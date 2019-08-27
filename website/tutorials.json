@@ -1,0 +1,50 @@
+{
+  "Using Captum with Ax": [
+    {
+      "id": "custom_captum_model_in_ax",
+      "title": "Using a custom Captum model"
+    }
+  ],
+  "Full Optimization Loops": [
+    {
+      "id": "closed_loop_captum_only",
+      "title": "q-Noisy Constrained EI"
+    }
+  ],
+  "Bite-Sized Tutorials": [
+    {
+      "id": "fit_model_with_torch_optimizer",
+      "title": "Fitting a model using torch.optim"
+    },
+    {
+      "id": "compare_mc_analytic_acquisition",
+      "title": "Comparing analytic and MC Expected Improvement"
+    },
+    {
+      "id": "optimize_with_cmaes",
+      "title": "Acquisition function optimization with CMA-ES"
+    },
+    {
+      "id": "optimize_stochastic",
+      "title": "Acquisition function optimization with torch.optim"
+    },
+    {
+      "id": "batch_mode_cross_validation",
+      "title": "Using batch evaluation for fast cross-validation"
+    },
+    {
+      "id": "custom_acquisition",
+      "title": "Writing a custom acquisition function"
+    }
+  ],
+  "Advanced Usage": [
+    {
+      "id": "meta_learning_with_rgpe",
+      "title": "Meta-learning with RGPE"
+    },
+    {
+      "id": "vae_mnist",
+      "title": "High-dimensional optimization with VAEs"
+    }
+  ]
+}
