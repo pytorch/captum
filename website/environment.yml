@@ -1,6 +1,0 @@
-name: captum
-channels:
-  - pytorch
-dependencies:
-  - numpy
-  - pytorch>=1.2
