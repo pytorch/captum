@@ -49,7 +49,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
-    'sphinx.ext.intersphinx',
+    "sphinx.ext.intersphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -81,8 +81,8 @@ autoclass_content = "both"
 
 # Configuration for intersphinx: refer to the Python standard library and PyTorch
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'pytorch': ('https://pytorch.org/docs/stable/index.html', None),
+    "python": ("https://docs.python.org/3", None),
+    "pytorch": ("https://pytorch.org/docs/stable/index.html", None),
 }
 
 
