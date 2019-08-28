@@ -23,7 +23,7 @@ class NeuronConductance(NeuronAttribution):
         neuron_index,
         baselines=None,
         target=None,
-        n_steps=500,
+        n_steps=50,
         method="riemann_trapezoid",
     ):
         r"""
