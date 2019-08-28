@@ -3,8 +3,8 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attributions.conductance import Conductance
-from captum.attributions.neuron_conductance import NeuronConductance
+from captum._attribution.conductance import Conductance
+from captum._attribution.neuron_conductance import NeuronConductance
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual

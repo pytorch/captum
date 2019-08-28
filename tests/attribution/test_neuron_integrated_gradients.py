@@ -3,8 +3,8 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attributions.integrated_gradients import IntegratedGradients
-from captum.attributions.neuron_integrated_gradients import NeuronIntegratedGradients
+from captum._attribution.integrated_gradients import IntegratedGradients
+from captum._attribution.neuron_integrated_gradients import NeuronIntegratedGradients
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual

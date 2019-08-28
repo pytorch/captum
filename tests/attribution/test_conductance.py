@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attributions.conductance import Conductance
+from captum._attribution.conductance import Conductance
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.conductance_reference import ConductanceReference

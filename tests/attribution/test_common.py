@@ -3,10 +3,10 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attributions.utils.common import validate_input, validate_reg_type
-from captum.attributions.utils.common import maximum_of_lists
-from captum.attributions.utils.common import normalize
-from captum.attributions.utils.common import Stat, MaxList
+from captum._attribution.utils.common import validate_input, validate_reg_type
+from captum._attribution.utils.common import maximum_of_lists
+from captum._attribution.utils.common import normalize
+from captum._attribution.utils.common import Stat, MaxList
 
 
 class Test(unittest.TestCase):

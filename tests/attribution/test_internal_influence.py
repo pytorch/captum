@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attributions.internal_influence import InternalInfluence
+from captum._attribution.internal_influence import InternalInfluence
 
 from .helpers.basic_models import TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual

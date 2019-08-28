@@ -3,7 +3,7 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attributions.utils.gradient import (
+from captum._attribution.utils.gradient import (
     compute_gradients,
     compute_layer_gradients_and_eval,
 )

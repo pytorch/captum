@@ -3,8 +3,8 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attributions.integrated_gradients import IntegratedGradients
-from captum.attributions.noise_tunnel import NoiseTunnel
+from captum._attribution.integrated_gradients import IntegratedGradients
+from captum._attribution.noise_tunnel import NoiseTunnel
 
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
 
