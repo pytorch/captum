@@ -6,7 +6,7 @@ from .utils.common import _reshape_and_sum
 from .utils.gradient import compute_layer_gradients_and_eval
 
 
-class Conductance(LayerAttribution):
+class LayerConductance(LayerAttribution):
     def __init__(self, forward_func, layer):
         r"""
         Args
@@ -22,7 +22,7 @@ class Conductance(LayerAttribution):
         inputs,
         baselines=None,
         target=None,
-        n_steps=500,
+        n_steps=50,
         method="riemann_trapezoid",
     ):
         r"""
