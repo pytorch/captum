@@ -20,8 +20,8 @@ from pytext.data.featurizer import SimpleFeaturizer
 from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
 from pytext.config.doc_classification import ModelInputConfig, TargetConfig
 
-from captum.attributions.models.pytext import configure_model_integ_grads_embeddings
-from captum.attributions.models.pytext import BaselineGenerator
+from captum._attribution.models.pytext import configure_model_integ_grads_embeddings
+from captum._attribution.models.pytext import BaselineGenerator
 
 
 class VocabStub:

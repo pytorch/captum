@@ -3,9 +3,9 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attributions.saliency import Saliency
-from captum.attributions.neuron_gradient import NeuronGradient
-from captum.attributions.utils.common import _forward_layer_eval, _extend_index_list
+from captum._attribution.saliency import Saliency
+from captum._attribution.neuron_gradient import NeuronGradient
+from captum._attribution.utils.common import _forward_layer_eval, _extend_index_list
 
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer

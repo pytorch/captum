@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
-from .attributions.integrated_gradients import IntegratedGradients  # noqa
-from .attributions.deep_lift import DeepLift  # noqa
-from .attributions.input_x_gradient import InputXGradient  # noqa
-from .attributions.saliency import Saliency  # noqa
-from .attributions.noise_tunnel import NoiseTunnel  # noqa
-from .attributions.models.base import (
+from ._attribution.integrated_gradients import IntegratedGradients  # noqa
+from ._attribution.deep_lift import DeepLift  # noqa
+from ._attribution.input_x_gradient import InputXGradient  # noqa
+from ._attribution.saliency import Saliency  # noqa
+from ._attribution.noise_tunnel import NoiseTunnel  # noqa
+from ._attribution.models.base import (
     InterpretableEmbeddingBase,
     TokenReferenceBase,
     configure_interpretable_embedding_layer,
 )  # noqa
 
-from .attributions.utils.gradient import compute_gradients  # noqa
-from .attributions.utils import visualization  # noqa
+from ._attribution.utils.gradient import compute_gradients  # noqa
+from ._attribution.utils import visualization  # noqa
 
 __version__ = "0.1.0"
 

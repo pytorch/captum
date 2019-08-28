@@ -4,7 +4,7 @@ import torch
 import unittest
 
 
-from captum.attributions.deep_lift import DeepLift
+from captum._attribution.deep_lift import DeepLift
 
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel

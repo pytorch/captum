@@ -3,8 +3,8 @@ from __future__ import print_function
 import unittest
 import torch
 
-from captum.attributions.saliency import Saliency
-from captum.attributions.noise_tunnel import NoiseTunnel
+from captum._attribution.saliency import Saliency
+from captum._attribution.noise_tunnel import NoiseTunnel
 
 from .helpers.basic_models import BasicModel
 from .helpers.classification_models import SoftmaxModel

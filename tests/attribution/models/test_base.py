@@ -3,7 +3,7 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attributions.models.base import configure_interpretable_embedding_layer
+from captum._attribution.models.base import configure_interpretable_embedding_layer
 
 from ..helpers.basic_models import BasicEmbeddingModel
 

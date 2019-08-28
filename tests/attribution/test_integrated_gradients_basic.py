@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-from captum.attributions.integrated_gradients import IntegratedGradients
-from captum.attributions.noise_tunnel import NoiseTunnel
-from captum.attributions.utils.common import _run_forward
+from captum._attribution.integrated_gradients import IntegratedGradients
+from captum._attribution.noise_tunnel import NoiseTunnel
+from captum._attribution.utils.common import _run_forward
 
 from .helpers.basic_models import (
     BasicModel,

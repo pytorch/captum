@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import numpy as np
 import torch
-from captum.attributions.utils.approximation_methods import approximation_parameters
-from captum.attributions.utils.attribution import LayerAttribution
-from captum.attributions.utils.common import _reshape_and_sum
+from captum._attribution.utils.approximation_methods import approximation_parameters
+from captum._attribution.utils.attribution import LayerAttribution
+from captum._attribution.utils.common import _reshape_and_sum
 
 
 """

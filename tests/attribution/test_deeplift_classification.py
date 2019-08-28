@@ -3,7 +3,7 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attributions.deep_lift import DeepLift
+from captum._attribution.deep_lift import DeepLift
 
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel

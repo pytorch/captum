@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import unittest
 
-from captum.attributions.utils.approximation_methods import riemann_builders, Riemann
+from captum._attribution.utils.approximation_methods import riemann_builders, Riemann
 
 from .helpers.utils import assertArraysAlmostEqual
 
