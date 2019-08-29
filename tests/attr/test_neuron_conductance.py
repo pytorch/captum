@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attr._core.conductance import Conductance
+from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.neuron_conductance import NeuronConductance
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
@@ -59,7 +59,7 @@ class Test(unittest.TestCase):
     def _conductance_input_sum_test_assert(
         self, model, target_layer, test_input, test_baseline=None
     ):
-        layer_cond = Conductance(model, target_layer)
+        layer_cond = LayerConductance(model, target_layer)
         attributions = layer_cond.attribute(
             test_input,
             baselines=test_baseline,

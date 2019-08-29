@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attr._core.conductance import Conductance
+from captum.attr._core.layer_conductance import LayerConductance
 
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.conductance_reference import ConductanceReference
@@ -67,7 +67,7 @@ class Test(unittest.TestCase):
     def _conductance_test_helper(
         self, model, target_layer, test_input, expected_conductance
     ):
-        cond = Conductance(model, target_layer)
+        cond = LayerConductance(model, target_layer)
         attributions = cond.attribute(
             test_input, target=0, n_steps=500, method="gausslegendre"
         )
@@ -88,7 +88,7 @@ class Test(unittest.TestCase):
         final_output = model(test_input)
         hook.remove()
         target_index = torch.argmax(torch.sum(final_output, 0))
-        cond = Conductance(model, target_layer)
+        cond = LayerConductance(model, target_layer)
         cond_ref = ConductanceReference(model, target_layer)
         attributions = cond.attribute(
             test_input,
