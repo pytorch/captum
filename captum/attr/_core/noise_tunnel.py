@@ -159,7 +159,7 @@ class NoiseTunnel(Attribution):
             if "baselines" not in kwargs:
                 return
 
-            baselines = kwargs["baselines"]
+            baselines = kwargs['baselines']
             baselines = format_baseline(baselines, inputs)
             validate_input(inputs, baselines)
 
@@ -167,12 +167,12 @@ class NoiseTunnel(Attribution):
                 baseline.repeat_interleave(n_samples, dim=0) for baseline in baselines
             )
             # update kwargs with expanded baseline
-            kwargs["baselines"] = baselines
+            kwargs['baselines'] = baselines
 
         def expand_and_update_additional_forward_args():
             if "additional_forward_args" not in kwargs:
                 return
-            additional_forward_args = kwargs["additional_forward_args"]
+            additional_forward_args = kwargs['additional_forward_args']
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
             )
@@ -182,7 +182,7 @@ class NoiseTunnel(Attribution):
                 additional_forward_args, n_samples, expansion_type="repeat_interleave"
             )
             # update kwargs with expanded baseline
-            kwargs["additional_forward_args"] = additional_forward_args
+            kwargs['additional_forward_args'] = additional_forward_args
 
         def compute_expected_attribution_and_sq(attribution):
             bsz = attribution.shape[0] // n_samples
@@ -219,9 +219,8 @@ class NoiseTunnel(Attribution):
         expected_attributions = []
         expected_attributions_sq = []
         for attribution in attributions:
-            expected_attribution, expected_attribution_sq = compute_expected_attribution_and_sq(
-                attribution
-            )
+            expected_attribution, expected_attribution_sq = \
+                compute_expected_attribution_and_sq(attribution)
             expected_attributions.append(expected_attribution)
             expected_attributions_sq.append(expected_attribution_sq)
 
