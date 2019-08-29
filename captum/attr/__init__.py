@@ -5,6 +5,12 @@ from ._core.deep_lift import DeepLift  # noqa
 from ._core.input_x_gradient import InputXGradient  # noqa
 from ._core.saliency import Saliency  # noqa
 from ._core.noise_tunnel import NoiseTunnel  # noqa
+from ._core.layer_conductance import LayerConductance  # noqa
+from ._core.layer_gradient_x_activation import LayerGradientXActivation  # noqa
+from ._core.layer_activation import LayerActivation  # noqa
+from ._core.neuron_conductance import NeuronConductance  # noqa
+from ._core.neuron_gradient import NeuronGradient  # noqa
+from ._core.neuron_integrated_gradients import NeuronIntegratedGradients  # noqa
 from ._models.base import (
     InterpretableEmbeddingBase,
     TokenReferenceBase,
@@ -19,6 +25,12 @@ __all__ = [
     "DeepLift",
     "InputXGradient",
     "Saliency",
+    "LayerConductance",
+    "LayerGradientXActivation",
+    "LayerActivation",
+    "NeuronConductance",
+    "NeuronGradient",
+    "NeuronIntegratedGradients",
     "NoiseTunnel",
     "InterpretableEmbeddingBase",
     "TokenReferenceBase",
