@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
     def _assert_multi_variable(self, type):
         model = BasicModel2()
 
-        input1 = torch.tensor([3.0], requires_grad=True)
+        input1 = torch.tensor([3.0])
         input2 = torch.tensor([1.0], requires_grad=True)
 
         baseline1 = torch.tensor([0.0])
@@ -100,7 +100,7 @@ class Test(unittest.TestCase):
         )
         self._compute_attribution_and_evaluate(
             model,
-            torch.tensor([0.0], requires_grad=True),
+            torch.tensor([0.0]),
             torch.tensor([0.0]),
             type=type,
         )

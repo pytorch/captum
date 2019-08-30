@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
 
     def test_simple_conductance_input_linear1(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_input_test_assert(net, net.linear1, inp, 0, [0.0, 90.0, 0.0])
 
     def test_simple_conductance_input_relu(self):
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
 
     def test_matching_conv2_multi_input_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(2, 1, 10, 10)
         self._conductance_input_sum_test_assert(net, net.conv2, inp)
 
     def test_matching_relu2_multi_input_conductance(self):
@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
 
     def test_matching_pool2_multi_input_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(1, 1, 10, 10)
         baseline = 20 * torch.randn(1, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.pool2, inp, baseline)
 

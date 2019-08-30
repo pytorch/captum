@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
 
     def test_simple_linear_activation(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_helper(
             net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
         )
@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
 
     def test_simple_output_activation(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_helper(net, net.linear2, inp, [392.0, 394.0])
 
     def _layer_activation_test_helper(

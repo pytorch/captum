@@ -31,7 +31,7 @@ class Test(unittest.TestCase):
         self._saliency_classification_helper(reg_type="vargrad")
 
     def _saliency_base_helper(self, reg_type="vanilla"):
-        input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
+        input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0])
         # manually percomputed gradients
         grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
         model = BasicModel()

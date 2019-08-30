@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
 
     def test_simple_linear_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._internal_influence_test_helper(
             net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
         )
@@ -29,13 +29,13 @@ class Test(unittest.TestCase):
 
     def test_simple_output_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._internal_influence_test_helper(net, net.linear2, inp, [[1.0, 0.0]])
 
     def test_simple_with_baseline_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 80.0, 0.0]], requires_grad=True)
-        base = torch.tensor([[0.0, -20.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 80.0, 0.0]])
+        base = torch.tensor([[0.0, -20.0, 0.0]])
         self._internal_influence_test_helper(
             net, net.linear1, inp, [[0.7, 0.8, 0.8, 0.8]], base
         )

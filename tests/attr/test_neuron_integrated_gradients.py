@@ -13,7 +13,7 @@ from .helpers.utils import assertArraysAlmostEqual
 class Test(unittest.TestCase):
     def test_simple_ig_input_linear2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._ig_input_test_assert(net, net.linear2, inp, 0, [0.0, 390.0, 0.0])
 
     def test_simple_ig_input_linear1(self):
@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
 
     def test_simple_ig_input_relu2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
 
     def test_matching_output_gradient(self):
