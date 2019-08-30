@@ -3,40 +3,12 @@ from __future__ import print_function
 import torch
 import unittest
 
-from captum.attr._utils.common import validate_input, validate_reg_type
-from captum.attr._utils.common import maximum_of_lists
-from captum.attr._utils.common import normalize
+from captum.attr._utils.common import validate_input, validate_noise_tunnel_type
 from captum.attr._utils.common import Stat, MaxList
+from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 
 
 class Test(unittest.TestCase):
-    def test_maximum_of_lists(self):
-        a = torch.Tensor([1.0, -3.0, -7.4])
-        b = torch.Tensor([-2.0, 1.5])
-        c = torch.Tensor([5.0, -6.0])
-
-        self.assertEqual(-7.4, maximum_of_lists(a, b))
-        self.assertEqual(7.4, maximum_of_lists(a, b, abs_val=True))
-        self.assertEqual(-6.0, maximum_of_lists(b, c))
-        self.assertEqual(6.0, maximum_of_lists(b, c, abs_val=True))
-        self.assertEqual(-7.4, maximum_of_lists(a, b, c))
-        self.assertEqual(7.4, maximum_of_lists(a, b, c, abs_val=True))
-
-    def test_normalize(self):
-        a = torch.Tensor([-1.0, 1.0])
-        b = torch.Tensor([-2.0, 1.5])
-
-        self.assertEqual([1.0, -1.0], normalize(a)[0].tolist())
-        self.assertEqual([-1.0, 1.0], normalize(a, abs_val=True)[0].tolist())
-        self.assertEqual([0.5, -0.5], normalize(a, b)[0].tolist())
-        self.assertEqual([-0.5, 0.5], normalize(a, b, abs_val=True)[0].tolist())
-
-    def test_normalize_zeros(self):
-        a = torch.Tensor([0.0, 0.0])
-        b = torch.Tensor([0.0, 0.0])
-
-        self.assertEqual([0.0, 0.0], normalize(a, b, abs_val=True)[0].tolist())
-
     def test_validate_input(self):
         with self.assertRaises(AssertionError):
             validate_input(torch.Tensor([-1.0, 1.0]), torch.Tensor([-2.0]))
@@ -51,11 +23,12 @@ class Test(unittest.TestCase):
             torch.Tensor([-1.0]), torch.Tensor([-2.0]), method="gausslegendre"
         )
 
-    def test_validate_reg_type(self):
+    def test_validate_nt_type(self):
         with self.assertRaises(AssertionError):
-            validate_reg_type("abc")
-        validate_reg_type("smoothgrad")
-        validate_reg_type("vargrad")
+            validate_noise_tunnel_type("abc", SUPPORTED_NOISE_TUNNEL_TYPES)
+        validate_noise_tunnel_type("smoothgrad", SUPPORTED_NOISE_TUNNEL_TYPES)
+        validate_noise_tunnel_type("smoothgrad_sq", SUPPORTED_NOISE_TUNNEL_TYPES)
+        validate_noise_tunnel_type("vargrad", SUPPORTED_NOISE_TUNNEL_TYPES)
 
     def test_stat_tracking(self):
         data = [1, 2, 3, 4, 5]
