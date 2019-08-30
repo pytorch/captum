@@ -2,7 +2,7 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import _reshape_and_sum, _extend_index_list, _format_input_baseline, _format_additional_forward_args, validate_input, _format_attributions
+from .._utils.common import _reshape_and_sum, _extend_index_list, _format_input_baseline, _format_additional_forward_args, validate_input, _format_attributions, _expand_additional_forward_args
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 

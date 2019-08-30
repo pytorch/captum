@@ -77,7 +77,7 @@ class LayerConductance(LayerAttribution):
         # the number of batches.
         # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
         input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, n_steps)
+            _expand_additional_forward_args(additional_forward_args, n_steps + 1)
             if additional_forward_args is not None
             else None
         )

@@ -50,11 +50,11 @@ class NeuronIntegratedGradients(NeuronAttribution):
                               that of the input.
         """
 
-        def forward_fn(helper_inputs):
+        def forward_fn(*args):
             layer_output = _forward_layer_eval(
-                self.forward_func, helper_inputs, self.layer
+                self.forward_func, args, self.layer
             )
-            indices = _extend_index_list(helper_inputs.shape[0], neuron_index)
+            indices = _extend_index_list(args[0].shape[0], neuron_index)
             return torch.stack(tuple(layer_output[i] for i in indices))
 
         ig = IntegratedGradients(forward_fn)
