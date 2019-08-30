@@ -118,8 +118,8 @@ class NoiseTunnel(Attribution):
                 >>> net = ImageClassifier()
                 >>> ig = IntegratedGradients(net)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>  # Creates noise tunnel
-                >>  nt = NoiseTunnel(ig)
+                >>> # Creates noise tunnel
+                >>> nt = NoiseTunnel(ig)
                 >>> # Generates 10 perturbed input tensors per image.
                 >>> # Computes integrated gradients for class 3 for each generated
                 >>> # input and averages attributions accros all 10
