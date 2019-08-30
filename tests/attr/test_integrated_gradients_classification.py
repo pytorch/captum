@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
                     inputs,
                     nt_type=type,
                     n_samples=10,
-                    noise_frac=0.0002,
+                    stdevs=0.0002,
                     target=target,
                     method=method,
                 )
