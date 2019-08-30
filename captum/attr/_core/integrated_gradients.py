@@ -6,6 +6,7 @@ from .._utils.common import (
     validate_input,
     format_input,
     format_baseline,
+    _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
     _run_forward,
@@ -106,7 +107,7 @@ class IntegratedGradients(GradientBasedAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs, baselines = self._format_input_baseline(inputs, baselines)
+        inputs, baselines = _format_input_baseline(inputs, baselines)
 
         validate_input(inputs, baselines, n_steps, method)
 
@@ -119,7 +120,7 @@ class IntegratedGradients(GradientBasedAttribution):
         scaled_features_tpl = tuple(
             torch.cat(
                 [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
-            )
+            ).requires_grad_()
             for input, baseline in zip(inputs, baselines)
         )
 
@@ -179,10 +180,6 @@ class IntegratedGradients(GradientBasedAttribution):
 
         return _format_attributions(is_inputs_tuple, attributions), delta
 
-    def _format_input_baseline(self, inputs, baselines):
-        inputs = format_input(inputs)
-        baselines = format_baseline(baselines, inputs)
-        return inputs, baselines
 
     def _compute_convergence_delta(
         self,

@@ -6,6 +6,8 @@ import unittest
 from captum.attr._utils.gradient import (
     compute_gradients,
     compute_layer_gradients_and_eval,
+    prepare_gradient_inputs,
+    undo_gradient_requirements,
 )
 
 from .helpers.utils import assertArraysAlmostEqual
@@ -17,6 +19,30 @@ from .helpers.basic_models import (
 
 
 class Test(unittest.TestCase):
+    def test_prepare_gradient(self):
+        initial_grads = [False, True, False]
+        test_tensor = torch.tensor([[6.0]], requires_grad=True)
+        test_tensor.grad = torch.tensor([[7.0]])
+        test_tensor_tuple = (torch.tensor([[5.0]]), test_tensor, torch.tensor([[7.0]]))
+        out_mask = prepare_gradient_inputs(test_tensor_tuple)
+        for i in range(len(test_tensor_tuple)):
+            self.assertTrue(test_tensor_tuple[i].requires_grad)
+            self.assertEqual(out_mask[i], initial_grads[i])
+            if test_tensor_tuple[i].grad is not None:
+                self.assertAlmostEqual(torch.sum(test_tensor_tuple[i].grad).item(), 0.0)
+
+
+    def test_undo_gradient(self):
+        initial_grads = [False, True, False]
+        test_tensor = torch.tensor([[6.0]], requires_grad=True)
+        test_tensor.grad = torch.tensor([[7.0]])
+        test_tensor_tuple = (test_tensor, torch.tensor([[6.0]], requires_grad=True), torch.tensor([[7.0]],requires_grad=True))
+        undo_gradient_requirements(test_tensor_tuple, initial_grads)
+        for i in range(len(test_tensor_tuple)):
+            self.assertEqual(test_tensor_tuple[i].requires_grad, initial_grads[i])
+            if test_tensor_tuple[i].grad is not None:
+                self.assertAlmostEqual(torch.sum(test_tensor_tuple[i].grad).item(), 0.0)
+
     def test_gradient_basic(self):
         model = BasicModel()
         input = torch.tensor([[5.0]], requires_grad=True)
