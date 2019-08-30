@@ -36,8 +36,8 @@ class Test(unittest.TestCase):
         test_tensor = torch.tensor([[6.0]], requires_grad=True)
         test_tensor.grad = torch.tensor([[7.0]])
         test_tensor_tuple = (
-            test_tensor,
             torch.tensor([[6.0]], requires_grad=True),
+            test_tensor,
             torch.tensor([[7.0]], requires_grad=True),
         )
         undo_gradient_requirements(test_tensor_tuple, initial_grads)

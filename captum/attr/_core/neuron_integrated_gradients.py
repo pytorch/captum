@@ -22,8 +22,8 @@ class NeuronIntegratedGradients(NeuronAttribution):
         inputs,
         neuron_index,
         baselines=None,
-        n_steps=50,
         additional_forward_args=None,
+        n_steps=50,
         method="gausslegendre",
     ):
         r"""
