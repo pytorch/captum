@@ -90,6 +90,8 @@ class NoiseTunnel(Attribution):
                             corresponds to the input with the same index in the inputs
                             tuple.
                             Default: `1.0` if `stdevs` is not provided.
+                **kwargs (Any, optional): Contains a list of arguments that are passed
+                            to `attribution_method` attribution algorithm
 
             Return:
 
@@ -108,8 +110,6 @@ class NoiseTunnel(Attribution):
                             and represents the arithmetic mean
                             across all `n_sample` pertubed tensors for that input.
 
-                **kwargs (Any, optional): Contains a list of arguments that are passed
-                            to `attribution_method` attribution algorithm
 
             Examples::
 
