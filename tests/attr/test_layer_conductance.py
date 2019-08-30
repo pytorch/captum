@@ -5,7 +5,11 @@ import unittest
 import torch
 from captum.attr._core.layer_conductance import LayerConductance
 
-from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer, TestModel_MultiLayer_MultiInput
+from .helpers.basic_models import (
+    TestModel_ConvNet,
+    TestModel_MultiLayer,
+    TestModel_MultiLayer_MultiInput,
+)
 from .helpers.conductance_reference import ConductanceReference
 from .helpers.utils import assertArraysAlmostEqual
 
@@ -38,14 +42,18 @@ class Test(unittest.TestCase):
         inp1 = torch.tensor([[0.0, 10.0, 0.0]])
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
-        self._conductance_test_assert(net, net.model.linear2, (inp1,inp2,inp3), [390.0, 0.0], (4,))
+        self._conductance_test_assert(
+            net, net.model.linear2, (inp1, inp2, inp3), [390.0, 0.0], (4,)
+        )
 
     def test_simple_multi_input_relu_conductance(self):
         net = TestModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
-        self._conductance_test_assert(net, net.model.relu, (inp1,inp2), [90.0, 100.0, 100.0, 100.0], (inp3, 5))
+        self._conductance_test_assert(
+            net, net.model.relu, (inp1, inp2), [90.0, 100.0, 100.0, 100.0], (inp3, 5)
+        )
 
     def test_matching_conv1_conductance(self):
         net = TestModel_ConvNet()
@@ -79,11 +87,20 @@ class Test(unittest.TestCase):
         self._conductance_reference_test_assert(net, net.fc1, inp, baseline)
 
     def _conductance_test_assert(
-        self, model, target_layer, test_input, expected_conductance, additional_args=None
+        self,
+        model,
+        target_layer,
+        test_input,
+        expected_conductance,
+        additional_args=None,
     ):
         cond = LayerConductance(model, target_layer)
         attributions = cond.attribute(
-            test_input, target=0, n_steps=500, method="gausslegendre", additional_forward_args=additional_args
+            test_input,
+            target=0,
+            n_steps=500,
+            method="gausslegendre",
+            additional_forward_args=additional_args,
         )
         assertArraysAlmostEqual(
             attributions.squeeze(0).tolist(), expected_conductance, delta=0.1

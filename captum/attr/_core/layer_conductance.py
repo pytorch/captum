@@ -2,7 +2,13 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import LayerAttribution
-from .._utils.common import _reshape_and_sum, _format_input_baseline, _format_additional_forward_args, _expand_additional_forward_args, validate_input
+from .._utils.common import (
+    _reshape_and_sum,
+    _format_input_baseline,
+    _format_additional_forward_args,
+    _expand_additional_forward_args,
+    validate_input,
+)
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -85,7 +91,11 @@ class LayerConductance(LayerAttribution):
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func, self.layer, scaled_features_tpl, target, input_additional_args
+            self.forward_func,
+            self.layer,
+            scaled_features_tpl,
+            target,
+            input_additional_args,
         )
         # Compute differences between consecutive evaluations of layer_eval.
         # This approximates the total input gradient of each step multiplied

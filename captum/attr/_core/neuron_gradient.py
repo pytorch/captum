@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import _forward_layer_eval, _extend_index_list, format_input, _format_additional_forward_args, _format_attributions
+from .._utils.common import (
+    _forward_layer_eval,
+    _extend_index_list,
+    format_input,
+    _format_additional_forward_args,
+    _format_attributions,
+)
 from .._utils.gradient import prepare_gradient_inputs, undo_gradient_requirements
 
 import torch
@@ -43,7 +49,9 @@ class NeuronGradient(NeuronAttribution):
         )
         gradient_mask = prepare_gradient_inputs(inputs)
 
-        layer_out = _forward_layer_eval(self.forward_func, inputs, self.layer,additional_forward_args)
+        layer_out = _forward_layer_eval(
+            self.forward_func, inputs, self.layer, additional_forward_args
+        )
         indices = _extend_index_list(inputs[0].shape[0], neuron_index)
         with torch.autograd.set_grad_enabled(True):
             input_grads = torch.autograd.grad(

@@ -27,4 +27,6 @@ class LayerActivation(LayerAttribution):
 
                 attributions: Activation of each neuron in output of given layer
         """
-        return _forward_layer_eval(self.forward_func, inputs, self.layer, additional_forward_args)
+        return _forward_layer_eval(
+            self.forward_func, inputs, self.layer, additional_forward_args
+        )

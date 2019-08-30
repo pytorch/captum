@@ -195,6 +195,7 @@ class TestModel_MultiLayer(nn.Module):
         lin2_out = self.linear2(relu_out)
         return lin2_out
 
+
 class TestModel_MultiLayer_MultiInput(nn.Module):
     def __init__(self):
         super().__init__()

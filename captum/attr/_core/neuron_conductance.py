@@ -2,7 +2,15 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import _reshape_and_sum, _extend_index_list, _format_input_baseline, _format_additional_forward_args, validate_input, _format_attributions, _expand_additional_forward_args
+from .._utils.common import (
+    _reshape_and_sum,
+    _extend_index_list,
+    _format_input_baseline,
+    _format_additional_forward_args,
+    validate_input,
+    _format_attributions,
+    _expand_additional_forward_args,
+)
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -94,7 +102,11 @@ class NeuronConductance(NeuronAttribution):
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func, self.layer, scaled_features_tpl, target, input_additional_args
+            self.forward_func,
+            self.layer,
+            scaled_features_tpl,
+            target,
+            input_additional_args,
         )
         # Creates list of target neuron across batched examples (dimension 0)
         indices = _extend_index_list(total_batch, neuron_index)
@@ -111,19 +123,24 @@ class NeuronConductance(NeuronAttribution):
         # mid layer gradient for each input step.
         mid_grads = torch.stack([layer_gradients[index] for index in indices])
 
-        scaled_input_gradients = tuple(input_grad * mid_grads.reshape(
-            (total_batch,) + (1,) * (len(input_grad.shape) - 1)
-        ) for input_grad in input_grads)
+        scaled_input_gradients = tuple(
+            input_grad
+            * mid_grads.reshape((total_batch,) + (1,) * (len(input_grad.shape) - 1))
+            for input_grad in input_grads
+        )
 
         # Mutliplies by appropriate step size.
-        scaled_grads = tuple(scaled_input_gradient.contiguous().view(
-            n_steps, -1
-        ) * torch.tensor(step_sizes).view(n_steps, 1).to(scaled_input_gradient.device) for scaled_input_gradient in scaled_input_gradients)
+        scaled_grads = tuple(
+            scaled_input_gradient.contiguous().view(n_steps, -1)
+            * torch.tensor(step_sizes).view(n_steps, 1).to(scaled_input_gradient.device)
+            for scaled_input_gradient in scaled_input_gradients
+        )
 
         # Aggregates across all steps for each tensor in the input tuple
-        total_grads = tuple(_reshape_and_sum(
-            scaled_grad, n_steps, num_examples, input_grad.shape[1:]
-        ) for (scaled_grad, input_grad) in zip(scaled_grads, input_grads))
+        total_grads = tuple(
+            _reshape_and_sum(scaled_grad, n_steps, num_examples, input_grad.shape[1:])
+            for (scaled_grad, input_grad) in zip(scaled_grads, input_grads)
+        )
 
         # computes attribution for each tensor in input tuple
         # attributions has the same dimentionality as inputs

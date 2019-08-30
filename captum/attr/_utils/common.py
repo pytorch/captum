@@ -90,6 +90,7 @@ def format_baseline(baselines, inputs):
 
     return baselines
 
+
 def _format_input_baseline(inputs, baselines):
     inputs = format_input(inputs)
     baselines = format_baseline(baselines, inputs)
@@ -181,6 +182,7 @@ def _forward_layer_eval(forward_func, inputs, layer, additional_forward_args=Non
     def forward_hook(module, inp, out):
         nonlocal saved_layer_output
         saved_layer_output = out
+
     hook = layer.register_forward_hook(forward_hook)
     _run_forward(forward_func, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
