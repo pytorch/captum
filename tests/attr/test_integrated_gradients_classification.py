@@ -16,6 +16,9 @@ class Test(unittest.TestCase):
     def test_sigmoid_classification_smoothgrad(self):
         self._assert_sigmoid_classification("smoothgrad")
 
+    def test_sigmoid_classification_smoothgrad_sq(self):
+        self._assert_sigmoid_classification("smoothgrad_sq")
+
     def test_sigmoid_classification_vargrad(self):
         self._assert_sigmoid_classification("vargrad")
 
@@ -24,6 +27,9 @@ class Test(unittest.TestCase):
 
     def test_softmax_classification_smoothgrad(self):
         self._assert_softmax_classification("smoothgrad")
+
+    def test_softmax_classification_smoothgrad_sq(self):
+        self._assert_softmax_classification("smoothgrad_sq")
 
     def test_softmax_classification_vargrad(self):
         self._assert_softmax_classification("vargrad")
@@ -77,9 +83,9 @@ class Test(unittest.TestCase):
                 nt = NoiseTunnel(ig)
                 attributions, delta = nt.attribute(
                     inputs,
-                    reg_type=type,
+                    nt_type=type,
                     n_samples=10,
-                    noise_frac=0.0002,
+                    stdevs=0.0002,
                     target=target,
                     method=method,
                 )
