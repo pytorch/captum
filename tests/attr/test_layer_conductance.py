@@ -13,7 +13,7 @@ from .helpers.utils import assertArraysAlmostEqual
 class Test(unittest.TestCase):
     def test_simple_input_conductance(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_helper(net, net.linear0, inp, [0.0, 390.0, 0.0])
 
     def test_simple_linear_conductance(self):
@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
 
     def test_simple_relu_conductance(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_helper(net, net.relu, inp, [90.0, 100.0, 100.0, 100.0])
 
     def test_simple_output_conductance(self):
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
 
     def test_matching_pool1_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(1, 1, 10, 10)
         self._conductance_reference_test_helper(net, net.pool1, inp)
 
     def test_matching_conv2_conductance(self):
@@ -50,7 +50,7 @@ class Test(unittest.TestCase):
 
     def test_matching_pool2_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(1, 1, 10, 10)
         self._conductance_reference_test_helper(net, net.pool2, inp)
 
     def test_matching_conv_multi_input_conductance(self):
@@ -60,7 +60,7 @@ class Test(unittest.TestCase):
 
     def test_matching_conv_with_baseline_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(3, 1, 10, 10)
         baseline = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_reference_test_helper(net, net.fc1, inp, baseline)
 

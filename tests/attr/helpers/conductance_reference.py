@@ -4,6 +4,7 @@ import torch
 from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
+from captum.attr._utils.gradient import prepare_gradient_inputs, undo_gradient_requirements
 
 
 """
@@ -137,7 +138,7 @@ class ConductanceReference(LayerAttribution):
         """
         if baselines is None:
             baselines = 0
-
+        gradient_mask = prepare_gradient_inputs((inputs,))
         # retrieve step size and scaling factor for specified approximation method
         step_sizes_func, alphas_func = approximation_parameters(method)
         step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
@@ -171,6 +172,8 @@ class ConductanceReference(LayerAttribution):
         scaled_grads = mid_layer_gradients.contiguous().view(
             n_steps, -1
         ) * torch.tensor(step_sizes).view(n_steps, 1).to(mid_layer_gradients.device)
+
+        undo_gradient_requirements((inputs,), gradient_mask)
 
         # Element-wise mutliply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum across

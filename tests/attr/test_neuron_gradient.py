@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
 
     def test_simple_gradient_input_linear1(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
 
     def test_simple_gradient_input_relu(self):
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
 
     def test_simple_gradient_input_relu2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
 
     def test_matching_output_gradient(self):
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
 
     def test_matching_intermediate_gradient(self):
         net = TestModel_ConvNet()
-        inp = torch.randn(3, 1, 10, 10, requires_grad=True)
+        inp = torch.randn(3, 1, 10, 10)
         self._gradient_matching_test_assert(net, net.relu2, inp)
 
     def _gradient_input_test_assert(

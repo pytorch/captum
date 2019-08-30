@@ -23,7 +23,7 @@ class LayerConductance(LayerAttribution):
         baselines=None,
         target=None,
         additional_forward_args=None,
-        n_steps=500,
+        n_steps=50,
         method="riemann_trapezoid",
     ):
         r"""
