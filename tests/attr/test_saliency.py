@@ -46,7 +46,7 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, noise_frac=0.0002
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002
             )
         self.assertEqual(input.shape, attributions.shape)
 
@@ -71,6 +71,6 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, noise_frac=0.0002, target=target
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002, target=target
             )
         self.assertEqual(input.shape, attributions.shape)

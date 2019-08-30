@@ -50,7 +50,7 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, noise_frac=0.0002, target=target
+                input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
             )
 
         self.assertAlmostEqual(attributions.shape, input.shape)
@@ -71,6 +71,6 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, noise_frac=0.0002
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002
             )
         self.assertAlmostEqual(attributions.shape, input.shape)

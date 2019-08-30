@@ -263,39 +263,52 @@ class Test(unittest.TestCase):
                     n_steps=1500,
                     target=target,
                 )
+            else:
+                nt = NoiseTunnel(ig)
+                attributions, delta = nt.attribute(
+                    inputs,
+                    nt_type=type,
+                    n_samples=20,
+                    stdevs=0.002,
+                    baselines=baselines,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                    method=method,
+                )
+
+            if type == "vanilla" or isinstance(
+                model,
+                (
+                    BasicModel,
+                    BasicModel2,
+                    BasicModel3,
+                    BasicModel4_MultiArgs,
+                    BasicModel5_MultiArgs,
+                ),
+            ):
                 if isinstance(attributions, tuple):
                     attr_sum = sum(
                         torch.sum(attribution).item() for attribution in attributions
                     )
                 else:
                     attr_sum = torch.sum(attributions).item()
-                expected_delta = abs(
-                    attr_sum
-                    - (forward_input.sum().item() - forward_baseline.sum().item())
-                )
-                self.assertAlmostEqual(
-                    attr_sum,
-                    forward_input.sum().item() - forward_baseline.sum().item(),
-                    delta=0.05,
-                )
-                self.assertAlmostEqual(delta, expected_delta, delta=0.005)
-            else:
-                nt = NoiseTunnel(ig)
-                attributions, delta = nt.attribute(
-                    inputs,
-                    nt_type=type,
-                    n_samples=10,
-                    noise_frac=0.0002,
-                    baselines=baselines,
-                    target=target,
-                    additional_forward_args=additional_forward_args,
-                    method=method,
-                )
-            if isinstance(inputs, tuple):
-                for input, attribution in zip(inputs, attributions):
-                    self.assertEqual(attribution.shape, input.shape)
-            else:
-                self.assertEqual(attributions.shape, inputs.shape)
+                    expected_delta = abs(
+                        attr_sum
+                        - (forward_input.sum().item() - forward_baseline.sum().item())
+                    )
+                    self.assertAlmostEqual(
+                        attr_sum,
+                        forward_input.sum().item() - forward_baseline.sum().item(),
+                        delta=0.05,
+                    )
+                    self.assertAlmostEqual(delta, expected_delta, delta=0.005)
+
+                if isinstance(inputs, tuple):
+                    for input, attribution in zip(inputs, attributions):
+                        self.assertEqual(attribution.shape, input.shape)
+                else:
+                    self.assertEqual(attributions.shape, inputs.shape)
+
         return attributions
 
     def _compute_attribution_batch_helper_evaluate(
