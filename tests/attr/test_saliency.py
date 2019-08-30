@@ -16,27 +16,27 @@ class Test(unittest.TestCase):
         self._saliency_base_helper()
 
     def test_saliency_test_basic_smoothgrad(self):
-        self._saliency_base_helper(reg_type="smoothgrad")
+        self._saliency_base_helper(nt_type="smoothgrad")
 
     def test_saliency_test_basic_vargrad(self):
-        self._saliency_base_helper(reg_type="vargrad")
+        self._saliency_base_helper(nt_type="vargrad")
 
     def test_saliency_classification_vanilla(self):
         self._saliency_classification_helper()
 
     def test_saliency_classification_smoothgrad(self):
-        self._saliency_classification_helper(reg_type="smoothgrad")
+        self._saliency_classification_helper(nt_type="smoothgrad")
 
     def test_saliency_classification_vargrad(self):
-        self._saliency_classification_helper(reg_type="vargrad")
+        self._saliency_classification_helper(nt_type="vargrad")
 
-    def _saliency_base_helper(self, reg_type="vanilla"):
+    def _saliency_base_helper(self, nt_type="vanilla"):
         input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
         # manually percomputed gradients
         grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
         model = BasicModel()
         saliency = Saliency(model.forward)
-        if reg_type == "vanilla":
+        if nt_type == "vanilla":
             attributions = saliency.attribute(input)
             expected = torch.abs(grads)
             self.assertEqual(
@@ -46,19 +46,19 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(
-                input, reg_type=reg_type, n_samples=10, noise_frac=0.0002
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002
             )
         self.assertEqual(input.shape, attributions.shape)
 
-    def _saliency_classification_helper(self, reg_type="vanilla"):
+    def _saliency_classification_helper(self, nt_type="vanilla"):
         num_in = 5
         input = torch.tensor([[0.0, 1.0, 2.0, 3.0, 4.0]], requires_grad=True)
         target = torch.tensor(5)
         # 10-class classification model
         model = SoftmaxModel(num_in, 20, 10)
-        saliency = Saliency(model.forward)
+        saliency = Saliency(model)
 
-        if reg_type == "vanilla":
+        if nt_type == "vanilla":
             attributions = saliency.attribute(input, target)
 
             output = model(input)[:, target]
@@ -71,6 +71,6 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(
-                input, reg_type=reg_type, n_samples=10, noise_frac=0.0002, target=target
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002, target=target
             )
         self.assertEqual(input.shape, attributions.shape)

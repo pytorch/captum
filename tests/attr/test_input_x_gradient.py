@@ -13,24 +13,24 @@ from .helpers.classification_models import SoftmaxModel
 # TODO add more unit tests when the input is a tuple
 class Test(unittest.TestCase):
     def test_input_x_gradient_test_basic_vanilla(self):
-        self._input_x_gradient_base_helper()
+        self._input_x_gradient_base_helper(nt_type="vanilla")
 
     def test_input_x_gradient_test_basic_smoothgrad(self):
-        self._input_x_gradient_base_helper(reg_type="smoothgrad")
+        self._input_x_gradient_base_helper(nt_type="smoothgrad")
 
     def test_input_x_gradient_test_basic_vargrad(self):
-        self._input_x_gradient_base_helper(reg_type="vargrad")
+        self._input_x_gradient_base_helper(nt_type="vargrad")
 
     def test_input_x_gradient_classification_vanilla(self):
         self._input_x_gradient_classification_helper()
 
     def test_input_x_gradient_classification_smoothgrad(self):
-        self._input_x_gradient_classification_helper(reg_type="smoothgrad")
+        self._input_x_gradient_classification_helper(nt_type="smoothgrad")
 
     def test_input_x_gradient_classification_vargrad(self):
-        self._input_x_gradient_classification_helper(reg_type="vargrad")
+        self._input_x_gradient_classification_helper(nt_type="vargrad")
 
-    def _input_x_gradient_classification_helper(self, reg_type="vanilla"):
+    def _input_x_gradient_classification_helper(self, nt_type="vanilla"):
         num_in = 5
         input = torch.tensor([[0.0, 1.0, 2.0, 3.0, 4.0]], requires_grad=True)
         target = torch.tensor(5)
@@ -38,7 +38,7 @@ class Test(unittest.TestCase):
         # 10-class classification model
         model = SoftmaxModel(num_in, 20, 10)
         input_x_grad = InputXGradient(model.forward)
-        if reg_type == "vanilla":
+        if nt_type == "vanilla":
             attributions = input_x_grad.attribute(input, target)
             output = model(input)[:, target]
             output.backward()
@@ -50,18 +50,18 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, reg_type=reg_type, n_samples=10, noise_frac=0.0002, target=target
+                input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
             )
 
         self.assertAlmostEqual(attributions.shape, input.shape)
 
-    def _input_x_gradient_base_helper(self, reg_type="vanilla"):
+    def _input_x_gradient_base_helper(self, nt_type="vanilla"):
         input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
         # manually percomputed gradients
         grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
         model = BasicModel()
         input_x_grad = InputXGradient(model.forward)
-        if reg_type == "vanilla":
+        if nt_type == "vanilla":
             attributions = input_x_grad.attribute(input)
             expected = grads * input
             self.assertEqual(
@@ -71,6 +71,6 @@ class Test(unittest.TestCase):
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, reg_type=reg_type, n_samples=10, noise_frac=0.0002
+                input, nt_type=nt_type, n_samples=10, stdevs=0.0002
             )
         self.assertAlmostEqual(attributions.shape, input.shape)

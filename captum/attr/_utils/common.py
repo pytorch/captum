@@ -6,24 +6,6 @@ import numpy as np
 from .approximation_methods import SUPPORTED_METHODS
 
 
-# TODO remove - most probably not needed
-def maximum_of_lists(*lsts, abs_val=False):
-    if abs_val:
-        max_lst = [abs(max(sub_lst, key=abs)) for sub_lst in lsts]
-    else:
-        max_lst = [max(sub_lst, key=abs) for sub_lst in lsts]
-    return max(max_lst, key=abs)
-
-
-# TODO remove - most probably not needed
-def normalize(*inputs, abs_val=False):
-    max_absolute_value = maximum_of_lists(*inputs, abs_val=abs_val)
-    return tuple(
-        0.0 * input if max_absolute_value == 0.0 else input / max_absolute_value
-        for input in inputs
-    )
-
-
 def random_baseline(self, input, start, end):
     return torch.tensor(
         start + end * np.random.random(input.shape),
@@ -56,10 +38,10 @@ def validate_input(inputs, baselines, n_steps=50, method="riemann_trapezoid"):
     )
 
 
-def validate_reg_type(reg_type):
-    assert reg_type in ["smoothgrad", "vargrad"], (
-        "Regularization types must be either `smoothgrad` or `vargrad`. "
-        "Given {}".format(reg_type)
+def validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
+    assert nt_type in supported_noise_tunnel_types, (
+        "Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "
+        "Given {}".format(nt_type)
     )
 
 
@@ -154,14 +136,26 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
     return output if target is None else output[:, target]
 
 
-def _expand_additional_forward_args(additional_forward_args, n_steps):
-    def _expand_tensor_forward_arg(additional_forward_arg, n_steps):
+def _expand_additional_forward_args(
+    additional_forward_args, n_steps, expansion_type="repeat"
+):
+    def _expand_tensor_forward_arg(
+        additional_forward_arg, n_steps, expansion_type="repeat"
+    ):
         if len(additional_forward_arg.size()) == 0:
             return additional_forward_arg
-        return torch.cat([additional_forward_arg] * n_steps, dim=0)
+        if expansion_type == "repeat":
+            return torch.cat([additional_forward_arg] * n_steps, dim=0)
+        elif expansion_type == "repeat_interleave":
+            return additional_forward_arg.repeat_interleave(n_steps, dim=0)
+        else:
+            raise NotImplementedError(
+                "Currently only `repeat` and `repeat_interleave`"
+                " expansion_types are supported"
+            )
 
     return tuple(
-        _expand_tensor_forward_arg(additional_forward_arg, n_steps)
+        _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
         if isinstance(additional_forward_arg, torch.Tensor)
         else additional_forward_arg
         for additional_forward_arg in additional_forward_args
