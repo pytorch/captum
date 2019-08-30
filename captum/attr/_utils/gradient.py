@@ -3,6 +3,7 @@ import torch
 
 from .common import _run_forward
 
+
 def prepare_gradient_inputs(input_tensors):
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
@@ -10,7 +11,9 @@ def prepare_gradient_inputs(input_tensors):
     is returned to its initial state, a list of flags representing whether or not
      a tensor originally required grad is returned.
     """
-    assert isinstance(input_tensors, tuple) , "Inputs should be wrapped in a tuple prior to preparing for gradients"
+    assert isinstance(
+        input_tensors, tuple
+    ), "Inputs should be wrapped in a tuple prior to preparing for gradients"
     grad_required = []
     for tensor in input_tensors:
         assert isinstance(tensor, torch.Tensor), "Given input is not a torch.Tensor"
@@ -19,6 +22,7 @@ def prepare_gradient_inputs(input_tensors):
         if tensor.grad is not None:
             tensor.grad.zero_()
     return grad_required
+
 
 def undo_gradient_requirements(input_tensors, grad_required):
     """
@@ -29,14 +33,19 @@ def undo_gradient_requirements(input_tensors, grad_required):
     gradients.
     """
 
-    assert isinstance(input_tensors, tuple) , "Inputs should be wrapped in a tuple prior to preparing for gradients."
-    assert len(input_tensors) == len(grad_required), "Input tuple length should match gradient mask."
+    assert isinstance(
+        input_tensors, tuple
+    ), "Inputs should be wrapped in a tuple prior to preparing for gradients."
+    assert len(input_tensors) == len(
+        grad_required
+    ), "Input tuple length should match gradient mask."
     for index, tensor in enumerate(input_tensors):
         assert isinstance(tensor, torch.Tensor), "Given input is not a torch.Tensor"
         if tensor.grad is not None:
             tensor.grad.zero_()
         if not grad_required[index]:
             tensor.requires_grad_(False)
+
 
 def compute_gradients(forward_fn, input, target_ind=None, additional_forward_args=None):
     r"""
@@ -65,7 +74,9 @@ def compute_gradients(forward_fn, input, target_ind=None, additional_forward_arg
     return grads
 
 
-def compute_layer_gradients_and_eval(forward_fn, layer, inputs, target_ind=None, additional_forward_args=None):
+def compute_layer_gradients_and_eval(
+    forward_fn, layer, inputs, target_ind=None, additional_forward_args=None
+):
     r"""
         Computes gradients of the output with respect to a given layer as well
         as the output evaluation of the layer for an arbitrary forward function

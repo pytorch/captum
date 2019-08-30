@@ -69,7 +69,9 @@ class DeepLift(GradientBasedAttribution):
         # match the sizes of inputs and baselines in case of multiple references
         # for a single input
         inputs = tuple(
-            input.repeat([baseline.shape[0]] + [1] * (len(baseline.shape) - 1)).requires_grad_()
+            input.repeat(
+                [baseline.shape[0]] + [1] * (len(baseline.shape) - 1)
+            ).requires_grad_()
             for input, baseline in zip(inputs, baselines)
         )
         validate_input(inputs, baselines)

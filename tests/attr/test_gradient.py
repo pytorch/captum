@@ -31,12 +31,15 @@ class Test(unittest.TestCase):
             if test_tensor_tuple[i].grad is not None:
                 self.assertAlmostEqual(torch.sum(test_tensor_tuple[i].grad).item(), 0.0)
 
-
     def test_undo_gradient(self):
         initial_grads = [False, True, False]
         test_tensor = torch.tensor([[6.0]], requires_grad=True)
         test_tensor.grad = torch.tensor([[7.0]])
-        test_tensor_tuple = (test_tensor, torch.tensor([[6.0]], requires_grad=True), torch.tensor([[7.0]],requires_grad=True))
+        test_tensor_tuple = (
+            test_tensor,
+            torch.tensor([[6.0]], requires_grad=True),
+            torch.tensor([[7.0]], requires_grad=True),
+        )
         undo_gradient_requirements(test_tensor_tuple, initial_grads)
         for i in range(len(test_tensor_tuple)):
             self.assertEqual(test_tensor_tuple[i].requires_grad, initial_grads[i])

@@ -4,8 +4,6 @@ import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.common import (
     validate_input,
-    format_input,
-    format_baseline,
     _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
@@ -179,7 +177,6 @@ class IntegratedGradients(GradientBasedAttribution):
         )
 
         return _format_attributions(is_inputs_tuple, attributions), delta
-
 
     def _compute_convergence_delta(
         self,

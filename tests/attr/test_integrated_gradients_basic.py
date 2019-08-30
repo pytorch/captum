@@ -99,10 +99,7 @@ class Test(unittest.TestCase):
             type=type,
         )
         self._compute_attribution_and_evaluate(
-            model,
-            torch.tensor([0.0]),
-            torch.tensor([0.0]),
-            type=type,
+            model, torch.tensor([0.0]), torch.tensor([0.0]), type=type
         )
         self._compute_attribution_and_evaluate(
             model,
