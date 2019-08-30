@@ -184,8 +184,8 @@ class Test(unittest.TestCase):
         self._compute_attribution_and_evaluate(
             model,
             (
-                torch.tensor([[1.5, 2.0, 34.3]], requires_grad=True),
-                torch.tensor([[3.0, 3.5, 23.2]], requires_grad=True),
+                torch.tensor([[1.5, 2.0, 3.3]], requires_grad=True),
+                torch.tensor([[3.0, 3.5, 2.2]], requires_grad=True),
             ),
             type=type,
         )
@@ -269,45 +269,32 @@ class Test(unittest.TestCase):
                     inputs,
                     nt_type=type,
                     n_samples=20,
-                    stdevs=0.002,
+                    stdevs=0.000002,
                     baselines=baselines,
                     target=target,
                     additional_forward_args=additional_forward_args,
                     method=method,
                 )
 
-            if type == "vanilla" or isinstance(
-                model,
-                (
-                    BasicModel,
-                    BasicModel2,
-                    BasicModel3,
-                    BasicModel4_MultiArgs,
-                    BasicModel5_MultiArgs,
-                ),
-            ):
-                if isinstance(attributions, tuple):
-                    attr_sum = sum(
-                        torch.sum(attribution).item() for attribution in attributions
-                    )
-                else:
-                    attr_sum = torch.sum(attributions).item()
-                    expected_delta = abs(
-                        attr_sum
-                        - (forward_input.sum().item() - forward_baseline.sum().item())
-                    )
-                    self.assertAlmostEqual(
-                        attr_sum,
-                        forward_input.sum().item() - forward_baseline.sum().item(),
-                        delta=0.05,
-                    )
-                    self.assertAlmostEqual(delta, expected_delta, delta=0.005)
-
-                if isinstance(inputs, tuple):
-                    for input, attribution in zip(inputs, attributions):
-                        self.assertEqual(attribution.shape, input.shape)
-                else:
-                    self.assertEqual(attributions.shape, inputs.shape)
+            if isinstance(attributions, tuple):
+                attr_sum = sum(
+                    torch.sum(attribution).item() for attribution in attributions
+                )
+                for input, attribution in zip(inputs, attributions):
+                    self.assertEqual(attribution.shape, input.shape)
+            else:
+                attr_sum = torch.sum(attributions).item()
+                expected_delta = abs(
+                    attr_sum
+                    - (forward_input.sum().item() - forward_baseline.sum().item())
+                )
+                self.assertAlmostEqual(
+                    attr_sum,
+                    forward_input.sum().item() - forward_baseline.sum().item(),
+                    delta=0.05,
+                )
+                self.assertAlmostEqual(delta, expected_delta, delta=0.005)
+                self.assertEqual(attributions.shape, inputs.shape)
 
         return attributions
 
