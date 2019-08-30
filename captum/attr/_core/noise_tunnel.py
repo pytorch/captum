@@ -91,7 +91,8 @@ class NoiseTunnel(Attribution):
                             tuple.
                             Default: `1.0` if `stdevs` is not provided.
                 **kwargs (Any, optional): Contains a list of arguments that are passed
-                            to `attribution_method` attribution algorithm
+                            to `attribution_method` attribution algorithm. For
+                            instance `additional_forward_args` and `baselines`.
 
             Return:
 
