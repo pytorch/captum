@@ -195,6 +195,14 @@ class TestModel_MultiLayer(nn.Module):
         lin2_out = self.linear2(relu_out)
         return lin2_out
 
+class TestModel_MultiLayer_MultiInput(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = TestModel_MultiLayer()
+
+    def forward(self, x1, x2, x3, scale):
+        return self.model(scale * (x1 + x2 + x3))
+
 
 class TestModel_ConvNet(nn.Module):
     def __init__(self):

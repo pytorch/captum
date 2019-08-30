@@ -6,7 +6,7 @@ import torch
 from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.neuron_conductance import NeuronConductance
 
-from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
+from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer, TestModel_MultiLayer_MultiInput
 from .helpers.utils import assertArraysAlmostEqual
 
 
@@ -28,6 +28,20 @@ class Test(unittest.TestCase):
         inp = torch.tensor([[0.0, 70.0, 30.0]], requires_grad=True)
         self._conductance_input_test_assert(net, net.relu, inp, (3,), [0.0, 70.0, 30.0])
 
+    def test_simple_conductance_multi_input_linear2(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 5.0, 0.0]])
+        self._conductance_input_test_assert(net, net.model.linear2, (inp1,inp2,inp3), (0,), ([0.0, 156.0, 0.0],[0.0, 156.0, 0.0],[0.0, 78.0, 0.0]), (4,))
+
+    def test_simple_conductance_multi_input_relu(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0]])
+        self._conductance_input_test_assert(net, net.model.relu, (inp1,inp2), (3,), ([0.0, 50.0, 5.0],[0.0, 20.0, 25.0]), (inp3, 5))
+
     def test_matching_conv2_multi_input_conductance(self):
         net = TestModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10)
@@ -46,15 +60,21 @@ class Test(unittest.TestCase):
         self._conductance_input_sum_test_assert(net, net.pool2, inp, baseline)
 
     def _conductance_input_test_assert(
-        self, model, target_layer, test_input, test_neuron, expected_input_conductance
+        self, model, target_layer, test_input, test_neuron, expected_input_conductance, additional_input=None
     ):
         cond = NeuronConductance(model, target_layer)
         attributions = cond.attribute(
-            test_input, test_neuron, target=0, n_steps=500, method="gausslegendre"
+            test_input, test_neuron, target=0, n_steps=500, method="gausslegendre", additional_forward_args=additional_input
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_input_conductance, delta=0.1
-        )
+        if isinstance(expected_input_conductance,tuple):
+            for i in range(len(expected_input_conductance)):
+                assertArraysAlmostEqual(
+                    attributions[i].squeeze(0).tolist(), expected_input_conductance[i], delta=0.1
+                )
+        else:
+            assertArraysAlmostEqual(
+                attributions.squeeze(0).tolist(), expected_input_conductance, delta=0.1
+            )
 
     def _conductance_input_sum_test_assert(
         self, model, target_layer, test_input, test_baseline=None
