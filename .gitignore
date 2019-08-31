@@ -12,12 +12,15 @@ dist/
 downloads/
 eggs/
 .eggs/
+insights/frontend/node_modules/
+insights/frontend/.pnp/
 lib/
 lib64/
 parts/
 sdist/
 var/
 wheels/
+
 *.egg-info/
 .installed.cfg
 *.egg
@@ -45,9 +48,13 @@ wheels/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+insights/frontend/npm-debug.log*
+insights/frontend/yarn-debug.log*
+insights/frontend/yarn-error.log*
 
 # Unit test / coverage reports
 htmlcov/
+insights/frontend/coverage
 .tox/
 .coverage
 .coverage.*

@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     visualizer = AttributionVisualizer(
         models=[get_pretrained_model()],  # some nn.Module
-        classes=get_classes(),  # a list of classes, indices correspond to name. If scalar or one output, just print out whatever
+        classes=get_classes(),  # a list of classes, indices correspond to name
         features=[ImageFeature("Photo")],  # output visualization type
         dataset=dataset,  # should also support regular iter
     )

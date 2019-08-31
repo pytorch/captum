@@ -1,10 +1,10 @@
 import base64
 from collections import namedtuple
 from io import BytesIO
+
+from captum.attr._utils import visualization as viz
+
 import numpy as np
-
-from captum import visualization as viz
-
 from matplotlib import pyplot as plt
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")

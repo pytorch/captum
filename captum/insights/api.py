@@ -1,10 +1,9 @@
 from collections import namedtuple
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, List
 
-from captum import IntegratedGradients
+from captum.attr import IntegratedGradients
 
 import torch
-import torch.nn as nn
 from features import BaseFeature
 from serve import start_server
 
@@ -51,15 +50,17 @@ class AttributionVisualizer(object):
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="400px"))
 
     def _get_labels_from_scores(self, scores, indices):
-        l = []
+        model_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
             if score > 0.0001:
-                l.append(ModelScore(scores[i].item(), self.classes[indices[i]]))
-        return l
+                model_scores.append(
+                    ModelScore(scores[i].item(), self.classes[indices[i]])
+                )
+        return model_scores
 
     def visualize(self):
-        data, labels = self.dataloader.next()
+        data, labels = next(self.dataloader)
         net = self.models[0]  # TODO process multiple models
         outputs = net(data)
 

@@ -1,8 +1,8 @@
-# PyTorch Captum Visualization UI
+# PyTorch Captum Insights
 
 ## Development
 
-Captum Vis is built on top of React, using create-react-app.
+Captum Insights frontend is built on top of React, using create-react-app.
 
 `yarn build` to compile files.
 
