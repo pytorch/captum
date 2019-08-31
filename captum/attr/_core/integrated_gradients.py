@@ -18,9 +18,10 @@ from .._utils.attribution import GradientBasedAttribution
 class IntegratedGradients(GradientBasedAttribution):
     def __init__(self, forward_func):
         r"""
-        Args
+        Args:
 
-            forward_func:  The forward function of the model or any modification of it
+            forward_func (function): The forward function of the model or
+                       any modification of it
         """
         super().__init__(forward_func)
 
