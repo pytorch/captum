@@ -42,16 +42,16 @@ class Saliency(GradientBasedAttribution):
                             no target index is necessary. (Note: Tuples for multi
                             -dimensional output indices will be supported soon.)
                 abs (bool, optional): Returns absolute value of gradients if set
-                            to True, otherwise returns the (signed) gradients i
+                            to True, otherwise returns the (signed) gradients if
                             False.
                             Defalut: True
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple of 1D tensors and can
-                            have arbitrary length. Note that the same additional
-                            forward args are provided for each step on the integrated
-                            path. Default: None
+                            can be provided. It can contain ND tensors, or any arbitrary
+                            python type. The gradients are not computed with respect
+                            to these arguments.
+                            Default: None
 
         Return:
 
