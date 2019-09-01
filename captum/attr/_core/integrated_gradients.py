@@ -67,10 +67,15 @@ class IntegratedGradients(GradientBasedAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple of 1D tensors and can
-                            have arbitrary length. Note that the same additional
-                            forward args are provided for each step on the integrated
-                            path. Default: None
+                            can be provided. It can contain a tuple of ND tensors or
+                            any arbitrary python type of any shape.
+                            In case of the ND tensor the first dimension of the
+                            tensor must correspond to the batch size. It will be
+                            repeated for each `n_steps` along the integrated path
+                            of integrated greadients.
+                            Note that the gradients are not computed with respect
+                            to these arguments.
+                            Default: None
                 n_steps (tuple, optional): The number of steps used by the approximation
                             method. Default: 50.
                 method (string, optional): Method for approximating the integral,

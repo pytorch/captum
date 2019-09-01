@@ -38,10 +38,10 @@ class InputXGradient(GradientBasedAttribution):
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
-                        can be provided. It must be a tuple of 1D tensors and can
-                        have arbitrary length. Note that the same additional
-                        forward args are provided for each step on the integrated
-                        path. Default: None
+                        can be provided. It can contain ND tensors, or any arbitrary
+                        python type. The gradients are not computed with respect
+                        to these arguments.
+                        Default: None
 
         Return:
 
