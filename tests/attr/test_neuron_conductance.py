@@ -10,6 +10,7 @@ from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual
 
+
 class Test(BaseTest):
     def test_simple_conductance_input_linear2(self):
         net = TestModel_MultiLayer()
