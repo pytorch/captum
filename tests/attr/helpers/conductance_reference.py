@@ -5,7 +5,7 @@ from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
 from captum.attr._utils.gradient import (
-    prepare_gradient_inputs,
+    apply_gradient_requirements,
     undo_gradient_requirements,
 )
 
@@ -141,7 +141,7 @@ class ConductanceReference(LayerAttribution):
         """
         if baselines is None:
             baselines = 0
-        gradient_mask = prepare_gradient_inputs((inputs,))
+        gradient_mask = apply_gradient_requirements((inputs,))
         # retrieve step size and scaling factor for specified approximation method
         step_sizes_func, alphas_func = approximation_parameters(method)
         step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)

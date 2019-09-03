@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import torch
+import warnings
 
 from .common import _run_forward
 
 
-def prepare_gradient_inputs(input_tensors):
+def apply_gradient_requirements(inputs):
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
     each Tensor, and ensures all grads are set to zero. To ensure that the input
@@ -12,19 +13,25 @@ def prepare_gradient_inputs(input_tensors):
      a tensor originally required grad is returned.
     """
     assert isinstance(
-        input_tensors, tuple
+        inputs, tuple
     ), "Inputs should be wrapped in a tuple prior to preparing for gradients"
     grad_required = []
-    for tensor in input_tensors:
-        assert isinstance(tensor, torch.Tensor), "Given input is not a torch.Tensor"
-        grad_required.append(tensor.requires_grad)
-        tensor.requires_grad_()
-        if tensor.grad is not None:
-            tensor.grad.zero_()
+    for index, input in enumerate(inputs):
+        assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
+        grad_required.append(input.requires_grad)
+        if not input.requires_grad:
+            warnings.warn(
+                """Input Tensor %d did not already require gradients,
+            required_grads has been set automatically."""
+                % index
+            )
+            input.requires_grad_()
+        if input.grad is not None:
+            input.grad.zero_()
     return grad_required
 
 
-def undo_gradient_requirements(input_tensors, grad_required):
+def undo_gradient_requirements(inputs, grad_required):
     """
     Iterates through list of tensors, zeros each gradient, and sets required
     grad to false if the corresponding index in grad_required is False.
@@ -34,17 +41,18 @@ def undo_gradient_requirements(input_tensors, grad_required):
     """
 
     assert isinstance(
-        input_tensors, tuple
+        inputs, tuple
     ), "Inputs should be wrapped in a tuple prior to preparing for gradients."
-    assert len(input_tensors) == len(
+    assert len(inputs) == len(
         grad_required
     ), "Input tuple length should match gradient mask."
-    for index, tensor in enumerate(input_tensors):
-        assert isinstance(tensor, torch.Tensor), "Given input is not a torch.Tensor"
-        if tensor.grad is not None:
-            tensor.grad.zero_()
+    for index, input in enumerate(inputs):
+        assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
+        if input.grad is not None:
+            input.grad.detach_()
+            input.grad.zero_()
         if not grad_required[index]:
-            tensor.requires_grad_(False)
+            input.requires_grad_(False)
 
 
 def compute_gradients(forward_fn, input, target_ind=None, additional_forward_args=None):
@@ -114,6 +122,11 @@ def compute_layer_gradients_and_eval(
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
         # Remove unnecessary forward hook.
         hook.remove()
-        saved_grads = torch.autograd.grad(torch.unbind(output), saved_layer_output)[0]
+        saved_grads = torch.autograd.grad(torch.unbind(output), saved_layer_output)
+        assert (
+            len(saved_grads) == 1
+        ), """Layers with multiple output tensors
+                                         are not yet supported"""
+        saved_grads = saved_grads[0]
 
     return saved_grads, saved_layer_output

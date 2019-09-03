@@ -7,7 +7,7 @@ from .._utils.common import (
     _format_additional_forward_args,
     _format_attributions,
 )
-from .._utils.gradient import prepare_gradient_inputs, undo_gradient_requirements
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 import torch
 
@@ -47,7 +47,7 @@ class NeuronGradient(NeuronAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        gradient_mask = prepare_gradient_inputs(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
 
         layer_out = _forward_layer_eval(
             self.forward_func, inputs, self.layer, additional_forward_args

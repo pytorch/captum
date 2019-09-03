@@ -42,7 +42,7 @@ class Test(unittest.TestCase):
             net.model.linear2,
             (inp1, inp2, inp3),
             (0,),
-            ([0.0, 156.0, 0.0], [0.0, 156.0, 0.0], [0.0, 78.0, 0.0]),
+            ([[0.0, 156.0, 0.0]], [[0.0, 156.0, 0.0]], [[0.0, 78.0, 0.0]]),
             (4,),
         )
 
@@ -56,7 +56,24 @@ class Test(unittest.TestCase):
             net.model.relu,
             (inp1, inp2),
             (3,),
-            ([0.0, 50.0, 5.0], [0.0, 20.0, 25.0]),
+            ([[0.0, 50.0, 5.0]], [[0.0, 20.0, 25.0]]),
+            (inp3, 5),
+        )
+
+    def test_simple_conductance_multi_input_batch_relu(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 5.0]])
+        self._conductance_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            (3,),
+            (
+                [[0.0, 50.0, 5.0], [0.0, 0.0, 50.0]],
+                [[0.0, 20.0, 25.0], [0.0, 0.0, 50.0]],
+            ),
             (inp3, 5),
         )
 
@@ -96,12 +113,14 @@ class Test(unittest.TestCase):
             additional_forward_args=additional_input,
         )
         if isinstance(expected_input_conductance, tuple):
+            print(attributions)
             for i in range(len(expected_input_conductance)):
-                assertArraysAlmostEqual(
-                    attributions[i].squeeze(0).tolist(),
-                    expected_input_conductance[i],
-                    delta=0.1,
-                )
+                for j in range(len(expected_input_conductance[i])):
+                    assertArraysAlmostEqual(
+                        attributions[i][j : j + 1].squeeze(0).tolist(),
+                        expected_input_conductance[i][j],
+                        delta=0.1,
+                    )
         else:
             assertArraysAlmostEqual(
                 attributions.squeeze(0).tolist(), expected_input_conductance, delta=0.1
