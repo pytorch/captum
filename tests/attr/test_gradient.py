@@ -8,6 +8,7 @@ from captum.attr._utils.gradient import (
     compute_layer_gradients_and_eval,
 )
 
+from .helpers.base_test import BaseTest
 from .helpers.utils import assertArraysAlmostEqual
 from .helpers.basic_models import (
     BasicModel,
@@ -16,7 +17,7 @@ from .helpers.basic_models import (
 )
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_gradient_basic(self):
         model = BasicModel()
         input = torch.tensor([[5.0]], requires_grad=True)

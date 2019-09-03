@@ -7,8 +7,9 @@ from captum.attr._utils.common import validate_input, validate_noise_tunnel_type
 from captum.attr._utils.common import Stat, MaxList
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 
+from .helpers.base_test import BaseTest
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_validate_input(self):
         with self.assertRaises(AssertionError):
             validate_input(torch.Tensor([-1.0, 1.0]), torch.Tensor([-2.0]))

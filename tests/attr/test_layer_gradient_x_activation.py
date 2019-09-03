@@ -5,11 +5,12 @@ import unittest
 import torch
 from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_input_gradient_activation(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)

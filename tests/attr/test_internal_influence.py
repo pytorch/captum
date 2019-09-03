@@ -5,11 +5,12 @@ import unittest
 import torch
 from captum.attr._core.internal_influence import InternalInfluence
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_input_internal_inf(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)

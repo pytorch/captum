@@ -5,12 +5,13 @@ import unittest
 import torch
 from captum.attr._core.layer_conductance import LayerConductance
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.conductance_reference import ConductanceReference
 from .helpers.utils import assertArraysAlmostEqual
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_input_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)

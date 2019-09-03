@@ -6,12 +6,13 @@ import torch
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import BasicModel
 from .helpers.classification_models import SoftmaxModel
 
 
 # TODO add more unit tests when the input is a tuple
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_input_x_gradient_test_basic_vanilla(self):
         self._input_x_gradient_base_helper(nt_type="vanilla")
 
