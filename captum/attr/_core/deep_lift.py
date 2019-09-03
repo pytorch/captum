@@ -16,7 +16,7 @@ class DeepLift(GradientBasedAttribution):
         r"""
         Args:
 
-            model:  The reference to PyTorch model instance.
+            model (nn.Module):  The reference to PyTorch model instance.
         """
         super().__init__(model)
         self.model = model
@@ -75,12 +75,13 @@ class DeepLift(GradientBasedAttribution):
             for input, baseline in zip(inputs, baselines)
         )
         validate_input(inputs, baselines)
-        additional_forward_args = (
-            additional_forward_args if additional_forward_args else []
-        )
+
         self._traverse_modules(self.model, self._register_hooks)
         gradients = self.gradient_func(
-            self.forward_func, inputs, target_ind=target, *additional_forward_args
+            self.forward_func,
+            inputs,
+            target_ind=target,
+            additional_forward_args=additional_forward_args,
         )
         attributions = tuple(
             (input - baseline) * gradient
