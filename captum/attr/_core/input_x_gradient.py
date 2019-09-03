@@ -8,30 +8,63 @@ class InputXGradient(GradientBasedAttribution):
         r"""
         Args:
 
-            forward_func:  The forward function of the model or any modification of it
+            forward_func (function): The forward function of the model
+                       or any modification of it
         """
         super().__init__(forward_func)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
         A baseline approach for computing the attribution. It multiplies input with
-        its gradient.
+        the gradient with respect to input.
         https://arxiv.org/abs/1611.07270
 
         Args:
 
-                inputs:     A single high dimensional input tensor or a tuple of them.
-                target:     Predicted class index. This is necessary only for
-                            classification use cases
-                additional_forward_args: Apart input tensor an additional input can be
-                                         passed to forward function. It can have
-                                         arbitrary length.
+            inputs (tensor or tuple of tensors):  Input for which integrated
+                        gradients are computed. If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples (aka batch size), and if
+                        mutliple input tensors are provided, the examples must
+                        be aligned appropriately.
+            target (int, optional):  Output index for which gradient is computed
+                        (for classification cases, this is the target class).
+                        If the network returns a scalar value per example,
+                        no target index is necessary. (Note: Tuples for multi
+                        -dimensional output indices will be supported soon.)
+            additional_forward_args (tuple, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It can contain ND tensors, or any arbitrary
+                        python type. The gradients are not computed with respect
+                        to these arguments.
+                        Default: None
+
+        Return:
+
+                attributions (tensor or tuple of tensors): The input x gradient with
+                            respect to each input feature. Attributions will always be
+                            the same size as the provided inputs, with each value
+                            providing the attribution of the corresponding input index.
+                            If a single tensor is provided as inputs, a single tensor is
+                            returned. If a tuple is provided for inputs, a tuple of
+                            corresponding sized tensors is returned.
 
 
-        Returns:
+        Examples::
 
-                attributions: input * gradients(with respect to each input features)
-
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> # Generating random input with size 2x3x3x32
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Defining InputXGradient interpreter
+            >>> input_x_gradient = InputXGradient(net)
+            >>> # Computes inputXgradient for class 4.
+            >>> attribution = input_x_gradient.attribute(input, target=4)
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
@@ -39,11 +72,8 @@ class InputXGradient(GradientBasedAttribution):
 
         inputs = format_input(inputs)
 
-        additional_forward_args = (
-            additional_forward_args if additional_forward_args else []
-        )
         gradients = self.gradient_func(
-            self.forward_func, inputs, target, *additional_forward_args
+            self.forward_func, inputs, target, additional_forward_args
         )
 
         attributions = tuple(
