@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import unittest
 import torch
 
 from captum.attr._core.input_x_gradient import InputXGradient

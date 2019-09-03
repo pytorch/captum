@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import torch
-import unittest
 
 from captum.attr._utils.common import validate_input, validate_noise_tunnel_type
 from captum.attr._utils.common import Stat, MaxList
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 
 from .helpers.base_test import BaseTest
+
 
 class Test(BaseTest):
     def test_validate_input(self):
