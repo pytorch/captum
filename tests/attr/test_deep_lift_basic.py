@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import torch
-import unittest
 
 
 from captum.attr._core.deep_lift import DeepLift
