@@ -113,7 +113,6 @@ class Test(unittest.TestCase):
             additional_forward_args=additional_input,
         )
         if isinstance(expected_input_conductance, tuple):
-            print(attributions)
             for i in range(len(expected_input_conductance)):
                 for j in range(len(expected_input_conductance[i])):
                     assertArraysAlmostEqual(
