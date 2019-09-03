@@ -26,6 +26,9 @@ class Test(unittest.TestCase):
     def test_multivariable_smoothgrad(self):
         self._assert_multi_variable("smoothgrad")
 
+    def test_multivariable_smoothgrad_sq(self):
+        self._assert_multi_variable("smoothgrad_sq")
+
     def test_multivariable_vargrad(self):
         self._assert_multi_variable("vargrad")
 
@@ -34,6 +37,9 @@ class Test(unittest.TestCase):
 
     def test_multi_argument_smoothgrad(self):
         self._assert_multi_argument("smoothgrad")
+
+    def test_multi_argument_smoothgrad_sq(self):
+        self._assert_multi_argument("smoothgrad_sq")
 
     def test_multi_argument_vargrad(self):
         self._assert_multi_argument("vargrad")
@@ -44,6 +50,9 @@ class Test(unittest.TestCase):
     def test_univariable_smoothgrad(self):
         self._assert_univariable("smoothgrad")
 
+    def test_univariable_smoothgrad_sq(self):
+        self._assert_univariable("smoothgrad_sq")
+
     def test_univariable_vargrad(self):
         self._assert_univariable("vargrad")
 
@@ -53,14 +62,35 @@ class Test(unittest.TestCase):
     def test_multi_tensor_input_smoothgrad(self):
         self._assert_multi_tensor_input("smoothgrad")
 
+    def test_multi_tensor_input_smoothgrad_sq(self):
+        self._assert_multi_tensor_input("smoothgrad_sq")
+
     def test_multi_tensor_input_vargrad(self):
         self._assert_multi_tensor_input("vargrad")
 
     def test_batched_input_vanilla(self):
         self._assert_batched_tensor_input("vanilla")
 
+    def test_batched_input_smoothgrad(self):
+        self._assert_batched_tensor_input("smoothgrad")
+
+    def test_batched_input_smoothgrad_sq(self):
+        self._assert_batched_tensor_input("smoothgrad_sq")
+
+    def test_batched_input_vargrad(self):
+        self._assert_batched_tensor_input("vargrad")
+
     def test_batched_multi_input_vanilla(self):
         self._assert_batched_tensor_multi_input("vanilla")
+
+    def test_batched_multi_input_smoothgrad(self):
+        self._assert_batched_tensor_multi_input("smoothgrad")
+
+    def test_batched_multi_input_smoothgrad_sq(self):
+        self._assert_batched_tensor_multi_input("smoothgrad_sq")
+
+    def test_batched_multi_input_vargrad(self):
+        self._assert_batched_tensor_multi_input("vargrad")
 
     def _assert_multi_variable(self, type):
         model = BasicModel2()
@@ -154,8 +184,8 @@ class Test(unittest.TestCase):
         self._compute_attribution_and_evaluate(
             model,
             (
-                torch.tensor([[1.5, 2.0, 34.3]], requires_grad=True),
-                torch.tensor([[3.0, 3.5, 23.2]], requires_grad=True),
+                torch.tensor([[1.5, 2.0, 3.3]], requires_grad=True),
+                torch.tensor([[3.0, 3.5, 2.2]], requires_grad=True),
             ),
             type=type,
         )
@@ -193,7 +223,7 @@ class Test(unittest.TestCase):
         type="vanilla",
     ):
         r"""
-            attrib_type: 'vanilla', 'smoothgrad', 'vargrad'
+            attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
         ig = IntegratedGradients(model.forward)
         if not isinstance(inputs, tuple):
@@ -233,12 +263,27 @@ class Test(unittest.TestCase):
                     n_steps=1500,
                     target=target,
                 )
-                if isinstance(attributions, tuple):
-                    attr_sum = sum(
-                        torch.sum(attribution).item() for attribution in attributions
-                    )
-                else:
-                    attr_sum = torch.sum(attributions).item()
+            else:
+                nt = NoiseTunnel(ig)
+                attributions, delta = nt.attribute(
+                    inputs,
+                    nt_type=type,
+                    n_samples=20,
+                    stdevs=0.000002,
+                    baselines=baselines,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                    method=method,
+                )
+
+            if isinstance(attributions, tuple):
+                attr_sum = sum(
+                    torch.sum(attribution).item() for attribution in attributions
+                )
+                for input, attribution in zip(inputs, attributions):
+                    self.assertEqual(attribution.shape, input.shape)
+            else:
+                attr_sum = torch.sum(attributions).item()
                 expected_delta = abs(
                     attr_sum
                     - (forward_input.sum().item() - forward_baseline.sum().item())
@@ -249,29 +294,14 @@ class Test(unittest.TestCase):
                     delta=0.05,
                 )
                 self.assertAlmostEqual(delta, expected_delta, delta=0.005)
-            else:
-                nt = NoiseTunnel(ig)
-                attributions, delta = nt.attribute(
-                    inputs,
-                    reg_type=type,
-                    n_samples=10,
-                    noise_frac=0.0002,
-                    baselines=baselines,
-                    additional_forward_args=additional_forward_args,
-                    method=method,
-                )
-
-            if isinstance(inputs, tuple):
-                for input, attribution in zip(inputs, attributions):
-                    self.assertEqual(attribution.shape, input.shape)
-            else:
                 self.assertEqual(attributions.shape, inputs.shape)
+
         return attributions
 
     def _compute_attribution_batch_helper_evaluate(
         self, model, inputs, baselines=None, target=None, additional_forward_args=None
     ):
-        ig = IntegratedGradients(model.forward)
+        ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)
 
