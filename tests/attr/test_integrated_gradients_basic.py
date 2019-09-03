@@ -4,6 +4,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _run_forward
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel2,
@@ -19,7 +20,7 @@ import unittest
 import torch
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_multivariable_vanilla(self):
         self._assert_multi_variable("vanilla")
 

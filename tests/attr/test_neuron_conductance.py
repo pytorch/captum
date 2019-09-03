@@ -6,11 +6,11 @@ import torch
 from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.neuron_conductance import NeuronConductance
 
+from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
 from .helpers.utils import assertArraysAlmostEqual
 
-
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_conductance_input_linear2(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
