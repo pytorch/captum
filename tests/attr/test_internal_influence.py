@@ -66,6 +66,19 @@ class Test(unittest.TestCase):
             additional_args=(inp3, 5),
         )
 
+    def test_simple_multi_input_batch_relu_internal_inf(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._internal_influence_test_assert(
+            net,
+            net.model.linear1,
+            (inp1, inp2),
+            [[0.95, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]],
+            additional_args=(inp3, 5),
+        )
+
     def test_multiple_linear_internal_inf(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor(

@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
             net.model.linear2,
             (inp1, inp2, inp3),
             (0,),
-            ([0.0, 156.0, 0.0], [0.0, 156.0, 0.0], [0.0, 78.0, 0.0]),
+            ([[0.0, 156.0, 0.0]], [[0.0, 156.0, 0.0]], [[0.0, 78.0, 0.0]]),
             (4,),
         )
 
@@ -59,7 +59,21 @@ class Test(unittest.TestCase):
             net.model.relu,
             (inp1, inp2),
             (0,),
-            ([0.0, 1.5, 3.5], [0.0, 1.5, 3.5]),
+            ([[0.0, 1.5, 3.5]], [[0.0, 1.5, 3.5]]),
+            (inp3, 0.5),
+        )
+
+    def test_simple_ig_multi_input_relu_batch(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            (0,),
+            ([[0.0, 1.5, 3.5], [0.0, 40.0, 0.0]], [[0.0, 1.5, 3.5], [0.0, 10.0, 0.0]]),
             (inp3, 0.5),
         )
 
@@ -88,9 +102,12 @@ class Test(unittest.TestCase):
         )
         if isinstance(expected_input_ig, tuple):
             for i in range(len(expected_input_ig)):
-                assertArraysAlmostEqual(
-                    attributions[i].squeeze(0).tolist(), expected_input_ig[i], delta=0.1
-                )
+                for j in range(attributions[i].shape[0]):
+                    assertArraysAlmostEqual(
+                        attributions[i][j].squeeze(0).tolist(),
+                        expected_input_ig[i][j],
+                        delta=0.1,
+                    )
         else:
             assertArraysAlmostEqual(
                 attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1

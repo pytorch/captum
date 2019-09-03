@@ -4,7 +4,7 @@ import torch
 
 from .._utils.common import format_input, _format_attributions
 from .._utils.attribution import GradientBasedAttribution
-from .._utils.gradient import prepare_gradient_inputs, undo_gradient_requirements
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class Saliency(GradientBasedAttribution):
@@ -45,7 +45,7 @@ class Saliency(GradientBasedAttribution):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
-        gradient_mask = prepare_gradient_inputs(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
 
         additional_forward_args = (
             additional_forward_args if additional_forward_args else []

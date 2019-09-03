@@ -18,24 +18,24 @@ class Test(unittest.TestCase):
     def test_simple_input_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._conductance_test_assert(net, net.linear0, inp, [0.0, 390.0, 0.0])
+        self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
 
     def test_simple_linear_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._conductance_test_assert(
-            net, net.linear1, inp, [90.0, 100.0, 100.0, 100.0]
+            net, net.linear1, inp, [[90.0, 100.0, 100.0, 100.0]]
         )
 
     def test_simple_relu_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._conductance_test_assert(net, net.relu, inp, [90.0, 100.0, 100.0, 100.0])
+        self._conductance_test_assert(net, net.relu, inp, [[90.0, 100.0, 100.0, 100.0]])
 
     def test_simple_output_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._conductance_test_assert(net, net.linear2, inp, [390.0, 0.0])
+        self._conductance_test_assert(net, net.linear2, inp, [[390.0, 0.0]])
 
     def test_simple_multi_input_linear2_conductance(self):
         net = TestModel_MultiLayer_MultiInput()
@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
         self._conductance_test_assert(
-            net, net.model.linear2, (inp1, inp2, inp3), [390.0, 0.0], (4,)
+            net, net.model.linear2, (inp1, inp2, inp3), [[390.0, 0.0]], (4,)
         )
 
     def test_simple_multi_input_relu_conductance(self):
@@ -52,7 +52,20 @@ class Test(unittest.TestCase):
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
         self._conductance_test_assert(
-            net, net.model.relu, (inp1, inp2), [90.0, 100.0, 100.0, 100.0], (inp3, 5)
+            net, net.model.relu, (inp1, inp2), [[90.0, 100.0, 100.0, 100.0]], (inp3, 5)
+        )
+
+    def test_simple_multi_input_relu_conductance_batch(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 5.0]])
+        self._conductance_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            [[90.0, 100.0, 100.0, 100.0], [100.0, 100.0, 100.0, 100.0]],
+            (inp3, 5),
         )
 
     def test_matching_conv1_conductance(self):
@@ -102,9 +115,12 @@ class Test(unittest.TestCase):
             method="gausslegendre",
             additional_forward_args=additional_args,
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_conductance, delta=0.1
-        )
+        for i in range(len(expected_conductance)):
+            assertArraysAlmostEqual(
+                attributions[i : i + 1].squeeze(0).tolist(),
+                expected_conductance[i],
+                delta=0.1,
+            )
 
     def _conductance_reference_test_assert(
         self, model, target_layer, test_input, test_baseline=None
