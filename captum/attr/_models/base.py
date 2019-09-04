@@ -117,8 +117,10 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
                            embedding layer - `embedding_layer_name`
     """
     embedding_layer = _get_deep_layer_name(model, embedding_layer_name)
-    assert embedding_layer.__class__ is not InterpretableEmbeddingBase, (
-        "InterpretableEmbeddingBase has already been configured for layer {}".format(embedding_layer_name)
+    assert (
+        embedding_layer.__class__ is not InterpretableEmbeddingBase
+    ), "InterpretableEmbeddingBase has already been configured for layer {}".format(
+        embedding_layer_name
     )
     warnings.warn(
         """In order to make embedding layers more interpretable they will
@@ -126,11 +128,13 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
         original embedding layer. The original embedding layer must be set
         back by calling `remove_interpretable_embedding_layer` function
         after model interpretation is finished."""
-            )
-    interpretable_emb = InterpretableEmbeddingBase(embedding_layer,
-                                                   embedding_layer_name)
+    )
+    interpretable_emb = InterpretableEmbeddingBase(
+        embedding_layer, embedding_layer_name
+    )
     _set_deep_layer_value(model, embedding_layer_name, interpretable_emb)
     return interpretable_emb
+
 
 def remove_interpretable_embedding_layer(model, interpretable_emb):
     r"""
@@ -145,6 +149,6 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
             and has to be removed after interpretation is finished.
 
     """
-    _set_deep_layer_value(model,
-                          interpretable_emb.full_name,
-                          interpretable_emb.embedding)
+    _set_deep_layer_value(
+        model, interpretable_emb.full_name, interpretable_emb.embedding
+    )
