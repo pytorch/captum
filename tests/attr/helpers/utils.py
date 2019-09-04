@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 import torch
 
+
 def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
     for index, (input, ref) in enumerate(zip(inputArr, refArr)):
         assert (
@@ -13,6 +14,7 @@ def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
             differ more than by {}".format(
             index, input, ref, delta
         )
+
 
 class BaseTest(unittest.TestCase):
     """

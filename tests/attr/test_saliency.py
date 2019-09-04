@@ -31,12 +31,7 @@ def _get_multiargs_basic_config():
     return model, inputs, grads, additional_forward_args
 
 
-<<<<<<< HEAD
-# TODO add more unit tests when the input is a tuple
 class Test(BaseTest):
-=======
-class Test(unittest.TestCase):
->>>>>>> f1f2e91bc8faf16b0586a802b03b2f0540136016
     def test_saliency_test_basic_vanilla(self):
         self._saliency_base_assert(*_get_basic_config())
 
