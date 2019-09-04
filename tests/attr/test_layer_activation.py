@@ -5,9 +5,8 @@ import unittest
 import torch
 from captum.attr._core.layer_activation import LayerActivation
 
-from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_MultiLayer
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

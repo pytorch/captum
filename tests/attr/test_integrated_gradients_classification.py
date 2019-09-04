@@ -6,7 +6,7 @@ import unittest
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
-from .helpers.base_test import BaseTest
+from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
 
 

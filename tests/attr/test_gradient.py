@@ -7,8 +7,7 @@ from captum.attr._utils.gradient import (
     compute_layer_gradients_and_eval,
 )
 
-from .helpers.base_test import BaseTest
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,

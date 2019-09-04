@@ -5,7 +5,7 @@ import torch
 
 from captum.attr._core.deep_lift import DeepLift
 
-from .helpers.base_test import BaseTest
+from .helpers.utils import BaseTest
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
