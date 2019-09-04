@@ -5,7 +5,7 @@ import unittest
 import torch
 from captum.attr._core.internal_influence import InternalInfluence
 
-from .helpers.basic_models import TestModel_MultiLayer
+from .helpers.basic_models import TestModel_MultiLayer, TestModel_MultiLayer_MultiInput
 from .helpers.utils import assertArraysAlmostEqual
 
 
@@ -13,31 +13,70 @@ class Test(unittest.TestCase):
     def test_simple_input_internal_inf(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_helper(net, net.linear0, inp, [[3.9, 3.9, 3.9]])
+        self._internal_influence_test_assert(net, net.linear0, inp, [[3.9, 3.9, 3.9]])
 
     def test_simple_linear_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_helper(
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._internal_influence_test_assert(
             net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
         )
 
     def test_simple_relu_internal_inf(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_helper(net, net.relu, inp, [[1.0, 1.0, 1.0, 1.0]])
+        self._internal_influence_test_assert(net, net.relu, inp, [[1.0, 1.0, 1.0, 1.0]])
 
     def test_simple_output_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_helper(net, net.linear2, inp, [[1.0, 0.0]])
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._internal_influence_test_assert(net, net.linear2, inp, [[1.0, 0.0]])
 
     def test_simple_with_baseline_internal_inf(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 80.0, 0.0]], requires_grad=True)
-        base = torch.tensor([[0.0, -20.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_helper(
+        inp = torch.tensor([[0.0, 80.0, 0.0]])
+        base = torch.tensor([[0.0, -20.0, 0.0]])
+        self._internal_influence_test_assert(
             net, net.linear1, inp, [[0.7, 0.8, 0.8, 0.8]], base
+        )
+
+    def test_simple_multi_input_linear2_internal_inf(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 5.0, 0.0]])
+        self._internal_influence_test_assert(
+            net,
+            net.model.linear2,
+            (inp1, inp2, inp3),
+            [[1.0, 0.0]],
+            additional_args=(4,),
+        )
+
+    def test_simple_multi_input_relu_internal_inf(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0]])
+        self._internal_influence_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            [[1.0, 1.0, 1.0, 1.0]],
+            additional_args=(inp3, 5),
+        )
+
+    def test_simple_multi_input_batch_relu_internal_inf(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._internal_influence_test_assert(
+            net,
+            net.model.linear1,
+            (inp1, inp2),
+            [[0.95, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]],
+            additional_args=(inp3, 5),
         )
 
     def test_multiple_linear_internal_inf(self):
@@ -51,7 +90,7 @@ class Test(unittest.TestCase):
             ],
             requires_grad=True,
         )
-        self._internal_influence_test_helper(
+        self._internal_influence_test_assert(
             net,
             net.linear1,
             inp,
@@ -69,12 +108,18 @@ class Test(unittest.TestCase):
         base = torch.tensor(
             [[0.0, -20.0, 0.0], [-20.0, -20.0, 0.0]], requires_grad=True
         )
-        self._internal_influence_test_helper(
+        self._internal_influence_test_assert(
             net, net.linear1, inp, [[0.7, 0.8, 0.8, 0.8], [0.5, 0.6, 0.6, 0.6]], base
         )
 
-    def _internal_influence_test_helper(
-        self, model, target_layer, test_input, expected_activation, baseline=None
+    def _internal_influence_test_assert(
+        self,
+        model,
+        target_layer,
+        test_input,
+        expected_activation,
+        baseline=None,
+        additional_args=None,
     ):
         int_inf = InternalInfluence(model, target_layer)
         attributions = int_inf.attribute(
@@ -83,8 +128,9 @@ class Test(unittest.TestCase):
             target=0,
             n_steps=500,
             method="riemann_trapezoid",
+            additional_forward_args=additional_args,
         )
-        for i in range(test_input.shape[0]):
+        for i in range(len(expected_activation)):
             assertArraysAlmostEqual(
                 attributions[i : i + 1].squeeze(0).tolist(),
                 expected_activation[i],

@@ -2,8 +2,9 @@
 
 import torch
 
-from .._utils.common import _format_attributions
+from .._utils.common import _format_attributions, format_input
 from .._utils.attribution import GradientBasedAttribution
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class Saliency(GradientBasedAttribution):
@@ -80,7 +81,10 @@ class Saliency(GradientBasedAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        # No need to format inputs and additional_forward_args here.
+        inputs = format_input(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
+
+        # No need to format additional_forward_args here.
         # They are being formated in the `_run_forward` function in `common.py`
         gradients = self.gradient_func(
             self.forward_func, inputs, target, additional_forward_args
@@ -89,5 +93,5 @@ class Saliency(GradientBasedAttribution):
             attributions = tuple(torch.abs(gradient) for gradient in gradients)
         else:
             attributions = gradients
-
+        undo_gradient_requirements(inputs, gradient_mask)
         return _format_attributions(is_inputs_tuple, attributions)

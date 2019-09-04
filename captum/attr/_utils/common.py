@@ -73,6 +73,12 @@ def format_baseline(baselines, inputs):
     return baselines
 
 
+def _format_input_baseline(inputs, baselines):
+    inputs = format_input(inputs)
+    baselines = format_baseline(baselines, inputs)
+    return inputs, baselines
+
+
 def _format_attributions(is_inputs_tuple, attributions):
     r"""
     In case input is a tensor and the attributions is returned in form of a
@@ -162,7 +168,7 @@ def _expand_additional_forward_args(
     )
 
 
-def _forward_layer_eval(forward_func, inputs, layer):
+def _forward_layer_eval(forward_func, inputs, layer, additional_forward_args=None):
     saved_layer_output = None
 
     # Set a forward hook on specified module and run forward pass to
@@ -172,7 +178,7 @@ def _forward_layer_eval(forward_func, inputs, layer):
         saved_layer_output = out
 
     hook = layer.register_forward_hook(forward_hook)
-    forward_func(inputs)
+    _run_forward(forward_func, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
     return saved_layer_output
 

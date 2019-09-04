@@ -14,7 +14,7 @@ class LayerActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer)
 
-    def attribute(self, inputs):
+    def attribute(self, inputs, additional_forward_args=None):
         r"""
             Computes activation of selected layer for given input.
 
@@ -27,4 +27,6 @@ class LayerActivation(LayerAttribution):
 
                 attributions: Activation of each neuron in output of given layer
         """
-        return _forward_layer_eval(self.forward_func, inputs, self.layer)
+        return _forward_layer_eval(
+            self.forward_func, inputs, self.layer, additional_forward_args
+        )
