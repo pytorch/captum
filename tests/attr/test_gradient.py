@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import torch
-import unittest
 
 from captum.attr._utils.gradient import (
     compute_gradients,
@@ -10,7 +9,7 @@ from captum.attr._utils.gradient import (
     undo_gradient_requirements,
 )
 
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,
@@ -18,7 +17,7 @@ from .helpers.basic_models import (
 )
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_apply_gradient_reqs(self):
         initial_grads = [False, True, False]
         test_tensor = torch.tensor([[6.0]], requires_grad=True)

@@ -6,10 +6,11 @@ import unittest
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
+from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_sigmoid_classification_vanilla(self):
         self._assert_sigmoid_classification("vanilla")
 

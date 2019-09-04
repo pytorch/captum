@@ -13,13 +13,13 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     TestModel_MultiLayer,
 )
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 import unittest
 import torch
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_multivariable_vanilla(self):
         self._assert_multi_variable("vanilla")
 

@@ -1,17 +1,16 @@
 from __future__ import print_function
 
-import unittest
 import torch
 
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
-from .helpers.utils import assertArraysAlmostEqual
 from .helpers.classification_models import SoftmaxModel
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_input_x_gradient_test_basic_vanilla(self):
         self._input_x_gradient_base_assert(*_get_basic_config())
 

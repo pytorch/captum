@@ -7,16 +7,15 @@ from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._utils.common import _forward_layer_eval, _extend_index_list
 
-
 from .helpers.basic_models import (
     TestModel_ConvNet,
     TestModel_MultiLayer,
     TestModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_gradient_input_linear2(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)

@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import unittest
 import torch
 
 from captum.attr._core.saliency import Saliency
@@ -9,7 +8,7 @@ from captum.attr._utils.gradient import compute_gradients
 
 from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 def _get_basic_config():
@@ -32,7 +31,7 @@ def _get_multiargs_basic_config():
     return model, inputs, grads, additional_forward_args
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_saliency_test_basic_vanilla(self):
         self._saliency_base_assert(*_get_basic_config())
 
