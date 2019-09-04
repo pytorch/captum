@@ -5,7 +5,11 @@ import unittest
 import torch
 from captum.attr._core.layer_conductance import LayerConductance
 
-from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
+from .helpers.basic_models import (
+    TestModel_ConvNet,
+    TestModel_MultiLayer,
+    TestModel_MultiLayer_MultiInput,
+)
 from .helpers.conductance_reference import ConductanceReference
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
@@ -13,69 +17,112 @@ from .helpers.utils import assertArraysAlmostEqual, BaseTest
 class Test(BaseTest):
     def test_simple_input_conductance(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._conductance_test_helper(net, net.linear0, inp, [0.0, 390.0, 0.0])
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
 
     def test_simple_linear_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._conductance_test_helper(
-            net, net.linear1, inp, [90.0, 100.0, 100.0, 100.0]
+        self._conductance_test_assert(
+            net, net.linear1, inp, [[90.0, 100.0, 100.0, 100.0]]
         )
 
     def test_simple_relu_conductance(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._conductance_test_helper(net, net.relu, inp, [90.0, 100.0, 100.0, 100.0])
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._conductance_test_assert(net, net.relu, inp, [[90.0, 100.0, 100.0, 100.0]])
 
     def test_simple_output_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._conductance_test_helper(net, net.linear2, inp, [390.0, 0.0])
+        self._conductance_test_assert(net, net.linear2, inp, [[390.0, 0.0]])
+
+    def test_simple_multi_input_linear2_conductance(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 5.0, 0.0]])
+        self._conductance_test_assert(
+            net, net.model.linear2, (inp1, inp2, inp3), [[390.0, 0.0]], (4,)
+        )
+
+    def test_simple_multi_input_relu_conductance(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0]])
+        self._conductance_test_assert(
+            net, net.model.relu, (inp1, inp2), [[90.0, 100.0, 100.0, 100.0]], (inp3, 5)
+        )
+
+    def test_simple_multi_input_relu_conductance_batch(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
+        inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 5.0]])
+        self._conductance_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            [[90.0, 100.0, 100.0, 100.0], [100.0, 100.0, 100.0, 100.0]],
+            (inp3, 5),
+        )
 
     def test_matching_conv1_conductance(self):
         net = TestModel_ConvNet()
         inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.conv1, inp)
+        self._conductance_reference_test_assert(net, net.conv1, inp)
 
     def test_matching_pool1_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.pool1, inp)
+        inp = 100 * torch.randn(1, 1, 10, 10)
+        self._conductance_reference_test_assert(net, net.pool1, inp)
 
     def test_matching_conv2_conductance(self):
         net = TestModel_ConvNet()
         inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.conv2, inp)
+        self._conductance_reference_test_assert(net, net.conv2, inp)
 
     def test_matching_pool2_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(1, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.pool2, inp)
+        inp = 100 * torch.randn(1, 1, 10, 10)
+        self._conductance_reference_test_assert(net, net.pool2, inp)
 
     def test_matching_conv_multi_input_conductance(self):
         net = TestModel_ConvNet()
         inp = 100 * torch.randn(4, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.relu3, inp)
+        self._conductance_reference_test_assert(net, net.relu3, inp)
 
     def test_matching_conv_with_baseline_conductance(self):
         net = TestModel_ConvNet()
-        inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
+        inp = 100 * torch.randn(3, 1, 10, 10)
         baseline = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_helper(net, net.fc1, inp, baseline)
+        self._conductance_reference_test_assert(net, net.fc1, inp, baseline)
 
-    def _conductance_test_helper(
-        self, model, target_layer, test_input, expected_conductance
+    def _conductance_test_assert(
+        self,
+        model,
+        target_layer,
+        test_input,
+        expected_conductance,
+        additional_args=None,
     ):
         cond = LayerConductance(model, target_layer)
         attributions = cond.attribute(
-            test_input, target=0, n_steps=500, method="gausslegendre"
+            test_input,
+            target=0,
+            n_steps=500,
+            method="gausslegendre",
+            additional_forward_args=additional_args,
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_conductance, delta=0.1
-        )
+        for i in range(len(expected_conductance)):
+            assertArraysAlmostEqual(
+                attributions[i : i + 1].squeeze(0).tolist(),
+                expected_conductance[i],
+                delta=0.1,
+            )
 
-    def _conductance_reference_test_helper(
+    def _conductance_reference_test_assert(
         self, model, target_layer, test_input, test_baseline=None
     ):
         layer_output = None

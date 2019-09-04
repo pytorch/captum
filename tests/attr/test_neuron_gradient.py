@@ -7,7 +7,11 @@ from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._utils.common import _forward_layer_eval, _extend_index_list
 
-from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
+from .helpers.basic_models import (
+    TestModel_ConvNet,
+    TestModel_MultiLayer,
+    TestModel_MultiLayer_MultiInput,
+)
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
@@ -19,7 +23,7 @@ class Test(BaseTest):
 
     def test_simple_gradient_input_linear1(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
 
     def test_simple_gradient_input_relu(self):
@@ -29,8 +33,36 @@ class Test(BaseTest):
 
     def test_simple_gradient_input_relu2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
+
+    def test_simple_gradient_multi_input_linear2(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 100.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 0.0]])
+        self._gradient_input_test_assert(
+            net,
+            net.model.linear2,
+            (inp1, inp2, inp3),
+            (0,),
+            ([12.0, 12.0, 12.0], [12.0, 12.0, 12.0], [12.0, 12.0, 12.0]),
+            (3,),
+        )
+
+    def test_simple_gradient_multi_input_linear1(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 100.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 0.0]])
+        self._gradient_input_test_assert(
+            net,
+            net.model.linear1,
+            (inp1, inp2),
+            (0,),
+            ([5.0, 5.0, 5.0], [5.0, 5.0, 5.0]),
+            (inp3, 5),
+        )
 
     def test_matching_output_gradient(self):
         net = TestModel_ConvNet()
@@ -39,17 +71,33 @@ class Test(BaseTest):
 
     def test_matching_intermediate_gradient(self):
         net = TestModel_ConvNet()
-        inp = torch.randn(3, 1, 10, 10, requires_grad=True)
+        inp = torch.randn(3, 1, 10, 10)
         self._gradient_matching_test_assert(net, net.relu2, inp)
 
     def _gradient_input_test_assert(
-        self, model, target_layer, test_input, test_neuron, expected_input_gradient
+        self,
+        model,
+        target_layer,
+        test_input,
+        test_neuron,
+        expected_input_gradient,
+        additional_input=None,
     ):
         grad = NeuronGradient(model, target_layer)
-        attributions = grad.attribute(test_input, test_neuron)
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_input_gradient, delta=0.1
+        attributions = grad.attribute(
+            test_input, test_neuron, additional_forward_args=additional_input
         )
+        if isinstance(expected_input_gradient, tuple):
+            for i in range(len(expected_input_gradient)):
+                assertArraysAlmostEqual(
+                    attributions[i].squeeze(0).tolist(),
+                    expected_input_gradient[i],
+                    delta=0.1,
+                )
+        else:
+            assertArraysAlmostEqual(
+                attributions.squeeze(0).tolist(), expected_input_gradient, delta=0.1
+            )
 
     def _gradient_matching_test_assert(self, model, output_layer, test_input):
         out = _forward_layer_eval(model, test_input, output_layer)

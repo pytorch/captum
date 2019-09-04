@@ -2,7 +2,13 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import LayerAttribution
-from .._utils.common import _reshape_and_sum
+from .._utils.common import (
+    _reshape_and_sum,
+    _format_input_baseline,
+    _format_additional_forward_args,
+    _expand_additional_forward_args,
+    validate_input,
+)
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -22,7 +28,8 @@ class LayerConductance(LayerAttribution):
         inputs,
         baselines=None,
         target=None,
-        n_steps=500,
+        additional_forward_args=None,
+        n_steps=50,
         method="riemann_trapezoid",
     ):
         r"""
@@ -50,24 +57,45 @@ class LayerConductance(LayerAttribution):
                 attributions: Total conductance with respect to each neuron in
                               output of given layer
         """
-        if baselines is None:
-            baselines = 0
+        inputs, baselines = _format_input_baseline(inputs, baselines)
+        validate_input(inputs, baselines, n_steps, method)
 
-        num_examples = inputs.shape[0]
+        num_examples = inputs[0].shape[0]
 
         # Retrieve scaling factors for specified approximation method
         step_sizes_func, alphas_func = approximation_parameters(method)
         alphas = alphas_func(n_steps + 1)
 
         # Compute scaled inputs from baseline to final input.
-        scaled_features = torch.cat(
-            [baselines + alpha * (inputs - baselines) for alpha in alphas], dim=0
+        scaled_features_tpl = tuple(
+            torch.cat(
+                [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
+            ).requires_grad_()
+            for input, baseline in zip(inputs, baselines)
+        )
+
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        # apply number of steps to additional forward args
+        # currently, number of steps is applied only to additional forward arguemnts
+        # that are nd-tensors. It is assumed that the first dimension is
+        # the number of batches.
+        # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
+        input_additional_args = (
+            _expand_additional_forward_args(additional_forward_args, n_steps + 1)
+            if additional_forward_args is not None
+            else None
         )
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func, self.layer, scaled_features, target
+            self.forward_func,
+            self.layer,
+            scaled_features_tpl,
+            target,
+            input_additional_args,
         )
         # Compute differences between consecutive evaluations of layer_eval.
         # This approximates the total input gradient of each step multiplied
