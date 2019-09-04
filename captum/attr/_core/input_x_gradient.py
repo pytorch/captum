@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from .._utils.common import format_input, _format_attributions
 from .._utils.attribution import GradientBasedAttribution
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class InputXGradient(GradientBasedAttribution):
@@ -71,6 +72,7 @@ class InputXGradient(GradientBasedAttribution):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
 
         gradients = self.gradient_func(
             self.forward_func, inputs, target, additional_forward_args
@@ -79,4 +81,5 @@ class InputXGradient(GradientBasedAttribution):
         attributions = tuple(
             input * gradient for input, gradient in zip(inputs, gradients)
         )
+        undo_gradient_requirements(inputs, gradient_mask)
         return _format_attributions(is_inputs_tuple, attributions)

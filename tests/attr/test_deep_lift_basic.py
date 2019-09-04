@@ -26,7 +26,7 @@ class Test(BaseTest):
         self._deeplift_helper(model, inputs, baselines, expected)
 
     def test_relu_deeplift_multi_ref(self):
-        x1 = torch.tensor([[1.0]], requires_grad=True)
+        x1 = torch.tensor([[1.0]])
         x2 = torch.tensor([[2.0]], requires_grad=True)
 
         b1 = torch.tensor([[0.0], [0.5], [0.0], [0.5]], requires_grad=True)
