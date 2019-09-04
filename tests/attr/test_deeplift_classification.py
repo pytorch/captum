@@ -1,15 +1,15 @@
 from __future__ import print_function
 
 import torch
-import unittest
 
 from captum.attr._core.deep_lift import DeepLift
 
+from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_sigmoid_classification(self):
         num_in = 20
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)

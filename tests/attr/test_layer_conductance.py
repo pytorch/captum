@@ -11,10 +11,10 @@ from .helpers.basic_models import (
     TestModel_MultiLayer_MultiInput,
 )
 from .helpers.conductance_reference import ConductanceReference
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_input_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])

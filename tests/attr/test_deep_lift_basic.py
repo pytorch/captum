@@ -1,16 +1,16 @@
 from __future__ import print_function
 
 import torch
-import unittest
 
 
 from captum.attr._core.deep_lift import DeepLift
 
+from .helpers.utils import BaseTest
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_relu_deeplift(self):
         x1 = torch.tensor([1.0], requires_grad=True)
         x2 = torch.tensor([2.0], requires_grad=True)

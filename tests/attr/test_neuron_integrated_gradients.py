@@ -11,10 +11,10 @@ from .helpers.basic_models import (
     TestModel_MultiLayer,
     TestModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
-class Test(unittest.TestCase):
+class Test(BaseTest):
     def test_simple_ig_input_linear2(self):
         net = TestModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
