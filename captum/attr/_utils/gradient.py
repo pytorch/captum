@@ -21,12 +21,16 @@ def apply_gradient_requirements(inputs):
         grad_required.append(input.requires_grad)
         if not input.requires_grad:
             warnings.warn(
-                """Input Tensor %d did not already require gradients,
-            required_grads has been set automatically."""
-                % index
+                "Input Tensor %d did not already require gradients, "
+                "required_grads has been set automatically." % index
             )
             input.requires_grad_()
         if input.grad is not None:
+            if torch.sum(torch.abs(input.grad)).item() > 1e-7:
+                warnings.warn(
+                    "Input Tensor %d had a non-zero gradient tensor, "
+                    "which is being reset to 0." % index
+                )
             input.grad.zero_()
     return grad_required
 
