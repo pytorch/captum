@@ -4,7 +4,6 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _run_forward
 
-from .helpers.base_test import BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel2,
@@ -14,7 +13,7 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     TestModel_MultiLayer,
 )
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 import unittest
 import torch

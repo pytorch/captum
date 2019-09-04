@@ -6,7 +6,7 @@ from captum.attr._utils.common import validate_input, validate_noise_tunnel_type
 from captum.attr._utils.common import Stat, MaxList
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 
-from .helpers.base_test import BaseTest
+from .helpers.utils import BaseTest
 
 
 class Test(BaseTest):

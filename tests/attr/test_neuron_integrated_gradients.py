@@ -6,9 +6,8 @@ import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
 
-from .helpers.base_test import BaseTest
 from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
-from .helpers.utils import assertArraysAlmostEqual
+from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
