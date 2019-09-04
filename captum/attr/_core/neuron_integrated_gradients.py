@@ -18,7 +18,13 @@ class NeuronIntegratedGradients(NeuronAttribution):
         super().__init__(forward_func, layer)
 
     def attribute(
-        self, inputs, neuron_index, baselines=None, n_steps=50, method="gausslegendre"
+        self,
+        inputs,
+        neuron_index,
+        baselines=None,
+        additional_forward_args=None,
+        n_steps=50,
+        method="gausslegendre",
     ):
         r"""
             Computes integrated gradients for a particular neuron in the given
@@ -50,12 +56,17 @@ class NeuronIntegratedGradients(NeuronAttribution):
                               that of the input.
         """
 
-        def forward_fn(helper_inputs):
-            layer_output = _forward_layer_eval(
-                self.forward_func, helper_inputs, self.layer
-            )
-            indices = _extend_index_list(helper_inputs.shape[0], neuron_index)
+        def forward_fn(*args):
+            layer_output = _forward_layer_eval(self.forward_func, args, self.layer)
+            indices = _extend_index_list(args[0].shape[0], neuron_index)
             return torch.stack(tuple(layer_output[i] for i in indices))
 
         ig = IntegratedGradients(forward_fn)
-        return ig.attribute(inputs, baselines, n_steps=n_steps, method=method)[0]
+        # Return only attributions and not delta
+        return ig.attribute(
+            inputs,
+            baselines,
+            additional_forward_args=additional_forward_args,
+            n_steps=n_steps,
+            method=method,
+        )[0]

@@ -6,14 +6,18 @@ import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
 
-from .helpers.basic_models import TestModel_ConvNet, TestModel_MultiLayer
+from .helpers.basic_models import (
+    TestModel_ConvNet,
+    TestModel_MultiLayer,
+    TestModel_MultiLayer_MultiInput,
+)
 from .helpers.utils import assertArraysAlmostEqual
 
 
 class Test(unittest.TestCase):
     def test_simple_ig_input_linear2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._ig_input_test_assert(net, net.linear2, inp, 0, [0.0, 390.0, 0.0])
 
     def test_simple_ig_input_linear1(self):
@@ -28,8 +32,50 @@ class Test(unittest.TestCase):
 
     def test_simple_ig_input_relu2(self):
         net = TestModel_MultiLayer()
-        inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
+
+    def test_simple_ig_multi_input_linear2(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 10.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 5.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.linear2,
+            (inp1, inp2, inp3),
+            (0,),
+            ([[0.0, 156.0, 0.0]], [[0.0, 156.0, 0.0]], [[0.0, 78.0, 0.0]]),
+            (4,),
+        )
+
+    def test_simple_ig_multi_input_relu(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            (0,),
+            ([[0.0, 1.5, 3.5]], [[0.0, 1.5, 3.5]]),
+            (inp3, 0.5),
+        )
+
+    def test_simple_ig_multi_input_relu_batch(self):
+        net = TestModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            (0,),
+            ([[0.0, 1.5, 3.5], [0.0, 40.0, 0.0]], [[0.0, 1.5, 3.5], [0.0, 10.0, 0.0]]),
+            (inp3, 0.5),
+        )
 
     def test_matching_output_gradient(self):
         net = TestModel_ConvNet()
@@ -38,15 +84,34 @@ class Test(unittest.TestCase):
         self._ig_matching_test_assert(net, net.softmax, inp, baseline)
 
     def _ig_input_test_assert(
-        self, model, target_layer, test_input, test_neuron, expected_input_ig
+        self,
+        model,
+        target_layer,
+        test_input,
+        test_neuron,
+        expected_input_ig,
+        additional_input=None,
     ):
         grad = NeuronIntegratedGradients(model, target_layer)
         attributions = grad.attribute(
-            test_input, test_neuron, n_steps=500, method="gausslegendre"
+            test_input,
+            test_neuron,
+            n_steps=500,
+            method="gausslegendre",
+            additional_forward_args=additional_input,
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1
-        )
+        if isinstance(expected_input_ig, tuple):
+            for i in range(len(expected_input_ig)):
+                for j in range(attributions[i].shape[0]):
+                    assertArraysAlmostEqual(
+                        attributions[i][j].squeeze(0).tolist(),
+                        expected_input_ig[i][j],
+                        delta=0.1,
+                    )
+        else:
+            assertArraysAlmostEqual(
+                attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1
+            )
 
     def _ig_matching_test_assert(self, model, output_layer, test_input, baseline=None):
         out = model(test_input)
