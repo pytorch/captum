@@ -108,19 +108,21 @@ class Test(BaseTest):
         additional_args=None,
     ):
         cond = LayerConductance(model, target_layer)
-        attributions = cond.attribute(
-            test_input,
-            target=0,
-            n_steps=500,
-            method="gausslegendre",
-            additional_forward_args=additional_args,
-        )
-        for i in range(len(expected_conductance)):
-            assertArraysAlmostEqual(
-                attributions[i : i + 1].squeeze(0).tolist(),
-                expected_conductance[i],
-                delta=0.1,
+        for batch_size in (None, 1, 20):
+            attributions = cond.attribute(
+                test_input,
+                target=0,
+                n_steps=500,
+                method="gausslegendre",
+                additional_forward_args=additional_args,
+                batch_size=batch_size,
             )
+            for i in range(len(expected_conductance)):
+                assertArraysAlmostEqual(
+                    attributions[i : i + 1].squeeze(0).tolist(),
+                    expected_conductance[i],
+                    delta=0.1,
+                )
 
     def _conductance_reference_test_assert(
         self, model, target_layer, test_input, test_baseline=None

@@ -2,6 +2,7 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import LayerAttribution
+from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
@@ -31,6 +32,7 @@ class LayerConductance(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="riemann_trapezoid",
+        batch_size=50,
     ):
         r"""
             Computes conductance using gradients along the path, applying
@@ -90,13 +92,16 @@ class LayerConductance(LayerAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func,
-            self.layer,
+        layer_gradients, layer_eval = _batched_operator(
+            compute_layer_gradients_and_eval,
             scaled_features_tpl,
-            target,
             input_additional_args,
+            batch_size=batch_size,
+            forward_fn=self.forward_func,
+            layer=self.layer,
+            target_ind=target,
         )
+
         # Compute differences between consecutive evaluations of layer_eval.
         # This approximates the total input gradient of each step multiplied
         # by the step size.
