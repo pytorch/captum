@@ -175,35 +175,35 @@ candidate  # tensor([0.4887, 0.5063])
     );
 
     const Features = () => (
-      <div className="productShowcaseSection" style={{textAlign: 'center'}}>
-        <h2>Key Features</h2>
-        <Block layout="threeColumn">
-          {[
-            {
-              content:
-                'Plug in new models, acquisition functions, and optimizers.',
-              image: `${baseUrl}img/puzzle_pieces.svg`,
-              imageAlign: 'top',
-              title: 'Modular',
-            },
-            {
-              content:
-                'Easily integrate neural network modules. Native GPU & autograd support.',
-              image: `${baseUrl}img/pytorch_logo.svg`,
-              imageAlign: 'top',
-              title: 'Built on PyTorch',
-            },
-            {
-              content:
-                'Support for scalable GPs via GPyTorch. Run code on multiple devices.',
-              image: `${baseUrl}img/expanding_arrows.svg`,
-              imageAlign: 'top',
-              title: 'Scalable',
-            },
-          ]}
-        </Block>
-      </div>
-    );
+    <div className="productShowcaseSection" style={{textAlign: 'center'}}>
+      <h2>Key Features</h2>
+      <Block layout="threeColumn">
+        {[
+          {
+            content:
+              'Simple, yet powerful attribution methods like Integrated Gradients for improved model understanding.',
+            image: `${baseUrl}img/puzzle_pieces.svg`,
+            imageAlign: 'top',
+            title: 'State-of-the-art Algorithms',
+          },
+          {
+            content:
+              'Supports most types of PyTorch models and can be used with minimal modification to the original neural network.',
+            image: `${baseUrl}img/pytorch_logo.svg`,
+            imageAlign: 'top',
+            title: 'Built on PyTorch',
+          },
+          {
+            content:
+              'Open source, generic framework for interpretability research. Easily implement and benchmark new algorithms. ',
+            image: `${baseUrl}img/expanding_arrows.svg`,
+            imageAlign: 'top',
+            title: 'Extensible',
+          },
+        ]}
+      </Block>
+    </div>
+  );
 
     const Showcase = () => {
       if ((siteConfig.users || []).length === 0) {
