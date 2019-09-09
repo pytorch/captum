@@ -1,13 +1,13 @@
 from collections import namedtuple
-from typing import Any, List
+from typing import Any, List, Union
 
 from captum.attr import IntegratedGradients
 
 import torch
 from features import BaseFeature
-from serve import start_server
+from server import start_server
 
-ModelScore = namedtuple("ModelScore", "score label")
+PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
     "VisualizationOutput", "feature_outputs actual predicted"
 )
@@ -17,11 +17,12 @@ Contribution = namedtuple("Contribution", "name percent")
 class AttributionVisualizer(object):
     def __init__(
         self,
-        models: Any,
+        models: Union[List[torch.nn.Module], torch.nn.Module],
         classes: List[str],
         features: List[BaseFeature],
         dataset: Any,
         batch_size: int = 10,
+        use_softmax: bool = True,
     ):
         self.classes = classes
         self.features = features
@@ -33,6 +34,7 @@ class AttributionVisualizer(object):
                 self.dataset, batch_size=batch_size, shuffle=False, num_workers=2
             )
         )
+        self.use_softmax = use_softmax
 
     def _calculate_attribution(self, net, data, label):
         input = data.unsqueeze(0)
@@ -47,7 +49,7 @@ class AttributionVisualizer(object):
         port = start_server(self)
         from IPython.display import IFrame, display
 
-        display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="400px"))
+        display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
     def _get_labels_from_scores(self, scores, indices):
         model_scores = []
@@ -55,7 +57,7 @@ class AttributionVisualizer(object):
             score = scores[i].item()
             if score > 0.0001:
                 model_scores.append(
-                    ModelScore(scores[i].item(), self.classes[indices[i]])
+                    PredictionScore(scores[i].item(), self.classes[indices[i]])
                 )
         return model_scores
 
@@ -68,6 +70,7 @@ class AttributionVisualizer(object):
             torch.nn.functional.softmax(outputs, 1).cpu().detach().topk(4)
         )
         outputs = []
+
         for i in range(self.batch_size):
             datum, label = data[i], labels[i]
 

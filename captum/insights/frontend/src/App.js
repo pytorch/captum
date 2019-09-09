@@ -11,9 +11,9 @@ function cx(obj) {
 class Header extends React.Component {
   render() {
     return (
-      <div className="header">
+      <header className="header">
         <div className="header__name">Captum Insights</div>
-        <div className="header__nav">
+        <nav className="header__nav">
           <ul>
             <li className="header__nav__item header__nav__item--active">
               Instance Attribution
@@ -21,13 +21,13 @@ class Header extends React.Component {
             <li className="header__nav__item">Direct Target</li>
             <li className="header__nav__item">Export</li>
           </ul>
-        </div>
-      </div>
+        </nav>
+      </header>
     );
   }
 }
 
-class Filter extends React.Component {
+class FilterContainer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -45,16 +45,22 @@ class Filter extends React.Component {
     });
   };
 
-  handleSubmit = event => {
-    fetch("/fetch", { method: "POST", body: JSON.stringify(this.state) })
-      .then(response => response.json())
-      .then(response => this.props.setData(response));
-    event.preventDefault();
-  };
-
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
+      <Filter
+        instanceType={this.state.instance_type}
+        approximationSteps={this.state.approximation_steps}
+        onHandleInputChange={this.handleInputChange}
+        handleSubmit={this.props.fetchData}
+      />
+    );
+  }
+}
+
+class Filter extends React.Component {
+  render() {
+    return (
+      <form onSubmit={this.props.handleSubmit}>
         <div className="filter-panel">
           <div className="filter-panel__column">
             <div className="filter-panel__column__title">Filter by Classes</div>
@@ -71,8 +77,8 @@ class Filter extends React.Component {
               <select
                 className="select"
                 name="instance_type"
-                value={this.state.instance_type}
-                onChange={this.handleInputChange}
+                value={this.props.isntanceType}
+                onChange={this.props.handleInputChange}
               >
                 <option value="all">All</option>
                 <option value="false_negative">False Negative</option>
@@ -90,8 +96,8 @@ class Filter extends React.Component {
                 className="input"
                 name="approximation_steps"
                 type="number"
-                value={this.state.approximation_steps}
-                onChange={this.handleInputChange}
+                value={this.props.approximationSteps}
+                onChange={this.props.handleInputChange}
               />
             </div>
           </div>
@@ -174,14 +180,15 @@ class Contributions extends React.Component {
 
 class Visualization extends React.Component {
   render() {
-    const v = this.props.data;
-    const features = v.feature_outputs.map(f => get_feature(f));
+    const data = this.props.data;
+    const features = data.feature_outputs.map(f => get_feature(f));
+
     return (
       <div className="panel panel--long">
         <div className="panel__column">
           <div className="panel__column__title">Predicted</div>
           <div className="panel__column__body">
-            {v.predicted.map((p, i) => (
+            {data.predicted.map((p, i) => (
               <div className="row row--padding">
                 <div
                   className={cx({
@@ -247,13 +254,18 @@ class App extends React.Component {
     };
   }
 
-  setData = data => this.setState({ data: data });
+  fetchData = event => {
+    fetch("/fetch", { method: "POST", body: JSON.stringify(this.state) })
+      .then(response => response.json())
+      .then(response => this.props.setData(response));
+    event.preventDefault();
+  };
 
   render() {
     return (
       <div className="app">
         <Header />
-        <Filter setData={this.setData} />
+        <FilterContainer fetchData={this.fetchData} />
         <Visualizations data={this.state.data} />
       </div>
     );

@@ -44,7 +44,7 @@ def get_free_tcp_port():
     return port
 
 
-def start_server(_viz, port: Optional[int] = None, debug=False):
+def start_server(_viz, port: Optional[int] = None, debug=True):
     global visualizer
     visualizer = _viz
     if port is None:
