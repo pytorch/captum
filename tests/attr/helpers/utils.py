@@ -29,3 +29,16 @@ class BaseTest(unittest.TestCase):
         torch.manual_seed(1234)
         torch.cuda.manual_seed_all(1234)
         torch.backends.cudnn.deterministic = True
+
+
+class BaseGPUTest(BaseTest):
+    """
+    This class provides a basic framework for all Captum tests by providing
+    a set up fixture, which sets a fixed random seed. Since many torch
+    initializations are random, this ensures that tests run deterministically.
+    """
+
+    def setUp(self):
+        super().setUp()
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest("Skipping GPU test since CUDA not available.")

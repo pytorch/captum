@@ -33,6 +33,7 @@ class LayerConductance(LayerAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         batch_size=50,
+        device_ids=None,
     ):
         r"""
             Computes conductance using gradients along the path, applying
@@ -100,6 +101,7 @@ class LayerConductance(LayerAttribution):
             forward_fn=self.forward_func,
             layer=self.layer,
             target_ind=target,
+            device_ids=device_ids,
         )
 
         # Compute differences between consecutive evaluations of layer_eval.

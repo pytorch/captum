@@ -36,6 +36,7 @@ class NeuronConductance(NeuronAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         batch_size=None,
+        device_ids=None,
     ):
         r"""
             Computes conductance with respect to particular hidden neurons. The
@@ -112,6 +113,7 @@ class NeuronConductance(NeuronAttribution):
             layer=self.layer,
             target_ind=target,
             gradient_neuron_index=neuron_index,
+            device_ids=device_ids,
         )
 
         # Creates list of target neuron across batched examples (dimension 0)

@@ -24,6 +24,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        device_ids=None,
     ):
         r"""
             Computes integrated gradients for a particular neuron in the given
@@ -57,7 +58,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
 
         def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
             _, grads = _forward_layer_eval(
-                forward_fn, inputs, self.layer, additional_forward_args, neuron_index
+                forward_fn, inputs, self.layer, additional_forward_args, neuron_index, device_ids=device_ids
             )
             return grads
 
