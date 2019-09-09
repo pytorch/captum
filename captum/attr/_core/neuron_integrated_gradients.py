@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import torch
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import _forward_layer_eval, _extend_index_list
+from .._utils.gradient import _forward_layer_eval
 
 from .integrated_gradients import IntegratedGradients
 
@@ -56,12 +55,14 @@ class NeuronIntegratedGradients(NeuronAttribution):
                               that of the input.
         """
 
-        def forward_fn(*args):
-            layer_output = _forward_layer_eval(self.forward_func, args, self.layer)
-            indices = _extend_index_list(args[0].shape[0], neuron_index)
-            return torch.stack(tuple(layer_output[i] for i in indices))
+        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
+            _, grads = _forward_layer_eval(
+                forward_fn, inputs, self.layer, additional_forward_args, neuron_index
+            )
+            return grads
 
-        ig = IntegratedGradients(forward_fn)
+        ig = IntegratedGradients(self.forward_func)
+        ig.gradient_func = grad_fn
         # Return only attributions and not delta
         return ig.attribute(
             inputs,

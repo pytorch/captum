@@ -2,6 +2,7 @@
 import torch
 
 from .._utils.approximation_methods import approximation_parameters
+from .._utils.batching import _batched_operator
 from .._utils.common import (
     validate_input,
     _format_input_baseline,
@@ -32,6 +33,7 @@ class IntegratedGradients(GradientBasedAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        batch_size=None,
     ):
         r"""
             Computes the integral of gradients along the path from a baseline input
@@ -143,10 +145,17 @@ class IntegratedGradients(GradientBasedAttribution):
         )
 
         # grads: dim -> (bsz * #steps x inputs[0].shape[1:], ...)
-        grads = self.gradient_func(
-            self.forward_func, scaled_features_tpl, target, input_additional_args
+        # grads = self.gradient_func(
+        #    self.forward_func, scaled_features_tpl, target, input_additional_args
+        # )
+        grads = _batched_operator(
+            self.gradient_func,
+            scaled_features_tpl,
+            input_additional_args,
+            batch_size=batch_size,
+            forward_fn=self.forward_func,
+            target_ind=target,
         )
-
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems
         scaled_grads = [

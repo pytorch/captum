@@ -315,31 +315,33 @@ class Test(BaseTest):
             "riemann_trapezoid",
             "gausslegendre",
         ]:
-            attributions, delta = ig.attribute(
-                inputs,
-                baselines,
-                additional_forward_args=additional_forward_args,
-                method=method,
-                n_steps=1500,
-                target=target,
-            )
-            total_delta = 0
-            for i in range(inputs[0].shape[0]):
-                attributions_indiv, delta_indiv = ig.attribute(
-                    tuple(input[i : i + 1] for input in inputs),
-                    tuple(baseline[i : i + 1] for baseline in baselines),
+            for batch_size in [None, 1, 20]:
+                attributions, delta = ig.attribute(
+                    inputs,
+                    baselines,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=1500,
+                    n_steps=200,
                     target=target,
+                    batch_size=batch_size,
                 )
-                total_delta += delta_indiv
-                for j in range(len(attributions)):
-                    assertArraysAlmostEqual(
-                        attributions[j][i : i + 1].squeeze(0).tolist(),
-                        attributions_indiv[j].squeeze(0).tolist(),
+                total_delta = 0
+                for i in range(inputs[0].shape[0]):
+                    attributions_indiv, delta_indiv = ig.attribute(
+                        tuple(input[i : i + 1] for input in inputs),
+                        tuple(baseline[i : i + 1] for baseline in baselines),
+                        additional_forward_args=additional_forward_args,
+                        method=method,
+                        n_steps=200,
+                        target=target,
                     )
-            self.assertAlmostEqual(delta, total_delta, delta=0.005)
+                    total_delta += delta_indiv
+                    for j in range(len(attributions)):
+                        assertArraysAlmostEqual(
+                            attributions[j][i : i + 1].squeeze(0).tolist(),
+                            attributions_indiv[j].squeeze(0).tolist(),
+                        )
+                self.assertAlmostEqual(delta, total_delta, delta=0.005)
 
 
 if __name__ == "__main__":

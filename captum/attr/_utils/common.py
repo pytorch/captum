@@ -117,6 +117,14 @@ def _extend_index_list(dim_max, base_index):
     return [(ind,) + base_index for ind in range(dim_max)]
 
 
+def tuple_splice_range(inputs, start, end):
+    if inputs is None:
+        return None
+    return tuple(
+        inp[start:end] if isinstance(inp, torch.Tensor) else inp for inp in inputs
+    )
+
+
 def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     # Used for attribution methods which perform integration
     # Sums across integration steps by reshaping tensor to
@@ -125,6 +133,15 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     return torch.sum(
         tensor_input.reshape((num_steps, num_examples) + layer_size), dim=0
     )
+
+
+def _reduce_list(val_list, red_func=torch.cat):
+    if isinstance(val_list[0], torch.Tensor):
+        return red_func(val_list)
+    final_out = []
+    for i in range(len(val_list[0])):
+        final_out.append(_reduce_list([val_elem[i] for val_elem in val_list], red_func))
+    return tuple(final_out)
 
 
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
@@ -166,21 +183,6 @@ def _expand_additional_forward_args(
         else additional_forward_arg
         for additional_forward_arg in additional_forward_args
     )
-
-
-def _forward_layer_eval(forward_func, inputs, layer, additional_forward_args=None):
-    saved_layer_output = None
-
-    # Set a forward hook on specified module and run forward pass to
-    # get layer output tensor.
-    def forward_hook(module, inp, out):
-        nonlocal saved_layer_output
-        saved_layer_output = out
-
-    hook = layer.register_forward_hook(forward_hook)
-    _run_forward(forward_func, inputs, additional_forward_args=additional_forward_args)
-    hook.remove()
-    return saved_layer_output
 
 
 class MaxList:
