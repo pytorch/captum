@@ -3,7 +3,7 @@ import threading
 import torch
 import warnings
 
-from .common import _run_forward, _reduce_list, _extend_index_list
+from .common import _run_forward, _reduce_list, _extend_index_list, _sort_key_list
 
 
 def apply_gradient_requirements(inputs):
@@ -107,11 +107,12 @@ def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_ind
         return _reduce_list(gradient_tensors, sum)
 
 def _forward_layer_eval(
-    forward_func,
+    forward_fn,
     inputs,
     layer,
     additional_forward_args=None,
     gradient_neuron_index=None,
+    device_ids=None,
 ):
     saved_layer_outputs = {}
     lock = threading.Lock()
@@ -124,14 +125,19 @@ def _forward_layer_eval(
             saved_layer_outputs[out.device] = out
 
     hook = layer.register_forward_hook(forward_hook)
-    _run_forward(forward_func, inputs, additional_forward_args=additional_forward_args)
+    _run_forward(forward_fn, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
 
     if len(saved_layer_outputs) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
-    key_list = list(saved_layer_outputs.keys())
-    key_list.sort(key=lambda x: x.index)
+    if len(saved_layer_outputs) > 1 and device_ids is None:
+        if isinstance(forward_fn, torch.nn.DataParallel) and forward_fn.device_ids is not None:
+            device_ids = forward_fn.device_ids
+        else:
+            raise AssertionError("DataParallel Model Detected, device ID list or DataParallel model must be provided for identifying device batch ordering.")
+
+    key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
     if gradient_neuron_index is not None:
         inp_grads = _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_index)
         return torch.cat([saved_layer_outputs[dev] for dev in key_list]), inp_grads
@@ -146,6 +152,7 @@ def compute_layer_gradients_and_eval(
     target_ind=None,
     additional_forward_args=None,
     gradient_neuron_index=None,
+    device_ids=None,
 ):
     r"""
         Computes gradients of the output with respect to a given layer as well
@@ -193,8 +200,13 @@ def compute_layer_gradients_and_eval(
         if len(saved_layer_outputs) == 0:
             raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
-        key_list = list(saved_layer_outputs.keys())
-        key_list.sort(key=lambda x: x.index)
+        if len(saved_layer_outputs) > 1 and device_ids is None:
+            if isinstance(forward_fn, torch.nn.DataParallel) and forward_fn.device_ids is not None:
+                device_ids = forward_fn.device_ids
+            else:
+                raise AssertionError("DataParallel Model Detected, device ID list or DataParallel model must be provided for identifying device batch ordering.")
+
+        key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
         all_outputs = torch.cat([saved_layer_outputs[dev] for dev in key_list])
         grad_inputs = tuple(saved_layer_outputs[dev] for dev in key_list)
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)

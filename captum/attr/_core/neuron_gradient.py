@@ -23,7 +23,7 @@ class NeuronGradient(NeuronAttribution):
         """
         super().__init__(forward_func, layer)
 
-    def attribute(self, inputs, neuron_index, additional_forward_args=None):
+    def attribute(self, inputs, neuron_index, additional_forward_args=None, device_ids=None):
         r"""
             Computes gradient with respect to input of particular neuron in
             target hidden layer.
@@ -50,7 +50,7 @@ class NeuronGradient(NeuronAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
 
         layer_out, input_grads = _forward_layer_eval(
-            self.forward_func, inputs, self.layer, additional_forward_args, neuron_index
+            self.forward_func, inputs, self.layer, additional_forward_args, neuron_index, device_ids=device_ids
         )
 
         undo_gradient_requirements(inputs, gradient_mask)

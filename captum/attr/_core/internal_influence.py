@@ -31,6 +31,7 @@ class InternalInfluence(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        device_ids=None,
     ):
         r"""
             Computes internal influence using gradients along the path, applying
@@ -94,6 +95,7 @@ class InternalInfluence(LayerAttribution):
             scaled_features_tpl,
             target,
             input_additional_args,
+            device_ids=device_ids,
         )
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems

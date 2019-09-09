@@ -143,6 +143,23 @@ def _reduce_list(val_list, red_func=torch.cat):
         final_out.append(_reduce_list([val_elem[i] for val_elem in val_list], red_func))
     return tuple(final_out)
 
+def _sort_key_list(keys, device_ids=None):
+    if len(keys) == 1:
+        return keys
+    id_dict = {}
+    for key in keys:
+        if key.index in id_dict:
+            raise AssertionError("Duplicate CUDA Device ID identified in device list.")
+        id_dict[key.index] = key
+
+    out_list = []
+    for id in device_ids:
+        if id in id_dict:
+            out_list.append(id_dict[id])
+
+    if len(out_list) != len(keys):
+        raise AssertionError("Given Device ID List does not match devices with computed tensors.")
+    return out_list
 
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
     # make everything a tuple so that it is easy to unpack without
