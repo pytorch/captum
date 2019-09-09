@@ -88,6 +88,23 @@ def compute_gradients(
         grads = torch.autograd.grad(torch.unbind(output), inputs)
     return grads
 
+def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_index):
+    with torch.autograd.set_grad_enabled(True):
+        gradient_tensors = []
+        for key in key_list:
+            current_out_tensor = saved_layer_outputs[key]
+            gradient_tensors.append(
+                torch.autograd.grad(
+                    [
+                        current_out_tensor[index]
+                        for index in _extend_index_list(
+                            current_out_tensor.shape[0], gradient_neuron_index
+                        )
+                    ],
+                    inputs,
+                )
+            )
+        return _reduce_list(gradient_tensors, sum)
 
 def _forward_layer_eval(
     forward_func,
@@ -109,48 +126,17 @@ def _forward_layer_eval(
     hook = layer.register_forward_hook(forward_hook)
     _run_forward(forward_func, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
-    if len(saved_layer_outputs) == 1:
-        out_eval = next(iter(saved_layer_outputs.values()))
-        if gradient_neuron_index is not None:
-            with torch.autograd.set_grad_enabled(True):
-                input_grads = torch.autograd.grad(
-                    [
-                        out_eval[index]
-                        for index in _extend_index_list(
-                            out_eval.shape[0], gradient_neuron_index
-                        )
-                    ],
-                    inputs,
-                )
-            return out_eval, input_grads
-        return out_eval
-    elif len(saved_layer_outputs) > 1:
-        key_list = list(saved_layer_outputs.keys())
-        key_list.sort(key=lambda x: x.index)
-        if gradient_neuron_index is not None:
-            with torch.autograd.set_grad_enabled(True):
-                gradient_tensors = []
-                for key in key_list:
-                    current_out_tensor = saved_layer_outputs[key]
-                    gradient_tensors.append(
-                        torch.autograd.grad(
-                            [
-                                current_out_tensor[index]
-                                for index in _extend_index_list(
-                                    current_out_tensor.shape[0], gradient_neuron_index
-                                )
-                            ],
-                            inputs,
-                        )
-                    )
-                return (
-                    torch.cat([saved_layer_outputs[dev] for dev in key_list]),
-                    _reduce_list(gradient_tensors, sum),
-                )
-        else:
-            return torch.cat([saved_layer_outputs[dev] for dev in key_list])
-    else:
+
+    if len(saved_layer_outputs) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
+
+    key_list = list(saved_layer_outputs.keys())
+    key_list.sort(key=lambda x: x.index)
+    if gradient_neuron_index is not None:
+        inp_grads = _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_index)
+        return torch.cat([saved_layer_outputs[dev] for dev in key_list]), inp_grads
+    else:
+        return torch.cat([saved_layer_outputs[dev] for dev in key_list])
 
 
 def compute_layer_gradients_and_eval(
@@ -203,46 +189,18 @@ def compute_layer_gradients_and_eval(
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
         # Remove unnecessary forward hook.
         hook.remove()
-        if len(saved_layer_outputs) == 1:
-            eval = next(iter(saved_layer_outputs.values()))
-            saved_grads = torch.autograd.grad(torch.unbind(output), eval)
-            if gradient_neuron_index is not None:
-                input_grads = torch.autograd.grad(
-                    [
-                        eval[index]
-                        for index in _extend_index_list(
-                            eval.shape[0], gradient_neuron_index
-                        )
-                    ],
-                    inputs,
-                )
-                return saved_grads[0], eval, input_grads
-            return saved_grads[0], eval
-        elif len(saved_layer_outputs) > 1:
-            key_list = list(saved_layer_outputs.keys())
-            key_list.sort(key=lambda x: x.index)
-            grad_inputs = tuple(saved_layer_outputs[dev] for dev in key_list)
-            saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
-            all_grads = torch.cat(saved_grads)
-            all_outputs = torch.cat([saved_layer_outputs[dev] for dev in key_list])
-            if gradient_neuron_index is not None:
-                gradient_tensors = []
-                for key in key_list:
-                    current_out_tensor = saved_layer_outputs[key]
-                    gradient_tensors.append(
-                        torch.autograd.grad(
-                            [
-                                current_out_tensor[index]
-                                for index in _extend_index_list(
-                                    current_out_tensor.shape[0], gradient_neuron_index
-                                )
-                            ],
-                            inputs,
-                        )
-                    )
-                return all_grads, all_outputs, _reduce_list(gradient_tensors, sum)
-            return all_grads, all_outputs
+
+        if len(saved_layer_outputs) == 0:
+            raise AssertionError("Forward hook did not obtain any outputs for given layer")
+
+        key_list = list(saved_layer_outputs.keys())
+        key_list.sort(key=lambda x: x.index)
+        all_outputs = torch.cat([saved_layer_outputs[dev] for dev in key_list])
+        grad_inputs = tuple(saved_layer_outputs[dev] for dev in key_list)
+        saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
+        all_grads = torch.cat(saved_grads)
+        if gradient_neuron_index is not None:
+            inp_grads = _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_index)
+            return all_grads, all_outputs, inp_grads
         else:
-            raise AssertionError(
-                "Forward hook did not obtain any outputs for given layer"
-            )
+            return all_grads, all_outputs
