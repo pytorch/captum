@@ -145,9 +145,6 @@ class IntegratedGradients(GradientBasedAttribution):
         )
 
         # grads: dim -> (bsz * #steps x inputs[0].shape[1:], ...)
-        # grads = self.gradient_func(
-        #    self.forward_func, scaled_features_tpl, target, input_additional_args
-        # )
         grads = _batched_operator(
             self.gradient_func,
             scaled_features_tpl,
@@ -156,6 +153,7 @@ class IntegratedGradients(GradientBasedAttribution):
             forward_fn=self.forward_func,
             target_ind=target,
         )
+
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems
         scaled_grads = [
