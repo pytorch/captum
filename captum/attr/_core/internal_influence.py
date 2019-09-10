@@ -2,6 +2,7 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import LayerAttribution
+from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
@@ -31,6 +32,7 @@ class InternalInfluence(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        batch_size=None,
     ):
         r"""
             Computes internal influence using gradients along the path, applying
@@ -88,12 +90,14 @@ class InternalInfluence(LayerAttribution):
         )
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _ = compute_layer_gradients_and_eval(
-            self.forward_func,
-            self.layer,
+        layer_gradients, _ = _batched_operator(
+            compute_layer_gradients_and_eval,
             scaled_features_tpl,
-            target,
             input_additional_args,
+            batch_size=batch_size,
+            forward_fn=self.forward_func,
+            layer=self.layer,
+            target_ind=target,
             device_ids=self.device_ids,
         )
         # flattening grads so that we can multipy it with step-size

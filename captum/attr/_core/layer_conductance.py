@@ -32,7 +32,7 @@ class LayerConductance(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="riemann_trapezoid",
-        batch_size=50,
+        batch_size=None,
     ):
         r"""
             Computes conductance using gradients along the path, applying

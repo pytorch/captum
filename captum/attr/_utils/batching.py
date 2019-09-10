@@ -29,6 +29,8 @@ def _reduce_list(val_list, red_func=torch.cat):
     """
     if isinstance(val_list[0], torch.Tensor):
         return red_func(val_list)
+    assert isinstance(val_list[0], tuple), "Elements to be reduced can only be"
+    "either Tensors or tuples containing Tensors."
     final_out = []
     for i in range(len(val_list[0])):
         final_out.append(_reduce_list([val_elem[i] for val_elem in val_list], red_func))
@@ -53,14 +55,13 @@ def _sort_key_list(keys, device_ids=None):
         id_dict[key.index] = key
 
     out_list = []
-    for id in device_ids:
-        if id in id_dict:
-            out_list.append(id_dict[id])
+    for dev_id in device_ids:
+        if dev_id in id_dict:
+            out_list.append(id_dict[dev_id])
 
-    if len(out_list) != len(keys):
-        raise AssertionError(
-            "Given Device ID List does not match devices with computed tensors."
-        )
+    assert len(out_list) == len(keys), "Given Device ID List does not match"
+    "devices with computed tensors."
+
     return out_list
 
 

@@ -121,21 +121,23 @@ class Test(BaseTest):
         baseline=None,
         additional_args=None,
     ):
-        int_inf = InternalInfluence(model, target_layer)
-        attributions = int_inf.attribute(
-            test_input,
-            baselines=baseline,
-            target=0,
-            n_steps=500,
-            method="riemann_trapezoid",
-            additional_forward_args=additional_args,
-        )
-        for i in range(len(expected_activation)):
-            assertArraysAlmostEqual(
-                attributions[i : i + 1].squeeze(0).tolist(),
-                expected_activation[i],
-                delta=0.01,
+        for batch_size in [None, 1, 20]:
+            int_inf = InternalInfluence(model, target_layer)
+            attributions = int_inf.attribute(
+                test_input,
+                baselines=baseline,
+                target=0,
+                n_steps=500,
+                method="riemann_trapezoid",
+                additional_forward_args=additional_args,
+                batch_size=batch_size,
             )
+            for i in range(len(expected_activation)):
+                assertArraysAlmostEqual(
+                    attributions[i : i + 1].squeeze(0).tolist(),
+                    expected_activation[i],
+                    delta=0.01,
+                )
 
 
 if __name__ == "__main__":
