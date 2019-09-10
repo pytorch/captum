@@ -36,7 +36,7 @@ class ImageFeature(BaseFeature):
     def visualization_type(self):
         return "image"
 
-    def visualize(self, attribution, data, label):
+    def visualize(self, attribution, data, label, contribution):
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
         attribution_t = np.transpose(
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
@@ -58,7 +58,7 @@ class ImageFeature(BaseFeature):
             base=img_64,
             modified=ig_64,
             type=self.visualization_type(),
-            contribution=100,  # TODO implement contribution
+            contribution=contribution,
         )
 
 

@@ -4,8 +4,8 @@ from typing import Any, List, Union
 from captum.attr import IntegratedGradients
 
 import torch
-from features import BaseFeature
-from server import start_server
+from captum.insights.features import BaseFeature
+from captum.insights.server import start_server
 
 PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
@@ -75,8 +75,21 @@ class AttributionVisualizer(object):
             datum, label = data[i], labels[i]
 
             attribution = self._calculate_attribution(net, datum, label)
+
+            # sum of attribs for each feature
+            sum_feature = torch.zeros([len(attribution)])
+            for j, feature_attrib in enumerate(attribution):
+                sum_feature[j] = torch.sum(feature_attrib.flatten()).item()
+            # get sum of all feature attribs
+            sum_all = torch.sum(torch.abs(sum_feature))
+
             for j, feature in enumerate(self.features):
-                output = feature.visualize(attribution[j], datum, label)
+                contribution = 0
+                if sum_all != 0:
+                    contribution = sum_feature[j] / sum_all
+                output = feature.visualize(
+                    attribution[j], datum, label, contribution.item()
+                )
             predicted_labels = self._get_labels_from_scores(scores[i], predicted[i])
             actual_label = self.classes[labels[i]]
             outputs.append(
