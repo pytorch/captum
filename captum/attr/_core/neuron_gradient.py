@@ -23,9 +23,7 @@ class NeuronGradient(NeuronAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(
-        self, inputs, neuron_index, additional_forward_args=None, device_ids=None
-    ):
+    def attribute(self, inputs, neuron_index, additional_forward_args=None):
         r"""
             Computes gradient with respect to input of particular neuron in
             target hidden layer.
