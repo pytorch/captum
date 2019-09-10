@@ -42,6 +42,7 @@ class Test(BaseGPUTest):
             InternalInfluence,
             net,
             net.model.relu,
+            alt_device_ids=True,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=0,
@@ -70,6 +71,7 @@ class Test(BaseGPUTest):
             LayerActivation,
             net,
             net.model.relu,
+            alt_device_ids=True,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
         )
@@ -99,6 +101,7 @@ class Test(BaseGPUTest):
             LayerConductance,
             net,
             net.model.relu,
+            alt_device_ids=True,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
@@ -129,6 +132,7 @@ class Test(BaseGPUTest):
             LayerGradientXActivation,
             net,
             net.model.relu,
+            alt_device_ids=True,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
@@ -159,6 +163,7 @@ class Test(BaseGPUTest):
             NeuronConductance,
             net,
             net.model.relu,
+            alt_device_ids=True,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
@@ -176,7 +181,12 @@ class Test(BaseGPUTest):
             ]
         ).cuda()
         self._data_parallel_test_assert(
-            NeuronGradient, net, net.relu, inputs=inp, neuron_index=(3,)
+            NeuronGradient,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            neuron_index=(3,),
         )
 
     def test_multi_input_neuron_gradient(self):
@@ -206,7 +216,12 @@ class Test(BaseGPUTest):
             ]
         ).cuda()
         self._data_parallel_test_assert(
-            NeuronIntegratedGradients, net, net.relu, inputs=inp, neuron_index=(3,)
+            NeuronIntegratedGradients,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            neuron_index=(3,),
         )
 
     def test_multi_input_integrated_gradient(self):
@@ -225,13 +240,32 @@ class Test(BaseGPUTest):
             neuron_index=(3,),
         )
 
+    def _alt_device_list(self):
+        return [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
+
     def _data_parallel_test_assert(
-        self, method, model, target_layer=None, contains_delta=False, **kwargs
+        self,
+        method,
+        model,
+        target_layer=None,
+        contains_delta=False,
+        alt_device_ids=False,
+        **kwargs
     ):
-        dp_model = torch.nn.parallel.DataParallel(model)
+        if alt_device_ids:
+            dp_model = torch.nn.parallel.DataParallel(
+                model, device_ids=self._alt_device_list()
+            )
+        else:
+            dp_model = torch.nn.parallel.DataParallel(model)
         if target_layer:
             attr_orig = method(model, target_layer)
-            attr_dp = method(dp_model, target_layer)
+            if alt_device_ids:
+                attr_dp = method(
+                    dp_model.forward, target_layer, self._alt_device_list()
+                )
+            else:
+                attr_dp = method(dp_model, target_layer)
         else:
             attr_orig = method(model)
             attr_dp = method(dp_model)

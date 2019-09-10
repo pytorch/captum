@@ -6,7 +6,7 @@ from .integrated_gradients import IntegratedGradients
 
 
 class NeuronIntegratedGradients(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -14,7 +14,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -24,7 +24,6 @@ class NeuronIntegratedGradients(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
-        device_ids=None,
     ):
         r"""
             Computes integrated gradients for a particular neuron in the given
@@ -63,7 +62,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 self.layer,
                 additional_forward_args,
                 neuron_index,
-                device_ids=device_ids,
+                device_ids=self.device_ids,
             )
             return grads
 
