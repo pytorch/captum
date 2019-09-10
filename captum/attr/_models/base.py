@@ -124,8 +124,11 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
     )
     warnings.warn(
         """In order to make embedding layers more interpretable they will
-        be replaced with an interpretable equivalent which wraps the
-        original embedding layer. The original embedding layer must be set
+        be replaced with an interpretable embedding layer which wraps the
+        original embedding layer and takes word embedding vectors as inputs of
+        the forward function. This allows to generate baselines for word
+        embeddings and compute attributions for each embedding dimension.
+        The original embedding layer must be set
         back by calling `remove_interpretable_embedding_layer` function
         after model interpretation is finished."""
     )
