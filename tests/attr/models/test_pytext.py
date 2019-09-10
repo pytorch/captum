@@ -72,7 +72,7 @@ if HAS_PYTEXT:
             self.assertTrue(
                 torch.allclose(
                     integrated_gradients_embedding.get_attribution_map(input)["word"],
-                    input
+                    input,
                 )
             )
 
@@ -83,8 +83,7 @@ if HAS_PYTEXT:
             self.assertTrue(
                 torch.allclose(
                     baseline_generator.generate_baseline(
-                        integrated_gradients_embedding,
-                        5
+                        integrated_gradients_embedding, 5
                     )[0],
                     torch.tensor([[1, 1, 1, 1, 1]]),
                 )
