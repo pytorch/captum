@@ -116,7 +116,7 @@ jobs:
     steps:
       - checkout
       - conda_install:
-          args: "-n -f"
+          args: "-n"
       - lint_flake8
       - lint_black
       - unit_tests
