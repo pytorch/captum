@@ -123,6 +123,9 @@ def _forward_layer_eval(
     # Set a forward hook on specified module and run forward pass to
     # get layer output tensor.
     def forward_hook(module, inp, out):
+        assert isinstance(
+            out, torch.Tensor
+        ), "Layers with multiple output tensors are not yet supported."
         with lock:
             nonlocal saved_layer_outputs
             saved_layer_outputs[out.device] = out
