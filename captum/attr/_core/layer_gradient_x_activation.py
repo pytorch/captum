@@ -15,7 +15,9 @@ class LayerGradientXActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer)
 
-    def attribute(self, inputs, target=None, additional_forward_args=None, device_ids=None):
+    def attribute(
+        self, inputs, target=None, additional_forward_args=None, device_ids=None
+    ):
         r"""
             Computes activation of selected layer for given input.
 
@@ -37,6 +39,11 @@ class LayerGradientXActivation(LayerAttribution):
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func, self.layer, inputs, target, additional_forward_args, device_ids=device_ids
+            self.forward_func,
+            self.layer,
+            inputs,
+            target,
+            additional_forward_args,
+            device_ids=device_ids,
         )
         return layer_gradients * layer_eval

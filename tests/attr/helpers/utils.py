@@ -16,6 +16,12 @@ def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
         )
 
 
+def assertTensorAlmostEqual(test, tensor, expected):
+    test.assertAlmostEqual(
+        torch.sum(torch.abs(tensor - torch.tensor(expected))), 0.0, delta=0.0001
+    )
+
+
 class BaseTest(unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
