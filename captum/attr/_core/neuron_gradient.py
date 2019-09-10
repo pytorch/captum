@@ -13,7 +13,7 @@ from .._utils.gradient import (
 
 
 class NeuronGradient(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -21,7 +21,7 @@ class NeuronGradient(NeuronAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self, inputs, neuron_index, additional_forward_args=None, device_ids=None
@@ -57,7 +57,7 @@ class NeuronGradient(NeuronAttribution):
             self.layer,
             additional_forward_args,
             neuron_index,
-            device_ids=device_ids,
+            device_ids=self.device_ids,
         )
 
         undo_gradient_requirements(inputs, gradient_mask)

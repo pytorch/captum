@@ -4,7 +4,7 @@ from .._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -12,9 +12,9 @@ class LayerActivation(LayerAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, additional_forward_args=None, device_ids=None):
+    def attribute(self, inputs, additional_forward_args=None):
         r"""
             Computes activation of selected layer for given input.
 
@@ -32,5 +32,5 @@ class LayerActivation(LayerAttribution):
             inputs,
             self.layer,
             additional_forward_args,
-            device_ids=device_ids,
+            device_ids=self.device_ids,
         )

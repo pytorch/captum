@@ -46,6 +46,7 @@ def _sort_key_list(keys, device_ids=None):
     if len(keys) == 1:
         return keys
     id_dict = {}
+    assert device_ids is not None, "Device IDs must be provided with multiple devices."
     for key in keys:
         if key.index in id_dict:
             raise AssertionError("Duplicate CUDA Device ID identified in device list.")

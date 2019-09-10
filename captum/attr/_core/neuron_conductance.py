@@ -16,7 +16,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 
 
 class NeuronConductance(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -24,7 +24,7 @@ class NeuronConductance(NeuronAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -36,7 +36,6 @@ class NeuronConductance(NeuronAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         batch_size=None,
-        device_ids=None,
     ):
         r"""
             Computes conductance with respect to particular hidden neurons. The
@@ -113,7 +112,7 @@ class NeuronConductance(NeuronAttribution):
             layer=self.layer,
             target_ind=target,
             gradient_neuron_index=neuron_index,
-            device_ids=device_ids,
+            device_ids=self.device_ids,
         )
 
         # Creates list of target neuron across batched examples (dimension 0)

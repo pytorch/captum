@@ -13,7 +13,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 
 
 class InternalInfluence(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -21,7 +21,7 @@ class InternalInfluence(LayerAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -95,7 +95,7 @@ class InternalInfluence(LayerAttribution):
             scaled_features_tpl,
             target,
             input_additional_args,
-            device_ids=device_ids,
+            device_ids=self.device_ids,
         )
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems
