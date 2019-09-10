@@ -117,14 +117,6 @@ def _extend_index_list(dim_max, base_index):
     return [(ind,) + base_index for ind in range(dim_max)]
 
 
-def tuple_splice_range(inputs, start, end):
-    if inputs is None:
-        return None
-    return tuple(
-        inp[start:end] if isinstance(inp, torch.Tensor) else inp for inp in inputs
-    )
-
-
 def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     # Used for attribution methods which perform integration
     # Sums across integration steps by reshaping tensor to
@@ -134,32 +126,6 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
         tensor_input.reshape((num_steps, num_examples) + layer_size), dim=0
     )
 
-
-def _reduce_list(val_list, red_func=torch.cat):
-    if isinstance(val_list[0], torch.Tensor):
-        return red_func(val_list)
-    final_out = []
-    for i in range(len(val_list[0])):
-        final_out.append(_reduce_list([val_elem[i] for val_elem in val_list], red_func))
-    return tuple(final_out)
-
-def _sort_key_list(keys, device_ids=None):
-    if len(keys) == 1:
-        return keys
-    id_dict = {}
-    for key in keys:
-        if key.index in id_dict:
-            raise AssertionError("Duplicate CUDA Device ID identified in device list.")
-        id_dict[key.index] = key
-
-    out_list = []
-    for id in device_ids:
-        if id in id_dict:
-            out_list.append(id_dict[id])
-
-    if len(out_list) != len(keys):
-        raise AssertionError("Given Device ID List does not match devices with computed tensors.")
-    return out_list
 
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
     # make everything a tuple so that it is easy to unpack without
