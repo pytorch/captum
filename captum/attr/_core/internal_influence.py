@@ -31,7 +31,6 @@ class InternalInfluence(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
-        device_ids=None,
     ):
         r"""
             Computes internal influence using gradients along the path, applying
