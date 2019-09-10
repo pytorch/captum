@@ -46,5 +46,5 @@ class BaseGPUTest(BaseTest):
 
     def setUp(self):
         super().setUp()
-        if not torch.cuda.is_available() or torch.cuda.device_count() is 0:
+        if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
             raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
