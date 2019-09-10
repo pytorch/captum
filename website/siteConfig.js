@@ -18,7 +18,7 @@ const users = [];
 
 const siteConfig = {
   title: 'Captum',
-  tagline: 'Bayesian Optimization in PyTorch',
+  tagline: 'Model interpretability for PyTorch',
   url: 'https://captum.org',
   baseUrl: baseUrl,
   cleanUrl: true, // No .html extensions for paths
