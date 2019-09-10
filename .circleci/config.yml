@@ -83,13 +83,6 @@ commands:
               echo "Skipping deploy."
             fi
 
-  upload_coverage:
-    description: "Upload coverage report to codecov.io"
-    steps:
-      - run:
-          name: "Upload coverage report"
-          command: bash <(curl -s https://codecov.io/bash)
-
 
 jobs:
 
@@ -104,7 +97,18 @@ jobs:
       - lint_black
       - unit_tests
       - sphinx
-#      - upload_coverage
+
+  lint_test_py36_pip_release:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-f"
+      - lint_flake8
+      - lint_black
+      - unit_tests
+      - sphinx
 
   lint_test_py37_conda:
     docker:
@@ -117,7 +121,6 @@ jobs:
       - lint_black
       - unit_tests
       - sphinx
-#      - upload_coverage
 
 
 aliases:
@@ -135,6 +138,7 @@ workflows:
     jobs:
       - lint_test_py36_pip:
           filters: *exclude_ghpages_fbconfig
-# TODO: support conda install
-      # - lint_test_py37_conda:
-      #     filters: *exclude_ghpages_fbconfig
+      - lint_test_py36_pip_release:
+          filters: *exclude_ghpages_fbconfig
+      - lint_test_py37_conda:
+          filters: *exclude_ghpages_fbconfig

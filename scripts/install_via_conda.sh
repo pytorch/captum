@@ -22,14 +22,13 @@ if [[ $FRAMEWORKS == true ]]; then
   pip install pytext-nlp
 fi
 
-# TODO: Install non-nightly when 1.2 goes live
-#if [[ $PYTORCH_NIGHTLY == true ]]; then
+if [[ $PYTORCH_NIGHTLY == true ]]; then
   # install CPU version for much smaller download
   conda install -y -c pytorch pytorch-nightly-cpu
-#else
-#  # install CPU version for much smaller download
-#  conda install -y -c pytorch pytorch-cpu
-#fi
+else
+ # install CPU version for much smaller download
+ conda install -y -c pytorch pytorch-cpu
+fi
 
 # install other deps
 conda install -y numpy sphinx pytest flake8 ipywidgets ipython
