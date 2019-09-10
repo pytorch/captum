@@ -75,7 +75,7 @@ above:
 To execute unit tests from a manual install, run:
 ```bash
 # running a single unit test
-python -m unittest -v tests.attributions.test_saliency
+python -m unittest -v tests.attr.test_saliency
 # running all unit tests
 pytest -ra
 ```
