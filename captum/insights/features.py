@@ -42,7 +42,7 @@ class BaseFeature:
     def visualization_type(self) -> str:
         raise NotImplementedError
 
-    def visualize(self, attribution, data) -> FeatureOutput:
+    def visualize(self, attribution, data, contribution) -> FeatureOutput:
         raise NotImplementedError
 
 
@@ -64,7 +64,7 @@ class ImageFeature(BaseFeature):
     def visualization_type(self) -> str:
         return "image"
 
-    def visualize(self, attribution, data) -> FeatureOutput:
+    def visualize(self, attribution, data, contribution) -> FeatureOutput:
         attribution.squeeze_()
         data.squeeze_()
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
@@ -122,5 +122,5 @@ class TextFeature(BaseFeature):
             base=text,
             modified=modified,
             type=self.visualization_type(),
-            contribution=100,  # TODO implement contribution
+            contribution=contribution
         )

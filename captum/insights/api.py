@@ -168,8 +168,20 @@ class AttributionVisualizer(object):
                 additional_forward_args,
                 label,
             )
+
+            # sum of attribs for each feature
+            sum_feature = torch.zeros([len(attribution)])
+            for j, feature_attrib in enumerate(attribution):
+                sum_feature[j] = torch.sum(feature_attrib.flatten()).item()
+            # get sum of all feature attribs
+            sum_all = torch.sum(torch.abs(sum_feature))
+
             for j, feature in enumerate(self.features):
-                feature_output = feature.visualize(attribution[j], inputs[j])
+                contribution = 0
+                if sum_all != 0:
+                    contribution = sum_feature[j] / sum_all
+
+                feature_output = feature.visualize(attribution[j], inputs[j], contribution.item())
                 predicted_labels = self._get_labels_from_scores(scores, predicted)
                 actual_label = self.classes[label]
                 vis_outputs.append(
