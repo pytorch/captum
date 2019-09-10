@@ -3,7 +3,7 @@ import socket
 import threading
 from typing import Optional
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
@@ -27,6 +27,7 @@ def namedtuple_to_dict(obj):
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
+    print(request.json)
     return jsonify(namedtuple_to_dict(visualizer.visualize()))
 
 

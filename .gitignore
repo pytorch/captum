@@ -14,6 +14,7 @@ eggs/
 .eggs/
 insights/frontend/node_modules/
 insights/frontend/.pnp/
+insights/frontend/build/
 lib/
 lib64/
 parts/

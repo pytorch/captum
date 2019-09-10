@@ -45,13 +45,18 @@ class FilterContainer extends React.Component {
     });
   };
 
+  handleSubmit = event => {
+    this.props.fetchData(this.state);
+    event.preventDefault();
+  };
+
   render() {
     return (
       <Filter
         instanceType={this.state.instance_type}
         approximationSteps={this.state.approximation_steps}
         onHandleInputChange={this.handleInputChange}
-        handleSubmit={this.props.fetchData}
+        handleSubmit={this.handleSubmit}
       />
     );
   }
@@ -207,7 +212,7 @@ class Visualization extends React.Component {
           <div className="panel__column__title">Label</div>
           <div className="panel__column__body">
             <div className="row row--padding">
-              <div className="btn btn--outline">{v.actual}</div>
+              <div className="btn btn--outline">{data.actual}</div>
             </div>
           </div>
         </div>
@@ -215,7 +220,7 @@ class Visualization extends React.Component {
           <div className="panel__column__title">Contribution</div>
           <div className="panel__column__body">
             <div className="bar-chart">
-              <Contributions feature_outputs={v.feature_outputs} />
+              <Contributions feature_outputs={data.feature_outputs} />
             </div>
           </div>
         </div>
@@ -254,11 +259,17 @@ class App extends React.Component {
     };
   }
 
-  fetchData = event => {
-    fetch("/fetch", { method: "POST", body: JSON.stringify(this.state) })
+  fetchData = filter_config => {
+    console.log("filter config: ", filter_config);
+    fetch("/fetch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(filter_config)
+    })
       .then(response => response.json())
-      .then(response => this.props.setData(response));
-    event.preventDefault();
+      .then(response => this.setState({ data: response }));
   };
 
   render() {
