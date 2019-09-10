@@ -5,7 +5,3 @@ captum.attr._utils.approximation_methods
 
 .. autoclass:: Riemann
     :members:
-
-
-.. autoclass:: TokenReferenceBase
-    :members:
