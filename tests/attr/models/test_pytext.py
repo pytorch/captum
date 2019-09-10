@@ -21,11 +21,11 @@ try:
     from pytext.data.featurizer import SimpleFeaturizer
     from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
+
+    from captum.attr._models.pytext import configure_model_integ_grads_embeddings
+    from captum.attr._models.pytext import BaselineGenerator
 except ImportError:
     HAS_PYTEXT = False
-
-from captum.attr._models.pytext import configure_model_integ_grads_embeddings
-from captum.attr._models.pytext import BaselineGenerator
 
 
 class VocabStub:
@@ -71,7 +71,8 @@ if HAS_PYTEXT:
             self.assertEqual(embedding_list(input).shape[2], input.shape[2])
             self.assertTrue(
                 torch.allclose(
-                    integrated_gradients_embedding.get_attribution_map(input)["word"], input
+                    integrated_gradients_embedding.get_attribution_map(input)["word"],
+                    input
                 )
             )
 
@@ -81,9 +82,10 @@ if HAS_PYTEXT:
             integrated_gradients_embedding = embedding_list[0]
             self.assertTrue(
                 torch.allclose(
-                    baseline_generator.generate_baseline(integrated_gradients_embedding, 5)[
-                        0
-                    ],
+                    baseline_generator.generate_baseline(
+                        integrated_gradients_embedding,
+                        5
+                    )[0],
                     torch.tensor([[1, 1, 1, 1, 1]]),
                 )
             )
