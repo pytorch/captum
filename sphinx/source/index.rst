@@ -1,7 +1,7 @@
 :github_url: https://github.com/pytorch/captum
 
 Captum API Reference
-===================================
+====================
 
 .. toctree::
    :maxdepth: 2
