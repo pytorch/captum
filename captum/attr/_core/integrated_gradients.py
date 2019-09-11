@@ -34,9 +34,9 @@ class IntegratedGradients(GradientBasedAttribution):
         method="gausslegendre",
     ):
         r"""
-            Computes the integral of gradients along the path from a baseline input
-            to the given input using Riemann's Method or Gauss-Legendre. If no
-            baseline is provided, the default baseline is the zero tensor.
+            Approximates the integral of gradients along the path from a baseline input
+            to the given input. If no baseline is provided, the default baseline
+            is the zero tensor.
             More details regarding the integrated gradient method can be found in the
             original paper here:
             https://arxiv.org/abs/1703.01365
@@ -63,6 +63,7 @@ class IntegratedGradients(GradientBasedAttribution):
                             If the network returns a scalar value per example,
                             no target index is necessary. (Note: Tuples for multi
                             -dimensional output indices will be supported soon.)
+                            Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
@@ -70,9 +71,9 @@ class IntegratedGradients(GradientBasedAttribution):
                             any arbitrary python type of any shape.
                             In case of the ND tensor the first dimension of the
                             tensor must correspond to the batch size. It will be
-                            repeated for each `n_steps` along the integrated path
-                            of integrated greadients.
-                            Note that the gradients are not computed with respect
+                            repeated for each of `n_steps` along the integrated path
+                            of integrated gradients.
+                            Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
                 n_steps (tuple, optional): The number of steps used by the approximation
