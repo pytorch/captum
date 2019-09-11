@@ -1,5 +1,5 @@
 captum.attr._utils.attribution
-===========================
+==============================
 
 .. automodule:: captum.attr._utils.attribution
 
