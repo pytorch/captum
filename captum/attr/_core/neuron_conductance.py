@@ -19,9 +19,17 @@ class NeuronConductance(NeuronAttribution):
         r"""
         Args
 
-            forward_func:  The forward function of the model or any modification of it
-            layer: Layer for which output attributions are computed.
-                   Output size of attribute matches that of layer output.
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
+            layer (torch.nn.Module): Layer for which attributions are computed.
+                          Neuron index in the attribute method refers to a particular
+                          neuron in the output of this layer. Currently, only
+                          layers which output a single tensor are supported.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                          applies a DataParallel model. This allows reconstruction of
+                          intermediate outputs from batched results across devices.
+                          If forward_func is given as the DataParallel model itself,
+                          then it is not neccesary to provide this argument.
         """
         super().__init__(forward_func, layer)
 
@@ -36,34 +44,90 @@ class NeuronConductance(NeuronAttribution):
         method="riemann_trapezoid",
     ):
         r"""
-            Computes conductance with respect to particular hidden neurons. The
+            Computes conductance with respect to particular hidden neuron. The
             returned output is in the shape of the input, showing the attribution
             / conductance of each input feature to the selected hidden layer neuron.
             The details of the approach can be found here:
             https://arxiv.org/abs/1805.12233
 
-            Args
+            Args:
 
-                inputs:     A single high dimensional input tensor, in which
-                            dimension 0 corresponds to number of examples.
-                neuron_index: Tuple providing index of neuron in output of given
+                inputs (tensor or tuple of tensors):  Input for which neuron integrated
+                            gradients are computed. If forward_func takes a single
+                            tensor as input, a single input tensor should be provided.
+                            If forward_func takes multiple tensors as input, a tuple
+                            of the input tensors should be provided. It is assumed
+                            that for all given input tensors, dimension 0 corresponds
+                            to the number of examples, and if mutliple input tensors
+                            are provided, the examples must be aligned appropriately.
+                neuron_index (int or tuple): Index of neuron in output of given
                               layer for which attribution is desired. Length of
                               this tuple must be one less than the number of
                               dimensions in the output of the given layer (since
                               dimension 0 corresponds to number of examples).
-                baselines:   A single high dimensional baseline tensor,
-                            which has the same shape as the input
-                target:     Predicted class index. This is necessary only for
-                            classification use cases
-                n_steps:    The number of steps used by the approximation method
-                method:     Method for integral approximation, one of `riemann_right`,
-                            `riemann_left`, `riemann_middle`, `riemann_trapezoid`
-                            or `gausslegendre`
+                              An integer may be provided instead of a tuple of
+                              length 1.
+                baselines (tensor or tuple of tensors, optional):  Baseline from which
+                            integral is computed. If inputs is a single tensor,
+                            baselines must also be a single tensor with exactly the same
+                            dimensions as inputs. If inputs is a tuple of tensors,
+                            baselines must also be a tuple of tensors, with matching
+                            dimensions to inputs.
+                            Default: zero tensor for each input tensor
+                target (int, optional):  Output index for which gradient is computed
+                            (for classification cases, this is the target class).
+                            If the network returns a scalar value per example,
+                            no target index is necessary. (Note: Tuples for multi
+                            -dimensional output indices will be supported soon.)
+                            Default: None
+                additional_forward_args (tuple, optional): If the forward function
+                            requires additional arguments other than the inputs for
+                            which attributions should not be computed, this argument
+                            can be provided. It can contain a tuple of ND tensors or
+                            any arbitrary python type of any shape.
+                            In case of the ND tensor the first dimension of the
+                            tensor must correspond to the batch size. It will be
+                            repeated for each of `n_steps` along the integrated path
+                            of integrated gradients.
+                            Note that attributions are not computed with respect
+                            to these arguments.
+                            Default: None
+                n_steps (tuple, optional): The number of steps used by the approximation
+                            method. Default: 50.
+                method (string, optional): Method for approximating the integral,
+                            one of `riemann_right`, `riemann_left`, `riemann_middle`,
+                            `riemann_trapezoid` or `gausslegendre`.
+                            Default: `gausslegendre` if no method is provided.
+                batch_size (int, optional): Divides total #steps * #examples of
+                            necessary forward and backward evaluations into chunks
+                            of size batch_size, which are evaluated sequentially.
+                            If batch_size is None, then all evaluations are processed
+                            in one batch.
+                            Default: None
 
-            Return
+            Return:
 
-                attributions: Total conductance with respect to each neuron in
-                              output of given layer
+                attributions (tensor or tuple of tensors): Conductance for
+                            particular neuron with respect to each input feature.
+                            Attributions will always be the same size as the provided
+                            inputs, with each value providing the attribution of the
+                            corresponding input index.
+                            If a single tensor is provided as inputs, a single tensor is
+                            returned. If a tuple is provided for inputs, a tuple of
+                            corresponding sized tensors is returned.
+
+            Examples::
+
+                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+                >>> # and returns an Nx10 tensor of class probabilities.
+                >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
+                >>> # and the output of this layer has dimensions Nx12x32x32.
+                >>> net = ImageClassifier()
+                >>> neuron_cond = NeuronConductance(net, net.conv1)
+                >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+                >>> # Computes neuron integrated gradients for neuron with
+                >>> # index (4,1,2).
+                >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """
         is_inputs_tuple = isinstance(inputs, tuple)
 
