@@ -6,22 +6,26 @@ import tempfile
 
 import torch
 
-from pytext.common.constants import DatasetFieldName
-from pytext.data import CommonMetadata
-from pytext.fields import FieldMeta
-from pytext.config.component import create_model
-from pytext.models.doc_model import DocModel_Deprecated
-from pytext.models.decoders.mlp_decoder import MLPDecoder
-from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
-from pytext.models.embeddings.word_embedding import WordEmbedding
-from pytext.config.component import create_featurizer
-from pytext.config.field_config import FeatureConfig, WordFeatConfig
-from pytext.data.featurizer import SimpleFeaturizer
-from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
-from pytext.config.doc_classification import ModelInputConfig, TargetConfig
+HAS_PYTEXT = True
+try:
+    from pytext.common.constants import DatasetFieldName
+    from pytext.data import CommonMetadata
+    from pytext.fields import FieldMeta
+    from pytext.config.component import create_model
+    from pytext.models.doc_model import DocModel_Deprecated
+    from pytext.models.decoders.mlp_decoder import MLPDecoder
+    from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
+    from pytext.models.embeddings.word_embedding import WordEmbedding
+    from pytext.config.component import create_featurizer
+    from pytext.config.field_config import FeatureConfig, WordFeatConfig
+    from pytext.data.featurizer import SimpleFeaturizer
+    from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
+    from pytext.config.doc_classification import ModelInputConfig, TargetConfig
 
-from captum.attr._models.pytext import configure_model_integ_grads_embeddings
-from captum.attr._models.pytext import BaselineGenerator
+    from captum.attr._models.pytext import configure_model_integ_grads_embeddings
+    from captum.attr._models.pytext import BaselineGenerator
+except ImportError:
+    HAS_PYTEXT = False
 
 
 class VocabStub:
@@ -35,6 +39,9 @@ class VocabStub:
 
 class TestWordEmbeddings(unittest.TestCase):
     def setUp(self):
+        if not HAS_PYTEXT:
+            return self.skipTest("Skip the test since PyText is not installed")
+
         self.embedding_file, self.embedding_path = tempfile.mkstemp()
         self.word_embedding_file, self.word_embedding_path = tempfile.mkstemp()
         self.decoder_file, self.decoder_path = tempfile.mkstemp()
