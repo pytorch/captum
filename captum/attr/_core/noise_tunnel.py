@@ -39,8 +39,13 @@ class NoiseTunnel(Attribution):
         super().__init__()
 
     def attribute(
-        self, inputs, nt_type="smoothgrad", n_samples=5, stdevs=1.0,
-        draw_baseline_from_distrib=False, **kwargs
+        self,
+        inputs,
+        nt_type="smoothgrad",
+        n_samples=5,
+        stdevs=1.0,
+        draw_baseline_from_distrib=False,
+        **kwargs
     ):
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
@@ -172,19 +177,21 @@ class NoiseTunnel(Attribution):
 
             baselines = kwargs["baselines"]
             baselines = format_baseline(baselines, inputs)
-            validate_input(inputs, baselines,
-                           draw_baseline_from_distrib=draw_baseline_from_distrib)
+            validate_input(
+                inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
+            )
 
             if draw_baseline_from_distrib:
                 bsz = inputs[0].shape[0]
                 num_ref_samples = baselines[0].shape[0]
-                rand_indices = np.random.choice(num_ref_samples,
-                                                n_samples * bsz).tolist()
-                baselines = tuple(baseline[rand_indices, :]
-                                  for baseline in baselines)
+                rand_indices = np.random.choice(
+                    num_ref_samples, n_samples * bsz
+                ).tolist()
+                baselines = tuple(baseline[rand_indices, :] for baseline in baselines)
             else:
                 baselines = tuple(
-                    baseline.repeat_interleave(n_samples, dim=0) for baseline in baselines
+                    baseline.repeat_interleave(n_samples, dim=0)
+                    for baseline in baselines
                 )
             # update kwargs with expanded baseline
             kwargs["baselines"] = baselines
