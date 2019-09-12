@@ -23,7 +23,7 @@ class InputXGradient(GradientBasedAttribution):
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
-                        attribution is computed. If forward_func takes a single
+                        attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
