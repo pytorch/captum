@@ -83,12 +83,14 @@ class NeuronConductance(NeuronAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It can contain a tuple of ND tensors or
-                            any arbitrary python type of any shape.
-                            In case of the ND tensor the first dimension of the
-                            tensor must correspond to the batch size. It will be
-                            repeated for each of `n_steps` along the integrated path
-                            of integrated gradients.
+                            can be provided. It must be a tuple containing tensors or
+                            any arbitrary python types. These arguments are provided to
+                            forward_func in order following the arguments in inputs.
+                            For a tensor, the first dimension of the tensor must
+                            correspond to the number of examples. It will be repeated
+                             for each of `n_steps` along the integrated path.
+                            For all other types, the given argument is used for
+                            all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
