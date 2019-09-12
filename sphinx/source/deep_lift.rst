@@ -1,7 +1,7 @@
-captum.attr._core.deep_lift
+Captum.DeepLift
 ===========================
 
-.. automodule:: captum.attr._core.deep_lift
+.. automodule:: ._core.deep_lift
 
 .. autoclass:: DeepLift
     :members:

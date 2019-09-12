@@ -88,6 +88,7 @@ ENV/
 
 # vim
 *.swp
+*.swo
 
 # Sphinx documentation
 sphinx/build/
