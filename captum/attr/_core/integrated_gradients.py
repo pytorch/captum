@@ -84,6 +84,12 @@ class IntegratedGradients(GradientBasedAttribution):
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
                             `riemann_trapezoid` or `gausslegendre`.
                             Default: `gausslegendre` if no method is provided.
+                batch_size (int, optional): Divides total #steps * #examples of
+                            necessary forward and backward evaluations into chunks
+                            of size batch_size, which are evaluated sequentially.
+                            If batch_size is None, then all evaluations are processed
+                            in one batch.
+                            Default: None
 
             Return:
 
