@@ -58,8 +58,8 @@ class LayerConductance(LayerAttribution):
 
             Args
 
-                inputs (tensor or tuple of tensors):  Input for which integrated
-                            gradients are computed. If forward_func takes a single
+                inputs (tensor or tuple of tensors):  Input for which layer
+                            conductance is computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed

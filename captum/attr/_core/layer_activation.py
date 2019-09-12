@@ -30,8 +30,8 @@ class LayerActivation(LayerAttribution):
 
             Args
 
-                inputs (tensor or tuple of tensors):  Input for which integrated
-                            gradients are computed. If forward_func takes a single
+                inputs (tensor or tuple of tensors):  Input for which layer
+                            activation is computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
@@ -41,12 +41,9 @@ class LayerActivation(LayerAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It can contain a tuple of ND tensors or
-                            any arbitrary python type of any shape.
-                            In case of the ND tensor the first dimension of the
-                            tensor must correspond to the batch size. It will be
-                            repeated for each of `n_steps` along the integrated path
-                            of integrated gradients.
+                            can be provided. It must be a tuple containing tensors or
+                            any arbitrary python types. These arguments are provided to
+                            forward_func in order following the arguments in inputs.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
