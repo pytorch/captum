@@ -2,19 +2,18 @@
   "Using Captum": [
      {
       "id": "Titanic_Basic_Interpret",
-      "title": "Captum Introduction Tutorial - Titanic Data Analysis"
+      "title": "Getting started with Captum"
+    },{
+      "id": "IMDB_TorchText_Interpret",
+      "title": "Interpreting text models"
     },
     {
       "id": "CIFAR_TorchVision_Interpret",
-      "title": "Integrated Gradients on CIFAR10 dataset"
-    },
-    {
-      "id": "IMDB_TorchText_Interpret",
-      "title": "Predict and Interpret Samples"
+      "title": "Intepreting vision models"
     },
     {
       "id": "Multimodal_VQA_Interpret",
-      "title": "Model Interpretation for Visual Question Answering"
+      "title": "Intepreting multimodal models"
     }
 
   ]
