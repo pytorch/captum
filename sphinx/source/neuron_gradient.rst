@@ -1,5 +1,5 @@
-captum.attr._core.neuron_gradient
-=================================
+Captum.NeuronGradient
+=====================
 
 .. automodule:: captum.attr._core.neuron_gradient
 

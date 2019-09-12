@@ -1,4 +1,4 @@
-captum.attr._models.pytext
+Captum.Models
 ==========================
 
 .. automodule:: captum.attr._models.pytext

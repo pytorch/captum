@@ -1,5 +1,5 @@
-captum.attr._models.base
-========================
+Captum.Models.Base
+==================
 
 .. automodule:: captum.attr._models.base
 

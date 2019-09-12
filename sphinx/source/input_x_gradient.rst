@@ -1,5 +1,5 @@
-captum.attr._core.input_x_gradient
-==================================
+Captum.InputXGradient
+=====================
 
 .. automodule:: captum.attr._core.input_x_gradient
 

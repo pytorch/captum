@@ -1,5 +1,5 @@
-captum.attr._core.saliency
-==========================
+Captum.Saliency
+===============
 
 .. automodule:: captum.attr._core.saliency
 

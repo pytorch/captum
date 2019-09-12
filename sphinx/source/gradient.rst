@@ -1,5 +1,5 @@
-captum.attr._utils.gradient
-===========================
+Captum.Gradient
+===============
 
 .. automodule:: captum.attr._utils.gradient
 

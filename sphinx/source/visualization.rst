@@ -1,5 +1,5 @@
-captum.attr._utils.visualization
-================================
+Captum.Visualization
+====================
 
 .. automodule:: captum.attr._utils.visualization
 

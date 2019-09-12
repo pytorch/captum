@@ -1,5 +1,5 @@
-captum.attr._core.layer_conductance
-===================================
+Captum.LayerConductance
+=======================
 
 .. automodule:: captum.attr._core.layer_conductance
 

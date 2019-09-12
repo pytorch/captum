@@ -1,5 +1,5 @@
-captum.attr._core.layer_activation
-==================================
+Captum.LayerActivation
+======================
 
 .. automodule:: captum.attr._core.layer_activation
 

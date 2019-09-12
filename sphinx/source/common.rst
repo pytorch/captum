@@ -1,5 +1,5 @@
-captum.attr._utils.common
-=========================
+Captum.Utils
+============
 
 .. automodule:: captum.attr._utils.common
 

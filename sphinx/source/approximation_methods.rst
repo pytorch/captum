@@ -1,5 +1,5 @@
-captum.attr._utils.approximation_methods
-========================================
+Captum Approximation
+====================
 
 .. automodule:: captum.attr._utils.approximation_methods
 
