@@ -6,7 +6,7 @@ import numpy as np
 from .approximation_methods import SUPPORTED_METHODS
 
 
-def random_baseline(self, input, start, end):
+def random_baseline(input, start, end):
     return torch.tensor(
         start + end * np.random.random(input.shape),
         dtype=input.dtype,
@@ -15,19 +15,26 @@ def random_baseline(self, input, start, end):
 
 
 # TODO rename maybe to validate_ig_input
-def validate_input(inputs, baselines, n_steps=50, method="riemann_trapezoid"):
+def validate_input(
+    inputs,
+    baselines,
+    n_steps=50,
+    method="riemann_trapezoid",
+    draw_baseline_from_distrib=False,
+):
     assert len(inputs) == len(baselines), (
         "Input and baseline must have the same "
         "dimensions, baseline has {} features whereas input has {}.".format(
             len(baselines), len(inputs)
         )
     )
-    for input, baseline in zip(inputs, baselines):
-        assert (
-            input.shape == baseline.shape
-        ), "Input and baseline must have the same shape. {} != {}".format(
-            baseline.shape, input.shape
-        )
+    if not draw_baseline_from_distrib:
+        for input, baseline in zip(inputs, baselines):
+            assert (
+                input.shape == baseline.shape
+            ), "Input and baseline must have the same shape. {} != {}".format(
+                baseline.shape, input.shape
+            )
     assert (
         n_steps >= 0
     ), "The number of steps must be a positive integer. " "Given: {}".format(n_steps)

@@ -17,6 +17,7 @@ from ._models.base import (
     InterpretableEmbeddingBase,
     TokenReferenceBase,
     configure_interpretable_embedding_layer,
+    remove_interpretable_embedding_layer,
 )  # noqa
 
 from ._utils.gradient import compute_gradients  # noqa
@@ -40,4 +41,5 @@ __all__ = [
     "compute_gradients",
     "visualization",
     "configure_interpretable_embedding_layer",
+    "remove_interpretable_embedding_layer",
 ]
