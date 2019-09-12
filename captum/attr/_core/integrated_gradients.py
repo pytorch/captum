@@ -78,7 +78,7 @@ class IntegratedGradients(GradientBasedAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                n_steps (tuple, optional): The number of steps used by the approximation
+                n_steps (int, optional): The number of steps used by the approximation
                             method. Default: 50.
                 method (string, optional): Method for approximating the integral,
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
