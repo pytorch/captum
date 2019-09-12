@@ -9,8 +9,8 @@ class InputXGradient(GradientBasedAttribution):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model
-                       or any modification of it
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
         """
         super().__init__(forward_func)
 
