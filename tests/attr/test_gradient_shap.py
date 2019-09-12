@@ -9,6 +9,7 @@ from .helpers.utils import BaseTest
 from .helpers.classification_models import SoftmaxModel
 from captum.attr._core.gradient_shap import GradientShap
 
+
 class Test(BaseTest):
 
     # These test reproduces some of the test cases from the original implementation
@@ -21,8 +22,10 @@ class Test(BaseTest):
         x2 = torch.ones(batch_size, 4)
 
         batch_size_baselines = 20
-        baselines = (torch.zeros(batch_size_baselines, 3),
-                     torch.zeros(batch_size_baselines, 4))
+        baselines = (
+            torch.zeros(batch_size_baselines, 3),
+            torch.zeros(batch_size_baselines, 4),
+        )
 
         class Net(nn.Module):
             def __init__(self):
@@ -42,13 +45,16 @@ class Test(BaseTest):
         attributions, delta = gradient_shap.attribute((x1, x2), baselines)
         self.assertEqual(attributions[0].shape, x1.shape)
         self.assertEqual(attributions[1].shape, x2.shape)
-        self.assertTrue(delta < 0.05, "Sum of shap values does" \
-                               " not match the difference of endpoints. %f" % (delta))
+        self.assertTrue(
+            delta < 0.05,
+            "Sum of shap values does"
+            " not match the difference of endpoints. %f" % (delta),
+        )
 
     def test_classification(self):
         num_in = 40
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
-        baselines =  torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
+        baselines = torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
         target = torch.tensor(1)
         # 10-class classification model
         model = SoftmaxModel(num_in, 20, 10)
@@ -56,9 +62,12 @@ class Test(BaseTest):
         model.zero_grad()
 
         gradient_shap = GradientShap(model)
-        attributions, delta =  gradient_shap.attribute(
+        attributions, delta = gradient_shap.attribute(
             inputs, baselines=baselines, target=target, n_samples=1000, stdevs=0.9
         )
         self.assertEqual(attributions.shape, inputs.shape)
-        self.assertTrue(delta < 0.05, "Sum of shap values does" \
-                               " not match the difference of endpoints. %f" % (delta))
+        self.assertTrue(
+            delta < 0.05,
+            "Sum of shap values does"
+            " not match the difference of endpoints. %f" % (delta),
+        )
