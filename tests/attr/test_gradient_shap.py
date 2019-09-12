@@ -12,7 +12,7 @@ from captum.attr._core.gradient_shap import GradientShap
 
 class Test(BaseTest):
 
-    # These test reproduces some of the test cases from the original implementation
+    # This test reproduces some of the test cases from the original implementation
     # https://github.com/slundberg/shap/
     # explainers/test_gradient.py
     def test_basic_multi_input(self):
