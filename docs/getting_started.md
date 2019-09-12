@@ -3,10 +3,7 @@ id: getting_started
 title: Getting Started
 ---
 
-This section shows you how to get your feet wet with Captum.
-
-Before jumping the gun, we recommend you start with the high-level
-[Overview](overview) to learn about the basic concepts in Captum.
+This section shows you how to get up and running with Captum.
 
 
 ## Installing Captum
