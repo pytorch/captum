@@ -26,7 +26,7 @@ class Attribution:
         """
         raise NotImplementedError("A derived class should implement attribute method")
 
-    def has_convergence_delta(self):
+    def _has_convergence_delta(self):
         return False
 
     def _compute_convergence_delta(
