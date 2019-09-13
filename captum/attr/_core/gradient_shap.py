@@ -93,6 +93,20 @@ class GradientShap(GradientBasedAttribution):
             n_steps (tuple, optional): The number of steps used by the smoothgrad
                         method. Default: 50.
 
+
+            Examples::
+
+                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+                >>> # and returns an Nx10 tensor of class probabilities.
+                >>> net = ImageClassifier()
+                >>> gradient_shap = GradientShap(net)
+                >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
+                >>> # choosing baselines randomly
+                >>> baselines = torch.randn(20, 3, 32, 32)
+                >>> # Computes gradient shap for the input
+                >>> # Attribution size matches input size, 3x12x32x32
+                >>> attribution = gradient_shap.attribute(input, baselines, target=5)
+
         """
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
 
