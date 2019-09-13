@@ -34,7 +34,7 @@ class NoiseTunnel(Attribution):
             Saliency.
         """
         self.attribution_method = attribution_method
-        self.is_delta_supported = self.attribution_method.has_convergence_delta()
+        self.is_delta_supported = self.attribution_method._has_convergence_delta()
 
         super().__init__()
 

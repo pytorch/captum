@@ -190,5 +190,5 @@ class InputBaselineXGradient(GradientBasedAttribution):
         )
         return _format_attributions(is_inputs_tuple, attributions)
 
-    def has_convergence_delta(self):
+    def _has_convergence_delta(self):
         return False
