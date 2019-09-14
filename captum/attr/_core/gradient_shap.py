@@ -66,9 +66,11 @@ class GradientShap(GradientBasedAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if mutliple input tensors
                         are provided, the examples must be aligned appropriately.
-            baselines (tensor or tuple of tensors, optional):  Baseline from which
-                        integral is computed. It is recommended that the number
+            baselines (tensor or tuple of tensors, optional):  Baselines from which
+                        expectation is computed. It is recommended that the number
                         of samples in the baselines' tensors is larger than one.
+                        This defines the baseline distribution from which we will
+                        draw our samples from.
                         If inputs is a tuple of tensors,
                         baselines must also be a tuple of tensors, with the
                         same number of tensors as the inputs.
@@ -131,7 +133,7 @@ class GradientShap(GradientBasedAttribution):
         )
         return attributions, delta
 
-    def has_convergence_delta(self):
+    def _has_convergence_delta(self):
         return True
 
 
