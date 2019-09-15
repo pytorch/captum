@@ -82,14 +82,14 @@ pytest -ra
 
 ## Getting Started
 Captum allows to interpret/understand the predictions of PyTorch models by
-looking at the features that contributed to those decisions. It also
+looking at the features that contribute to decisions that the model makes. It also
 helps to understand which neurons and layers are important for model predictions.
 
 To do so, it uses state of the art model interpretability algorithms and
 attributes contributions to each input of the model with respect to
 different neurons / layers, both intermediate and final.
 
-Now, let's apply some of those algorithms to a Toy model that we created for
+Now, let's apply some of those algorithms to a Toy model that we have created for
 demonstration purposes.
 For simplicity we can use the following simple architecture but users are welcome
 to use any PyTorch model of their choice.
@@ -133,24 +133,24 @@ no predictive signal. Zero tensor can serve as a baseline for some tasks.
 
 Afterwards, we will apply model interpretability algorithms on the network
 mentioned above, in order to understand the importance of individual
-neurons/layers and the parts of the input play an important role in the
+neurons/layers and the parts of the input that play an important role in the
 final prediction.
 
-Let's fix random seed in order to make computations deterministic
+Let's fix random seeds in order to make computations deterministic
 ```
 torch.manual_seed(123)
 np.random.seed(123)
 ```
 
-Let's define our input and baseline tensors. It is used in some interpretability
-algorithms such as Integrated Gradients, DeepLift, GradientShap, etc.
+Now, let's define our input and baseline tensors. Baselines are used in some
+interpretability algorithms such as Integrated Gradients, DeepLift,
+GradientShap, etc.
 ```
 input = torch.rand(2, 3)
 baseline = torch.zeros(2, 3)
 ```
-Let's use one of the algorithms `IntegratedGradients`. In this example
-integrated gradients will assign a attribution score to each input with
-respect to final output prediction.
+As next we will use `IntegratedGradients` algorithms to assign attribution
+scores to each input feature with respect to final output.
 ```
 ig = IntegratedGradients(model)
 attributions, delta = ig.attribute(input, baseline)
@@ -171,16 +171,15 @@ contributed to the final prediction and negative means the opposite.
 The magnitude of the attribution score signifies the strength of the contribution.
 Zero attribution score means no contribution from that particular feature.
 
-Similarly we can apply GradientShap, DeepLift and other attribution algorithms to the model.
+Similarly, we can apply GradientShap, DeepLift and other attribution algorithms to the model.
 ```
 gs = GradientShap(model)
 
-# This defines a distribution of baselines and we will draw `n_samples` from that
-# distribution for estimate the expectation of gradients across all baselines
+# We define a distribution of baselines and draw `n_samples` from that
+# distribution in order to estimate the expectations of gradients across all baselines
 baseline_dist = torch.rand(100, 3)
 attributions, delta = gs.attribute(input, baseline_dist, n_samples=50)
 print('GradientShap Attributions: ', attributions, ' Approximation error: ', delta)
-
 ```
 Output
 ```
@@ -199,9 +198,7 @@ ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
 attributions, delta = nt.attribute(input, nt_type='smoothgrad', baselines=baseline)
 print('IG + SmoothGrad Attributions: ', attributions, ' Approximation error: ', delta)
-
 ```
-
 Output
 ```
 IG + SmoothGrad Attributions:  tensor([[-1.2138,  0.6688,  0.7747],
@@ -220,13 +217,18 @@ nc = NeuronConductance(model, model.lin2)
 attributions = nc.attribute(input, neuron_index=3, baselines=baseline)
 print('Neuron Attributions: ', attributions)
 ```
-Since neuron conductance does not have completeness property, it is not computed
+Output
+```
+Neuron Attributions:  tensor([[0.2902, 0.5062, 0.2466],
+                             [0.6748, 0.0725, 0.8492]])
+```
+Since neuron conductance does not have completeness property, delta is not computed
 here. However, layer conductance has completeness property and we will compute for
 the layer.
 
-Layer conductance shows the importance of the layer for a predictions. It does
-not attribute the contribution scores to the input features.
-
+Layer conductance shows the importance of neurons for a layer and given input.
+It doesn't attribute the contribution scores to the input features
+but shows the importance of each neuron in selected layer.
 ```
 lc = LayerConductance(model, model.lin1)
 attributions, delta = lc.attribute(input, baselines=baseline)
