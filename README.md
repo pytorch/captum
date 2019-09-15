@@ -92,7 +92,7 @@ different neurons / layers, both intermediate and final.
 
 Now, let's apply some of those algorithms to a toy model that we have created for
 demonstration purposes.
-For simplicity, we can use the following simple architecture but users are welcome
+For simplicity, we will use the following simple architecture but users are welcome
 to use any PyTorch model of their choice.
 ```
 import torch
