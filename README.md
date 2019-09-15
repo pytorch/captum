@@ -193,7 +193,7 @@ In order to smoothen and improve the quality of the attributions we can run
 Integrated Gradients and other attribution methods through a Noise Tunnel.
 Noise Tunnel allows to use Smoothgrad/Smoothgrad_sq and Vargrad techniques
 with gaussian kernels to smoothen the gradients.
-Here is en example how we can use NoseTunnel with Integrated Gradients.
+Here is an example how we can use NoseTunnel with Integrated Gradients.
 ```
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
@@ -242,8 +242,8 @@ Layer Attributions:  tensor([[0.8883, 1.5497, 0.7550],
 Approximation error:  9.5367431640625e-07
 ```
 
-More details on the list of algorithms that we support and how to apply
-captum on different types of models can be found in out tutorials.
+More details on the list of supported algorithms and how to apply
+captum on different types of models can be found in our tutorials.
 
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.

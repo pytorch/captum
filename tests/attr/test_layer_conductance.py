@@ -117,7 +117,6 @@ class Test(BaseTest):
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
             )
-            print('delta: ', delta)
             self.assertTrue(delta < 0.05, "Sum of attributions does" \
                             " not match the difference of endpoints. %f" % (delta))
 
@@ -150,8 +149,11 @@ class Test(BaseTest):
             n_steps=300,
             method="gausslegendre",
         )
-        self.assertTrue(delta < 0.05, "Sum of attributions values does" \
-                        " not match the difference of endpoints. %f" % (delta))
+        self.assertTrue(
+            delta < 0.05,
+            "Sum of attributions values does"
+            " not match the difference of endpoints. %f" % (delta),
+        )
 
         attributions_reference = cond_ref.attribute(
             test_input,
