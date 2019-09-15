@@ -242,6 +242,9 @@ Layer Attributions:  tensor([[0.8883, 1.5497, 0.7550],
 Approximation error:  9.5367431640625e-07
 ```
 
+More details on the list of algorithms that we support and how to apply
+captum on different types of models can be found in out tutorials.
+
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
