@@ -90,9 +90,9 @@ To do so, it uses state of the art model interpretability algorithms and
 attributes contributions to each input of the model with respect to
 different neurons / layers, both intermediate and final.
 
-Now, let's apply some of those algorithms to a Toy model that we have created for
+Now, let's apply some of those algorithms to a toy model that we have created for
 demonstration purposes.
-For simplicity we can use the following simple architecture but users are welcome
+For simplicity, we can use the following simple architecture but users are welcome
 to use any PyTorch model of their choice.
 ```
 import torch
