@@ -140,7 +140,7 @@ final prediction.
 Let's fix random seeds in order to make computations deterministic
 ```
 torch.manual_seed(123)
-np.random.seed(123)
+np.random.seed(124)
 ```
 
 Now, let's define our input and baseline tensors. Baselines are used in some
