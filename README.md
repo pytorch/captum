@@ -100,7 +100,7 @@ import torch.nn as nn
 import numpy as np
 
 from captum.attr import IntegratedGradients, NoiseTunnel, \
-    NeuronConductance, LayerConductance
+    NeuronConductance, LayerConductance, GradientShap
 
     class ToyModel(nn.Module):
         def __init__(self):
