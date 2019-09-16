@@ -8,7 +8,7 @@ from .._utils.common import (
 from .._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    _forward_layer_eval,
+    _forward_layer_eval_with_neuron_grads,
 )
 
 
@@ -49,7 +49,7 @@ class NeuronGradient(NeuronAttribution):
         )
         gradient_mask = apply_gradient_requirements(inputs)
 
-        layer_out, input_grads = _forward_layer_eval(
+        layer_out, input_grads = _forward_layer_eval_with_neuron_grads(
             self.forward_func,
             inputs,
             self.layer,

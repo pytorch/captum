@@ -62,7 +62,7 @@ def undo_gradient_requirements(inputs, grad_required):
 
 
 def compute_gradients(
-    forward_fn, inputs, target_ind=None, additional_forward_args=None, batch_size=None
+    forward_fn, inputs, target_ind=None, additional_forward_args=None
 ):
     r"""
         Computes gradients of the output with respect to inputs for an
@@ -110,6 +110,19 @@ def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_ind
 
 
 def _forward_layer_eval(
+    forward_fn, inputs, layer, additional_forward_args=None, device_ids=None
+):
+    return _forward_layer_eval_with_neuron_grads(
+        forward_fn,
+        inputs,
+        layer,
+        additional_forward_args=additional_forward_args,
+        gradient_neuron_index=None,
+        device_ids=device_ids,
+    )
+
+
+def _forward_layer_eval_with_neuron_grads(
     forward_fn,
     inputs,
     layer,
@@ -117,6 +130,22 @@ def _forward_layer_eval(
     gradient_neuron_index=None,
     device_ids=None,
 ):
+    """
+    This method computes forward evaluation for a particular layer using a
+    forward hook. If a gradient_neuron_index is provided, then gradients with
+    respect to that neuron in the layer output are also returned.
+
+    These functionalities are combined due to the behavior of DataParallel models
+    with hooks, in which hooks are executed once per device. We need to internally
+    combine the separated tensors from devices by concatenating based on device_ids.
+    Any necessary gradients must be taken with respect to each independent batched
+    tensor, so the gradients are computed and combined appropriately.
+
+    More information regarding the behavior of forward hooks with DataParallel models
+    can be found in the PyTorch data parallel documentation. We maintain the separate
+    evals in a dictionary protected by a lock, analogous to the gather implementation
+    for the core PyTorch DataParallel implementation.
+    """
     saved_layer_outputs = {}
     lock = threading.Lock()
 
@@ -154,9 +183,12 @@ def _forward_layer_eval(
         inp_grads = _neuron_gradients(
             inputs, saved_layer_outputs, key_list, gradient_neuron_index
         )
-        return torch.cat([saved_layer_outputs[dev] for dev in key_list]), inp_grads
+        return (
+            torch.cat([saved_layer_outputs[device_id] for device_id in key_list]),
+            inp_grads,
+        )
     else:
-        return torch.cat([saved_layer_outputs[dev] for dev in key_list])
+        return torch.cat([saved_layer_outputs[device_id] for device_id in key_list])
 
 
 def compute_layer_gradients_and_eval(
@@ -172,6 +204,17 @@ def compute_layer_gradients_and_eval(
         Computes gradients of the output with respect to a given layer as well
         as the output evaluation of the layer for an arbitrary forward function
         and given input.
+
+        For data parallel models, hooks are executed once per device ,so we
+        need to internally combine the separated tensors from devices by
+        concatenating based on device_ids. Any necessary gradients must be taken
+        with respect to each independent batched tensor, so the gradients are
+        computed and combined appropriately.
+
+        More information regarding the behavior of forward hooks with DataParallel
+        models can be found in the PyTorch data parallel documentation. We maintain
+        the separate inputs in a dictionary protected by a lock, analogous to the
+        gather implementation for the core PyTorch DataParallel implementation.
 
         Args
 
@@ -229,8 +272,10 @@ def compute_layer_gradients_and_eval(
                 )
 
         key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
-        all_outputs = torch.cat([saved_layer_outputs[dev] for dev in key_list])
-        grad_inputs = tuple(saved_layer_outputs[dev] for dev in key_list)
+        all_outputs = _reduce_list(
+            [saved_layer_outputs[device_id] for device_id in key_list]
+        )
+        grad_inputs = tuple(saved_layer_outputs[device_id] for device_id in key_list)
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
         all_grads = torch.cat(saved_grads)
         if gradient_neuron_index is not None:

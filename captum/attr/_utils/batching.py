@@ -8,9 +8,12 @@ def _tuple_splice_range(inputs, start, end):
     """
     Splices each tensor element of given tuple (inputs) from range start
     (inclusive) to end (non-inclusive) on its first dimension. If element
-    is not a Tensor, it is left unchanged. The returned value is a tuple
-    with the same length as inputs, with Tensors spliced appropriately.
+    is not a Tensor, it is left unchanged. It is assumed that all tensor elements
+    have the same first dimension (corresponding to number of examples).
+    The returned value is a tuple with the same length as inputs, with Tensors
+    spliced appropriately.
     """
+    assert start < end, "Start point must precede end point for batch splicing."
     if inputs is None:
         return None
     return tuple(
@@ -54,10 +57,10 @@ def _sort_key_list(keys, device_ids=None):
             raise AssertionError("Duplicate CUDA Device ID identified in device list.")
         id_dict[key.index] = key
 
-    out_list = []
-    for dev_id in device_ids:
-        if dev_id in id_dict:
-            out_list.append(id_dict[dev_id])
+    out_list = [
+        id_dict[device_id]
+        for device_id in filter(lambda device_id: device_id in id_dict, device_ids)
+    ]
 
     assert len(out_list) == len(keys), "Given Device ID List does not match"
     "devices with computed tensors."
@@ -65,44 +68,43 @@ def _sort_key_list(keys, device_ids=None):
     return out_list
 
 
-def _batched_generator(inputs, additional_forward_args=None, batch_size=None):
+def _batched_generator(inputs, additional_forward_args=None, internal_batch_size=None):
     """
-    Returns a generator which returns corresponding chunks of size batch_size
+    Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
     generator only includes original inputs and additional args.
     """
-    assert batch_size is None or (
-        isinstance(batch_size, int) and batch_size > 0
+    assert internal_batch_size is None or (
+        isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
     inputs = format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
-    if batch_size is None:
+    if internal_batch_size is None:
         yield inputs, additional_forward_args
     else:
-        current_total = 0
-        while current_total < num_examples:
+        for current_total in range(0, num_examples, internal_batch_size):
             yield _tuple_splice_range(
-                inputs, current_total, current_total + batch_size
+                inputs, current_total, current_total + internal_batch_size
             ), _tuple_splice_range(
-                additional_forward_args, current_total, current_total + batch_size
+                additional_forward_args,
+                current_total,
+                current_total + internal_batch_size,
             )
-            current_total += batch_size
 
 
 def _batched_operator(
-    operator, inputs, additional_forward_args=None, batch_size=None, **kwargs
+    operator, inputs, additional_forward_args=None, internal_batch_size=None, **kwargs
 ):
     """
     Batches the operation of the given operator, applying the given batch size
     to inputs and additional forward arguments, and returning the concatenation
     of the results of each batch.
     """
-    all_outputs = []
-    for input, additional in _batched_generator(
-        inputs, additional_forward_args, batch_size
-    ):
-        all_outputs.append(
-            operator(inputs=input, additional_forward_args=additional, **kwargs)
+    all_outputs = [
+        operator(inputs=input, additional_forward_args=additional, **kwargs)
+        for input, additional in _batched_generator(
+            inputs, additional_forward_args, internal_batch_size
         )
+    ]
     return _reduce_list(all_outputs)
