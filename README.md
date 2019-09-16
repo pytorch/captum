@@ -81,7 +81,7 @@ pytest -ra
 ```
 
 ## Getting Started
-Captum allows to interpret/understand the predictions of PyTorch models by
+Captum helps to interpret/understand the predictions of PyTorch models by
 looking at the features that contribute to the decisions that the model makes.
 It also helps to understand which neurons and layers are important for
 model predictions.
