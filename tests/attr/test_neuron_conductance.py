@@ -103,7 +103,7 @@ class Test(BaseTest):
         expected_input_conductance,
         additional_input=None,
     ):
-        for batch_size in (None, 1, 20):
+        for internal_batch_size in (None, 1, 20):
             cond = NeuronConductance(model, target_layer)
             attributions = cond.attribute(
                 test_input,
@@ -112,7 +112,7 @@ class Test(BaseTest):
                 n_steps=500,
                 method="gausslegendre",
                 additional_forward_args=additional_input,
-                batch_size=batch_size,
+                internal_batch_size=internal_batch_size,
             )
             if isinstance(expected_input_conductance, tuple):
                 for i in range(len(expected_input_conductance)):
