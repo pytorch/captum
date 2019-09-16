@@ -33,7 +33,7 @@ class IntegratedGradients(GradientBasedAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
-        batch_size=None,
+        internal_batch_size=None,
     ):
         r"""
             Computes the integral of gradients along the path from a baseline input
@@ -149,7 +149,7 @@ class IntegratedGradients(GradientBasedAttribution):
             self.gradient_func,
             scaled_features_tpl,
             input_additional_args,
-            batch_size=batch_size,
+            internal_batch_size=internal_batch_size,
             forward_fn=self.forward_func,
             target_ind=target,
         )

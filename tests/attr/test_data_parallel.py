@@ -12,7 +12,11 @@ from captum.attr._core.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
 
-from .helpers.basic_models import TestModel_MultiLayer, TestModel_MultiLayer_MultiInput
+from .helpers.basic_models import (
+    TestModel_MultiLayer,
+    TestModel_MultiLayer_MultiInput,
+    TestModel_ConvNet,
+)
 from .helpers.utils import BaseGPUTest
 
 
@@ -46,6 +50,7 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=0,
+            test_batches=True,
         )
 
     def test_simple_layer_activation(self):
@@ -105,6 +110,14 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
+            test_batches=True,
+        )
+
+    def test_multi_dim_layer_conductance(self):
+        net = TestModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            LayerConductance, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
 
     def test_simple_layer_gradient_x_activation(self):
@@ -149,7 +162,7 @@ class Test(BaseGPUTest):
             ]
         ).cuda()
         self._data_parallel_test_assert(
-            NeuronConductance, net, net.relu, inputs=inp, neuron_index=(3,), target=1
+            NeuronConductance, net, net.relu, inputs=inp, neuron_index=3, target=1
         )
 
     def test_multi_input_neuron_conductance(self):
@@ -168,6 +181,20 @@ class Test(BaseGPUTest):
             additional_forward_args=(inp3, 5),
             target=1,
             neuron_index=(3,),
+            test_batches=True,
+        )
+
+    def test_multi_dim_neuron_conductance(self):
+        net = TestModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            NeuronConductance,
+            net,
+            net.conv2,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
+            neuron_index=(0, 1, 0),
         )
 
     def test_simple_neuron_gradient(self):
@@ -186,7 +213,7 @@ class Test(BaseGPUTest):
             net.relu,
             alt_device_ids=True,
             inputs=inp,
-            neuron_index=(3,),
+            neuron_index=3,
         )
 
     def test_multi_input_neuron_gradient(self):
@@ -221,7 +248,7 @@ class Test(BaseGPUTest):
             net.relu,
             alt_device_ids=True,
             inputs=inp,
-            neuron_index=(3,),
+            neuron_index=3,
         )
 
     def test_multi_input_integrated_gradient(self):
@@ -238,6 +265,7 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             neuron_index=(3,),
+            test_batches=True,
         )
 
     def _alt_device_list(self):
@@ -245,11 +273,12 @@ class Test(BaseGPUTest):
 
     def _data_parallel_test_assert(
         self,
-        method,
+        algorithm,
         model,
         target_layer=None,
         contains_delta=False,
         alt_device_ids=False,
+        test_batches=False,
         **kwargs
     ):
         if alt_device_ids:
@@ -259,34 +288,48 @@ class Test(BaseGPUTest):
         else:
             dp_model = torch.nn.parallel.DataParallel(model)
         if target_layer:
-            attr_orig = method(model, target_layer)
+            attr_orig = algorithm(model, target_layer)
             if alt_device_ids:
-                attr_dp = method(
+                attr_dp = algorithm(
                     dp_model.forward, target_layer, self._alt_device_list()
                 )
             else:
-                attr_dp = method(dp_model, target_layer)
+                attr_dp = algorithm(dp_model, target_layer)
         else:
-            attr_orig = method(model)
-            attr_dp = method(dp_model)
-        attributions_orig = attr_orig.attribute(**kwargs)
-        attributions_dp = attr_dp.attribute(**kwargs)
-        if contains_delta:
-            attributions_orig = attributions_orig[0]
-            attributions_dp = attributions_dp[0]
-        if isinstance(attributions_dp, torch.Tensor):
-            self.assertAlmostEqual(
-                torch.sum(torch.abs(attributions_orig - attributions_dp)),
-                0,
-                delta=0.0001,
-            )
-        else:
-            for i in range(len(attributions_orig)):
+            attr_orig = algorithm(model)
+            attr_dp = algorithm(dp_model)
+        batch_sizes = [None]
+        if test_batches:
+            batch_sizes = [None, 1, 8]
+        for batch_size in batch_sizes:
+            if batch_size:
+                attributions_orig = attr_orig.attribute(
+                    internal_batch_size=batch_size, **kwargs
+                )
+            else:
+                attributions_orig = attr_orig.attribute(**kwargs)
+            if batch_size:
+                attributions_dp = attr_dp.attribute(
+                    internal_batch_size=batch_size, **kwargs
+                )
+            else:
+                attributions_dp = attr_dp.attribute(**kwargs)
+            if contains_delta:
+                attributions_orig = attributions_orig[0]
+                attributions_dp = attributions_dp[0]
+            if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
-                    torch.sum(torch.abs(attributions_orig[i] - attributions_dp[i])),
+                    torch.sum(torch.abs(attributions_orig - attributions_dp)),
                     0,
                     delta=0.0001,
                 )
+            else:
+                for i in range(len(attributions_orig)):
+                    self.assertAlmostEqual(
+                        torch.sum(torch.abs(attributions_orig[i] - attributions_dp[i])),
+                        0,
+                        delta=0.0001,
+                    )
 
 
 if __name__ == "__main__":

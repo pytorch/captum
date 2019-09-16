@@ -35,7 +35,7 @@ class NeuronConductance(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="riemann_trapezoid",
-        batch_size=None,
+        internal_batch_size=None,
     ):
         r"""
             Computes conductance with respect to particular hidden neurons. The
@@ -107,7 +107,7 @@ class NeuronConductance(NeuronAttribution):
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
-            batch_size=batch_size,
+            internal_batch_size=internal_batch_size,
             forward_fn=self.forward_func,
             layer=self.layer,
             target_ind=target,
@@ -119,8 +119,8 @@ class NeuronConductance(NeuronAttribution):
         indices = _extend_index_list(total_batch, neuron_index)
 
         # Multiplies by appropriate gradient of output with respect to hidden neurons
-        # mid_grads is a 1D Tensor of length num_steps*batch_size, containing
-        # mid layer gradient for each input step.
+        # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
+        # containing mid layer gradient for each input step.
         mid_grads = torch.stack([layer_gradients[index] for index in indices])
 
         scaled_input_gradients = tuple(

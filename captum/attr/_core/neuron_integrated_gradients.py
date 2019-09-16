@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import _forward_layer_eval
+from .._utils.gradient import _forward_layer_eval_with_neuron_grads
 
 from .integrated_gradients import IntegratedGradients
 
@@ -24,7 +24,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
-        batch_size=None,
+        internal_batch_size=None,
     ):
         r"""
             Computes integrated gradients for a particular neuron in the given
@@ -57,7 +57,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         """
 
         def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-            _, grads = _forward_layer_eval(
+            _, grads = _forward_layer_eval_with_neuron_grads(
                 forward_fn,
                 inputs,
                 self.layer,
@@ -76,5 +76,5 @@ class NeuronIntegratedGradients(NeuronAttribution):
             additional_forward_args=additional_forward_args,
             n_steps=n_steps,
             method=method,
-            batch_size=batch_size,
+            internal_batch_size=internal_batch_size,
         )[0]

@@ -25,6 +25,15 @@ class Test(BaseTest):
         self.assertEqual(spliced_tuple[1], "test")
         assertTensorAlmostEqual(self, spliced_tuple[2], [[0, 1, 2], [3, 4, 5]])
 
+    def test_tuple_splice_range_3d(self):
+        test_tuple = (
+            torch.tensor([[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [6, 7, 8]]]),
+            "test",
+        )
+        spliced_tuple = _tuple_splice_range(test_tuple, 1, 2)
+        assertTensorAlmostEqual(self, spliced_tuple[0], [[[6, 7, 8], [6, 7, 8]]])
+        self.assertEqual(spliced_tuple[1], "test")
+
     def test_reduce_list_tensors(self):
         tensors = [torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])]
         reduced = _reduce_list(tensors)
@@ -78,15 +87,20 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, add[0], array3[index])
             self.assertEqual(add[1], 5)
 
+    def test_batched_operator_0_bsz(self):
+        inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        with self.assertRaises(AssertionError):
+            _batched_operator(lambda x: x, inputs=inp1, batch_size=0)
+
     def test_batched_operator(self):
-        def sample_operator(inputs, additional_forward_args, scale):
+        def _sample_operator(inputs, additional_forward_args, scale):
             return (scale * (sum(inputs)), scale * sum(additional_forward_args))
 
         inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
         inp2 = torch.tensor([[6, 7, 8], [0, 1, 2], [3, 4, 5]])
         inp3 = torch.tensor([[0, 1, 2], [0, 0, 0], [0, 0, 0]])
         batched_result = _batched_operator(
-            sample_operator,
+            _sample_operator,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3),
             scale=2.0,
