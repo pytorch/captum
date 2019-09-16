@@ -121,7 +121,7 @@ class Test(BaseTest):
         baseline=None,
         additional_args=None,
     ):
-        for batch_size in [None, 1, 20]:
+        for internal_batch_size in [None, 1, 20]:
             int_inf = InternalInfluence(model, target_layer)
             attributions = int_inf.attribute(
                 test_input,
@@ -130,7 +130,7 @@ class Test(BaseTest):
                 n_steps=500,
                 method="riemann_trapezoid",
                 additional_forward_args=additional_args,
-                batch_size=batch_size,
+                internal_batch_size=internal_batch_size,
             )
             for i in range(len(expected_activation)):
                 assertArraysAlmostEqual(

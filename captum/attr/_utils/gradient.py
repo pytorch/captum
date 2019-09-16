@@ -150,7 +150,9 @@ def _forward_layer_eval_with_neuron_grads(
     lock = threading.Lock()
 
     # Set a forward hook on specified module and run forward pass to
-    # get layer output tensor.
+    # get layer output tensor(s).
+    # For DataParallel models, each partition adds entry to dictionary
+    # with key as device and value as corresponding Tensor.
     def forward_hook(module, inp, out):
         assert isinstance(
             out, torch.Tensor
@@ -166,6 +168,9 @@ def _forward_layer_eval_with_neuron_grads(
     if len(saved_layer_outputs) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
+    # Multiple devices / keys implies a DataParallel model, so we look for
+    # device IDs if given or available from forward function
+    # (DataParallel model object).
     if len(saved_layer_outputs) > 1 and device_ids is None:
         if (
             isinstance(forward_fn, torch.nn.DataParallel)
@@ -178,6 +183,9 @@ def _forward_layer_eval_with_neuron_grads(
                 " must be provided for identifying device batch ordering."
             )
 
+    # Identifies correct device ordering based on device ids.
+    # key_list is a list of devices in appropriate ordering for concatenation.
+    # If only one key exists (standard model), key list simply has one element.
     key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
     if gradient_neuron_index is not None:
         inp_grads = _neuron_gradients(
@@ -240,7 +248,9 @@ def compute_layer_gradients_and_eval(
         lock = threading.Lock()
 
         # Set a forward hook on specified module and run forward pass to
-        # get layer output tensor.
+        # get layer output tensor(s).
+        # For DataParallel models, each partition adds entry to dictionary
+        # with key as device and value as corresponding Tensor.
         def forward_hook(module, inp, out):
             with lock:
                 assert isinstance(
@@ -259,6 +269,9 @@ def compute_layer_gradients_and_eval(
                 "Forward hook did not obtain any outputs for given layer"
             )
 
+        # Multiple devices / keys implies a DataParallel model, so we look for
+        # device IDs if given or available from forward function
+        # (DataParallel model object).
         if len(saved_layer_outputs) > 1 and device_ids is None:
             if (
                 isinstance(forward_fn, torch.nn.DataParallel)
@@ -271,6 +284,9 @@ def compute_layer_gradients_and_eval(
                     " must be provided for identifying device batch ordering."
                 )
 
+        # Identifies correct device ordering based on device ids.
+        # key_list is a list of devices in appropriate ordering for concatenation.
+        # If only one key exists (standard model), key list simply has one element.
         key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
         all_outputs = _reduce_list(
             [saved_layer_outputs[device_id] for device_id in key_list]

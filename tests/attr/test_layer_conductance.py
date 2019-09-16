@@ -108,14 +108,14 @@ class Test(BaseTest):
         additional_args=None,
     ):
         cond = LayerConductance(model, target_layer)
-        for batch_size in (None, 1, 20):
+        for internal_internal_batch_size in (None, 1, 20):
             attributions = cond.attribute(
                 test_input,
                 target=0,
                 n_steps=500,
                 method="gausslegendre",
                 additional_forward_args=additional_args,
-                batch_size=batch_size,
+                internal_internal_batch_size=internal_internal_batch_size,
             )
             for i in range(len(expected_conductance)):
                 assertArraysAlmostEqual(

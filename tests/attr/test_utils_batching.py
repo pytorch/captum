@@ -90,7 +90,7 @@ class Test(BaseTest):
     def test_batched_operator_0_bsz(self):
         inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
         with self.assertRaises(AssertionError):
-            _batched_operator(lambda x: x, inputs=inp1, batch_size=0)
+            _batched_operator(lambda x: x, inputs=inp1, internal_batch_size=0)
 
     def test_batched_operator(self):
         def _sample_operator(inputs, additional_forward_args, scale):
@@ -104,7 +104,7 @@ class Test(BaseTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3),
             scale=2.0,
-            batch_size=1,
+            internal_batch_size=1,
         )
         assertTensorAlmostEqual(
             self, batched_result[0], [[12, 16, 20], [6, 10, 14], [18, 22, 26]]

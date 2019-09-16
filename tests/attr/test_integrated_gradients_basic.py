@@ -315,7 +315,7 @@ class Test(BaseTest):
             "riemann_trapezoid",
             "gausslegendre",
         ]:
-            for batch_size in [None, 1, 20]:
+            for internal_batch_size in [None, 1, 20]:
                 attributions, delta = ig.attribute(
                     inputs,
                     baselines,
@@ -323,7 +323,7 @@ class Test(BaseTest):
                     method=method,
                     n_steps=200,
                     target=target,
-                    batch_size=batch_size,
+                    internal_batch_size=internal_batch_size,
                 )
                 total_delta = 0
                 for i in range(inputs[0].shape[0]):
