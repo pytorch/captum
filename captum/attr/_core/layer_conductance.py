@@ -61,6 +61,11 @@ class LayerConductance(LayerAttribution):
 
                 attributions: Total conductance with respect to each neuron in
                               output of given layer
+                delta (float): The difference between the total approximated and
+                            true integrated gradients.
+                            This is computed using the property that the total sum of
+                            forward_func(inputs) - forward_func(baselines) must equal
+                            the total sum of the attributions.
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
         validate_input(inputs, baselines, n_steps, method)
