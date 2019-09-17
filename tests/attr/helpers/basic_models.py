@@ -86,7 +86,7 @@ class BasicModel6_MultiTensor(nn.Module):
         super().__init__()
 
     def forward(self, input1, input2):
-        input = torch.cat((input1, input2))
+        input = input1 + input2
         return 1 - F.relu(1 - input)[:, 1]
 
 

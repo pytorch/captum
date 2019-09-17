@@ -187,7 +187,7 @@ class NoiseTunnel(Attribution):
                 rand_indices = np.random.choice(
                     num_ref_samples, n_samples * bsz
                 ).tolist()
-                baselines = tuple(baseline[rand_indices, :] for baseline in baselines)
+                baselines = tuple(baseline[rand_indices] for baseline in baselines)
             else:
                 baselines = tuple(
                     baseline.repeat_interleave(n_samples, dim=0)
