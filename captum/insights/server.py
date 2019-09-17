@@ -28,7 +28,8 @@ def namedtuple_to_dict(obj):
 @app.route("/fetch", methods=["POST"])
 def fetch():
     print(request.json)
-    return jsonify(namedtuple_to_dict(visualizer.visualize()))
+    visualizer_output = visualizer.visualize()
+    return jsonify(namedtuple_to_dict(visualizer_output))
 
 
 @app.route("/")
