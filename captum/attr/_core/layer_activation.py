@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from .._utils.attribution import LayerAttribution
-from .._utils.common import _forward_layer_eval
+from .._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -12,7 +12,7 @@ class LayerActivation(LayerAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(self, inputs, additional_forward_args=None):
         r"""
@@ -28,5 +28,9 @@ class LayerActivation(LayerAttribution):
                 attributions: Activation of each neuron in output of given layer
         """
         return _forward_layer_eval(
-            self.forward_func, inputs, self.layer, additional_forward_args
+            self.forward_func,
+            inputs,
+            self.layer,
+            additional_forward_args,
+            device_ids=self.device_ids,
         )

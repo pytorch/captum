@@ -103,27 +103,31 @@ class Test(BaseTest):
         expected_input_conductance,
         additional_input=None,
     ):
-        cond = NeuronConductance(model, target_layer)
-        attributions = cond.attribute(
-            test_input,
-            test_neuron,
-            target=0,
-            n_steps=500,
-            method="gausslegendre",
-            additional_forward_args=additional_input,
-        )
-        if isinstance(expected_input_conductance, tuple):
-            for i in range(len(expected_input_conductance)):
-                for j in range(len(expected_input_conductance[i])):
-                    assertArraysAlmostEqual(
-                        attributions[i][j : j + 1].squeeze(0).tolist(),
-                        expected_input_conductance[i][j],
-                        delta=0.1,
-                    )
-        else:
-            assertArraysAlmostEqual(
-                attributions.squeeze(0).tolist(), expected_input_conductance, delta=0.1
+        for internal_batch_size in (None, 1, 20):
+            cond = NeuronConductance(model, target_layer)
+            attributions = cond.attribute(
+                test_input,
+                test_neuron,
+                target=0,
+                n_steps=500,
+                method="gausslegendre",
+                additional_forward_args=additional_input,
+                internal_batch_size=internal_batch_size,
             )
+            if isinstance(expected_input_conductance, tuple):
+                for i in range(len(expected_input_conductance)):
+                    for j in range(len(expected_input_conductance[i])):
+                        assertArraysAlmostEqual(
+                            attributions[i][j : j + 1].squeeze(0).tolist(),
+                            expected_input_conductance[i][j],
+                            delta=0.1,
+                        )
+            else:
+                assertArraysAlmostEqual(
+                    attributions.squeeze(0).tolist(),
+                    expected_input_conductance,
+                    delta=0.1,
+                )
 
     def _conductance_input_sum_test_assert(
         self, model, target_layer, test_input, test_baseline=None
