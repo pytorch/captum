@@ -115,7 +115,8 @@ class GradientShap(GradientBasedAttribution):
                 >>> baselines = torch.randn(20, 3, 32, 32)
                 >>> # Computes gradient shap for the input
                 >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = gradient_shap.attribute(input, baselines, target=5)
+                >>> attribution, delta = gradient_shap.attribute(input, baselines,
+                                                                 target=5)
 
         """
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
