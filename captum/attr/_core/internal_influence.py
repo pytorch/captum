@@ -2,6 +2,7 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import LayerAttribution
+from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
@@ -13,7 +14,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 
 
 class InternalInfluence(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -21,7 +22,7 @@ class InternalInfluence(LayerAttribution):
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -31,6 +32,7 @@ class InternalInfluence(LayerAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        internal_batch_size=None,
     ):
         r"""
             Computes internal influence using gradients along the path, applying
@@ -88,12 +90,15 @@ class InternalInfluence(LayerAttribution):
         )
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _ = compute_layer_gradients_and_eval(
-            self.forward_func,
-            self.layer,
+        layer_gradients, _ = _batched_operator(
+            compute_layer_gradients_and_eval,
             scaled_features_tpl,
-            target,
             input_additional_args,
+            internal_batch_size=internal_batch_size,
+            forward_fn=self.forward_func,
+            layer=self.layer,
+            target_ind=target,
+            device_ids=self.device_ids,
         )
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems
