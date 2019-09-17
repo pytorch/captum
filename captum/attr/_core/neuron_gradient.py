@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
 from .._utils.common import (
-    _forward_layer_eval,
-    _extend_index_list,
     format_input,
     _format_additional_forward_args,
     _format_attributions,
 )
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-
-import torch
+from .._utils.gradient import (
+    apply_gradient_requirements,
+    undo_gradient_requirements,
+    _forward_layer_eval_with_neuron_grads,
+)
 
 
 class NeuronGradient(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -29,7 +29,7 @@ class NeuronGradient(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(self, inputs, neuron_index, additional_forward_args=None):
         r"""
@@ -95,14 +95,14 @@ class NeuronGradient(NeuronAttribution):
         )
         gradient_mask = apply_gradient_requirements(inputs)
 
-        layer_out = _forward_layer_eval(
-            self.forward_func, inputs, self.layer, additional_forward_args
+        layer_out, input_grads = _forward_layer_eval_with_neuron_grads(
+            self.forward_func,
+            inputs,
+            self.layer,
+            additional_forward_args,
+            neuron_index,
+            device_ids=self.device_ids,
         )
-        indices = _extend_index_list(inputs[0].shape[0], neuron_index)
-        with torch.autograd.set_grad_enabled(True):
-            input_grads = torch.autograd.grad(
-                [layer_out[index] for index in indices], inputs
-            )
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_attributions(is_inputs_tuple, input_grads)

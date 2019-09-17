@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from .._utils.attribution import LayerAttribution
-from .._utils.common import _forward_layer_eval
+from .._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -22,7 +22,7 @@ class LayerActivation(LayerAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(self, inputs, additional_forward_args=None):
         r"""
@@ -68,5 +68,9 @@ class LayerActivation(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input)
         """
         return _forward_layer_eval(
-            self.forward_func, inputs, self.layer, additional_forward_args
+            self.forward_func,
+            inputs,
+            self.layer,
+            additional_forward_args,
+            device_ids=self.device_ids,
         )

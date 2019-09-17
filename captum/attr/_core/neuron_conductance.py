@@ -2,6 +2,7 @@
 import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import NeuronAttribution
+from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
     _extend_index_list,
@@ -15,7 +16,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 
 
 class NeuronConductance(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -31,7 +32,7 @@ class NeuronConductance(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -42,6 +43,7 @@ class NeuronConductance(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="riemann_trapezoid",
+        internal_batch_size=None,
     ):
         r"""
             Computes conductance with respect to particular hidden neuron. The
@@ -167,26 +169,24 @@ class NeuronConductance(NeuronAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func,
-            self.layer,
+        layer_gradients, layer_eval, input_grads = _batched_operator(
+            compute_layer_gradients_and_eval,
             scaled_features_tpl,
-            target,
             input_additional_args,
+            internal_batch_size=internal_batch_size,
+            forward_fn=self.forward_func,
+            layer=self.layer,
+            target_ind=target,
+            gradient_neuron_index=neuron_index,
+            device_ids=self.device_ids,
         )
+
         # Creates list of target neuron across batched examples (dimension 0)
         indices = _extend_index_list(total_batch, neuron_index)
 
-        # Computes gradients of target neurons with respect to input
-        # input_grads shape is (batch_size*#steps x inputs.shape[1:])
-        with torch.autograd.set_grad_enabled(True):
-            input_grads = torch.autograd.grad(
-                [layer_eval[index] for index in indices], scaled_features_tpl
-            )
-
         # Multiplies by appropriate gradient of output with respect to hidden neurons
-        # mid_grads is a 1D Tensor of length num_steps*batch_size, containing
-        # mid layer gradient for each input step.
+        # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
+        # containing mid layer gradient for each input step.
         mid_grads = torch.stack([layer_gradients[index] for index in indices])
 
         scaled_input_gradients = tuple(

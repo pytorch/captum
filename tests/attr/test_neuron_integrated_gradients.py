@@ -92,26 +92,28 @@ class Test(BaseTest):
         expected_input_ig,
         additional_input=None,
     ):
-        grad = NeuronIntegratedGradients(model, target_layer)
-        attributions = grad.attribute(
-            test_input,
-            test_neuron,
-            n_steps=500,
-            method="gausslegendre",
-            additional_forward_args=additional_input,
-        )
-        if isinstance(expected_input_ig, tuple):
-            for i in range(len(expected_input_ig)):
-                for j in range(attributions[i].shape[0]):
-                    assertArraysAlmostEqual(
-                        attributions[i][j].squeeze(0).tolist(),
-                        expected_input_ig[i][j],
-                        delta=0.1,
-                    )
-        else:
-            assertArraysAlmostEqual(
-                attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1
+        for internal_batch_size in [None, 1, 20]:
+            grad = NeuronIntegratedGradients(model, target_layer)
+            attributions = grad.attribute(
+                test_input,
+                test_neuron,
+                n_steps=500,
+                method="gausslegendre",
+                additional_forward_args=additional_input,
+                internal_batch_size=internal_batch_size,
             )
+            if isinstance(expected_input_ig, tuple):
+                for i in range(len(expected_input_ig)):
+                    for j in range(attributions[i].shape[0]):
+                        assertArraysAlmostEqual(
+                            attributions[i][j].squeeze(0).tolist(),
+                            expected_input_ig[i][j],
+                            delta=0.1,
+                        )
+            else:
+                assertArraysAlmostEqual(
+                    attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1
+                )
 
     def _ig_matching_test_assert(self, model, output_layer, test_input, baseline=None):
         out = model(test_input)

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-import torch
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import _forward_layer_eval, _extend_index_list
+from .._utils.gradient import _forward_layer_eval_with_neuron_grads
 
 from .integrated_gradients import IntegratedGradients
 
 
 class NeuronIntegratedGradients(NeuronAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -23,7 +22,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(
         self,
@@ -33,6 +32,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         additional_forward_args=None,
         n_steps=50,
         method="gausslegendre",
+        internal_batch_size=None,
     ):
         r"""
             Approximates the integral of gradients for a particular neuron
@@ -121,12 +121,19 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
 
-        def forward_fn(*args):
-            layer_output = _forward_layer_eval(self.forward_func, args, self.layer)
-            indices = _extend_index_list(args[0].shape[0], neuron_index)
-            return torch.stack(tuple(layer_output[i] for i in indices))
+        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
+            _, grads = _forward_layer_eval_with_neuron_grads(
+                forward_fn,
+                inputs,
+                self.layer,
+                additional_forward_args,
+                neuron_index,
+                device_ids=self.device_ids,
+            )
+            return grads
 
-        ig = IntegratedGradients(forward_fn)
+        ig = IntegratedGradients(self.forward_func)
+        ig.gradient_func = grad_fn
         # Return only attributions and not delta
         return ig.attribute(
             inputs,
@@ -134,4 +141,5 @@ class NeuronIntegratedGradients(NeuronAttribution):
             additional_forward_args=additional_forward_args,
             n_steps=n_steps,
             method=method,
+            internal_batch_size=internal_batch_size,
         )[0]
