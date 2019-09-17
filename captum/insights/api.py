@@ -1,11 +1,11 @@
 from collections import namedtuple
-from typing import Any, List, Union
+from typing import Iterable, List, Union
 
 from captum.attr import IntegratedGradients
+from captum.insights.features import BaseFeature
+from captum.insights.server import start_server
 
 import torch
-from features import BaseFeature
-from server import start_server
 
 PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
@@ -14,35 +14,44 @@ VisualizationOutput = namedtuple(
 Contribution = namedtuple("Contribution", "name percent")
 
 
+class Transformer(object):
+    def __init__(self, transform, name=None):
+        self.transform = transform
+        self.name = name
+
+
+class Data(object):
+    def __init__(self, inputs, labels, additional_args=None):
+        self.inputs = inputs
+        self.labels = labels
+        self.additional_args = additional_args
+
+
 class AttributionVisualizer(object):
     def __init__(
         self,
         models: Union[List[torch.nn.Module], torch.nn.Module],
         classes: List[str],
         features: List[BaseFeature],
-        dataset: Any,
-        batch_size: int = 10,
-        use_softmax: bool = True,
+        dataset: Iterable[Data],
     ):
+        self.models = models
         self.classes = classes
         self.features = features
-        self.models = models
         self.dataset = dataset
-        self.batch_size = batch_size
-        self.dataloader = iter(
-            torch.utils.data.DataLoader(
-                self.dataset, batch_size=batch_size, shuffle=False, num_workers=2
-            )
-        )
-        self.use_softmax = use_softmax
 
-    def _calculate_attribution(self, net, data, label):
-        input = data.unsqueeze(0)
-        input.requires_grad = True
+    def _calculate_attribution(self, net, baselines, data, label):
+        # temporary fix until we get full batching support
+        data = data.unsqueeze(0)
+        for i in range(len(baselines)):
+            baselines[i] = baselines[i].unsqueeze(0)
+
+        data.requires_grad = True
         net.eval()
         ig = IntegratedGradients(net)
         net.zero_grad()
-        attr_ig, _ = ig.attribute(input, baselines=input * 0, target=label)
+        attr_ig, _ = ig.attribute(data, baselines=tuple(baselines), target=label)
+
         return attr_ig
 
     def render(self):
@@ -61,29 +70,58 @@ class AttributionVisualizer(object):
                 )
         return model_scores
 
+    def _transform(
+        self, transforms: Union[Transformer, List[Transformer]], input: torch.Tensor
+    ):
+        if transforms is None:
+            return input
+
+        transformed_input = input
+        if isinstance(transforms, List):
+            for t in transforms:
+                transformed_input = t.transform(transformed_input)
+        else:
+            transformed_input = transforms.transform(transformed_input)
+
+        return transformed_input
+
     def visualize(self):
-        data, labels = next(self.dataloader)
+        batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
-        outputs = net(data)
+        if batch_data.additional_args is not None:
+            outputs = net(batch_data.inputs, batch_data.additional_args)
+        else:
+            outputs = net(batch_data.inputs)
 
-        scores, predicted = (
-            torch.nn.functional.softmax(outputs, 1).cpu().detach().topk(4)
-        )
-        outputs = []
+        scores, predicted = outputs.cpu().detach().topk(4)
 
-        for i in range(self.batch_size):
-            datum, label = data[i], labels[i]
+        vis_outputs = []
+        # convention that batch size is the first index
+        for i in range(batch_data.inputs.shape[0]):
+            input, label = batch_data.inputs[i], batch_data.labels[i]
 
-            attribution = self._calculate_attribution(net, datum, label)
+            transformed_input = input
+            baselines = []
+
+            for feature in self.features:
+                baselines.append(self._transform(feature.baseline_transforms, input))
+                transformed_input = self._transform(
+                    feature.input_transforms, transformed_input
+                )
+
+            attribution = self._calculate_attribution(
+                net, baselines, transformed_input, label
+            )
             for j, feature in enumerate(self.features):
-                output = feature.visualize(attribution[j], datum, label)
+                output = feature.visualize(attribution[j], input, label)
+
             predicted_labels = self._get_labels_from_scores(scores[i], predicted[i])
-            actual_label = self.classes[labels[i]]
-            outputs.append(
+            actual_label = self.classes[label]
+            vis_outputs.append(
                 VisualizationOutput(
                     feature_outputs=[output],
                     actual=actual_label,
                     predicted=predicted_labels,
                 )
             )
-        return outputs
+        return vis_outputs

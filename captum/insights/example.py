@@ -1,9 +1,10 @@
+from captum.insights.api import AttributionVisualizer, Data, Transformer
+from captum.insights.features import ImageFeature
+
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-from api import AttributionVisualizer
-from features import ImageFeature
 
 
 def get_classes():
@@ -52,19 +53,44 @@ def get_pretrained_model():
     return net
 
 
-if __name__ == "__main__":
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-    )
-    dataset = torchvision.datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform
-    )
+class ReviewDataset(torch.utils.data.Dataset):
+    def __init__(self, data_list, transforms=None):
+        pass
 
+
+def forward_with_softmax(input):
+    return nn.functional.softmax(input, 1)
+
+
+def baseline(input):
+    return input * 0
+
+
+def formatted_data_iter():
+    dataset = torchvision.datasets.CIFAR10(
+        root="./data", train=False, download=True, transform=transforms.ToTensor()
+    )
+    dataloader = iter(
+        torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=False, num_workers=2)
+    )
+    while True:
+        images, labels = next(dataloader)
+        yield Data(inputs=images, labels=labels)
+
+
+if __name__ == "__main__":
+    normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     visualizer = AttributionVisualizer(
-        models=[get_pretrained_model()],  # some nn.Module
-        classes=get_classes(),  # a list of classes, indices correspond to name
-        features=[ImageFeature("Photo")],  # output visualization type
-        dataset=dataset,  # should also support regular iter
+        models=[get_pretrained_model()],
+        classes=get_classes(),
+        features=[
+            ImageFeature(
+                "Photo",
+                baseline_transforms=[Transformer(baseline)],
+                input_transforms=[Transformer(normalize)],
+            )
+        ],
+        dataset=formatted_data_iter(),
     )
 
     visualizer.render()

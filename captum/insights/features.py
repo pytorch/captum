@@ -10,10 +10,7 @@ from matplotlib import pyplot as plt
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def convert_img_base64(img, denormalize=False):
-    if denormalize:
-        img = img / 2 + 0.5
-
+def _convert_img_base64(img):
     buff = BytesIO()
 
     plt.imsave(buff, img)
@@ -21,17 +18,33 @@ def convert_img_base64(img, denormalize=False):
     return base64img
 
 
-class BaseFeature:
-    def __init__(self, name: str):
+class Transformer(object):
+    def __init__(self, transform, name=None):
+        self.transform = transform
         self.name = name
+
+
+class BaseFeature(object):
+    def __init__(
+        self, name, baseline_transforms, input_transforms, visualization_transform
+    ):
+        self.name = name
+        self.baseline_transforms = baseline_transforms
+        self.input_transforms = input_transforms
+        self.visualization_transform = visualization_transform
 
     def visualization_type(self):
         raise NotImplementedError
 
 
 class ImageFeature(BaseFeature):
-    def __init__(self, name: str):
-        super().__init__(name)
+    def __init__(self, name, input_transforms, baseline_transforms):
+        super().__init__(
+            name,
+            baseline_transforms=baseline_transforms,
+            input_transforms=input_transforms,
+            visualization_transform=None,
+        )
 
     def visualization_type(self):
         return "image"
@@ -50,8 +63,8 @@ class ImageFeature(BaseFeature):
             overlay=True,
             mask_mode=True,
         )
-        ig_64 = convert_img_base64(img_integrated_gradient_overlay)
-        img_64 = convert_img_base64(data_t, True)
+        ig_64 = _convert_img_base64(img_integrated_gradient_overlay)
+        img_64 = _convert_img_base64(data_t)
 
         return FeatureOutput(
             name=self.name,
@@ -60,13 +73,3 @@ class ImageFeature(BaseFeature):
             type=self.visualization_type(),
             contribution=100,  # TODO implement contribution
         )
-
-
-class TextFeature(BaseFeature):
-    def __init__(self, name: str):
-        super().__init__(name)
-
-
-class ComplexFeature(BaseFeature):
-    def __init__(self, name: str):
-        super().__init__(name)
