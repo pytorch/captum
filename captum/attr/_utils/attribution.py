@@ -68,7 +68,6 @@ class Attribution:
         else:
             return abs(attr_sum - (end_point - start_point)).sum().item()
 
-
 class GradientBasedAttribution(Attribution):
     def __init__(self, forward_func):
         r"""
@@ -123,6 +122,16 @@ class LayerAttribution(InternalAttribution):
     the size of the layer output.
     """
 
+    def __init__(self, forward_func, layer):
+        r"""
+        Args
+
+            forward_func:  The forward function of the model or any modification of it
+            layer: Layer for which output attributions are computed.
+                   Output size of attribute matches that of layer output.
+        """
+        super().__init__(forward_func, layer)
+
 
 class NeuronAttribution(InternalAttribution):
     r"""
@@ -134,6 +143,16 @@ class NeuronAttribution(InternalAttribution):
     The output attribution of calling attribute on a NeuronAttribution object
     always matches the size of the input.
     """
+
+    def __init__(self, forward_func, layer):
+        r"""
+        Args
+
+            forward_func:  The forward function of the model or any modification of it
+            layer: Layer for which output attributions are computed.
+                   Output size of attribute matches that of layer output.
+        """
+        super().__init__(forward_func, layer)
 
     def attribute(self, inputs, neuron_index, **kwargs):
         r"""
