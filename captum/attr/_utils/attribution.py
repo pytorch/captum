@@ -56,13 +56,13 @@ class Attribution:
         # of batch size. Let the user to sum it if they need to
         # Address this in a separate PR
         if is_multi_baseline:
-            return abs(
-                attr_sum - (end_point.mean(0).item() - start_point.mean(0).item())
-            ).sum().item()
+            return (
+                abs(attr_sum - (end_point.mean(0).item() - start_point.mean(0).item()))
+                .sum()
+                .item()
+            )
         else:
-            return abs(
-                attr_sum - (end_point - start_point)
-            ).sum().item()
+            return abs(attr_sum - (end_point - start_point)).sum().item()
 
 
 class GradientBasedAttribution(Attribution):
