@@ -28,13 +28,20 @@ def validate_input(
             len(baselines), len(inputs)
         )
     )
-    if not draw_baseline_from_distrib:
-        for input, baseline in zip(inputs, baselines):
+
+    for input, baseline in zip(inputs, baselines):
+        if draw_baseline_from_distrib:
+            assert input.shape[1:] == baseline.shape[1:], (
+                "The samples in input and baseline batches must have"
+                " the same shape. {} != {}".format(baseline.shape[1:], input.shape[1:])
+            )
+        else:
             assert (
                 input.shape == baseline.shape
             ), "Input and baseline must have the same shape. {} != {}".format(
                 baseline.shape, input.shape
             )
+
     assert (
         n_steps >= 0
     ), "The number of steps must be a positive integer. " "Given: {}".format(n_steps)

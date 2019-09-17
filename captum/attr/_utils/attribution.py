@@ -38,8 +38,8 @@ class Attribution:
         additional_forward_args=None,
         is_multi_baseline=False,
     ):
-        def _sum_rows(attribution):
-            return [attribution_row.sum() for attribution_row in attribution]
+        def _sum_rows(input):
+            return [input_row.sum() for input_row in input]
 
         with torch.no_grad():
             start_point = _run_forward(
@@ -50,15 +50,19 @@ class Attribution:
                 self.forward_func, end_point, target, additional_forward_args
             )
 
+        row_sums = [_sum_rows(attribution) for attribution in attributions]
+        attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
+        # TODO ideally do not sum - we should return deltas as a 1D tensor
+        # of batch size. Let the user to sum it if they need to
+        # Address this in a separate PR
         if is_multi_baseline:
-            row_sums = [_sum_rows(attribution) for attribution in attributions]
-            attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
             return abs(
                 attr_sum - (end_point.mean(0).item() - start_point.mean(0).item())
-            ).sum()
+            ).sum().item()
         else:
-            attr_sum = sum(attribution.sum().item() for attribution in attributions)
-            return abs(attr_sum - (end_point.sum().item() - start_point.sum().item()))
+            return abs(
+                attr_sum - (end_point - start_point)
+            ).sum().item()
 
 
 class GradientBasedAttribution(Attribution):
