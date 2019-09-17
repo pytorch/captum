@@ -1,130 +1,82 @@
 #!/usr/bin/env python3
 
-# TODO: move it to widget folder?
-
-# First visualizations are based on MIT-licensed code from
-# https://github.com/TianhongDai/integrated-gradient-pytorch
-# This file copies some of the content from:
-# https://github.com/TianhongDai/integrated-gradient-pytorch/
-# blob/master/visualization.py
-
+from enum import Enum
 import numpy as np
-from IPython.core.display import display, HTML
 
 
-G = [0, 255, 0]
-R = [255, 0, 0]
+class VisualizeMethod(Enum):
+    heat_map = 1
+    masked_image = 2
+    alpha_scaled = 3
+    blended_heat_map = 4
+
+class VisualizeSign(Enum):
+    positive = 1
+    absolute_value = 2
+    negative = 3
+    all = 4
+
+green = [0, 255, 0]
+red = [255, 0, 0]
+blue = [0, 0, 255]
 
 
-def convert_to_gray_scale(attributions):
-    return np.average(attributions, axis=2)
+def visualize_image_attr(attr, original_image=None, channel_transpose=False, sign="positive", method="heat_map",outlier_perc=2):
+    if channel_transpose:
+        attr = np.transpose(attr, (1,2,0))
+        if original_image is not None:
+            original_image = np.transpose(original_image, (1,2,0))
 
+    # Combine RGB attribution channels
+    attr_combined = np.sum(attr, axis=2)
+    heat_map_color = None
 
-def linear_transform(
-    attributions,
-    clip_above_percentile=99.9,
-    clip_below_percentile=70.0,
-    low=0.2,
-    plot_distribution=False,
-):
-    m = compute_threshold_by_top_percentage(
-        attributions,
-        percentage=100 - clip_above_percentile,
-        plot_distribution=plot_distribution,
-    )
-    e = compute_threshold_by_top_percentage(
-        attributions,
-        percentage=100 - clip_below_percentile,
-        plot_distribution=plot_distribution,
-    )
-    transformed = (1 - low) * (np.abs(attributions) - e) / (m - e) + low
-    transformed *= np.sign(attributions)
-    transformed *= transformed >= low
-    transformed = np.clip(transformed, 0.0, 1.0)
-    return transformed
+    if VisualizeMethod[method] == VisualizeMethod.blended_heat_map:
+        assert original_image is not None, "Image must be provided for blended heat map."
+        return (0.6 * np.expand_dims(np.mean(original_image, axis=2),axis=2) + 0.4 * visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign=sign, method="heat_map",outlier_perc=outlier_perc)).astype(int)
 
+    if VisualizeSign[sign] == VisualizeSign.all:
+        assert VisualizeMethod[method] == VisualizeMethod.heat_map, "Heat Map is the only supported visualization approach for both positive and negative attribution."
+        return visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign="positive", method=method,outlier_perc=outlier_perc) + visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign="negative", method=method,outlier_perc=outlier_perc)
 
-def compute_threshold_by_top_percentage(
-    attributions, percentage=60, plot_distribution=True
-):
-    if percentage < 0 or percentage > 100:
-        raise ValueError("percentage must be in [0, 100]")
-    if percentage == 100:
-        return np.min(attributions)
-    flat_attributions = attributions.flatten()
-    attribution_sum = np.sum(flat_attributions)
-    sorted_attributions = np.sort(np.abs(flat_attributions))[::-1]
-    cum_sum = 100.0 * np.cumsum(sorted_attributions) / attribution_sum
-    threshold_idx = np.where(cum_sum >= percentage)[0][0]
-    threshold = sorted_attributions[threshold_idx]
-    if plot_distribution:
-        raise NotImplementedError
-    return threshold
-
-
-def polarity_function(attributions, polarity):
-    if polarity == "positive":
-        return np.clip(attributions, 0, 1)
-    elif polarity == "negative":
-        return np.clip(attributions, -1, 0)
+    # Choose appropriate signed values and rescale, removing given outlier percentage.
+    if VisualizeSign[sign] == VisualizeSign.positive:
+        attr_combined = (attr_combined > 0) * attr_combined
+        attr_combined = attr_combined / np.percentile(attr_combined, 100 - outlier_perc)
+        attr_combined[attr_combined > 1] = 1
+        heat_map_color = green
+    elif VisualizeSign[sign] == VisualizeSign.negative:
+        attr_combined = (attr_combined < 0) * attr_combined
+        attr_combined = attr_combined / np.percentile(attr_combined, outlier_perc)
+        attr_combined[attr_combined > 1] = 1
+        heat_map_color = red
+    elif VisualizeSign[sign] == VisualizeSign.absolute_value:
+        attr_combined = np.abs(attr_combined)
+        attr_combined = attr_combined / np.percentile(attr_combined, 100 - outlier_perc)
+        attr_combined[attr_combined > 1] = 1
+        heat_map_color = blue
     else:
-        raise NotImplementedError
+        raise AssertionError("Visualize Sign type is not valid.")
 
-
-def overlay_function(attributions, image):
-    return np.clip(0.7 * image + 0.5 * attributions, 0, 255)
-
-
-def visualize_image(
-    attributions,
-    image,
-    positive_channel=G,
-    negative_channel=R,
-    polarity="positive",
-    clip_above_percentile=99.9,
-    clip_below_percentile=0,
-    morphological_cleanup=False,
-    outlines=False,
-    outlines_component_percentage=90,
-    overlay=True,
-    mask_mode=False,
-    plot_distribution=False,
-):
-    if polarity == "both":
-        raise NotImplementedError
-
-    elif polarity == "positive":
-        attributions = polarity_function(attributions, polarity=polarity)
-        channel = positive_channel
-
-    # convert the attributions to the gray scale
-    attributions = convert_to_gray_scale(attributions)
-    attributions = linear_transform(
-        attributions,
-        clip_above_percentile,
-        clip_below_percentile,
-        0.0,
-        plot_distribution=plot_distribution,
-    )
-    attributions_mask = attributions.copy()
-    if morphological_cleanup:
-        raise NotImplementedError
-    if outlines:
-        raise NotImplementedError
-    attributions = np.expand_dims(attributions, 2) * channel
-    if overlay:
-        if not mask_mode:
-            attributions = overlay_function(attributions, image)
-        else:
-            attributions = np.expand_dims(attributions_mask, 2)
-            attributions = np.clip(attributions * image, 0, 255)
-            attributions = attributions[:, :, (2, 1, 0)]
-    return attributions
-
+    # Apply chosen visualization method.
+    if VisualizeMethod[method] == VisualizeMethod.heat_map:
+        return (np.expand_dims(attr_combined, 2) * heat_map_color).astype(int)
+    elif VisualizeMethod[method] == VisualizeMethod.masked_image:
+        assert original_image is not None, "Image must be provided for masking."
+        assert np.shape(original_image)[:-1] == np.shape(attr_combined), "Image dimensions do not match attribution dimensions for masking."
+        return (np.expand_dims(attr_combined, 2) * original_image).astype(int)
+    elif VisualizeMethod[method] == VisualizeMethod.alpha_scaled:
+        assert original_image is not None, "Image must be provided for masking."
+        assert np.shape(original_image)[:-1] == np.shape(attr_combined), "Image dimensions do not match attribution dimensions for adding alpha channel."
+        # Concatenate alpha channel and return
+        return np.concatenate((original_image, (255*np.expand_dims(attr_combined, 2)).astype(int)), axis=2)
+    elif VisualizeMethod[method] == VisualizeMethod.blended_heat_map:
+        return np.concatenate((original_image, (255*np.expand_dims(attr_combined, 2)).astype(int)), axis=2)
+    else:
+        raise AssertionError("Visualize Method type is not valid.")
 
 # These visualization methods are for text and are partially copied from
 # experiments conducted by Davide Testuggine at Facebook.
-
 
 class VisualizationDataRecord:
     r"""
