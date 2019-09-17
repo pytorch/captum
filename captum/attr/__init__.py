@@ -3,6 +3,7 @@
 from ._core.integrated_gradients import IntegratedGradients  # noqa
 from ._core.internal_influence import InternalInfluence  # noqa
 from ._core.deep_lift import DeepLift  # noqa
+from ._core.deep_lift import DeepLift, DeepLiftShap  # noqa
 from ._core.input_x_gradient import InputXGradient  # noqa
 from ._core.saliency import Saliency  # noqa
 from ._core.noise_tunnel import NoiseTunnel  # noqa
@@ -26,6 +27,7 @@ from ._utils import visualization  # noqa
 __all__ = [
     "IntegratedGradients",
     "DeepLift",
+    "DeepLiftShap",
     "InputXGradient",
     "Saliency",
     "LayerConductance",
@@ -38,7 +40,7 @@ __all__ = [
     "GradientShap",
     "InterpretableEmbeddingBase",
     "TokenReferenceBase",
-    "compute_gradients",
+    "compute_gradients",  # TODO we don't need to expose this any more
     "visualization",
     "configure_interpretable_embedding_layer",
     "remove_interpretable_embedding_layer",

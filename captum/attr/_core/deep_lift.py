@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 import torch
 import torch.nn.functional as F
 
@@ -9,6 +10,7 @@ from .._utils.common import (
     validate_input,
 )
 from .._utils.attribution import GradientBasedAttribution
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class DeepLift(GradientBasedAttribution):
@@ -27,12 +29,35 @@ class DeepLift(GradientBasedAttribution):
         self, inputs, baselines=None, target=None, additional_forward_args=None
     ):
         r""""
-            Rescale-rule implementation of deeplift approach based on
-            the following paper.
-            https://arxiv.org/pdf/1704.02685.pdf
-            At this point we support one input sample with
-            multiple references.
+        Implements DeepLIFT algorithm based on the following paper:
+        Learning Important Features Through Propagating Activation Differences,
+            Avanti Shrikumar, et. al.
+        https://arxiv.org/abs/1704.02685
 
+        and the gradient formulation proposed in:
+        Towards better understanding of gradient-based attribution methods for
+        deep neural networks,  Marco Ancona, et.al.
+        https://openreview.net/pdf?id=Sy21R9JAW
+
+        This implementation supports only Rescale rule. RevealCancel rule will
+        be supported in later releases.
+        An addition to that, in order to keep the implementation cleaner, DeepLIFT
+        for internal neurons and layers will be implemented in a separate file.
+        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
+        Integrated Gradients, it runs significantly faster than Integrated
+        Gradients and is preferred for large datasets.
+
+        Currently we only support a limited number of non-linear activations
+        but the plan is to expand the list in the future.
+
+        Note: As we know, currently we cannot access the building blocks,
+        such as Tanh and Sigmoid, of PyTorch's built-in LSTM, RNNs and
+        GRUs. Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
+        with performance similar to built-in ones with TorchScript.
+        More details on how to build custom RNNs can be found here:
+        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
+
+        # TODO update this from the documentation PR
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -61,40 +86,42 @@ class DeepLift(GradientBasedAttribution):
                         to these arguments.
                         Default: None
 
-
         Returns:
 
                 attributions: with respect to each input features which has the
-                              same shape and dimensionality as the input
+                            same shape and dimensionality as the input
+                delta (float): The difference between the total approximation to the
+                            integrated gradient and total true integrated gradient.
+                            This is computed using the property that the total sum of
+                            forward_func(inputs) - forward_func(baselines) must equal
+                            the total sum of the integrated gradient.
 
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> dl = DeepLift(net)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Computes deeplift attribution scores for class 3.
+            >>> attribution, delta = dl.attribute(input, target=3)
         """
-        """
-            There might be multiple references per input. Match the references
-            to inputs.
-        """
+
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
         baselines = format_baseline(baselines, inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
 
+        # set hooks for baselines
         self._traverse_modules(self.model, self._register_hooks, input_type="ref")
         self.forward_func(*baselines)
-        multi_refs = [
-            input.shape != baseline.shape for input, baseline in zip(inputs, baselines)
-        ]
 
-        # match the sizes of inputs and baselines in case of multiple references
-        # for a single input
-        inputs = tuple(
-            input.repeat(
-                [baseline.shape[0]] + [1] * (len(baseline.shape) - 1)
-            ).requires_grad_()
-            for input, baseline in zip(inputs, baselines)
-        )
         validate_input(inputs, baselines)
 
+        # set hook for inputs
         self._traverse_modules(self.model, self._register_hooks)
         gradients = self.gradient_func(
             self.forward_func,
@@ -110,12 +137,18 @@ class DeepLift(GradientBasedAttribution):
         # remove hooks from all activations
         self._remove_hooks()
 
-        # Average for multiple references
-        attributions = tuple(
-            torch.mean(result, axis=0, keepdim=False) if multi_ref else result
-            for multi_ref, result in zip(multi_refs, attributions)
+        start_point, end_point = baselines, inputs
+
+        # computes convergence error
+        delta = self._compute_convergence_delta(
+            attributions,
+            start_point,
+            end_point,
+            additional_forward_args=additional_forward_args,
+            target=target,
         )
-        return _format_attributions(is_inputs_tuple, attributions)
+        undo_gradient_requirements(inputs, gradient_mask)
+        return _format_attributions(is_inputs_tuple, attributions), delta
 
     def _is_non_linear(self, module):
         module_name = module._get_name()
@@ -194,6 +227,11 @@ class DeepLift(GradientBasedAttribution):
             setattr(module, ref_handle, handle)
 
     def _traverse_modules(self, module, hook_fn, input_type="non_ref"):
+        warnings.warn(
+            """Setting forward and backward hooks on non-linear
+                         activations. The hooks will be removed after the
+                         attribution is finished"""
+        )
         children = module.children()
         for child in children:
             self._traverse_modules(child, hook_fn, input_type)
@@ -204,6 +242,105 @@ class DeepLift(GradientBasedAttribution):
             forward_handle.remove()
         for backward_handle in self.backward_handles:
             backward_handle.remove()
+
+    def _has_convergence_delta(self):
+        return True
+
+
+class DeepLiftShap(DeepLift):
+    def __init__(self, model):
+        r"""
+        Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
+        More details about the algorithm can be found here:
+
+        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting
+        -model-predictions.pdf
+
+        Note that the model makes two major assumptions.
+        It assumes that:
+            1. Input features are independant
+            2. The model is linear when explaining predictions for each input
+        Although, it assumes a linear model for each input, the overall
+        model can be complex and non-linear.
+
+        Args:
+
+            model (nn.Module):  The reference to PyTorch model instance.
+
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> dl = DeepLiftShap(net)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Computes shap values using deeplift for class 3.
+            >>> attribution, delta = dl.attribute(input, target=3)
+        """
+        super().__init__(model)
+
+    def attribute(
+        self, inputs, baselines=None, target=None, additional_forward_args=None
+    ):
+        # TODO add docs here
+        def compute_mean(inp_bsz, base_bsz, attribution):
+            # Average for multiple references
+            attr_shape = (base_bsz, inp_bsz)
+            if len(attribution.shape) > 1:
+                attr_shape += (-1,)
+            return torch.mean(attribution.view(attr_shape), axis=0, keepdim=False)
+
+        # Keeps track whether original input is a tuple or not before
+        # converting it into a tuple.
+        is_inputs_tuple = isinstance(inputs, tuple)
+
+        inputs = format_input(inputs)
+        baselines = format_baseline(baselines, inputs)
+
+        # batch sizes
+        inp_bsz = inputs[0].shape[0]
+        base_bsz = baselines[0].shape[0]
+        # match the sizes of inputs and baselines in case of multiple references
+        # for a single input
+        inputs = tuple(
+            [
+                input.repeat_interleave(base_bsz, dim=0).requires_grad_()
+                for input, baseline in zip(inputs, baselines)
+            ]
+        )
+        baselines = tuple(
+            [
+                baseline.repeat(
+                    (inp_bsz,) + tuple([1] * (len(baseline.shape) - 1))
+                ).requires_grad_()
+                for baseline in baselines
+            ]
+        )
+
+        attributions, delta = super().attribute(
+            inputs,
+            baselines,
+            target=target,
+            additional_forward_args=additional_forward_args,
+        )
+
+        attributions = tuple(
+            compute_mean(inp_bsz, base_bsz, attribution) for attribution in attributions
+        )
+
+        start_point, end_point = baselines, inputs
+
+        # computes convergence error
+        delta = self._compute_convergence_delta(
+            attributions,
+            start_point,
+            end_point,
+            additional_forward_args=additional_forward_args,
+            target=target,
+            is_multi_baseline=True,
+        )
+
+        return _format_attributions(is_inputs_tuple, attributions), delta
 
 
 def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-6):
@@ -218,6 +355,16 @@ def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-6):
     grad_input[0] = torch.where(
         delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
     )
+    return grad_input
+
+
+def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-6):
+    grad_input_unnorm = torch.where(
+        delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
+    )
+    # normalizing
+    n = grad_input[0].shape[1]
+    grad_input[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
     return grad_input
 
 
@@ -258,16 +405,6 @@ def maxpool3d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-6):
         grad_output,
         eps=eps,
     )
-
-
-def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-6):
-    grad_input_unnorm = torch.where(
-        delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
-    )
-    # normalizing
-    n = grad_input[0].shape[1]
-    grad_input[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
-    return grad_input
 
 
 def maxpool(
