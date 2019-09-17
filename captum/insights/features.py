@@ -1,11 +1,13 @@
 import base64
 from collections import namedtuple
 from io import BytesIO
+from typing import Callable, List, Union
 
 from captum.attr._utils import visualization as viz
 
 import numpy as np
 from matplotlib import pyplot as plt
+from torch import Tensor
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
@@ -19,26 +21,38 @@ def _convert_img_base64(img):
 
 
 class Transformer(object):
-    def __init__(self, transform, name=None):
+    def __init__(self, transform: Callable[[Tensor], Tensor], name=None):
         self.transform = transform
         self.name = name
 
 
 class BaseFeature(object):
     def __init__(
-        self, name, baseline_transforms, input_transforms, visualization_transform
+        self,
+        name: str,
+        baseline_transforms: Union[Transformer, List[Transformer]],
+        input_transforms: Union[Transformer, List[Transformer]],
+        visualization_transform: Transformer,
     ):
         self.name = name
         self.baseline_transforms = baseline_transforms
         self.input_transforms = input_transforms
         self.visualization_transform = visualization_transform
 
-    def visualization_type(self):
+    def visualization_type(self) -> str:
+        raise NotImplementedError
+
+    def visualize(self, attribution, data, label) -> FeatureOutput:
         raise NotImplementedError
 
 
 class ImageFeature(BaseFeature):
-    def __init__(self, name, input_transforms, baseline_transforms):
+    def __init__(
+        self,
+        name: str,
+        input_transforms: Union[Transformer, List[Transformer]],
+        baseline_transforms: Union[Transformer, List[Transformer]],
+    ):
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -46,10 +60,10 @@ class ImageFeature(BaseFeature):
             visualization_transform=None,
         )
 
-    def visualization_type(self):
+    def visualization_type(self) -> str:
         return "image"
 
-    def visualize(self, attribution, data, label):
+    def visualize(self, attribution, data, label) -> FeatureOutput:
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
         attribution_t = np.transpose(
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)

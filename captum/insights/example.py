@@ -53,15 +53,6 @@ def get_pretrained_model():
     return net
 
 
-class ReviewDataset(torch.utils.data.Dataset):
-    def __init__(self, data_list, transforms=None):
-        pass
-
-
-def forward_with_softmax(input):
-    return nn.functional.softmax(input, 1)
-
-
 def baseline(input):
     return input * 0
 
@@ -80,8 +71,9 @@ def formatted_data_iter():
 
 if __name__ == "__main__":
     normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    model = get_pretrained_model()
     visualizer = AttributionVisualizer(
-        models=[get_pretrained_model()],
+        models=[model],
         classes=get_classes(),
         features=[
             ImageFeature(

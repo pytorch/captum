@@ -5,7 +5,7 @@ from captum.attr import IntegratedGradients
 from captum.insights.features import BaseFeature
 from captum.insights.server import start_server
 
-import torch
+from torch import Module, Tensor
 
 PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
@@ -30,7 +30,7 @@ class Data(object):
 class AttributionVisualizer(object):
     def __init__(
         self,
-        models: Union[List[torch.nn.Module], torch.nn.Module],
+        models: Union[List[Module], Module],
         classes: List[str],
         features: List[BaseFeature],
         dataset: Iterable[Data],
@@ -40,7 +40,9 @@ class AttributionVisualizer(object):
         self.features = features
         self.dataset = dataset
 
-    def _calculate_attribution(self, net, baselines, data, label):
+    def _calculate_attribution(
+        self, net: Module, baselines: List[Tensor], data: Tensor, label: Tensor
+    ) -> Tensor:
         # temporary fix until we get full batching support
         data = data.unsqueeze(0)
         for i in range(len(baselines)):
@@ -60,19 +62,21 @@ class AttributionVisualizer(object):
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
-    def _get_labels_from_scores(self, scores, indices):
-        model_scores = []
+    def _get_labels_from_scores(
+        self, scores: Tensor, indices: Tensor
+    ) -> List[PredictionScore]:
+        pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
             if score > 0.0001:
-                model_scores.append(
+                pred_scores.append(
                     PredictionScore(scores[i].item(), self.classes[indices[i]])
                 )
-        return model_scores
+        return pred_scores
 
     def _transform(
-        self, transforms: Union[Transformer, List[Transformer]], input: torch.Tensor
-    ):
+        self, transforms: Union[Transformer, List[Transformer]], input: Tensor
+    ) -> Tensor:
         if transforms is None:
             return input
 
@@ -85,7 +89,7 @@ class AttributionVisualizer(object):
 
         return transformed_input
 
-    def visualize(self):
+    def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
         if batch_data.additional_args is not None:
