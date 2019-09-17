@@ -29,11 +29,10 @@ if [[ $FRAMEWORKS == true ]]; then
   sudo pip install pytext-nlp
 fi
 
-# TODO: Install non-nightly when 1.2 goes live
 # install pytorch nightly if asked for
-#if [[ $PYTORCH_NIGHLTY == true ]]; then
+if [[ $PYTORCH_NIGHLTY == true ]]; then
   sudo pip install torch_nightly -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
-#fi
+fi
 
 # install deployment bits if asked for
 if [[ $DEPLOY == true ]]; then

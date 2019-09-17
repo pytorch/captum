@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from ._core.integrated_gradients import IntegratedGradients  # noqa
+from ._core.internal_influence import InternalInfluence  # noqa
 from ._core.deep_lift import DeepLift  # noqa
 from ._core.input_x_gradient import InputXGradient  # noqa
 from ._core.saliency import Saliency  # noqa

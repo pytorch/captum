@@ -5,7 +5,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 
 
 class LayerGradientXActivation(LayerAttribution):
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
@@ -23,7 +23,7 @@ class LayerGradientXActivation(LayerAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r"""
@@ -83,6 +83,11 @@ class LayerGradientXActivation(LayerAttribution):
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_eval = compute_layer_gradients_and_eval(
-            self.forward_func, self.layer, inputs, target, additional_forward_args
+            self.forward_func,
+            self.layer,
+            inputs,
+            target,
+            additional_forward_args,
+            device_ids=self.device_ids,
         )
         return layer_gradients * layer_eval

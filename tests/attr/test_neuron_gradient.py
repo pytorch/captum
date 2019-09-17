@@ -5,7 +5,8 @@ import unittest
 import torch
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron_gradient import NeuronGradient
-from captum.attr._utils.common import _forward_layer_eval, _extend_index_list
+from captum.attr._utils.common import _extend_index_list
+from captum.attr._utils.gradient import _forward_layer_eval
 
 from .helpers.basic_models import (
     TestModel_ConvNet,
