@@ -39,15 +39,19 @@ class Attribution:
         is_multi_baseline=False,
     ):
         def _sum_rows(input):
-            return [input_row.sum() for input_row in input]
+            return torch.tensor([input_row.sum() for input_row in input])
 
         with torch.no_grad():
-            start_point = _run_forward(
-                self.forward_func, start_point, target, additional_forward_args
+            start_point = _sum_rows(
+                _run_forward(
+                    self.forward_func, start_point, target, additional_forward_args
+                )
             )
 
-            end_point = _run_forward(
-                self.forward_func, end_point, target, additional_forward_args
+            end_point = _sum_rows(
+                _run_forward(
+                    self.forward_func, end_point, target, additional_forward_args
+                )
             )
 
         row_sums = [_sum_rows(attribution) for attribution in attributions]
