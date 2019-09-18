@@ -5,7 +5,8 @@ from captum.attr import IntegratedGradients
 from captum.insights.features import BaseFeature
 from captum.insights.server import start_server
 
-from torch import Module, Tensor
+from torch import Tensor
+from torch.nn import Module
 
 PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
@@ -52,7 +53,7 @@ class AttributionVisualizer(object):
         net.eval()
         ig = IntegratedGradients(net)
         net.zero_grad()
-        attr_ig, _ = ig.attribute(data, baselines=tuple(baselines), target=label)
+        attr_ig, _ = ig.attribute(data, baselines=data * 0, target=3)
 
         return attr_ig
 
@@ -65,6 +66,7 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[PredictionScore]:
+        scores, indices = scores.squeeze(), indices.squeeze()
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
@@ -75,51 +77,66 @@ class AttributionVisualizer(object):
         return pred_scores
 
     def _transform(
-        self, transforms: Union[Transformer, List[Transformer]], input: Tensor
+        self,
+        transforms: Union[Transformer, List[Transformer]],
+        inputs: Tensor,
+        batch: bool = False,
     ) -> Tensor:
-        if transforms is None:
-            return input
+        if batch:
+            for i in range(len(inputs)):
+                inputs[i] = self._transform(transforms, inputs[i])
+            return inputs
 
-        transformed_input = input
+        if transforms is None:
+            return inputs
+
+        transformed_inputs = inputs
         if isinstance(transforms, List):
             for t in transforms:
-                transformed_input = t.transform(transformed_input)
+                transformed_inputs = t.transform(transformed_inputs)
         else:
-            transformed_input = transforms.transform(transformed_input)
+            transformed_inputs = transforms.transform(transformed_inputs)
 
-        return transformed_input
+        return transformed_inputs
 
     def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
-        if batch_data.additional_args is not None:
-            outputs = net(batch_data.inputs, batch_data.additional_args)
-        else:
-            outputs = net(batch_data.inputs)
-
-        scores, predicted = outputs.cpu().detach().topk(4)
 
         vis_outputs = []
+
         # convention that batch size is the first index
         for i in range(batch_data.inputs.shape[0]):
-            input, label = batch_data.inputs[i], batch_data.labels[i]
-
-            transformed_input = input
             baselines = []
+            transformed_inputs = batch_data.inputs[i]
 
             for feature in self.features:
-                baselines.append(self._transform(feature.baseline_transforms, input))
-                transformed_input = self._transform(
-                    feature.input_transforms, transformed_input
+                transformed_inputs = self._transform(
+                    feature.input_transforms, transformed_inputs
+                )
+            for feature in self.features:
+                baselines.append(
+                    self._transform(feature.baseline_transforms, transformed_inputs)
                 )
 
+            if batch_data.additional_args is not None:
+                outputs = net(
+                    transformed_inputs.unsqueeze(0), batch_data.additional_args
+                )
+            else:
+                outputs = net(transformed_inputs.unsqueeze(0))
+
+            scores, predicted = outputs.cpu().detach().topk(4)
+
+            original_input, label = batch_data.inputs[i], batch_data.labels[i]
+
             attribution = self._calculate_attribution(
-                net, baselines, transformed_input, label
+                net, baselines, transformed_inputs, label
             )
             for j, feature in enumerate(self.features):
-                output = feature.visualize(attribution[j], input, label)
+                output = feature.visualize(attribution[j], original_input, label)
 
-            predicted_labels = self._get_labels_from_scores(scores[i], predicted[i])
+            predicted_labels = self._get_labels_from_scores(scores, predicted)
             actual_label = self.classes[label]
             vis_outputs.append(
                 VisualizationOutput(
