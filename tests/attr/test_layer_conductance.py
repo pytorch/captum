@@ -117,8 +117,11 @@ class Test(BaseTest):
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
             )
-            self.assertTrue(delta < 0.05, "Sum of attributions does" \
-                            " not match the difference of endpoints. %f" % (delta))
+            self.assertTrue(
+                delta < 0.05,
+                "Sum of attributions does"
+                " not match the difference of endpoints. %f" % (delta),
+            )
 
             for i in range(len(expected_conductance)):
                 assertArraysAlmostEqual(

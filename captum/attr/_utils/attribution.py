@@ -53,7 +53,8 @@ class Attribution:
                     self.forward_func, end_point, target, additional_forward_args
                 )
             )
-
+        print("start_point: ", start_point)
+        print("attributions: ", attributions)
         row_sums = [_sum_rows(attribution) for attribution in attributions]
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
         # TODO ideally do not sum - we should return deltas as a 1D tensor
@@ -67,6 +68,7 @@ class Attribution:
             )
         else:
             return abs(attr_sum - (end_point - start_point)).sum().item()
+
 
 class GradientBasedAttribution(Attribution):
     def __init__(self, forward_func):
@@ -122,13 +124,18 @@ class LayerAttribution(InternalAttribution):
     the size of the layer output.
     """
 
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
             forward_func:  The forward function of the model or any modification of it
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
+            device_ids: Device ID list, necessary only if forward_func applies a
+                   DataParallel model, which allows reconstruction of
+                   intermediate outputs from batched results across devices.
+                   If forward_func is given as the DataParallel model itself,
+                   then it is not neccesary to provide this argument.
         """
         super().__init__(forward_func, layer)
 
@@ -144,15 +151,20 @@ class NeuronAttribution(InternalAttribution):
     always matches the size of the input.
     """
 
-    def __init__(self, forward_func, layer):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args
 
             forward_func:  The forward function of the model or any modification of it
             layer: Layer for which output attributions are computed.
                    Output size of attribute matches that of layer output.
+            device_ids: Device ID list, necessary only if forward_func applies a
+                   DataParallel model, which allows reconstruction of
+                   intermediate outputs from batched results across devices.
+                   If forward_func is given as the DataParallel model itself,
+                   then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def attribute(self, inputs, neuron_index, **kwargs):
         r"""
