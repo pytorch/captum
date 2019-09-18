@@ -110,6 +110,16 @@ jobs:
       - unit_tests
       - sphinx
 
+  test_cuda_multi_gpu:
+    docker_image: "soumith/conda-cuda"
+    use_cuda_docker_runtime: "1"
+    resource_class: gpu.medium
+    steps:
+      - checkout
+      - conda_install:
+          args: "-n"
+      - unit_tests
+
   lint_test_py37_conda:
     docker:
       - image: continuumio/miniconda3
