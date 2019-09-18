@@ -111,8 +111,8 @@ jobs:
       - sphinx
 
   test_cuda_multi_gpu:
-    docker_image: "soumith/conda-cuda"
-    use_cuda_docker_runtime: "1"
+    docker:
+      - image: soumith/conda-cuda
     resource_class: gpu.medium
     steps:
       - checkout
