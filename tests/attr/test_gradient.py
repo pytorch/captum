@@ -63,7 +63,7 @@ class Test(BaseTest):
         input2 = torch.tensor([[-5.0, 2.0]], requires_grad=True)
         grads = compute_gradients(model, (input1, input2))
         assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
-        assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [0.0, 0.0], delta=0.01)
+        assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
 
     def test_layer_gradient_linear0(self):
         model = TestModel_MultiLayer()

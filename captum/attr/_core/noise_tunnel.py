@@ -2,6 +2,7 @@
 
 import torch
 
+import numpy as np
 from enum import Enum
 
 from .._utils.attribution import Attribution
@@ -15,8 +16,6 @@ from .._utils.common import (
     _expand_additional_forward_args,
 )
 
-from .integrated_gradients import IntegratedGradients
-
 
 class NoiseTunnelType(Enum):
     smoothgrad = 1
@@ -24,8 +23,6 @@ class NoiseTunnelType(Enum):
     vargrad = 3
 
 
-# TODO find a better way of defining this once more algorithms support delta
-SUPPORTED_ALGORITHMS_RETURNING_DELTA = [IntegratedGradients]
 SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
@@ -37,14 +34,18 @@ class NoiseTunnel(Attribution):
             Saliency.
         """
         self.attribution_method = attribution_method
-        print(self.attribution_method.__class__)
-        self.is_delta_supported = (
-            self.attribution_method.__class__ in SUPPORTED_ALGORITHMS_RETURNING_DELTA
-        )
+        self.is_delta_supported = self.attribution_method._has_convergence_delta()
+
         super().__init__()
 
     def attribute(
-        self, inputs, nt_type="smoothgrad", n_samples=5, stdevs=1.0, **kwargs
+        self,
+        inputs,
+        nt_type="smoothgrad",
+        n_samples=5,
+        stdevs=1.0,
+        draw_baseline_from_distrib=False,
+        **kwargs
     ):
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
@@ -90,6 +91,10 @@ class NoiseTunnel(Attribution):
                             corresponds to the input with the same index in the inputs
                             tuple.
                             Default: `1.0` if `stdevs` is not provided.
+                draw_baseline_from_distrib (bool, optional): Indicates whether to
+                            randomly draw baseline samples from the `baselines`
+                            distribution provided as an input tensor.
+                            Default: False
                 **kwargs (Any, optional): Contains a list of arguments that are passed
                             to `attribution_method` attribution algorithm. For
                             instance `additional_forward_args` and `baselines`.
@@ -162,7 +167,6 @@ class NoiseTunnel(Attribution):
             # draws `np.prod(input_expanded_size)` samples from normal distribution
             # with given input parametrization
             noise = torch.normal(0, stdev_expanded)
-
             return input.repeat_interleave(n_samples, dim=0) + noise
 
         def expand_and_update_baselines():
@@ -173,11 +177,22 @@ class NoiseTunnel(Attribution):
 
             baselines = kwargs["baselines"]
             baselines = format_baseline(baselines, inputs)
-            validate_input(inputs, baselines)
-
-            baselines = tuple(
-                baseline.repeat_interleave(n_samples, dim=0) for baseline in baselines
+            validate_input(
+                inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
             )
+
+            if draw_baseline_from_distrib:
+                bsz = inputs[0].shape[0]
+                num_ref_samples = baselines[0].shape[0]
+                rand_indices = np.random.choice(
+                    num_ref_samples, n_samples * bsz
+                ).tolist()
+                baselines = tuple(baseline[rand_indices] for baseline in baselines)
+            else:
+                baselines = tuple(
+                    baseline.repeat_interleave(n_samples, dim=0)
+                    for baseline in baselines
+                )
             # update kwargs with expanded baseline
             kwargs["baselines"] = baselines
 
@@ -198,13 +213,13 @@ class NoiseTunnel(Attribution):
 
         def compute_expected_attribution_and_sq(attribution):
             bsz = attribution.shape[0] // n_samples
-            attribution_shape = (bsz, n_samples)
+            attribution_shape = (n_samples, bsz)
             if len(attribution.shape) > 1:
                 attribution_shape += attribution.shape[1:]
 
             attribution = attribution.view(attribution_shape)
-            expected_attribution = attribution.mean(dim=1)
-            expected_attribution_sq = torch.mean(attribution ** 2, dim=1)
+            expected_attribution = attribution.mean(dim=0)
+            expected_attribution_sq = torch.mean(attribution ** 2, dim=0)
             return expected_attribution, expected_attribution_sq
 
         # Keeps track whether original input is a tuple or not before
@@ -216,7 +231,6 @@ class NoiseTunnel(Attribution):
         validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
         delta = 0
-
         inputs_with_noise = add_noise_to_inputs()
         # if the algorithm supports baselines and/or additional_forward_args they
         # will be expanded based on the n_steps and corrsponding kwargs

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+import torch
 
-from .common import zeros
+from .common import zeros, _run_forward
 from .gradient import compute_gradients
 
 
@@ -24,6 +25,48 @@ class Attribution:
 
         """
         raise NotImplementedError("A derived class should implement attribute method")
+
+    def _has_convergence_delta(self):
+        return False
+
+    def _compute_convergence_delta(
+        self,
+        attributions,
+        start_point,
+        end_point,
+        target=None,
+        additional_forward_args=None,
+        is_multi_baseline=False,
+    ):
+        def _sum_rows(input):
+            return torch.tensor([input_row.sum() for input_row in input])
+
+        with torch.no_grad():
+            start_point = _sum_rows(
+                _run_forward(
+                    self.forward_func, start_point, target, additional_forward_args
+                )
+            )
+
+            end_point = _sum_rows(
+                _run_forward(
+                    self.forward_func, end_point, target, additional_forward_args
+                )
+            )
+
+        row_sums = [_sum_rows(attribution) for attribution in attributions]
+        attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
+        # TODO ideally do not sum - we should return deltas as a 1D tensor
+        # of batch size. Let the user to sum it if they need to
+        # Address this in a separate PR
+        if is_multi_baseline:
+            return (
+                abs(attr_sum - (end_point.mean(0).item() - start_point.mean(0).item()))
+                .sum()
+                .item()
+            )
+        else:
+            return abs(attr_sum - (end_point - start_point)).sum().item()
 
 
 class GradientBasedAttribution(Attribution):
