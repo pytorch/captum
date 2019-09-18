@@ -129,7 +129,7 @@ class LayerConductance(LayerAttribution):
         start_point, end_point = baselines, inputs
 
         delta = self._compute_convergence_delta(
-            attributions,
+            (attributions,),
             start_point,
             end_point,
             target=target,
