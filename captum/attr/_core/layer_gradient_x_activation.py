@@ -12,11 +12,11 @@ class LayerGradientXActivation(LayerAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output,
-                          corresponding to attribution of each neuron in the
-                          output of this layer.
-                          Currently, only layers which output a single tensor
-                          are supported.
+                          Output size of attribute matches this layer's output
+                          dimensions, corresponding to attribution of each neuron
+                          in the output of this layer.
+                          Currently, only layers with a single tensor output are
+                          supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -49,9 +49,12 @@ class LayerGradientXActivation(LayerAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple containing tensors or
-                            any arbitrary python types. These arguments are provided to
-                            forward_func in order following the arguments in inputs.
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None

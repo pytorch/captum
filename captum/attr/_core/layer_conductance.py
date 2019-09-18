@@ -21,11 +21,11 @@ class LayerConductance(LayerAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output,
-                          corresponding to attribution of each neuron in the
-                          output of this layer.
-                          Currently, only layers which output a single tensor
-                          are supported.
+                          Output size of attribute matches this layer's output
+                          dimensions, corresponding to attribution of each neuron
+                          in the output of this layer.
+                          Currently, only layers with a single tensor output are
+                          supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -84,12 +84,15 @@ class LayerConductance(LayerAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple containing tensors or
-                            any arbitrary python types. These arguments are provided to
-                            forward_func in order following the arguments in inputs.
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
                             For a tensor, the first dimension of the tensor must
                             correspond to the number of examples. It will be repeated
-                             for each of `n_steps` along the integrated path.
+                            for each of `n_steps` along the integrated path.
                             For all other types, the given argument is used for
                             all forward evaluations.
                             Note that attributions are not computed with respect
@@ -101,11 +104,14 @@ class LayerConductance(LayerAttribution):
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
                             `riemann_trapezoid` or `gausslegendre`.
                             Default: `gausslegendre` if no method is provided.
-                batch_size (int, optional): Divides total #steps * #examples of
-                            necessary forward and backward evaluations into chunks
-                            of size batch_size, which are evaluated sequentially.
-                            If batch_size is None, then all evaluations are processed
-                            in one batch.
+                internal_batch_size (int, optional): Divides total #steps * #examples of
+                            evaluation data points into chunks of size
+                            internal_batch_size, which are evaluated sequentially.
+                            For DataParallel models, each batch is split among the
+                            available devices, so evaluations on each available
+                            device contain internal_batch_size / num_devices examples.
+                            If internal_batch_size is None, then all evaluations are
+                            processed in one batch.
                             Default: None
 
             Return
