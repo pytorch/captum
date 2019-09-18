@@ -19,10 +19,12 @@ class NeuronGradient(NeuronAttribution):
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                          Neuron index in the attribute method refers to a particular
-                          neuron in the output of this layer. Currently, only
-                          layers which output a single tensor are supported.
+            layer (torch.nn.Module): Layer for which neuron attributions are computed.
+                          Attributions for a particular neuron in the output of
+                          this layer are computed using the argument neuron_index
+                          in the attribute method.
+                          Currently, only layers with a single tensor output are
+                          supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -33,9 +35,8 @@ class NeuronGradient(NeuronAttribution):
 
     def attribute(self, inputs, neuron_index, additional_forward_args=None):
         r"""
-            Computes gradient with respect to input of a particular neuron in
-            the given hidden layer.
-
+            Computes the gradient of the output of a particular neuron with
+            respect to the inputs of the network.
 
             Args
 
@@ -57,9 +58,12 @@ class NeuronGradient(NeuronAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple containing tensors or
-                            any arbitrary python types. These arguments are provided to
-                            forward_func in order following the arguments in inputs.
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
@@ -95,7 +99,7 @@ class NeuronGradient(NeuronAttribution):
         )
         gradient_mask = apply_gradient_requirements(inputs)
 
-        layer_out, input_grads = _forward_layer_eval_with_neuron_grads(
+        _, input_grads = _forward_layer_eval_with_neuron_grads(
             self.forward_func,
             inputs,
             self.layer,

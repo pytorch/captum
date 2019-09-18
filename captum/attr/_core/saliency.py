@@ -50,9 +50,12 @@ class Saliency(GradientBasedAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It must be a tuple containing tensors or
-                            any arbitrary python types. These arguments are provided to
-                            forward_func in order following the arguments in inputs.
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
