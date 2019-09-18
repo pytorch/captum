@@ -146,6 +146,8 @@ workflows:
 
   lint_and_test:
     jobs:
+      - test_cuda_multi_gpu:
+          filters: *exclude_ghpages_fbconfig
       - lint_test_py36_pip:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py36_pip_release:
