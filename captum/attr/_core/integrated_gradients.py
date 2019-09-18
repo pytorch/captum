@@ -8,7 +8,6 @@ from .._utils.common import (
     _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
-    _run_forward,
     _reshape_and_sum,
     _expand_additional_forward_args,
 )
@@ -191,26 +190,5 @@ class IntegratedGradients(GradientBasedAttribution):
 
         return _format_attributions(is_inputs_tuple, attributions), delta
 
-    def _compute_convergence_delta(
-        self,
-        attributions,
-        start_point,
-        end_point,
-        target=None,
-        additional_forward_args=None,
-    ):
-        attr_sum = sum(attribution.sum().item() for attribution in attributions)
-        start_point = (
-            _run_forward(
-                self.forward_func, start_point, target, additional_forward_args
-            )
-            .sum()
-            .item()
-        )
-        end_point = (
-            _run_forward(self.forward_func, end_point, target, additional_forward_args)
-            .sum()
-            .item()
-        )
-
-        return abs(attr_sum - (end_point - start_point))
+    def _has_convergence_delta(self):
+        return True
