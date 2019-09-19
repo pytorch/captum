@@ -81,18 +81,18 @@ pytest -ra
 ```
 
 ## Getting Started
-Captum helps to interpret and understand the predictions of PyTorch models by
-looking at the features that contribute to the decision that the model makes.
-It also helps to understand which neurons and layers are important for
+Captum helps you interpret and understand predictions of PyTorch models by
+exploring features that contribute to a prediction the model makes.
+It also helps understand which neurons and layers are important for
 model predictions.
 
-To do so, currently, it uses gradient-based model interpretability algorithms
+Currently, the library uses gradient-based interpretability algorithms
 and attributes contributions to each input of the model with respect to
 different neurons and layers, both intermediate and final.
 
-Let's apply some of those algorithms to a toy model that we have created for
+Let's apply some of those algorithms to a toy model we have created for
 demonstration purposes.
-For simplicity, we will use the following simple architecture, but users are welcome
+For simplicity, we will use the following architecture, but users are welcome
 to use any PyTorch model of their choice.
 
 ```
@@ -133,12 +133,12 @@ model = ToyModel()
 model.eval()
 ```
 
-Next, we would like to define a simple input and baseline tensors.
+Next, we need to define simple input and baseline tensors.
 Baselines belong to the input space and often carry no predictive signal.
-Zero tensor can serve as a baseline for some tasks.
+Zero tensor can serve as a baseline for many tasks.
 Some interpretability algorithms such as Integrated
-Gradients, Deeplift, GradientShap are designed to attribute the change between
-the input and baseline to a predictive class or a value that the neural
+Gradients, Deeplift and GradientShap are designed to attribute the change
+between the input and baseline to a predictive class or a value that the neural
 network outputs.
 
 We will apply model interpretability algorithms on the network
