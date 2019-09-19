@@ -117,6 +117,7 @@ class ReLULinearDeepLiftModel(nn.Module):
         self.l2 = nn.Linear(3, 1, bias=False)
         self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0], [0.0, 1.0, 3.0]]))
         self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0], [0.0, 1.0, 2.0]]))
+        self.relu = nn.ReLU()
 
     def forward(self, x1, x2):
         return self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)).sum(axis=1)
