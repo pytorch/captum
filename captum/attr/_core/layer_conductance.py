@@ -104,9 +104,10 @@ class LayerConductance(LayerAttribution):
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
                             `riemann_trapezoid` or `gausslegendre`.
                             Default: `gausslegendre` if no method is provided.
-                internal_batch_size (int, optional): Divides total #steps * #examples of
-                            evaluation data points into chunks of size
-                            internal_batch_size, which are evaluated sequentially.
+                internal_batch_size (int, optional): Divides total #steps * #examples
+                            data points into chunks of size internal_batch_size,
+                            which are computed (forward / backward passes)
+                            sequentially.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain internal_batch_size / num_devices examples.
