@@ -9,6 +9,7 @@ from .._utils.common import (
     _format_additional_forward_args,
     _expand_additional_forward_args,
     validate_input,
+    _expand_target,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
 
@@ -172,6 +173,7 @@ class LayerConductance(LayerAttribution):
             if additional_forward_args is not None
             else None
         )
+        expanded_target = _expand_target(target, n_steps + 1)
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
@@ -182,7 +184,7 @@ class LayerConductance(LayerAttribution):
             internal_batch_size=internal_batch_size,
             forward_fn=self.forward_func,
             layer=self.layer,
-            target_ind=target,
+            target_ind=expanded_target,
             device_ids=self.device_ids,
         )
 

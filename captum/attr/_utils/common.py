@@ -156,7 +156,23 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
         if additional_forward_args is not None
         else inputs
     )
-
+    num_examples = output.shape[0]
+    if target is None:
+        return output
+    elif isinstance(target, int) or (isinstance(target, torch.Tensor) and torch.numel(target) == 1 and isinstance(target.item(), int)):
+        return output[:, target]
+    elif isinstance(target, tuple):
+        return torch.stack([output[i] for i in _extend_index_list(num_examples, target)])
+    elif isinstance(target, list):
+        assert len(target) == len(output), "Target list does not match output list!"
+        if type(target[0]) is int:
+            return torch.stack([output[(i,) + (target[i],)] for i in range(num_examples)])
+        elif type(target[0]) is tuple:
+            return torch.stack([output[(i,) + target[i]] for i in range(num_examples)])
+        else:
+            raise AssertionError("Target element type in list is not valid.")
+    else:
+        raise AssertionError("Target type %r is not valid." % target)
     return output if target is None else output[:, target]
 
 
@@ -184,6 +200,11 @@ def _expand_additional_forward_args(
         else additional_forward_arg
         for additional_forward_arg in additional_forward_args
     )
+
+def _expand_target(target, n_steps):
+    if isinstance(target, list):
+        return target*n_steps
+    return target
 
 
 class MaxList:

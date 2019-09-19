@@ -11,6 +11,7 @@ from .._utils.common import (
     validate_input,
     _format_attributions,
     _expand_additional_forward_args,
+    _expand_target,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
 
@@ -179,6 +180,7 @@ class NeuronConductance(NeuronAttribution):
             if additional_forward_args is not None
             else None
         )
+        expanded_target = _expand_target(target, n_steps)
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
@@ -189,7 +191,7 @@ class NeuronConductance(NeuronAttribution):
             internal_batch_size=internal_batch_size,
             forward_fn=self.forward_func,
             layer=self.layer,
-            target_ind=target,
+            target_ind=expanded_target,
             gradient_neuron_index=neuron_index,
             device_ids=self.device_ids,
         )

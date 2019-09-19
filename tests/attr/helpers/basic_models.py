@@ -185,13 +185,17 @@ class TestModel_MultiLayer(nn.Module):
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
-    def forward(self, x, add_input=None):
+    def forward(self, x, add_input=None, multidim_output=False):
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
-        return lin2_out
+        if multidim_output:
+            stack_mid = torch.stack((lin2_out, lin2_out), dim=2)
+            return torch.stack((stack_mid, stack_mid), dim=3)
+        else:
+            return lin2_out
 
 
 class TestModel_MultiLayer_MultiInput(nn.Module):
