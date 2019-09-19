@@ -8,7 +8,6 @@ from .._utils.common import (
     _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
-    _run_forward,
     _reshape_and_sum,
     _expand_additional_forward_args,
 )
@@ -53,12 +52,12 @@ class IntegratedGradients(GradientBasedAttribution):
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if mutliple input tensors
                             are provided, the examples must be aligned appropriately.
-                baselines (tensor or tuple of tensors, optional):  Baseline from which
-                            integral is computed. If inputs is a single tensor,
-                            baselines must also be a single tensor with exactly the same
-                            dimensions as inputs. If inputs is a tuple of tensors,
-                            baselines must also be a tuple of tensors, with matching
-                            dimensions to inputs.
+                baselines (tensor or tuple of tensors, optional):  Baseline define
+                            the starting point from which integral is computed.
+                            If inputs is a single tensor, baselines must also be a
+                            single tensor with exactly the same dimensions as inputs.
+                            If inputs is a tuple of tensors, baselines must also be
+                            a tuple of tensors, with matching dimensions to inputs.
                             Default: zero tensor for each input tensor
                 target (int, optional):  Output index for which gradient is computed
                             (for classification cases, this is the target class).
@@ -109,8 +108,8 @@ class IntegratedGradients(GradientBasedAttribution):
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float): The difference between the total approximation to the
-                            integrated gradient and total true integrated gradient.
+                delta (float): The difference between the total approximated and
+                            true integrated gradients.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the integrated gradient.
@@ -207,26 +206,5 @@ class IntegratedGradients(GradientBasedAttribution):
 
         return _format_attributions(is_inputs_tuple, attributions), delta
 
-    def _compute_convergence_delta(
-        self,
-        attributions,
-        start_point,
-        end_point,
-        target=None,
-        additional_forward_args=None,
-    ):
-        attr_sum = sum(attribution.sum().item() for attribution in attributions)
-        start_point = (
-            _run_forward(
-                self.forward_func, start_point, target, additional_forward_args
-            )
-            .sum()
-            .item()
-        )
-        end_point = (
-            _run_forward(self.forward_func, end_point, target, additional_forward_args)
-            .sum()
-            .item()
-        )
-
-        return abs(attr_sum - (end_point - start_point))
+    def _has_convergence_delta(self):
+        return True
