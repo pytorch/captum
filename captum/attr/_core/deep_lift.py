@@ -207,7 +207,7 @@ class DeepLift(GradientBasedAttribution):
             out - out_ref for out, out_ref in zip(module.output, module.output_ref)
         )
 
-        #modified_grads = [g_input for g_input in grad_input]
+        # modified_grads = [g_input for g_input in grad_input]
 
         # remove all the properies that we set for the inputs and output
         del module.input_ref
@@ -274,8 +274,7 @@ class DeepLiftShap(DeepLift):
         Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
         More details about the algorithm can be found here:
 
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting
-        -model-predictions.pdf
+        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
         Note that the model makes two major assumptions.
         It assumes that:
@@ -353,6 +352,7 @@ class DeepLiftShap(DeepLift):
             >>> # Computes shap values using deeplift for class 3.
             >>> attribution, delta = dl.attribute(input, target=3)
         """
+
         def compute_mean(inp_bsz, base_bsz, attribution):
             # Average for multiple references
             attr_shape = (base_bsz, inp_bsz)
@@ -425,7 +425,7 @@ def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
     grad_input[0] = torch.where(
         delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
     )
-    print('grad_input: ', grad_input)
+    print("grad_input: ", grad_input)
     return grad_input
 
 
