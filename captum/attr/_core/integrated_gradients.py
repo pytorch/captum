@@ -52,12 +52,12 @@ class IntegratedGradients(GradientBasedAttribution):
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if mutliple input tensors
                             are provided, the examples must be aligned appropriately.
-                baselines (tensor or tuple of tensors, optional):  Baseline from which
-                            integral is computed. If inputs is a single tensor,
-                            baselines must also be a single tensor with exactly the same
-                            dimensions as inputs. If inputs is a tuple of tensors,
-                            baselines must also be a tuple of tensors, with matching
-                            dimensions to inputs.
+                baselines (tensor or tuple of tensors, optional):  Baseline define
+                            the starting point from which integral is computed.
+                            If inputs is a single tensor, baselines must also be a
+                            single tensor with exactly the same dimensions as inputs.
+                            If inputs is a tuple of tensors, baselines must also be
+                            a tuple of tensors, with matching dimensions to inputs.
                             Default: zero tensor for each input tensor
                 target (int, optional):  Output index for which gradient is computed
                             (for classification cases, this is the target class).
@@ -92,8 +92,8 @@ class IntegratedGradients(GradientBasedAttribution):
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float): The difference between the total approximation to the
-                            integrated gradient and total true integrated gradient.
+                delta (float): The difference between the total approximated and
+                            true integrated gradients.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the integrated gradient.
