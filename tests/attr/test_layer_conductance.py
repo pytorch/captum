@@ -109,7 +109,7 @@ class Test(BaseTest):
     ):
         cond = LayerConductance(model, target_layer)
         for internal_batch_size in (None, 1, 20):
-            attributions = cond.attribute(
+            attributions, delta = cond.attribute(
                 test_input,
                 target=0,
                 n_steps=500,
@@ -117,6 +117,12 @@ class Test(BaseTest):
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
             )
+            self.assertTrue(
+                delta < 0.05,
+                "Sum of attributions does"
+                " not match the difference of endpoints. %f" % (delta),
+            )
+
             for i in range(len(expected_conductance)):
                 assertArraysAlmostEqual(
                     attributions[i : i + 1].squeeze(0).tolist(),
@@ -139,13 +145,19 @@ class Test(BaseTest):
         target_index = torch.argmax(torch.sum(final_output, 0))
         cond = LayerConductance(model, target_layer)
         cond_ref = ConductanceReference(model, target_layer)
-        attributions = cond.attribute(
+        attributions, delta = cond.attribute(
             test_input,
             baselines=test_baseline,
             target=target_index,
             n_steps=300,
             method="gausslegendre",
         )
+        self.assertTrue(
+            delta < 0.05,
+            "Sum of attributions values does"
+            " not match the difference of endpoints. %f" % (delta),
+        )
+
         attributions_reference = cond_ref.attribute(
             test_input,
             baselines=test_baseline,
@@ -166,7 +178,7 @@ class Test(BaseTest):
         # Test if batching is working correctly for inputs with multiple examples
         if test_input.shape[0] > 1:
             for i in range(test_input.shape[0]):
-                single_attributions = cond.attribute(
+                single_attributions, delta = cond.attribute(
                     test_input[i : i + 1],
                     baselines=test_baseline[i : i + 1]
                     if test_baseline is not None

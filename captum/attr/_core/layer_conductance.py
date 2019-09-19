@@ -24,6 +24,9 @@ class LayerConductance(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
+    def _has_convergence_delta(self):
+        return True
+
     def attribute(
         self,
         inputs,
@@ -58,6 +61,11 @@ class LayerConductance(LayerAttribution):
 
                 attributions: Total conductance with respect to each neuron in
                               output of given layer
+                delta (float): The difference between the total approximated and
+                            true conductance.
+                            This is computed using the property that the total sum of
+                            forward_func(inputs) - forward_func(baselines) must equal
+                            the total sum of the attributions.
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
         validate_input(inputs, baselines, n_steps, method)
@@ -111,9 +119,21 @@ class LayerConductance(LayerAttribution):
         # Element-wise mutliply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum
         # across stepped inputs.
-        return _reshape_and_sum(
+        attributions = _reshape_and_sum(
             grad_diffs * layer_gradients[:-num_examples],
             n_steps,
             num_examples,
             layer_eval.shape[1:],
         )
+
+        start_point, end_point = baselines, inputs
+
+        delta = self._compute_convergence_delta(
+            (attributions,),
+            start_point,
+            end_point,
+            target=target,
+            additional_forward_args=additional_forward_args,
+        )
+
+        return attributions, delta
