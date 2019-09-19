@@ -107,9 +107,10 @@ class NeuronConductance(NeuronAttribution):
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
                             `riemann_trapezoid` or `gausslegendre`.
                             Default: `gausslegendre` if no method is provided.
-                internal_batch_size (int, optional): Divides total #steps * #examples of
-                            evaluation data points into chunks of size
-                            internal_batch_size, which are evaluated sequentially.
+                internal_batch_size (int, optional): Divides total #steps * #examples
+                            data points into chunks of size internal_batch_size,
+                            which are computed (forward / backward passes)
+                            sequentially.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain internal_batch_size / num_devices examples.
@@ -137,7 +138,11 @@ class NeuronConductance(NeuronAttribution):
                 >>> net = ImageClassifier()
                 >>> neuron_cond = NeuronConductance(net, net.conv1)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Computes neuron integrated gradients for neuron with
+                >>> # To compute neuron attribution, we need to provide the neuron
+                >>> # index for which attribution is desired. Since the layer output
+                >>> # is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)
+                >>> # which indexes a particular neuron in the layer output.
+                >>> # Computes neuron conductance for neuron with
                 >>> # index (4,1,2).
                 >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """

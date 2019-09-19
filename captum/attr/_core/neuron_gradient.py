@@ -88,6 +88,11 @@ class NeuronGradient(NeuronAttribution):
                 >>> net = ImageClassifier()
                 >>> neuron_ig = NeuronGradient(net, net.conv1)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+                >>> # To compute neuron attribution, we need to provide the neuron
+                >>> # index for which attribution is desired. Since the layer output
+                >>> # is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)
+                >>> # which indexes a particular neuron in the layer output.
+                >>> # For this example, we choose the index (4,1,2).
                 >>> # Computes neuron gradient for neuron with
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
