@@ -9,8 +9,8 @@ class InputXGradient(GradientBasedAttribution):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model
-                       or any modification of it
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
         """
         super().__init__(forward_func)
 
@@ -22,8 +22,8 @@ class InputXGradient(GradientBasedAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
-                        gradients are computed. If forward_func takes a single
+            inputs (tensor or tuple of tensors):  Input for which
+                        attributions are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
@@ -39,8 +39,12 @@ class InputXGradient(GradientBasedAttribution):
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
-                        can be provided. It can contain ND tensors, or any arbitrary
-                        python type. The gradients are not computed with respect
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a tuple
+                        containing multiple additional arguments including tensors
+                        or any arbitrary python types. These arguments are provided to
+                        forward_func in order following the arguments in inputs.
+                        Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
 

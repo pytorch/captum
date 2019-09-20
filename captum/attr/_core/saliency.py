@@ -12,16 +12,16 @@ class Saliency(GradientBasedAttribution):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model or
+            forward_func (callable): The forward function of the model or
                         any modification of it
         """
         super().__init__(forward_func)
 
     def attribute(self, inputs, target=None, abs=True, additional_forward_args=None):
         r""""
-        A baseline approach for computing the attribution. It returns
-        the gradients with respect to inputs. If `abs` is set to True the absolute
-        value of the gradients is returned.
+        A baseline approach for computing input attribution. It returns
+        the gradients with respect to inputs. If `abs` is set to True, which is
+        the default, the absolute value of the gradients is returned.
 
         More details about the approach can be found in the following paper:
             https://arxiv.org/pdf/1312.6034.pdf
@@ -42,6 +42,7 @@ class Saliency(GradientBasedAttribution):
                             If the network returns a scalar value per example,
                             no target index is necessary. (Note: Tuples for multi
                             -dimensional output indices will be supported soon.)
+                            Default: None
                 abs (bool, optional): Returns absolute value of gradients if set
                             to True, otherwise returns the (signed) gradients if
                             False.
@@ -49,15 +50,20 @@ class Saliency(GradientBasedAttribution):
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It can contain ND tensors, or any arbitrary
-                            python type. The gradients are not computed with respect
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
+                            Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
 
         Return:
 
                 attributions (tensor or tuple of tensors): The gradients with
-                            respect to each input feature. attributions will always be
+                            respect to each input feature. Attributions will always be
                             the same size as the provided inputs, with each value
                             providing the attribution of the corresponding input index.
                             If a single tensor is provided as inputs, a single tensor is
