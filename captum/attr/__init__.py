@@ -39,7 +39,7 @@ __all__ = [
     "GradientShap",
     "InterpretableEmbeddingBase",
     "TokenReferenceBase",
-    "compute_gradients",  # TODO we don't need to expose this any more
+    "compute_gradients",
     "visualization",
     "configure_interpretable_embedding_layer",
     "remove_interpretable_embedding_layer",

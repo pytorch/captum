@@ -221,13 +221,13 @@ class NoiseTunnel(Attribution):
 
         def compute_expected_attribution_and_sq(attribution):
             bsz = attribution.shape[0] // n_samples
-            attribution_shape = (n_samples, bsz)
+            attribution_shape = (bsz, n_samples)
             if len(attribution.shape) > 1:
                 attribution_shape += attribution.shape[1:]
 
             attribution = attribution.view(attribution_shape)
-            expected_attribution = attribution.mean(dim=0)
-            expected_attribution_sq = torch.mean(attribution ** 2, dim=0)
+            expected_attribution = attribution.mean(dim=1, keepdim=False)
+            expected_attribution_sq = torch.mean(attribution ** 2, dim=1, keepdim=False)
             return expected_attribution, expected_attribution_sq
 
         # Keeps track whether original input is a tuple or not before

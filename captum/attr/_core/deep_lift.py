@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 import warnings
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+
+import numpy as np
 
 from .._utils.common import (
     format_input,
     format_baseline,
     _format_attributions,
     _format_tensor_into_tuples,
+    _run_forward,
     validate_input,
 )
 from .._utils.attribution import GradientBasedAttribution
@@ -44,8 +48,8 @@ class DeepLift(GradientBasedAttribution):
 
         This implementation supports only Rescale rule. RevealCancel rule will
         be supported in later releases.
-        An addition to that, in order to keep the implementation cleaner, DeepLIFT
-        for internal neurons and layers will be implemented in a separate file.
+        In addition to that, in order to keep the implementation cleaner, DeepLIFT
+        for internal neurons and layers will be implemented separately.
         Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
         Integrated Gradients, it runs significantly faster than Integrated
         Gradients and is preferred for large datasets.
@@ -131,12 +135,17 @@ class DeepLift(GradientBasedAttribution):
         baselines = format_baseline(baselines, inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
+        validate_input(inputs, baselines)
+
         # set hooks for baselines
         self._traverse_modules(self.model, self._register_hooks, input_type="ref")
         # make forward pass and remove baseline hooks
-        self.forward_func(*baselines)
-
-        validate_input(inputs, baselines)
+        _run_forward(
+            self.forward_func,
+            baselines,
+            target=target,
+            additional_forward_args=additional_forward_args,
+        )
 
         # set hook for inputs
         self._traverse_modules(self.model, self._register_hooks)
@@ -168,8 +177,7 @@ class DeepLift(GradientBasedAttribution):
         return _format_attributions(is_inputs_tuple, attributions), delta
 
     def _is_non_linear(self, module):
-        module_name = module._get_name()
-        return module_name in SUPPORTED_NON_LINEAR.keys()
+        return type(module) in SUPPORTED_NON_LINEAR.keys()
 
     # we need forward hook to access and detach the inputs and outputs of a neuron
     def _forward_hook(self, module, inputs, outputs):
@@ -214,9 +222,8 @@ class DeepLift(GradientBasedAttribution):
         del module.output_ref
         del module.input
         del module.output
-
         return tuple(
-            SUPPORTED_NON_LINEAR[module._get_name()](
+            SUPPORTED_NON_LINEAR[type(module)](
                 module, delta_in, delta_out, list(grad_input), grad_output, eps=eps
             )
         )
@@ -278,7 +285,7 @@ class DeepLiftShap(DeepLift):
 
         Note that the model makes two major assumptions.
         It assumes that:
-            1. Input features are independant
+            1. Input features are independent
             2. The model is linear when explaining predictions for each input
         Although, it assumes a linear model for each input, the overall
         model can be complex and non-linear.
@@ -338,9 +345,9 @@ class DeepLiftShap(DeepLift):
                         corresponding sized tensors is returned.
             delta (float): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
-                        must equal the total sum of attributions computed
-                        based on approximated SHAP values using Deeplift's
-                        rescale rule.
+                        must be very close to the total sum of attributions
+                        computed based on approximated SHAP values using
+                        Deeplift's rescale rule.
 
         Examples::
 
@@ -355,10 +362,10 @@ class DeepLiftShap(DeepLift):
 
         def compute_mean(inp_bsz, base_bsz, attribution):
             # Average for multiple references
-            attr_shape = (base_bsz, inp_bsz)
+            attr_shape = (inp_bsz, base_bsz)
             if len(attribution.shape) > 1:
                 attr_shape += (-1,)
-            return torch.mean(attribution.view(attr_shape), axis=0, keepdim=False)
+            return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
@@ -375,7 +382,7 @@ class DeepLiftShap(DeepLift):
         inputs = tuple(
             [
                 input.repeat_interleave(base_bsz, dim=0).requires_grad_()
-                for input, baseline in zip(inputs, baselines)
+                for input in inputs
             ]
         )
         baselines = tuple(
@@ -432,7 +439,7 @@ def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
         delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
     )
     # normalizing
-    n = grad_input[0].shape[1]
+    n = np.prod(grad_input[0].shape)
     grad_input[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
     return grad_input
 
@@ -514,14 +521,14 @@ def maxpool(
 
 
 SUPPORTED_NON_LINEAR = {
-    "ReLU": nonlinear,
-    "Elu": nonlinear,
-    "LeakyReLU": nonlinear,
-    "Sigmoid": nonlinear,
-    "Tanh": nonlinear,
-    "Softplus": nonlinear,
-    "MaxPool1d": maxpool1d,
-    "MaxPool2d": maxpool2d,
-    "MaxPool3d": maxpool3d,
-    "Softmax": softmax,
+    nn.ReLU: nonlinear,
+    nn.ELU: nonlinear,
+    nn.LeakyReLU: nonlinear,
+    nn.Sigmoid: nonlinear,
+    nn.Tanh: nonlinear,
+    nn.Softplus: nonlinear,
+    nn.MaxPool1d: maxpool1d,
+    nn.MaxPool2d: maxpool2d,
+    nn.MaxPool3d: maxpool3d,
+    nn.Softmax: softmax,
 }
