@@ -35,12 +35,31 @@ class DeepLift(GradientBasedAttribution):
 
         Args:
 
-                inputs:     A single high dimensional input tensor or a tuple of them.
-                target:     Predicted class index. This is necessary only for
-                            classification use cases
-                additional_forward_args: Besides input tensor an additional input can be
-                                         passed to forward function. It can have
-                                         arbitrary length.
+            inputs (tensor or tuple of tensors):  Input for which
+                        attributions are computed. If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples (aka batch size), and if
+                        mutliple input tensors are provided, the examples must
+                        be aligned appropriately.
+            target (int, optional):  Output index for which gradient is computed
+                        (for classification cases, this is the target class).
+                        If the network returns a scalar value per example,
+                        no target index is necessary. (Note: Tuples for multi
+                        -dimensional output indices will be supported soon.)
+            additional_forward_args (tuple, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a tuple
+                        containing multiple additional arguments including tensors
+                        or any arbitrary python types. These arguments are provided to
+                        forward_func in order, following the arguments in inputs.
+                        Note that attributions are not computed with respect
+                        to these arguments.
+                        Default: None
 
 
         Returns:

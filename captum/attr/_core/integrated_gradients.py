@@ -19,8 +19,8 @@ class IntegratedGradients(GradientBasedAttribution):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model or
-                       any modification of it
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
         """
         super().__init__(forward_func)
 
@@ -35,9 +35,9 @@ class IntegratedGradients(GradientBasedAttribution):
         internal_batch_size=None,
     ):
         r"""
-            Computes the integral of gradients along the path from a baseline input
-            to the given input using Riemann's Method or Gauss-Legendre. If no
-            baseline is provided, the default baseline is the zero tensor.
+            Approximates the integral of gradients along the path from a baseline input
+            to the given input. If no baseline is provided, the default baseline
+            is the zero tensor.
             More details regarding the integrated gradient method can be found in the
             original paper here:
             https://arxiv.org/abs/1703.01365
@@ -64,24 +64,40 @@ class IntegratedGradients(GradientBasedAttribution):
                             If the network returns a scalar value per example,
                             no target index is necessary. (Note: Tuples for multi
                             -dimensional output indices will be supported soon.)
+                            Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
-                            can be provided. It can contain a tuple of ND tensors or
-                            any arbitrary python type of any shape.
-                            In case of the ND tensor the first dimension of the
-                            tensor must correspond to the batch size. It will be
-                            repeated for each `n_steps` along the integrated path
-                            of integrated greadients.
-                            Note that the gradients are not computed with respect
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
+                            For a tensor, the first dimension of the tensor must
+                            correspond to the number of examples. It will be repeated
+                             for each of `n_steps` along the integrated path.
+                            For all other types, the given argument is used for
+                            all forward evaluations.
+                            Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                n_steps (tuple, optional): The number of steps used by the approximation
+                n_steps (int, optional): The number of steps used by the approximation
                             method. Default: 50.
                 method (string, optional): Method for approximating the integral,
                             one of `riemann_right`, `riemann_left`, `riemann_middle`,
                             `riemann_trapezoid` or `gausslegendre`.
                             Default: `gausslegendre` if no method is provided.
+                internal_batch_size (int, optional): Divides total #steps * #examples
+                            data points into chunks of size internal_batch_size,
+                            which are computed (forward / backward passes)
+                            sequentially.
+                            For DataParallel models, each batch is split among the
+                            available devices, so evaluations on each available
+                            device contain internal_batch_size / num_devices examples.
+                            If internal_batch_size is None, then all evaluations are
+                            processed in one batch.
+                            Default: None
 
             Return:
 

@@ -29,7 +29,7 @@ SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 class NoiseTunnel(Attribution):
     def __init__(self, attribution_method):
         r"""
-        attribution_method (Attribution) An instance of any attribution algorithm
+        attribution_method (Attribution): An instance of any attribution algorithm
             of type `Attribution`. E.g. Integrated Gradients, Conductance or
             Saliency.
         """
@@ -49,13 +49,18 @@ class NoiseTunnel(Attribution):
     ):
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
-        before applying attribution algorithms on the inputs and model.
-        The resulting attribution for each sample in the batch is either
-        the expected value (smoothgrad), the square of expected value (smoothgrad_sq)
-        or the variance (vargrad) of all `n_samples` attributions per
-        input in the batch.
+        and applies the given attribution algorithm to each of the samples.
+        The attributions of the samples are combined based on the given noise
+        tunnel type (nt_type):
+        If nt_type is `smoothgrad`, the mean of the sampled attributions is
+        returned. This approximates smoothing the given attribution method
+        with a Gaussian Kernel.
+        If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions
+        is returned.
+        If nt_type is `vargrad`, the variance of the sample attributions is
+        returned.
 
-        More details about adding noise can me found in the following papers:
+        More details about adding noise can be found in the following papers:
             https://arxiv.org/abs/1810.03292
             https://arxiv.org/abs/1810.03307
             https://arxiv.org/abs/1706.03825
@@ -86,8 +91,8 @@ class NoiseTunnel(Attribution):
                             of gaussian noise with zero mean that is added to each
                             input in the batch. If `stdevs` is a single float value
                             then that same value is used for all inputs. If it is
-                            a tuple then it has to have the same length as the inputs
-                            tuple. In this case each stdev value in the stdevs tuple
+                            a tuple, then it must have the same length as the inputs
+                            tuple. In this case, each stdev value in the stdevs tuple
                             corresponds to the input with the same index in the inputs
                             tuple.
                             Default: `1.0` if `stdevs` is not provided.
@@ -96,8 +101,11 @@ class NoiseTunnel(Attribution):
                             distribution provided as an input tensor.
                             Default: False
                 **kwargs (Any, optional): Contains a list of arguments that are passed
-                            to `attribution_method` attribution algorithm. For
-                            instance `additional_forward_args` and `baselines`.
+                            to `attribution_method` attribution algorithm.
+                            Any additional arguments that should be used for the
+                            chosen attribution method should be included here.
+                            For instance, such arguments include
+                            `additional_forward_args` and `baselines`.
 
             Return:
 
