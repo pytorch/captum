@@ -5,7 +5,7 @@ import numpy as np
 
 from torch import nn
 
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2
 from captum.attr._core.gradient_shap import GradientShap
@@ -51,7 +51,7 @@ class Test(BaseTest):
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
         attributions_ig, delta_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(attributions, attributions)
+        assertAttributionComparision(self, attributions, attributions)
 
     def test_classification(self):
         num_in = 40
@@ -75,7 +75,7 @@ class Test(BaseTest):
         attributions_ig, delta_ig = ig.attribute(
             inputs, baselines=baselines, target=target
         )
-        self._assert_shap_ig_comparision((attributions,), (attributions_ig,))
+        assertAttributionComparision(self, (attributions,), (attributions_ig,))
 
     def test_basic_relu_multi_input(self):
         model = BasicModel2()
@@ -94,7 +94,7 @@ class Test(BaseTest):
 
         ig = IntegratedGradients(model)
         attributions_ig, delta_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(attributions, attributions_ig)
+        assertAttributionComparision(self, attributions, attributions_ig)
 
     def _assert_attribution_delta(self, inputs, attributions, delta):
         for input, attribution in zip(inputs, attributions):
@@ -104,10 +104,3 @@ class Test(BaseTest):
             "Sum of SHAP values does"
             " not match the difference of endpoints. %f" % (delta),
         )
-
-    def _assert_shap_ig_comparision(self, attributions1, attributions2):
-        for attribution1, attribution2 in zip(attributions1, attributions2):
-            for attr_row1, attr_row2 in zip(
-                attribution1.detach().numpy(), attribution2.detach().numpy()
-            ):
-                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.005)

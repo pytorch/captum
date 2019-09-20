@@ -3,8 +3,9 @@ from __future__ import print_function
 import torch
 
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
+from captum.attr._core.integrated_gradients import IntegratedGradients
 
-from .helpers.utils import BaseTest
+from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
@@ -72,8 +73,13 @@ class Test(BaseTest):
 
             self.assertTrue(
                 delta < 0.00001,
-                "The sum of attribution values is not "
-                "nearly equal to the difference between the endpoint",
+                "The sum of attribution values {} is not "
+                "nearly equal to the difference between the endpoint".format(delta),
             )
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(input.shape, attribution.shape)
+            if inputs[0].shape == baselines[0].shape:
+                # Compare with Integrated Gradients
+                ig = IntegratedGradients(model)
+                attributions_ig, delta_ig = ig.attribute(inputs, baselines)
+                assertAttributionComparision(self, attributions, attributions_ig)

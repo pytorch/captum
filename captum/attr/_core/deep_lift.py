@@ -7,6 +7,7 @@ from .._utils.common import (
     format_input,
     format_baseline,
     _format_attributions,
+    _format_tensor_into_tuples,
     validate_input,
 )
 from .._utils.attribution import GradientBasedAttribution
@@ -189,6 +190,8 @@ class DeepLift(GradientBasedAttribution):
     def _detach_tensors(
         self, input_attr_name, output_attr_name, module, inputs, outputs
     ):
+        inputs = _format_tensor_into_tuples(inputs)
+        outputs = _format_tensor_into_tuples(outputs)
         setattr(module, input_attr_name, tuple(input.detach() for input in inputs))
         setattr(module, output_attr_name, tuple(output.detach() for output in outputs))
 
@@ -206,9 +209,6 @@ class DeepLift(GradientBasedAttribution):
         delta_out = tuple(
             out - out_ref for out, out_ref in zip(module.output, module.output_ref)
         )
-
-        # modified_grads = [g_input for g_input in grad_input]
-
         # remove all the properies that we set for the inputs and output
         del module.input_ref
         del module.output_ref
@@ -421,11 +421,9 @@ def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
     """
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
-
     grad_input[0] = torch.where(
         delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
     )
-    print("grad_input: ", grad_input)
     return grad_input
 
 

@@ -53,8 +53,6 @@ class Attribution:
                     self.forward_func, end_point, target, additional_forward_args
                 )
             )
-        print("start_point: ", start_point)
-        print("attributions: ", attributions)
         row_sums = [_sum_rows(attribution) for attribution in attributions]
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
         # TODO ideally do not sum - we should return deltas as a 1D tensor

@@ -22,6 +22,17 @@ def assertTensorAlmostEqual(test, tensor, expected):
     )
 
 
+def assertAttributionComparision(test, attributions1, attributions2):
+    for attribution1, attribution2 in zip(attributions1, attributions2):
+        for attr_row1, attr_row2 in zip(
+            attribution1.detach().numpy(), attribution2.detach().numpy()
+        ):
+            if isinstance(attr_row1, np.ndarray):
+                assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.05)
+            else:
+                test.assertAlmostEqual(attr_row1, attr_row2, delta=0.05)
+
+
 class BaseTest(unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
