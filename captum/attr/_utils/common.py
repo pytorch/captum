@@ -59,14 +59,18 @@ def validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
     )
 
 
-# TODO write test case here
-def format_input(inputs):
+def _format_tensor_into_tuples(inputs):
     if not isinstance(inputs, tuple):
         assert isinstance(
             inputs, torch.Tensor
         ), "`inputs` must have type " "torch.Tensor but {} found: ".format(type(inputs))
         inputs = (inputs,)
     return inputs
+
+
+# TODO write test case here
+def format_input(inputs):
+    return _format_tensor_into_tuples(inputs)
 
 
 def _format_additional_forward_args(additional_forward_args):
