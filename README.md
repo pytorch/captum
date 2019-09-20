@@ -123,8 +123,8 @@ class ToyModel(nn.Module):
 
     def forward(self, input):
         lin1 = self.lin1(input)
-        relu1 = self.relu(lin2)
-        lin2 = self.lin2(lin1)
+        relu = self.relu(lin1)
+        lin2 = self.lin2(relu)
         return lin2
 ```
 
