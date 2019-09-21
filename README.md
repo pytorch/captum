@@ -126,6 +126,7 @@ class ToyModel(nn.Module):
         relu = self.relu(lin1)
         lin2 = self.lin2(relu)
         return lin2
+```
 
 Let's create an instance of our model and set it to eval mode.
 ```
