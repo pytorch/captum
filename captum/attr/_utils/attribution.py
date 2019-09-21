@@ -53,19 +53,13 @@ class Attribution:
                     self.forward_func, end_point, target, additional_forward_args
                 )
             )
-        print("start_point: ", start_point)
-        print("attributions: ", attributions)
         row_sums = [_sum_rows(attribution) for attribution in attributions]
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
         # TODO ideally do not sum - we should return deltas as a 1D tensor
         # of batch size. Let the user to sum it if they need to
         # Address this in a separate PR
         if is_multi_baseline:
-            return (
-                abs(attr_sum - (end_point.mean(0).item() - start_point.mean(0).item()))
-                .sum()
-                .item()
-            )
+            return abs(attr_sum - (end_point - start_point.mean(0).item())).sum().item()
         else:
             return abs(attr_sum - (end_point - start_point)).sum().item()
 

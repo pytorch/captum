@@ -99,8 +99,6 @@ class ReLUDeepLiftModel(nn.Module):
         super().__init__()
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
-        # self.relu3 = nn.ReLU()
-        # self.relu_seq = nn.Sequential(self.relu1, self.relu2)
 
     def forward(self, x1, x2):
         return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
@@ -108,21 +106,21 @@ class ReLUDeepLiftModel(nn.Module):
 
 class ReLULinearDeepLiftModel(nn.Module):
     r"""
-        Implements Relu (3*x1|2*x2) | is a concat op
+        Architecture is based on:
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/
         tests/test_tensorflow.py#L65
     """
 
     def __init__(self):
         super().__init__()
+        self.l1 = nn.Linear(3, 1, bias=False)
+        self.l2 = nn.Linear(3, 1, bias=False)
+        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0], [0.0, 1.0, 3.0]]))
+        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0], [0.0, 1.0, 2.0]]))
         self.relu = nn.ReLU()
-        self.l1 = nn.Linear(2, 1, bias=False)
-        self.l2 = nn.Linear(2, 1, bias=False)
-        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 0.0], [0.0, 3.0]]))
-        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 0.0], [0.0, 2.0]]))
 
     def forward(self, x1, x2):
-        return self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)).squeeze()
+        return self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)).sum(axis=1)
 
 
 class TextModule(nn.Module):
