@@ -288,7 +288,7 @@ class DeepLiftShap(DeepLift):
             1. Input features are independent
             2. The model is linear when explaining predictions for each input
         Although, it assumes a linear model for each input, the overall
-        model can be complex and non-linear.
+        model accross multiple inputs can be complex and non-linear.
 
         Args:
 
@@ -309,13 +309,11 @@ class DeepLiftShap(DeepLift):
                         If inputs is a single tensor, baselines must also be a
                         single tensor. If inputs is a tuple of tensors, baselines
                         must also be a tuple of tensors. The first dimension in
-                        baseline tensors defines the distribution from which we
-                        randomly draw samples. All other dimensions starting after
-                        the first dimension should match with the inputs'
-                        dimensions after the first dimension. It is recommended that
-                        the number of samples in the baselines' tensors is larger
-                        than one.
-
+                        baseline tensors defines the distribution of baselines.
+                        All other dimensions starting after the first dimension
+                        should match with the inputs' dimensions after the
+                        first dimension. It is recommended that the number of
+                        samples in the baselines' tensors is larger than one.
                         Default: zero tensor for each input tensor
             target (int, optional):  Output index for which gradient is computed
                         (for classification cases, this is the target class).
@@ -364,7 +362,7 @@ class DeepLiftShap(DeepLift):
             # Average for multiple references
             attr_shape = (inp_bsz, base_bsz)
             if len(attribution.shape) > 1:
-                attr_shape += (-1,)
+                attr_shape += attribution.shape[1:]
             return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
         # Keeps track whether original input is a tuple or not before
