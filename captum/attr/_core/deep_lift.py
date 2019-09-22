@@ -285,10 +285,11 @@ class DeepLiftShap(DeepLift):
 
         Note that the model makes two major assumptions.
         It assumes that:
-            1. Input features are independent
-            2. The model is linear when explaining predictions for each input
-        Although, it assumes a linear model for each input, the overall
-        model accross multiple inputs can be complex and non-linear.
+            1. Input features are independent of one another
+            2. The explanation model is linear, meaning that the explanations are
+               modeled through the additive composition of feature effects.
+        Although, it assumes a linear model for each explanation, the overall
+        model across multiple explanations can be complex and non-linear.
 
         Args:
 
