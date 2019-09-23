@@ -181,22 +181,65 @@ button {
   border-radius: 4px;
 }
 
-.bar-blue {
+.percentage-blue {
   background-color: #80aaff;
 }
 
-.bar-light-blue {
+.percentage-light-blue {
   background-color: rgba(128, 170, 255, 0.6);
 }
 
-.bar-light-red {
+.percentage-light-red {
   background-color: #e79c8d;
 }
 
-.bar-red {
+.percentage-red {
   background-color: #d45c43;
 }
 
-.bar-gray {
+.percentage-gray {
   background: #c6c6c6;
+}
+
+.percentage-white {
+  background-color: auto;
+}
+
+.text-feature-word {
+  position: relative;
+  display: inline-block;
+  border-radius: 2px;
+  padding: 2px;
+}
+
+.tooltip__label {
+  max-width: 200px;
+  background: rgba(0, 0, 0, 0.75);
+  position: absolute;
+  text-align: center;
+  border-radius: 4px;
+  color: white;
+  padding: 4px;
+  font-size: 1.1em;
+  font-weight: 600;
+  visibility: hidden;
+  width: 80px;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -40px;
+}
+
+.tooltip__label::after {
+  content: " ";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-style: solid;
+  border-width: 6px;
+  border-color: rgba(0, 0, 0, 0.75) transparent transparent transparent;
+}
+
+.text-feature-word:hover .tooltip__label {
+  visibility: visible;
 }

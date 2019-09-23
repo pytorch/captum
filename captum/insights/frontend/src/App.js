@@ -1,8 +1,11 @@
 import React from "react";
 import "./App.css";
 
-// helper method to convert a POJO into a valid classname
+// helper method to convert an array or object into a valid classname
 function cx(obj) {
+  if (Array.isArray(obj)) {
+    return obj.join(" ");
+  }
   return Object.keys(obj)
     .filter(k => !!obj[k])
     .join(" ");
@@ -25,6 +28,14 @@ class Header extends React.Component {
       </header>
     );
   }
+}
+
+function Tooltip(props) {
+  return (
+    <div className="tooltip">
+      <div className="tooltip__label">{props.label}</div>
+    </div>
+  );
 }
 
 class FilterContainer extends React.Component {
@@ -115,21 +126,39 @@ class Filter extends React.Component {
   }
 }
 
+// TODO maybe linear interpolate the colors instead of hardcoding them
+function getPercentageColor(percentage, zeroDefault = false) {
+  if (percentage > 50) {
+    return "percentage-blue";
+  } else if (percentage > 10) {
+    return "percentage-light-blue";
+  } else if (percentage > -10) {
+    if (zeroDefault) {
+      return "percentage-white";
+    }
+    return "percentage-gray";
+  } else if (percentage > -50) {
+    return "percentage-light-red";
+  } else {
+    return "percentage-red";
+  }
+}
+
 function ImageFeature(props) {
   return (
     <>
-      <div className="panel__column__title">{props.feature.name} (Image)</div>
+      <div className="panel__column__title">{props.data.name} (Image)</div>
       <div className="panel__column__body">
         <div className="gallery">
           <div className="gallery__item">
             <div className="gallery__item__image">
-              <img src={"data:image/png;base64," + props.feature.base} />
+              <img src={"data:image/png;base64," + props.data.base} />
             </div>
             <div className="gallery__item__description">Original</div>
           </div>
           <div className="gallery__item">
             <div className="gallery__item__image">
-              <img src={"data:image/png;base64," + props.feature.modified} />
+              <img src={"data:image/png;base64," + props.data.modified} />
             </div>
             <div className="gallery__item__description">Gradient Overlay</div>
           </div>
@@ -139,41 +168,50 @@ function ImageFeature(props) {
   );
 }
 
-function get_feature(f) {
-  let feature = null;
-  switch (f.type) {
-    case "image":
-      feature = <ImageFeature feature={f} />;
-      break;
+function TextFeature(props) {
+  const color_words = props.data.base.map((w, i) => {
+    return (
+      <>
+        <span
+          className={cx([
+            getPercentageColor(props.data.modified[i], /* zeroDefault */ true),
+            "text-feature-word"
+          ])}
+        >
+          {w}
+          <Tooltip label={props.data.modified[i]} />
+        </span>{" "}
+      </>
+    );
+  });
+  return (
+    <>
+      <div className="panel__column__title">{props.data.name} (Image)</div>
+      <div className="panel__column__body">{color_words}</div>
+    </>
+  );
+}
 
+function Feature(props) {
+  const data = props.data;
+  switch (data.type) {
+    case "image":
+      return <ImageFeature data={data} />;
+    case "text":
+      return <TextFeature data={data} />;
     default:
-      throw new Error("Unsupported feature visualization type: " + f.type);
+      throw new Error("Unsupported feature visualization type: " + data.type);
   }
-  return feature;
 }
 
 class Contributions extends React.Component {
-  _getColorClassName(percentage) {
-    if (percentage > 50) {
-      return "bar-blue";
-    } else if (percentage > 10) {
-      return "bar-light-blue";
-    } else if (percentage > -10) {
-      return "bar-gray";
-    } else if (percentage > -50) {
-      return "bar-light-red";
-    } else {
-      return "bar-red";
-    }
-  }
-
   render() {
     return this.props.feature_outputs.map(f => (
       <div className="bar-chart__group">
         <div
           className={cx({
             "bar-chart__group__bar": true,
-            [this._getColorClassName(f.contribution)]: true
+            [getPercentageColor(f.contribution)]: true
           })}
           width={f.contribution + "%"}
         />
@@ -186,7 +224,7 @@ class Contributions extends React.Component {
 class Visualization extends React.Component {
   render() {
     const data = this.props.data;
-    const features = data.feature_outputs.map(f => get_feature(f));
+    const features = data.feature_outputs.map(f => <Feature data={f} />);
 
     return (
       <div className="panel panel--long">
@@ -236,7 +274,8 @@ function Visualizations(props) {
       <div className="viz">
         <div className="panel">
           <div className="filter-panel__column">
-            Please press <strong>Fetch</strong> to start loading data.
+            Please press <strong className="text-feature-word">Fetch</strong> to
+            start loading data.
           </div>
         </div>
       </div>
