@@ -58,13 +58,19 @@ setup(
     description="Model interpretability for PyTorch",
     author="PyTorch Core Team",
     license="BSD",
-    url="https://captum.org",
+    url="https://captum.ai",
     project_urls={
-        "Documentation": "https://captum.org",
+        "Documentation": "https://captum.ai",
         "Source": "https://github.com/pytorch/captum",
         "conda": "https://anaconda.org/pytorch/captum",
     },
-    keywords=["Model Interpretability", "Model Understanding", "PyTorch"],
+    keywords=[
+        "Model Interpretability",
+        "Model Understanding",
+        "Feature Importance",
+        "Neuron Importance",
+        "PyTorch",
+    ],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3 :: Only",
@@ -76,9 +82,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    # TODO: Require when 1.2 goes live
-    # install_requires=["numpy", "torch>=1.2"],
-    install_requires=["numpy", "torch>=1.1"],
+    install_requires=["numpy", "torch>=1.2"],
     packages=find_packages(),
     extras_require={
         "dev": DEV_REQUIRES,
