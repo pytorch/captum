@@ -2,13 +2,13 @@ from collections import namedtuple
 from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 from captum.attr import IntegratedGradients
+from captum.attr._utils.batching import _batched_generator
+from captum.attr._utils.common import _run_forward
 from captum.insights.features import BaseFeature
 from captum.insights.server import start_server
 
 from torch import Tensor
 from torch.nn import Module
-
-from ..attr._utils.batching import _batched_generator
 
 PredictionScore = namedtuple("PredictionScore", "score label")
 VisualizationOutput = namedtuple(
@@ -109,7 +109,7 @@ class AttributionVisualizer(object):
 
         vis_outputs = []
 
-        for i, (inputs, additional_args) in enumerate(
+        for i, (inputs, additional_forward_args) in enumerate(
             _batched_generator(
                 inputs=batch_data.inputs,
                 additional_forward_args=batch_data.additional_args,
@@ -118,7 +118,10 @@ class AttributionVisualizer(object):
         ):
             # initialize baselines
             baseline_transforms_len = len(self.features[0].baseline_transforms)
-            baselines = [[[None] * len(self.features)] * baseline_transforms_len]
+            baselines = [
+                [None] * len(self.features) for _ in range(baseline_transforms_len)
+            ]
+            # baselines = [[[None] * len(self.features)] * baseline_transforms_len]
             transformed_inputs = list(inputs)
 
             for feature_i, feature in enumerate(self.features):
@@ -135,10 +138,8 @@ class AttributionVisualizer(object):
                     baselines[baseline_i][feature_i] = self._transform(
                         baseline_transform, transformed_inputs[feature_i], True
                     )
-            if additional_args is not None:
-                outputs = net(*transformed_inputs, additional_args)
-            else:
-                outputs = net(*transformed_inputs)
+
+            outputs = _run_forward(net, transformed_inputs, additional_forward_args)
 
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
