@@ -48,7 +48,7 @@ def get_pretrained_model():
             return x
 
     net = Net()
-    net.load_state_dict(torch.load("../../notebooks/models/cifar_torchvision.pt"))
+    net.load_state_dict(torch.load("../../tutorials/models/cifar_torchvision.pt"))
     return net
 
 
