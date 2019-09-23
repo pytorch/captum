@@ -217,16 +217,18 @@ class DeepLift(GradientBasedAttribution):
         delta_out = tuple(
             out - out_ref for out, out_ref in zip(module.output, module.output_ref)
         )
+        multipliers = tuple(
+            SUPPORTED_NON_LINEAR[type(module)](
+                module, delta_in, delta_out, list(grad_input), grad_output, eps=eps
+            )
+        )
         # remove all the properies that we set for the inputs and output
         del module.input_ref
         del module.output_ref
         del module.input
         del module.output
-        return tuple(
-            SUPPORTED_NON_LINEAR[type(module)](
-                module, delta_in, delta_out, list(grad_input), grad_output, eps=eps
-            )
-        )
+
+        return multipliers
 
     def _register_hooks(self, module, input_type="non_ref"):
         # TODO find a better way of checking if a module is a container or not
