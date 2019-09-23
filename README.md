@@ -280,10 +280,15 @@ python -m captum.insights.example
 
 and navigate to the URL specified in the output.
 
-To build Insights you will need [Node](https://nodejs.org/en/) >= 8.x
-and [Yarn](https://yarnpkg.com/en/) >= 1.5.
+Alternatively, launch our equivalent tutorial notebook with
 
-To build and launch from a checkout in a conda environment run
+```
+jupyter notebook tutorials/CIFAR_TorchVision_Captum_Insights.ipynb
+```
+
+To build Insights you will need [Node](https://nodejs.org/en/) >= 8.x
+and [Yarn](https://yarnpkg.com/en/) >= 1.5. To build and launch from a
+local checkout with conda run
 
 ```
 conda install -c conda-forge yarn
