@@ -12,9 +12,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-insights/frontend/node_modules/
-insights/frontend/.pnp/
-insights/frontend/build/
+captum/insights/frontend/node_modules/
+captum/insights/frontend/.pnp/
+captum/insights/frontend/build/
 lib/
 lib64/
 parts/
@@ -49,13 +49,13 @@ wheels/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-insights/frontend/npm-debug.log*
-insights/frontend/yarn-debug.log*
-insights/frontend/yarn-error.log*
+captum/insights/frontend/npm-debug.log*
+captum/insights/frontend/yarn-debug.log*
+captum/insights/frontend/yarn-error.log*
 
 # Unit test / coverage reports
 htmlcov/
-insights/frontend/coverage
+captum/insights/frontend/coverage
 .tox/
 .coverage
 .coverage.*
