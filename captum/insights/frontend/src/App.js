@@ -186,7 +186,7 @@ function TextFeature(props) {
   });
   return (
     <>
-      <div className="panel__column__title">{props.data.name} (Image)</div>
+      <div className="panel__column__title">{props.data.name} (Text)</div>
       <div className="panel__column__body">{color_words}</div>
     </>
   );
