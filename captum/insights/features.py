@@ -35,7 +35,7 @@ class BaseFeature:
     def visualization_type(self) -> str:
         raise NotImplementedError
 
-    def visualize(self, attribution, data, label) -> FeatureOutput:
+    def visualize(self, attribution, data) -> FeatureOutput:
         raise NotImplementedError
 
 
@@ -57,7 +57,7 @@ class ImageFeature(BaseFeature):
     def visualization_type(self) -> str:
         return "image"
 
-    def visualize(self, attribution, data, label) -> FeatureOutput:
+    def visualize(self, attribution, data) -> FeatureOutput:
         attribution.squeeze_()
         data.squeeze_()
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))

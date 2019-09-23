@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import threading
 from typing import Optional
@@ -46,11 +47,15 @@ def get_free_tcp_port():
     return port
 
 
-def start_server(_viz, port: Optional[int] = None, debug=True):
+def start_server(_viz, port: Optional[int] = None):
+    debug = bool(os.environ.get("CAPTUM_INSIGHTS_DEBUG"))
     global visualizer
     visualizer = _viz
-    if port is None:
+
+    if port is None and not debug:
         port = get_free_tcp_port()
+    elif debug:
+        port = 5000
 
     print("starting server on port:", port)
 
@@ -60,7 +65,7 @@ def start_server(_viz, port: Optional[int] = None, debug=True):
         app.logger.disabled = True
         threading.Thread(target=app.run, kwargs={"port": port}).start()
     else:
-        app.run(use_reloader=True, port=5000, debug=True, threaded=True)
+        app.run(use_reloader=True, port=port, debug=True, threaded=True)
     return port
 
 

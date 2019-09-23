@@ -52,13 +52,19 @@ class AttributionVisualizer(object):
         net: Module,
         baselines: List[Tuple[Tensor, ...]],
         data: Tuple[Tensor, ...],
+        additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Tensor,
     ) -> Tensor:
         net.eval()
         ig = IntegratedGradients(net)
         net.zero_grad()
         # TODO support multiple baselines
-        attr_ig, _ = ig.attribute(data, baselines=baselines[0], target=label)
+        attr_ig, _ = ig.attribute(
+            data,
+            baselines=baselines[0],
+            additional_forward_args=additional_forward_args,
+            target=label,
+        )
 
         return attr_ig
 
@@ -121,7 +127,6 @@ class AttributionVisualizer(object):
             baselines = [
                 [None] * len(self.features) for _ in range(baseline_transforms_len)
             ]
-            # baselines = [[[None] * len(self.features)] * baseline_transforms_len]
             transformed_inputs = list(inputs)
 
             for feature_i, feature in enumerate(self.features):
@@ -139,7 +144,9 @@ class AttributionVisualizer(object):
                         baseline_transform, transformed_inputs[feature_i], True
                     )
 
-            outputs = _run_forward(net, transformed_inputs, additional_forward_args)
+            outputs = _run_forward(
+                net, tuple(transformed_inputs), additional_forward_args
+            )
 
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
@@ -151,18 +158,22 @@ class AttributionVisualizer(object):
             baselines = [tuple(b) for b in baselines]
 
             attribution = self._calculate_attribution(
-                net, baselines, tuple(transformed_inputs), label
+                net,
+                baselines,
+                tuple(transformed_inputs),
+                additional_forward_args,
+                label,
             )
             for j, feature in enumerate(self.features):
-                feature_output = feature.visualize(attribution[j], inputs[j], label)
-
-            predicted_labels = self._get_labels_from_scores(scores, predicted)
-            actual_label = self.classes[label]
-            vis_outputs.append(
-                VisualizationOutput(
-                    feature_outputs=[feature_output],
-                    actual=actual_label,
-                    predicted=predicted_labels,
+                feature_output = feature.visualize(attribution[j], inputs[j])
+                predicted_labels = self._get_labels_from_scores(scores, predicted)
+                actual_label = self.classes[label]
+                vis_outputs.append(
+                    VisualizationOutput(
+                        feature_outputs=[feature_output],
+                        actual=actual_label,
+                        predicted=predicted_labels,
+                    )
                 )
-            )
+
         return vis_outputs
