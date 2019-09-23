@@ -279,17 +279,16 @@ class DeepLiftShap(DeepLift):
     ):
         r"""
         Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
-        It computes the attribution of each input example with respect to each
-        baseline example and averages the attributions for each input example.
+        For each input sample it computes DeepLift attribution with respect to
+        each baseline and averages resulting attributions.
         More details about the algorithm can be found here:
 
         http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
 
-        Note that the model makes two major assumptions.
-        It assumes that:
-            1. Input features are independent of one another
-            2. The explanation model is linear, meaning that the explanations are
-               modeled through the additive composition of feature effects.
+        Note that the explanation model:
+            1. Assumes that input features are independent of one another
+            2. Is linear, meaning that the explanations are modeled through
+               the additive composition of feature effects.
         Although, it assumes a linear model for each explanation, the overall
         model across multiple explanations can be complex and non-linear.
 
