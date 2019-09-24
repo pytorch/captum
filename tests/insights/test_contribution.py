@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from captum.insights.api import AttributionVisualizer, Data
 from captum.insights.features import ImageFeature, BaseFeature, FeatureOutput
 
-from ..attr.helpers.utils import BaseTest
+from tests.attr.helpers.utils import BaseTest
 
 class RealFeature(BaseFeature):
     def __init__(
