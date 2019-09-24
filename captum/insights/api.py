@@ -169,8 +169,6 @@ class AttributionVisualizer(object):
             label = batch_data.labels[i]
             actual_label = self.classes[label]
 
-            predicted_labels = self._get_labels_from_scores(scores, predicted)
-
             if len(outputs) == 1:
                 scores = outputs
                 predicted = scores.round().to(torch.int)
@@ -180,6 +178,8 @@ class AttributionVisualizer(object):
             scores = scores.cpu().squeeze(0)
             predicted = predicted.cpu().squeeze_(0)
             baselines = [tuple(b) for b in baselines]
+
+            predicted_labels = self._get_labels_from_scores(scores, predicted)
 
             attrs_per_input = self._calculate_attribution(
                 net,
@@ -203,7 +203,7 @@ class AttributionVisualizer(object):
                     feature_outputs=feature,
                     actual=actual_label,
                     predicted=predicted_labels,
-                    )
+                )
                 for feature in features
             ]
 
