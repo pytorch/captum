@@ -50,8 +50,8 @@ class ImageFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        input_transforms: Union[Callable, List[Callable]],
         baseline_transforms: Union[Callable, List[Callable]],
+        input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable] = None,
     ):
         super().__init__(
@@ -92,8 +92,8 @@ class TextFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        input_transforms: Union[Callable, List[Callable]],
         baseline_transforms: Union[Callable, List[Callable]],
+        input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable],
     ):
         super().__init__(

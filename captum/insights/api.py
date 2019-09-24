@@ -108,19 +108,36 @@ class AttributionVisualizer(object):
 
         return transformed_inputs
 
-    def visualize(self) -> List[VisualizationOutput]:
+    def _calculate_net_contrib(self, attribution_per_input):
+        # get the net contribution per inpout
+        net_contrib = torch.stack(
+            [attrib.flatten().sum() for attrib in attribution_per_input]
+        )
+
+        # normalise the contribution, s.t. sum(abs(x_i)) = 1
+        norm = torch.norm(net_contrib, p=1)
+        if norm > 0:
+            net_contrib /= norm
+
+        return net_contrib
+
+    def visualize(self) -> List[List[VisualizationOutput]]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
         vis_outputs = []
 
         for i, (inputs, additional_forward_args) in enumerate(
             _batched_generator(
-                inputs=batch_data.inputs,
+                inputs=tuple(batch_data.inputs),
                 additional_forward_args=batch_data.additional_args,
                 internal_batch_size=1,  # should be 1 until we have batch label support
             )
         ):
             # initialize baselines
+            #
+            # TODO: fixme
+            # this makes baseline transforms non-Nullable
+            # also cannot do multiple baselines ...?
             baseline_transforms_len = len(self.features[0].baseline_transforms)
             baselines = [
                 [None] * len(self.features) for _ in range(baseline_transforms_len)
@@ -150,6 +167,9 @@ class AttributionVisualizer(object):
                 outputs = self.score_func(outputs)
 
             label = batch_data.labels[i]
+            actual_label = self.classes[label]
+
+            predicted_labels = self._get_labels_from_scores(scores, predicted)
 
             if len(outputs) == 1:
                 scores = outputs
@@ -161,7 +181,7 @@ class AttributionVisualizer(object):
             predicted = predicted.cpu().squeeze_(0)
             baselines = [tuple(b) for b in baselines]
 
-            attribution = self._calculate_attribution(
+            attrs_per_input = self._calculate_attribution(
                 net,
                 baselines,
                 tuple(transformed_inputs),
@@ -169,27 +189,24 @@ class AttributionVisualizer(object):
                 label,
             )
 
-            # sum of attribs for each feature
-            sum_feature = torch.zeros([len(attribution)])
-            for j, feature_attrib in enumerate(attribution):
-                sum_feature[j] = torch.sum(feature_attrib.flatten()).item()
-            # get sum of all feature attribs
-            sum_all = torch.sum(torch.abs(sum_feature))
+            net_contrib = self._calculate_net_contrib(attrs_per_input)
 
-            for j, feature in enumerate(self.features):
-                contribution = 0
-                if sum_all != 0:
-                    contribution = sum_feature[j] / sum_all
-
-                feature_output = feature.visualize(attribution[j], inputs[j], contribution.item())
-                predicted_labels = self._get_labels_from_scores(scores, predicted)
-                actual_label = self.classes[label]
-                vis_outputs.append(
-                    VisualizationOutput(
-                        feature_outputs=[feature_output],
-                        actual=actual_label,
-                        predicted=predicted_labels,
-                    )
+            features = [
+                feature.visualize(attr, data, contrib)
+                for feature, attr, data, contrib in zip(
+                    self.features, attrs_per_input, inputs, net_contrib
                 )
+            ]
+
+            features = [
+                VisualizationOutput(
+                    feature_outputs=feature,
+                    actual=actual_label,
+                    predicted=predicted_labels,
+                    )
+                for feature in features
+            ]
+
+            vis_outputs.append(features)
 
         return vis_outputs
