@@ -64,14 +64,15 @@ class SigmoidDeepLiftModel(nn.Module):
         self.num_hidden = num_hidden
         self.num_out = num_out
         self.lin1 = nn.Linear(num_in, num_hidden, bias=False)
-        self.lin2 = nn.Linear(num_hidden, num_out, bias=False)
+        self.maxpool = nn.MaxPool1d(2)
+        self.lin2 = nn.Linear(num_hidden // 2, num_out, bias=False)
         self.lin1.weight = nn.Parameter(torch.ones(num_hidden, num_in))
-        self.lin2.weight = nn.Parameter(torch.ones(num_out, num_hidden))
+        self.lin2.weight = nn.Parameter(torch.ones(num_out, num_hidden // 2))
         self.relu1 = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):
-        lin1 = self.lin1(input)
+        lin1 = self.maxpool(self.lin1(input).unsqueeze(1)).squeeze(1)
         lin2 = self.lin2(self.relu1(lin1))
         return self.sigmoid(lin2)
 

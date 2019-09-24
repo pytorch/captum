@@ -180,9 +180,7 @@ class DeepLift(GradientBasedAttribution):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
     def _tensor_grad_hook(self, grad):
-        tensor_grad = COMPLEX_GRADIENTS[-1]
-        del COMPLEX_GRADIENTS[-1]
-        return tensor_grad
+        return COMPLEX_GRADIENTS.pop()
 
     # we need forward hook to access and detach the inputs and outputs of a neuron
     def _forward_hook(self, module, inputs, outputs):

@@ -9,6 +9,7 @@ from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel
 from .helpers.basic_models import TestModel_ConvNet
+from .helpers.basic_models import TestModel_ConvNet_MaxPool1d
 
 
 class Test(BaseTest):
@@ -74,6 +75,15 @@ class Test(BaseTest):
         baseline = 20 * torch.randn(2, 1, 10, 10)
 
         model = TestModel_ConvNet()
+        dl = DeepLift(model)
+
+        self.softmax_classification(model, dl, input, baseline)
+
+    def test_convnet_with_maxpool1d(self):
+        input = 100 * torch.randn(2, 1, 10, requires_grad=True)
+        baseline = 20 * torch.randn(2, 1, 10)
+
+        model = TestModel_ConvNet_MaxPool1d()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
