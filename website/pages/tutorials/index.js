@@ -55,23 +55,23 @@ class TutorialHome extends React.Component {
                 In this tutorial we create and train a simple neural network on the Titanic survival dataset.
                 We then use Integrated Gradients to analyze feature importance.  We then deep dive the network to assess layer and neuron importance
                 using conductance.  Finally, we analyze a specific
-                neuron to understand feature importance for that specific neuron.  Find the tutorial <a href="/tutorials/Titanic_Basic_Interpret">here</a>.
+                neuron to understand feature importance for that specific neuron.  Find the tutorial <a href="Titanic_Basic_Interpret">here</a>.
 
                 <h4>Interpreting text models:</h4>
                 In this tutorial we use a pre-trained CNN model for sentiment analysis on an IMDB dataset.
                 We use Captum and Integrated Gradients to interpret model predictions by show which specific
-                words have highest attribution to the model output.  Find the tutorial <a href="/tutorials/IMDB_TorchText_Interpret">here </a>.
+                words have highest attribution to the model output.  Find the tutorial <a href="IMDB_TorchText_Interpret">here </a>.
 
                 <h4>Interpreting vision models:</h4>
                 This tutorial demonstrates how to use Captum for interpreting vision focused models.
                 First we create and train (or use a pre-trained) a simple CNN model on the CIFAR dataset.
                 We then interpret the output of an example with a series of overlays using Integrated Gradients and DeepLIFT.
-                Find the tutorial <a href="/tutorials/CIFAR_TorchVision_Interpret">here</a>.
+                Find the tutorial <a href="CIFAR_TorchVision_Interpret">here</a>.
 
                 <h4>Interpreting multimodal models:</h4>
                 To demonstrate interpreting multimodal models we have chosen to look at an open source Visual Question Answer (VQA) model.
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
-                of the text and visual parts of the model. Find the tutorial <a href="/tutorials/Multimodal_VQA_Interpret">here</a>.
+                of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
               </p>
             </body>
