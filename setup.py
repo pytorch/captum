@@ -72,6 +72,7 @@ with open(os.path.join(os.path.dirname(__file__), "captum/__init__.py"), "r") as
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+
 # build Captum Insights via yarn if content doesn't exist
 def build_insights():
     report("-- Building Captum Insights")
