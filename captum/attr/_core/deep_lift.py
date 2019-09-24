@@ -179,11 +179,18 @@ class DeepLift(GradientBasedAttribution):
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
+    def _tensor_grad_hook(self, grad):
+        tensor_grad = COMPLEX_GRADIENTS[-1]
+        del COMPLEX_GRADIENTS[-1]
+        return tensor_grad
+
     # we need forward hook to access and detach the inputs and outputs of a neuron
     def _forward_hook(self, module, inputs, outputs):
         input_attr_name = "input"
         output_attr_name = "output"
         self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
+        if type(module) in FAILURE_CASES:
+            inputs[0].register_hook(self._tensor_grad_hook)
 
     def _forward_hook_ref(self, module, inputs, outputs):
         input_attr_name = "input_ref"
@@ -516,9 +523,17 @@ def maxpool(
         list(module.input[0].shape),
     )
 
-    grad_input[0] = torch.where(
-        delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
-    )
+    if type(module) == nn.MaxPool1d:
+        # the gradient isn't changed here; instead, the tensor hook
+        # will be responsible for changing the gradient
+        COMPLEX_GRADIENTS.append(torch.where(
+            delta_in[0] < eps, torch.zeros_like(module.input[0]),
+            unpool_grad_out_delta / delta_in[0]
+        ))
+    else:
+        grad_input[0] = torch.where(
+            delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
+        )
     return grad_input
 
 
@@ -534,3 +549,9 @@ SUPPORTED_NON_LINEAR = {
     nn.MaxPool3d: maxpool3d,
     nn.Softmax: softmax,
 }
+
+FAILURE_CASES = {
+    nn.MaxPool1d
+}
+
+COMPLEX_GRADIENTS = []
