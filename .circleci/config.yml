@@ -50,7 +50,7 @@ commands:
     steps:
       - run:
           name: "Run sphinx"
-          command: sphinx-build -WT --keep-going sphinx/source sphinx/build
+          command: sphinx-build -T --keep-going sphinx/source sphinx/build
 
   configure_github_bot:
     description: "Configure Docusaurus GitHub bot"
