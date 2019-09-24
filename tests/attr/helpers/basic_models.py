@@ -217,6 +217,9 @@ class TestModel_ConvNet(nn.Module):
         self.fc2 = nn.Linear(8, 10)
         self.softmax = nn.Softmax(dim=1)
 
+        self.fc1.weight = nn.Parameter(torch.ones(8, 4))
+        self.fc2.weight = nn.Parameter(torch.ones(10, 8))
+
     def forward(self, x):
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)

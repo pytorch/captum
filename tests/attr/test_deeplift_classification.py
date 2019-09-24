@@ -8,6 +8,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel
+from .helpers.basic_models import TestModel_ConvNet
 
 
 class Test(BaseTest):
@@ -38,7 +39,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines)
 
-    def test_softmax_classificatio_batch_zero_baseline(self):
+    def test_softmax_classification_batch_zero_baseline(self):
         num_in = 40
         input = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
         baselines = 0 * input
@@ -48,7 +49,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines)
 
-    def test_softmax_classificatio_multi_baseline(self):
+    def test_softmax_classification_multi_baseline(self):
         num_in = 40
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         baselines = torch.randn(5, 40)
@@ -58,7 +59,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines)
 
-    def test_softmax_classificatio_batch_multi_baseline(self):
+    def test_softmax_classification_batch_multi_baseline(self):
         num_in = 40
         input = torch.arange(0.0, num_in * 2.0, requires_grad=True).reshape(2, num_in)
         baselines = torch.randn(5, 40)
@@ -67,6 +68,15 @@ class Test(BaseTest):
         dl = DeepLiftShap(model)
 
         self.softmax_classification(model, dl, input, baselines)
+
+    def test_convnet_with_maxpool2d(self):
+        input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
+        baseline = 20 * torch.randn(2, 1, 10, 10)
+
+        model = TestModel_ConvNet()
+        dl = DeepLift(model)
+
+        self.softmax_classification(model, dl, input, baseline)
 
     def softmax_classification(self, model, attr_method, input, baselines):
         target = torch.tensor(2)
