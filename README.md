@@ -260,6 +260,28 @@ Approximation error:  9.5367431640625e-07
 More details on the list of supported algorithms and how to apply
 Captum on different types of models can be found in our tutorials.
 
+
+## Captum Insights
+
+Captum provides a web interface called Insights for easy visualization and
+access to a number of our interpretability algorithms.
+
+To execute a sample model on CIFAR10 via Captum Insights run
+
+```
+python captum/insights/example.py
+```
+
+and navigate to http://127.0.0.1:5000/.
+
+To build locally with conda run
+
+```
+conda install -c conda-forge yarn
+python setup.py develop
+python captum/insights/example.py
+```
+
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
