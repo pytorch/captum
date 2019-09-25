@@ -96,7 +96,9 @@ class TinyMultiModal(nn.Module):
 
 def _labelled_img_data(num_samples=10, width=16, height=16, depth=3, num_labels=10):
     for i in range(num_samples):
-        yield torch.randn(depth, height, width), torch.randint(num_labels, (1,))
+        yield torch.empty(depth, height, width).uniform_(0, 1), torch.randint(
+            num_labels, (1,)
+        )
 
 
 def _multi_modal_data(img_dataset, feature_size=256):
