@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# this builds the Captum Insights React-based UI
+# This builds the Captum Insights React-based UI using yarn.
 #
-# run this script from the project root using `./scripts/build_insights.sh`
+# Run this script from the project root using `./scripts/build_insights.sh`
+
+set -e
 
 usage() {
   echo "Usage: $0"
@@ -22,6 +24,14 @@ while getopts 'h' flag; do
       ;;
   esac
 done
+
+# check if yarn is installed
+if [ ! -x "$(command -v yarn)" ]; then
+  echo ""
+  echo "Please install yarn with 'conda install -c conda-forge yarn' or equivalent."
+  echo ""
+  exit 1
+fi
 
 # go into subdir
 pushd captum/insights/frontend || exit
