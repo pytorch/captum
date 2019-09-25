@@ -52,7 +52,7 @@ def get_pretrained_model():
 
     net = Net()
     pt_path = os.path.abspath(
-        os.path.dirname(__file__) + "/../../tutorials/models/cifar_torchvision.pt"
+        os.path.dirname(__file__) + "/models/cifar_torchvision.pt"
     )
     net.load_state_dict(torch.load(pt_path))
     return net
@@ -63,9 +63,8 @@ def baseline_func(input):
 
 
 def formatted_data_iter():
-    data_path = os.path.abspath(os.path.dirname(__file__) + "/../../data")
     dataset = torchvision.datasets.CIFAR10(
-        root=data_path, train=False, download=True, transform=transforms.ToTensor()
+        root="data/test", train=False, download=True, transform=transforms.ToTensor()
     )
     dataloader = iter(
         torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=False, num_workers=2)

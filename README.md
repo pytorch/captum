@@ -266,15 +266,15 @@ Captum on different types of models can be found in our tutorials.
 Captum provides a web interface called Insights for easy visualization and
 access to a number of our interpretability algorithms.
 
-To execute a sample model on CIFAR10 via Captum Insights run
+To analyze a sample model on CIFAR10 via Captum Insights run
 
 ```
-python captum/insights/example.py
+python -m captum.insights.example
 ```
 
-and navigate to http://127.0.0.1:5000/.
+and navigate to the URL specified in the output.
 
-To build locally with conda run
+To build and launch from a checkout with conda run
 
 ```
 conda install -c conda-forge yarn

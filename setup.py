@@ -61,7 +61,7 @@ TUTORIALS_REQUIRES = [
     "torchvision",
 ]
 
-INSIGHTS_FILE_SUBDIRS = ["insights/frontend/build"]
+INSIGHTS_FILE_SUBDIRS = ["insights/frontend/build", "insights/models"]
 
 # get version string from module
 with open(os.path.join(os.path.dirname(__file__), "captum/__init__.py"), "r") as f:

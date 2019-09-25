@@ -57,8 +57,6 @@ def start_server(_viz, port: Optional[int] = None):
     elif debug:
         port = 5000
 
-    print("starting server on port:", port)
-
     if not debug:
         log = logging.getLogger("werkzeug")
         log.disabled = True
@@ -66,6 +64,8 @@ def start_server(_viz, port: Optional[int] = None):
         threading.Thread(target=app.run, kwargs={"port": port}).start()
     else:
         app.run(use_reloader=True, port=port, debug=True, threaded=True)
+
+    print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
     return port
 
 
