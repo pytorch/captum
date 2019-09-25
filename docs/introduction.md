@@ -12,6 +12,6 @@ For model developers, Captum can be used to improve and troubleshoot models by f
 
 ## Target Audience
 
-The primary audiences for Captum are interpretability researchers focused on identifying algorithms that can better interpret many types of models, and model developers who are looking to improve their models and understand which features are important.
+The primary audiences for Captum are model developers who are looking to improve their models and understand which features are important and interpretability researchers focused on identifying algorithms that can better interpret many types of models.
 
 Captum can also be used by application engineers who are using trained models in production. Captum provides easier troubleshooting through improved model interpretability, and the potential for delivering better explanations to end users on why they’re seeing a specific piece of content, such as a movie recommendation.

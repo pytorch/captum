@@ -1,8 +1,6 @@
 {
   "docs": {
-    "About": ["introduction", "design_philosophy", "captum_and_ax"],
-    "General": ["getting_started"],
-    "Basic Concepts": ["overview", "models", "posteriors", "acquisition", "optimization"],
-    "Advanced Topics": ["batching", "objectives", "samplers"]
+    "About": ["introduction"],
+    "General": ["getting_started"]
   }
 }

@@ -29,15 +29,15 @@ class TutorialHome extends React.Component {
             </header>
             <body>
               <p>
-                The tutorials here will help you understand and use Captum in
-                your own work. They assume that you are familiar with both
-                Bayesian optimization (BO) and PyTorch.
+                The tutorials here will help you understand and use Captum. They assume that you are familiar with PyTorch and its basic features.
               </p>
               <p>
-                If you are new to BO, we recommend you start with the{' '}
-                <a href="https://ax.dev/docs/bayesopt">Ax docs</a> and the
-                following{' '}
-                <a href="https://arxiv.org/abs/1807.02811">tutorial paper</a>.
+                If you are new to Captum, the easiest way to get started is
+                with the{' '}
+                <a href="https://pytorch.org/tutorials/beginner/blitz/tensor_tutorial.html#sphx-glr-beginner-blitz-tensor-tutorial-py">
+                  Getting started with Captum
+                </a>{' '}
+                tutorial.
               </p>
               <p>
                 If you are new to PyTorch, the easiest way to get started is
@@ -51,44 +51,28 @@ class TutorialHome extends React.Component {
                 The Captum tutorials are grouped into the following four areas.
               </p>
               <p>
-                <h4>Using Captum with Ax</h4>
-                These tutorials give you an overview of how to leverage{' '}
-                <a href="https://ax.dev">Ax</a>, a platform for sequential
-                experimentation, in order to simplify the management of your BO
-                loop. Doing so can help you focus on the main aspects of BO
-                (models, acquisition functions, optimization of acquisition
-                functions), rather than tedious loop control. See our{' '}
-                <a href="https://captum.org/docs/captum_and_ax">
-                  Documentation
-                </a>{' '}
-                for additional information.
-                <h4>Full Optimization Loops</h4>
-                In some situations (e.g. when working in a non-standard setting,
-                or if you want to understand and control various details of the
-                BO loop), then you may also consider working purely in Captum.
-                The tutorials in this section illustrate this approach.
-                <h4>Bite-Sized Tutorials</h4>
-                Rather than guiding you through full end-to-end BO loops, the
-                tutorials in this section focus on specific tasks that you will
-                encounter in customizing your BO algorithms. For instance, you
-                may want to{' '}
-                <a href="https://captum.org/tutorials/custom_acquisition">
-                  write a custom acquisition function
-                </a>{' '}
-                and then{' '}
-                <a href="https://captum.org/tutorials/optimize_with_cmaes">
-                  use a custom zero-th order optimizer
-                </a>{' '}
-                to optimize it.
-                <h4>Advanced Usage</h4>
-                Tutorials in this section showcase more advanced ways of using
-                Captum. For instance,{' '}
-                <a href="https://captum.org/tutorials/vae_mnist">
-                  this tutorial
-                </a>{' '}
-                shows how to perform BO if your objective function is an image,
-                by optimizing in the latent space of a variational auto-encoder
-                (VAE).
+                <h4>Getting started with Captum:</h4>
+                In this tutorial we create and train a simple neural network on the Titanic survival dataset.
+                We then use Integrated Gradients to analyze feature importance.  We then deep dive the network to assess layer and neuron importance
+                using conductance.  Finally, we analyze a specific
+                neuron to understand feature importance for that specific neuron.  Find the tutorial <a href="Titanic_Basic_Interpret">here</a>.
+
+                <h4>Interpreting text models:</h4>
+                In this tutorial we use a pre-trained CNN model for sentiment analysis on an IMDB dataset.
+                We use Captum and Integrated Gradients to interpret model predictions by show which specific
+                words have highest attribution to the model output.  Find the tutorial <a href="IMDB_TorchText_Interpret">here </a>.
+
+                <h4>Interpreting vision models:</h4>
+                This tutorial demonstrates how to use Captum for interpreting vision focused models.
+                First we create and train (or use a pre-trained) a simple CNN model on the CIFAR dataset.
+                We then interpret the output of an example with a series of overlays using Integrated Gradients and DeepLIFT.
+                Find the tutorial <a href="CIFAR_TorchVision_Interpret">here</a>.
+
+                <h4>Interpreting multimodal models:</h4>
+                To demonstrate interpreting multimodal models we have chosen to look at an open source Visual Question Answer (VQA) model.
+                Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
+                of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
+
               </p>
             </body>
           </div>
