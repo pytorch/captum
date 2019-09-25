@@ -1,0 +1,251 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._utils.attribution</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">.common</span> <span class="k">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">_run_forward</span>
+<span class="kn">from</span> <span class="nn">.gradient</span> <span class="k">import</span> <span class="n">compute_gradients</span>
+
+
+<div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
+<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method computes and returns the attribution values for each input tensor</span>
+<span class="sd">        Deriving classes are responsible for implementing its logic accordingly.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">                inputs:     A single high dimensional input tensor or a tuple of them.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">                attributions: Attribution values for each input vector. The</span>
+<span class="sd">                              `attributions` have the dimensionality of inputs</span>
+<span class="sd">                              for standard attribution derived classes and the</span>
+<span class="sd">                              dimensionality of the given tensor for layer attributions.</span>
+<span class="sd">                others ?</span>
+
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"A derived class should implement attribute method"</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_compute_convergence_delta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">start_point</span><span class="p">,</span>
+        <span class="n">end_point</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">is_multi_baseline</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_sum_rows</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">input_row</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">input_row</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">start_point</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span>
+                <span class="n">_run_forward</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">start_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">end_point</span> <span class="o">=</span> <span class="n">_sum_rows</span><span class="p">(</span>
+                <span class="n">_run_forward</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">row_sums</span> <span class="o">=</span> <span class="p">[</span><span class="n">_sum_rows</span><span class="p">(</span><span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">]</span>
+        <span class="n">attr_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">row_sum</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_sum</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">row_sums</span><span class="p">)])</span>
+        <span class="c1"># TODO ideally do not sum - we should return deltas as a 1D tensor</span>
+        <span class="c1"># of batch size. Let the user to sum it if they need to</span>
+        <span class="c1"># Address this in a separate PR</span>
+        <span class="k">if</span> <span class="n">is_multi_baseline</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_point</span> <span class="o">-</span> <span class="n">start_point</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_point</span> <span class="o">-</span> <span class="n">start_point</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
+
+
+<span class="k">class</span> <span class="nc">GradientBasedAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_func:  The forward function of the model or any modification of it</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">compute_gradients</span>
+
+    <span class="k">def</span> <span class="nf">zero_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Takes a tuple of tensors as input and returns a tuple that has the same</span>
+<span class="sd">        size as the `inputs` which contains zero tensors of the same</span>
+<span class="sd">        shape as the `inputs`</span>
+
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="InternalAttribution"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.InternalAttribution">[docs]</a><span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Shared base class for LayerAttrubution and NeuronAttribution,</span>
+<span class="sd">    attribution types that require a model and a particular layer.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_func:  The forward function of the model or any modification of it</span>
+<span class="sd">            layer: Layer for which output attributions are computed.</span>
+<span class="sd">                   Output size of attribute matches that of layer output.</span>
+<span class="sd">            device_ids: Device ID list, necessary only if forward_func applies a</span>
+<span class="sd">                        DataParallel model, which allows reconstruction of</span>
+<span class="sd">                        intermediate outputs from batched results across devices.</span>
+<span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                        then it is not neccesary to provide this argument.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span></div>
+
+
+<div class="viewcode-block" id="LayerAttribution"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.LayerAttribution">[docs]</a><span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Layer attribution provides attribution values for the given layer, quanitfying</span>
+<span class="sd">    the importance of each neuron within the given layer's output. The output</span>
+<span class="sd">    attribution of calling attribute on a LayerAttribution object always matches</span>
+<span class="sd">    the size of the layer output.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_func:  The forward function of the model or any modification of it</span>
+<span class="sd">            layer: Layer for which output attributions are computed.</span>
+<span class="sd">                   Output size of attribute matches that of layer output.</span>
+<span class="sd">            device_ids: Device ID list, necessary only if forward_func applies a</span>
+<span class="sd">                   DataParallel model, which allows reconstruction of</span>
+<span class="sd">                   intermediate outputs from batched results across devices.</span>
+<span class="sd">                   If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                   then it is not neccesary to provide this argument.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Neuron attribution provides input attribution for a given neuron, quanitfying</span>
+<span class="sd">    the importance of each input feature in the activation of a particular neuron.</span>
+<span class="sd">    Calling attribute on a NeuronAttribution object requires also providing</span>
+<span class="sd">    the index of the neuron in the output of the given layer for which attributions</span>
+<span class="sd">    are required.</span>
+<span class="sd">    The output attribution of calling attribute on a NeuronAttribution object</span>
+<span class="sd">    always matches the size of the input.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_func:  The forward function of the model or any modification of it</span>
+<span class="sd">            layer: Layer for which output attributions are computed.</span>
+<span class="sd">                   Output size of attribute matches that of layer output.</span>
+<span class="sd">            device_ids: Device ID list, necessary only if forward_func applies a</span>
+<span class="sd">                   DataParallel model, which allows reconstruction of</span>
+<span class="sd">                   intermediate outputs from batched results across devices.</span>
+<span class="sd">                   If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                   then it is not neccesary to provide this argument.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../attribution.html#captum.attr._utils.attribution.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method computes and returns the neuron attribution values for each</span>
+<span class="sd">        input tensor. Deriving classes are responsible for implementing</span>
+<span class="sd">        its logic accordingly.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">                inputs:     A single high dimensional input tensor or a tuple of them.</span>
+<span class="sd">                neuron_index: Tuple providing index of neuron in output of given</span>
+<span class="sd">                              layer for which attribution is desired. Length of</span>
+<span class="sd">                              this tuple must be one less than the number of</span>
+<span class="sd">                              dimensions in the output of the given layer (since</span>
+<span class="sd">                              dimension 0 corresponds to number of examples).</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">                attributions: Attribution values for each input vector. The</span>
+<span class="sd">                              `attributions` have the dimensionality of inputs.</span>
+<span class="sd">                others ?</span>
+
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"A derived class should implement attribute method"</span><span class="p">)</span></div></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

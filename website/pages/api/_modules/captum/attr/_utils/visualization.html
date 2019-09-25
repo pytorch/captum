@@ -1,0 +1,313 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._utils.visualization</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># TODO: move it to widget folder?</span>
+
+<span class="c1"># First visualizations are based on MIT-licensed code from</span>
+<span class="c1"># https://github.com/TianhongDai/integrated-gradient-pytorch</span>
+<span class="c1"># This file copies some of the content from:</span>
+<span class="c1"># https://github.com/TianhongDai/integrated-gradient-pytorch/</span>
+<span class="c1"># blob/master/visualization.py</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">IPython.core.display</span> <span class="k">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+
+
+<span class="n">G</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">R</span> <span class="o">=</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">convert_to_gray_scale</span><span class="p">(</span><span class="n">attributions</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">linear_transform</span><span class="p">(</span>
+    <span class="n">attributions</span><span class="p">,</span>
+    <span class="n">clip_above_percentile</span><span class="o">=</span><span class="mf">99.9</span><span class="p">,</span>
+    <span class="n">clip_below_percentile</span><span class="o">=</span><span class="mf">70.0</span><span class="p">,</span>
+    <span class="n">low</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">plot_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">compute_threshold_by_top_percentage</span><span class="p">(</span>
+        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">percentage</span><span class="o">=</span><span class="mi">100</span> <span class="o">-</span> <span class="n">clip_above_percentile</span><span class="p">,</span>
+        <span class="n">plot_distribution</span><span class="o">=</span><span class="n">plot_distribution</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">compute_threshold_by_top_percentage</span><span class="p">(</span>
+        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">percentage</span><span class="o">=</span><span class="mi">100</span> <span class="o">-</span> <span class="n">clip_below_percentile</span><span class="p">,</span>
+        <span class="n">plot_distribution</span><span class="o">=</span><span class="n">plot_distribution</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">transformed</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="n">low</span>
+    <span class="n">transformed</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+    <span class="n">transformed</span> <span class="o">*=</span> <span class="n">transformed</span> <span class="o">&gt;=</span> <span class="n">low</span>
+    <span class="n">transformed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">transformed</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transformed</span>
+
+
+<span class="k">def</span> <span class="nf">compute_threshold_by_top_percentage</span><span class="p">(</span>
+    <span class="n">attributions</span><span class="p">,</span> <span class="n">percentage</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">plot_distribution</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">percentage</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">percentage</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"percentage must be in [0, 100]"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">percentage</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+    <span class="n">flat_attributions</span> <span class="o">=</span> <span class="n">attributions</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">attribution_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">flat_attributions</span><span class="p">)</span>
+    <span class="n">sorted_attributions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">flat_attributions</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cum_sum</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sorted_attributions</span><span class="p">)</span> <span class="o">/</span> <span class="n">attribution_sum</span>
+    <span class="n">threshold_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">cum_sum</span> <span class="o">&gt;=</span> <span class="n">percentage</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">sorted_attributions</span><span class="p">[</span><span class="n">threshold_idx</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">plot_distribution</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">return</span> <span class="n">threshold</span>
+
+
+<span class="k">def</span> <span class="nf">polarity_function</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">polarity</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"positive"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"negative"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+
+<span class="k">def</span> <span class="nf">overlay_function</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.7</span> <span class="o">*</span> <span class="n">image</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">attributions</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">visualize_image</span><span class="p">(</span>
+    <span class="n">attributions</span><span class="p">,</span>
+    <span class="n">image</span><span class="p">,</span>
+    <span class="n">positive_channel</span><span class="o">=</span><span class="n">G</span><span class="p">,</span>
+    <span class="n">negative_channel</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+    <span class="n">polarity</span><span class="o">=</span><span class="s2">"positive"</span><span class="p">,</span>
+    <span class="n">clip_above_percentile</span><span class="o">=</span><span class="mf">99.9</span><span class="p">,</span>
+    <span class="n">clip_below_percentile</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">morphological_cleanup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">outlines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">outlines_component_percentage</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+    <span class="n">overlay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">mask_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">plot_distribution</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"both"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">elif</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">"positive"</span><span class="p">:</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">polarity_function</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">polarity</span><span class="o">=</span><span class="n">polarity</span><span class="p">)</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">positive_channel</span>
+
+    <span class="c1"># convert the attributions to the gray scale</span>
+    <span class="n">attributions</span> <span class="o">=</span> <span class="n">convert_to_gray_scale</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
+    <span class="n">attributions</span> <span class="o">=</span> <span class="n">linear_transform</span><span class="p">(</span>
+        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">clip_above_percentile</span><span class="p">,</span>
+        <span class="n">clip_below_percentile</span><span class="p">,</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">plot_distribution</span><span class="o">=</span><span class="n">plot_distribution</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">attributions_mask</span> <span class="o">=</span> <span class="n">attributions</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">morphological_cleanup</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">if</span> <span class="n">outlines</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="n">attributions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">channel</span>
+    <span class="k">if</span> <span class="n">overlay</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mask_mode</span><span class="p">:</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">overlay_function</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">attributions_mask</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">attributions</span> <span class="o">*</span> <span class="n">image</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">attributions</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">attributions</span>
+
+
+<span class="c1"># These visualization methods are for text and are partially copied from</span>
+<span class="c1"># experiments conducted by Davide Testuggine at Facebook.</span>
+
+
+<div class="viewcode-block" id="VisualizationDataRecord"><a class="viewcode-back" href="../../../../visualization.html#captum.attr._utils.visualization.VisualizationDataRecord">[docs]</a><span class="k">class</span> <span class="nc">VisualizationDataRecord</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        A data record for storing attribution relevant information</span>
+<span class="sd">    """</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"word_attributions"</span><span class="p">,</span>
+        <span class="s2">"pred_prob"</span><span class="p">,</span>
+        <span class="s2">"pred_class"</span><span class="p">,</span>
+        <span class="s2">"target_class"</span><span class="p">,</span>
+        <span class="s2">"attr_class"</span><span class="p">,</span>
+        <span class="s2">"attr_score"</span><span class="p">,</span>
+        <span class="s2">"raw_input"</span><span class="p">,</span>
+        <span class="s2">"convergence_score"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">word_attributions</span><span class="p">,</span>
+        <span class="n">pred_prob</span><span class="p">,</span>
+        <span class="n">pred_class</span><span class="p">,</span>
+        <span class="n">target_class</span><span class="p">,</span>
+        <span class="n">attr_class</span><span class="p">,</span>
+        <span class="n">attr_score</span><span class="p">,</span>
+        <span class="n">raw_input</span><span class="p">,</span>
+        <span class="n">convergence_score</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">word_attributions</span> <span class="o">=</span> <span class="n">word_attributions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_prob</span> <span class="o">=</span> <span class="n">pred_prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pred_class</span> <span class="o">=</span> <span class="n">pred_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_class</span> <span class="o">=</span> <span class="n">target_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_class</span> <span class="o">=</span> <span class="n">attr_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_score</span> <span class="o">=</span> <span class="n">attr_score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_input</span> <span class="o">=</span> <span class="n">raw_input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convergence_score</span> <span class="o">=</span> <span class="n">convergence_score</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_color</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
+    <span class="c1"># clip values to prevent CSS errors (Values should be from [-1,1])</span>
+    <span class="n">attr</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">attr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">hue</span> <span class="o">=</span> <span class="mi">120</span>
+        <span class="n">sat</span> <span class="o">=</span> <span class="mi">75</span>
+        <span class="n">lig</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="mi">50</span> <span class="o">*</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hue</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sat</span> <span class="o">=</span> <span class="mi">75</span>
+        <span class="n">lig</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">40</span> <span class="o">*</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"hsl(</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">%, </span><span class="si">{}</span><span class="s2">%)"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hue</span><span class="p">,</span> <span class="n">sat</span><span class="p">,</span> <span class="n">lig</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">format_classname</span><span class="p">(</span><span class="n">classname</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">'&lt;td&gt;&lt;text style="padding-right:2em"&gt;&lt;b&gt;</span><span class="si">{}</span><span class="s1">&lt;/b&gt;&lt;/text&gt;&lt;/td&gt;'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">classname</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">format_special_tokens</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"&lt;"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">token</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"&gt;"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"#"</span> <span class="o">+</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"&lt;&gt;"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">token</span>
+
+
+<span class="k">def</span> <span class="nf">format_tooltip</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">'&lt;div class="tooltip"&gt;</span><span class="si">{item}</span><span class="se">\</span>
+<span class="s1">        &lt;span class="tooltiptext"&gt;</span><span class="si">{text}</span><span class="s1">&lt;/span&gt;</span><span class="se">\</span>
+<span class="s1">        &lt;/div&gt;'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">format_word_importances</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">importances</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">importances</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">importances</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"&lt;td&gt;&lt;/td&gt;"</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">importances</span><span class="p">)</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"&lt;td&gt;"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">importance</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">importances</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">)]):</span>
+        <span class="n">word</span> <span class="o">=</span> <span class="n">format_special_tokens</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">_get_color</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span>
+        <span class="n">unwrapped_tag</span> <span class="o">=</span> <span class="s1">'&lt;mark style="background-color: </span><span class="si">{color}</span><span class="s1">; opacity:1.0; </span><span class="se">\</span>
+<span class="s1">                    line-height:1.75"&gt;&lt;font color="black"&gt; </span><span class="si">{word}</span><span class="se">\</span>
+<span class="s1">                    &lt;/font&gt;&lt;/mark&gt;'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">word</span><span class="o">=</span><span class="n">word</span>
+        <span class="p">)</span>
+        <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unwrapped_tag</span><span class="p">)</span>
+    <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"&lt;/td&gt;"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">visualize_text</span><span class="p">(</span><span class="n">datarecords</span><span class="p">:</span> <span class="n">VisualizationDataRecord</span><span class="p">):</span>
+    <span class="n">dom</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"&lt;table width: 100%&gt;"</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"&lt;tr&gt;&lt;th&gt;Target Label&lt;/th&gt;"</span>
+        <span class="s2">"&lt;th&gt;Predicted Label&lt;/th&gt;"</span>
+        <span class="s2">"&lt;th&gt;Attribution Label&lt;/th&gt;"</span>
+        <span class="s2">"&lt;th&gt;Attribution Score&lt;/th&gt;"</span>
+        <span class="s2">"&lt;th&gt;Word Importance&lt;/th&gt;"</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">datarecord</span> <span class="ow">in</span> <span class="n">datarecords</span><span class="p">:</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">"&lt;tr&gt;"</span><span class="p">,</span>
+                    <span class="n">format_classname</span><span class="p">(</span><span class="n">datarecord</span><span class="o">.</span><span class="n">target_class</span><span class="p">),</span>
+                    <span class="n">format_classname</span><span class="p">(</span>
+                        <span class="s2">"</span><span class="si">{0}</span><span class="s2"> (</span><span class="si">{1:.2f}</span><span class="s2">)"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">datarecord</span><span class="o">.</span><span class="n">pred_class</span><span class="p">,</span> <span class="n">datarecord</span><span class="o">.</span><span class="n">pred_prob</span>
+                        <span class="p">)</span>
+                    <span class="p">),</span>
+                    <span class="n">format_classname</span><span class="p">(</span><span class="n">datarecord</span><span class="o">.</span><span class="n">attr_class</span><span class="p">),</span>
+                    <span class="n">format_classname</span><span class="p">(</span><span class="s2">"</span><span class="si">{0:.2f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datarecord</span><span class="o">.</span><span class="n">attr_score</span><span class="p">)),</span>
+                    <span class="n">format_word_importances</span><span class="p">(</span>
+                        <span class="n">datarecord</span><span class="o">.</span><span class="n">raw_input</span><span class="p">,</span> <span class="n">datarecord</span><span class="o">.</span><span class="n">word_attributions</span>
+                    <span class="p">),</span>
+                    <span class="s2">"&lt;tr&gt;"</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">dom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span>
+    <span class="n">dom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"&lt;/table&gt;"</span><span class="p">)</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dom</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

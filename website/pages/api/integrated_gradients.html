@@ -1,0 +1,180 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="module-captum.attr._core.integrated_gradients">
+<span id="captum-integratedgradients"></span><h1>Captum.IntegratedGradients<a class="headerlink" href="#module-captum.attr._core.integrated_gradients" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._core.integrated_gradients.IntegratedGradients">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.integrated_gradients.</code><code class="sig-name descname">IntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.integrated_gradients.IntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+modification of it</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="captum.attr._core.integrated_gradients.IntegratedGradients.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.integrated_gradients.IntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximates the integral of gradients along the path from a baseline input
+to the given input. If no baseline is provided, the default baseline
+is the zero tensor.
+More details regarding the integrated gradient method can be found in the
+original paper here:
+<a class="reference external" href="https://arxiv.org/abs/1703.01365">https://arxiv.org/abs/1703.01365</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which integrated
+gradients are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples, and if mutliple input tensors
+are provided, the examples must be aligned appropriately.</p></li>
+<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baseline define
+the starting point from which integral is computed.
+If inputs is a single tensor, baselines must also be a
+single tensor with exactly the same dimensions as inputs.
+If inputs is a tuple of tensors, baselines must also be
+a tuple of tensors, with matching dimensions to inputs.
+Default: zero tensor for each input tensor</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Output index for which gradient is computed
+(for classification cases, this is the target class).
+If the network returns a scalar value per example,
+no target index is necessary. (Note: Tuples for multi
+-dimensional output indices will be supported soon.)
+Default: None</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – <p>If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to forward_func in order following the
+arguments in inputs.
+For a tensor, the first dimension of the tensor must
+correspond to the number of examples. It will be repeated</p>
+<blockquote>
+<div><p>for each of <cite>n_steps</cite> along the integrated path.</p>
+</div></blockquote>
+<p>For all other types, the given argument is used for
+all forward evaluations.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p>
+</p></li>
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+method. Default: 50.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
+<cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
+Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+data points into chunks of size internal_batch_size,
+which are computed (forward / backward passes)
+sequentially.
+For DataParallel models, each batch is split among the
+available devices, so evaluations on each available
+device contain internal_batch_size / num_devices examples.
+If internal_batch_size is None, then all evaluations are
+processed in one batch.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Integrated gradients with</dt><dd><p>respect to each input feature. attributions will always be
+the same size as the provided inputs, with each value
+providing the attribution of the corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+<dt>delta (float): The difference between the total approximated and</dt><dd><p>true integrated gradients.
+This is computed using the property that the total sum of
+forward_func(inputs) - forward_func(baselines) must equal
+the total sum of the integrated gradient.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions (tensor or tuple of tensors)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes integrated gradients for class 3.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="input_x_gradient.html" title="previous chapter">Captum.InputXGradient</a></li>
+<li>Next: <a href="internal_influence.html" title="next chapter">Captum.InternalInfluence</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

@@ -1,0 +1,195 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="module-captum.attr._utils.attribution">
+<span id="captum-utils-attribution"></span><h1>Captum.Utils.Attribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.Attribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">Attribution</code><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="captum.attr._utils.attribution.Attribution.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes and returns the attribution values for each input tensor
+Deriving classes are responsible for implementing its logic accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – A single high dimensional input tensor or a tuple of them.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution values for each input vector. The</dt><dd><p><cite>attributions</cite> have the dimensionality of inputs
+for standard attribution derived classes and the
+dimensionality of the given tensor for layer attributions.</p>
+</dd>
+</dl>
+<p>others ?</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.InternalAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">InternalAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#InternalAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.InternalAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shared base class for LayerAttrubution and NeuronAttribution,
+attribution types that require a model and a particular layer.</p>
+<p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it
+layer: Layer for which output attributions are computed.</p>
+<blockquote>
+<div><p>Output size of attribute matches that of layer output.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids: Device ID list, necessary only if forward_func applies a</dt><dd><p>DataParallel model, which allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.LayerAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">LayerAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.LayerAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Layer attribution provides attribution values for the given layer, quanitfying
+the importance of each neuron within the given layer’s output. The output
+attribution of calling attribute on a LayerAttribution object always matches
+the size of the layer output.</p>
+<p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it
+layer: Layer for which output attributions are computed.</p>
+<blockquote>
+<div><p>Output size of attribute matches that of layer output.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids: Device ID list, necessary only if forward_func applies a</dt><dd><p>DataParallel model, which allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.NeuronAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">NeuronAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.NeuronAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Neuron attribution provides input attribution for a given neuron, quanitfying
+the importance of each input feature in the activation of a particular neuron.
+Calling attribute on a NeuronAttribution object requires also providing
+the index of the neuron in the output of the given layer for which attributions
+are required.
+The output attribution of calling attribute on a NeuronAttribution object
+always matches the size of the input.</p>
+<p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it
+layer: Layer for which output attributions are computed.</p>
+<blockquote>
+<div><p>Output size of attribute matches that of layer output.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids: Device ID list, necessary only if forward_func applies a</dt><dd><p>DataParallel model, which allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._utils.attribution.NeuronAttribution.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.NeuronAttribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes and returns the neuron attribution values for each
+input tensor. Deriving classes are responsible for implementing
+its logic accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> – A single high dimensional input tensor or a tuple of them.</p></li>
+<li><p><strong>neuron_index</strong> – Tuple providing index of neuron in output of given
+layer for which attribution is desired. Length of
+this tuple must be one less than the number of
+dimensions in the output of the given layer (since
+dimension 0 corresponds to number of examples).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution values for each input vector. The</dt><dd><p><cite>attributions</cite> have the dimensionality of inputs.</p>
+</dd>
+</dl>
+<p>others ?</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="approximation_methods.html" title="previous chapter">Captum Approximation</a></li>
+<li>Next: <a href="common.html" title="next chapter">Captum.Utils</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

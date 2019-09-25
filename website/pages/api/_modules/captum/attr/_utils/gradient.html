@@ -1,0 +1,369 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._utils.gradient</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.common</span> <span class="k">import</span> <span class="n">_run_forward</span><span class="p">,</span> <span class="n">_extend_index_list</span>
+<span class="kn">from</span> <span class="nn">.batching</span> <span class="k">import</span> <span class="n">_reduce_list</span><span class="p">,</span> <span class="n">_sort_key_list</span>
+
+
+<div class="viewcode-block" id="apply_gradient_requirements"><a class="viewcode-back" href="../../../../gradient.html#captum.attr._utils.gradient.apply_gradient_requirements">[docs]</a><span class="k">def</span> <span class="nf">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Iterates through tuple on input tensors and sets requires_grad to be true on</span>
+<span class="sd">    each Tensor, and ensures all grads are set to zero. To ensure that the input</span>
+<span class="sd">    is returned to its initial state, a list of flags representing whether or not</span>
+<span class="sd">     a tensor originally required grad is returned.</span>
+<span class="sd">    """</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span>
+    <span class="p">),</span> <span class="s2">"Inputs should be wrapped in a tuple prior to preparing for gradients"</span>
+    <span class="n">grad_required</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="nb">input</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">),</span> <span class="s2">"Given input is not a torch.Tensor"</span>
+        <span class="n">grad_required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">input</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Input Tensor </span><span class="si">%d</span><span class="s2"> did not already require gradients, "</span>
+                <span class="s2">"required_grads has been set automatically."</span> <span class="o">%</span> <span class="n">index</span>
+            <span class="p">)</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">grad</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-7</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">"Input Tensor </span><span class="si">%d</span><span class="s2"> had a non-zero gradient tensor, "</span>
+                    <span class="s2">"which is being reset to 0."</span> <span class="o">%</span> <span class="n">index</span>
+                <span class="p">)</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">grad_required</span></div>
+
+
+<div class="viewcode-block" id="undo_gradient_requirements"><a class="viewcode-back" href="../../../../gradient.html#captum.attr._utils.gradient.undo_gradient_requirements">[docs]</a><span class="k">def</span> <span class="nf">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">grad_required</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Iterates through list of tensors, zeros each gradient, and sets required</span>
+<span class="sd">    grad to false if the corresponding index in grad_required is False.</span>
+<span class="sd">    This method is used to undo the effects of prepare_gradient_inputs, making</span>
+<span class="sd">    grads not required for any input tensor that did not initially require</span>
+<span class="sd">    gradients.</span>
+<span class="sd">    """</span>
+
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span>
+    <span class="p">),</span> <span class="s2">"Inputs should be wrapped in a tuple prior to preparing for gradients."</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="n">grad_required</span>
+    <span class="p">),</span> <span class="s2">"Input tuple length should match gradient mask."</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="nb">input</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">),</span> <span class="s2">"Given input is not a torch.Tensor"</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">detach_</span><span class="p">()</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">grad_required</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_gradients"><a class="viewcode-back" href="../../../../gradient.html#captum.attr._utils.gradient.compute_gradients">[docs]</a><span class="k">def</span> <span class="nf">compute_gradients</span><span class="p">(</span>
+    <span class="n">forward_fn</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes gradients of the output with respect to inputs for an</span>
+<span class="sd">        arbitrary forward function.</span>
+
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_fn: forward function. This can be for example model's</span>
+<span class="sd">                        forward function.</span>
+<span class="sd">            input:      Input at which gradients are evaluated,</span>
+<span class="sd">                        will be passed to forward_fn.</span>
+<span class="sd">            target_ind: Index of the target class for which gradients</span>
+<span class="sd">                        must be computed (classification only).</span>
+<span class="sd">            args:       Additional input arguments that forward function requires.</span>
+<span class="sd">                        It takes an empty tuple (no additional arguments) if no</span>
+<span class="sd">                        additional arguments are required</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+        <span class="c1"># runs forward pass</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_fn</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
+
+        <span class="c1"># torch.unbind(forward_out) is a list of scalar tensor tuples and</span>
+        <span class="c1"># contains batch_size * #steps elements</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">grads</span></div>
+
+
+<span class="k">def</span> <span class="nf">_neuron_gradients</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">saved_layer_outputs</span><span class="p">,</span> <span class="n">key_list</span><span class="p">,</span> <span class="n">gradient_neuron_index</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">gradient_tensors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">:</span>
+            <span class="n">current_out_tensor</span> <span class="o">=</span> <span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">gradient_tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">current_out_tensor</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">_extend_index_list</span><span class="p">(</span>
+                            <span class="n">current_out_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gradient_neuron_index</span>
+                        <span class="p">)</span>
+                    <span class="p">],</span>
+                    <span class="n">inputs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_reduce_list</span><span class="p">(</span><span class="n">gradient_tensors</span><span class="p">,</span> <span class="nb">sum</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_forward_layer_eval</span><span class="p">(</span>
+    <span class="n">forward_fn</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+    <span class="k">return</span> <span class="n">_forward_layer_eval_with_neuron_grads</span><span class="p">(</span>
+        <span class="n">forward_fn</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+        <span class="n">gradient_neuron_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">device_ids</span><span class="o">=</span><span class="n">device_ids</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_forward_layer_eval_with_neuron_grads</span><span class="p">(</span>
+    <span class="n">forward_fn</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">,</span>
+    <span class="n">layer</span><span class="p">,</span>
+    <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">gradient_neuron_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    This method computes forward evaluation for a particular layer using a</span>
+<span class="sd">    forward hook. If a gradient_neuron_index is provided, then gradients with</span>
+<span class="sd">    respect to that neuron in the layer output are also returned.</span>
+
+<span class="sd">    These functionalities are combined due to the behavior of DataParallel models</span>
+<span class="sd">    with hooks, in which hooks are executed once per device. We need to internally</span>
+<span class="sd">    combine the separated tensors from devices by concatenating based on device_ids.</span>
+<span class="sd">    Any necessary gradients must be taken with respect to each independent batched</span>
+<span class="sd">    tensor, so the gradients are computed and combined appropriately.</span>
+
+<span class="sd">    More information regarding the behavior of forward hooks with DataParallel models</span>
+<span class="sd">    can be found in the PyTorch data parallel documentation. We maintain the separate</span>
+<span class="sd">    evals in a dictionary protected by a lock, analogous to the gather implementation</span>
+<span class="sd">    for the core PyTorch DataParallel implementation.</span>
+<span class="sd">    """</span>
+    <span class="n">saved_layer_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+    <span class="c1"># Set a forward hook on specified module and run forward pass to</span>
+    <span class="c1"># get layer output tensor(s).</span>
+    <span class="c1"># For DataParallel models, each partition adds entry to dictionary</span>
+    <span class="c1"># with key as device and value as corresponding Tensor.</span>
+    <span class="k">def</span> <span class="nf">forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+        <span class="p">),</span> <span class="s2">"Layers with multiple output tensors are not yet supported."</span>
+        <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+            <span class="k">nonlocal</span> <span class="n">saved_layer_outputs</span>
+            <span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span>
+
+    <span class="n">hook</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">)</span>
+    <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_fn</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">)</span>
+    <span class="n">hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Forward hook did not obtain any outputs for given layer"</span><span class="p">)</span>
+
+    <span class="c1"># Multiple devices / keys implies a DataParallel model, so we look for</span>
+    <span class="c1"># device IDs if given or available from forward function</span>
+    <span class="c1"># (DataParallel model object).</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward_fn</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">forward_fn</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="n">device_ids</span> <span class="o">=</span> <span class="n">forward_fn</span><span class="o">.</span><span class="n">device_ids</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">"DataParallel Model Detected, device ID list or DataParallel model"</span>
+                <span class="s2">" must be provided for identifying device batch ordering."</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Identifies correct device ordering based on device ids.</span>
+    <span class="c1"># key_list is a list of devices in appropriate ordering for concatenation.</span>
+    <span class="c1"># If only one key exists (standard model), key list simply has one element.</span>
+    <span class="n">key_list</span> <span class="o">=</span> <span class="n">_sort_key_list</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">device_ids</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gradient_neuron_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inp_grads</span> <span class="o">=</span> <span class="n">_neuron_gradients</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span> <span class="n">saved_layer_outputs</span><span class="p">,</span> <span class="n">key_list</span><span class="p">,</span> <span class="n">gradient_neuron_index</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">device_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">]),</span>
+            <span class="n">inp_grads</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">device_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="compute_layer_gradients_and_eval"><a class="viewcode-back" href="../../../../gradient.html#captum.attr._utils.gradient.compute_layer_gradients_and_eval">[docs]</a><span class="k">def</span> <span class="nf">compute_layer_gradients_and_eval</span><span class="p">(</span>
+    <span class="n">forward_fn</span><span class="p">,</span>
+    <span class="n">layer</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">,</span>
+    <span class="n">target_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">gradient_neuron_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Computes gradients of the output with respect to a given layer as well</span>
+<span class="sd">        as the output evaluation of the layer for an arbitrary forward function</span>
+<span class="sd">        and given input.</span>
+
+<span class="sd">        For data parallel models, hooks are executed once per device ,so we</span>
+<span class="sd">        need to internally combine the separated tensors from devices by</span>
+<span class="sd">        concatenating based on device_ids. Any necessary gradients must be taken</span>
+<span class="sd">        with respect to each independent batched tensor, so the gradients are</span>
+<span class="sd">        computed and combined appropriately.</span>
+
+<span class="sd">        More information regarding the behavior of forward hooks with DataParallel</span>
+<span class="sd">        models can be found in the PyTorch data parallel documentation. We maintain</span>
+<span class="sd">        the separate inputs in a dictionary protected by a lock, analogous to the</span>
+<span class="sd">        gather implementation for the core PyTorch DataParallel implementation.</span>
+
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_fn: forward function. This can be for example model's</span>
+<span class="sd">                        forward function.</span>
+<span class="sd">            layer:      Layer for which gradients / output will be evaluated.</span>
+<span class="sd">            inputs:     Input at which gradients are evaluated,</span>
+<span class="sd">                        will be passed to forward_fn.</span>
+<span class="sd">            target_ind: Index of the target class for which gradients</span>
+<span class="sd">                        must be computed (classification only).</span>
+<span class="sd">            args:       Additional input arguments that forward function requires.</span>
+<span class="sd">                        It takes an empty tuple (no additional arguments) if no</span>
+<span class="sd">                        additional arguments are required</span>
+
+
+<span class="sd">        Return</span>
+
+<span class="sd">            gradients:  Gradients of output with respect to target layer output.</span>
+<span class="sd">            evals:      Target layer output for given input.</span>
+<span class="sd">    """</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">saved_layer_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+        <span class="c1"># Set a forward hook on specified module and run forward pass to</span>
+        <span class="c1"># get layer output tensor(s).</span>
+        <span class="c1"># For DataParallel models, each partition adds entry to dictionary</span>
+        <span class="c1"># with key as device and value as corresponding Tensor.</span>
+        <span class="k">def</span> <span class="nf">forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">out</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+                <span class="p">),</span> <span class="s2">"Layers with multiple output tensors are not yet supported."</span>
+                <span class="k">nonlocal</span> <span class="n">saved_layer_outputs</span>
+                <span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span>
+
+        <span class="n">hook</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_fn</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
+        <span class="c1"># Remove unnecessary forward hook.</span>
+        <span class="n">hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">"Forward hook did not obtain any outputs for given layer"</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Multiple devices / keys implies a DataParallel model, so we look for</span>
+        <span class="c1"># device IDs if given or available from forward function</span>
+        <span class="c1"># (DataParallel model object).</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward_fn</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">forward_fn</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="n">device_ids</span> <span class="o">=</span> <span class="n">forward_fn</span><span class="o">.</span><span class="n">device_ids</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">"DataParallel Model Detected, device ID list or DataParallel model"</span>
+                    <span class="s2">" must be provided for identifying device batch ordering."</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Identifies correct device ordering based on device ids.</span>
+        <span class="c1"># key_list is a list of devices in appropriate ordering for concatenation.</span>
+        <span class="c1"># If only one key exists (standard model), key list simply has one element.</span>
+        <span class="n">key_list</span> <span class="o">=</span> <span class="n">_sort_key_list</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">device_ids</span><span class="p">)</span>
+        <span class="n">all_outputs</span> <span class="o">=</span> <span class="n">_reduce_list</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">device_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">grad_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">saved_layer_outputs</span><span class="p">[</span><span class="n">device_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">)</span>
+        <span class="n">saved_grads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="n">grad_inputs</span><span class="p">)</span>
+        <span class="n">all_grads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">saved_grads</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gradient_neuron_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inp_grads</span> <span class="o">=</span> <span class="n">_neuron_gradients</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">saved_layer_outputs</span><span class="p">,</span> <span class="n">key_list</span><span class="p">,</span> <span class="n">gradient_neuron_index</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">all_grads</span><span class="p">,</span> <span class="n">all_outputs</span><span class="p">,</span> <span class="n">inp_grads</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">all_grads</span><span class="p">,</span> <span class="n">all_outputs</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

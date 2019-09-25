@@ -1,0 +1,134 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="module-captum.attr._models.base">
+<span id="captum-models-base"></span><h1>Captum.Models.Base<a class="headerlink" href="#module-captum.attr._models.base" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">InterpretableEmbeddingBase</code><span class="sig-paren">(</span><em class="sig-param">embedding</em>, <em class="sig-param">full_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since some embedding vectors, e.g. word are created and assigned in
+the embedding layers of Pytorch models we need a way to access
+those layers, generate the embeddings and subtract the baseline.
+To do so, we separate embedding layers from the model, compute the embeddings
+separately and do all operations needed outside of the model.
+The original embedding layer is being replaced by
+<cite>InterpretableEmbeddingBase</cite> layer which passes already
+precomputed embedding vectors to the layers below.</p>
+<dl class="method">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>The forward pass of embedding layer. This can be for the text or any
+type of embedding.</p>
+<p>Args</p>
+<blockquote>
+<div><p>input: Input embeddings tensor</p>
+</div></blockquote>
+<p>Return</p>
+<blockquote>
+<div><dl class="simple">
+<dt>output: Output tensor is the same as input. It passes through</dt><dd><p>the embedding tensors to lower layers without any
+modifications</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+<dl class="method">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">
+<code class="sig-name descname">indices_to_embeddings</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps indices to corresponding embedding vectors</p>
+<p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>input: a tensor of input indices. A typical example of an input</dt><dd><p>index is word index.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Returns</p>
+<blockquote>
+<div><dl class="simple">
+<dt>tensor: A tensor of word embeddings corresponding to the indices</dt><dd><p>specified in the input</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+</dd></dl>
+<dl class="class">
+<dt id="captum.attr._models.base.TokenReferenceBase">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">TokenReferenceBase</code><span class="sig-paren">(</span><em class="sig-param">reference_token_idx=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for creating reference tensor for a sequence of tokens. A typical
+example of such token is <cite>PAD</cite>. Users need to provide the index of the
+reference token in the vocabulary as an argument to <cite>TokenReferenceBase</cite>
+class.</p>
+<dl class="method">
+<dt id="captum.attr._models.base.TokenReferenceBase.generate_reference">
+<code class="sig-name descname">generate_reference</code><span class="sig-paren">(</span><em class="sig-param">sequence_length</em>, <em class="sig-param">device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generated reference tensor of given <cite>sequence_length</cite> using
+<cite>reference_token_idx</cite></p>
+<p>Returns</p>
+<blockquote>
+<div><p>tensor: a sequence of reference token with dimension [sequence_length]</p>
+</div></blockquote>
+</dd></dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Captum.Visualization</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="saliency.html" title="previous chapter">Captum.Saliency</a></li>
+<li>Next: <a href="pytext.html" title="next chapter">Captum.Models</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>
