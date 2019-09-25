@@ -13,10 +13,14 @@ import os
 import re
 import sys
 
-
+# base_path = os.path.abspath("../captum"))
 base_path = os.path.abspath(os.path.join(__file__, "..", "..", "..", "captum"))
+
 sys.path.append(base_path)
 
+sys.path.insert(0, os.path.abspath("../..captum/attr"))
+
+print(base_path)
 
 # -- Project information -----------------------------------------------------
 
