@@ -14,6 +14,7 @@ while getopts 'ndf' flag; do
   done
 
 # install yarn for insights build
+sudo apt update
 sudo apt install yarn
 
 # NOTE: All of the below installs use sudo, b/c otherwise pip will get
