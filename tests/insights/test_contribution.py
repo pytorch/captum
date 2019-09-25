@@ -191,9 +191,6 @@ class Test(BaseTest):
             list(dataset), batch_size=10, shuffle=False, num_workers=2
         )
 
-        def input_transform(x):
-            return x
-
         visualizer = AttributionVisualizer(
             models=[
                 _get_pretrained_multimodal(input_size=misc_feature_size)
@@ -202,7 +199,7 @@ class Test(BaseTest):
             features=[
                 ImageFeature(
                     "Photo",
-                    input_transforms=[input_transform],
+                    input_transforms=[lambda x: x],
                     baseline_transforms=[lambda x: x * 0],
                 ),
                 RealFeature(
