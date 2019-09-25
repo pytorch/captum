@@ -134,10 +134,6 @@ class AttributionVisualizer(object):
             )
         ):
             # initialize baselines
-            #
-            # TODO: fixme
-            # this makes baseline transforms non-Nullable
-            # also cannot do multiple baselines ...?
             baseline_transforms_len = len(self.features[0].baseline_transforms)
             baselines = [
                 [None] * len(self.features) for _ in range(baseline_transforms_len)
