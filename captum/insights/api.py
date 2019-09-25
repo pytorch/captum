@@ -7,6 +7,7 @@ from captum.attr._utils.common import _run_forward
 from captum.insights.features import BaseFeature
 from captum.insights.server import start_server
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -30,10 +31,10 @@ class AttributionVisualizer(object):
     def __init__(
         self,
         models: Union[List[Module], Module],
-        score_func: Optional[Callable],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
+        score_func: Optional[Callable] = None,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -55,10 +56,9 @@ class AttributionVisualizer(object):
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Tensor,
     ) -> Tensor:
-        net.eval()
         ig = IntegratedGradients(net)
-        net.zero_grad()
         # TODO support multiple baselines
+        label = None if len(label.shape) == 0 else label
         attr_ig, _ = ig.attribute(
             data,
             baselines=baselines[0],
@@ -77,13 +77,13 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[PredictionScore]:
-        scores, indices = scores.squeeze(), indices.squeeze()
+        scores, indices = scores.squeeze(0), indices.squeeze(0)
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
             if score > 0.0001:
                 pred_scores.append(
-                    PredictionScore(scores[i].item(), self.classes[indices[i]])
+                    PredictionScore(score, self.classes[indices[i].item()])
                 )
         return pred_scores
 
@@ -112,7 +112,6 @@ class AttributionVisualizer(object):
     def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
-
         vis_outputs = []
 
         for i, (inputs, additional_forward_args) in enumerate(
@@ -151,10 +150,13 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
-            scores, predicted = outputs.cpu().detach().topk(4)
-
             label = batch_data.labels[i]
 
+            if len(outputs) == 1:
+                scores = outputs.detach()
+                predicted = scores.round().to(torch.int)
+            else:
+                scores, predicted = outputs.cpu().detatch().topk(min(4, len(outputs)))
             baselines = [tuple(b) for b in baselines]
 
             attribution = self._calculate_attribution(
