@@ -5,7 +5,6 @@ from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward
 from captum.insights.features import BaseFeature
-from captum.insights.server import start_server
 
 import torch
 from torch import Tensor
@@ -72,8 +71,10 @@ class AttributionVisualizer(object):
         return attr_ig
 
     def render(self):
-        port = start_server(self)
         from IPython.display import IFrame, display
+        from captum.insights.server import start_server
+
+        port = start_server(self)
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
