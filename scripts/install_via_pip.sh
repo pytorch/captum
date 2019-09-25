@@ -1,19 +1,23 @@
 #!/bin/bash
 
-set -ex
+set -e
 
-PYTORCH_NIGHLTY=false
+PYTORCH_NIGHTLY=false
 DEPLOY=false
 
 while getopts 'ndf' flag; do
   case "${flag}" in
-    n) PYTORCH_NIGHLTY=true ;;
+    n) PYTORCH_NIGHTLY=true ;;
     d) DEPLOY=true ;;
     f) FRAMEWORKS=true ;;
     *) echo "usage: $0 [-n] [-d] [-f]" >&2
        exit 1 ;;
     esac
   done
+
+# NOTE: Only Debian variants are supported, since this script is only
+# used by our tests on CircleCI. In the future we might generalize,
+# but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
 sudo apt install apt-transport-https ca-certificates
@@ -44,7 +48,7 @@ if [[ $FRAMEWORKS == true ]]; then
 fi
 
 # install pytorch nightly if asked for
-if [[ $PYTORCH_NIGHLTY == true ]]; then
+if [[ $PYTORCH_NIGHTLY == true ]]; then
   sudo pip install torch_nightly -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
 fi
 
