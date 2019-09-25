@@ -1,0 +1,655 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>captum.attr._core.deep_lift &#8212; Captum 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for captum.attr._core.deep_lift</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">format_input</span><span class="p">,</span>
+    <span class="n">format_baseline</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">validate_input</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientBasedAttribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
+
+
+<span class="c1"># TODO: GradientBasedAttribution needs to be replaced with Attribution or</span>
+<span class="c1"># OutputAttribution class</span>
+<div class="viewcode-block" id="DeepLift"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift">[docs]</a><span class="k">class</span> <span class="nc">DeepLift</span><span class="p">(</span><span class="n">GradientBasedAttribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="DeepLift.attribute"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;&quot;</span>
+<span class="sd">        Implements DeepLIFT algorithm based on the following paper:</span>
+<span class="sd">        Learning Important Features Through Propagating Activation Differences,</span>
+<span class="sd">        Avanti Shrikumar, et. al.</span>
+<span class="sd">        https://arxiv.org/abs/1704.02685</span>
+
+<span class="sd">        and the gradient formulation proposed in:</span>
+<span class="sd">        Towards better understanding of gradient-based attribution methods for</span>
+<span class="sd">        deep neural networks,  Marco Ancona, et.al.</span>
+<span class="sd">        https://openreview.net/pdf?id=Sy21R9JAW</span>
+
+<span class="sd">        This implementation supports only Rescale rule. RevealCancel rule will</span>
+<span class="sd">        be supported in later releases.</span>
+<span class="sd">        In addition to that, in order to keep the implementation cleaner, DeepLIFT</span>
+<span class="sd">        for internal neurons and layers will be implemented separately.</span>
+<span class="sd">        Although DeepLIFT&#39;s(Rescale Rule) attribution quality is comparable with</span>
+<span class="sd">        Integrated Gradients, it runs significantly faster than Integrated</span>
+<span class="sd">        Gradients and is preferred for large datasets.</span>
+
+<span class="sd">        Currently we only support a limited number of non-linear activations</span>
+<span class="sd">        but the plan is to expand the list in the future.</span>
+
+<span class="sd">        Note: As we know, currently we cannot access the building blocks,</span>
+<span class="sd">        of PyTorch&#39;s built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.</span>
+<span class="sd">        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs</span>
+<span class="sd">        with performance similar to built-in ones with TorchScript.</span>
+<span class="sd">        More details on how to build custom RNNs can be found here:</span>
+<span class="sd">        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">                        attributions are computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples (aka batch size), and if</span>
+<span class="sd">                        mutliple input tensors are provided, the examples must</span>
+<span class="sd">                        be aligned appropriately.</span>
+<span class="sd">            baselines (tensor or tuple of tensors, optional): Baselines define</span>
+<span class="sd">                        reference samples which are compared with the inputs.</span>
+<span class="sd">                        In order to assign attribution scores DeepLift computes</span>
+<span class="sd">                        the differences between the inputs and references and</span>
+<span class="sd">                        corresponding outputs.</span>
+<span class="sd">                        If inputs is a single tensor, baselines must also be a</span>
+<span class="sd">                        single tensor with exactly the same dimensions as inputs.</span>
+<span class="sd">                        If inputs is a tuple of tensors, baselines must also be</span>
+<span class="sd">                        a tuple of tensors, with matching dimensions to inputs.</span>
+<span class="sd">                        Default: zero tensor for each input tensor</span>
+<span class="sd">            target (int, optional):  Output index for which gradient is computed</span>
+<span class="sd">                        (for classification cases, this is the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary. (Note: Tuples for multi</span>
+<span class="sd">                        -dimensional output indices will be supported soon.)</span>
+<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
+<span class="sd">                        containing multiple additional arguments including tensors</span>
+<span class="sd">                        or any arbitrary python types. These arguments are provided to</span>
+<span class="sd">                        forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">            attributions (tensor or tuple of tensors): Attribution score</span>
+<span class="sd">                        computed based on DeepLift rescale rule with respect</span>
+<span class="sd">                        to each input feature. Attributions will always be</span>
+<span class="sd">                        the same size as the provided inputs, with each value</span>
+<span class="sd">                        providing the attribution of the corresponding input index.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                        returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                        corresponding sized tensors is returned.</span>
+<span class="sd">            delta (float): This is computed using the property that the total</span>
+<span class="sd">                        sum of forward_func(inputs) - forward_func(baselines)</span>
+<span class="sd">                        must equal the total sum of the attributions computed</span>
+<span class="sd">                        based on Deeplift&#39;s rescale rule.</span>
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; dl = DeepLift(net)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes deeplift attribution scores for class 3.</span>
+<span class="sd">            &gt;&gt;&gt; attribution, delta = dl.attribute(input, target=3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Keeps track whether original input is a tuple or not before</span>
+        <span class="c1"># converting it into a tuple.</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">baselines</span> <span class="o">=</span> <span class="n">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="n">validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+
+        <span class="c1"># set hooks for baselines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;ref&quot;</span><span class="p">)</span>
+        <span class="c1"># make forward pass and remove baseline hooks</span>
+        <span class="n">_run_forward</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># set hook for inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">target_ind</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="o">*</span> <span class="n">gradient</span>
+            <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># remove hooks from all activations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_hooks</span><span class="p">()</span>
+
+        <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span>
+
+        <span class="c1"># computes convergence error</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_convergence_delta</span><span class="p">(</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">start_point</span><span class="p">,</span>
+            <span class="n">end_point</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span></div>
+
+    <span class="k">def</span> <span class="nf">_is_non_linear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="c1"># we need forward hook to access and detach the inputs and outputs of a neuron</span>
+    <span class="k">def</span> <span class="nf">_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+        <span class="n">input_attr_name</span> <span class="o">=</span> <span class="s2">&quot;input&quot;</span>
+        <span class="n">output_attr_name</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detach_tensors</span><span class="p">(</span><span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_forward_hook_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+        <span class="n">input_attr_name</span> <span class="o">=</span> <span class="s2">&quot;input_ref&quot;</span>
+        <span class="n">output_attr_name</span> <span class="o">=</span> <span class="s2">&quot;output_ref&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detach_tensors</span><span class="p">(</span><span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+        <span class="c1"># since it is a reference forward hook remove it from the module after</span>
+        <span class="c1"># detaching the variables</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">ref_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="c1"># remove attribute `ref_handle`</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">ref_handle</span>
+
+    <span class="k">def</span> <span class="nf">_detach_tensors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span>
+    <span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">input_attr_name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         `grad_input` is the gradient of the neuron with respect to its input</span>
+<span class="sd">         `grad_output` is the gradient of the neuron with respect to its output</span>
+<span class="sd">          we can override `grad_input` according to chain rule with.</span>
+<span class="sd">         `grad_output` * delta_out / delta_in.</span>
+
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="n">delta_in</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">inp</span> <span class="o">-</span> <span class="n">inp_ref</span> <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">inp_ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input_ref</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">delta_out</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">out</span> <span class="o">-</span> <span class="n">out_ref</span> <span class="k">for</span> <span class="n">out</span><span class="p">,</span> <span class="n">out_ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">output_ref</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">multipliers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">SUPPORTED_NON_LINEAR</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)](</span>
+                <span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">grad_input</span><span class="p">),</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># remove all the properies that we set for the inputs and output</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input_ref</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">output_ref</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">output</span>
+
+        <span class="k">return</span> <span class="n">multipliers</span>
+
+    <span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;non_ref&quot;</span><span class="p">):</span>
+        <span class="c1"># TODO find a better way of checking if a module is a container or not</span>
+        <span class="n">module_fullname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
+        <span class="n">has_already_hooks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">_backward_hooks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;nn.modules.container&quot;</span> <span class="ow">in</span> <span class="n">module_fullname</span>
+            <span class="ow">or</span> <span class="n">has_already_hooks</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_non_linear</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+        <span class="c1"># adds forward hook to leaf nodes that are non-linear</span>
+        <span class="k">if</span> <span class="n">input_type</span> <span class="o">!=</span> <span class="s2">&quot;ref&quot;</span><span class="p">:</span>
+            <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
+            <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook_ref</span><span class="p">)</span>
+            <span class="n">ref_handle</span> <span class="o">=</span> <span class="s2">&quot;ref_handle&quot;</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">ref_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">hook_fn</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;non_ref&quot;</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sd">&quot;&quot;&quot;Setting forward, backward hooks and attributes on non-linear</span>
+<span class="sd">               activations. The hooks and attributes will be removed</span>
+<span class="sd">            after the attribution is finished&quot;&quot;&quot;</span>
+        <span class="p">)</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">children</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">hook_fn</span><span class="p">,</span> <span class="n">input_type</span><span class="p">)</span>
+            <span class="n">hook_fn</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">input_type</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>
+            <span class="n">forward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">backward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span>
+            <span class="n">backward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extends DeepLift alogrithm and approximates SHAP values using Deeplift.</span>
+<span class="sd">        For each input sample it computes DeepLift attribution with respect to</span>
+<span class="sd">        each baseline and averages resulting attributions.</span>
+<span class="sd">        More details about the algorithm can be found here:</span>
+
+<span class="sd">        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</span>
+
+<span class="sd">        Note that the explanation model:</span>
+<span class="sd">            1. Assumes that input features are independent of one another</span>
+<span class="sd">            2. Is linear, meaning that the explanations are modeled through</span>
+<span class="sd">               the additive composition of feature effects.</span>
+<span class="sd">        Although, it assumes a linear model for each explanation, the overall</span>
+<span class="sd">        model across multiple explanations can be complex and non-linear.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">                        attributions are computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples (aka batch size), and if</span>
+<span class="sd">                        mutliple input tensors are provided, the examples must</span>
+<span class="sd">                        be aligned appropriately.</span>
+<span class="sd">            baselines (tensor or tuple of tensors, optional): Baselines define</span>
+<span class="sd">                        reference samples which are compared with the inputs.</span>
+<span class="sd">                        In order to assign attribution scores DeepLift computes</span>
+<span class="sd">                        the differences between the inputs and references and</span>
+<span class="sd">                        corresponding outputs.</span>
+<span class="sd">                        If inputs is a single tensor, baselines must also be a</span>
+<span class="sd">                        single tensor. If inputs is a tuple of tensors, baselines</span>
+<span class="sd">                        must also be a tuple of tensors. The first dimension in</span>
+<span class="sd">                        baseline tensors defines the distribution of baselines.</span>
+<span class="sd">                        All other dimensions starting after the first dimension</span>
+<span class="sd">                        should match with the inputs&#39; dimensions after the</span>
+<span class="sd">                        first dimension. It is recommended that the number of</span>
+<span class="sd">                        samples in the baselines&#39; tensors is larger than one.</span>
+<span class="sd">                        Default: zero tensor for each input tensor</span>
+<span class="sd">            target (int, optional):  Output index for which gradient is computed</span>
+<span class="sd">                        (for classification cases, this is the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary. (Note: Tuples for multi</span>
+<span class="sd">                        -dimensional output indices will be supported soon.)</span>
+<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a tuple</span>
+<span class="sd">                        containing multiple additional arguments including tensors</span>
+<span class="sd">                        or any arbitrary python types. These arguments are provided to</span>
+<span class="sd">                        forward_func in order, following the arguments in inputs.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">        Returns:</span>
+
+<span class="sd">            attributions (tensor or tuple of tensors): Attribution score</span>
+<span class="sd">                        computed based on DeepLift rescale rule with respect</span>
+<span class="sd">                        to each input feature. Attributions will always be</span>
+<span class="sd">                        the same size as the provided inputs, with each value</span>
+<span class="sd">                        providing the attribution of the corresponding input index.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                        returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                        corresponding sized tensors is returned.</span>
+<span class="sd">            delta (float): This is computed using the property that the total</span>
+<span class="sd">                        sum of forward_func(inputs) - forward_func(baselines)</span>
+<span class="sd">                        must be very close to the total sum of attributions</span>
+<span class="sd">                        computed based on approximated SHAP values using</span>
+<span class="sd">                        Deeplift&#39;s rescale rule.</span>
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; dl = DeepLiftShap(net)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes shap values using deeplift for class 3.</span>
+<span class="sd">            &gt;&gt;&gt; attribution, delta = dl.attribute(input, target=3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">compute_mean</span><span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">):</span>
+            <span class="c1"># Average for multiple references</span>
+            <span class="n">attr_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">attr_shape</span> <span class="o">+=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attr_shape</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Keeps track whether original input is a tuple or not before</span>
+        <span class="c1"># converting it into a tuple.</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">baselines</span> <span class="o">=</span> <span class="n">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="c1"># batch sizes</span>
+        <span class="n">inp_bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">base_bsz</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># match the sizes of inputs and baselines in case of multiple references</span>
+        <span class="c1"># for a single input</span>
+        <span class="n">expanded_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">base_bsz</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+                <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">expanded_baselines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">baseline</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">inp_bsz</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="n">baselines</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">expanded_inputs</span><span class="p">,</span>
+            <span class="n">expanded_baselines</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">compute_mean</span><span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span>
+        <span class="p">)</span>
+
+        <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span>
+
+        <span class="c1"># computes convergence error</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_convergence_delta</span><span class="p">(</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">start_point</span><span class="p">,</span>
+            <span class="n">end_point</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">is_multi_baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
+
+
+<span class="k">def</span> <span class="nf">nonlinear</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)</span>
+<span class="sd">    grad_output: (dLoss / dlayer_out)</span>
+<span class="sd">    https://github.com/pytorch/pytorch/issues/12331</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># supported non-linear modules take only single tensor as input hence accessing</span>
+    <span class="c1"># only the first element in `grad_input` and `grad_output`</span>
+    <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">grad_input</span>
+
+
+<span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="n">grad_input_unnorm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="c1"># normalizing</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">grad_input_unnorm</span> <span class="o">-</span> <span class="n">grad_input_unnorm</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">grad_input</span>
+
+
+<span class="k">def</span> <span class="nf">maxpool1d</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">maxpool</span><span class="p">(</span>
+        <span class="n">module</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_pool1d</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_unpool1d</span><span class="p">,</span>
+        <span class="n">delta_in</span><span class="p">,</span>
+        <span class="n">delta_out</span><span class="p">,</span>
+        <span class="n">grad_input</span><span class="p">,</span>
+        <span class="n">grad_output</span><span class="p">,</span>
+        <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">maxpool2d</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">maxpool</span><span class="p">(</span>
+        <span class="n">module</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_pool2d</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_unpool2d</span><span class="p">,</span>
+        <span class="n">delta_in</span><span class="p">,</span>
+        <span class="n">delta_out</span><span class="p">,</span>
+        <span class="n">grad_input</span><span class="p">,</span>
+        <span class="n">grad_output</span><span class="p">,</span>
+        <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">maxpool3d</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">maxpool</span><span class="p">(</span>
+        <span class="n">module</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_pool3d</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">max_unpool3d</span><span class="p">,</span>
+        <span class="n">delta_in</span><span class="p">,</span>
+        <span class="n">delta_out</span><span class="p">,</span>
+        <span class="n">grad_input</span><span class="p">,</span>
+        <span class="n">grad_output</span><span class="p">,</span>
+        <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">maxpool</span><span class="p">(</span>
+    <span class="n">module</span><span class="p">,</span>
+    <span class="n">pool_func</span><span class="p">,</span>
+    <span class="n">unpool_func</span><span class="p">,</span>
+    <span class="n">delta_in</span><span class="p">,</span>
+    <span class="n">delta_out</span><span class="p">,</span>
+    <span class="n">grad_input</span><span class="p">,</span>
+    <span class="n">grad_output</span><span class="p">,</span>
+    <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># The forward function of maxpool takes only tensors not</span>
+    <span class="c1"># a tuple hence accessing the first</span>
+    <span class="c1"># element in the tuple of inputs, grad_input and grad_output</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">pool_func</span><span class="p">(</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">dilation</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">ceil_mode</span><span class="p">,</span>
+        <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">unpool_grad_out_delta</span> <span class="o">=</span> <span class="n">unpool_func</span><span class="p">(</span>
+        <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">indices</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">padding</span><span class="p">,</span>
+        <span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">unpool_grad_out_delta</span> <span class="o">/</span> <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">grad_input</span>
+
+
+<span class="n">SUPPORTED_NON_LINEAR</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">ELU</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Softplus</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool1d</span><span class="p">:</span> <span class="n">maxpool1d</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">:</span> <span class="n">maxpool2d</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool3d</span><span class="p">:</span> <span class="n">maxpool3d</span><span class="p">,</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">:</span> <span class="n">softmax</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">Captum.DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">Captum.InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">Captum.IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internal_influence.html">Captum.InternalInfluence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_activation.html">Captum.LayerActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_conductance.html">Captum.LayerConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer_gradient_x_activation.html">Captum.LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_conductance.html">Captum.NeuronConductance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_gradient.html">Captum.NeuronGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron_integrated_gradients.html">Captum.NeuronIntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">Captum.NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Captum.Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">Captum.Models.Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pytext.html">Captum.Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../approximation_methods.html">Captum Approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Captum.Utils.Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../common.html">Captum.Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient.html">Captum.Gradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../visualization.html">Captum.Visualization</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
