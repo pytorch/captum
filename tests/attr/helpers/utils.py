@@ -9,7 +9,7 @@ import torch
 def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
     for index, (input, ref) in enumerate(zip(inputArr, refArr)):
         almost_equal = abs(input - ref) <= delta
-        if hasattr(almost_equal, '__iter__'):
+        if hasattr(almost_equal, "__iter__"):
             almost_equal = almost_equal.all()
         assert (
             almost_equal

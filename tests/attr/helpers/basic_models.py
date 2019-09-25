@@ -237,6 +237,7 @@ class TestModel_ConvNet_MaxPool1d(nn.Module):
     behaves differently to other modules from the perspective
     of the DeepLift Attributions
     """
+
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv1d(1, 2, 3)
