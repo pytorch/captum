@@ -269,8 +269,8 @@ Captum on different types of models can be found in our tutorials.
 
 ## Captum Insights
 
-Captum provides a web interface called Insights for easy visualization and
-access to a number of our interpretability algorithms.
+We provide Captum Insights as an easy web and notebook interface for
+fast visualization and debugging with the model of your choice.
 
 To analyze a sample model on CIFAR10 via Captum Insights run
 
@@ -280,7 +280,7 @@ python -m captum.insights.example
 
 and navigate to the URL specified in the output.
 
-Alternatively, launch our equivalent tutorial notebook with
+Alternatively, launch a sample tutorial notebook with
 
 ```
 jupyter notebook tutorials/CIFAR_TorchVision_Captum_Insights.ipynb
