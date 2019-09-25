@@ -128,7 +128,7 @@ class AttributionVisualizer(object):
 
         for i, (inputs, additional_forward_args) in enumerate(
             _batched_generator(
-                inputs=tuple(batch_data.inputs),
+                inputs=batch_data.inputs,
                 additional_forward_args=batch_data.additional_args,
                 internal_batch_size=1,  # should be 1 until we have batch label support
             )

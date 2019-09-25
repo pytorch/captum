@@ -124,6 +124,16 @@ def _get_pretrained_multimodal(input_size=256):
     return BasicMultiModal(input_size=input_size, pretrained=True)
 
 
+def to_iter(data_loader):
+    # TODO: not sure how to make this cleaner
+    for x, y in data_loader:
+        # if it's not multi input
+        # NOTE: torch.utils.data.DataLoader returns a list in this case
+        if not isinstance(x, list):
+            x = (x,)
+        yield Data(inputs=tuple(x), labels=y)
+
+
 class Test(BaseTest):
     def test_one_feature(self):
         transform = transforms.Compose(
@@ -135,13 +145,10 @@ class Test(BaseTest):
         dataset = torchvision.datasets.CIFAR10(
             root="./data", train=False, download=True, transform=transform
         )
+        # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=10, shuffle=False, num_workers=2
         )
-
-        def to_iter(data_loader):
-            for x, y in data_loader:
-                yield Data(inputs=(x,), labels=y)
 
         visualizer = AttributionVisualizer(
             models=[_get_pretrained_cnn()],
@@ -179,16 +186,13 @@ class Test(BaseTest):
         dataset = _multi_modal_data(
             img_dataset=img_dataset, feature_size=misc_feature_size
         )
+        # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
             list(dataset), batch_size=10, shuffle=False, num_workers=2
         )
 
         def input_transform(x):
             return x
-
-        def to_iter(data_loader):
-            for x, y in data_loader:
-                yield Data(inputs=x, labels=y)
 
         visualizer = AttributionVisualizer(
             models=[
