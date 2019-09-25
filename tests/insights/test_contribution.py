@@ -3,8 +3,6 @@ from typing import Callable, List, Optional, Union
 
 import torch
 import torch.nn as nn
-import torchvision
-import torchvision.transforms as transforms
 
 from captum.insights.api import AttributionVisualizer, Data
 from captum.insights.features import ImageFeature, BaseFeature, FeatureOutput
@@ -38,7 +36,6 @@ class RealFeature(BaseFeature):
             contribution=contribution_frac,
         )
 
-
 def _get_classes():
     classes = [
         "Plane",
@@ -55,53 +52,53 @@ def _get_classes():
     return classes
 
 
-class BasicCnn(nn.Module):
+class TinyCnn(nn.Module):
     def __init__(self, feature_extraction=False):
-        super(BasicCnn, self).__init__()
+        super().__init__()
         self.feature_extraction = feature_extraction
 
         self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool1 = nn.MaxPool2d(2, 2)
-        self.pool2 = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(
-            84, 10
-        )  # note: not removing this in order to load the params
         self.relu1 = nn.ReLU()
+        self.pool1 = nn.MaxPool2d(2, 2)
+
+        self.conv2 = nn.Conv2d(6, 16, 5)
         self.relu2 = nn.ReLU()
-        self.relu3 = nn.ReLU()
-        self.relu4 = nn.ReLU()
+        self.pool2 = nn.MaxPool2d(2, 2)
+
+        if not self.feature_extraction:
+            self.fc = nn.Linear(16, 10)
 
     def forward(self, x):
         x = self.pool1(self.relu1(self.conv1(x)))
         x = self.pool2(self.relu2(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = self.relu3(self.fc1(x))
-        x = self.relu4(self.fc2(x))
+        x = x.view(-1, 16)
+
         if not self.feature_extraction:
-            x = self.fc3(x)
+            x = self.fc(x)
         return x
 
 
-class BasicMultiModal(nn.Module):
+class TinyMultiModal(nn.Module):
     def __init__(self, input_size=256, pretrained=False):
-        super(BasicMultiModal, self).__init__()
+        super().__init__()
         if pretrained:
-            self.img_model = _get_pretrained_cnn(feature_extraction=True)
+            self.img_model = _get_cnn(feature_extraction=True)
         else:
-            self.img_model = BasicCnn(feature_extraction=True)
-        self.misc_model = nn.Sequential(
-            nn.Linear(input_size, 128), nn.ReLU(), nn.Linear(128, 84)
-        )
-        self.fc = nn.Linear(84 * 2, 10)
+            self.img_model = TinyCnn(feature_extraction=True)
+
+        self.misc_model = nn.Sequential(nn.Linear(input_size, 16), nn.ReLU())
+        self.fc = nn.Linear(16 * 2, 10)
 
     def forward(self, img, misc):
         img = self.img_model(img)
         misc = self.misc_model(misc)
         x = torch.cat((img, misc), dim=-1)
         return self.fc(x)
+
+
+def _labelled_img_data(num_samples=10, width=16, height=16, depth=3, num_labels=10):
+    for i in range(num_samples):
+        yield torch.randn(depth, height, width), torch.randint(num_labels, (1,))
 
 
 def _multi_modal_data(img_dataset, feature_size=256):
@@ -116,12 +113,12 @@ def _multi_modal_data(img_dataset, feature_size=256):
         yield ((img, misc), label)
 
 
-def _get_pretrained_cnn(feature_extraction=False):
-    return BasicCnn(feature_extraction=feature_extraction)
+def _get_cnn(feature_extraction=False):
+    return TinyCnn(feature_extraction=feature_extraction)
 
 
-def _get_pretrained_multimodal(input_size=256):
-    return BasicMultiModal(input_size=input_size, pretrained=True)
+def _get_multimodal(input_size=256):
+    return TinyMultiModal(input_size=input_size, pretrained=True)
 
 
 def to_iter(data_loader):
@@ -136,23 +133,18 @@ def to_iter(data_loader):
 
 class Test(BaseTest):
     def test_one_feature(self):
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ]
-        )
-        dataset = torchvision.datasets.CIFAR10(
-            root="./data", train=False, download=True, transform=transform
-        )
+        batch_size = 3
+        classes = _get_classes()
+        dataset = list(_labelled_img_data(num_labels=len(classes), num_samples=2*batch_size))
+
         # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=10, shuffle=False, num_workers=2
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=2
         )
 
         visualizer = AttributionVisualizer(
-            models=[_get_pretrained_cnn()],
-            classes=_get_classes(),
+            models=[_get_cnn()],
+            classes=classes,
             features=[
                 ImageFeature(
                     "Photo",
@@ -163,6 +155,8 @@ class Test(BaseTest):
             dataset=to_iter(data_loader),
             score_func=None,
         )
+
+        # TODO: add parameters to supply to IntegratedGradients.attribute?
         outputs = visualizer.visualize()
 
         for output in outputs:
@@ -173,29 +167,22 @@ class Test(BaseTest):
             self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)
 
     def test_multi_features(self):
-        transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-            ]
-        )
-        img_dataset = torchvision.datasets.CIFAR10(
-            root="./data", train=False, download=True, transform=transform
-        )
+        batch_size = 3
+        classes = _get_classes()
+        img_dataset = list(_labelled_img_data(num_labels=len(classes), num_samples=2*batch_size))
+
         misc_feature_size = 5
         dataset = _multi_modal_data(
             img_dataset=img_dataset, feature_size=misc_feature_size
         )
         # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
-            list(dataset), batch_size=10, shuffle=False, num_workers=2
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=2
         )
 
         visualizer = AttributionVisualizer(
-            models=[
-                _get_pretrained_multimodal(input_size=misc_feature_size)
-            ],  # some nn.Module
-            classes=_get_classes(),  # a list of classes, indices correspond to name
+            models=[_get_multimodal(input_size=misc_feature_size)],
+            classes=classes,
             features=[
                 ImageFeature(
                     "Photo",
@@ -212,6 +199,7 @@ class Test(BaseTest):
             score_func=None,
         )
 
+        # TODO: add parameters to supply to IntegratedGradients.attribute?
         outputs = visualizer.visualize()
 
         for output in outputs:
