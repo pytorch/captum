@@ -57,11 +57,7 @@ class AttributionVisualizer(object):
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Tensor],
-<<<<<<< HEAD
-=======
-        label: Tensor,
         **params_to_attribute,  # TODO: add type anno
->>>>>>> allow to provide arguments to ig.attribute
     ) -> Tensor:
         ig = IntegratedGradients(net)
         net.zero_grad()

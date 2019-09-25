@@ -57,24 +57,22 @@ class TinyCnn(nn.Module):
         super().__init__()
         self.feature_extraction = feature_extraction
 
-        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv1 = nn.Conv2d(3, 3, 5)
         self.relu1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2, 2)
 
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(2, 2)
-
         if not self.feature_extraction:
-            self.fc = nn.Linear(16, 10)
+            self.conv2 = nn.Conv2d(3, 10, 2)
 
     def forward(self, x):
         x = self.pool1(self.relu1(self.conv1(x)))
-        x = self.pool2(self.relu2(self.conv2(x)))
-        x = x.view(-1, 16)
 
         if not self.feature_extraction:
-            x = self.fc(x)
+            x = self.conv2(x)
+            x = x.view(-1, 10)
+        else:
+            x = x.view(-1, 12)
+
         return x
 
 
@@ -86,8 +84,8 @@ class TinyMultiModal(nn.Module):
         else:
             self.img_model = TinyCnn(feature_extraction=True)
 
-        self.misc_model = nn.Sequential(nn.Linear(input_size, 16), nn.ReLU())
-        self.fc = nn.Linear(16 * 2, 10)
+        self.misc_model = nn.Sequential(nn.Linear(input_size, 12), nn.ReLU())
+        self.fc = nn.Linear(12 * 2, 10)
 
     def forward(self, img, misc):
         img = self.img_model(img)
@@ -101,13 +99,8 @@ def _labelled_img_data(num_samples=10, width=16, height=16, depth=3, num_labels=
         yield torch.randn(depth, height, width), torch.randint(num_labels, (1,))
 
 
-<<<<<<< HEAD
 def _multi_modal_data(img_dataset, feature_size=256):
-    def misc_data(length, feature_size=256):
-=======
-def multi_modal_data(img_dataset, feature_size=None):
     def misc_data(length, feature_size=None):
->>>>>>> allow to provide arguments to ig.attribute
         for i in range(length):
             yield torch.randn(feature_size)
 
@@ -138,13 +131,15 @@ def to_iter(data_loader):
 
 class Test(BaseTest):
     def test_one_feature(self):
-        batch_size = 3
+        batch_size = 2
         classes = _get_classes()
-        dataset = list(_labelled_img_data(num_labels=len(classes), num_samples=2*batch_size))
+        dataset = list(
+            _labelled_img_data(num_labels=len(classes), num_samples=batch_size)
+        )
 
         # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
-            list(dataset), batch_size=batch_size, shuffle=False, num_workers=2
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
         )
 
         visualizer = AttributionVisualizer(
@@ -171,17 +166,19 @@ class Test(BaseTest):
             self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)
 
     def test_multi_features(self):
-        batch_size = 3
+        batch_size = 2
         classes = _get_classes()
-        img_dataset = list(_labelled_img_data(num_labels=len(classes), num_samples=2*batch_size))
+        img_dataset = list(
+            _labelled_img_data(num_labels=len(classes), num_samples=batch_size)
+        )
 
-        misc_feature_size = 5
+        misc_feature_size = 2
         dataset = _multi_modal_data(
             img_dataset=img_dataset, feature_size=misc_feature_size
         )
         # NOTE: using DataLoader to batch the inputs -- since it is required
         data_loader = torch.utils.data.DataLoader(
-            list(dataset), batch_size=batch_size, shuffle=False, num_workers=2
+            list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
         )
 
         visualizer = AttributionVisualizer(
