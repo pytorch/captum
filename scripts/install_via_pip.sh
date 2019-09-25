@@ -16,7 +16,9 @@ while getopts 'ndf' flag; do
   done
 
 # install yarn for insights build
+# and make sure cmdtest doesn't get installed instead
 sudo apt update
+sudo apt remove cmdtest
 sudo apt install yarn
 
 # yarn needs terminal info
