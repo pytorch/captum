@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 PYTORCH_NIGHTLY=false
 
 while getopts 'nf' flag; do

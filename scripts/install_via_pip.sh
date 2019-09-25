@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 PYTORCH_NIGHLTY=false
 DEPLOY=false
 
@@ -18,8 +20,7 @@ sudo apt update
 sudo apt install yarn
 
 # yarn needs terminal info
-TERM=linux
-TERMINFO=/etc/terminfo
+export TERM=xterm
 
 # NOTE: All of the below installs use sudo, b/c otherwise pip will get
 # permission errors installing in the docker container. An alternative would be
