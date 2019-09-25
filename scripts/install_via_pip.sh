@@ -13,6 +13,9 @@ while getopts 'ndf' flag; do
     esac
   done
 
+# install yarn for insights build
+sudo apt install yarn
+
 # NOTE: All of the below installs use sudo, b/c otherwise pip will get
 # permission errors installing in the docker container. An alternative would be
 # to use a virtualenv, but that would lead to bifurcation of the CircleCI config
