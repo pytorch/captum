@@ -15,13 +15,13 @@ while getopts 'ndf' flag; do
     esac
   done
 
-# install yarn for insights build
-# and make sure cmdtest doesn't get installed instead
-sudo apt remove cmdtest
+# install nodejs and yarn for insights build
 sudo apt install apt-transport-https ca-certificates
+curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 sudo apt update
+sudo apt install nodejs
 sudo apt install yarn
 
 # yarn needs terminal info
