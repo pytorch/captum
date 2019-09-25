@@ -57,17 +57,19 @@ class AttributionVisualizer(object):
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Tensor],
+<<<<<<< HEAD
+=======
+        label: Tensor,
+        **params_to_attribute,  # TODO: add type anno
+>>>>>>> allow to provide arguments to ig.attribute
     ) -> Tensor:
         ig = IntegratedGradients(net)
+        net.zero_grad()
         # TODO support multiple baselines
-        label = None if label is None or len(label.shape) == 0 else label
-        attr_ig, _ = ig.attribute(
-            data,
-            baselines=baselines[0],
-            additional_forward_args=additional_forward_args,
-            target=label,
-        )
-
+        params_to_attribute["baselines"] = baselines[0]
+        params_to_attribute["target"] = label
+        params_to_attribute["additional_forward_args"] = additional_forward_args
+        attr_ig, _ = ig.attribute(data, **params_to_attribute)
         return attr_ig
 
     def render(self):
@@ -122,7 +124,8 @@ class AttributionVisualizer(object):
 
         return net_contrib
 
-    def visualize(self) -> List[List[VisualizationOutput]]:
+    # TODO: add type anno for params_to_attribute
+    def visualize(self, **params_to_attribute) -> List[List[VisualizationOutput]]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
         vis_outputs = []
@@ -184,6 +187,7 @@ class AttributionVisualizer(object):
                 tuple(transformed_inputs),
                 additional_forward_args,
                 label,
+                **params_to_attribute,
             )
 
             net_contrib = self._calculate_net_contrib(attrs_per_input)

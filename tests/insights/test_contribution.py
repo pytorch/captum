@@ -101,8 +101,13 @@ def _labelled_img_data(num_samples=10, width=16, height=16, depth=3, num_labels=
         yield torch.randn(depth, height, width), torch.randint(num_labels, (1,))
 
 
+<<<<<<< HEAD
 def _multi_modal_data(img_dataset, feature_size=256):
     def misc_data(length, feature_size=256):
+=======
+def multi_modal_data(img_dataset, feature_size=None):
+    def misc_data(length, feature_size=None):
+>>>>>>> allow to provide arguments to ig.attribute
         for i in range(length):
             yield torch.randn(feature_size)
 
@@ -156,8 +161,7 @@ class Test(BaseTest):
             score_func=None,
         )
 
-        # TODO: add parameters to supply to IntegratedGradients.attribute?
-        outputs = visualizer.visualize()
+        outputs = visualizer.visualize(n_steps=2)
 
         for output in outputs:
             contribs = torch.stack(
@@ -199,8 +203,7 @@ class Test(BaseTest):
             score_func=None,
         )
 
-        # TODO: add parameters to supply to IntegratedGradients.attribute?
-        outputs = visualizer.visualize()
+        outputs = visualizer.visualize(n_steps=2)
 
         for output in outputs:
             contribs = torch.stack(
