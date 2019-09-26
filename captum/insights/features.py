@@ -109,8 +109,9 @@ class TextFeature(BaseFeature):
         attribution.squeeze_(0)
         data.squeeze_(0)
         attribution = attribution.sum(dim=1)
-        normalized_attribution = attribution / attribution.norm()
 
+        # L-Infinity norm
+        normalized_attribution = attribution / abs(attribution).max()
         modified = [x * 100 for x in normalized_attribution.tolist()]
 
         return FeatureOutput(
