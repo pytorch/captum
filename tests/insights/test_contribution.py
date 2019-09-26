@@ -139,7 +139,7 @@ class Test(BaseTest):
             _labelled_img_data(num_labels=len(classes), num_samples=batch_size)
         )
 
-        # NOTE: using DataLoader to batch the inputs 
+        # NOTE: using DataLoader to batch the inputs
         # since AttributionVisualizer requires the input to be of size `B x ...`
         data_loader = torch.utils.data.DataLoader(
             list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
@@ -179,7 +179,7 @@ class Test(BaseTest):
         dataset = _multi_modal_data(
             img_dataset=img_dataset, feature_size=misc_feature_size
         )
-        # NOTE: using DataLoader to batch the inputs since 
+        # NOTE: using DataLoader to batch the inputs since
         # AttributionVisualizer requires the input to be of size `B x ...`
         data_loader = torch.utils.data.DataLoader(
             list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
