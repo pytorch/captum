@@ -106,10 +106,12 @@ class TextFeature(BaseFeature):
     def visualize(self, attribution, data) -> FeatureOutput:
         text = self.visualization_transform(data)
 
-        attribution.squeeze_()
+        attribution.squeeze_(0)
         data.squeeze_(0)
+        attribution = attribution.sum(dim=1)
+        normalized_attribution = attribution / attribution.norm()
 
-        modified = [x * 100 for x in attribution.sum(dim=1).tolist()]
+        modified = [x * 100 for x in normalized_attribution.tolist()]
 
         return FeatureOutput(
             name=self.name,
