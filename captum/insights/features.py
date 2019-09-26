@@ -19,7 +19,7 @@ def _convert_img_base64(img):
     return base64img
 
 
-def convert_figure_base64(fig, denormalize=False):
+def _convert_figure_base64(fig, denormalize=False):
     buff = BytesIO()
     fig.savefig(buff, format="png")
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
@@ -76,8 +76,8 @@ class ImageFeature(BaseFeature):
             attribution_t, (data_t / 2) + 0.5, method="heat_map", sign="absolute_value"
         )
 
-        attr_img_64 = convert_figure_base64(fig)
-        img_64 = convert_img_base64(data_t, True)
+        attr_img_64 = _convert_figure_base64(fig)
+        img_64 = _convert_img_base64(data_t, True)
 
         return FeatureOutput(
             name=self.name,

@@ -36,6 +36,7 @@ def _normalize_scale(attr, scale_factor):
             "Attempting to normalize by value approximately 0, skipping normalization."
             "This likely means that attribution values are all close to 0."
         )
+        return attr
     attr_norm = attr / scale_factor
     return np.clip(attr_norm, -1, 1)
 
@@ -102,9 +103,9 @@ def visualize_image_attr(
             original_image (numpy.array):  Numpy array corresponding to original
                         image. Shape must be in the form (H, W, C), with
                         channels as the last dimension. Image can be provided either
-                        with values in range 0-1 or 0-255. This is a necessary
-                        argument for any visualization method which utilizes
-                        the original image.
+                        with float values in range 0-1 or int values between 0-255.
+                        This is a necessary argument for any visualization method
+                        which utilizes the original image.
                         Default: None
             method (string): Chosen method for visualizing attribution. Supported
                         options are:
