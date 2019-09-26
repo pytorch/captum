@@ -1,9 +1,9 @@
-### Integrated Gradients
+## Integrated Gradients
 
 This section of the documentation shows how to apply integrated gradients on
 models with different types of parameters and inputs using Captum.
 
-## Description
+### Description
 
 [Integrated gradients](https://arxiv.org/pdf/1703.01365.pdf) is a simple, yet powerful axiomatic attribution method that requires almost no modification of the original network. It can be used for augmenting accuracy metrics, model debugging and feature or rule extraction.
 
@@ -194,7 +194,7 @@ input2_attr:  tensor([[ 0.0000,  0.0000],
 approximation_error (aka delta): 0.005693793296813965
 ```
 
-## More details on how to apply integrated gradients on larger DNN networks can be found here
+### More details on how to apply integrated gradients on larger DNN networks can be found here
 
 * [A simple classification model and CIFAR Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/CIFAR_TorchVision_Interpret.ipynb)
 * [Torchvision's ResNet18 Model using handpicked images] (TODO add link here)
