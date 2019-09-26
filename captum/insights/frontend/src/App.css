@@ -4,7 +4,6 @@
 }
 
 .header {
-  background: white;
 }
 
 .header__name {
@@ -17,6 +16,8 @@
 .header__nav {
   border-bottom: solid 1px #ccd0d5;
   padding-left: 32px;
+  background-color: white;
+  padding-top: 4px;
 }
 
 .header__nav ul {
@@ -37,11 +38,11 @@
 .header__nav__item--active {
   color: black;
   font-weight: 600;
-  border-bottom: solid 4px #3578e5;
+  border-bottom: solid 4px #ee4c2c;
 }
 
 .filter-panel {
-  background-color: #f3f8fe;
+  background-color: white;
 }
 
 .filter-panel,
@@ -108,7 +109,7 @@ button {
 }
 
 .btn {
-  border: solid 1px #3578e5;
+  border: solid 1px #ee4c2c;
   text-align: center;
   font-weight: 600;
   border-radius: 4px;
@@ -122,21 +123,21 @@ button {
 }
 
 .btn--outline {
-  color: #3578e5;
+  color: #ee4c2c;
 }
 
 .btn--outline:hover {
   background-color: rgba(0, 0, 0, 0.05);
-  border: solid 1px #3367bc;
+  border: solid 1px #ee4c2c;
 }
 
 .btn--solid {
-  background-color: #3578e5;
+  background-color: #ee4c2c;
   color: white;
 }
 
 .btn--solid:hover {
-  background-color: #3367bc;
+  background-color: #d7725e;
 }
 
 .viz {
