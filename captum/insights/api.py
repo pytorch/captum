@@ -19,10 +19,7 @@ Contribution = namedtuple("Contribution", "name percent")
 
 class Data:
     def __init__(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        labels: Optional[Tensor],
-        additional_args=None,
+        self, inputs: Union[Tensor, Tuple[Tensor, ...]], labels, additional_args=None
     ):
         self.inputs = inputs
         self.labels = labels
@@ -33,10 +30,10 @@ class AttributionVisualizer(object):
     def __init__(
         self,
         models: Union[List[Module], Module],
+        score_func: Optional[Callable],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
-        score_func: Optional[Callable] = None,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -56,12 +53,12 @@ class AttributionVisualizer(object):
         baselines: List[Tuple[Tensor, ...]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Optional[Tensor],
+        label: Tensor,
         **params_to_attribute,  # TODO: add type anno
     ) -> Tensor:
+        net.eval()
         ig = IntegratedGradients(net)
         net.zero_grad()
-        # TODO support multiple baselines
         params_to_attribute["baselines"] = baselines[0]
         params_to_attribute["target"] = label
         params_to_attribute["additional_forward_args"] = additional_forward_args
@@ -79,10 +76,14 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[PredictionScore]:
+        scores, indices = scores.squeeze(), indices.squeeze()
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
-            pred_scores.append(PredictionScore(score, self.classes[indices[i].item()]))
+            if score > 0.0001:
+                pred_scores.append(
+                    PredictionScore(scores[i].item(), self.classes[indices[i]])
+                )
         return pred_scores
 
     def _transform(
@@ -108,7 +109,7 @@ class AttributionVisualizer(object):
         return transformed_inputs
 
     def _calculate_net_contrib(self, attribution_per_input):
-        # get the net contribution per inpout
+        # get the net contribution per feature (input)
         net_contrib = torch.stack(
             [attrib.flatten().sum() for attrib in attribution_per_input]
         )
@@ -124,6 +125,7 @@ class AttributionVisualizer(object):
     def visualize(self, **params_to_attribute) -> List[List[VisualizationOutput]]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
+
         vis_outputs = []
 
         for i, (inputs, additional_forward_args) in enumerate(
@@ -162,22 +164,16 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
+            scores, predicted = outputs.cpu().detach().topk(4)
+
             label = batch_data.labels[i]
             actual_label = self.classes[label]
 
-            if len(outputs) == 1:
-                scores = outputs
-                predicted = scores.round().to(torch.int)
-            else:
-                scores, predicted = outputs.topk(min(4, len(outputs)))
-
-            scores = scores.cpu().squeeze(0)
-            predicted = predicted.cpu().squeeze_(0)
-            baselines = [tuple(b) for b in baselines]
-
             predicted_labels = self._get_labels_from_scores(scores, predicted)
 
-            attrs_per_input = self._calculate_attribution(
+            baselines = [tuple(b) for b in baselines]
+
+            attrs_per_feature = self._calculate_attribution(
                 net,
                 baselines,
                 tuple(transformed_inputs),
@@ -186,12 +182,12 @@ class AttributionVisualizer(object):
                 **params_to_attribute,
             )
 
-            net_contrib = self._calculate_net_contrib(attrs_per_input)
+            net_contrib = self._calculate_net_contrib(attrs_per_feature)
 
             features = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_input, inputs, net_contrib
+                    self.features, attrs_per_feature, inputs, net_contrib
                 )
             ]
 
