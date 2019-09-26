@@ -36,12 +36,14 @@ def _normalize_scale(attr, scale_factor):
             "Attempting to normalize by value approximately 0, skipping normalization."
             "This likely means that attribution values are all close to 0."
         )
-        return attr
+        return np.clip(attr, -1, 1)
     attr_norm = attr / scale_factor
     return np.clip(attr_norm, -1, 1)
 
 
 def _cumulative_sum_threshold(values, percentile):
+    assert percentile >= 0 and percentile <= 100, "Percentile for thresholding must be "
+    "between 0 and 100 inclusive."
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
     threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
@@ -154,7 +156,7 @@ def visualize_image_attr(
                         the visualization. If given method does not use a heatmap,
                         then a colormap axis is created and hidden. This is
                         necessary for appropriate alignment when visualizing
-                        multiple plots, some with heatmaps and some without.
+                        multiple plots, some with colorbars and some without.
                         Default: False
             title (string, optional): Title string for plot. If None, no title is
                         set.
@@ -254,7 +256,6 @@ def visualize_image_attr(
                     ],
                     axis=2,
                 ),
-                cmap="gray",
             )
         else:
             raise AssertionError("Visualize Method type is not valid.")
