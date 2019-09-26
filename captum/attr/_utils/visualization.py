@@ -2,13 +2,21 @@
 
 from enum import Enum
 import numpy as np
+import warnings
+
+from IPython.core.display import display, HTML
+
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-class VisualizeMethod(Enum):
+class ImageVisualizeMethod(Enum):
     heat_map = 1
-    masked_image = 2
-    alpha_scaled = 3
-    blended_heat_map = 4
+    blended_heat_map = 2
+    original_image = 3
+    masked_image = 4
+    alpha_scaling = 5
 
 class VisualizeSign(Enum):
     positive = 1
@@ -16,64 +24,275 @@ class VisualizeSign(Enum):
     negative = 3
     all = 4
 
-green = [0, 255, 0]
-red = [255, 0, 0]
-blue = [0, 0, 255]
+def _prepare_image(attr_visual):
+    return np.clip(attr_visual.astype(int), 0, 255)
 
+def _normalize_scale(attr, scale_factor):
+    if abs(scale_factor) < 1e-5:
+        warnings.warn("Attempting to normalize by value approximately 0, skipping normalization. This likely means that attribution values are all close to 0.")
+    attr_norm = attr / scale_factor
+    return np.clip(attr_norm, -1, 1)
 
-def visualize_image_attr(attr, original_image=None, channel_transpose=False, sign="positive", method="heat_map",outlier_perc=2):
-    if channel_transpose:
-        attr = np.transpose(attr, (1,2,0))
-        if original_image is not None:
-            original_image = np.transpose(original_image, (1,2,0))
+def _cumulative_sum_threshold(values, percentile):
+    sorted_vals = np.sort(values.flatten())
+    cum_sums = np.cumsum(sorted_vals)
+    threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
+    return sorted_vals[threshold_id]
 
-    # Combine RGB attribution channels
+def _normalize_image_attr(attr, sign, outlier_perc=2):
     attr_combined = np.sum(attr, axis=2)
-    heat_map_color = None
-
-    if VisualizeMethod[method] == VisualizeMethod.blended_heat_map:
-        assert original_image is not None, "Image must be provided for blended heat map."
-        return (0.6 * np.expand_dims(np.mean(original_image, axis=2),axis=2) + 0.4 * visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign=sign, method="heat_map",outlier_perc=outlier_perc)).astype(int)
-
-    if VisualizeSign[sign] == VisualizeSign.all:
-        assert VisualizeMethod[method] == VisualizeMethod.heat_map, "Heat Map is the only supported visualization approach for both positive and negative attribution."
-        return visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign="positive", method=method,outlier_perc=outlier_perc) + visualize_image_attr(attr=attr, original_image=original_image, channel_transpose=False, sign="negative", method=method,outlier_perc=outlier_perc)
-
     # Choose appropriate signed values and rescale, removing given outlier percentage.
-    if VisualizeSign[sign] == VisualizeSign.positive:
+    if VisualizeSign[sign] == VisualizeSign.all:
+        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(np.abs(attr_combined), 100 - outlier_perc))
+    elif VisualizeSign[sign] == VisualizeSign.positive:
         attr_combined = (attr_combined > 0) * attr_combined
-        attr_combined = attr_combined / np.percentile(attr_combined, 100 - outlier_perc)
-        attr_combined[attr_combined > 1] = 1
-        heat_map_color = green
+        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc))
     elif VisualizeSign[sign] == VisualizeSign.negative:
         attr_combined = (attr_combined < 0) * attr_combined
-        attr_combined = attr_combined / np.percentile(attr_combined, outlier_perc)
-        attr_combined[attr_combined > 1] = 1
-        heat_map_color = red
+        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, outlier_perc))
     elif VisualizeSign[sign] == VisualizeSign.absolute_value:
         attr_combined = np.abs(attr_combined)
-        attr_combined = attr_combined / np.percentile(attr_combined, 100 - outlier_perc)
-        attr_combined[attr_combined > 1] = 1
-        heat_map_color = blue
+        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc))
     else:
         raise AssertionError("Visualize Sign type is not valid.")
+    return attr_combined
 
-    # Apply chosen visualization method.
-    if VisualizeMethod[method] == VisualizeMethod.heat_map:
-        return (np.expand_dims(attr_combined, 2) * heat_map_color).astype(int)
-    elif VisualizeMethod[method] == VisualizeMethod.masked_image:
-        assert original_image is not None, "Image must be provided for masking."
-        assert np.shape(original_image)[:-1] == np.shape(attr_combined), "Image dimensions do not match attribution dimensions for masking."
-        return (np.expand_dims(attr_combined, 2) * original_image).astype(int)
-    elif VisualizeMethod[method] == VisualizeMethod.alpha_scaled:
-        assert original_image is not None, "Image must be provided for masking."
-        assert np.shape(original_image)[:-1] == np.shape(attr_combined), "Image dimensions do not match attribution dimensions for adding alpha channel."
-        # Concatenate alpha channel and return
-        return np.concatenate((original_image, (255*np.expand_dims(attr_combined, 2)).astype(int)), axis=2)
-    elif VisualizeMethod[method] == VisualizeMethod.blended_heat_map:
-        return np.concatenate((original_image, (255*np.expand_dims(attr_combined, 2)).astype(int)), axis=2)
+def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absolute_value", plt_fig_axis=None,outlier_perc=2,cmap=None,alpha_overlay=0.5,show_colorbar=False, title = None, show_figure=True):
+    r"""
+        Visualizes attribution for a given image by normalizing attribution values
+        of the desired sign (positive, negative, absolute value, or all) and displaying
+        them using the desired mode in a matplotlib figure.
+
+        Args:
+
+            attr (numpy.array): Numpy array corresponding to attributions to be
+                        visualized. Shape must be in the form (H, W, C), with
+                        channels as last dimension. Shape must also match that of
+                        the original image if provided.
+            original_image (numpy.array):  Numpy array corresponding to original
+                        image. Shape must be in the form (H, W, C), with
+                        channels as the last dimension. Image can be provided either
+                        with values in range 0-1 or 0-255. This is a necessary
+                        argument for any visualization method which utilizes
+                        the original image.
+                        Default: None
+            method (string): Chosen method for visualizing attribution. Supported
+                        options are:
+                            1. `heat_map` - Display heat map of chosen attributions
+                            2. `blended_heat_map` - Overlay heat map over greyscale
+                                version of original image. Parameter alpha_overlay
+                                corresponds to alpha of heat map.
+                            3. `original_image` - Only display original image.
+                            4. `masked_image` - Mask image (pixel-wise multiply)
+                                by normalized attribution values.
+                            5. `alpha_scaling` - Sets alpha channel of each pixel
+                            to be equal to normalized attribution value.
+                        Default: `heat_map`
+            sign (string): Chosen sign of attributions to visualize. Supported
+                            options are:
+                            1. `positive` - Displays only positive pixel attributions.
+                            2. `absolute_value` - Displays absolute value of attributions.
+                            3. `negative` - Displays only negative pixel attributions.
+                            4. `all` - Displays both positive and negative attribution
+                                values. This is not supported for `masked_image` or
+                                `alpha_scaling` modes, since signed information cannot
+                                be represented in these modes.
+                        Default: `absolute_value`
+            plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
+                        on which to visualize. If None is provided, then a new figure
+                        and axis are created.
+                        Default: None
+            outlier_perc (float, optional): Top attribution values which correspond
+                        to a total of outlier_perc percentage of the total attribution
+                        are set to 1 and scaling is performed using the minimum of
+                        these values. For sign=`all`, outliers and scale value are
+                        computed using absolute value of attributions.
+                        Default: 2
+            cmap (string, optional): String corresponding to desired colormap for
+                        heatmap visualization. This defaults to "Reds" for negative
+                        sign, "Blues" for absolute value, "Greens" for positive sign,
+                        and a spectrum from red to green for all. Note that this
+                        argument is only used for visualizations displaying heatmaps.
+                        Default: None
+            alpha_overlay (float, optional): Alpha to set for heatmap when using
+                        `blended_heat_map` visualization mode, which overlays the
+                        heat map over the greyscaled original image.
+                        Default: 0.5
+            show_colorbar (boolean, optional): Displays colorbar for heatmap below
+                        the visualization. If given method does not use a heatmap,
+                        then a colormap axis is created and hidden. This is
+                        necessary for appropriate alignment when visualizing
+                        multiple plots, some with heatmaps and some without.
+                        Default: False
+            title (string, optional): Title string for plot. If None, no title is
+                        set.
+                        Default: None
+            show_figure (boolean, optional): If true, calls plt.show to render
+                        plot after creating figure.
+
+
+        Return:
+
+            figure (matplotlib.pyplot.figure): Figure object on which visualization
+                        is created. If plt_fig_axis argument is given, this is the
+                        same figure provided.
+            axis (matplotlib.pyplot.axis): Axis object on which visualization
+                        is created. If plt_fig_axis argument is given, this is the
+                        same axis provided.
+
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> ig = IntegratedGradients(net)
+            >>> # Computes integrated gradients for class 3 for a given image .
+            >>> attribution, delta = ig.attribute(orig_image, target=3)
+            >>> # Displays blended heat map visualization of computed attributions.
+            >>> _ = visualize_image_attr(attribution, orig_image, "blended_heat_map")
+    """
+    # Create plot if figure, axis not provided
+    if plt_fig_axis is not None:
+        plt_fig, plt_axis = plt_fig_axis
     else:
-        raise AssertionError("Visualize Method type is not valid.")
+        plt_fig, plt_axis = plt.subplots()
+
+    if np.max(original_image) <= 1.0:
+        original_image = _prepare_image(original_image * 255)
+
+    # Remove ticks and tick labels from plot.
+    plt_axis.xaxis.set_ticks_position('none')
+    plt_axis.yaxis.set_ticks_position('none')
+    plt_axis.set_yticklabels([])
+    plt_axis.set_xticklabels([])
+
+    heat_map = None
+    # Show original image
+    if ImageVisualizeMethod[method] == ImageVisualizeMethod.original_image:
+        plt_axis.imshow(original_image)
+    else:
+        # Choose appropriate signed attributions and normalize.
+        norm_attr = _normalize_image_attr(attr, sign, outlier_perc)
+
+        # Set default colormap and bounds based on sign.
+        if VisualizeSign[sign] == VisualizeSign.all:
+            default_cmap = LinearSegmentedColormap.from_list("RdWhGn",["red","white","green"])
+            vmin, vmax = -1, 1
+        elif VisualizeSign[sign] == VisualizeSign.positive:
+            default_cmap = "Greens"
+            vmin, vmax = 0, 1
+        elif VisualizeSign[sign] == VisualizeSign.negative:
+            default_cmap = "Reds"
+            vmin, vmax = 0, 1
+        elif VisualizeSign[sign] == VisualizeSign.absolute_value:
+            default_cmap = "Blues"
+            vmin, vmax = 0, 1
+        else:
+            raise AssertionError("Visualize Sign type is not valid.")
+        cmap = cmap if cmap is not None else default_cmap
+
+        # Show appropriate image visualization.
+        if ImageVisualizeMethod[method] == ImageVisualizeMethod.heat_map:
+            heat_map = plt_axis.imshow(norm_attr,cmap=cmap,vmin=vmin, vmax=vmax)
+        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.blended_heat_map:
+            plt_axis.imshow(np.mean(original_image, axis=2),cmap="gray")
+            heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay)
+        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.masked_image:
+            assert VisualizeSign[sign] != VisualizeSign.all, "Cannot display masked image with both positive and negative attributions, choose a different sign option."
+            plt_axis.imshow(_prepare_image(original_image*np.expand_dims(norm_attr,2)))
+        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.alpha_scaling:
+            assert VisualizeSign[sign] != VisualizeSign.all, "Cannot display alpha scaling with both positive and negative attributions, choose a different sign option."
+            plt_axis.imshow(np.concatenate([original_image, _prepare_image(np.expand_dims(norm_attr,2)*255)],axis=2),cmap="gray")
+        else:
+            raise AssertionError("Visualize Method type is not valid.")
+
+    # Add colorbar. If given method is not a heatmap and no colormap is relevant,
+    # then a colormap axis is created and hidden. This is necessary for appropriate
+    # alignment when visualizing multiple plots, some with heatmaps and some
+    # without.
+    if show_colorbar:
+        axis_separator = make_axes_locatable(plt_axis)
+        colorbar_axis = axis_separator.append_axes("bottom", size="5%", pad=0.1)
+        if heat_map:
+            plt_fig.colorbar(heat_map, orientation="horizontal",cax=colorbar_axis)
+        else:
+            colorbar_axis.axis('off')
+    if title:
+        plt_axis.set_title(title)
+
+    if show_figure:
+        plt.show()
+
+    return plt_fig, plt_axis
+
+def visualize_image_attr_multiple(methods, signs, attr, original_image=None, titles = None, figsize=(8, 6), show_figure=True, **kwargs):
+    r"""
+        Visualizes attribution using multiple visualization methods displayed
+        in a 1 x k grid, where k is the number of desired visualizations.
+
+        Args:
+
+            methods (list of strings): List of strings of length k, defining method
+                            for each visualization. Each method must be a valid
+                            string argument for method to visualize_image_attr.
+            signs (list of strings): List of strings of length k, defining signs for
+                            each visualization. Each sign must be a valid
+                            string argument for sign to visualize_image_attr.
+            attr (numpy.array): Numpy array corresponding to attributions to be
+                        visualized. Shape must be in the form (H, W, C), with
+                        channels as last dimension. Shape must also match that of
+                        the original image if provided.
+            original_image (numpy.array):  Numpy array corresponding to original
+                        image. Shape must be in the form (H, W, C), with
+                        channels as the last dimension. Image can be provided either
+                        with values in range 0-1 or 0-255. This is a necessary
+                        argument for any visualization method which utilizes
+                        the original image.
+                        Default: None
+            titles (list of strings):  List of strings of length k, providing a
+                        title string for each plot. If None is provided, no titles
+                        are added to subplots.
+                        Default: None
+            figsize (tuple, optional): Size of figure created.
+                        Default: (8, 6)
+            show_figure (boolean, optional): If true, calls plt.show to render
+                        plot after creating figure.
+            **kwargs (Any, optional): Any additional arguments which will be passed
+                        to every individual visualization. Such arguments include
+                        `show_colorbar`, `alpha_overlay`, `cmap`, etc.
+
+
+        Return:
+
+            figure (matplotlib.pyplot.figure): Figure object on which visualization
+                        is created. If plt_fig_axis argument is given, this is the
+                        same figure provided.
+            axis (matplotlib.pyplot.axis): Axis object on which visualization
+                        is created. If plt_fig_axis argument is given, this is the
+                        same axis provided.
+
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> ig = IntegratedGradients(net)
+            >>> # Computes integrated gradients for class 3 for a given image .
+            >>> attribution, delta = ig.attribute(orig_image, target=3)
+            >>> # Displays original image and heat map visualization of
+            >>> # computed attributions side by side.
+            >>> _ = visualize_mutliple_image_attr(["original_image", "heat_map"],
+            >>>                     ["all", "positive"], attribution, orig_image)
+    """
+    assert len(methods) == len(signs), "Methods and signs array lengths must match."
+    plt_fig = plt.figure(figsize=figsize)
+    plt_axis = plt_fig.subplots(1, len(methods))
+    for i in range(len(methods)):
+        visualize_image_attr(attr, original_image=original_image, method=methods[i], sign=signs[i], plt_fig_axis=(plt_fig, plt_axis[i]), show_figure=False, title=titles[i] if titles else None, **kwargs)
+    plt_fig.tight_layout()
+    if show_figure:
+        plt.show()
+    return plt_fig, plt_axis
 
 # These visualization methods are for text and are partially copied from
 # experiments conducted by Davide Testuggine at Facebook.
