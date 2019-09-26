@@ -18,20 +18,27 @@ class ImageVisualizeMethod(Enum):
     masked_image = 4
     alpha_scaling = 5
 
+
 class VisualizeSign(Enum):
     positive = 1
     absolute_value = 2
     negative = 3
     all = 4
 
+
 def _prepare_image(attr_visual):
     return np.clip(attr_visual.astype(int), 0, 255)
 
+
 def _normalize_scale(attr, scale_factor):
     if abs(scale_factor) < 1e-5:
-        warnings.warn("Attempting to normalize by value approximately 0, skipping normalization. This likely means that attribution values are all close to 0.")
+        warnings.warn(
+            "Attempting to normalize by value approximately 0, skipping normalization."
+            "This likely means that attribution values are all close to 0."
+        )
     attr_norm = attr / scale_factor
     return np.clip(attr_norm, -1, 1)
+
 
 def _cumulative_sum_threshold(values, percentile):
     sorted_vals = np.sort(values.flatten())
@@ -39,25 +46,48 @@ def _cumulative_sum_threshold(values, percentile):
     threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
     return sorted_vals[threshold_id]
 
+
 def _normalize_image_attr(attr, sign, outlier_perc=2):
     attr_combined = np.sum(attr, axis=2)
     # Choose appropriate signed values and rescale, removing given outlier percentage.
     if VisualizeSign[sign] == VisualizeSign.all:
-        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(np.abs(attr_combined), 100 - outlier_perc))
+        attr_combined = _normalize_scale(
+            attr_combined,
+            _cumulative_sum_threshold(np.abs(attr_combined), 100 - outlier_perc),
+        )
     elif VisualizeSign[sign] == VisualizeSign.positive:
         attr_combined = (attr_combined > 0) * attr_combined
-        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc))
+        attr_combined = _normalize_scale(
+            attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
+        )
     elif VisualizeSign[sign] == VisualizeSign.negative:
         attr_combined = (attr_combined < 0) * attr_combined
-        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, outlier_perc))
+        attr_combined = _normalize_scale(
+            attr_combined, _cumulative_sum_threshold(attr_combined, outlier_perc)
+        )
     elif VisualizeSign[sign] == VisualizeSign.absolute_value:
         attr_combined = np.abs(attr_combined)
-        attr_combined = _normalize_scale(attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc))
+        attr_combined = _normalize_scale(
+            attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
+        )
     else:
         raise AssertionError("Visualize Sign type is not valid.")
     return attr_combined
 
-def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absolute_value", plt_fig_axis=None,outlier_perc=2,cmap=None,alpha_overlay=0.5,show_colorbar=False, title = None, show_figure=True):
+
+def visualize_image_attr(
+    attr,
+    original_image=None,
+    method="heat_map",
+    sign="absolute_value",
+    plt_fig_axis=None,
+    outlier_perc=2,
+    cmap=None,
+    alpha_overlay=0.5,
+    show_colorbar=False,
+    title=None,
+    show_figure=True,
+):
     r"""
         Visualizes attribution for a given image by normalizing attribution values
         of the desired sign (positive, negative, absolute value, or all) and displaying
@@ -91,7 +121,8 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
             sign (string): Chosen sign of attributions to visualize. Supported
                             options are:
                             1. `positive` - Displays only positive pixel attributions.
-                            2. `absolute_value` - Displays absolute value of attributions.
+                            2. `absolute_value` - Displays absolute value of
+                                attributions.
                             3. `negative` - Displays only negative pixel attributions.
                             4. `all` - Displays both positive and negative attribution
                                 values. This is not supported for `masked_image` or
@@ -161,8 +192,8 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
         original_image = _prepare_image(original_image * 255)
 
     # Remove ticks and tick labels from plot.
-    plt_axis.xaxis.set_ticks_position('none')
-    plt_axis.yaxis.set_ticks_position('none')
+    plt_axis.xaxis.set_ticks_position("none")
+    plt_axis.yaxis.set_ticks_position("none")
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
 
@@ -176,7 +207,9 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
 
         # Set default colormap and bounds based on sign.
         if VisualizeSign[sign] == VisualizeSign.all:
-            default_cmap = LinearSegmentedColormap.from_list("RdWhGn",["red","white","green"])
+            default_cmap = LinearSegmentedColormap.from_list(
+                "RdWhGn", ["red", "white", "green"]
+            )
             vmin, vmax = -1, 1
         elif VisualizeSign[sign] == VisualizeSign.positive:
             default_cmap = "Greens"
@@ -193,16 +226,35 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
 
         # Show appropriate image visualization.
         if ImageVisualizeMethod[method] == ImageVisualizeMethod.heat_map:
-            heat_map = plt_axis.imshow(norm_attr,cmap=cmap,vmin=vmin, vmax=vmax)
+            heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax)
         elif ImageVisualizeMethod[method] == ImageVisualizeMethod.blended_heat_map:
-            plt_axis.imshow(np.mean(original_image, axis=2),cmap="gray")
-            heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay)
+            plt_axis.imshow(np.mean(original_image, axis=2), cmap="gray")
+            heat_map = plt_axis.imshow(
+                norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
+            )
         elif ImageVisualizeMethod[method] == ImageVisualizeMethod.masked_image:
-            assert VisualizeSign[sign] != VisualizeSign.all, "Cannot display masked image with both positive and negative attributions, choose a different sign option."
-            plt_axis.imshow(_prepare_image(original_image*np.expand_dims(norm_attr,2)))
+            assert (
+                VisualizeSign[sign] != VisualizeSign.all
+            ), "Cannot display masked image with both positive and negative "
+            "attributions, choose a different sign option."
+            plt_axis.imshow(
+                _prepare_image(original_image * np.expand_dims(norm_attr, 2))
+            )
         elif ImageVisualizeMethod[method] == ImageVisualizeMethod.alpha_scaling:
-            assert VisualizeSign[sign] != VisualizeSign.all, "Cannot display alpha scaling with both positive and negative attributions, choose a different sign option."
-            plt_axis.imshow(np.concatenate([original_image, _prepare_image(np.expand_dims(norm_attr,2)*255)],axis=2),cmap="gray")
+            assert (
+                VisualizeSign[sign] != VisualizeSign.all
+            ), "Cannot display alpha scaling with both positive and negative "
+            "attributions, choose a different sign option."
+            plt_axis.imshow(
+                np.concatenate(
+                    [
+                        original_image,
+                        _prepare_image(np.expand_dims(norm_attr, 2) * 255),
+                    ],
+                    axis=2,
+                ),
+                cmap="gray",
+            )
         else:
             raise AssertionError("Visualize Method type is not valid.")
 
@@ -214,9 +266,9 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
         axis_separator = make_axes_locatable(plt_axis)
         colorbar_axis = axis_separator.append_axes("bottom", size="5%", pad=0.1)
         if heat_map:
-            plt_fig.colorbar(heat_map, orientation="horizontal",cax=colorbar_axis)
+            plt_fig.colorbar(heat_map, orientation="horizontal", cax=colorbar_axis)
         else:
-            colorbar_axis.axis('off')
+            colorbar_axis.axis("off")
     if title:
         plt_axis.set_title(title)
 
@@ -225,7 +277,17 @@ def visualize_image_attr(attr, original_image=None,method="heat_map",sign="absol
 
     return plt_fig, plt_axis
 
-def visualize_image_attr_multiple(methods, signs, attr, original_image=None, titles = None, figsize=(8, 6), show_figure=True, **kwargs):
+
+def visualize_image_attr_multiple(
+    methods,
+    signs,
+    attr,
+    original_image=None,
+    titles=None,
+    figsize=(8, 6),
+    show_figure=True,
+    **kwargs
+):
     r"""
         Visualizes attribution using multiple visualization methods displayed
         in a 1 x k grid, where k is the number of desired visualizations.
@@ -288,14 +350,25 @@ def visualize_image_attr_multiple(methods, signs, attr, original_image=None, tit
     plt_fig = plt.figure(figsize=figsize)
     plt_axis = plt_fig.subplots(1, len(methods))
     for i in range(len(methods)):
-        visualize_image_attr(attr, original_image=original_image, method=methods[i], sign=signs[i], plt_fig_axis=(plt_fig, plt_axis[i]), show_figure=False, title=titles[i] if titles else None, **kwargs)
+        visualize_image_attr(
+            attr,
+            original_image=original_image,
+            method=methods[i],
+            sign=signs[i],
+            plt_fig_axis=(plt_fig, plt_axis[i]),
+            show_figure=False,
+            title=titles[i] if titles else None,
+            **kwargs
+        )
     plt_fig.tight_layout()
     if show_figure:
         plt.show()
     return plt_fig, plt_axis
 
+
 # These visualization methods are for text and are partially copied from
 # experiments conducted by Davide Testuggine at Facebook.
+
 
 class VisualizationDataRecord:
     r"""

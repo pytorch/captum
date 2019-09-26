@@ -20,11 +20,13 @@ def convert_img_base64(img, denormalize=False):
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
+
 def convert_figure_base64(fig, denormalize=False):
     buff = BytesIO()
     fig.savefig(buff, format="png")
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
+
 
 class BaseFeature:
     def __init__(self, name: str):
@@ -47,15 +49,9 @@ class ImageFeature(BaseFeature):
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
         )
 
-        img_integrated_gradient_overlay = viz.visualize_image(
-            attribution_t,
-            data_t,
-            clip_above_percentile=99,
-            clip_below_percentile=0,
-            overlay=True,
-            mask_mode=True,
+        fig, axis = viz.visualize_image_attr(
+            attribution_t, (data_t / 2) + 0.5, method="heat_map", sign="absolute_value"
         )
-        fig, axis = viz.visualize_image_attr(attribution_t, (data_t / 2) + 0.5, method="heat_map",sign="absolute_value")
         attr_img_64 = convert_figure_base64(fig)
         img_64 = convert_img_base64(data_t, True)
 
