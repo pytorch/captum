@@ -1,7 +1,4 @@
----
-id: integrated_gradients
-title: Integrated Gradients
----
+### Integrated Gradients
 
 This section of the documentation shows how to apply integrated gradients on
 models with different types of parameters and inputs using Captum.
@@ -9,9 +6,11 @@ models with different types of parameters and inputs using Captum.
 ## Description
 
 [Integrated gradients](https://arxiv.org/pdf/1703.01365.pdf) is a simple, yet powerful axiomatic attribution method that requires almost no modification of the original network. It can be used for augmenting accuracy metrics, model debugging and feature or rule extraction.
+
 Captum provides a generic implementation of integrated gradients that can be used with any PyTorch model.
 In this section of the tutorial we will describe how to apply integrated gradients for output predictions.
 Here is an example code snippet that reproduces the results from the [original paper](https://arxiv.org/pdf/1703.01365.pdf) (page 10).
+
 First, let's create a sample ToyModel.
 
 ```
@@ -198,7 +197,7 @@ approximation_error (aka delta): 0.005693793296813965
 ## More details on how to apply integrated gradients on larger DNN networks can be found here
 
 * [A simple classification model and CIFAR Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/CIFAR_TorchVision_Interpret.ipynb)
-* [Torchvision's ResNet18 Model using handpicked images] ()
+* [Torchvision's ResNet18 Model using handpicked images] (TODO add link here)
 * [Sentiment classification model using TorchText and IMDB Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/IMDB_TorchText_Interpret.ipynb)
 * [Visual Question Answering Model] (https://github.com/pytorch/captum/blob/master/tutorials/Multimodal_VQA_Interpret.ipynb)
 * [A simple DNN with 2 hidden layers and Titanic Dataset] (https://github.com/pytorch/captum/blob/master/notebooks/Titanic_Basic_Interpret.ipynb)
