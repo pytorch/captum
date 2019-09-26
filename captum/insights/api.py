@@ -81,9 +81,7 @@ class AttributionVisualizer(object):
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
-            pred_scores.append(
-                PredictionScore(score, self.classes[indices[i].item()])
-            )
+            pred_scores.append(PredictionScore(score, self.classes[indices[i].item()]))
         return pred_scores
 
     def _transform(
