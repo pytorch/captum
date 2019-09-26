@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import threading
 from typing import Optional
@@ -28,7 +29,8 @@ def namedtuple_to_dict(obj):
 @app.route("/fetch", methods=["POST"])
 def fetch():
     print(request.json)
-    return jsonify(namedtuple_to_dict(visualizer.visualize()))
+    visualizer_output = visualizer.visualize()
+    return jsonify(namedtuple_to_dict(visualizer_output))
 
 
 @app.route("/")
@@ -45,13 +47,15 @@ def get_free_tcp_port():
     return port
 
 
-def start_server(_viz, port: Optional[int] = None, debug=True):
+def start_server(_viz, port: Optional[int] = None):
+    debug = bool(os.environ.get("CAPTUM_INSIGHTS_DEBUG"))
     global visualizer
     visualizer = _viz
-    if port is None:
-        port = get_free_tcp_port()
 
-    print("starting server on port:", port)
+    if port is None and not debug:
+        port = get_free_tcp_port()
+    elif debug:
+        port = 5000
 
     if not debug:
         log = logging.getLogger("werkzeug")
@@ -59,7 +63,9 @@ def start_server(_viz, port: Optional[int] = None, debug=True):
         app.logger.disabled = True
         threading.Thread(target=app.run, kwargs={"port": port}).start()
     else:
-        app.run(use_reloader=True, port=5000, debug=True, threaded=True)
+        app.run(use_reloader=True, port=port, debug=True, threaded=True)
+
+    print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
     return port
 
 

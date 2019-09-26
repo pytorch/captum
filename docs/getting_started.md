@@ -3,10 +3,7 @@ id: getting_started
 title: Getting Started
 ---
 
-This section shows you how to get your feet wet with Captum.
-
-Before jumping the gun, we recommend you start with the high-level
-[Overview](overview) to learn about the basic concepts in Captum.
+This section shows you how to get up and running with Captum.
 
 
 ## Installing Captum
@@ -36,15 +33,12 @@ For more detailed installation instructions, please see the
 [Project Readme](https://github.com/pytorch/captum/blob/master/README.md)
 on GitHub.
 
-## Basic Components
-
-TODO: Add content here
-
 
 ## Tutorials
 
-Our Jupyter notebook tutorials help you get off the ground with Captum.
-View and download them [here](../tutorials).
+We have several tutorials to help get you off the ground with Captum.  The tutorials are Jupyter notebooks and cover the basics along with demonstrating usage of Captum with models of different modalities.
+
+View the tutorials page [here](../tutorials).
 
 
 ## API Reference

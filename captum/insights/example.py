@@ -1,9 +1,12 @@
+import os
+
+from captum.insights.api import AttributionVisualizer, Data
+from captum.insights.features import ImageFeature
+
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-from api import AttributionVisualizer
-from features import ImageFeature
 
 
 def get_classes():
@@ -48,23 +51,44 @@ def get_pretrained_model():
             return x
 
     net = Net()
-    net.load_state_dict(torch.load("../../tutorials/models/cifar_torchvision.pt"))
+    pt_path = os.path.abspath(
+        os.path.dirname(__file__) + "/models/cifar_torchvision.pt"
+    )
+    net.load_state_dict(torch.load(pt_path))
     return net
 
 
-if __name__ == "__main__":
-    transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-    )
-    dataset = torchvision.datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform
-    )
+def baseline_func(input):
+    return input * 0
 
+
+def formatted_data_iter():
+    dataset = torchvision.datasets.CIFAR10(
+        root="data/test", train=False, download=True, transform=transforms.ToTensor()
+    )
+    dataloader = iter(
+        torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=False, num_workers=2)
+    )
+    while True:
+        images, labels = next(dataloader)
+        yield Data(inputs=images, labels=labels)
+
+
+if __name__ == "__main__":
+    normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    model = get_pretrained_model()
     visualizer = AttributionVisualizer(
-        models=[get_pretrained_model()],  # some nn.Module
-        classes=get_classes(),  # a list of classes, indices correspond to name
-        features=[ImageFeature("Photo")],  # output visualization type
-        dataset=dataset,  # should also support regular iter
+        models=[model],
+        score_func=lambda o: torch.nn.functional.softmax(o, 1),
+        classes=get_classes(),
+        features=[
+            ImageFeature(
+                "Photo",
+                baseline_transforms=[baseline_func],
+                input_transforms=[normalize],
+            )
+        ],
+        dataset=formatted_data_iter(),
     )
 
     visualizer.render()
