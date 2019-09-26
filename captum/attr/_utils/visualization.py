@@ -255,7 +255,7 @@ def visualize_image_attr(
                         _prepare_image(np.expand_dims(norm_attr, 2) * 255),
                     ],
                     axis=2,
-                ),
+                )
             )
         else:
             raise AssertionError("Visualize Method type is not valid.")
