@@ -68,7 +68,9 @@ def _sort_key_list(keys, device_ids=None):
     return out_list
 
 
-def _batched_generator(inputs, additional_forward_args=None, target_ind=None, internal_batch_size=None):
+def _batched_generator(
+    inputs, additional_forward_args=None, target_ind=None, internal_batch_size=None
+):
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
@@ -90,11 +92,20 @@ def _batched_generator(inputs, additional_forward_args=None, target_ind=None, in
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
-            ), target_ind[current_total:current_total + internal_batch_size] if isinstance(target_ind, list) else target_ind
+            ), target_ind[
+                current_total : current_total + internal_batch_size
+            ] if isinstance(
+                target_ind, list
+            ) else target_ind
 
 
 def _batched_operator(
-    operator, inputs, additional_forward_args=None, target_ind=None, internal_batch_size=None, **kwargs
+    operator,
+    inputs,
+    additional_forward_args=None,
+    target_ind=None,
+    internal_batch_size=None,
+    **kwargs
 ):
     """
     Batches the operation of the given operator, applying the given batch size
@@ -102,7 +113,12 @@ def _batched_operator(
     of the results of each batch.
     """
     all_outputs = [
-        operator(inputs=input, additional_forward_args=additional, target_ind=target, **kwargs)
+        operator(
+            inputs=input,
+            additional_forward_args=additional,
+            target_ind=target,
+            **kwargs
+        )
         for input, additional, target in _batched_generator(
             inputs, additional_forward_args, target_ind, internal_batch_size
         )

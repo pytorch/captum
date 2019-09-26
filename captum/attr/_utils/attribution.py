@@ -131,7 +131,7 @@ class LayerAttribution(InternalAttribution):
                    If forward_func is given as the DataParallel model itself,
                    then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
 
 class NeuronAttribution(InternalAttribution):

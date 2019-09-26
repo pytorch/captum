@@ -20,7 +20,7 @@ def assertTensorAlmostEqual(test, tensor, expected):
     if not isinstance(expected, torch.Tensor):
         expected = torch.tensor(expected)
     test.assertAlmostEqual(
-        torch.sum(torch.abs(tensor - expected)), 0.0, delta=0.0001
+        torch.sum(torch.abs(tensor - expected)).item(), 0.0, delta=0.0001
     )
 
 

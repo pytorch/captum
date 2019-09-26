@@ -276,7 +276,6 @@ class Test(BaseGPUTest):
         algorithm,
         model,
         target_layer=None,
-        contains_delta=False,
         alt_device_ids=False,
         test_batches=False,
         **kwargs
@@ -291,13 +290,14 @@ class Test(BaseGPUTest):
             attr_orig = algorithm(model, target_layer)
             if alt_device_ids:
                 attr_dp = algorithm(
-                    dp_model.forward, target_layer, self._alt_device_list()
+                    dp_model.forward, target_layer, device_ids=self._alt_device_list()
                 )
             else:
                 attr_dp = algorithm(dp_model, target_layer)
         else:
             attr_orig = algorithm(model)
             attr_dp = algorithm(dp_model)
+        contains_delta = attr_orig._has_convergence_delta()
         batch_sizes = [None]
         if test_batches:
             batch_sizes = [None, 1, 8]

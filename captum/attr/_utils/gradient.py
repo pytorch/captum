@@ -83,7 +83,10 @@ def compute_gradients(
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert len(output.shape) < 2 or (len(output.shape) == 2 and len(output[0]) == 1), "Target not provided when necessary, cannot take gradient with respect to multiple outputs."
+        assert len(output.shape) < 2 or (
+            len(output.shape) == 2 and len(output[0]) == 1
+        ), "Target not provided when necessary, cannot take gradient with respect "
+        "to multiple outputs."
         # torch.unbind(forward_out) is a list of scalar tensor tuples and
         # contains batch_size * #steps elements
         grads = torch.autograd.grad(torch.unbind(output), inputs)
@@ -261,7 +264,9 @@ def compute_layer_gradients_and_eval(
 
         hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert len(output.shape) < 2 or (len(output.shape) == 2 and len(output[0]) == 1), "Target not provided when necessary, cannot"
+        assert len(output.shape) < 2 or (
+            len(output.shape) == 2 and len(output[0]) == 1
+        ), "Target not provided when necessary, cannot"
         "take gradient with respect to multiple outputs."
         # Remove unnecessary forward hook.
         hook.remove()
