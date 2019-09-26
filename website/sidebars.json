@@ -1,6 +1,6 @@
 {
   "docs": {
     "About": ["introduction"],
-    "General": ["getting_started"]
+    "General": ["getting_started", "captum_insights", "algorithms"]
   }
 }
