@@ -163,7 +163,7 @@ class Test(BaseTest):
 
         for output in outputs:
             contribs = torch.stack(
-                [feature.feature_outputs.contribution for feature in output]
+                [feature.contribution for feature in output.feature_outputs]
             )
             total_contrib = torch.sum(torch.abs(contribs))
             self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)
@@ -208,7 +208,7 @@ class Test(BaseTest):
 
         for output in outputs:
             contribs = torch.stack(
-                [feature.feature_outputs.contribution for feature in output]
+                [feature.contribution for feature in output.feature_outputs]
             )
             total_contrib = torch.sum(torch.abs(contribs))
             self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)

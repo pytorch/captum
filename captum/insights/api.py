@@ -122,7 +122,7 @@ class AttributionVisualizer(object):
         return net_contrib
 
     # TODO: add type anno for params_to_attribute
-    def visualize(self, **params_to_attribute) -> List[List[VisualizationOutput]]:
+    def visualize(self, **params_to_attribute) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
 
@@ -173,7 +173,12 @@ class AttributionVisualizer(object):
 
             baselines = [tuple(b) for b in baselines]
 
-            attrs_per_feature = self._calculate_attribution(
+            # attributions are given per input*
+            # inputs given to the model are described via `self.features`
+            #
+            # *an input contains multiple features that represent it
+            #   e.g. all the pixels that describe an image is an input
+            attrs_per_inputs = self._calculate_attribution(
                 net,
                 baselines,
                 tuple(transformed_inputs),
@@ -182,24 +187,22 @@ class AttributionVisualizer(object):
                 **params_to_attribute,
             )
 
-            net_contrib = self._calculate_net_contrib(attrs_per_feature)
+            net_contrib = self._calculate_net_contrib(attrs_per_inputs)
 
-            features = [
+            # the features per input given
+            features_per_input = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_feature, inputs, net_contrib
+                    self.features, attrs_per_inputs, inputs, net_contrib
                 )
             ]
 
-            features = [
-                VisualizationOutput(
-                    feature_outputs=feature,
-                    actual=actual_label,
-                    predicted=predicted_labels,
-                )
-                for feature in features
-            ]
+            output = VisualizationOutput(
+                feature_outputs=features_per_input,
+                actual=actual_label,
+                predicted=predicted_labels,
+            )
 
-            vis_outputs.append(features)
+            vis_outputs.append(output)
 
         return vis_outputs
