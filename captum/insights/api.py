@@ -20,7 +20,10 @@ Contribution = namedtuple("Contribution", "name percent")
 
 class Data:
     def __init__(
-        self, inputs: Union[Tensor, Tuple[Tensor, ...]], labels, additional_args=None
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        labels: Optional[Tensor],
+        additional_args=None,
     ):
         self.inputs = inputs
         self.labels = labels
@@ -54,11 +57,11 @@ class AttributionVisualizer(object):
         baselines: List[Tuple[Tensor, ...]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Tensor,
+        label: Optional[Tensor],
     ) -> Tensor:
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
-        label = None if len(label.shape) == 0 else label
+        label = None if label is None or len(label.shape) == 0 else label
         attr_ig, _ = ig.attribute(
             data,
             baselines=baselines[0],
@@ -77,7 +80,6 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[PredictionScore]:
-        scores, indices = scores.squeeze(0), indices.squeeze(0)
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
@@ -150,10 +152,13 @@ class AttributionVisualizer(object):
             label = batch_data.labels[i]
 
             if len(outputs) == 1:
-                scores = outputs.detach()
+                scores = outputs
                 predicted = scores.round().to(torch.int)
             else:
-                scores, predicted = outputs.cpu().detatch().topk(min(4, len(outputs)))
+                scores, predicted = outputs.topk(min(4, len(outputs)))
+
+            scores = scores.cpu().squeeze(0)
+            predicted = predicted.cpu().squeeze_(0)
             baselines = [tuple(b) for b in baselines]
 
             attribution = self._calculate_attribution(
