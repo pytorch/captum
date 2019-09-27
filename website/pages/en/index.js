@@ -111,35 +111,60 @@ class Index extends React.Component {
     // getStartedSection
     const pre = '```';
     // Example for model fitting
-    const modelFitCodeExample = `${pre}python
+    const createModelExample = `${pre}python
+import numpy as np
+
 import torch
-from captum.models import SingleTaskGP
-from captum.fit import fit_gpytorch_model
-from gpytorch.mlls import ExactMarginalLogLikelihood
+import torch.nn as nn
 
-train_X = torch.rand(10, 2)
-Y = 1 - torch.norm(train_X - 0.5, dim=-1) + 0.1 * torch.rand(10)
-train_Y = (Y - Y.mean()) / Y.std()
+from captum.attr import (
+    GradientShap,
+    IntegratedGradients,
+    LayerConductance,
+    NeuronConductance,
+    NoiseTunnel,
+)
 
-gp = SingleTaskGP(train_X, train_Y)
-mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
-fit_gpytorch_model(mll)
+class ToyModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.lin1 = nn.Linear(3, 4)
+        self.lin1.weight = nn.Parameter(torch.ones(4, 3))
+        self.lin1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(4, 1)
+        self.lin2.weight = nn.Parameter(torch.ones(1, 4))
+        self.lin2.bias = nn.Parameter(torch.tensor([-3.0]))
+
+    def forward(self, input):
+        lin1 = self.lin1(input)
+        relu = self.relu(lin1)
+        lin2 = self.lin2(relu)
+        return lin2
+
+
+model = ToyModel()
+model.eval()
+torch.manual_seed(123)
+np.random.seed(124)
     `;
     // Example for defining an acquisition function
-    const constrAcqFuncExample = `${pre}python
-from captum.acquisition import UpperConfidenceBound
-
-UCB = UpperConfidenceBound(gp, beta=0.1)
+    const defineInputBaseline = `${pre}python
+input = torch.rand(2, 3)
+baseline = torch.zeros(2, 3)
     `;
     // Example for optimizing candidates
-    const optAcqFuncExample = `${pre}python
-from captum.optim import joint_optimize
+    const instantiateApply = `${pre}python
+ig = IntegratedGradients(model)
+attributions, delta = ig.attribute(input, baseline)
+print('IG Attributions: ', attributions, ' Approximation error: ', delta)
+    `;
 
-bounds = torch.stack([torch.zeros(2), torch.ones(2)])
-candidate = joint_optimize(
-    UCB, bounds=bounds, q=1, num_restarts=5, raw_samples=20,
-)
-candidate  # tensor([0.4887, 0.5063])
+    const igOutput = `${pre}python
+IG Attributions:  tensor([[0.8883, 1.5497, 0.7550],
+                          [2.0657, 0.2219, 2.5996]])
+Approximation Error:  9.5367431640625e-07
     `;
     //
     const QuickStart = () => (
@@ -158,16 +183,20 @@ candidate  # tensor([0.4887, 0.5063])
               <MarkdownBlock>{bash`pip install captum`}</MarkdownBlock>
             </li>
             <li>
-              <h4>Fit a model:</h4>
-              <MarkdownBlock>{modelFitCodeExample}</MarkdownBlock>
+              <h4>Create and prepare model:</h4>
+              <MarkdownBlock>{createModelExample}</MarkdownBlock>
             </li>
             <li>
-              <h4>Construct an acquisition function:</h4>
-              <MarkdownBlock>{constrAcqFuncExample}</MarkdownBlock>
+              <h4>Define input and baseline tensors:</h4>
+              <MarkdownBlock>{defineInputBaseline}</MarkdownBlock>
             </li>
             <li>
-              <h4>Optimize the acquisition function:</h4>
-              <MarkdownBlock>{optAcqFuncExample}</MarkdownBlock>
+              <h4>Select algorithm to instantiate and apply (Integrated Gradients in this example):</h4>
+              <MarkdownBlock>{instantiateApply}</MarkdownBlock>
+            </li>
+            <li>
+              <h4>View Output:</h4>
+              <MarkdownBlock>{igOutput}</MarkdownBlock>
             </li>
           </ol>
         </Container>
@@ -181,10 +210,10 @@ candidate  # tensor([0.4887, 0.5063])
         {[
           {
             content:
-              'Simple, yet powerful attribution methods like Integrated Gradients for improved model understanding.',
+              'Interpret models across different modalities including vision, text, dense and sparse features.',
             image: `${baseUrl}img/puzzle_pieces.svg`,
             imageAlign: 'top',
-            title: 'State-of-the-art Algorithms',
+            title: 'Multi-Modal Support',
           },
           {
             content:
