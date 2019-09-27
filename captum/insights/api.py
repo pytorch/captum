@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Union, Dict, Any
 
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
@@ -54,7 +54,7 @@ class AttributionVisualizer(object):
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Tensor,
-        **params_to_attribute,  # TODO: add type anno
+        **params_to_attribute: Dict[str, Any],
     ) -> Tensor:
         net.eval()
         ig = IntegratedGradients(net)
@@ -109,10 +109,10 @@ class AttributionVisualizer(object):
 
         return transformed_inputs
 
-    def _calculate_net_contrib(self, attribution_per_input):
+    def _calculate_net_contrib(self, attrs_per_input_feature: List[Tensor]):
         # get the net contribution per feature (input)
         net_contrib = torch.stack(
-            [attrib.flatten().sum() for attrib in attribution_per_input]
+            [attrib.flatten().sum() for attrib in attrs_per_input_feature]
         )
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
@@ -122,8 +122,9 @@ class AttributionVisualizer(object):
 
         return net_contrib
 
-    # TODO: add type anno for params_to_attribute
-    def visualize(self, **params_to_attribute) -> List[VisualizationOutput]:
+    def visualize(
+        self, **params_to_attribute: Dict[str, Any]
+    ) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
 
