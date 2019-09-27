@@ -179,11 +179,16 @@ class DeepLift(GradientBasedAttribution):
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
+    def _tensor_grad_hook(self, grad):
+        return GRADIENTS.pop()
+
     # we need forward hook to access and detach the inputs and outputs of a neuron
     def _forward_hook(self, module, inputs, outputs):
         input_attr_name = "input"
         output_attr_name = "output"
         self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
+        if type(module) in FAILURE_CASES:
+            inputs[0].register_hook(self._tensor_grad_hook)
 
     def _forward_hook_ref(self, module, inputs, outputs):
         input_attr_name = "input_ref"
@@ -516,9 +521,20 @@ def maxpool(
         list(module.input[0].shape),
     )
 
-    grad_input[0] = torch.where(
-        delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
-    )
+    if type(module) == nn.MaxPool1d:
+        # the gradient isn't changed here; instead, the tensor hook
+        # will be responsible for changing the gradient
+        GRADIENTS.append(
+            torch.where(
+                delta_in[0] < eps,
+                torch.zeros_like(module.input[0]),
+                unpool_grad_out_delta / delta_in[0],
+            )
+        )
+    else:
+        grad_input[0] = torch.where(
+            delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
+        )
     return grad_input
 
 
@@ -534,3 +550,18 @@ SUPPORTED_NON_LINEAR = {
     nn.MaxPool3d: maxpool3d,
     nn.Softmax: softmax,
 }
+
+
+# In some cases, grad_input and grad_output will contain gradients only for a subset of
+# the inputs and outputs. See the warning at:
+# https://pytorch.org/docs/stable/nn.html#torch.nn.Module.register_backward_hook
+# Modules with this behaviour are documented in FAILURE_CASES. For modules with this
+# behaviour, the calculated DeepLift gradient should be appended GRADIENTS - a tensor
+# hook (DeepLift._tensor_grad_hook) will then replace the module's input tensor's grad
+# with the gradient in GRADIENTS.
+# If many more failure cases are recorded, an alternative solution should be
+# investigated, where they can be caught without being predefined.
+
+FAILURE_CASES = {nn.MaxPool1d}
+
+GRADIENTS = []
