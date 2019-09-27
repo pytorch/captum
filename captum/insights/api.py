@@ -59,6 +59,7 @@ class AttributionVisualizer(object):
         net.eval()
         ig = IntegratedGradients(net)
         net.zero_grad()
+        # TODO support multiple baselines
         params_to_attribute["baselines"] = baselines[0]
         params_to_attribute["target"] = label
         params_to_attribute["additional_forward_args"] = additional_forward_args
@@ -178,7 +179,7 @@ class AttributionVisualizer(object):
             #
             # *an input contains multiple features that represent it
             #   e.g. all the pixels that describe an image is an input
-            attrs_per_inputs = self._calculate_attribution(
+            attrs_per_input_feature = self._calculate_attribution(
                 net,
                 baselines,
                 tuple(transformed_inputs),
@@ -187,13 +188,13 @@ class AttributionVisualizer(object):
                 **params_to_attribute,
             )
 
-            net_contrib = self._calculate_net_contrib(attrs_per_inputs)
+            net_contrib = self._calculate_net_contrib(attrs_per_input_feature)
 
             # the features per input given
             features_per_input = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_inputs, inputs, net_contrib
+                    self.features, attrs_per_input_feature, inputs, net_contrib
                 )
             ]
 
