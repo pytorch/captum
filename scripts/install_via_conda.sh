@@ -40,5 +40,5 @@ conda install -y numpy sphinx pytest flake8 ipywidgets ipython
 conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints
 
 # build insights and install captum
-# TODO: remove CI=0 when we want React warnings treated as errors
-CI=0 BUILD_INSIGHTS=1 python setup.py develop
+# TODO: remove CI=false when we want React warnings treated as errors
+CI=false BUILD_INSIGHTS=1 python setup.py develop
