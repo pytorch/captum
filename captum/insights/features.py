@@ -45,13 +45,13 @@ class ImageFeature(BaseFeature):
         name: str,
         input_transforms: Union[Callable, List[Callable]],
         baseline_transforms: Union[Callable, List[Callable]],
-        visualization_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        visualization_transform: Optional[Callable] = None,
     ):
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
             input_transforms=input_transforms,
-            visualization_transform=None,
+            visualization_transform=visualization_transform,
         )
 
     def visualization_type(self) -> str:
@@ -80,6 +80,44 @@ class ImageFeature(BaseFeature):
             name=self.name,
             base=img_64,
             modified=ig_64,
+            type=self.visualization_type(),
+            contribution=100,  # TODO implement contribution
+        )
+
+
+class TextFeature(BaseFeature):
+    def __init__(
+        self,
+        name: str,
+        input_transforms: Union[Callable, List[Callable]],
+        baseline_transforms: Union[Callable, List[Callable]],
+        visualization_transform: Optional[Callable],
+    ):
+        super().__init__(
+            name,
+            baseline_transforms=baseline_transforms,
+            input_transforms=input_transforms,
+            visualization_transform=visualization_transform,
+        )
+
+    def visualization_type(self) -> str:
+        return "text"
+
+    def visualize(self, attribution, data) -> FeatureOutput:
+        text = self.visualization_transform(data)
+
+        attribution.squeeze_(0)
+        data.squeeze_(0)
+        attribution = attribution.sum(dim=1)
+
+        # L-Infinity norm
+        normalized_attribution = attribution / abs(attribution).max()
+        modified = [x * 100 for x in normalized_attribution.tolist()]
+
+        return FeatureOutput(
+            name=self.name,
+            base=text,
+            modified=modified,
             type=self.visualization_type(),
             contribution=100,  # TODO implement contribution
         )

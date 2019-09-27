@@ -179,7 +179,7 @@ function TextFeature(props) {
           ])}
         >
           {w}
-          <Tooltip label={props.data.modified[i]} />
+          <Tooltip label={props.data.modified[i].toFixed(3)} />
         </span>{" "}
       </>
     );

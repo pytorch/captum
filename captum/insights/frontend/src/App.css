@@ -214,6 +214,7 @@ button {
 }
 
 .tooltip__label {
+  z-index: 999999;
   max-width: 200px;
   background: rgba(0, 0, 0, 0.75);
   position: absolute;
@@ -231,6 +232,7 @@ button {
 }
 
 .tooltip__label::after {
+  z-index: 999999;
   content: " ";
   position: absolute;
   top: 100%;
