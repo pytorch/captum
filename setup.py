@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# Welcome to the PyTorch Captum setup.py.
+#
+# Environment variables for feature toggles:
+#
+#   BUILD_INSIGHTS
+#     enables Captum Insights build via yarn
+#
+
 import os
 import re
 import subprocess
@@ -25,11 +33,14 @@ if sys.version_info < (REQUIRED_MAJOR, REQUIRED_MINOR):
     sys.exit(error)
 
 
-RUN_BUILD_INSIGHTS = True
+# Allow for environment variable checks
+def check_env_flag(name, default=""):
+    return os.getenv(name, default).upper() in ["ON", "1", "YES", "TRUE", "Y"]
+
+
+BUILD_INSIGHTS = check_env_flag("BUILD_INSIGHTS")
 VERBOSE_SCRIPT = True
-for i, arg in enumerate(sys.argv):
-    if arg == "clean":
-        RUN_BUILD_INSIGHTS = False
+for arg in sys.argv:
     if arg == "-q" or arg == "--quiet":
         VERBOSE_SCRIPT = False
 
@@ -41,27 +52,19 @@ def report(*args):
         pass
 
 
-TEST_REQUIRES = [
-    "pytest",
-    "pytest-cov",
-    "ipywidgets",
-    "ipython",
-    "jupyter",
-    "matplotlib",
-]
-
-DEV_REQUIRES = TEST_REQUIRES + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints"]
-
-TUTORIALS_REQUIRES = [
-    "ipywidgets",
-    "ipython",
-    "jupyter",
-    "matplotlib",
-    "pytext-nlp",
-    "torchvision",
-]
+INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
 
 INSIGHTS_FILE_SUBDIRS = ["insights/frontend/build", "insights/models"]
+
+TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
+
+TEST_REQUIRES = ["pytest", "pytest-cov"]
+
+DEV_REQUIRES = (
+    INSIGHTS_REQUIRES
+    + TEST_REQUIRES
+    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints"]
+)
 
 # get version string from module
 with open(os.path.join(os.path.dirname(__file__), "captum/__init__.py"), "r") as f:
@@ -73,18 +76,12 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
-# build Captum Insights via yarn if content doesn't exist
+# optionally build Captum Insights via yarn
 def build_insights():
     report("-- Building Captum Insights")
-    is_built = all(
-        os.path.exists(os.path.join("captum", d)) for d in INSIGHTS_FILE_SUBDIRS
-    )
-    if is_built:
-        report("Skipping since " + str(INSIGHTS_FILE_SUBDIRS) + " all exist")
-    else:
-        command = "./scripts/build_insights.sh"
-        report("Running: " + command)
-        subprocess.check_call(command)
+    command = "./scripts/build_insights.sh"
+    report("Running: " + command)
+    subprocess.check_call(command)
 
 
 # explore paths under root and subdirs to gather package files
@@ -100,7 +97,7 @@ def get_package_files(root, subdirs):
 
 if __name__ == "__main__":
 
-    if RUN_BUILD_INSIGHTS:
+    if BUILD_INSIGHTS:
         build_insights()
 
     package_files = get_package_files("captum", INSIGHTS_FILE_SUBDIRS)
@@ -136,10 +133,11 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
-        install_requires=["numpy", "torch>=1.2"],
+        install_requires=["matplotlib", "numpy", "torch>=1.2"],
         packages=find_packages(),
         extras_require={
             "dev": DEV_REQUIRES,
+            "insights": INSIGHTS_REQUIRES,
             "test": TEST_REQUIRES,
             "tutorials": TUTORIALS_REQUIRES,
         },

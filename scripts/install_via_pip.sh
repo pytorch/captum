@@ -39,8 +39,8 @@ export TERM=xterm
 # upgrade pip
 sudo pip install --upgrade pip
 
-# install captum + dev deps
-sudo pip install -e .[dev]
+# build insights and install captum with dev deps
+BUILD_INSIGHTS=1 sudo pip install -e .[dev]
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then

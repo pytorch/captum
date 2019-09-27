@@ -39,5 +39,5 @@ fi
 conda install -y numpy sphinx pytest flake8 ipywidgets ipython
 conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints
 
-# install captum
-conda develop .
+# build insights and install captum
+BUILD_INSIGHTS=1 conda develop .
