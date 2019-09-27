@@ -185,9 +185,10 @@ class Test(BaseTest):
             ],
             dataset=to_iter(data_loader),
             score_func=None,
+            n_steps=2,
         )
 
-        outputs = visualizer.visualize(n_steps=2)
+        outputs = visualizer.visualize()
 
         for output in outputs:
             contribs = torch.stack(
@@ -230,9 +231,10 @@ class Test(BaseTest):
             ],
             dataset=to_iter(data_loader),
             score_func=None,
+            n_steps=2,
         )
 
-        outputs = visualizer.visualize(n_steps=2)
+        outputs = visualizer.visualize()
 
         for output in outputs:
             contribs = torch.stack(

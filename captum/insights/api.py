@@ -34,6 +34,7 @@ class AttributionVisualizer(object):
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
+        n_steps: int = 50,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -46,6 +47,7 @@ class AttributionVisualizer(object):
         self.features = features
         self.dataset = dataset
         self.score_func = score_func
+        self.n_steps = n_steps
 
     def _calculate_attribution(
         self,
@@ -54,16 +56,19 @@ class AttributionVisualizer(object):
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Tensor,
-        **params_to_attribute: Dict[str, Any],
     ) -> Tensor:
         net.eval()
         ig = IntegratedGradients(net)
-        net.zero_grad()
         # TODO support multiple baselines
-        params_to_attribute["baselines"] = baselines[0]
-        params_to_attribute["target"] = label
-        params_to_attribute["additional_forward_args"] = additional_forward_args
-        attr_ig, _ = ig.attribute(data, **params_to_attribute)
+        label = None if label is None or len(label.shape) == 0 else label
+        attr_ig, _ = ig.attribute(
+            data,
+            baselines=baselines[0],
+            additional_forward_args=additional_forward_args,
+            target=label,
+            n_steps=self.n_steps,
+        )
+
         return attr_ig
 
     def render(self):
@@ -122,9 +127,7 @@ class AttributionVisualizer(object):
 
         return net_contrib
 
-    def visualize(
-        self, **params_to_attribute: Dict[str, Any]
-    ) -> List[VisualizationOutput]:
+    def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
 
@@ -186,7 +189,6 @@ class AttributionVisualizer(object):
                 tuple(transformed_inputs),
                 additional_forward_args,
                 label,
-                **params_to_attribute,
             )
 
             net_contrib = self._calculate_net_contrib(attrs_per_input_feature)
