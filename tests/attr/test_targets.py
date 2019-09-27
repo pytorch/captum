@@ -21,7 +21,7 @@ from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
-    def test_simple_target_error(self):
+    def test_simple_target_missing_error(self):
         net = TestModel_MultiLayer()
         inp = torch.zeros((1, 3))
         with self.assertRaises(AssertionError):
@@ -173,7 +173,7 @@ class Test(BaseTest):
             n_samples=500,
             stdevs=0.0,
             targets=[0, 1, 1, 0],
-            delta=0.1,
+            delta=0.02,
         )
 
     def test_simple_target_gradient_shap_tensor(self):
@@ -187,7 +187,7 @@ class Test(BaseTest):
             n_samples=500,
             stdevs=0.0,
             targets=torch.tensor([0, 1, 1, 0]),
-            delta=0.1,
+            delta=0.02,
         )
 
     def test_simple_target_gradient_shap_single_tensor(self):
@@ -202,7 +202,7 @@ class Test(BaseTest):
             stdevs=0.0,
             targets=torch.tensor([0]),
             splice_targets=False,
-            delta=0.1,
+            delta=0.02,
         )
 
     def test_multi_target_gradient_shap(self):
@@ -217,7 +217,7 @@ class Test(BaseTest):
             stdevs=0.0,
             additional_forward_args=(None, True),
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
-            delta=0.1,
+            delta=0.02,
         )
 
     def test_simple_target_nt(self):
