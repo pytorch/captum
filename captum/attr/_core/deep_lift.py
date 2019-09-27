@@ -14,7 +14,7 @@ from .._utils.common import (
     _run_forward,
     validate_input,
 )
-from .._utils.attribution import GradientBasedAttribution
+from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
@@ -29,9 +29,7 @@ def _check_valid_module(inputs, outputs):
         return False
 
 
-# TODO: GradientBasedAttribution needs to be replaced with Attribution or
-# OutputAttribution class
-class DeepLift(GradientBasedAttribution):
+class DeepLift(GradientAttribution):
     def __init__(self, model):
         r"""
         Args:

@@ -64,7 +64,7 @@ class Attribution:
             return abs(attr_sum - (end_point - start_point)).sum().item()
 
 
-class GradientBasedAttribution(Attribution):
+class GradientAttribution(Attribution):
     def __init__(self, forward_func):
         r"""
         Args
@@ -85,7 +85,7 @@ class GradientBasedAttribution(Attribution):
         return zeros(inputs)
 
 
-class InternalAttribution(Attribution):
+class InternalAttribution(GradientAttribution):
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
@@ -104,8 +104,7 @@ class InternalAttribution(Attribution):
                         If forward_func is given as the DataParallel model itself,
                         then it is not neccesary to provide this argument.
         """
-        super().__init__()
-        self.forward_func = forward_func
+        super().__init__(forward_func)
         self.layer = layer
         self.device_ids = device_ids
 
