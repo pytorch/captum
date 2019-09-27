@@ -551,6 +551,17 @@ SUPPORTED_NON_LINEAR = {
     nn.Softmax: softmax,
 }
 
+
+# In some cases, grad_input and grad_output will contain gradients only for a subset of
+# the inputs and outputs. See the warning at:
+# https://pytorch.org/docs/stable/nn.html#torch.nn.Module.register_backward_hook
+# Modules with this behaviour are documented in FAILURE_CASES. For modules with this
+# behaviour, the calculated DeepLift gradient should be appended GRADIENTS - a tensor
+# hook (DeepLift._tensor_grad_hook) will then replace the module's input tensor's grad
+# with the gradient in GRADIENTS.
+# If many more failure cases are recorded, an alternative solution should be
+# investigated, where they can be caught without being predefined.
+
 FAILURE_CASES = {nn.MaxPool1d}
 
 GRADIENTS = []
