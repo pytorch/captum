@@ -13,6 +13,7 @@ from .._utils.common import (
     _format_tensor_into_tuples,
     _run_forward,
     validate_input,
+    _expand_target,
 )
 from .._utils.attribution import GradientBasedAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
@@ -395,11 +396,12 @@ class DeepLiftShap(DeepLift):
                 for baseline in baselines
             ]
         )
+        expanded_target = _expand_target(target, base_bsz, expansion_type="repeat_interleave")
 
         attributions, delta = super().attribute(
             expanded_inputs,
             expanded_baselines,
-            target=target,
+            target=expanded_target,
             additional_forward_args=additional_forward_args,
         )
 
@@ -409,17 +411,7 @@ class DeepLiftShap(DeepLift):
 
         start_point, end_point = baselines, inputs
 
-        # computes convergence error
-        delta = self._compute_convergence_delta(
-            attributions,
-            start_point,
-            end_point,
-            additional_forward_args=additional_forward_args,
-            target=target,
-            is_multi_baseline=True,
-        )
-
-        return _format_attributions(is_inputs_tuple, attributions), delta
+        return _format_attributions(is_inputs_tuple, attributions), delta / base_bsz
 
 
 def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):

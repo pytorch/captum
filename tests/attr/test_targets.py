@@ -6,6 +6,9 @@ import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.input_x_gradient import InputXGradient
+from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
+from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.noise_tunnel import NoiseTunnel
 
 from captum.attr._core.internal_influence import InternalInfluence
 from captum.attr._core.layer_conductance import LayerConductance
@@ -13,7 +16,9 @@ from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivati
 
 from captum.attr._core.neuron_conductance import NeuronConductance
 
-from .helpers.basic_models import TestModel_MultiLayer
+from .helpers.basic_models import (
+    TestModel_MultiLayer,
+)
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -43,6 +48,29 @@ class Test(BaseTest):
             test_batches=True,
         )
 
+    def test_simple_target_ig_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            IntegratedGradients,
+            net,
+            inputs=inp,
+            targets=torch.tensor([0, 1, 1, 0]),
+            test_batches=True,
+        )
+
+    def test_simple_target_ig_single_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            IntegratedGradients,
+            net,
+            inputs=inp,
+            targets=torch.tensor([0]),
+            test_batches=True,
+            splice_targets=False,
+        )
+
     def test_multi_target_ig(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
@@ -60,6 +88,11 @@ class Test(BaseTest):
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(Saliency, net, inputs=inp, targets=[0, 1, 1, 0])
 
+    def test_simple_target_saliency_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(Saliency, net, inputs=inp, targets=torch.tensor([0, 1, 1, 0]))
+
     def test_multi_target_saliency(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
@@ -69,6 +102,129 @@ class Test(BaseTest):
             inputs=inp,
             additional_forward_args=(None, True),
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_deep_lift(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(DeepLift, net, inputs=inp, targets=[0, 1, 1, 0])
+
+    def test_multi_target_deep_lift(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            DeepLift,
+            net,
+            inputs=inp,
+            additional_forward_args=(None, True),
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_deep_lift_shap(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=[0, 1, 1, 0])
+
+    def test_simple_target_deep_lift_shap_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=torch.tensor([0, 1, 1, 0]))
+
+    def test_simple_target_deep_lift_shap_single_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=torch.tensor([0]), splice_targets=False)
+
+    def test_multi_target_deep_lift_shap(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            DeepLiftShap,
+            net,
+            inputs=inp,
+            additional_forward_args=(None, True),
+            baselines=0.5*inp,
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_gradient_shap(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=[0, 1, 1, 0], delta=0.1)
+
+    def test_simple_target_gradient_shap_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=torch.tensor([0, 1, 1, 0]), delta=0.1)
+
+    def test_simple_target_gradient_shap_single_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=torch.tensor([0]), splice_targets=False, delta=0.1)
+
+    def test_multi_target_gradient_shap(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            GradientShap,
+            net,
+            inputs=inp,
+            baselines=0.5*inp[0:1],
+            n_samples=500,
+            stdevs=0.0,
+            additional_forward_args=(None, True),
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            delta=0.1,
+        )
+
+    def test_simple_target_nt(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            NoiseTunnel,
+            IntegratedGradients(net),
+            inputs=inp,
+            targets=[0, 1, 1, 0],
+            stdevs=0.0,
+            test_batches=True,
+        )
+
+    def test_simple_target_nt_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            NoiseTunnel,
+            IntegratedGradients(net),
+            inputs=inp,
+            targets=torch.tensor([0, 1, 1, 0]),
+            stdevs=0.0,
+            test_batches=True,
+        )
+
+    def test_simple_target_nt_single_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            NoiseTunnel,
+            IntegratedGradients(net),
+            inputs=inp,
+            targets=torch.tensor([0]),
+            stdevs=0.0,
+            test_batches=True,
+            splice_targets=False,
+        )
+
+    def test_multi_target_nt(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            NoiseTunnel,
+            IntegratedGradients(net),
+            inputs=inp,
+            additional_forward_args=(None, True),
+            stdevs=0.0,
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            test_batches=True,
         )
 
     def test_simple_target_input_x_gradient(self):
@@ -126,6 +282,18 @@ class Test(BaseTest):
             test_batches=True,
         )
 
+    def test_simple_target_layer_cond_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            LayerConductance,
+            net,
+            inputs=inp,
+            target_layer=net.relu,
+            targets=torch.tensor([0, 1, 1, 0]),
+            test_batches=True,
+        )
+
     def test_multi_target_layer_cond(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
@@ -175,6 +343,19 @@ class Test(BaseTest):
             test_batches=True,
         )
 
+    def test_simple_target_neuron_conductance_tensor(self):
+        net = TestModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            NeuronConductance,
+            net,
+            inputs=inp,
+            target_layer=net.relu,
+            targets=torch.tensor([0, 1, 1, 0]),
+            neuron_index=3,
+            test_batches=True,
+        )
+
     def test_multi_target_neuron_conductance(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
@@ -197,6 +378,8 @@ class Test(BaseTest):
         targets,
         target_layer=None,
         test_batches=False,
+        splice_targets=True,
+        delta=0.0001,
         **kwargs
     ):
         if target_layer:
@@ -223,17 +406,17 @@ class Test(BaseTest):
                 attributions_orig = attributions_orig[0]
             for i in range(len(inputs)):
                 single_attr = attr.attribute(
-                    inputs=inputs[i : i + 1], target=targets[i], **kwargs
+                    inputs=inputs[i : i + 1], target=targets[i] if splice_targets else targets, **kwargs
                 )
                 single_attr_target_list = attr.attribute(
-                    inputs=inputs[i : i + 1], target=targets[i : i + 1], **kwargs
+                    inputs=inputs[i : i + 1], target=targets[i : i + 1]if splice_targets else targets, **kwargs
                 )
                 if attr._has_convergence_delta():
                     single_attr = single_attr[0]
                     single_attr_target_list = single_attr_target_list[0]
-                assertTensorAlmostEqual(self, attributions_orig[i : i + 1], single_attr)
+                assertTensorAlmostEqual(self, attributions_orig[i : i + 1], single_attr, delta=delta)
                 assertTensorAlmostEqual(
-                    self, attributions_orig[i : i + 1], single_attr_target_list
+                    self, attributions_orig[i : i + 1], single_attr_target_list, delta=delta
                 )
 
 
