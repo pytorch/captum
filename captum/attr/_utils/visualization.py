@@ -11,7 +11,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-class ImageVisualizeMethod(Enum):
+class ImageVisualizationMethod(Enum):
     heat_map = 1
     blended_heat_map = 2
     original_image = 3
@@ -42,6 +42,7 @@ def _normalize_scale(attr, scale_factor):
 
 
 def _cumulative_sum_threshold(values, percentile):
+    # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, "Percentile for thresholding must be "
     "between 0 and 100 inclusive."
     sorted_vals = np.sort(values.flatten())
@@ -54,28 +55,21 @@ def _normalize_image_attr(attr, sign, outlier_perc=2):
     attr_combined = np.sum(attr, axis=2)
     # Choose appropriate signed values and rescale, removing given outlier percentage.
     if VisualizeSign[sign] == VisualizeSign.all:
-        attr_combined = _normalize_scale(
-            attr_combined,
-            _cumulative_sum_threshold(np.abs(attr_combined), 100 - outlier_perc),
-        )
+        threshold = _cumulative_sum_threshold(np.abs(attr_combined), 100 - outlier_perc)
     elif VisualizeSign[sign] == VisualizeSign.positive:
         attr_combined = (attr_combined > 0) * attr_combined
-        attr_combined = _normalize_scale(
-            attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
-        )
+        threshold = _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
     elif VisualizeSign[sign] == VisualizeSign.negative:
         attr_combined = (attr_combined < 0) * attr_combined
-        attr_combined = _normalize_scale(
-            attr_combined, _cumulative_sum_threshold(attr_combined, outlier_perc)
+        threshold = -1 * _cumulative_sum_threshold(
+            np.abs(attr_combined), 100 - outlier_perc
         )
     elif VisualizeSign[sign] == VisualizeSign.absolute_value:
         attr_combined = np.abs(attr_combined)
-        attr_combined = _normalize_scale(
-            attr_combined, _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
-        )
+        attr_combined = _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
     else:
         raise AssertionError("Visualize Sign type is not valid.")
-    return attr_combined
+    return _normalize_scale(attr_combined, threshold)
 
 
 def visualize_image_attr(
@@ -102,15 +96,15 @@ def visualize_image_attr(
                         visualized. Shape must be in the form (H, W, C), with
                         channels as last dimension. Shape must also match that of
                         the original image if provided.
-            original_image (numpy.array):  Numpy array corresponding to original
-                        image. Shape must be in the form (H, W, C), with
+            original_image (numpy.array, optional):  Numpy array corresponding to
+                        original image. Shape must be in the form (H, W, C), with
                         channels as the last dimension. Image can be provided either
                         with float values in range 0-1 or int values between 0-255.
                         This is a necessary argument for any visualization method
                         which utilizes the original image.
                         Default: None
-            method (string): Chosen method for visualizing attribution. Supported
-                        options are:
+            method (string, optional): Chosen method for visualizing attribution.
+                        Supported options are:
                             1. `heat_map` - Display heat map of chosen attributions
                             2. `blended_heat_map` - Overlay heat map over greyscale
                                 version of original image. Parameter alpha_overlay
@@ -121,7 +115,7 @@ def visualize_image_attr(
                             5. `alpha_scaling` - Sets alpha channel of each pixel
                             to be equal to normalized attribution value.
                         Default: `heat_map`
-            sign (string): Chosen sign of attributions to visualize. Supported
+            sign (string, optional): Chosen sign of attributions to visualize. Supported
                             options are:
                             1. `positive` - Displays only positive pixel attributions.
                             2. `absolute_value` - Displays absolute value of
@@ -202,7 +196,7 @@ def visualize_image_attr(
 
     heat_map = None
     # Show original image
-    if ImageVisualizeMethod[method] == ImageVisualizeMethod.original_image:
+    if ImageVisualizationMethod[method] == ImageVisualizationMethod.original_image:
         plt_axis.imshow(original_image)
     else:
         # Choose appropriate signed attributions and normalize.
@@ -228,14 +222,17 @@ def visualize_image_attr(
         cmap = cmap if cmap is not None else default_cmap
 
         # Show appropriate image visualization.
-        if ImageVisualizeMethod[method] == ImageVisualizeMethod.heat_map:
+        if ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map:
             heat_map = plt_axis.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax)
-        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.blended_heat_map:
+        elif (
+            ImageVisualizationMethod[method]
+            == ImageVisualizationMethod.blended_heat_map
+        ):
             plt_axis.imshow(np.mean(original_image, axis=2), cmap="gray")
             heat_map = plt_axis.imshow(
                 norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
             )
-        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.masked_image:
+        elif ImageVisualizationMethod[method] == ImageVisualizationMethod.masked_image:
             assert (
                 VisualizeSign[sign] != VisualizeSign.all
             ), "Cannot display masked image with both positive and negative "
@@ -243,7 +240,7 @@ def visualize_image_attr(
             plt_axis.imshow(
                 _prepare_image(original_image * np.expand_dims(norm_attr, 2))
             )
-        elif ImageVisualizeMethod[method] == ImageVisualizeMethod.alpha_scaling:
+        elif ImageVisualizationMethod[method] == ImageVisualizationMethod.alpha_scaling:
             assert (
                 VisualizeSign[sign] != VisualizeSign.all
             ), "Cannot display alpha scaling with both positive and negative "
@@ -306,15 +303,15 @@ def visualize_image_attr_multiple(
                         visualized. Shape must be in the form (H, W, C), with
                         channels as last dimension. Shape must also match that of
                         the original image if provided.
-            original_image (numpy.array):  Numpy array corresponding to original
-                        image. Shape must be in the form (H, W, C), with
+            original_image (numpy.array, optional):  Numpy array corresponding to
+                        original image. Shape must be in the form (H, W, C), with
                         channels as the last dimension. Image can be provided either
                         with values in range 0-1 or 0-255. This is a necessary
                         argument for any visualization method which utilizes
                         the original image.
                         Default: None
-            titles (list of strings):  List of strings of length k, providing a
-                        title string for each plot. If None is provided, no titles
+            titles (list of strings, optional):  List of strings of length k, providing
+                        a title string for each plot. If None is provided, no titles
                         are added to subplots.
                         Default: None
             figsize (tuple, optional): Size of figure created.
