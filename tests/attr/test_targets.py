@@ -16,9 +16,7 @@ from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivati
 
 from captum.attr._core.neuron_conductance import NeuronConductance
 
-from .helpers.basic_models import (
-    TestModel_MultiLayer,
-)
+from .helpers.basic_models import TestModel_MultiLayer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -91,7 +89,9 @@ class Test(BaseTest):
     def test_simple_target_saliency_tensor(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(Saliency, net, inputs=inp, targets=torch.tensor([0, 1, 1, 0]))
+        self._target_batch_test_assert(
+            Saliency, net, inputs=inp, targets=torch.tensor([0, 1, 1, 0])
+        )
 
     def test_multi_target_saliency(self):
         net = TestModel_MultiLayer()
@@ -123,17 +123,32 @@ class Test(BaseTest):
     def test_simple_target_deep_lift_shap(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=[0, 1, 1, 0])
+        self._target_batch_test_assert(
+            DeepLiftShap, net, inputs=inp, baselines=0.5 * inp, targets=[0, 1, 1, 0]
+        )
 
     def test_simple_target_deep_lift_shap_tensor(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=torch.tensor([0, 1, 1, 0]))
+        self._target_batch_test_assert(
+            DeepLiftShap,
+            net,
+            inputs=inp,
+            baselines=0.5 * inp,
+            targets=torch.tensor([0, 1, 1, 0]),
+        )
 
     def test_simple_target_deep_lift_shap_single_tensor(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(DeepLiftShap, net, inputs=inp, baselines=0.5*inp, targets=torch.tensor([0]), splice_targets=False)
+        self._target_batch_test_assert(
+            DeepLiftShap,
+            net,
+            inputs=inp,
+            baselines=0.5 * inp,
+            targets=torch.tensor([0]),
+            splice_targets=False,
+        )
 
     def test_multi_target_deep_lift_shap(self):
         net = TestModel_MultiLayer()
@@ -143,24 +158,52 @@ class Test(BaseTest):
             net,
             inputs=inp,
             additional_forward_args=(None, True),
-            baselines=0.5*inp,
+            baselines=0.5 * inp,
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
         )
 
     def test_simple_target_gradient_shap(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=[0, 1, 1, 0], delta=0.1)
+        self._target_batch_test_assert(
+            GradientShap,
+            net,
+            inputs=inp,
+            baselines=0.5 * inp[0:1],
+            n_samples=500,
+            stdevs=0.0,
+            targets=[0, 1, 1, 0],
+            delta=0.1,
+        )
 
     def test_simple_target_gradient_shap_tensor(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=torch.tensor([0, 1, 1, 0]), delta=0.1)
+        self._target_batch_test_assert(
+            GradientShap,
+            net,
+            inputs=inp,
+            baselines=0.5 * inp[0:1],
+            n_samples=500,
+            stdevs=0.0,
+            targets=torch.tensor([0, 1, 1, 0]),
+            delta=0.1,
+        )
 
     def test_simple_target_gradient_shap_single_tensor(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(GradientShap, net, inputs=inp, baselines=0.5*inp[0:1], n_samples=500, stdevs=0.0, targets=torch.tensor([0]), splice_targets=False, delta=0.1)
+        self._target_batch_test_assert(
+            GradientShap,
+            net,
+            inputs=inp,
+            baselines=0.5 * inp[0:1],
+            n_samples=500,
+            stdevs=0.0,
+            targets=torch.tensor([0]),
+            splice_targets=False,
+            delta=0.1,
+        )
 
     def test_multi_target_gradient_shap(self):
         net = TestModel_MultiLayer()
@@ -169,7 +212,7 @@ class Test(BaseTest):
             GradientShap,
             net,
             inputs=inp,
-            baselines=0.5*inp[0:1],
+            baselines=0.5 * inp[0:1],
             n_samples=500,
             stdevs=0.0,
             additional_forward_args=(None, True),
@@ -406,17 +449,26 @@ class Test(BaseTest):
                 attributions_orig = attributions_orig[0]
             for i in range(len(inputs)):
                 single_attr = attr.attribute(
-                    inputs=inputs[i : i + 1], target=targets[i] if splice_targets else targets, **kwargs
+                    inputs=inputs[i : i + 1],
+                    target=targets[i] if splice_targets else targets,
+                    **kwargs
                 )
                 single_attr_target_list = attr.attribute(
-                    inputs=inputs[i : i + 1], target=targets[i : i + 1]if splice_targets else targets, **kwargs
+                    inputs=inputs[i : i + 1],
+                    target=targets[i : i + 1] if splice_targets else targets,
+                    **kwargs
                 )
                 if attr._has_convergence_delta():
                     single_attr = single_attr[0]
                     single_attr_target_list = single_attr_target_list[0]
-                assertTensorAlmostEqual(self, attributions_orig[i : i + 1], single_attr, delta=delta)
                 assertTensorAlmostEqual(
-                    self, attributions_orig[i : i + 1], single_attr_target_list, delta=delta
+                    self, attributions_orig[i : i + 1], single_attr, delta=delta
+                )
+                assertTensorAlmostEqual(
+                    self,
+                    attributions_orig[i : i + 1],
+                    single_attr_target_list,
+                    delta=delta,
                 )
 
 

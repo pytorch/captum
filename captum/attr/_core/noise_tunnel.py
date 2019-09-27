@@ -224,7 +224,9 @@ class NoiseTunnel(Attribution):
             if "target" not in kwargs:
                 return
             target = kwargs["target"]
-            target = _expand_target(target, n_samples, expansion_type="repeat_interleave")
+            target = _expand_target(
+                target, n_samples, expansion_type="repeat_interleave"
+            )
             # update kwargs with expanded baseline
             kwargs["target"] = target
 

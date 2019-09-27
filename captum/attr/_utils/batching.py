@@ -96,7 +96,9 @@ def _batched_generator(
                 current_total : current_total + internal_batch_size
             ] if isinstance(
                 target_ind, list
-            ) or (isinstance(target_ind, torch.Tensor) and target_ind.numel() > 1) else target_ind
+            ) or (
+                isinstance(target_ind, torch.Tensor) and target_ind.numel() > 1
+            ) else target_ind
 
 
 def _batched_operator(

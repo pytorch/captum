@@ -396,7 +396,9 @@ class DeepLiftShap(DeepLift):
                 for baseline in baselines
             ]
         )
-        expanded_target = _expand_target(target, base_bsz, expansion_type="repeat_interleave")
+        expanded_target = _expand_target(
+            target, base_bsz, expansion_type="repeat_interleave"
+        )
 
         attributions, delta = super().attribute(
             expanded_inputs,
@@ -408,8 +410,6 @@ class DeepLiftShap(DeepLift):
         attributions = tuple(
             compute_mean(inp_bsz, base_bsz, attribution) for attribution in attributions
         )
-
-        start_point, end_point = baselines, inputs
 
         return _format_attributions(is_inputs_tuple, attributions), delta / base_bsz
 

@@ -216,9 +216,9 @@ class InputBaselineXGradient(GradientBasedAttribution):
             target=target,
             delta_per_sample=True,
         )
-        #print(inputs)
-        #print(sum(attributions[0]))
-        #print(sum(attributions[1]))
+        # print(inputs)
+        # print(sum(attributions[0]))
+        # print(sum(attributions[1]))
         return _format_attributions(is_inputs_tuple, attributions), delta
 
     def _has_convergence_delta(self):
