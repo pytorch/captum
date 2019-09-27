@@ -36,6 +36,34 @@ class RealFeature(BaseFeature):
             contribution=contribution_frac,
         )
 
+class RealFeature(BaseFeature):
+    def __init__(
+        self,
+        name: str,
+        baseline_transforms: Union[Callable, List[Callable]],
+        input_transforms: Union[Callable, List[Callable]],
+        visualization_transforms: Optional[Union[Callable, List[Callable]]] = None,
+    ):
+        super().__init__(
+            name,
+            baseline_transforms=baseline_transforms,
+            input_transforms=input_transforms,
+            visualization_transform=None,
+        )
+
+    def visualization_type(self):
+        return "real"
+
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+        return FeatureOutput(
+            name=self.name,
+            base=data,
+            modified=data,
+            type=self.visualization_type(),
+            contribution=contribution_frac,
+        )
+
+
 def _get_classes():
     classes = [
         "Plane",
