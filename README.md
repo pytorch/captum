@@ -72,6 +72,7 @@ pip install -e .
 
 To customize the installation, you can also run the following variants of the
 above:
+* `pip install -e .[insights]`: Also installs all packages necessary for running Captum Insights.
 * `pip install -e .[dev]`: Also installs all tools necessary for development
   (testing, linting, docs building; see [Contributing](#contributing) below).
 * `pip install -e .[tutorials]`: Also installs all packages necessary for running the tutorial notebooks.
@@ -279,11 +280,14 @@ python -m captum.insights.example
 
 and navigate to the URL specified in the output.
 
-To build and launch from a checkout with conda run
+To build Insights you will need [Node](https://nodejs.org/en/) >= 8.x
+and [Yarn](https://yarnpkg.com/en/) >= 1.5.
+
+To build and launch from a checkout in a conda environment run
 
 ```
 conda install -c conda-forge yarn
-python setup.py develop
+BUILD_INSIGHTS=1 python setup.py develop
 python captum/insights/example.py
 ```
 

@@ -79,7 +79,6 @@ and [Yarn](https://yarnpkg.com/en/) >= 1.5.
 
 The following command will both build the docs and serve the site locally:
 ```bash
-cd scripts
 ./scripts/build_docs.sh
 ```
 
@@ -93,14 +92,6 @@ We actively welcome your pull requests.
    documentation builds.
 4. Ensure the test suite passes.
 5. Make sure your code passes both `black` and `flake8` formatting checks.
-6. If you haven't already, complete the Contributor License Agreement ("CLA").
-
-
-## Contributor License Agreement ("CLA")
-
-In order to accept your pull request, we need you to submit a CLA. You only need
-to do this once to work on any of Facebook's open source projects. You can
-complete your CLA here: <https://code.facebook.com/cla>
 
 
 ## Issues
