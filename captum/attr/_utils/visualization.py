@@ -43,8 +43,8 @@ def _normalize_scale(attr, scale_factor):
 
 def _cumulative_sum_threshold(values, percentile):
     # given values should be non-negative
-    assert percentile >= 0 and percentile <= 100, "Percentile for thresholding must be "
-    "between 0 and 100 inclusive."
+    assert percentile >= 0 and percentile <= 100, ("Percentile for thresholding must be "
+    "between 0 and 100 inclusive.")
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
     threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
@@ -66,7 +66,7 @@ def _normalize_image_attr(attr, sign, outlier_perc=2):
         )
     elif VisualizeSign[sign] == VisualizeSign.absolute_value:
         attr_combined = np.abs(attr_combined)
-        attr_combined = _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
+        threshold = _cumulative_sum_threshold(attr_combined, 100 - outlier_perc)
     else:
         raise AssertionError("Visualize Sign type is not valid.")
     return _normalize_scale(attr_combined, threshold)
@@ -185,19 +185,19 @@ def visualize_image_attr(
     else:
         plt_fig, plt_axis = plt.subplots()
 
-    if np.max(original_image) <= 1.0:
-        original_image = _prepare_image(original_image * 255)
+    if original_image is not None:
+        if np.max(original_image) <= 1.0:
+            original_image = _prepare_image(original_image * 255)
+    else:
+        assert (
+            ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map
+        ), "Original Image must be provided for any visualization other than heatmap."
 
     # Remove ticks and tick labels from plot.
     plt_axis.xaxis.set_ticks_position("none")
     plt_axis.yaxis.set_ticks_position("none")
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
-
-    assert (
-        ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map
-        or original_image is not None
-    ), "Original Image must be provided for any visualization other than heatmap."
 
     heat_map = None
     # Show original image
@@ -240,16 +240,16 @@ def visualize_image_attr(
         elif ImageVisualizationMethod[method] == ImageVisualizationMethod.masked_image:
             assert (
                 VisualizeSign[sign] != VisualizeSign.all
-            ), "Cannot display masked image with both positive and negative "
-            "attributions, choose a different sign option."
+            ), ("Cannot display masked image with both positive and negative "
+            "attributions, choose a different sign option.")
             plt_axis.imshow(
                 _prepare_image(original_image * np.expand_dims(norm_attr, 2))
             )
         elif ImageVisualizationMethod[method] == ImageVisualizationMethod.alpha_scaling:
             assert (
                 VisualizeSign[sign] != VisualizeSign.all
-            ), "Cannot display alpha scaling with both positive and negative "
-            "attributions, choose a different sign option."
+            ), ("Cannot display alpha scaling with both positive and negative "
+            "attributions, choose a different sign option.")
             plt_axis.imshow(
                 np.concatenate(
                     [
