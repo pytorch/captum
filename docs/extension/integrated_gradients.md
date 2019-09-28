@@ -1,3 +1,7 @@
+---
+id: integrated_gradients
+title: Integrated Gradients
+---
 ## Integrated Gradients
 
 This section of the documentation shows how to apply integrated gradients on
