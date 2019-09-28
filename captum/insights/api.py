@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Callable, Iterable, List, Optional, Tuple, Union, Dict, Any
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
