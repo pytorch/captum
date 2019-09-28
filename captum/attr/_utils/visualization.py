@@ -43,8 +43,9 @@ def _normalize_scale(attr, scale_factor):
 
 def _cumulative_sum_threshold(values, percentile):
     # given values should be non-negative
-    assert percentile >= 0 and percentile <= 100, ("Percentile for thresholding must be "
-    "between 0 and 100 inclusive.")
+    assert percentile >= 0 and percentile <= 100, (
+        "Percentile for thresholding must be " "between 0 and 100 inclusive."
+    )
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
     threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
@@ -238,18 +239,18 @@ def visualize_image_attr(
                 norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha_overlay
             )
         elif ImageVisualizationMethod[method] == ImageVisualizationMethod.masked_image:
-            assert (
-                VisualizeSign[sign] != VisualizeSign.all
-            ), ("Cannot display masked image with both positive and negative "
-            "attributions, choose a different sign option.")
+            assert VisualizeSign[sign] != VisualizeSign.all, (
+                "Cannot display masked image with both positive and negative "
+                "attributions, choose a different sign option."
+            )
             plt_axis.imshow(
                 _prepare_image(original_image * np.expand_dims(norm_attr, 2))
             )
         elif ImageVisualizationMethod[method] == ImageVisualizationMethod.alpha_scaling:
-            assert (
-                VisualizeSign[sign] != VisualizeSign.all
-            ), ("Cannot display alpha scaling with both positive and negative "
-            "attributions, choose a different sign option.")
+            assert VisualizeSign[sign] != VisualizeSign.all, (
+                "Cannot display alpha scaling with both positive and negative "
+                "attributions, choose a different sign option."
+            )
             plt_axis.imshow(
                 np.concatenate(
                     [
