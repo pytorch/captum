@@ -11,10 +11,10 @@ from .._utils.common import (
     _reshape_and_sum,
     _expand_additional_forward_args,
 )
-from .._utils.attribution import GradientBasedAttribution
+from .._utils.attribution import GradientAttribution
 
 
-class IntegratedGradients(GradientBasedAttribution):
+class IntegratedGradients(GradientAttribution):
     def __init__(self, forward_func):
         r"""
         Args:

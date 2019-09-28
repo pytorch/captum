@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from .._utils.common import format_input, _format_attributions
-from .._utils.attribution import GradientBasedAttribution
+from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
-class InputXGradient(GradientBasedAttribution):
+class InputXGradient(GradientAttribution):
     def __init__(self, forward_func):
         r"""
         Args:
