@@ -14,7 +14,14 @@ FeatureOutput = namedtuple("FeatureOutput", "name base modified type contributio
 def _convert_img_base64(img):
     buff = BytesIO()
 
-    plt.imsave(buff, img)
+    plt.imsave(buff, img, format="png")
+    base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
+    return base64img
+
+
+def _convert_figure_base64(fig):
+    buff = BytesIO()
+    fig.savefig(buff, format="png")
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
@@ -65,21 +72,17 @@ class ImageFeature(BaseFeature):
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
         )
 
-        img_integrated_gradient_overlay = viz.visualize_image(
-            attribution_t,
-            data_t,
-            clip_above_percentile=99,
-            clip_below_percentile=0,
-            overlay=True,
-            mask_mode=True,
+        fig, axis = viz.visualize_image_attr(
+            attribution_t, (data_t / 2) + 0.5, method="heat_map", sign="absolute_value"
         )
-        ig_64 = _convert_img_base64(img_integrated_gradient_overlay)
+
+        attr_img_64 = _convert_figure_base64(fig)
         img_64 = _convert_img_base64(data_t)
 
         return FeatureOutput(
             name=self.name,
             base=img_64,
-            modified=ig_64,
+            modified=attr_img_64,
             type=self.visualization_type(),
             contribution=100,  # TODO implement contribution
         )
