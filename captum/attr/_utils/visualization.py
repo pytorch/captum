@@ -194,6 +194,11 @@ def visualize_image_attr(
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
 
+    assert (
+        ImageVisualizationMethod[method] == ImageVisualizationMethod.heat_map
+        or original_image is not None
+    ), "Original Image must be provided for any visualization other than heatmap."
+
     heat_map = None
     # Show original image
     if ImageVisualizationMethod[method] == ImageVisualizationMethod.original_image:
