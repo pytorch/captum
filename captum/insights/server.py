@@ -2,6 +2,7 @@ import logging
 import os
 import socket
 import threading
+from time import sleep
 from typing import Optional
 
 from flask import Flask, jsonify, render_template, request
@@ -63,6 +64,7 @@ def start_server(_viz, port: Optional[int] = None):
         log.disabled = True
         app.logger.disabled = True
         threading.Thread(target=app.run, kwargs={"port": port}).start()
+        sleep(0.1)  # let server startup before showing in iframe
     else:
         app.run(use_reloader=True, port=port, debug=True, threaded=True)
 

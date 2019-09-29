@@ -126,3 +126,34 @@ class TextFeature(BaseFeature):
             type=self.visualization_type(),
             contribution=contribution_frac,
         )
+
+
+class GeneralFeature(BaseFeature):
+    def __init__(self, name: str, categories: List[str]):
+        super().__init__(
+            name,
+            baseline_transforms=None,
+            input_transforms=None,
+            visualization_transform=None,
+        )
+        self.categories = categories
+
+    def visualization_type(self) -> str:
+        return "general"
+
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+        attribution.squeeze_(0)
+        data.squeeze_(0)
+
+        # L-2 norm
+        normalized_attribution = attribution / attribution.norm()
+        modified = [x * 100 for x in normalized_attribution.tolist()]
+
+        base = [f"{c}: {d:.2f}" for c, d in zip(self.categories, data.tolist())]
+        return FeatureOutput(
+            name=self.name,
+            base=base,
+            modified=modified,
+            type=self.visualization_type(),
+            contribution=contribution_frac,
+        )

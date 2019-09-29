@@ -257,3 +257,36 @@ button {
 .text-feature-word:hover .tooltip__label {
   visibility: visible;
 }
+
+.general-feature__label-container {
+  display: inline-flex;
+  justify-content: space-between;
+  width: 20%;
+  padding-right: 8px;
+}
+
+.general-feature__label {
+  font-weight: 600;
+}
+
+.general-feature__percent {
+  display: inline-block;
+}
+
+.general-feature__bar-container {
+  display: inline-block;
+  width: 70%;
+}
+.general-feature__bar {
+  display: inline-block;
+  border-radius: 4px;
+  height: 12px;
+}
+
+.general-feature__bar__positive {
+  background: #80aaff;
+}
+
+.general-feature__bar__negative {
+  background: #d45c43;
+}
