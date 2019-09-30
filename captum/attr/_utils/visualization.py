@@ -370,10 +370,9 @@ def visualize_image_attr_multiple(
         )
     if use_pyplot:
         plt_fig = plt.figure(figsize=fig_size)
-        plt_axis = plt_fig.subplots(1, len(methods))
     else:
         plt_fig = Figure(figsize=fig_size)
-        plt_axis = plt_fig.subplots(1, len(methods))
+    plt_axis = plt_fig.subplots(1, len(methods))
 
     # When visualizing one
     if len(methods) == 1:
