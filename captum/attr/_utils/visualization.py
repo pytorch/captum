@@ -6,7 +6,8 @@ import warnings
 
 from IPython.core.display import display, HTML
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -84,7 +85,8 @@ def visualize_image_attr(
     alpha_overlay=0.5,
     show_colorbar=False,
     title=None,
-    show_figure=True,
+    fig_size=(6,6),
+    use_pyplot=True,
 ):
     r"""
         Visualizes attribution for a given image by normalizing attribution values
@@ -156,9 +158,13 @@ def visualize_image_attr(
             title (string, optional): Title string for plot. If None, no title is
                         set.
                         Default: None
-            show_figure (boolean, optional): If true, calls plt.show to render
-                        plot after creating figure.
-
+            fig_size (tuple, optional): Size of figure created.
+                        Default: (6,6)
+            use_pyplot (boolean, optional): If true, uses pyplot to create and show
+                        figure and displays the figure after creating. If False,
+                        uses Matplotlib object oriented API and simply returns a
+                        figure object without showing.
+                        Default: True.
 
         Return:
 
@@ -184,7 +190,11 @@ def visualize_image_attr(
     if plt_fig_axis is not None:
         plt_fig, plt_axis = plt_fig_axis
     else:
-        plt_fig, plt_axis = plt.subplots()
+        if use_pyplot:
+            plt_fig, plt_axis = plt.subplots(figsize=fig_size)
+        else:
+            plt_fig = Figure(figsize=fig_size)
+            plt_axis = plt_fig.subplots()
 
     if original_image is not None:
         if np.max(original_image) <= 1.0:
@@ -277,20 +287,20 @@ def visualize_image_attr(
     if title:
         plt_axis.set_title(title)
 
-    if show_figure:
+    if use_pyplot:
         plt.show()
 
     return plt_fig, plt_axis
 
 
 def visualize_image_attr_multiple(
+    attr,
+    original_image,
     methods,
     signs,
-    attr,
-    original_image=None,
     titles=None,
-    figsize=(8, 6),
-    show_figure=True,
+    fig_size=(8, 6),
+    use_pyplot=True,
     **kwargs
 ):
     r"""
@@ -299,12 +309,6 @@ def visualize_image_attr_multiple(
 
         Args:
 
-            methods (list of strings): List of strings of length k, defining method
-                            for each visualization. Each method must be a valid
-                            string argument for method to visualize_image_attr.
-            signs (list of strings): List of strings of length k, defining signs for
-                            each visualization. Each sign must be a valid
-                            string argument for sign to visualize_image_attr.
             attr (numpy.array): Numpy array corresponding to attributions to be
                         visualized. Shape must be in the form (H, W, C), with
                         channels as last dimension. Shape must also match that of
@@ -315,15 +319,23 @@ def visualize_image_attr_multiple(
                         with values in range 0-1 or 0-255. This is a necessary
                         argument for any visualization method which utilizes
                         the original image.
-                        Default: None
+            methods (list of strings): List of strings of length k, defining method
+                            for each visualization. Each method must be a valid
+                            string argument for method to visualize_image_attr.
+            signs (list of strings): List of strings of length k, defining signs for
+                            each visualization. Each sign must be a valid
+                            string argument for sign to visualize_image_attr.
             titles (list of strings, optional):  List of strings of length k, providing
                         a title string for each plot. If None is provided, no titles
                         are added to subplots.
                         Default: None
-            figsize (tuple, optional): Size of figure created.
+            fig_size (tuple, optional): Size of figure created.
                         Default: (8, 6)
-            show_figure (boolean, optional): If true, calls plt.show to render
-                        plot after creating figure.
+            use_pyplot (boolean, optional): If true, uses pyplot to create and show
+                        figure and displays the figure after creating. If False,
+                        uses Matplotlib object oriented API and simply returns a
+                        figure object without showing.
+                        Default: True.
             **kwargs (Any, optional): Any additional arguments which will be passed
                         to every individual visualization. Such arguments include
                         `show_colorbar`, `alpha_overlay`, `cmap`, etc.
@@ -352,8 +364,20 @@ def visualize_image_attr_multiple(
             >>>                     ["all", "positive"], attribution, orig_image)
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
-    plt_fig = plt.figure(figsize=figsize)
-    plt_axis = plt_fig.subplots(1, len(methods))
+    if titles is not None:
+        assert len(methods) == len(titles), ("If titles list is given, length must "
+        "match that of methods list.")
+    if use_pyplot:
+        plt_fig = plt.figure(figsize=fig_size)
+        plt_axis = plt_fig.subplots(1, len(methods))
+    else:
+        plt_fig = Figure(figsize=fig_size)
+        plt_axis = plt_fig.subplots(1, len(methods))
+
+    # When visualizing one
+    if len(methods) == 1:
+        plt_axis = [plt_axis]
+
     for i in range(len(methods)):
         visualize_image_attr(
             attr,
@@ -361,12 +385,12 @@ def visualize_image_attr_multiple(
             method=methods[i],
             sign=signs[i],
             plt_fig_axis=(plt_fig, plt_axis[i]),
-            show_figure=False,
+            use_pyplot=False,
             title=titles[i] if titles else None,
             **kwargs
         )
     plt_fig.tight_layout()
-    if show_figure:
+    if use_pyplot:
         plt.show()
     return plt_fig, plt_axis
 
