@@ -8,28 +8,20 @@ Captum API Reference
    :caption: Contents:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: API Reference
 
+   saliency
    deep_lift
+   deep_lift_shap
+   gradient_shap
    input_x_gradient
    integrated_gradients
-   internal_influence
-   layer_activation
-   layer_conductance
-   layer_gradient_x_activation
-   neuron_conductance
-   neuron_gradient
-   neuron_integrated_gradients
    noise_tunnel
-   saliency
    base
-   pytext
-   approximation_methods
-   attribution
-   common
-   gradient
-   visualization
+   neuron
+   layer
+
 
 
 Indices and Tables
