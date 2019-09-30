@@ -85,7 +85,7 @@ def visualize_image_attr(
     alpha_overlay=0.5,
     show_colorbar=False,
     title=None,
-    fig_size=(6,6),
+    fig_size=(6, 6),
     use_pyplot=True,
 ):
     r"""
@@ -365,8 +365,9 @@ def visualize_image_attr_multiple(
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
     if titles is not None:
-        assert len(methods) == len(titles), ("If titles list is given, length must "
-        "match that of methods list.")
+        assert len(methods) == len(titles), (
+            "If titles list is given, length must " "match that of methods list."
+        )
     if use_pyplot:
         plt_fig = plt.figure(figsize=fig_size)
         plt_axis = plt_fig.subplots(1, len(methods))

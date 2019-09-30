@@ -6,14 +6,13 @@ from typing import Callable, List, Optional, Union
 from captum.attr._utils import visualization as viz
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
 def _convert_figure_base64(fig):
     buff = BytesIO()
-    fig.savefig(buff, format="png", pad_inches=0.0,)
+    fig.savefig(buff, format="png", pad_inches=0.0)
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
@@ -65,7 +64,7 @@ class ImageFeature(BaseFeature):
         )
 
         orig_fig, _ = viz.visualize_image_attr(
-            attribution_t, data_t, method="original_image",
+            attribution_t, data_t, method="original_image"
         )
         attr_fig, _ = viz.visualize_image_attr(
             attribution_t, data_t, method="heat_map", sign="absolute_value"
