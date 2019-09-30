@@ -9,32 +9,6 @@ from captum.insights.features import ImageFeature, BaseFeature, FeatureOutput
 
 from tests.attr.helpers.utils import BaseTest
 
-class RealFeature(BaseFeature):
-    def __init__(
-        self,
-        name: str,
-        baseline_transforms: Union[Callable, List[Callable]],
-        input_transforms: Union[Callable, List[Callable]],
-        visualization_transforms: Optional[Union[Callable, List[Callable]]] = None,
-    ):
-        super().__init__(
-            name,
-            baseline_transforms=baseline_transforms,
-            input_transforms=input_transforms,
-            visualization_transform=None,
-        )
-
-    def visualization_type(self):
-        return "real"
-
-    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        return FeatureOutput(
-            name=self.name,
-            base=data,
-            modified=data,
-            type=self.visualization_type(),
-            contribution=contribution_frac,
-        )
 
 class RealFeature(BaseFeature):
     def __init__(
@@ -122,7 +96,7 @@ class TinyMultiModal(nn.Module):
         return self.fc(x)
 
 
-def _labelled_img_data(num_samples=10, width=16, height=16, depth=3, num_labels=10):
+def _labelled_img_data(num_samples=10, width=8, height=8, depth=3, num_labels=10):
     for i in range(num_samples):
         yield torch.empty(depth, height, width).uniform_(0, 1), torch.randint(
             num_labels, (1,)

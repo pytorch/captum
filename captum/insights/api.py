@@ -30,10 +30,10 @@ class AttributionVisualizer(object):
     def __init__(
         self,
         models: Union[List[Module], Module],
-        score_func: Optional[Callable],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
+        score_func: Optional[Callable],
         n_steps: int = 50,
     ):
         if not isinstance(models, List):
@@ -55,7 +55,7 @@ class AttributionVisualizer(object):
         baselines: List[Tuple[Tensor, ...]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Tensor,
+        label: Optional[Tensor],
     ) -> Tensor:
         net.eval()
         ig = IntegratedGradients(net)
@@ -86,10 +86,7 @@ class AttributionVisualizer(object):
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
-            if score > 0.0001:
-                pred_scores.append(
-                    PredictionScore(scores[i].item(), self.classes[indices[i]])
-                )
+            pred_scores.append(PredictionScore(score, self.classes[indices[i]]))
         return pred_scores
 
     def _transform(
@@ -169,9 +166,17 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
-            scores, predicted = outputs.cpu().detach().topk(4)
-
             label = batch_data.labels[i]
+
+            if len(outputs) == 1:
+                scores = outputs
+                predicted = scores.round().to(torch.int)
+            else:
+                scores, predicted = outputs.topk(min(4, len(outputs)))
+
+            scores = scores.cpu().squeeze(0)
+            predicted = predicted.cpu().squeeze(0)
+
             actual_label = self.classes[label]
 
             predicted_labels = self._get_labels_from_scores(scores, predicted)
