@@ -15,15 +15,6 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._grad_cam_test_assert(net, net.linear0, inp, [400.0])
 
-    def test_simple_non_conv_multi_input_linear2(self):
-        net = TestModel_MultiLayer_MultiInput()
-        inp1 = torch.tensor([[0.0, 10.0, 0.0]])
-        inp2 = torch.tensor([[0.0, 10.0, 0.0]])
-        inp3 = torch.tensor([[0.0, 5.0, 0.0]])
-        self._grad_cam_test_assert(
-            net, net.model.linear2, (inp1, inp2, inp3), [392.0], (4,)
-        )
-
     def _grad_cam_test_assert(
         self,
         model,
@@ -36,7 +27,6 @@ class Test(BaseTest):
         attributions = layer_gc.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
-        print(attributions)
         assertArraysAlmostEqual(
             attributions.squeeze(0).tolist(), expected_activation, delta=0.01
         )

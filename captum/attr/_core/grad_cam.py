@@ -99,6 +99,7 @@ class LayerGradCam(LayerAttribution):
             device_ids=self.device_ids,
         )
         summed_grads = torch.mean(layer_gradients, dim=tuple(x for x in range(2,len(layer_gradients.shape))), keepdim=True)
+        print(summed_grads)
         non_neg_scaled_act = F.relu(torch.sum(summed_grads * layer_eval, dim=1, keepdim=True))
 
         if inp_interpolate:
