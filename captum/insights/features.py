@@ -64,10 +64,14 @@ class ImageFeature(BaseFeature):
         )
 
         orig_fig, _ = viz.visualize_image_attr(
-            attribution_t, data_t, method="original_image"
+            attribution_t, data_t, method="original_image", use_pyplot=False
         )
         attr_fig, _ = viz.visualize_image_attr(
-            attribution_t, data_t, method="heat_map", sign="absolute_value"
+            attribution_t,
+            data_t,
+            method="heat_map",
+            sign="absolute_value",
+            use_pyplot=False,
         )
 
         img_64 = _convert_figure_base64(orig_fig)
