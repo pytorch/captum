@@ -15,38 +15,41 @@ Captum provides a generic implementation of integrated gradients that can be use
 In this section of the tutorial we will describe how to apply integrated gradients for output predictions.
 Here is an example code snippet that reproduces the results from the [original paper](https://arxiv.org/pdf/1703.01365.pdf) (page 10).
 
-First, let's create a sample ToyModel.
+First, let's create a sample ToyModel, which computes a simple function on two inputs.
 
 ```
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 class ToyModel(nn.Module):
+    r"""
+    Example toy model from the original paper (page 10)
 
-"""
-Example toy model from the original paper (page 10)
-
-https://arxiv.org/pdf/1703.01365.pdf
+    https://arxiv.org/pdf/1703.01365.pdf
 
 
-f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
-"""
+    f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
+    """
 
-def __init__(self):
-    super().__init__()
+    def __init__(self):
+        super().__init__()
 
-def forward(self, input1, input2):
-    relu_out1 = F.relu(input1)
-    relu_out2 = F.relu(input2)
-    return F.relu(relu_out1 - 1 - relu_out2)
+    def forward(self, input1, input2):
+        relu_out1 = F.relu(input1)
+        relu_out2 = F.relu(input2)
+        return F.relu(relu_out1 - 1 - relu_out2)
 ```
 
 Second, let's apply integrated gradients on the toy model's output layer using sample data.
-Below code snippet computes the attribution of output with respect to the inputs.
+The code snippet below computes the attribution of output with respect to the inputs.
 `attribute` method of `IntegratedGradients` class returns input attributions which
 have the same size and dimensionality as the inputs and an approximation error which
 is computed based on the completeness property of the integrated gradients.
-
+Completeness property is one of the axioms that integrated gradients satisfies.
+It states that the sum of the attributions must be equal to the difference between
+the output of the DNN function F at the inputs and corresponding baselines.
+The baselines also have the same shape and dimensionality as the inputs and if not
+provided zero is used as default value.
 ```
 from captum.attr import IntegratedGradients
 model = ToyModel()
@@ -84,31 +87,31 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ToySoftmaxModel(nn.Module):
-"""
-Model architecture from:
+    r"""
+    Model architecture from:
 
-https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
-"""
+    https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
+    """
 
-def __init__(self, num_in, num_hidden, num_out):
-    super().__init__()
-    self.num_in = num_in
-    self.num_hidden = num_hidden
-    self.num_out = num_out
-    self.lin1 = nn.Linear(num_in, num_hidden)
-    self.lin2 = nn.Linear(num_hidden, num_hidden)
-    self.lin3 = nn.Linear(num_hidden, num_out)
-    self.softmax = nn.Softmax(dim=1)
+    def __init__(self, num_in, num_hidden, num_out):
+        super().__init__()
+        self.num_in = num_in
+        self.num_hidden = num_hidden
+        self.num_out = num_out
+        self.lin1 = nn.Linear(num_in, num_hidden)
+        self.lin2 = nn.Linear(num_hidden, num_hidden)
+        self.lin3 = nn.Linear(num_hidden, num_out)
+        self.softmax = nn.Softmax(dim=1)
 
-def forward(self, input):
-    lin1 = F.relu(self.lin1(input))
-    lin2 = F.relu(self.lin2(lin1))
-    lin3 = self.lin3(lin2)
-    return self.softmax(lin3)
+    def forward(self, input):
+        lin1 = F.relu(self.lin1(input))
+        lin2 = F.relu(self.lin2(lin1))
+        lin3 = self.lin3(lin2)
+        return self.softmax(lin3)
 ```
 
 Now, let's apply integrated gradients on the toy classification model defined
-above using inputs that contain a range of numbers. We also choose arbitrary
+above using inputs that contain a range of numbers. We also choose an arbitrary
 target class (target_class_index: 5) which we use to attribute our predictions to.
 Similar to previous example the output of attribution is a tensor with the same
 dimensionality as the inputs and an approximation error computed based on the
@@ -129,9 +132,8 @@ target_class_index = 5
 ig = IntegratedGradients(model)
 attributions, approximation_error = ig.attribute(input, target=target)
 
-# The input and returned corresponding attribution have the same shape. The attributions
-# are always returned in a tuples. Even if the input is a tensor it will internally
-# be wrapped with a tuple for generality.
+# The input and returned corresponding attribution have the
+# same shape and dimensionality.
 
 output
 
@@ -150,11 +152,16 @@ assert attributions.shape == input.shape
 ```
 
 Now, let's look at a model that besides input tensors takes input arguments of
-other types. For example, a single integer value.
-Those arguments are passed as `additional_forward_args` to `attribute` method. In
-the example below, we also demonstrate how to apply integrated gradients to a batch
-of samples. The first dimension of the input corresponds to the batch size.
-In this case batch size is equal to two.
+other types. In practice this can be used to pass the sequence length or the
+word/token indices in a sequence of a text, for instance. The example below
+demonstrates how to use `additional_forward_args`. In this particular example
+`additional_forward_args` represents single integer value.
+Those arguments are passed as `additional_forward_args` to `attribute` method and
+they will be passed to model's forward function followed by inputs in the oder
+provided in `additional_forward_args`. In the example below, we also demonstrate
+how to apply integrated gradients to a batch of samples. The first dimension of
+the input corresponds to the batch size.
+In this case, batch size is equal to two.
 
 ```
 import torch
@@ -162,7 +169,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ToyModel_With_Additional_Forward_Args(nn.Module):
-    """
+    r"""
         Slightly modified example model from the paper
         https://arxiv.org/pdf/1703.01365.pdf
         f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
@@ -197,6 +204,13 @@ input2_attr:  tensor([[ 0.0000,  0.0000],
                       [0.0000, -1.3371]], grad_fn=<MulBackward0>)
 approximation_error (aka delta): 0.005693793296813965
 ```
+In addition to the parameters described above integrated gradients also allows to specify
+integral approximation type with the argument `method` which accepts the following values:
+`riemann_right`, `riemann_left`, `riemann_middle`, `riemann_trapezoid` and `gausslegendre`.
+The latter approximates the fastest and is used as a default approximation  method.
+Besides approximation type the user can also specify the number of approximation
+steps using `n_steps` input argument. The latter can be used to find a tradeoff
+between approximation speed and the accuracy.
 
 ### More details on how to apply integrated gradients on larger DNN networks can be found here
 
