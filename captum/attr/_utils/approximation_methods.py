@@ -62,7 +62,7 @@ def riemann_builders(method=Riemann.trapezoid):
             deltas[-1] /= 2
         return deltas
 
-    def weight_coefficients(n):
+    def alphas(n):
         assert n > 1, "The number of steps has to be larger than one"
         if method == Riemann.trapezoid:
             return list(np.linspace(0, 1, n))
