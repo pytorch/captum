@@ -19,7 +19,10 @@ Contribution = namedtuple("Contribution", "name percent")
 
 class Data:
     def __init__(
-        self, inputs: Union[Tensor, Tuple[Tensor, ...]], labels, additional_args=None
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        labels: Optional[Tensor],
+        additional_args=None,
     ):
         self.inputs = inputs
         self.labels = labels
@@ -33,7 +36,7 @@ class AttributionVisualizer(object):
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
-        score_func: Optional[Callable],
+        score_func: Optional[Callable] = None,
         n_steps: int = 50,
     ):
         if not isinstance(models, List):
@@ -57,7 +60,6 @@ class AttributionVisualizer(object):
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Tensor],
     ) -> Tensor:
-        net.eval()
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
         label = None if label is None or len(label.shape) == 0 else label
@@ -127,7 +129,6 @@ class AttributionVisualizer(object):
     def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
-
         vis_outputs = []
 
         for i, (inputs, additional_forward_args) in enumerate(
