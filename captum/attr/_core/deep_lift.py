@@ -14,13 +14,22 @@ from .._utils.common import (
     _run_forward,
     validate_input,
 )
-from .._utils.attribution import GradientBasedAttribution
+from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
-# TODO: GradientBasedAttribution needs to be replaced with Attribution or
-# OutputAttribution class
-class DeepLift(GradientBasedAttribution):
+# Check if module backward hook can safely be used for the module that produced
+# this inputs / outputs mapping
+def _check_valid_module(inputs, outputs):
+    curr_fn = outputs.grad_fn
+    first_next = curr_fn.next_functions[0]
+    try:
+        return first_next[0] == inputs[first_next[1]].grad_fn
+    except IndexError:
+        return False
+
+
+class DeepLift(GradientAttribution):
     def __init__(self, model):
         r"""
         Args:
@@ -184,6 +193,26 @@ class DeepLift(GradientBasedAttribution):
         input_attr_name = "input"
         output_attr_name = "output"
         self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
+        if not _check_valid_module(inputs, outputs):
+            module.is_invalid = True
+            module.saved_grad = None
+
+            def tensor_backward_hook(grad):
+                if module.saved_grad is None:
+                    raise RuntimeError(
+                        """Module {} was detected as not supporting correctly module
+                        backward hook. You should modify your hook to ignore the given
+                        grad_inputs (recompute them by hand if needed) and save the
+                        newly computed grad_inputs in module.saved_grad. See MaxPool1d
+                        as an example.""".format(
+                            module
+                        )
+                    )
+                return module.saved_grad
+
+            inputs[0].register_hook(tensor_backward_hook)
+        else:
+            module.is_invalid = False
 
     def _forward_hook_ref(self, module, inputs, outputs):
         input_attr_name = "input_ref"
@@ -516,10 +545,31 @@ def maxpool(
         list(module.input[0].shape),
     )
 
-    grad_input[0] = torch.where(
+    # If the module is invalid, we need to recompute the grad_input
+    if module.is_invalid:
+        original_grad_input = grad_input
+        grad_input = (
+            unpool_func(
+                grad_output[0],
+                indices,
+                module.kernel_size,
+                module.stride,
+                module.padding,
+                list(module.input[0].shape),
+            ),
+        )
+
+    new_grad_input = torch.where(
         delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
     )
-    return grad_input
+
+    # If the module is invalid, save the newly computed gradients
+    # The original_grad_input will be overriden later in the Tensor hook
+    if module.is_invalid:
+        module.saved_grad = new_grad_input
+        return original_grad_input
+    else:
+        return (new_grad_input,)
 
 
 SUPPORTED_NON_LINEAR = {

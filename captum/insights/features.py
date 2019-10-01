@@ -14,7 +14,14 @@ FeatureOutput = namedtuple("FeatureOutput", "name base modified type contributio
 def _convert_img_base64(img):
     buff = BytesIO()
 
-    plt.imsave(buff, img)
+    plt.imsave(buff, img, format="png")
+    base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
+    return base64img
+
+
+def _convert_figure_base64(fig):
+    buff = BytesIO()
+    fig.savefig(buff, format="png")
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
@@ -35,7 +42,7 @@ class BaseFeature:
     def visualization_type(self) -> str:
         raise NotImplementedError
 
-    def visualize(self, attribution, data) -> FeatureOutput:
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         raise NotImplementedError
 
 
@@ -43,21 +50,21 @@ class ImageFeature(BaseFeature):
     def __init__(
         self,
         name: str,
-        input_transforms: Union[Callable, List[Callable]],
         baseline_transforms: Union[Callable, List[Callable]],
-        visualization_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        input_transforms: Union[Callable, List[Callable]],
+        visualization_transform: Optional[Callable] = None,
     ):
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
             input_transforms=input_transforms,
-            visualization_transform=None,
+            visualization_transform=visualization_transform,
         )
 
     def visualization_type(self) -> str:
         return "image"
 
-    def visualize(self, attribution, data) -> FeatureOutput:
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         attribution.squeeze_()
         data.squeeze_()
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
@@ -65,21 +72,55 @@ class ImageFeature(BaseFeature):
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
         )
 
-        img_integrated_gradient_overlay = viz.visualize_image(
-            attribution_t,
-            data_t,
-            clip_above_percentile=99,
-            clip_below_percentile=0,
-            overlay=True,
-            mask_mode=True,
+        fig, axis = viz.visualize_image_attr(
+            attribution_t, (data_t / 2) + 0.5, method="heat_map", sign="absolute_value"
         )
-        ig_64 = _convert_img_base64(img_integrated_gradient_overlay)
+
+        attr_img_64 = _convert_figure_base64(fig)
         img_64 = _convert_img_base64(data_t)
 
         return FeatureOutput(
             name=self.name,
             base=img_64,
-            modified=ig_64,
+            modified=attr_img_64,
             type=self.visualization_type(),
-            contribution=100,  # TODO implement contribution
+            contribution=contribution_frac,
+        )
+
+
+class TextFeature(BaseFeature):
+    def __init__(
+        self,
+        name: str,
+        baseline_transforms: Union[Callable, List[Callable]],
+        input_transforms: Union[Callable, List[Callable]],
+        visualization_transform: Optional[Callable],
+    ):
+        super().__init__(
+            name,
+            baseline_transforms=baseline_transforms,
+            input_transforms=input_transforms,
+            visualization_transform=visualization_transform,
+        )
+
+    def visualization_type(self) -> str:
+        return "text"
+
+    def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
+        text = self.visualization_transform(data)
+
+        attribution.squeeze_(0)
+        data.squeeze_(0)
+        attribution = attribution.sum(dim=1)
+
+        # L-Infinity norm
+        normalized_attribution = attribution / abs(attribution).max()
+        modified = [x * 100 for x in normalized_attribution.tolist()]
+
+        return FeatureOutput(
+            name=self.name,
+            base=text,
+            modified=modified,
+            type=self.visualization_type(),
+            contribution=contribution_frac,
         )

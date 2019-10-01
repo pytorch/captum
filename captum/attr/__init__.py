@@ -19,11 +19,18 @@ from ._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )  # noqa
-
-from ._utils.gradient import compute_gradients  # noqa
+from ._utils import visualization  # noqa
+from ._utils.attribution import Attribution  # noqa
+from ._utils.attribution import GradientAttribution  # noqa
+from ._utils.attribution import LayerAttribution  # noqa
+from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils import visualization  # noqa
 
 __all__ = [
+    "Attribution",
+    "GradientAttribution",
+    "NeuronAttribution",
+    "LayerAttribution",
     "IntegratedGradients",
     "DeepLift",
     "InputXGradient",
@@ -38,7 +45,6 @@ __all__ = [
     "GradientShap",
     "InterpretableEmbeddingBase",
     "TokenReferenceBase",
-    "compute_gradients",
     "visualization",
     "configure_interpretable_embedding_layer",
     "remove_interpretable_embedding_layer",

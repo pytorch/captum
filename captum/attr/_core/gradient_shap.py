@@ -3,13 +3,13 @@ import torch
 
 import numpy as np
 
-from .._utils.attribution import GradientBasedAttribution
+from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions
 
 from .noise_tunnel import NoiseTunnel
 
 
-class GradientShap(GradientBasedAttribution):
+class GradientShap(GradientAttribution):
     def __init__(self, forward_func):
         r"""
         Args:
@@ -162,7 +162,7 @@ class GradientShap(GradientBasedAttribution):
         return True
 
 
-class InputBaselineXGradient(GradientBasedAttribution):
+class InputBaselineXGradient(GradientAttribution):
     def __init__(self, forward_func):
         r"""
         Args:

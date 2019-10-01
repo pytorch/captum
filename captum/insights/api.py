@@ -5,8 +5,8 @@ from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward
 from captum.insights.features import BaseFeature
-from captum.insights.server import start_server
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -19,7 +19,10 @@ Contribution = namedtuple("Contribution", "name percent")
 
 class Data:
     def __init__(
-        self, inputs: Union[Tensor, Tuple[Tensor, ...]], labels, additional_args=None
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        labels: Optional[Tensor],
+        additional_args=None,
     ):
         self.inputs = inputs
         self.labels = labels
@@ -30,10 +33,11 @@ class AttributionVisualizer(object):
     def __init__(
         self,
         models: Union[List[Module], Module],
-        score_func: Optional[Callable],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
+        score_func: Optional[Callable] = None,
+        n_steps: int = 50,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -46,6 +50,7 @@ class AttributionVisualizer(object):
         self.features = features
         self.dataset = dataset
         self.score_func = score_func
+        self.n_steps = n_steps
 
     def _calculate_attribution(
         self,
@@ -53,24 +58,26 @@ class AttributionVisualizer(object):
         baselines: List[Tuple[Tensor, ...]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Tensor,
+        label: Optional[Tensor],
     ) -> Tensor:
-        net.eval()
         ig = IntegratedGradients(net)
-        net.zero_grad()
         # TODO support multiple baselines
+        label = None if label is None or len(label.shape) == 0 else label
         attr_ig, _ = ig.attribute(
             data,
             baselines=baselines[0],
             additional_forward_args=additional_forward_args,
             target=label,
+            n_steps=self.n_steps,
         )
 
         return attr_ig
 
     def render(self):
-        port = start_server(self)
         from IPython.display import IFrame, display
+        from captum.insights.server import start_server
+
+        port = start_server(self)
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
@@ -81,10 +88,7 @@ class AttributionVisualizer(object):
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
-            if score > 0.0001:
-                pred_scores.append(
-                    PredictionScore(scores[i].item(), self.classes[indices[i]])
-                )
+            pred_scores.append(PredictionScore(score, self.classes[indices[i]]))
         return pred_scores
 
     def _transform(
@@ -109,10 +113,22 @@ class AttributionVisualizer(object):
 
         return transformed_inputs
 
+    def _calculate_net_contrib(self, attrs_per_input_feature: List[Tensor]):
+        # get the net contribution per feature (input)
+        net_contrib = torch.stack(
+            [attrib.flatten().sum() for attrib in attrs_per_input_feature]
+        )
+
+        # normalise the contribution, s.t. sum(abs(x_i)) = 1
+        norm = torch.norm(net_contrib, p=1)
+        if norm > 0:
+            net_contrib /= norm
+
+        return net_contrib
+
     def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
-
         vis_outputs = []
 
         for i, (inputs, additional_forward_args) in enumerate(
@@ -151,29 +167,52 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
-            scores, predicted = outputs.cpu().detach().topk(4)
-
             label = batch_data.labels[i]
+
+            if len(outputs) == 1:
+                scores = outputs
+                predicted = scores.round().to(torch.int)
+            else:
+                scores, predicted = outputs.topk(min(4, len(outputs)))
+
+            scores = scores.cpu().squeeze(0)
+            predicted = predicted.cpu().squeeze(0)
+
+            actual_label = self.classes[label]
+
+            predicted_labels = self._get_labels_from_scores(scores, predicted)
 
             baselines = [tuple(b) for b in baselines]
 
-            attribution = self._calculate_attribution(
+            # attributions are given per input*
+            # inputs given to the model are described via `self.features`
+            #
+            # *an input contains multiple features that represent it
+            #   e.g. all the pixels that describe an image is an input
+            attrs_per_input_feature = self._calculate_attribution(
                 net,
                 baselines,
                 tuple(transformed_inputs),
                 additional_forward_args,
                 label,
             )
-            for j, feature in enumerate(self.features):
-                feature_output = feature.visualize(attribution[j], inputs[j])
-                predicted_labels = self._get_labels_from_scores(scores, predicted)
-                actual_label = self.classes[label]
-                vis_outputs.append(
-                    VisualizationOutput(
-                        feature_outputs=[feature_output],
-                        actual=actual_label,
-                        predicted=predicted_labels,
-                    )
+
+            net_contrib = self._calculate_net_contrib(attrs_per_input_feature)
+
+            # the features per input given
+            features_per_input = [
+                feature.visualize(attr, data, contrib)
+                for feature, attr, data, contrib in zip(
+                    self.features, attrs_per_input_feature, inputs, net_contrib
                 )
+            ]
+
+            output = VisualizationOutput(
+                feature_outputs=features_per_input,
+                actual=actual_label,
+                predicted=predicted_labels,
+            )
+
+            vis_outputs.append(output)
 
         return vis_outputs
