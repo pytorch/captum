@@ -6,22 +6,13 @@ from typing import Callable, List, Optional, Union
 from captum.attr._utils import visualization as viz
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
-def _convert_img_base64(img):
-    buff = BytesIO()
-
-    plt.imsave(buff, img, format="png")
-    base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
-    return base64img
-
-
 def _convert_figure_base64(fig):
     buff = BytesIO()
-    fig.savefig(buff, format="png")
+    fig.savefig(buff, format="png", pad_inches=0.0)
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
@@ -72,12 +63,19 @@ class ImageFeature(BaseFeature):
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
         )
 
-        fig, axis = viz.visualize_image_attr(
-            attribution_t, (data_t / 2) + 0.5, method="heat_map", sign="absolute_value"
+        orig_fig, _ = viz.visualize_image_attr(
+            attribution_t, data_t, method="original_image", use_pyplot=False
+        )
+        attr_fig, _ = viz.visualize_image_attr(
+            attribution_t,
+            data_t,
+            method="heat_map",
+            sign="absolute_value",
+            use_pyplot=False,
         )
 
-        attr_img_64 = _convert_figure_base64(fig)
-        img_64 = _convert_img_base64(data_t)
+        img_64 = _convert_figure_base64(orig_fig)
+        attr_img_64 = _convert_figure_base64(attr_fig)
 
         return FeatureOutput(
             name=self.name,
