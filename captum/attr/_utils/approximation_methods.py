@@ -37,12 +37,24 @@ def approximation_parameters(method):
 def riemann_builders(method=Riemann.trapezoid):
     r"""Step sizes are identical and alphas are scaled in [0, 1]
 
-        Args
-             n: The number of steps
+        Args:
+
+             n: The number of integration steps
              method: `left`, `right`, `middle` and `trapezoid` riemann
+
+        Returns:
+
+            step_sizes (callable): `step_sizes` takes the number of steps as an
+                        arguement and returns an array of steps sizes which sum is
+                        smaller than or equal to one.
+
+            alphas (callable): `alphas` takes the number of steps as an input argument
+                        and returns the multipliers/coefficients for the inputs
+                        of integrand in the range of [0, 1]
+
     """
 
-    def w_list_func(n):
+    def step_sizes(n):
         assert n > 1, "The number of steps has to be larger than one"
         deltas = [1 / n] * n
         if method == Riemann.trapezoid:
@@ -50,7 +62,7 @@ def riemann_builders(method=Riemann.trapezoid):
             deltas[-1] /= 2
         return deltas
 
-    def alpha_list_func(n):
+    def weight_coefficients(n):
         assert n > 1, "The number of steps has to be larger than one"
         if method == Riemann.trapezoid:
             return list(np.linspace(0, 1, n))
@@ -67,26 +79,45 @@ def riemann_builders(method=Riemann.trapezoid):
         # if method == 'riemann_include_endpoints':
         #     return [i / (n - 1) for i in range(n)]
 
-    return w_list_func, alpha_list_func
+    return step_sizes, alphas
 
 
 def gauss_legendre_builders():
-    r""" For integration using gauss legendre
-    numpy makes our life easier, but it integrates in [-1, 1]. Need to rescale.
-    The weights returned by numpy also aggregate to 2. Need to rescale.
+    r""" Numpy's `np.polynomial.legendre` function helps to compute step sizes
+    and alpha coefficients using gauss-legendre quadrature rule.
+    Since numpy returns the integration parameters in different scales we need to
+    rescale them to adjust to the desired scale.
 
-    Args
-        n: The number of steps
+    Gauss Legendre quadrature rule for approximating the integrals was originally
+    proposed by Xue Feng and her intern Hauroun Habeeb.
+    https://research.fb.com/people/feng-xue/
+
+    Args:
+
+        n (int): The number of integration steps
+
+    Returns:
+
+        step_sizes (callable): `step_sizes` takes the number of steps as an
+                    arguement and returns an array of steps sizes which sum is
+                    smaller than or equal to one. In the literature it is also
+                    known as weights.
+
+        alphas (callable): `alphas` takes the number of steps as an input argument
+                    and returns the multipliers/coefficients for the inputs
+                    of integrand in the range of [0, 1]
+
+
     """
 
-    def w_list_func(n):
+    def step_sizes(n):
         assert n > 0, "The number of steps has to be larger than zero"
-        # Scale from 2 -> 1
+        # Scaling from 2 to 1
         return list(0.5 * np.polynomial.legendre.leggauss(n)[1])
 
-    def alpha_list_func(n):
+    def alphas(n):
         assert n > 0, "The number of steps has to be larger than zero"
-        # [-1, 1] -> [0, 1] scaling is necessary.
+        # Scaling from [-1, 1] to [0, 1]
         return list(0.5 * (1 + np.polynomial.legendre.leggauss(n)[0]))
 
-    return w_list_func, alpha_list_func
+    return step_sizes, alphas
