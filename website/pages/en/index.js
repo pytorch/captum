@@ -63,7 +63,7 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        <Logo img_src={baseUrl + 'img/captum-icon.png'}/>
+        <div className="productTitle">Captum</div>
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
@@ -210,7 +210,7 @@ Approximation Error:  9.5367431640625e-07
         {[
           {
             content:
-              'Interpret models across different modalities including vision, text, and more.',
+              'Supports interpretability of models across modalities including vision, text, and more.',
             image: `${baseUrl}img/multi-modal.png`,
             imageAlign: 'top',
             title: 'Multi-Modal',

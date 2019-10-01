@@ -50,6 +50,13 @@ html body {
  padding: 30px 0px;
 }
 
+.productTitle{
+  color: #ffffff;
+  font-family: FreightSans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+}
+
 .splashLogo {
   display: block;
   margin: 0 auto;
@@ -64,7 +71,7 @@ html body {
 
 .projectTitle {
   color: #ffffff;
-  font-variant: small-caps;
+  /*font-variant: small-caps;*/
   font-weight: 300;
 }
 
@@ -93,7 +100,7 @@ div.productShowcaseSection {
   font-weight: 360;
   margin: 0px;
   padding: 0px;
-  color: #1c60f7;
+  color: #222222;
 }
 
 .productShowcaseSection p {
