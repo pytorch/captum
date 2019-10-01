@@ -47,16 +47,7 @@ html body {
 
 .homeContainer {
  background-image: url(/img/landing-background.jpg);
-
-/*  background: rgb(2, 0, 36);
-  background: linear-gradient(
-    to bottom,
-    #020024 80%,
-    #673AB7 95%
-  );*/
-
-
-  padding: 30px 0px;
+ padding: 30px 0px;
 }
 
 .splashLogo {
