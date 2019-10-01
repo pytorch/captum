@@ -160,7 +160,9 @@ function ImageFeature(props) {
             <div className="gallery__item__image">
               <img src={"data:image/png;base64," + props.data.modified} />
             </div>
-            <div className="gallery__item__description">Gradient Overlay</div>
+            <div className="gallery__item__description">
+              Attribution Magnitude
+            </div>
           </div>
         </div>
       </div>
@@ -206,18 +208,24 @@ function Feature(props) {
 
 class Contributions extends React.Component {
   render() {
-    return this.props.feature_outputs.map(f => (
-      <div className="bar-chart__group">
-        <div
-          className={cx({
-            "bar-chart__group__bar": true,
-            [getPercentageColor(f.contribution)]: true
-          })}
-          width={f.contribution + "%"}
-        />
-        <div className="bar-chart__group__title">{f.name}</div>
-      </div>
-    ));
+    return this.props.feature_outputs.map(f => {
+      // pad bar height so features with 0 contribution can still be seen
+      // in graph
+      const contribution = f.contribution * 100;
+      const bar_height = contribution > 10 ? contribution : contribution + 10;
+      return (
+        <div className="bar-chart__group">
+          <div
+            className={cx([
+              "bar-chart__group__bar",
+              getPercentageColor(contribution)
+            ])}
+            style={{ height: bar_height + "px" }}
+          />
+          <div className="bar-chart__group__title">{f.name}</div>
+        </div>
+      );
+    });
   }
 }
 

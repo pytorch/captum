@@ -62,7 +62,7 @@ class AttributionVisualizer(object):
     ) -> Tensor:
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
-        label = None if label is None or len(label.shape) == 0 else label
+        label = None if label is None or label.nelement() == 0 else label
         attr_ig, _ = ig.attribute(
             data,
             baselines=baselines[0],
@@ -124,7 +124,7 @@ class AttributionVisualizer(object):
         if norm > 0:
             net_contrib /= norm
 
-        return net_contrib
+        return net_contrib.tolist()
 
     def visualize(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
@@ -169,11 +169,11 @@ class AttributionVisualizer(object):
 
             label = batch_data.labels[i]
 
-            if len(outputs) == 1:
+            if outputs.nelement() == 1:
                 scores = outputs
                 predicted = scores.round().to(torch.int)
             else:
-                scores, predicted = outputs.topk(min(4, len(outputs)))
+                scores, predicted = outputs.topk(min(4, outputs.shape[-1]))
 
             scores = scores.cpu().squeeze(0)
             predicted = predicted.cpu().squeeze(0)
