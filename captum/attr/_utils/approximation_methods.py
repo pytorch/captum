@@ -45,7 +45,7 @@ def riemann_builders(method=Riemann.trapezoid):
         Returns:
 
             step_sizes (callable): `step_sizes` takes the number of steps as an
-                        arguement and returns an array of steps sizes which sum is
+                        argument and returns an array of steps sizes which sum is
                         smaller than or equal to one.
 
             alphas (callable): `alphas` takes the number of steps as an input argument
@@ -99,7 +99,7 @@ def gauss_legendre_builders():
     Returns:
 
         step_sizes (callable): `step_sizes` takes the number of steps as an
-                    arguement and returns an array of steps sizes which sum is
+                    argument and returns an array of steps sizes which sum is
                     smaller than or equal to one. In the literature it is also
                     known as weights.
 
