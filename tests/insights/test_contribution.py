@@ -1,13 +1,14 @@
 from __future__ import print_function
+
+import unittest
 from typing import Callable, List, Optional, Union
+
+from captum.insights.api import AttributionVisualizer, Data
+from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
+from tests.attr.helpers.utils import BaseTest
 
 import torch
 import torch.nn as nn
-
-from captum.insights.api import AttributionVisualizer, Data
-from captum.insights.features import ImageFeature, BaseFeature, FeatureOutput
-
-from tests.attr.helpers.utils import BaseTest
 
 
 class RealFeature(BaseFeature):
@@ -97,7 +98,7 @@ class TinyMultiModal(nn.Module):
 
 
 def _labelled_img_data(num_samples=10, width=8, height=8, depth=3, num_labels=10):
-    for i in range(num_samples):
+    for _ in range(num_samples):
         yield torch.empty(depth, height, width).uniform_(0, 1), torch.randint(
             num_labels, (1,)
         )
@@ -105,7 +106,7 @@ def _labelled_img_data(num_samples=10, width=8, height=8, depth=3, num_labels=10
 
 def _multi_modal_data(img_dataset, feature_size=256):
     def misc_data(length, feature_size=None):
-        for i in range(length):
+        for _ in range(length):
             yield torch.randn(feature_size)
 
     misc_dataset = misc_data(length=len(img_dataset), feature_size=feature_size)
@@ -165,11 +166,8 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            contribs = torch.stack(
-                [feature.contribution for feature in output.feature_outputs]
-            )
-            total_contrib = torch.sum(torch.abs(contribs))
-            self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)
+            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     def test_multi_features(self):
         batch_size = 2
@@ -183,7 +181,7 @@ class Test(BaseTest):
             img_dataset=img_dataset, feature_size=misc_feature_size
         )
         # NOTE: using DataLoader to batch the inputs since
-        # AttributionVisualizer requires the input to be of size `B x ...`
+        # AttributionVisualizer requires the input to be of size `N x ...`
         data_loader = torch.utils.data.DataLoader(
             list(dataset), batch_size=batch_size, shuffle=False, num_workers=0
         )
@@ -211,13 +209,14 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            contribs = torch.stack(
-                [feature.contribution for feature in output.feature_outputs]
-            )
-            total_contrib = torch.sum(torch.abs(contribs))
-            self.assertAlmostEqual(total_contrib.item(), 1.0, places=6)
+            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     # TODO: add test for multiple models (related to TODO in captum/insights/api.py)
     #
     # TODO: add test to make the attribs == 0 -- error occurs
     #       I know (through manual testing) that this breaks some existing code
+
+
+if __name__ == "__main__":
+    unittest.main()

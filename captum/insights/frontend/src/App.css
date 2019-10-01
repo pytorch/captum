@@ -170,16 +170,27 @@ button {
 }
 
 .gallery__item__image img {
-  height: 130px;
+  height: 200px;
   width: auto;
 }
 
-.bar-chart__group {
-  padding: 8px 0;
+.gallery__item__description {
+  text-align: center;
 }
+
+.bar-chart__group {
+  padding: 2px 0;
+  display: flex;
+}
+
 .bar-chart__group__bar {
-  height: 10px;
-  border-radius: 4px;
+  width: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.bar-chart__group__title {
+  padding-left: 8px;
 }
 
 .percentage-blue {
