@@ -12,7 +12,8 @@ FeatureOutput = namedtuple("FeatureOutput", "name base modified type contributio
 
 def _convert_figure_base64(fig):
     buff = BytesIO()
-    fig.savefig(buff, format="png", pad_inches=0.0)
+    fig.tight_layout()  # removes padding
+    fig.savefig(buff, format="png")
     base64img = base64.b64encode(buff.getvalue()).decode("utf-8")
     return base64img
 
