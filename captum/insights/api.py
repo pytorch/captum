@@ -55,17 +55,18 @@ class AttributionVisualizer(object):
     def _calculate_attribution(
         self,
         net: Module,
-        baselines: List[Tuple[Tensor, ...]],
+        baselines: Optional[List[Tuple[Tensor, ...]]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Tensor],
     ) -> Tensor:
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
+        baseline = baselines[0] if len(baselines) > 0 else None
         label = None if label is None or label.nelement() == 0 else label
         attr_ig, _ = ig.attribute(
             data,
-            baselines=baselines[0],
+            baselines=baseline,
             additional_forward_args=additional_forward_args,
             target=label,
             n_steps=self.n_steps,
@@ -84,7 +85,6 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[PredictionScore]:
-        scores, indices = scores.squeeze(), indices.squeeze()
         pred_scores = []
         for i in range(len(indices)):
             score = scores[i].item()
@@ -139,26 +139,28 @@ class AttributionVisualizer(object):
             )
         ):
             # initialize baselines
-            baseline_transforms_len = len(self.features[0].baseline_transforms)
+            baseline_transforms_len = len(self.features[0].baseline_transforms or [])
             baselines = [
                 [None] * len(self.features) for _ in range(baseline_transforms_len)
             ]
             transformed_inputs = list(inputs)
 
             for feature_i, feature in enumerate(self.features):
-                transformed_inputs[feature_i] = self._transform(
-                    feature.input_transforms, transformed_inputs[feature_i], True
-                )
-                assert baseline_transforms_len == len(
-                    feature.baseline_transforms
-                ), "Must have same number of baselines across all features"
-
-                for baseline_i, baseline_transform in enumerate(
-                    feature.baseline_transforms
-                ):
-                    baselines[baseline_i][feature_i] = self._transform(
-                        baseline_transform, transformed_inputs[feature_i], True
+                if feature.input_transforms is not None:
+                    transformed_inputs[feature_i] = self._transform(
+                        feature.input_transforms, transformed_inputs[feature_i], True
                     )
+                if feature.baseline_transforms is not None:
+                    assert baseline_transforms_len == len(
+                        feature.baseline_transforms
+                    ), "Must have same number of baselines across all features"
+
+                    for baseline_i, baseline_transform in enumerate(
+                        feature.baseline_transforms
+                    ):
+                        baselines[baseline_i][feature_i] = self._transform(
+                            baseline_transform, transformed_inputs[feature_i], True
+                        )
 
             outputs = _run_forward(
                 net, tuple(transformed_inputs), additional_forward_args
@@ -167,7 +169,7 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
-            label = batch_data.labels[i]
+            label = None if batch_data.labels is None else batch_data.labels[i]
 
             if outputs.nelement() == 1:
                 scores = outputs
@@ -178,8 +180,7 @@ class AttributionVisualizer(object):
             scores = scores.cpu().squeeze(0)
             predicted = predicted.cpu().squeeze(0)
 
-            actual_label = self.classes[label]
-
+            actual_label = self.classes[label] if label is not None else None
             predicted_labels = self._get_labels_from_scores(scores, predicted)
 
             baselines = [tuple(b) for b in baselines]

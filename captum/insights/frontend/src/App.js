@@ -194,6 +194,35 @@ function TextFeature(props) {
   );
 }
 
+function GeneralFeature(props) {
+  const bars = props.data.base.map((w, i) => {
+    const percent = props.data.modified[i].toFixed(3);
+    const color =
+      "general-feature__bar__" + (percent > 0 ? "positive" : "negative");
+    const width_percent = Math.abs(percent) + "%";
+    return (
+      <div className="general-feature">
+        <span className="general-feature__label-container">
+          <span className="general-feature__label">{w}</span>
+          <span className="general-feature__percent">{percent}</span>
+        </span>
+        <div className="general-feature__bar-container">
+          <span
+            className={cx(["general-feature__bar", color])}
+            style={{ width: width_percent }}
+          ></span>
+        </div>
+      </div>
+    );
+  });
+  return (
+    <>
+      <div className="panel__column__title">{props.data.name} (General)</div>
+      <div className="panel__column__body">{bars}</div>
+    </>
+  );
+}
+
 function Feature(props) {
   const data = props.data;
   switch (data.type) {
@@ -201,6 +230,8 @@ function Feature(props) {
       return <ImageFeature data={data} />;
     case "text":
       return <TextFeature data={data} />;
+    case "general":
+      return <GeneralFeature data={data} />;
     default:
       throw new Error("Unsupported feature visualization type: " + data.type);
   }
