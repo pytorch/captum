@@ -36,46 +36,42 @@ class Test(BaseTest):
         validate_noise_tunnel_type("vargrad", SUPPORTED_NOISE_TUNNEL_TYPES)
 
     def test_select_target_2d(self):
-        test_tensor = torch.tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        assertTensorAlmostEqual(self, _select_targets(test_tensor, 1), [2, 5, 8])
+        output_tensor = torch.tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        assertTensorAlmostEqual(self, _select_targets(output_tensor, 1), [2, 5, 8])
         assertTensorAlmostEqual(
-            self, _select_targets(test_tensor, torch.tensor(0)), [1, 4, 7]
+            self, _select_targets(output_tensor, torch.tensor(0)), [1, 4, 7]
         )
         assertTensorAlmostEqual(
-            self, _select_targets(test_tensor, torch.tensor([1, 2, 0])), [2, 6, 7]
+            self, _select_targets(output_tensor, torch.tensor([1, 2, 0])), [2, 6, 7]
         )
         assertTensorAlmostEqual(
-            self, _select_targets(test_tensor, [1, 2, 0]), [2, 6, 7]
+            self, _select_targets(output_tensor, [1, 2, 0]), [2, 6, 7]
         )
-
-        # Verify error is raised if dimension is out of bounds.
-        with self.assertRaises(AssertionError):
-            _select_targets(test_tensor, torch.tensor(4))
 
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
-            _select_targets(test_tensor, (1, 2))
+            _select_targets(output_tensor, (1, 2))
 
     def test_select_target_3d(self):
-        test_tensor = torch.tensor(
+        output_tensor = torch.tensor(
             [[[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[9, 8, 7], [6, 5, 4], [3, 2, 1]]]
         )
-        assertTensorAlmostEqual(self, _select_targets(test_tensor, (0, 1)), [2, 8])
+        assertTensorAlmostEqual(self, _select_targets(output_tensor, (0, 1)), [2, 8])
         assertTensorAlmostEqual(
-            self, _select_targets(test_tensor, [(0, 1), (2, 0)]), [2, 3]
+            self, _select_targets(output_tensor, [(0, 1), (2, 0)]), [2, 3]
         )
 
         # Verify error is raised if list is longer than number of examples.
         with self.assertRaises(AssertionError):
-            _select_targets(test_tensor, [(0, 1), (2, 0), (3, 2)])
+            _select_targets(output_tensor, [(0, 1), (2, 0), (3, 2)])
 
         # Verify error is raised if any dimension is out of bounds.
         with self.assertRaises(AssertionError):
-            _select_targets(test_tensor, [(1, 2), (2, 3)])
+            _select_targets(output_tensor, [(1, 2), (2, 3)])
 
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
-            _select_targets(test_tensor, (1, 2, 3))
+            _select_targets(output_tensor, (1, 2, 3))
 
     def test_stat_tracking(self):
         data = [1, 2, 3, 4, 5]

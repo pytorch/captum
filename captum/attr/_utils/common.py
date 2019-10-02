@@ -3,7 +3,15 @@
 import torch
 import numpy as np
 
+from enum import Enum
+
+
 from .approximation_methods import SUPPORTED_METHODS
+
+
+class ExpansionTypes(Enum):
+    repeat = 1
+    repeat_interleave = 2
 
 
 def random_baseline(input, start, end):
@@ -145,72 +153,59 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     )
 
 
-def _verify_select_item(output, target):
-    # Verifies that target is within bounds.
-    assert len(output.shape) >= len(target), (
-        "Cannot choose output index %r, output has only %d dimensions."
-        % (target, len(output.shape))
+def _convert_index(shape, target):
+    assert len(shape) == len(target), (
+        "The length of each target must equal to " "the number of output dimensions - 1"
     )
-    for i in range(len(target)):
-        assert target[i] < output.shape[i], (
-            "Cannot choose output index %r, output shape is %r."
-            % (target, tuple(output.shape))
-        )
-    return output[target]
+    total_index = 0
+    current_total = 1
+    for i in range(len(target) - 1, -1, -1):
+        assert (
+            target[i] < shape[i]
+        ), "Index %r cannot be chosen from output with " "shape %r." % (target, shape)
+        total_index += current_total * target[i]
+        current_total = current_total * shape[i]
+    return total_index
 
 
 def _verify_select_column(output, target):
-    assert len(output.shape) > 1, "Cannot choose target column, output is only 1D."
-    assert target < output.shape[1], (
-        "Cannot choose target column %d, output dimension 1 only has %d columns."
-        % (target, output.shape[1])
-    )
-    return output[:, target]
+    target = (target,) if isinstance(target, int) else target
+    assert (
+        len(target) <= len(output.shape) - 1
+    ), "Cannot choose target column with " "output shape %r." % (output.shape,)
+    return output[(slice(None), *target)]
 
 
 def _select_targets(output, target):
     num_examples = output.shape[0]
+    dims = len(output.shape)
     if target is None:
         return output
-    elif isinstance(target, int):
+    elif isinstance(target, int) or isinstance(target, tuple):
         return _verify_select_column(output, target)
-    elif isinstance(target, tuple):
-        return torch.stack(
-            [
-                _verify_select_item(output, i)
-                for i in _extend_index_list(num_examples, target)
-            ]
-        )
     elif isinstance(target, torch.Tensor):
         if torch.numel(target) == 1 and isinstance(target.item(), int):
             return _verify_select_column(output, target.item())
-        elif len(target.shape) == 1 and torch.numel(target) == len(output):
-            return torch.stack(
-                [
-                    _verify_select_item(output, (i,) + (target[i].item(),))
-                    for i in range(num_examples)
-                ]
-            )
+        elif len(target.shape) == 1 and torch.numel(target) == num_examples:
+            assert dims == 2, "Output must be 2D to select tensor of targets."
+            return torch.gather(output, 1, target.reshape(len(output), 1))
         else:
             raise AssertionError(
-                "Tensor target dimension %r is not valid." % target.shape
+                "Tensor target dimension %r is not valid." % (target.shape,)
             )
     elif isinstance(target, list):
-        assert len(target) == len(output), "Target list length does not match output!"
+        assert len(target) == num_examples, "Target list length does not match output!"
         if type(target[0]) is int:
-            return torch.stack(
-                [
-                    _verify_select_item(output, (i,) + (target[i],))
-                    for i in range(num_examples)
-                ]
-            )
+            assert dims == 2, "Output must be 2D to select tensor of targets."
+            return torch.gather(output, 1, torch.tensor(target).reshape(len(output), 1))
         elif type(target[0]) is tuple:
-            return torch.stack(
+            target_tensor = torch.tensor(
                 [
-                    _verify_select_item(output, (i,) + target[i])
-                    for i in range(num_examples)
+                    _convert_index(tuple(output.shape[1:]), targ_elem)
+                    for targ_elem in target
                 ]
-            )
+            ).reshape((num_examples, 1))
+            return torch.gather(output.reshape((num_examples, -1)), 1, target_tensor)
         else:
             raise AssertionError("Target element type in list is not valid.")
     else:
@@ -239,9 +234,9 @@ def _expand_additional_forward_args(
     ):
         if len(additional_forward_arg.size()) == 0:
             return additional_forward_arg
-        if expansion_type == "repeat":
+        if ExpansionTypes[expansion_type] == ExpansionTypes.repeat:
             return torch.cat([additional_forward_arg] * n_steps, dim=0)
-        elif expansion_type == "repeat_interleave":
+        elif ExpansionTypes[expansion_type] == ExpansionTypes.repeat_interleave:
             return additional_forward_arg.repeat_interleave(n_steps, dim=0)
         else:
             raise NotImplementedError(
@@ -259,9 +254,9 @@ def _expand_additional_forward_args(
 
 def _expand_target(target, n_steps, expansion_type="repeat"):
     if isinstance(target, list):
-        if expansion_type == "repeat":
+        if ExpansionTypes[expansion_type] == ExpansionTypes.repeat:
             return target * n_steps
-        elif expansion_type == "repeat_interleave":
+        elif ExpansionTypes[expansion_type] == ExpansionTypes.repeat_interleave:
             expanded_target = []
             for i in target:
                 expanded_target.extend([i] * n_steps)

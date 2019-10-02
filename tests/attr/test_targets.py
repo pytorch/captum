@@ -350,7 +350,7 @@ class Test(BaseTest):
             test_batches=True,
         )
 
-    def test_simple_target_layer_gradientx_act(self):
+    def test_simple_target_layer_gradient_x_act(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
@@ -361,7 +361,7 @@ class Test(BaseTest):
             targets=[0, 1, 1, 0],
         )
 
-    def test_multi_target_layer_gradientx_act(self):
+    def test_multi_target_layer_gradient_x_act(self):
         net = TestModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
@@ -426,39 +426,39 @@ class Test(BaseTest):
         **kwargs
     ):
         if target_layer:
-            attr = algorithm(model, target_layer)
+            attr_method = algorithm(model, target_layer)
         else:
-            attr = algorithm(model)
+            attr_method = algorithm(model)
 
         batch_sizes = [None]
         if test_batches:
             batch_sizes = [None, 2, 4]
         for batch_size in batch_sizes:
             if batch_size:
-                attributions_orig = attr.attribute(
+                attributions_orig = attr_method.attribute(
                     inputs=inputs,
                     target=targets,
                     internal_batch_size=batch_size,
                     **kwargs
                 )
             else:
-                attributions_orig = attr.attribute(
+                attributions_orig = attr_method.attribute(
                     inputs=inputs, target=targets, **kwargs
                 )
-            if attr._has_convergence_delta():
+            if attr_method._has_convergence_delta():
                 attributions_orig = attributions_orig[0]
             for i in range(len(inputs)):
-                single_attr = attr.attribute(
+                single_attr = attr_method.attribute(
                     inputs=inputs[i : i + 1],
                     target=targets[i] if splice_targets else targets,
                     **kwargs
                 )
-                single_attr_target_list = attr.attribute(
+                single_attr_target_list = attr_method.attribute(
                     inputs=inputs[i : i + 1],
                     target=targets[i : i + 1] if splice_targets else targets,
                     **kwargs
                 )
-                if attr._has_convergence_delta():
+                if attr_method._has_convergence_delta():
                     single_attr = single_attr[0]
                     single_attr_target_list = single_attr_target_list[0]
                 assertTensorAlmostEqual(

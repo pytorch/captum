@@ -192,8 +192,8 @@ class TestModel_MultiLayer(nn.Module):
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
         if multidim_output:
-            stack_mid = torch.stack((lin2_out, lin2_out), dim=2)
-            return torch.stack((stack_mid, stack_mid), dim=3)
+            stack_mid = torch.stack((lin2_out, 2 * lin2_out), dim=2)
+            return torch.stack((stack_mid, 4 * stack_mid), dim=3)
         else:
             return lin2_out
 
