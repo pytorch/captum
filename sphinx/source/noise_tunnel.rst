@@ -1,5 +1,5 @@
-Captum.NoiseTunnel
-==================
+NoiseTunnel
+============
 
 .. automodule:: captum.attr._core.noise_tunnel
 
