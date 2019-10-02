@@ -154,9 +154,9 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
 
 
 def _convert_index(shape, target):
-    assert len(shape) == len(target), (
-        "The length of each target must equal to the number of output dimensions - 1"
-    )
+    assert len(shape) == len(
+        target
+    ), "The length of each target must equal to the number of output dimensions - 1"
     total_index = 0
     current_total = 1
     for i in range(len(target) - 1, -1, -1):
