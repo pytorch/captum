@@ -1,12 +1,10 @@
 import logging
-import os
 import socket
 import threading
 from time import sleep
 from typing import Optional
-from time import sleep
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template
 
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
@@ -55,7 +53,7 @@ def run_app():
     app.run(port=port, use_reloader=False)
 
 
-def start_server(_viz, debug=False, _port: Optional[int] = None):
+def start_server(_viz, debug, _port: Optional[int] = None):
     global visualizer
     visualizer = _viz
 

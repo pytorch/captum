@@ -74,11 +74,11 @@ class AttributionVisualizer(object):
 
         return attr_ig
 
-    def render(self):
+    def render(self, debug=False):
         from IPython.display import IFrame, display
         from captum.insights.server import start_server
 
-        port = start_server(self)
+        port = start_server(self, debug)
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
