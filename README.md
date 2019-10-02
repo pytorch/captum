@@ -1,13 +1,10 @@
-<a href="https://captum.org">
-  <img width="350" src="./captum_logo_lockup.svg" alt="Captum Logo" />
-</a>
+![Captum Logo](./website/static/captum_logo.png)
 
 <hr/>
 
 [![Conda](https://img.shields.io/conda/v/pytorch/captum.svg)](https://anaconda.org/pytorch/captum)
 [![PyPI](https://img.shields.io/pypi/v/captum.svg)](https://pypi.org/project/captum)
 [![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
-[![Codecov](https://img.shields.io/codecov/c/github/pytorch/captum.svg)](https://codecov.io/github/pytorch/captum)
 
 Captum is a model interpretability and understanding library for PyTorch.
 Captum means comprehension in latin and contains general purpose implementations
@@ -279,6 +276,8 @@ python -m captum.insights.example
 ```
 
 and navigate to the URL specified in the output.
+
+![Captum Insights Screenshot](./website/static/captum_insights_screenshot.png)
 
 To build Insights you will need [Node](https://nodejs.org/en/) >= 8.x
 and [Yarn](https://yarnpkg.com/en/) >= 1.5.
