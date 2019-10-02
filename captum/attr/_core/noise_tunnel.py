@@ -15,6 +15,7 @@ from .._utils.common import (
     _format_additional_forward_args,
     _expand_additional_forward_args,
     _expand_target,
+    ExpansionTypes,
 )
 
 
@@ -215,7 +216,9 @@ class NoiseTunnel(Attribution):
             if additional_forward_args is None:
                 return
             additional_forward_args = _expand_additional_forward_args(
-                additional_forward_args, n_samples, expansion_type="repeat_interleave"
+                additional_forward_args,
+                n_samples,
+                expansion_type=ExpansionTypes.repeat_interleave,
             )
             # update kwargs with expanded baseline
             kwargs["additional_forward_args"] = additional_forward_args
@@ -225,7 +228,7 @@ class NoiseTunnel(Attribution):
                 return
             target = kwargs["target"]
             target = _expand_target(
-                target, n_samples, expansion_type="repeat_interleave"
+                target, n_samples, expansion_type=ExpansionTypes.repeat_interleave
             )
             # update kwargs with expanded baseline
             kwargs["target"] = target

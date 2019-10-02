@@ -227,16 +227,16 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
 
 
 def _expand_additional_forward_args(
-    additional_forward_args, n_steps, expansion_type="repeat"
+    additional_forward_args, n_steps, expansion_type=ExpansionTypes.repeat
 ):
     def _expand_tensor_forward_arg(
-        additional_forward_arg, n_steps, expansion_type="repeat"
+        additional_forward_arg, n_steps, expansion_type=ExpansionTypes.repeat
     ):
         if len(additional_forward_arg.size()) == 0:
             return additional_forward_arg
-        if ExpansionTypes[expansion_type] == ExpansionTypes.repeat:
+        if expansion_type == ExpansionTypes.repeat:
             return torch.cat([additional_forward_arg] * n_steps, dim=0)
-        elif ExpansionTypes[expansion_type] == ExpansionTypes.repeat_interleave:
+        elif expansion_type == ExpansionTypes.repeat_interleave:
             return additional_forward_arg.repeat_interleave(n_steps, dim=0)
         else:
             raise NotImplementedError(
@@ -252,11 +252,11 @@ def _expand_additional_forward_args(
     )
 
 
-def _expand_target(target, n_steps, expansion_type="repeat"):
+def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
     if isinstance(target, list):
-        if ExpansionTypes[expansion_type] == ExpansionTypes.repeat:
+        if expansion_type == ExpansionTypes.repeat:
             return target * n_steps
-        elif ExpansionTypes[expansion_type] == ExpansionTypes.repeat_interleave:
+        elif expansion_type == ExpansionTypes.repeat_interleave:
             expanded_target = []
             for i in target:
                 expanded_target.extend([i] * n_steps)

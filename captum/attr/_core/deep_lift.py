@@ -14,6 +14,7 @@ from .._utils.common import (
     _run_forward,
     validate_input,
     _expand_target,
+    ExpansionTypes,
 )
 from .._utils.attribution import GradientBasedAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
@@ -397,7 +398,7 @@ class DeepLiftShap(DeepLift):
             ]
         )
         expanded_target = _expand_target(
-            target, base_bsz, expansion_type="repeat_interleave"
+            target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
 
         attributions, delta = super().attribute(
