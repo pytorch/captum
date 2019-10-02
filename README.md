@@ -1,4 +1,4 @@
-![Captum Logo](./website/static/captum_logo.png)
+![Captum Logo](./website/static/img/captum_logo.png)
 
 <hr/>
 
@@ -277,7 +277,7 @@ python -m captum.insights.example
 
 and navigate to the URL specified in the output.
 
-![Captum Insights Screenshot](./website/static/captum_insights_screenshot.png)
+![Captum Insights Screenshot](./website/static/img/captum_insights_screenshot.png)
 
 To build Insights you will need [Node](https://nodejs.org/en/) >= 8.x
 and [Yarn](https://yarnpkg.com/en/) >= 1.5.
