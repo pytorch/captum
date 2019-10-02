@@ -10,21 +10,27 @@ html body {
   overflow-x: hidden;
 }
 
-.fixedHeaderContainer {
-  background-color: #222222;
-}
-
-.fixedHeaderContainer header .headerTitleWithLogo {
+.navSearchWrapper{
   display: none;
 }
 
+.fixedHeaderContainer {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e2e2;
+}
+
+.fixedHeaderContainer header .headerTitleWithLogo {
+  display: block;
+  color: #222222;
+}
+
 .navigationSlider .slidingNav ul {
-    background: #222222;
+    background: #ffffff;
 }
 
 .navigationSlider .slidingNav ul li a {
-  color: #efefef;
-  background-color: #222222;
+  color: #222222;
+  background-color: #ffffff;
 }
 
 .navigationSlider .slidingNav ul li a:hover,
@@ -35,30 +41,37 @@ html body {
 
 .navigationSlider .slidingNav ul li.siteNavItemActive > a,
 .navigationSlider .slidingNav ul li.siteNavGroupActive > a {
+  color: #222222;
   background-color: inherit;
 }
 
 .homeContainer {
-  background: rgb(2, 0, 36);
-  background: linear-gradient(
-    180deg,
-    rgba(2, 0, 36, 1),
-    rgba(34, 34, 34, 1) 0%,
-    rgba(28, 96, 247, 1) 100%
-  );
-  padding: 30px 0px;
+ background-image: url(/img/landing-background.jpg);
+ padding: 30px 0px;
+}
+
+.productTitle{
+  color: #ffffff;
+  font-family: FreightSans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 48px;
+  font-weight: 400;
 }
 
 .splashLogo {
   display: block;
   margin: 0 auto;
-  height: 230px;
-  width: 275px;
+  height: 150px;
+  width: 150px;
+}
+
+.primaryLogoImage{
+  height: 100%;
+  width:100%;
 }
 
 .projectTitle {
   color: #ffffff;
-  font-variant: small-caps;
+  /*font-variant: small-caps;*/
   font-weight: 300;
 }
 
@@ -87,7 +100,7 @@ div.productShowcaseSection {
   font-weight: 360;
   margin: 0px;
   padding: 0px;
-  color: #1c60f7;
+  color: #222222;
 }
 
 .productShowcaseSection p {

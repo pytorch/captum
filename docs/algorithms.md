@@ -3,12 +3,12 @@ id: algorithms
 title: Algorithms
 ---
 
-Captum is a framework within which different interpretability methods can be implemented.  The Captum team welcomes any contributions in the form of algorithms, methods or framework extensions!  Below is a short summary of the various methods currently implemented within Captum and we will update with descriptions for methods added by the community.
+Captum is a library within which different interpretability methods can be implemented.  The Captum team welcomes any contributions in the form of algorithms, methods or library extensions!  Below is a short summary of the various methods currently implemented within Captum and we will update with descriptions for methods added by the community.
 
 ## Integrated Gradients
 Integrated Gradients is an axiomatic attribution method that requires almost no modification of the original network. It can be used for augmenting accuracy metrics, model debugging and feature or rule extraction. The cornerstones of this approach are two fundamental axioms, namely sensitivity and implementation invariance. While other attribution methods fail to fulfill one or the other axiom, integrated gradients satisfies both.
 
-Integrated gradients uses a baseline from which integration is done along the path from reference to the input in question.  As such, Integrated gradients represents the integral along the path from the baseline to input. Formally, it can be described as follows:
+Integrated gradients represents the integral along the path from the baseline to input. The integral can be approximated using Riemann Sum or Gauss Legendre quadrature rule. Formally, it can be described as follows:
 
 ![IG_eq1](/img/IG_eq1.png)
 Integrated Gradients along the i - th dimension of input X. Alpha is the scaling coefficient. The equations are copied from the [original paper](https://arxiv.org/abs/1703.01365).
@@ -21,7 +21,9 @@ DeepLIFT is a back propagation based approach that attributes a change to inputs
 ![deepLIFT_eq1](/img/deepLIFT_multipliers_eq1.png)
 x is the input neuron with a difference from reference Δx, and t is the target neuron with a difference from reference Δt. C is then the contribution of Δx to Δt.
 
-Like partial derivatives (gradients) used in back propagation, multipliers obey the Chain Rule.  Implementations of DeepLIFT override the implementation of the activation function in use during back propagation in order to calculate multipliers rather than partial gradients.  
+Like partial derivatives (gradients) used in back propagation, multipliers obey the Chain Rule. According to the formulations proposed in [this paper](https://openreview.net/pdf?id=Sy21R9JAW). DeepLIFT can be overwritten as the modified partial derivatives of output of non-linear activations with respect to their inputs.
+
+Currently, we only support Rescale Rule of DeepLIFT Algorithms. RevealCancel Rule will be implemented in later releases.
 
 To learn more about DeepLIFT visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1704.02685)  
