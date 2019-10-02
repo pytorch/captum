@@ -1,0 +1,136 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.layer_activation</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">LayerAttribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">_forward_layer_eval</span>
+
+
+<div class="viewcode-block" id="LayerActivation"><a class="viewcode-back" href="../../../../layer.html#captum.attr._core.layer_activation.LayerActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args</span>
+
+<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+<span class="sd">                          modification of it</span>
+<span class="sd">            layer (torch.nn.Module): Layer for which attributions are computed.</span>
+<span class="sd">                          Output size of attribute matches this layer's output</span>
+<span class="sd">                          dimensions, corresponding to attribution of each neuron</span>
+<span class="sd">                          in the output of this layer.</span>
+<span class="sd">                          Currently, only layers with a single tensor output are</span>
+<span class="sd">                          supported.</span>
+<span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
+<span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
+<span class="sd">                          intermediate outputs from batched results across devices.</span>
+<span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                          then it is not neccesary to provide this argument.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LayerActivation.attribute"><a class="viewcode-back" href="../../../../layer.html#captum.attr._core.layer_activation.LayerActivation.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">            Computes activation of selected layer for given input.</span>
+
+<span class="sd">            Args</span>
+
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which layer</span>
+<span class="sd">                            activation is computed. If forward_func takes a single</span>
+<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                            of the input tensors should be provided. It is assumed</span>
+<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                            to the number of examples, and if mutliple input tensors</span>
+<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
+<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                            requires additional arguments other than the inputs for</span>
+<span class="sd">                            which attributions should not be computed, this argument</span>
+<span class="sd">                            can be provided. It must be either a single additional</span>
+<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                            tuple containing multiple additional arguments including</span>
+<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                            are provided to forward_func in order following the</span>
+<span class="sd">                            arguments in inputs.</span>
+<span class="sd">                            Note that attributions are not computed with respect</span>
+<span class="sd">                            to these arguments.</span>
+<span class="sd">                            Default: None</span>
+
+<span class="sd">            Return</span>
+
+<span class="sd">                attributions (tensor): Activation of each neuron in given layer output.</span>
+<span class="sd">                            Attributions will always be the same size as the</span>
+<span class="sd">                            output of the given layer.</span>
+
+<span class="sd">            Examples::</span>
+
+<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">                &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="sd">                &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">                &gt;&gt;&gt; layer_act = LayerActivation(net, net.conv1)</span>
+<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">                &gt;&gt;&gt; # Computes layer activation.</span>
+<span class="sd">                &gt;&gt;&gt; # attribution is layer output, with size Nx12x32x32</span>
+<span class="sd">                &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

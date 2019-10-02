@@ -1,0 +1,429 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="neuron">
+<h1>neuron<a class="headerlink" href="#neuron" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-captum.attr._core.neuron_gradient">
+<span id="neurongradient"></span><h2>NeuronGradient<a class="headerlink" href="#module-captum.attr._core.neuron_gradient" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._core.neuron_gradient.NeuronGradient">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.neuron_gradient.</code><code class="sig-name descname">NeuronGradient</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_gradient.html#NeuronGradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_gradient.NeuronGradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>forward_func (callable):  The forward function of the model or any</dt><dd><p>modification of it</p>
+</dd>
+<dt>layer (torch.nn.Module): Layer for which neuron attributions are computed.</dt><dd><p>Attributions for a particular neuron in the output of
+this layer are computed using the argument neuron_index
+in the attribute method.
+Currently, only layers with a single tensor output are
+supported.</p>
+</dd>
+<dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._core.neuron_gradient.NeuronGradient.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_gradient.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the gradient of the output of a particular neuron with
+respect to the inputs of the network.</p>
+<p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>inputs (tensor or tuple of tensors):  Input for which neuron</dt><dd><p>gradients are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples, and if mutliple input tensors
+are provided, the examples must be aligned appropriately.</p>
+</dd>
+<dt>neuron_index (int or tuple): Index of neuron in output of given</dt><dd><p>layer for which attribution is desired. Length of
+this tuple must be one less than the number of
+dimensions in the output of the given layer (since
+dimension 0 corresponds to number of examples).
+An integer may be provided instead of a tuple of
+length 1.</p>
+</dd>
+<dt>additional_forward_args (tuple, optional): If the forward function</dt><dd><p>requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to forward_func in order following the
+arguments in inputs.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Return</p>
+<blockquote>
+<div><dl class="simple">
+<dt>attributions (tensor or tuple of tensors): Gradients of</dt><dd><p>particular neuron with respect to each input feature.
+Attributions will always be the same size as the provided
+inputs, with each value providing the attribution of the
+corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neuron_ig</span> <span class="o">=</span> <span class="n">NeuronGradient</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">conv1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># To compute neuron attribution, we need to provide the neuron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index for which attribution is desired. Since the layer output</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># which indexes a particular neuron in the layer output.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># For this example, we choose the index (4,1,2).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes neuron gradient for neuron with</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index (4,1,2).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">neuron_ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+</div>
+<div class="section" id="module-captum.attr._core.neuron_integrated_gradients">
+<span id="neuronintegratedgradients"></span><h2>NeuronIntegratedGradients<a class="headerlink" href="#module-captum.attr._core.neuron_integrated_gradients" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.neuron_integrated_gradients.</code><code class="sig-name descname">NeuronIntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>forward_func (callable):  The forward function of the model or any</dt><dd><p>modification of it</p>
+</dd>
+<dt>layer (torch.nn.Module): Layer for which attributions are computed.</dt><dd><p>Attributions for a particular neuron in the output of
+this layer are computed using the argument neuron_index
+in the attribute method.
+Currently, only layers with a single tensor output are
+supported.</p>
+</dd>
+<dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Approximates the integral of gradients for a particular neuron
+along the path from a baseline input to the given input.
+If no baseline is provided, the default baseline is the zero tensor.
+More details regarding the integrated gradient method can be found in the
+original paper here:
+<a class="reference external" href="https://arxiv.org/abs/1703.01365">https://arxiv.org/abs/1703.01365</a></p>
+<p>Note that this method is equivalent to applying integrated gradients
+where the output is the output of the identified neuron.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which neuron integrated
+gradients are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples, and if mutliple input tensors
+are provided, the examples must be aligned appropriately.</p></li>
+<li><p><strong>neuron_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – Index of neuron in output of given
+layer for which attribution is desired. Length of
+this tuple must be one less than the number of
+dimensions in the output of the given layer (since
+dimension 0 corresponds to number of examples).
+An integer may be provided instead of a tuple of
+length 1.</p></li>
+<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baseline from which
+integral is computed. If inputs is a single tensor,
+baselines must also be a single tensor with exactly the same
+dimensions as inputs. If inputs is a tuple of tensors,
+baselines must also be a tuple of tensors, with matching
+dimensions to inputs.
+Default: zero tensor for each input tensor</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – <p>If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to forward_func in order following the
+arguments in inputs.
+For a tensor, the first dimension of the tensor must
+correspond to the number of examples. It will be repeated</p>
+<blockquote>
+<div><p>for each of <cite>n_steps</cite> along the integrated path.</p>
+</div></blockquote>
+<p>For all other types, the given argument is used for
+all forward evaluations.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p>
+</p></li>
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+method. Default: 50.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
+<cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
+Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+data points into chunks of size internal_batch_size,
+which are computed (forward / backward passes)
+sequentially.
+For DataParallel models, each batch is split among the
+available devices, so evaluations on each available
+device contain internal_batch_size / num_devices examples.
+If internal_batch_size is None, then all evaluations are
+processed in one batch.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Integrated gradients for</dt><dd><p>particular neuron with respect to each input feature.
+Attributions will always be the same size as the provided
+inputs, with each value providing the attribution of the
+corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions (tensor or tuple of tensors)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neuron_ig</span> <span class="o">=</span> <span class="n">NeuronIntegratedGradients</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">conv1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># To compute neuron attribution, we need to provide the neuron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index for which attribution is desired. Since the layer output</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># which indexes a particular neuron in the layer output.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># For this example, we choose the index (4,1,2).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes neuron integrated gradients for neuron with</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index (4,1,2).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">neuron_ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+</div>
+<div class="section" id="module-captum.attr._core.neuron_conductance">
+<span id="neuronconductance"></span><h2>NeuronConductance<a class="headerlink" href="#module-captum.attr._core.neuron_conductance" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._core.neuron_conductance.NeuronConductance">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.neuron_conductance.</code><code class="sig-name descname">NeuronConductance</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_conductance.html#NeuronConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_conductance.NeuronConductance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>forward_func (callable):  The forward function of the model or any</dt><dd><p>modification of it</p>
+</dd>
+<dt>layer (torch.nn.Module): Layer for which neuron attributions are computed.</dt><dd><p>Attributions for a particular neuron in the output of
+this layer are computed using the argument neuron_index
+in the attribute method.
+Currently, only layers with a single tensor output are
+supported.</p>
+</dd>
+<dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._core.neuron_conductance.NeuronConductance.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_conductance.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes conductance with respect to particular hidden neuron. The
+returned output is in the shape of the input, showing the attribution
+/ conductance of each input feature to the selected hidden layer neuron.
+The details of the approach can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1805.12233">https://arxiv.org/abs/1805.12233</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which neuron
+conductance is computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples, and if mutliple input tensors
+are provided, the examples must be aligned appropriately.</p></li>
+<li><p><strong>neuron_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – Index of neuron in output of given
+layer for which attribution is desired. Length of
+this tuple must be one less than the number of
+dimensions in the output of the given layer (since
+dimension 0 corresponds to number of examples).
+An integer may be provided instead of a tuple of
+length 1.</p></li>
+<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baseline from which
+integral is computed. If inputs is a single tensor,
+baselines must also be a single tensor with exactly the same
+dimensions as inputs. If inputs is a tuple of tensors,
+baselines must also be a tuple of tensors, with matching
+dimensions to inputs.
+Default: zero tensor for each input tensor</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Output index for which gradient is computed
+(for classification cases, this is the target class).
+If the network returns a scalar value per example,
+no target index is necessary. (Note: Tuples for multi
+-dimensional output indices will be supported soon.)
+Default: None</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – <p>If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a
+tuple containing multiple additional arguments including
+tensors or any arbitrary python types. These arguments
+are provided to forward_func in order following the
+arguments in inputs.
+For a tensor, the first dimension of the tensor must
+correspond to the number of examples. It will be repeated</p>
+<blockquote>
+<div><p>for each of <cite>n_steps</cite> along the integrated path.</p>
+</div></blockquote>
+<p>For all other types, the given argument is used for
+all forward evaluations.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p>
+</p></li>
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+method. Default: 50.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
+one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
+<cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
+Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+data points into chunks of size internal_batch_size,
+which are computed (forward / backward passes)
+sequentially.
+For DataParallel models, each batch is split among the
+available devices, so evaluations on each available
+device contain internal_batch_size / num_devices examples.
+If internal_batch_size is None, then all evaluations are
+processed in one batch.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Conductance for</dt><dd><p>particular neuron with respect to each input feature.
+Attributions will always be the same size as the provided
+inputs, with each value providing the attribution of the
+corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions (tensor or tuple of tensors)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neuron_cond</span> <span class="o">=</span> <span class="n">NeuronConductance</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">net</span><span class="o">.</span><span class="n">conv1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># To compute neuron attribution, we need to provide the neuron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index for which attribution is desired. Since the layer output</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># which indexes a particular neuron in the layer output.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes neuron conductance for neuron with</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># index (4,1,2).</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">neuron_cond</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">base</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">neuron</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._core.neuron_gradient">NeuronGradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._core.neuron_integrated_gradients">NeuronIntegratedGradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._core.neuron_conductance">NeuronConductance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="base.html" title="previous chapter">base</a></li>
+<li>Next: <a href="layer.html" title="next chapter">layer</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

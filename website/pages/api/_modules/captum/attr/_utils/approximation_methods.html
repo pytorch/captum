@@ -1,0 +1,149 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._utils.approximation_methods</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+
+
+<div class="viewcode-block" id="Riemann"><a class="viewcode-back" href="../../../../approximation_methods.html#captum.attr._utils.approximation_methods.Riemann">[docs]</a><span class="k">class</span> <span class="nc">Riemann</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">trapezoid</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+<span class="n">SUPPORTED_RIEMANN_METHODS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"riemann_left"</span><span class="p">,</span>
+    <span class="s2">"riemann_right"</span><span class="p">,</span>
+    <span class="s2">"riemann_middle"</span><span class="p">,</span>
+    <span class="s2">"riemann_trapezoid"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="n">SUPPORTED_RIEMANN_METHODS</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"gausslegendre"</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""Retrieves parameters for the input approximation `method`</span>
+
+<span class="sd">        Args</span>
+<span class="sd">            method: The name of the approximation method. Currently only `riemann`</span>
+<span class="sd">                    and gauss legendre are</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SUPPORTED_RIEMANN_METHODS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">riemann_builders</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">Riemann</span><span class="p">[</span><span class="n">method</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"gausslegendre"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gauss_legendre_builders</span><span class="p">()</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid integral approximation method name: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">riemann_builders</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""Step sizes are identical and alphas are scaled in [0, 1]</span>
+
+<span class="sd">        Args</span>
+<span class="sd">             n: The number of steps</span>
+<span class="sd">             method: `left`, `right`, `middle` and `trapezoid` riemann</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">w_list_func</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than one"</span>
+        <span class="n">deltas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">:</span>
+            <span class="n">deltas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">2</span>
+            <span class="n">deltas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">deltas</span>
+
+    <span class="k">def</span> <span class="nf">alpha_list_func</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than one"</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">middle</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="c1"># This is not a standard riemann method but in many cases it</span>
+        <span class="c1"># leades to faster approaximation. Test cases for small number of steps</span>
+        <span class="c1"># do not make sense but for larger number of steps the approximation is</span>
+        <span class="c1"># better therefore leaving this option available</span>
+        <span class="c1"># if method == 'riemann_include_endpoints':</span>
+        <span class="c1">#     return [i / (n - 1) for i in range(n)]</span>
+
+    <span class="k">return</span> <span class="n">w_list_func</span><span class="p">,</span> <span class="n">alpha_list_func</span>
+
+
+<span class="k">def</span> <span class="nf">gauss_legendre_builders</span><span class="p">():</span>
+    <span class="sa">r</span><span class="sd">""" For integration using gauss legendre</span>
+<span class="sd">    numpy makes our life easier, but it integrates in [-1, 1]. Need to rescale.</span>
+<span class="sd">    The weights returned by numpy also aggregate to 2. Need to rescale.</span>
+
+<span class="sd">    Args</span>
+<span class="sd">        n: The number of steps</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">w_list_func</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than zero"</span>
+        <span class="c1"># Scale from 2 -&gt; 1</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">alpha_list_func</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than zero"</span>
+        <span class="c1"># [-1, 1] -&gt; [0, 1] scaling is necessary.</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">w_list_func</span><span class="p">,</span> <span class="n">alpha_list_func</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

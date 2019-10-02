@@ -1,0 +1,139 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="module-captum.attr._utils.common">
+<span id="captum-utils"></span><h1>Captum.Utils<a class="headerlink" href="#module-captum.attr._utils.common" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="captum.attr._utils.common.validate_input">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">validate_input</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">draw_baseline_from_distrib=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#validate_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.validate_input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common.validate_noise_tunnel_type">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">validate_noise_tunnel_type</code><span class="sig-paren">(</span><em class="sig-param">nt_type</em>, <em class="sig-param">supported_noise_tunnel_types</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#validate_noise_tunnel_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.validate_noise_tunnel_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common.format_input">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">format_input</code><span class="sig-paren">(</span><em class="sig-param">inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#format_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.format_input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common._format_attributions">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_format_attributions</code><span class="sig-paren">(</span><em class="sig-param">is_inputs_tuple</em>, <em class="sig-param">attributions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_format_attributions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._format_attributions" title="Permalink to this definition">¶</a></dt>
+<dd><p>In case input is a tensor and the attributions is returned in form of a
+tensor we take the first element of the attributions’ tuple to match the
+same shape signatues of the inputs</p>
+</dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common.zeros">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">zeros</code><span class="sig-paren">(</span><em class="sig-param">inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#zeros"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.zeros" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a tuple of tensors as input and returns a tuple that has the same
+size as the <cite>inputs</cite> which contains zero tensors of the same
+shape as the <cite>inputs</cite></p>
+</dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common._extend_index_list">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_extend_index_list</code><span class="sig-paren">(</span><em class="sig-param">dim_max</em>, <em class="sig-param">base_index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_extend_index_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._extend_index_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of index tuples in the form [(0, base_index_tuple),
+(1, base_index_tuple), … (dim_max, base_index_tuple)]
+where base_index_tuple is either an int or tuple of arbitrary length.</p>
+</dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common._reshape_and_sum">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_reshape_and_sum</code><span class="sig-paren">(</span><em class="sig-param">tensor_input</em>, <em class="sig-param">num_steps</em>, <em class="sig-param">num_examples</em>, <em class="sig-param">layer_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_reshape_and_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._reshape_and_sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="function">
+<dt id="captum.attr._utils.common._run_forward">
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_run_forward</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_run_forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._run_forward" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+<dl class="class">
+<dt id="captum.attr._utils.common.MaxList">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">MaxList</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">key=&lt;function MaxList.&lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep track of N maximal items</p>
+<dl class="simple">
+<dt>Implementation of MaxList:</dt><dd><p>for keeping track of the N top values of a large collection of items.
+Maintains a sorted list of the top N items that can be fetched with
+getlist().</p>
+</dd>
+<dt>Example use:</dt><dd><p>m = MaxList(2, key=lamda x: len(x))
+ml.add(“Hello World”)
+ml.add(“Mermaid Man!!!!”)
+ml.add(“Why?”)
+ml.getlist() -&gt; [“Mermaid Man!!!!”, “Hello World”]</p>
+</dd>
+<dt>If storing values that are not comparable, please provide a key function that</dt><dd><p>that maps the values to some numeric value.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="captum.attr._utils.common.MaxList.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an element to the MaxList</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item</strong> – the item that you want to add to the MaxList</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="method">
+<dt id="captum.attr._utils.common.MaxList.get_list">
+<code class="sig-name descname">get_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList.get_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList.get_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrive the list of N maximal items in sorted order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the sorted list of maximal items</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>

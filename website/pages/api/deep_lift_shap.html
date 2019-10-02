@@ -1,0 +1,164 @@
+
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="module-captum.attr._core.deep_lift">
+<span id="deepliftshap"></span><h1>DeepLiftShap<a class="headerlink" href="#module-captum.attr._core.deep_lift" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._core.deep_lift.DeepLiftShap">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.deep_lift.</code><code class="sig-name descname">DeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="captum.attr._core.deep_lift.DeepLiftShap.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
+For each input sample it computes DeepLift attribution with respect to
+each baseline and averages resulting attributions.
+More details about the algorithm can be found here:</p>
+<p><a class="reference external" href="http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf">http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</a></p>
+<dl class="simple">
+<dt>Note that the explanation model:</dt><dd><ol class="arabic simple">
+<li><p>Assumes that input features are independent of one another</p></li>
+<li><p>Is linear, meaning that the explanations are modeled through
+the additive composition of feature effects.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Although, it assumes a linear model for each explanation, the overall
+model across multiple explanations can be complex and non-linear.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
+attributions are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples (aka batch size), and if
+mutliple input tensors are provided, the examples must
+be aligned appropriately.</p></li>
+<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baselines define
+reference samples which are compared with the inputs.
+In order to assign attribution scores DeepLift computes
+the differences between the inputs and references and
+corresponding outputs.
+If inputs is a single tensor, baselines must also be a
+single tensor. If inputs is a tuple of tensors, baselines
+must also be a tuple of tensors. The first dimension in
+baseline tensors defines the distribution of baselines.
+All other dimensions starting after the first dimension
+should match with the inputs’ dimensions after the
+first dimension. It is recommended that the number of
+samples in the baselines’ tensors is larger than one.
+Default: zero tensor for each input tensor</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Output index for which gradient is computed
+(for classification cases, this is the target class).
+If the network returns a scalar value per example,
+no target index is necessary. (Note: Tuples for multi
+-dimensional output indices will be supported soon.)</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a tuple
+containing multiple additional arguments including tensors
+or any arbitrary python types. These arguments are provided to
+forward_func in order, following the arguments in inputs.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution score</dt><dd><p>computed based on DeepLift rescale rule with respect
+to each input feature. Attributions will always be
+the same size as the provided inputs, with each value
+providing the attribution of the corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+<dt>delta (float): This is computed using the property that the total</dt><dd><p>sum of forward_func(inputs) - forward_func(baselines)
+must be very close to the total sum of attributions
+computed based on approximated SHAP values using
+Deeplift’s rescale rule.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions (tensor or tuple of tensors)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes shap values using deeplift for class 3.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">dl</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+<dl class="function">
+<dt id="captum.attr._core.deep_lift.nonlinear">
+<code class="sig-prename descclassname">captum.attr._core.deep_lift.</code><code class="sig-name descname">nonlinear</code><span class="sig-paren">(</span><em class="sig-param">module</em>, <em class="sig-param">delta_in</em>, <em class="sig-param">delta_out</em>, <em class="sig-param">grad_input</em>, <em class="sig-param">grad_output</em>, <em class="sig-param">eps=1e-10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#nonlinear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.nonlinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
+grad_output: (dLoss / dlayer_out)
+<a class="reference external" href="https://github.com/pytorch/pytorch/issues/12331">https://github.com/pytorch/pytorch/issues/12331</a></p>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="deep_lift.html" title="previous chapter">DeepLift</a></li>
+<li>Next: <a href="gradient_shap.html" title="next chapter">GradientShap</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div>
