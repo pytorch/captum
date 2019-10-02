@@ -155,14 +155,14 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
 
 def _convert_index(shape, target):
     assert len(shape) == len(target), (
-        "The length of each target must equal to " "the number of output dimensions - 1"
+        "The length of each target must equal to the number of output dimensions - 1"
     )
     total_index = 0
     current_total = 1
     for i in range(len(target) - 1, -1, -1):
         assert (
             target[i] < shape[i]
-        ), "Index %r cannot be chosen from output with " "shape %r." % (target, shape)
+        ), "Index %r cannot be chosen from output with shape %r." % (target, shape)
         total_index += current_total * target[i]
         current_total = current_total * shape[i]
     return total_index
@@ -172,7 +172,7 @@ def _verify_select_column(output, target):
     target = (target,) if isinstance(target, int) else target
     assert (
         len(target) <= len(output.shape) - 1
-    ), "Cannot choose target column with " "output shape %r." % (output.shape,)
+    ), "Cannot choose target column with output shape %r." % (output.shape,)
     return output[(slice(None), *target)]
 
 
@@ -268,9 +268,9 @@ def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
             )
 
     elif isinstance(target, torch.Tensor) and torch.numel(target) > 1:
-        if expansion_type == "repeat":
+        if expansion_type == ExpansionTypes.repeat:
             return torch.cat([target] * n_steps, dim=0)
-        elif expansion_type == "repeat_interleave":
+        elif expansion_type == ExpansionTypes.repeat_interleave:
             return target.repeat_interleave(n_steps, dim=0)
         else:
             raise NotImplementedError(

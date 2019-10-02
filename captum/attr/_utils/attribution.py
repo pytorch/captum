@@ -36,7 +36,6 @@ class Attribution:
         end_point,
         target=None,
         additional_forward_args=None,
-        is_multi_baseline=False,
         delta_per_sample=False,
     ):
         def _sum_rows(input):
