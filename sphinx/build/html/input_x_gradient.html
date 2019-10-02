@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>InputXGradient &#8212; Captum 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="IntegratedGradients" href="integrated_gradients.html" />
+    <link rel="prev" title="GradientShap" href="gradient_shap.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-captum.attr._core.input_x_gradient">
+<span id="inputxgradient"></span><h1>InputXGradient<a class="headerlink" href="#module-captum.attr._core.input_x_gradient" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._core.input_x_gradient.InputXGradient">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.input_x_gradient.</code><code class="sig-name descname">InputXGradient</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/input_x_gradient.html#InputXGradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.input_x_gradient.InputXGradient" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
+modification of it</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="captum.attr._core.input_x_gradient.InputXGradient.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/input_x_gradient.html#InputXGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.input_x_gradient.InputXGradient.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>”
+A baseline approach for computing the attribution. It multiplies input with
+the gradient with respect to input.
+<a class="reference external" href="https://arxiv.org/abs/1611.07270">https://arxiv.org/abs/1611.07270</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
+attributions are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples (aka batch size), and if
+mutliple input tensors are provided, the examples must
+be aligned appropriately.</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Output index for which gradient is computed
+(for classification cases, this is the target class).
+If the network returns a scalar value per example,
+no target index is necessary. (Note: Tuples for multi
+-dimensional output indices will be supported soon.)</p></li>
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a tuple
+containing multiple additional arguments including tensors
+or any arbitrary python types. These arguments are provided to
+forward_func in order following the arguments in inputs.
+Note that attributions are not computed with respect
+to these arguments.
+Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The input x gradient with</dt><dd><p>respect to each input feature. Attributions will always be
+the same size as the provided inputs, with each value
+providing the attribution of the corresponding input index.
+If a single tensor is provided as inputs, a single tensor is
+returned. If a tuple is provided for inputs, a tuple of
+corresponding sized tensors is returned.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions (tensor or tuple of tensors)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Generating random input with size 2x3x3x32</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Defining InputXGradient interpreter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_x_gradient</span> <span class="o">=</span> <span class="n">InputXGradient</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes inputXgradient for class 4.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">input_x_gradient</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gradient_shap.html" title="previous chapter">GradientShap</a></li>
+      <li>Next: <a href="integrated_gradients.html" title="next chapter">IntegratedGradients</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/input_x_gradient.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

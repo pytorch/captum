@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>captum.attr._core.integrated_gradients &#8212; Captum 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for captum.attr._core.integrated_gradients</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.approximation_methods</span> <span class="k">import</span> <span class="n">approximation_parameters</span>
+<span class="kn">from</span> <span class="nn">.._utils.batching</span> <span class="k">import</span> <span class="n">_batched_operator</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">validate_input</span><span class="p">,</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_reshape_and_sum</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
+
+
+<div class="viewcode-block" id="IntegratedGradients"><a class="viewcode-back" href="../../../../integrated_gradients.html#captum.attr._core.integrated_gradients.IntegratedGradients">[docs]</a><span class="k">class</span> <span class="nc">IntegratedGradients</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+<span class="sd">                          modification of it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IntegratedGradients.attribute"><a class="viewcode-back" href="../../../../integrated_gradients.html#captum.attr._core.integrated_gradients.IntegratedGradients.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;gausslegendre&quot;</span><span class="p">,</span>
+        <span class="n">internal_batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Approximates the integral of gradients along the path from a baseline input</span>
+<span class="sd">            to the given input. If no baseline is provided, the default baseline</span>
+<span class="sd">            is the zero tensor.</span>
+<span class="sd">            More details regarding the integrated gradient method can be found in the</span>
+<span class="sd">            original paper here:</span>
+<span class="sd">            https://arxiv.org/abs/1703.01365</span>
+
+<span class="sd">            Args:</span>
+
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which integrated</span>
+<span class="sd">                            gradients are computed. If forward_func takes a single</span>
+<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                            of the input tensors should be provided. It is assumed</span>
+<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                            to the number of examples, and if mutliple input tensors</span>
+<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
+<span class="sd">                baselines (tensor or tuple of tensors, optional):  Baseline define</span>
+<span class="sd">                            the starting point from which integral is computed.</span>
+<span class="sd">                            If inputs is a single tensor, baselines must also be a</span>
+<span class="sd">                            single tensor with exactly the same dimensions as inputs.</span>
+<span class="sd">                            If inputs is a tuple of tensors, baselines must also be</span>
+<span class="sd">                            a tuple of tensors, with matching dimensions to inputs.</span>
+<span class="sd">                            Default: zero tensor for each input tensor</span>
+<span class="sd">                target (int, optional):  Output index for which gradient is computed</span>
+<span class="sd">                            (for classification cases, this is the target class).</span>
+<span class="sd">                            If the network returns a scalar value per example,</span>
+<span class="sd">                            no target index is necessary. (Note: Tuples for multi</span>
+<span class="sd">                            -dimensional output indices will be supported soon.)</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                            requires additional arguments other than the inputs for</span>
+<span class="sd">                            which attributions should not be computed, this argument</span>
+<span class="sd">                            can be provided. It must be either a single additional</span>
+<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                            tuple containing multiple additional arguments including</span>
+<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                            are provided to forward_func in order following the</span>
+<span class="sd">                            arguments in inputs.</span>
+<span class="sd">                            For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                            correspond to the number of examples. It will be repeated</span>
+<span class="sd">                             for each of `n_steps` along the integrated path.</span>
+<span class="sd">                            For all other types, the given argument is used for</span>
+<span class="sd">                            all forward evaluations.</span>
+<span class="sd">                            Note that attributions are not computed with respect</span>
+<span class="sd">                            to these arguments.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                n_steps (int, optional): The number of steps used by the approximation</span>
+<span class="sd">                            method. Default: 50.</span>
+<span class="sd">                method (string, optional): Method for approximating the integral,</span>
+<span class="sd">                            one of `riemann_right`, `riemann_left`, `riemann_middle`,</span>
+<span class="sd">                            `riemann_trapezoid` or `gausslegendre`.</span>
+<span class="sd">                            Default: `gausslegendre` if no method is provided.</span>
+<span class="sd">                internal_batch_size (int, optional): Divides total #steps * #examples</span>
+<span class="sd">                            data points into chunks of size internal_batch_size,</span>
+<span class="sd">                            which are computed (forward / backward passes)</span>
+<span class="sd">                            sequentially.</span>
+<span class="sd">                            For DataParallel models, each batch is split among the</span>
+<span class="sd">                            available devices, so evaluations on each available</span>
+<span class="sd">                            device contain internal_batch_size / num_devices examples.</span>
+<span class="sd">                            If internal_batch_size is None, then all evaluations are</span>
+<span class="sd">                            processed in one batch.</span>
+<span class="sd">                            Default: None</span>
+
+<span class="sd">            Return:</span>
+
+<span class="sd">                attributions (tensor or tuple of tensors): Integrated gradients with</span>
+<span class="sd">                            respect to each input feature. attributions will always be</span>
+<span class="sd">                            the same size as the provided inputs, with each value</span>
+<span class="sd">                            providing the attribution of the corresponding input index.</span>
+<span class="sd">                            If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                            returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                            corresponding sized tensors is returned.</span>
+<span class="sd">                delta (float): The difference between the total approximated and</span>
+<span class="sd">                            true integrated gradients.</span>
+<span class="sd">                            This is computed using the property that the total sum of</span>
+<span class="sd">                            forward_func(inputs) - forward_func(baselines) must equal</span>
+<span class="sd">                            the total sum of the integrated gradient.</span>
+
+<span class="sd">            Examples::</span>
+
+<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">                &gt;&gt;&gt; ig = IntegratedGradients(net)</span>
+<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">                &gt;&gt;&gt; # Computes integrated gradients for class 3.</span>
+<span class="sd">                &gt;&gt;&gt; attribution, delta = ig.attribute(input, target=3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Keeps track whether original input is a tuple or not before</span>
+        <span class="c1"># converting it into a tuple.</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+
+        <span class="n">validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+        <span class="c1"># retrieve step size and scaling factor for specified approximation method</span>
+        <span class="n">step_sizes_func</span><span class="p">,</span> <span class="n">alphas_func</span> <span class="o">=</span> <span class="n">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="n">step_sizes</span><span class="p">,</span> <span class="n">alphas</span> <span class="o">=</span> <span class="n">step_sizes_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">),</span> <span class="n">alphas_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
+
+        <span class="c1"># scale features and compute gradients. (batch size is abbreviated as bsz)</span>
+        <span class="c1"># scaled_features&#39; dim -&gt; (bsz * #steps x inputs[0].shape[1:], ...)</span>
+        <span class="n">scaled_features_tpl</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">baseline</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+            <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+            <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+        <span class="c1"># apply number of steps to additional forward args</span>
+        <span class="c1"># currently, number of steps is applied only to additional forward arguemnts</span>
+        <span class="c1"># that are nd-tensors. It is assumed that the first dimension is</span>
+        <span class="c1"># the number of batches.</span>
+        <span class="c1"># dim -&gt; (bsz * #steps x additional_forward_args[0].shape[1:], ...)</span>
+        <span class="n">input_additional_args</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_expand_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="c1"># grads: dim -&gt; (bsz * #steps x inputs[0].shape[1:], ...)</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">,</span>
+            <span class="n">scaled_features_tpl</span><span class="p">,</span>
+            <span class="n">input_additional_args</span><span class="p">,</span>
+            <span class="n">internal_batch_size</span><span class="o">=</span><span class="n">internal_batch_size</span><span class="p">,</span>
+            <span class="n">forward_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">target_ind</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># flattening grads so that we can multipy it with step-size</span>
+        <span class="c1"># calling contigous to avoid `memory whole` problems</span>
+        <span class="n">scaled_grads</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">grad</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">step_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">grad</span> <span class="ow">in</span> <span class="n">grads</span>
+        <span class="p">]</span>
+
+        <span class="c1"># aggregates across all steps for each tensor in the input tuple</span>
+        <span class="c1"># total_grads has the same dimentionality as inputs</span>
+        <span class="n">total_grads</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_reshape_and_sum</span><span class="p">(</span>
+                <span class="n">scaled_grad</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">scaled_grad</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scaled_grads</span><span class="p">,</span> <span class="n">grads</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># computes attribution for each tensor in input tuple</span>
+        <span class="c1"># attributions has the same dimentionality as inputs</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">total_grad</span> <span class="o">*</span> <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">total_grad</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">total_grads</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span>
+
+        <span class="c1"># computes approximation error based on the completeness axiom</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_convergence_delta</span><span class="p">(</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">start_point</span><span class="p">,</span>
+            <span class="n">end_point</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span></div>
+
+    <span class="k">def</span> <span class="nf">_has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base.html">base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>base &#8212; Captum 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="neuron" href="neuron.html" />
+    <link rel="prev" title="NoiseTunnel" href="noise_tunnel.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="base">
+<h1>base<a class="headerlink" href="#base" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-captum.attr._utils.visualization">
+<span id="visualization"></span><h2>visualization<a class="headerlink" href="#module-captum.attr._utils.visualization" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._utils.visualization.VisualizeSign">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.visualization.</code><code class="sig-name descname">VisualizeSign</code><a class="reference internal" href="_modules/captum/attr/_utils/visualization.html#VisualizeSign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.visualization.VisualizeSign" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="captum.attr._utils.visualization.visualize_image_attr_multiple">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.visualization.</code><code class="sig-name descname">visualize_image_attr_multiple</code><a class="reference internal" href="_modules/captum/attr/_utils/visualization.html#visualize_image_attr_multiple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.visualization.visualize_image_attr_multiple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes attribution using multiple visualization methods displayed
+in a 1 x k grid, where k is the number of desired visualizations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attr</strong> (<em>numpy.array</em>) – Numpy array corresponding to attributions to be
+visualized. Shape must be in the form (H, W, C), with
+channels as last dimension. Shape must also match that of
+the original image if provided.</p></li>
+<li><p><strong>original_image</strong> (<em>numpy.array</em><em>, </em><em>optional</em>) – Numpy array corresponding to
+original image. Shape must be in the form (H, W, C), with
+channels as the last dimension. Image can be provided either
+with values in range 0-1 or 0-255. This is a necessary
+argument for any visualization method which utilizes
+the original image.</p></li>
+<li><p><strong>methods</strong> (<em>list of strings</em>) – List of strings of length k, defining method
+for each visualization. Each method must be a valid
+string argument for method to visualize_image_attr.</p></li>
+<li><p><strong>signs</strong> (<em>list of strings</em>) – List of strings of length k, defining signs for
+each visualization. Each sign must be a valid
+string argument for sign to visualize_image_attr.</p></li>
+<li><p><strong>titles</strong> (<em>list of strings</em><em>, </em><em>optional</em>) – List of strings of length k, providing
+a title string for each plot. If None is provided, no titles
+are added to subplots.
+Default: None</p></li>
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+Default: (8, 6)</p></li>
+<li><p><strong>use_pyplot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
+figure and displays the figure after creating. If False,
+uses Matplotlib object oriented API and simply returns a
+figure object without showing.
+Default: True.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Any additional arguments which will be passed
+to every individual visualization. Such arguments include
+<cite>show_colorbar</cite>, <cite>alpha_overlay</cite>, <cite>cmap</cite>, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Figure object on which visualization</dt><dd><p>is created. If plt_fig_axis argument is given, this is the
+same figure provided.</p>
+</dd>
+<dt>axis (matplotlib.pyplot.axis): Axis object on which visualization</dt><dd><p>is created. If plt_fig_axis argument is given, this is the
+same axis provided.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>figure (matplotlib.pyplot.figure)</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes integrated gradients for class 3 for a given image .</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">orig_image</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Displays original image and heat map visualization of</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># computed attributions side by side.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">visualize_mutliple_image_attr</span><span class="p">([</span><span class="s2">&quot;original_image&quot;</span><span class="p">,</span> <span class="s2">&quot;heat_map&quot;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>                    <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">],</span> <span class="n">attribution</span><span class="p">,</span> <span class="n">orig_image</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="captum.attr._utils.visualization.VisualizationDataRecord">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.visualization.</code><code class="sig-name descname">VisualizationDataRecord</code><span class="sig-paren">(</span><em class="sig-param">word_attributions</em>, <em class="sig-param">pred_prob</em>, <em class="sig-param">pred_class</em>, <em class="sig-param">target_class</em>, <em class="sig-param">attr_class</em>, <em class="sig-param">attr_score</em>, <em class="sig-param">raw_input</em>, <em class="sig-param">convergence_score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/visualization.html#VisualizationDataRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.visualization.VisualizationDataRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>A data record for storing attribution relevant information</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._models.base">
+<span id="interpretable-embedding-base"></span><h2>Interpretable Embedding Base<a class="headerlink" href="#module-captum.attr._models.base" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">InterpretableEmbeddingBase</code><span class="sig-paren">(</span><em class="sig-param">embedding</em>, <em class="sig-param">full_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since some embedding vectors, e.g. word are created and assigned in
+the embedding layers of Pytorch models we need a way to access
+those layers, generate the embeddings and subtract the baseline.
+To do so, we separate embedding layers from the model, compute the embeddings
+separately and do all operations needed outside of the model.
+The original embedding layer is being replaced by
+<cite>InterpretableEmbeddingBase</cite> layer which passes already
+precomputed embedding vectors to the layers below.</p>
+<dl class="method">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>The forward pass of embedding layer. This can be for the text or any
+type of embedding.</p>
+<p>Args</p>
+<blockquote>
+<div><p>input: Input embeddings tensor</p>
+</div></blockquote>
+<p>Return</p>
+<blockquote>
+<div><dl class="simple">
+<dt>output: Output tensor is the same as input. It passes through</dt><dd><p>the embedding tensors to lower layers without any
+modifications</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">
+<code class="sig-name descname">indices_to_embeddings</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps indices to corresponding embedding vectors</p>
+<p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>input: a tensor of input indices. A typical example of an input</dt><dd><p>index is word index.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Returns</p>
+<blockquote>
+<div><dl class="simple">
+<dt>tensor: A tensor of word embeddings corresponding to the indices</dt><dd><p>specified in the input</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._models.base">
+<span id="token-reference-base"></span><h2>Token Reference Base<a class="headerlink" href="#module-captum.attr._models.base" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._models.base.TokenReferenceBase">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">TokenReferenceBase</code><span class="sig-paren">(</span><em class="sig-param">reference_token_idx=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for creating reference tensor for a sequence of tokens. A typical
+example of such token is <cite>PAD</cite>. Users need to provide the index of the
+reference token in the vocabulary as an argument to <cite>TokenReferenceBase</cite>
+class.</p>
+<dl class="method">
+<dt id="captum.attr._models.base.TokenReferenceBase.generate_reference">
+<code class="sig-name descname">generate_reference</code><span class="sig-paren">(</span><em class="sig-param">sequence_length</em>, <em class="sig-param">device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generated reference tensor of given <cite>sequence_length</cite> using
+<cite>reference_token_idx</cite></p>
+<p>Returns</p>
+<blockquote>
+<div><p>tensor: a sequence of reference token with dimension [sequence_length]</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="captum.attr._models.base._get_deep_layer_name">
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">_get_deep_layer_name</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">layer_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#_get_deep_layer_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base._get_deep_layer_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverses through the layer names that are separated by
+dot in order to access the embedding layer.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="captum.attr._models.base._set_deep_layer_value">
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">_set_deep_layer_value</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">layer_names</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#_set_deep_layer_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base._set_deep_layer_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverses through the layer names that are separated by
+dot in order to access the embedding layer and update its value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="captum.attr._models.base.configure_interpretable_embedding_layer">
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">configure_interpretable_embedding_layer</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">embedding_layer_name='embedding'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.configure_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method wraps model’s embedding layer with an interpretable embedding
+layer that allows us to access the embeddings through their indices.</p>
+<p>Args</p>
+<blockquote>
+<div><p>model: An instance of PyTorch model that contains embeddings
+embedding_layer_name: The name of the embedding layer in the <cite>model</cite></p>
+<blockquote>
+<div><p>that we would like to make interpretable</p>
+</div></blockquote>
+</div></blockquote>
+<p>Returns</p>
+<blockquote>
+<div><dl class="simple">
+<dt>interpretable_emb: An instance of <cite>InterpretableEmbeddingBase</cite></dt><dd><p>embedding layer that wraps model’s
+embedding layer - <cite>embedding_layer_name</cite></p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="captum.attr._models.base.remove_interpretable_embedding_layer">
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">remove_interpretable_embedding_layer</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">interpretable_emb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.remove_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes interpretable embedding layer and sets back original
+embedding layer in the model.</p>
+<p>Args</p>
+<blockquote>
+<div><p>model: An instance of PyTorch model that contains embeddings
+interpretable_emb: An instance of <cite>InterpretableEmbeddingBase</cite> that was</p>
+<blockquote>
+<div><p>originally created in <cite>configure_interpretable_embedding_layer</cite> function
+and has to be removed after interpretation is finished.</p>
+</div></blockquote>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._models.base">
+<span id="configure-interpretable-embedding-layer"></span><h2>configure_interpretable_embedding_layer<a class="headerlink" href="#module-captum.attr._models.base" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">configure_interpretable_embedding_layer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._models.base">
+<span id="remove-interpretable-embedding-layer"></span><h2>remove_interpretable_embedding_layer<a class="headerlink" href="#module-captum.attr._models.base" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">remove_interpretable_embedding_layer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._utils.attribution">
+<span id="attribution"></span><h2>Attribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.Attribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">Attribution</code><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="captum.attr._utils.attribution.Attribution.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes and returns the attribution values for each input tensor
+Deriving classes are responsible for implementing its logic accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> – A single high dimensional input tensor or a tuple of them.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution values for each input vector. The</dt><dd><p><cite>attributions</cite> have the dimensionality of inputs
+for standard attribution derived classes and the
+dimensionality of the given tensor for layer attributions.</p>
+</dd>
+</dl>
+<p>others ?</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._utils.attribution">
+<span id="layerattribution"></span><h2>LayerAttribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.LayerAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">LayerAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.LayerAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Layer attribution provides attribution values for the given layer, quanitfying
+the importance of each neuron within the given layer’s output. The output
+attribution of calling attribute on a LayerAttribution object always matches
+the size of the layer output.</p>
+<p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it
+layer: Layer for which output attributions are computed.</p>
+<blockquote>
+<div><p>Output size of attribute matches that of layer output.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids: Device ID list, necessary only if forward_func applies a</dt><dd><p>DataParallel model, which allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._utils.attribution">
+<span id="neuron-attribution"></span><h2>Neuron Attribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.NeuronAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">NeuronAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.NeuronAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Neuron attribution provides input attribution for a given neuron, quanitfying
+the importance of each input feature in the activation of a particular neuron.
+Calling attribute on a NeuronAttribution object requires also providing
+the index of the neuron in the output of the given layer for which attributions
+are required.
+The output attribution of calling attribute on a NeuronAttribution object
+always matches the size of the input.</p>
+<p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it
+layer: Layer for which output attributions are computed.</p>
+<blockquote>
+<div><p>Output size of attribute matches that of layer output.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids: Device ID list, necessary only if forward_func applies a</dt><dd><p>DataParallel model, which allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not neccesary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._utils.attribution.NeuronAttribution.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.NeuronAttribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method computes and returns the neuron attribution values for each
+input tensor. Deriving classes are responsible for implementing
+its logic accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> – A single high dimensional input tensor or a tuple of them.</p></li>
+<li><p><strong>neuron_index</strong> – Tuple providing index of neuron in output of given
+layer for which attribution is desired. Length of
+this tuple must be one less than the number of
+dimensions in the output of the given layer (since
+dimension 0 corresponds to number of examples).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Attribution values for each input vector. The</dt><dd><p><cite>attributions</cite> have the dimensionality of inputs.</p>
+</dd>
+</dl>
+<p>others ?</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>attributions</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-captum.attr._utils.attribution">
+<span id="gradient-attribution"></span><h2>Gradient Attribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="captum.attr._utils.attribution.GradientAttribution">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">GradientAttribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.GradientAttribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args</p>
+<blockquote>
+<div><p>forward_func:  The forward function of the model or any modification of it</p>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr._utils.attribution.GradientAttribution.zero_baseline">
+<code class="sig-name descname">zero_baseline</code><span class="sig-paren">(</span><em class="sig-param">inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution.zero_baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.GradientAttribution.zero_baseline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a tuple of tensors as input and returns a tuple that has the same
+size as the <cite>inputs</cite> which contains zero tensors of the same
+shape as the <cite>inputs</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">base</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._utils.visualization">visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._models.base">Interpretable Embedding Base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._models.base">Token Reference Base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._models.base">configure_interpretable_embedding_layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._models.base">remove_interpretable_embedding_layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._utils.attribution">Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._utils.attribution">LayerAttribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._utils.attribution">Neuron Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-captum.attr._utils.attribution">Gradient Attribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="noise_tunnel.html" title="previous chapter">NoiseTunnel</a></li>
+      <li>Next: <a href="neuron.html" title="next chapter">neuron</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+      
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/base.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
