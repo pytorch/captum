@@ -4,12 +4,15 @@ import socket
 import threading
 from time import sleep
 from typing import Optional
+from time import sleep
 
 from flask import Flask, jsonify, render_template, request
 
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
 )
+visualizer = None
+port = None
 
 
 def namedtuple_to_dict(obj):
@@ -29,14 +32,12 @@ def namedtuple_to_dict(obj):
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
-    print(request.json)
     visualizer_output = visualizer.visualize()
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)
 
 
 @app.route("/")
-@app.route("/<int:id>")
 def index(id=0):
     return render_template("index.html")
 
@@ -49,28 +50,27 @@ def get_free_tcp_port():
     return port
 
 
-def start_server(_viz, port: Optional[int] = None):
-    debug = bool(os.environ.get("CAPTUM_INSIGHTS_DEBUG"))
+def run_app():
+    global port
+    app.run(port=port, use_reloader=False)
+
+
+def start_server(_viz, debug=False, _port: Optional[int] = None):
     global visualizer
     visualizer = _viz
 
-    if port is None and not debug:
+    global port
+    if port is None:
+        if not debug:
+            log = logging.getLogger("werkzeug")
+            log.disabled = True
+            app.logger.disabled = True
+
         port = get_free_tcp_port()
-    elif debug:
-        port = 5000
+        print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
+        # Start in a new thread to not block notebook execution
+        threading.Thread(target=run_app).start()
 
-    if not debug:
-        log = logging.getLogger("werkzeug")
-        log.disabled = True
-        app.logger.disabled = True
-        threading.Thread(target=app.run, kwargs={"port": port}).start()
-        sleep(0.1)  # let server startup before showing in iframe
-    else:
-        app.run(use_reloader=True, port=port, debug=True, threaded=True)
+        sleep(0.01)  # add a short delay to allow server to start up
 
-    print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
     return port
-
-
-if __name__ == "__main__":
-    start_server()
