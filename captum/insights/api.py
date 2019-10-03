@@ -87,7 +87,6 @@ class AttributionVisualizer(object):
             classes=[],
             count=4,
         )
-        print(self._config)
 
     def render(self):
         from IPython.display import IFrame, display
@@ -144,7 +143,6 @@ class AttributionVisualizer(object):
     def _is_prediction_correct(
         self, prediction_scores: List[PredictionScore], actual_label: str
     ):
-        print(prediction_scores, actual_label)
         if len(prediction_scores) == 0:
             return False
 
