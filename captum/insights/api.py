@@ -88,7 +88,7 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self):
+    def render(self, blocking=False, debug=False):
         from IPython.display import IFrame, display
         from captum.insights.server import start_server
 
