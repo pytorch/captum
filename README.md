@@ -106,6 +106,8 @@ import torch.nn as nn
 
 from captum.attr import (
     GradientShap,
+    DeepLift,
+    DeepLiftShap,
     IntegratedGradients,
     LayerConductance,
     NeuronConductance,
@@ -115,20 +117,16 @@ from captum.attr import (
 class ToyModel(nn.Module):
     def __init__(self):
         super().__init__()
-
-        self.lin1 = nn.Linear(3, 4)
-        self.lin1.weight = nn.Parameter(torch.ones(4, 3))
-        self.lin1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
         self.relu = nn.ReLU()
-        self.lin2 = nn.Linear(4, 1)
-        self.lin2.weight = nn.Parameter(torch.ones(1, 4))
-        self.lin2.bias = nn.Parameter(torch.tensor([-3.0]))
+        self.lin = nn.Linear(3, 2, bias=True)
+        self.sigmoid = nn.Sigmoid()
+
+        # initialize weights and biases
+        self.lin.weight = nn.Parameter(torch.arange(1.0, 7.0).view(2, 3))
+        self.lin.bias = nn.Parameter(torch.zeros(2))
 
     def forward(self, input):
-        lin1 = self.lin1(input)
-        relu = self.relu(lin1)
-        lin2 = self.lin2(relu)
-        return lin2
+        return self.sigmoid(self.lin(self.relu(input)))
 ```
 
 Let's create an instance of our model and set it to eval mode.
@@ -150,10 +148,10 @@ mentioned above in order to understand the importance of individual
 neurons/layers and the parts of the input that play an important role in the
 final prediction.
 
-Let's fix random seeds to make computations deterministic
+Let's fix random seeds to make computations deterministic.
 ```
-torch.manual_seed(123)
-np.random.seed(124)
+torch.manual_seed(0)
+np.random.seed(0)
 ```
 
 Let's define our input and baseline tensors. Baselines are used in some
@@ -166,49 +164,94 @@ input = torch.rand(2, 3)
 baseline = torch.zeros(2, 3)
 ```
 Next we will use `IntegratedGradients` algorithms to assign attribution
-scores to each input feature with respect to final output.
+scores to each input feature with respect to the second target output.
 ```
 ig = IntegratedGradients(model)
-attributions, delta = ig.attribute(input, baseline)
+attributions, delta = ig.attribute(input, baseline, target=1)
 print('IG Attributions: ', attributions, ' Approximation error: ', delta)
 ```
 Output:
 ```
-IG Attributions:  tensor([[0.8883, 1.5497, 0.7550],
-                          [2.0657, 0.2219, 2.5996]])
-Approximation Error:  9.5367431640625e-07
+IG Attributions:  tensor([[0.1556, 0.3011, 0.0416],
+                          [0.0447, 0.1302, 0.3223]])
+Approximation Error: 2.980232238769531e-07
 ```
 The algorithm outputs an attribution score for each input element and an
-approximation error that we would like to minimize. If the approximation error
-is large, we can try larger number of integral approximation steps by setting
-`n_steps` to a larger value. Not all algorithms return approximation error.
-Those which do, they compute it based on the completeness property of the algorithms.
+approximation error that we would like to minimize. It can also serve as a proxy
+of how much we can trust the attribution scores assigned by an attribution algorithm.
+If the approximation error is large, we can try larger number of integral
+approximation steps by setting `n_steps` to a larger value. Not all algorithms
+return approximation error. Those which do, though, compute it based on the
+completeness property of the algorithms.
 
 Positive attribution score means that the input in that particular position positively
 contributed to the final prediction and negative means the opposite.
 The magnitude of the attribution score signifies the strength of the contribution.
 Zero attribution score means no contribution from that particular feature.
 
-Similarly, we can apply GradientShap, DeepLift and other attribution algorithms to the model.
+Similarly, we can apply `GradientShap`, `DeepLift` and other attribution algorithms to the model.
+
 ```
 gs = GradientShap(model)
 
 # We define a distribution of baselines and draw `n_samples` from that
 # distribution in order to estimate the expectations of gradients across all baselines
-baseline_dist = torch.rand(100, 3)
-attributions, delta = gs.attribute(input, baseline_dist, n_samples=50)
+baseline_dist = torch.randn(1000, 3) * 0.01
+attributions, delta = gs.attribute(input, stdevs=0.001, n_samples=2000, baselines=baseline_dist, target=0)
 print('GradientShap Attributions: ', attributions, ' Approximation error: ', delta)
 ```
 Output
 ```
-GradientShap Attributions:  tensor([[ 0.0159, -0.8478,  0.3028],
-                                    [ 0.1546, -1.0068,  0.2770]])
-Approximation Error:  tensor(0.0462)
+GradientShap Attributions:  tensor([[0.0878, 0.2730, 0.0447],
+                                    [0.0209, 0.0989, 0.3109]])
+Approximation Error: 0.00531
 
 ```
+
+Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
+`ToyModel` described above. Current implementation of DeepLift supports only
+`Rescale` rule.
+For more details on alternative implementations, please read DeepLift's
+original paper linked below.
+
+```
+dl = DeepLift(model)
+attributions, delta = dl.attribute(input, baseline, target=0)
+print('DeepLift Attributions: ', attributions, ' Approximation error: ', delta)
+```
+Output
+```
+DeepLift Attributions:  tensor([[0.0883, 0.2733, 0.0472],
+                                [0.0216, 0.1007, 0.3116]])
+        Approximation error:  0.0
+```
+DeepLift assigns similar attribution scores as Integrated Gradients to inputs,
+however it has lower execution time. Another important thing to remember about
+DeepLift is that it currently doesn't support all non-linear activation types.
+For more details on limitations of the current implementation, please read
+DeepLift's original paper linked below.
+
+Now let's look into `DeepLiftShap`. Similar to `GradientShap`, `DeepLiftShap` uses
+baseline distribution. In the example below, we use the same baseline distribution
+as for `GradientShap`.
+
+```
+dl = DeepLiftShap(model)
+attributions, delta = dl.attribute(input, baseline_dist, target=0)
+print('DeepLiftSHAP Attributions: ', attributions, ' Approximation error: ', delta)
+```
+Output
+```
+DeepLift Attributions: tensor([0.0872, 0.2707, 0.0450],
+                              [0.0209, 0.0989, 0.3082]], grad_fn=<MeanBackward1>)
+Approximation error:  5.066394805908203e-07
+```
+`DeepLiftShap` uses `DeepLift` to compute attribution score for each
+input-baseline pair and averages it for each input across all baselines.
+
 In order to smooth and improve the quality of the attributions we can run
 `IntegratedGradients` and other attribution methods through a `NoiseTunnel`.
-`NoiseTunnel` allows to use SmoothGrad, SmoothGrad_Sq and VarGrad techniques
+`NoiseTunnel` allows us to use SmoothGrad, SmoothGrad_Sq and VarGrad techniques
 to smoothen the attributions by aggregating them for multiple noisy
 samples that were generated by adding gaussian noise.
 
@@ -217,14 +260,14 @@ Here is an example how we can use `NoiseTunnel` with `IntegratedGradients`.
 ```
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', baselines=baseline)
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.2, baselines=baseline, target=0)
 print('IG + SmoothGrad Attributions: ', attributions, ' Approximation error: ', delta)
 ```
 Output
 ```
-IG + SmoothGrad Attributions:  tensor([[-1.2138,  0.6688,  0.7747],
-                                       [1.3862,  0.7529,  2.2907]])
-Approximation Error:  0.07243824005126953
+IG + SmoothGrad Attributions:  tensor([[0.0717, 0.2328, 0.0789],
+                                       [0.0338, 0.0532, 0.3317]])
+Approximation Error:  4.470348358154297e-07
 
 ```
 
@@ -232,32 +275,32 @@ Let's look into the internals of our network and understand which layers
 and neurons are important for the predictions.
 We will start with the neuron conductance. Neuron conductance helps us to identify
 input features that are important for a particular neuron in a given
-layer. In this case, we choose to analyze the third neuron in the first layer.
+layer. In this case, we choose to analyze the first neuron in the first layer.
 
 ```
-nc = NeuronConductance(model, model.lin2)
-attributions = nc.attribute(input, neuron_index=3, baselines=baseline)
+nc = NeuronConductance(model, model.relu)
+attributions = nc.attribute(input, neuron_index=0, target=0)
 print('Neuron Attributions: ', attributions)
 ```
 Output
 ```
-Neuron Attributions:  tensor([[0.2902, 0.5062, 0.2466],
-                             [0.6748, 0.0725, 0.8492]])
+Neuron Attributions:  tensor([[0.0000, 0.2854, 0.0000],
+                              [0.0000, 0.1238, 0.0000]])
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
 It doesn't attribute the contribution scores to the input features
 but shows the importance of each neuron in selected layer.
 ```
-lc = LayerConductance(model, model.lin1)
-attributions, delta = lc.attribute(input, baselines=baseline)
+lc = LayerConductance(model, model.relu)
+attributions, delta = lc.attribute(input, baselines=baseline, target=0)
 print('Layer Attributions: ', attributions, ' Approximation Error: ', delta)
 ```
 Outputs
 ```
-Layer Attributions:  tensor([[0.8883, 1.5497, 0.7550],
-                            [2.0657, 0.2219, 2.5996]], grad_fn=<SumBackward1>)
-Approximation error:  9.5367431640625e-07
+Layer Attributions: tensor([[0.0891, 0.2758, 0.0476],
+                            [0.0219, 0.1019, 0.3152]], grad_fn=<SumBackward1>)
+Approximation error: 0.008803457021713257
 ```
 
 More details on the list of supported algorithms and how to apply
