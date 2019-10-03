@@ -49,11 +49,12 @@ def get_free_tcp_port():
 
 
 def run_app():
-    global port
     app.run(port=port, use_reloader=False)
 
 
-def start_server(_viz, debug, _port: Optional[int] = None):
+def start_server(
+    _viz, blocking: bool = False, debug: bool = False, _port: Optional[int] = None
+):
     global visualizer
     visualizer = _viz
 
@@ -64,11 +65,12 @@ def start_server(_viz, debug, _port: Optional[int] = None):
             log.disabled = True
             app.logger.disabled = True
 
-        port = get_free_tcp_port()
+        port = _port or get_free_tcp_port()
         print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
         # Start in a new thread to not block notebook execution
-        threading.Thread(target=run_app).start()
-
+        t = threading.Thread(target=run_app).start()
         sleep(0.01)  # add a short delay to allow server to start up
+        if blocking:
+            t.join()
 
     return port
