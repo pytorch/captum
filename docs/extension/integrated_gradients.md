@@ -212,7 +212,7 @@ Besides approximation type the user can also specify the number of approximation
 steps using `n_steps` input argument. The latter can be used to find a tradeoff
 between approximation speed and the accuracy.
 
-### More details on how to apply integrated gradients on larger DNN networks can be found here
+#### More details on how to apply integrated gradients on larger DNN networks can be found here
 
 * [A simple classification model and CIFAR Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/CIFAR_TorchVision_Interpret.ipynb)
 * [Torchvision's ResNet18 Model using handpicked images] (TODO add link here)
