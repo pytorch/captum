@@ -30,6 +30,7 @@ def namedtuple_to_dict(obj):
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
+    visualizer._update_config(request.json)
     visualizer_output = visualizer.visualize()
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)

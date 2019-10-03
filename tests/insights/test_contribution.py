@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 from typing import Callable, List, Optional, Union
 
-from captum.insights.api import AttributionVisualizer, Data
+from captum.insights.api import AttributionVisualizer, Data, FilterConfig
 from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
 from tests.attr.helpers.utils import BaseTest
 
@@ -160,8 +160,8 @@ class Test(BaseTest):
             ],
             dataset=to_iter(data_loader),
             score_func=None,
-            n_steps=2,
         )
+        visualizer._config = FilterConfig(steps=2)
 
         outputs = visualizer.visualize()
 
@@ -203,8 +203,8 @@ class Test(BaseTest):
             ],
             dataset=to_iter(data_loader),
             score_func=None,
-            n_steps=2,
         )
+        visualizer._config = FilterConfig(steps=2)
 
         outputs = visualizer.visualize()
 
