@@ -45,8 +45,8 @@ def riemann_builders(method=Riemann.trapezoid):
         Returns:
 
             step_sizes (callable): `step_sizes` takes the number of steps as an
-                        argument and returns an array of steps sizes which sum is
-                        smaller than or equal to one.
+                        input argument and returns an array of steps sizes which
+                        sum is smaller than or equal to one.
 
             alphas (callable): `alphas` takes the number of steps as an input argument
                         and returns the multipliers/coefficients for the inputs
@@ -89,8 +89,8 @@ def gauss_legendre_builders():
     rescale them to adjust to the desired scale.
 
     Gauss Legendre quadrature rule for approximating the integrals was originally
-    proposed by Xue Feng and her intern Hauroun Habeeb.
-    https://research.fb.com/people/feng-xue/
+    proposed by [Xue Feng and her intern Hauroun Habeeb]
+    (https://research.fb.com/people/feng-xue/).
 
     Args:
 
@@ -98,7 +98,7 @@ def gauss_legendre_builders():
 
     Returns:
 
-        step_sizes (callable): `step_sizes` takes the number of steps as an
+        step_sizes (callable): `step_sizes` takes the number of steps as an input
                     argument and returns an array of steps sizes which sum is
                     smaller than or equal to one. In the literature it is also
                     known as weights.
