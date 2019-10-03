@@ -215,7 +215,7 @@ Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
 `ToyModel` described above. Current implementation of DeepLift supports only
 `Rescale` rule.
 For more details on alternative implementations, please read DeepLift's
-original paper linked to the implementation of the algorithm.
+original paper linked below.
 
 ```
 dl = DeepLift(model)
@@ -232,7 +232,7 @@ DeepLift assigns similar attribution scores as Integrated Gradients to inputs,
 however it has lower execution time. Another important thing to remember about
 DeepLift is that it currently doesn't support all non-linear activation types.
 For more details on limitations of the current implementation, please read
-DeepLift's original paper linked to the implementation of the algorithms.
+DeepLift's original paper linked below.
 
 Now let's look into `DeepLiftShap`. Similar to `GradientShap`, `DeepLiftShap` uses
 baseline distribution. In the example below, we use the same baseline distribution
