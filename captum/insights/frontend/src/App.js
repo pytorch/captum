@@ -1,4 +1,5 @@
 import React from "react";
+import ReactTags from "react-tag-autocomplete";
 import "./App.css";
 
 // helper method to convert an array or object into a valid classname
@@ -73,6 +74,48 @@ class FilterContainer extends React.Component {
   }
 }
 
+class ClassFilter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tags: [{ id: 1, name: "Plane" }, { id: 2, name: "Car" }],
+      suggestions: [
+        { id: 3, name: "Bird" },
+        { id: 4, name: "Cat" },
+        { id: 5, name: "Deer" },
+        { id: 6, name: "Dog" }
+      ]
+    };
+  }
+
+  handleDelete = i => {
+    const tags = this.state.tags.slice(0);
+    const removed_tag = tags.splice(i, 1);
+    const suggestions = [].concat(this.state.suggestions, removed_tag);
+    this.setState({ tags: tags, suggestions: suggestions });
+  };
+
+  handleAddition = tag => {
+    const tags = [].concat(this.state.tags, tag);
+    const suggestions = this.state.suggestions.filter(t => t.id !== tag.id);
+    this.setState({ tags, suggestions });
+  };
+
+  render() {
+    return (
+      <ReactTags
+        tags={this.state.tags}
+        autofocus={false}
+        suggestions={this.state.suggestions}
+        handleDelete={this.handleDelete}
+        handleAddition={this.handleAddition}
+        minQueryLength={0}
+        placeholder="add new class..."
+      />
+    );
+  }
+}
+
 class Filter extends React.Component {
   render() {
     return (
@@ -81,7 +124,7 @@ class Filter extends React.Component {
           <div className="filter-panel__column">
             <div className="filter-panel__column__title">Filter by Classes</div>
             <div className="filter-panel__column__body">
-              Animal and 2 other classes are selected. <a href="">Edit</a>
+              <ClassFilter />
             </div>
           </div>
           <div className="filter-panel__column">
@@ -109,7 +152,7 @@ class Filter extends React.Component {
             <div className="filter-panel__column__body">
               Approximation steps:{" "}
               <input
-                className="input"
+                className="input input--narrow"
                 name="approximation_steps"
                 type="number"
                 value={this.props.approximationSteps}
@@ -326,7 +369,7 @@ function Visualizations(props) {
     return (
       <div className="viz">
         <div className="panel">
-          <div className="filter-panel__column">
+          <div className="panel__column">
             Please press <strong className="text-feature-word">Fetch</strong> to
             start loading data.
           </div>
