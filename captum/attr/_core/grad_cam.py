@@ -16,8 +16,8 @@ class LayerGradCam(LayerAttribution):
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's output
-                          dimensions, corresponding to attribution of each neuron
-                          in the output of this layer.
+                          dimensions, except for dimension 2, which will be 1,
+                          since GradCAM sums over channels.
                           Currently, only layers with a single tensor output are
                           supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
@@ -28,11 +28,30 @@ class LayerGradCam(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, target=None, inp_interpolate=False, additional_forward_args=None):
+    def attribute(self, inputs, target=None, additional_forward_args=None):
         r"""
-            Computes element-wise product of gradient and activation for selected
-            layer on given inputs.
+            Computes GradCAM attribution for chosen layer. GradCAM is designed for
+            convolutional neural networks, and is usually applied to the last
+            convolutional layer.
 
+            GradCAM computes the gradients of the target output with respect to
+            the given layer, averages for each output channel (dimension 2 of
+            output), and multiplies the average gradient for each channel by the
+            layer activations. The results are summed over all channels and a ReLU
+            is applied to the output, returning only non-negative attributions.
+
+            Note: this procedure sums over the second dimension (# of channels),
+            so the output of GradCAM attributions will have a second
+            dimension of 1, but all other dimensions will match that of the layer
+            output.
+
+            GradCAM attributions are generally upsampled and can be viewed as a
+            mask to the input, since a convolutional layer output gneerally
+            matches the input image spatially. This upsampling can be performed
+            using LayerAttribution.interpolate, as shown in the example below.
+
+            More details regarding the GradCAM method can be found in the
+            original paper here:
             https://arxiv.org/pdf/1610.02391.pdf
 
             Args
@@ -66,23 +85,31 @@ class LayerGradCam(LayerAttribution):
 
             Return
 
-                attributions (tensor): Product of gradient and activation for each
-                            neuron in given layer output.
-                            Attributions will always be the same size as the
-                            output of the given layer.
+                attributions (tensor): Attributions based on GradCAM method.
+                            Attributions will be the same size as the
+                            output of the given layer, except for dimension 2,
+                            which will be 1 due to summing over channels.
 
             Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
                 >>> # and returns an Nx10 tensor of class probabilities.
-                >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
-                >>> # and the output of this layer has dimensions Nx12x32x32.
+                >>> # It contains an attribute conv4, which is an instance of nn.conv2d,
+                >>> # and the output of this layer has dimensions Nx50x8x8.
+                >>> # It is the last convolution layer, which is the recommended
+                >>> # use case for GradCAM.
                 >>> net = ImageClassifier()
-                >>> layer_ga = LayerGradientXActivation(net, net.conv1)
+                >>> layer_gc = LayerGradCam(net, net.conv4)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Computes layer activation x gradient for class 3.
-                >>> # attribution size matches layer output, Nx12x32x32
-                >>> attribution = layer_ga.attribute(input, 3)
+                >>> # Computes layer GradCAM for class 3.
+                >>> # attribution size matches layer output except for dimension
+                >>> # 1, so dimensions of attr would be Nx1x8x8.
+                >>> attr = layer_gc.attribute(input, 3)
+                >>> # GradCAM attributions are often upsampled and viewed as a
+                >>> # mask to the input, since the convolutional layer output
+                >>> # spatially matches the original input image.
+                >>> # This can be done with LayerAttribution's interpolate method.
+                >>> upsampled_attr = LayerAttribution.interpolate(attr, (32, 32))
         """
         inputs = format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
@@ -98,10 +125,15 @@ class LayerGradCam(LayerAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
         )
-        summed_grads = torch.mean(layer_gradients, dim=tuple(x for x in range(2,len(layer_gradients.shape))), keepdim=True)
-        print(summed_grads)
-        non_neg_scaled_act = F.relu(torch.sum(summed_grads * layer_eval, dim=1, keepdim=True))
+        print(layer_gradients)
+        print(layer_eval)
+        summed_grads = torch.mean(
+            layer_gradients,
+            dim=tuple(x for x in range(2, len(layer_gradients.shape))),
+            keepdim=True,
+        )
 
-        if inp_interpolate:
-            return F.interpolate(non_neg_scaled_act, inputs[0].shape[2:])
+        non_neg_scaled_act = F.relu(
+            torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
+        )
         return non_neg_scaled_act

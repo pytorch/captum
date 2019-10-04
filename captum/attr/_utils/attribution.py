@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import torch
+import torch.nn.functional as F
 
 from .common import zeros, _run_forward
 from .gradient import compute_gradients
@@ -132,6 +133,9 @@ class LayerAttribution(InternalAttribution):
         """
         super().__init__(forward_func, layer)
 
+    def interpolate(layer_attribution, interpolate_dims):
+        return F.interpolate(layer_attribution, interpolate_dims)
+
 
 class NeuronAttribution(InternalAttribution):
     r"""
@@ -178,7 +182,6 @@ class NeuronAttribution(InternalAttribution):
 
                 attributions: Attribution values for each input vector. The
                               `attributions` have the dimensionality of inputs.
-                others ?
 
         """
         raise NotImplementedError("A derived class should implement attribute method")

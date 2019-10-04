@@ -203,6 +203,28 @@ class TestModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
+class BasicModel_SmallConvNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 2, 3, 1)
+        self.relu1 = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)
+        self.fc1 = nn.Linear(8, 4)
+        self.conv1.weight = nn.Parameter(torch.ones(2, 1, 3, 3))
+        self.conv1.bias = nn.Parameter(torch.tensor([-50.0, -75.0]))
+        self.fc1.weight = nn.Parameter(
+            torch.cat([torch.ones(4, 5), -1 * torch.ones(4, 3)], dim=1)
+        )
+        self.relu2 = nn.ReLU()
+
+    def forward(self, x, x2=None):
+        if x2 is not None:
+            x = x + x2
+        x = self.relu1(self.conv1(x))
+        x = x.view(-1, 8)
+        return self.relu2(self.fc1(x))
+
+
 class TestModel_ConvNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -217,6 +239,11 @@ class TestModel_ConvNet(nn.Module):
         self.fc2 = nn.Linear(8, 10)
         self.softmax = nn.Softmax(dim=1)
 
+        print(self.conv1.weight.data)
+        print(self.conv1.bias.data)
+
+        print(self.conv2.weight.data)
+        print(self.conv2.bias.data)
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
