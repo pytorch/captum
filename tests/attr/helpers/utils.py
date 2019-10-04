@@ -19,9 +19,12 @@ def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
         )
 
 
-def assertTensorAlmostEqual(test, tensor, expected):
+def assertTensorAlmostEqual(test, tensor, expected, delta=0.0001):
+    tensor = tensor.squeeze()
+    if not isinstance(expected, torch.Tensor):
+        expected = torch.tensor(expected)
     test.assertAlmostEqual(
-        torch.sum(torch.abs(tensor - torch.tensor(expected))), 0.0, delta=0.0001
+        torch.sum(torch.abs(tensor - expected)).item(), 0.0, delta=delta
     )
 
 

@@ -68,8 +68,12 @@ class Test(BaseTest):
             self.assertEqual(sorted_keys[i].index, device_index_list[i])
 
     def test_batched_generator(self):
-        def sample_operator(inputs, additional_forward_args, scale):
-            return (scale * (sum(inputs)), scale * sum(additional_forward_args))
+        def sample_operator(inputs, additional_forward_args, target_ind, scale):
+            return (
+                scale * (sum(inputs)),
+                scale * sum(additional_forward_args),
+                target_ind,
+            )
 
         array1 = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         array2 = [[6, 7, 8], [0, 1, 2], [3, 4, 5]]
@@ -79,13 +83,14 @@ class Test(BaseTest):
             torch.tensor(array2),
             torch.tensor(array3),
         )
-        for index, (inp, add) in enumerate(
-            _batched_generator((inp1, inp2), (inp3, 5), 1)
+        for index, (inp, add, targ) in enumerate(
+            _batched_generator((inp1, inp2), (inp3, 5), 7, 1)
         ):
             assertTensorAlmostEqual(self, inp[0], array1[index])
             assertTensorAlmostEqual(self, inp[1], array2[index])
             assertTensorAlmostEqual(self, add[0], array3[index])
             self.assertEqual(add[1], 5)
+            self.assertEqual(targ, 7)
 
     def test_batched_operator_0_bsz(self):
         inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
@@ -93,8 +98,11 @@ class Test(BaseTest):
             _batched_operator(lambda x: x, inputs=inp1, internal_batch_size=0)
 
     def test_batched_operator(self):
-        def _sample_operator(inputs, additional_forward_args, scale):
-            return (scale * (sum(inputs)), scale * sum(additional_forward_args))
+        def _sample_operator(inputs, additional_forward_args, target_ind, scale):
+            return (
+                scale * (sum(inputs)),
+                scale * sum(additional_forward_args) + target_ind[0],
+            )
 
         inp1 = torch.tensor([[0, 1, 2], [3, 4, 5], [6, 7, 8]])
         inp2 = torch.tensor([[6, 7, 8], [0, 1, 2], [3, 4, 5]])
@@ -103,6 +111,7 @@ class Test(BaseTest):
             _sample_operator,
             inputs=(inp1, inp2),
             additional_forward_args=(inp3),
+            target_ind=[0, 1, 2],
             scale=2.0,
             internal_batch_size=1,
         )
@@ -110,5 +119,5 @@ class Test(BaseTest):
             self, batched_result[0], [[12, 16, 20], [6, 10, 14], [18, 22, 26]]
         )
         assertTensorAlmostEqual(
-            self, batched_result[1], [[0, 2, 4], [0, 0, 0], [0, 0, 0]]
+            self, batched_result[1], [[0, 2, 4], [1, 1, 1], [2, 2, 2]]
         )

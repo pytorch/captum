@@ -3,7 +3,15 @@
 import torch
 import numpy as np
 
+from enum import Enum
+
+
 from .approximation_methods import SUPPORTED_METHODS
+
+
+class ExpansionTypes(Enum):
+    repeat = 1
+    repeat_interleave = 2
 
 
 def random_baseline(input, start, end):
@@ -145,6 +153,46 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     )
 
 
+def _verify_select_column(output, target):
+    target = (target,) if isinstance(target, int) else target
+    assert (
+        len(target) <= len(output.shape) - 1
+    ), "Cannot choose target column with output shape %r." % (output.shape,)
+    return output[(slice(None), *target)]
+
+
+def _select_targets(output, target):
+    num_examples = output.shape[0]
+    dims = len(output.shape)
+    if target is None:
+        return output
+    elif isinstance(target, int) or isinstance(target, tuple):
+        return _verify_select_column(output, target)
+    elif isinstance(target, torch.Tensor):
+        if torch.numel(target) == 1 and isinstance(target.item(), int):
+            return _verify_select_column(output, target.item())
+        elif len(target.shape) == 1 and torch.numel(target) == num_examples:
+            assert dims == 2, "Output must be 2D to select tensor of targets."
+            return torch.gather(output, 1, target.reshape(len(output), 1))
+        else:
+            raise AssertionError(
+                "Tensor target dimension %r is not valid." % (target.shape,)
+            )
+    elif isinstance(target, list):
+        assert len(target) == num_examples, "Target list length does not match output!"
+        if type(target[0]) is int:
+            assert dims == 2, "Output must be 2D to select tensor of targets."
+            return torch.gather(output, 1, torch.tensor(target).reshape(len(output), 1))
+        elif type(target[0]) is tuple:
+            return torch.stack(
+                [output[(i,) + targ_elem] for i, targ_elem in enumerate(target)]
+            )
+        else:
+            raise AssertionError("Target element type in list is not valid.")
+    else:
+        raise AssertionError("Target type %r is not valid." % target)
+
+
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
@@ -156,21 +204,20 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
         if additional_forward_args is not None
         else inputs
     )
-
-    return output if target is None else output[:, target]
+    return _select_targets(output, target)
 
 
 def _expand_additional_forward_args(
-    additional_forward_args, n_steps, expansion_type="repeat"
+    additional_forward_args, n_steps, expansion_type=ExpansionTypes.repeat
 ):
     def _expand_tensor_forward_arg(
-        additional_forward_arg, n_steps, expansion_type="repeat"
+        additional_forward_arg, n_steps, expansion_type=ExpansionTypes.repeat
     ):
         if len(additional_forward_arg.size()) == 0:
             return additional_forward_arg
-        if expansion_type == "repeat":
+        if expansion_type == ExpansionTypes.repeat:
             return torch.cat([additional_forward_arg] * n_steps, dim=0)
-        elif expansion_type == "repeat_interleave":
+        elif expansion_type == ExpansionTypes.repeat_interleave:
             return additional_forward_arg.repeat_interleave(n_steps, dim=0)
         else:
             raise NotImplementedError(
@@ -184,6 +231,35 @@ def _expand_additional_forward_args(
         else additional_forward_arg
         for additional_forward_arg in additional_forward_args
     )
+
+
+def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
+    if isinstance(target, list):
+        if expansion_type == ExpansionTypes.repeat:
+            return target * n_steps
+        elif expansion_type == ExpansionTypes.repeat_interleave:
+            expanded_target = []
+            for i in target:
+                expanded_target.extend([i] * n_steps)
+            return expanded_target
+        else:
+            raise NotImplementedError(
+                "Currently only `repeat` and `repeat_interleave`"
+                " expansion_types are supported"
+            )
+
+    elif isinstance(target, torch.Tensor) and torch.numel(target) > 1:
+        if expansion_type == ExpansionTypes.repeat:
+            return torch.cat([target] * n_steps, dim=0)
+        elif expansion_type == ExpansionTypes.repeat_interleave:
+            return target.repeat_interleave(n_steps, dim=0)
+        else:
+            raise NotImplementedError(
+                "Currently only `repeat` and `repeat_interleave`"
+                " expansion_types are supported"
+            )
+
+    return target
 
 
 class MaxList:

@@ -10,6 +10,7 @@ from .._utils.common import (
     _format_attributions,
     _reshape_and_sum,
     _expand_additional_forward_args,
+    _expand_target,
 )
 from .._utils.attribution import GradientAttribution
 
@@ -158,6 +159,7 @@ class IntegratedGradients(GradientAttribution):
             if additional_forward_args is not None
             else None
         )
+        expanded_target = _expand_target(target, n_steps)
 
         # grads: dim -> (bsz * #steps x inputs[0].shape[1:], ...)
         grads = _batched_operator(
@@ -166,7 +168,7 @@ class IntegratedGradients(GradientAttribution):
             input_additional_args,
             internal_batch_size=internal_batch_size,
             forward_fn=self.forward_func,
-            target_ind=target,
+            target_ind=expanded_target,
         )
 
         # flattening grads so that we can multipy it with step-size

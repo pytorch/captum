@@ -68,7 +68,9 @@ def _sort_key_list(keys, device_ids=None):
     return out_list
 
 
-def _batched_generator(inputs, additional_forward_args=None, internal_batch_size=None):
+def _batched_generator(
+    inputs, additional_forward_args=None, target_ind=None, internal_batch_size=None
+):
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
@@ -81,7 +83,7 @@ def _batched_generator(inputs, additional_forward_args=None, internal_batch_size
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
     if internal_batch_size is None:
-        yield inputs, additional_forward_args
+        yield inputs, additional_forward_args, target_ind
     else:
         for current_total in range(0, num_examples, internal_batch_size):
             yield _tuple_splice_range(
@@ -90,11 +92,22 @@ def _batched_generator(inputs, additional_forward_args=None, internal_batch_size
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
-            )
+            ), target_ind[
+                current_total : current_total + internal_batch_size
+            ] if isinstance(
+                target_ind, list
+            ) or (
+                isinstance(target_ind, torch.Tensor) and target_ind.numel() > 1
+            ) else target_ind
 
 
 def _batched_operator(
-    operator, inputs, additional_forward_args=None, internal_batch_size=None, **kwargs
+    operator,
+    inputs,
+    additional_forward_args=None,
+    target_ind=None,
+    internal_batch_size=None,
+    **kwargs
 ):
     """
     Batches the operation of the given operator, applying the given batch size
@@ -102,9 +115,14 @@ def _batched_operator(
     of the results of each batch.
     """
     all_outputs = [
-        operator(inputs=input, additional_forward_args=additional, **kwargs)
-        for input, additional in _batched_generator(
-            inputs, additional_forward_args, internal_batch_size
+        operator(
+            inputs=input,
+            additional_forward_args=additional,
+            target_ind=target,
+            **kwargs
+        )
+        for input, additional, target in _batched_generator(
+            inputs, additional_forward_args, target_ind, internal_batch_size
         )
     ]
     return _reduce_list(all_outputs)
