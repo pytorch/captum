@@ -239,11 +239,6 @@ class TestModel_ConvNet(nn.Module):
         self.fc2 = nn.Linear(8, 10)
         self.softmax = nn.Softmax(dim=1)
 
-        print(self.conv1.weight.data)
-        print(self.conv1.bias.data)
-
-        print(self.conv2.weight.data)
-        print(self.conv2.bias.data)
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 

@@ -45,7 +45,6 @@ class Test(BaseTest):
         attributions = layer_gc.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
-        print(attributions)
         assertTensorAlmostEqual(self, attributions, expected_activation, delta=0.01)
 
 

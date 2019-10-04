@@ -125,8 +125,6 @@ class LayerGradCam(LayerAttribution):
             additional_forward_args,
             device_ids=self.device_ids,
         )
-        print(layer_gradients)
-        print(layer_eval)
         summed_grads = torch.mean(
             layer_gradients,
             dim=tuple(x for x in range(2, len(layer_gradients.shape))),
