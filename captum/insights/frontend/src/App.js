@@ -126,6 +126,10 @@ class Filter extends React.Component {
   }
 }
 
+function Spinner(_) {
+  return <div className="spinner" />;
+}
+
 // TODO maybe linear interpolate the colors instead of hardcoding them
 function getPercentageColor(percentage, zeroDefault = false) {
   if (percentage > 50) {
@@ -308,6 +312,16 @@ class Visualization extends React.Component {
 }
 
 function Visualizations(props) {
+  if (props.loading) {
+    return (
+      <div className="viz">
+        <div className="panel panel--center">
+          <Spinner />
+        </div>
+      </div>
+    );
+  }
+
   if (!props.data || props.data.length === 0) {
     return (
       <div className="viz">
@@ -333,11 +347,13 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: []
+      data: [],
+      loading: false
     };
   }
 
   fetchData = filter_config => {
+    this.setState({ loading: true });
     fetch("/fetch", {
       method: "POST",
       headers: {
@@ -346,7 +362,7 @@ class App extends React.Component {
       body: JSON.stringify(filter_config)
     })
       .then(response => response.json())
-      .then(response => this.setState({ data: response }));
+      .then(response => this.setState({ data: response, loading: false }));
   };
 
   render() {
@@ -354,7 +370,7 @@ class App extends React.Component {
       <div className="app">
         <Header />
         <FilterContainer fetchData={this.fetchData} />
-        <Visualizations data={this.state.data} />
+        <Visualizations data={this.state.data} loading={this.state.loading} />
       </div>
     );
   }
