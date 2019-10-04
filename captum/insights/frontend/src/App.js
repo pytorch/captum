@@ -42,7 +42,7 @@ class FilterContainer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      instance_type: "all",
+      prediction: "all",
       approximation_steps: 50
     };
   }
@@ -64,9 +64,9 @@ class FilterContainer extends React.Component {
   render() {
     return (
       <Filter
-        instanceType={this.state.instance_type}
+        prediction={this.state.prediction}
         approximationSteps={this.state.approximation_steps}
-        onHandleInputChange={this.handleInputChange}
+        handleInputChange={this.handleInputChange}
         handleSubmit={this.handleSubmit}
       />
     );
@@ -89,16 +89,16 @@ class Filter extends React.Component {
               Filter by Instances
             </div>
             <div className="filter-panel__column__body">
-              Instance Type:{" "}
+              Prediction:{" "}
               <select
                 className="select"
-                name="instance_type"
-                value={this.props.isntanceType}
+                name="prediction"
                 onChange={this.props.handleInputChange}
+                value={this.props.prediction}
               >
                 <option value="all">All</option>
-                <option value="false_negative">False Negative</option>
-                <option value="false_positive">False Positive</option>
+                <option value="correct">Correct</option>
+                <option value="incorrect">Incorrect</option>
               </select>
             </div>
           </div>
@@ -338,7 +338,6 @@ class App extends React.Component {
   }
 
   fetchData = filter_config => {
-    console.log("filter config: ", filter_config);
     fetch("/fetch", {
       method: "POST",
       headers: {

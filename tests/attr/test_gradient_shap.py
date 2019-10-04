@@ -100,7 +100,7 @@ class Test(BaseTest):
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         self.assertTrue(
-            delta < 0.05,
+            delta < 0.001,
             "Sum of SHAP values does"
             " not match the difference of endpoints. %f" % (delta),
         )

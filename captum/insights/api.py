@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
@@ -15,6 +15,13 @@ VisualizationOutput = namedtuple(
     "VisualizationOutput", "feature_outputs actual predicted"
 )
 Contribution = namedtuple("Contribution", "name percent")
+
+
+class FilterConfig(NamedTuple):
+    steps: int = 25
+    prediction: str = "all"
+    classes: List[str] = []
+    count: int = 4
 
 
 class Data:
@@ -37,7 +44,6 @@ class AttributionVisualizer(object):
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
         score_func: Optional[Callable] = None,
-        n_steps: int = 50,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -50,7 +56,7 @@ class AttributionVisualizer(object):
         self.features = features
         self.dataset = dataset
         self.score_func = score_func
-        self.n_steps = n_steps
+        self._config = FilterConfig(steps=25, prediction="all", classes=[], count=4)
 
     def _calculate_attribution(
         self,
@@ -69,16 +75,24 @@ class AttributionVisualizer(object):
             baselines=baseline,
             additional_forward_args=additional_forward_args,
             target=label,
-            n_steps=self.n_steps,
+            n_steps=self._config.steps,
         )
 
         return attr_ig
 
-    def render(self):
+    def _update_config(self, settings):
+        self._config = FilterConfig(
+            steps=int(settings["approximation_steps"]),
+            prediction=settings["prediction"],
+            classes=[],
+            count=4,
+        )
+
+    def render(self, blocking=False, debug=False):
         from IPython.display import IFrame, display
         from captum.insights.server import start_server
 
-        port = start_server(self)
+        port = start_server(self, blocking, debug)
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
@@ -126,7 +140,15 @@ class AttributionVisualizer(object):
 
         return net_contrib.tolist()
 
-    def visualize(self) -> List[VisualizationOutput]:
+    def _is_prediction_correct(
+        self, prediction_scores: List[PredictionScore], actual_label: str
+    ):
+        if len(prediction_scores) == 0:
+            return False
+
+        return actual_label == prediction_scores[0].label
+
+    def _get_outputs(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
         net = self.models[0]  # TODO process multiple models
         vis_outputs = []
@@ -169,8 +191,6 @@ class AttributionVisualizer(object):
             if self.score_func is not None:
                 outputs = self.score_func(outputs)
 
-            label = None if batch_data.labels is None else batch_data.labels[i]
-
             if outputs.nelement() == 1:
                 scores = outputs
                 predicted = scores.round().to(torch.int)
@@ -180,8 +200,22 @@ class AttributionVisualizer(object):
             scores = scores.cpu().squeeze(0)
             predicted = predicted.cpu().squeeze(0)
 
+            label = None if batch_data.labels is None else batch_data.labels[i]
+
             actual_label = self.classes[label] if label is not None else None
-            predicted_labels = self._get_labels_from_scores(scores, predicted)
+            predicted_scores = self._get_labels_from_scores(scores, predicted)
+
+            # filter predictions here to avoid the cost of calculating attributions
+            if self._config.prediction == "all":
+                pass
+            elif self._config.prediction == "correct":
+                if not self._is_prediction_correct(predicted_scores, actual_label):
+                    continue
+            elif self._config.prediction == "incorrect":
+                if self._is_prediction_correct(predicted_scores, actual_label):
+                    continue
+            else:
+                raise Exception(f"Invalid prediction config: {self._config.prediction}")
 
             baselines = [tuple(b) for b in baselines]
 
@@ -211,9 +245,18 @@ class AttributionVisualizer(object):
             output = VisualizationOutput(
                 feature_outputs=features_per_input,
                 actual=actual_label,
-                predicted=predicted_labels,
+                predicted=predicted_scores,
             )
 
             vis_outputs.append(output)
 
         return vis_outputs
+
+    def visualize(self):
+        output_list = []
+        while len(output_list) < self._config.count:
+            try:
+                output_list.extend(self._get_outputs())
+            except StopIteration:
+                break
+        return output_list
