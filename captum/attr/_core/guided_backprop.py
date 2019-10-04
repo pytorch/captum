@@ -82,7 +82,7 @@ class GuidedBackprop(GradientAttribution):
             >>> gbp = GuidedBackprop(net)
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes Guided Backprop attribution scores for class 3.
-            >>> attribution, delta = gbp.attribute(input, target=3)
+            >>> attribution = gbp.attribute(input, target=3)
         """
 
         # Keeps track whether original input is a tuple or not before
