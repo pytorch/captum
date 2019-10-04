@@ -153,6 +153,12 @@ button {
   box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.18);
 }
 
+.panel--center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .panel__column {
   padding: 0 30px;
 }
@@ -289,4 +295,29 @@ button {
 
 .general-feature__bar__negative {
   background: #d45c43;
+}
+
+.spinner {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+}
+.spinner:after {
+  content: " ";
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #ee4c2c;
+  border-color: #ee4c2c transparent #ee4c2c transparent;
+  animation: spinner 1.2s linear infinite;
+}
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
