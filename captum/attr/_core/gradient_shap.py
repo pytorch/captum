@@ -138,7 +138,7 @@ class GradientShap(GradientAttribution):
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
-        attributions = nt.attribute(
+        attributions, delta = nt.attribute(
             inputs,
             nt_type="smoothgrad",
             n_samples=n_samples,
@@ -148,14 +148,7 @@ class GradientShap(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        delta = self._compute_convergence_delta(
-            attributions if isinstance(attributions, tuple) else (attributions,),
-            baselines,
-            inputs,
-            additional_forward_args=additional_forward_args,
-            target=target,
-            is_multi_baseline=True,
-        )
+        delta = abs(torch.mean(delta.reshape(-1, n_samples), dim=1)).sum().item()
         return attributions, delta
 
     def _has_convergence_delta(self):
@@ -214,7 +207,16 @@ class InputBaselineXGradient(GradientAttribution):
             input_baseline_diff * grad
             for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
         )
-        return _format_attributions(is_inputs_tuple, attributions)
+
+        delta = self._compute_convergence_delta(
+            attributions,
+            baselines,
+            inputs,
+            additional_forward_args=additional_forward_args,
+            target=target,
+            delta_per_sample=True,
+        )
+        return _format_attributions(is_inputs_tuple, attributions), delta
 
     def _has_convergence_delta(self):
-        return False
+        return True

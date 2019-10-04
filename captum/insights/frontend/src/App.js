@@ -42,7 +42,7 @@ class FilterContainer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      instance_type: "all",
+      prediction: "all",
       approximation_steps: 50
     };
   }
@@ -64,9 +64,9 @@ class FilterContainer extends React.Component {
   render() {
     return (
       <Filter
-        instanceType={this.state.instance_type}
+        prediction={this.state.prediction}
         approximationSteps={this.state.approximation_steps}
-        onHandleInputChange={this.handleInputChange}
+        handleInputChange={this.handleInputChange}
         handleSubmit={this.handleSubmit}
       />
     );
@@ -89,16 +89,16 @@ class Filter extends React.Component {
               Filter by Instances
             </div>
             <div className="filter-panel__column__body">
-              Instance Type:{" "}
+              Prediction:{" "}
               <select
                 className="select"
-                name="instance_type"
-                value={this.props.isntanceType}
+                name="prediction"
                 onChange={this.props.handleInputChange}
+                value={this.props.prediction}
               >
                 <option value="all">All</option>
-                <option value="false_negative">False Negative</option>
-                <option value="false_positive">False Positive</option>
+                <option value="correct">Correct</option>
+                <option value="incorrect">Incorrect</option>
               </select>
             </div>
           </div>
@@ -124,6 +124,10 @@ class Filter extends React.Component {
       </form>
     );
   }
+}
+
+function Spinner(_) {
+  return <div className="spinner" />;
 }
 
 // TODO maybe linear interpolate the colors instead of hardcoding them
@@ -160,7 +164,9 @@ function ImageFeature(props) {
             <div className="gallery__item__image">
               <img src={"data:image/png;base64," + props.data.modified} />
             </div>
-            <div className="gallery__item__description">Gradient Overlay</div>
+            <div className="gallery__item__description">
+              Attribution Magnitude
+            </div>
           </div>
         </div>
       </div>
@@ -192,6 +198,35 @@ function TextFeature(props) {
   );
 }
 
+function GeneralFeature(props) {
+  const bars = props.data.base.map((w, i) => {
+    const percent = props.data.modified[i].toFixed(3);
+    const color =
+      "general-feature__bar__" + (percent > 0 ? "positive" : "negative");
+    const width_percent = Math.abs(percent) + "%";
+    return (
+      <div className="general-feature">
+        <span className="general-feature__label-container">
+          <span className="general-feature__label">{w}</span>
+          <span className="general-feature__percent">{percent}</span>
+        </span>
+        <div className="general-feature__bar-container">
+          <span
+            className={cx(["general-feature__bar", color])}
+            style={{ width: width_percent }}
+          ></span>
+        </div>
+      </div>
+    );
+  });
+  return (
+    <>
+      <div className="panel__column__title">{props.data.name} (General)</div>
+      <div className="panel__column__body">{bars}</div>
+    </>
+  );
+}
+
 function Feature(props) {
   const data = props.data;
   switch (data.type) {
@@ -199,6 +234,8 @@ function Feature(props) {
       return <ImageFeature data={data} />;
     case "text":
       return <TextFeature data={data} />;
+    case "general":
+      return <GeneralFeature data={data} />;
     default:
       throw new Error("Unsupported feature visualization type: " + data.type);
   }
@@ -206,18 +243,24 @@ function Feature(props) {
 
 class Contributions extends React.Component {
   render() {
-    return this.props.feature_outputs.map(f => (
-      <div className="bar-chart__group">
-        <div
-          className={cx({
-            "bar-chart__group__bar": true,
-            [getPercentageColor(f.contribution)]: true
-          })}
-          width={f.contribution + "%"}
-        />
-        <div className="bar-chart__group__title">{f.name}</div>
-      </div>
-    ));
+    return this.props.feature_outputs.map(f => {
+      // pad bar height so features with 0 contribution can still be seen
+      // in graph
+      const contribution = f.contribution * 100;
+      const bar_height = contribution > 10 ? contribution : contribution + 10;
+      return (
+        <div className="bar-chart__group">
+          <div
+            className={cx([
+              "bar-chart__group__bar",
+              getPercentageColor(contribution)
+            ])}
+            style={{ height: bar_height + "px" }}
+          />
+          <div className="bar-chart__group__title">{f.name}</div>
+        </div>
+      );
+    });
   }
 }
 
@@ -269,6 +312,16 @@ class Visualization extends React.Component {
 }
 
 function Visualizations(props) {
+  if (props.loading) {
+    return (
+      <div className="viz">
+        <div className="panel panel--center">
+          <Spinner />
+        </div>
+      </div>
+    );
+  }
+
   if (!props.data || props.data.length === 0) {
     return (
       <div className="viz">
@@ -294,12 +347,13 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: []
+      data: [],
+      loading: false
     };
   }
 
   fetchData = filter_config => {
-    console.log("filter config: ", filter_config);
+    this.setState({ loading: true });
     fetch("/fetch", {
       method: "POST",
       headers: {
@@ -308,7 +362,7 @@ class App extends React.Component {
       body: JSON.stringify(filter_config)
     })
       .then(response => response.json())
-      .then(response => this.setState({ data: response }));
+      .then(response => this.setState({ data: response, loading: false }));
   };
 
   render() {
@@ -316,7 +370,7 @@ class App extends React.Component {
       <div className="app">
         <Header />
         <FilterContainer fetchData={this.fetchData} />
-        <Visualizations data={this.state.data} />
+        <Visualizations data={this.state.data} loading={this.state.loading} />
       </div>
     );
   }

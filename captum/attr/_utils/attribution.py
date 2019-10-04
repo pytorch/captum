@@ -37,7 +37,7 @@ class Attribution:
         end_point,
         target=None,
         additional_forward_args=None,
-        is_multi_baseline=False,
+        delta_per_sample=False,
     ):
         def _sum_rows(input):
             return torch.tensor([input_row.sum() for input_row in input])
@@ -58,9 +58,10 @@ class Attribution:
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
         # TODO ideally do not sum - we should return deltas as a 1D tensor
         # of batch size. Let the user to sum it if they need to
-        # Address this in a separate PR
-        if is_multi_baseline:
-            return abs(attr_sum - (end_point - start_point.mean(0).item())).sum().item()
+        # Currently this is provided when sample_delta is True, but this
+        # should change to the general behavior.
+        if delta_per_sample:
+            return attr_sum - (end_point - start_point)
         else:
             return abs(attr_sum - (end_point - start_point)).sum().item()
 
@@ -131,7 +132,7 @@ class LayerAttribution(InternalAttribution):
                    If forward_func is given as the DataParallel model itself,
                    then it is not neccesary to provide this argument.
         """
-        super().__init__(forward_func, layer)
+        super().__init__(forward_func, layer, device_ids)
 
     def interpolate(layer_attribution, interpolate_dims):
         return F.interpolate(layer_attribution, interpolate_dims, mode="bilinear")

@@ -153,6 +153,12 @@ button {
   box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.18);
 }
 
+.panel--center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .panel__column {
   padding: 0 30px;
 }
@@ -170,16 +176,27 @@ button {
 }
 
 .gallery__item__image img {
-  height: 130px;
+  height: 200px;
   width: auto;
 }
 
-.bar-chart__group {
-  padding: 8px 0;
+.gallery__item__description {
+  text-align: center;
 }
+
+.bar-chart__group {
+  padding: 2px 0;
+  display: flex;
+}
+
 .bar-chart__group__bar {
-  height: 10px;
-  border-radius: 4px;
+  width: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.bar-chart__group__title {
+  padding-left: 8px;
 }
 
 .percentage-blue {
@@ -245,4 +262,62 @@ button {
 
 .text-feature-word:hover .tooltip__label {
   visibility: visible;
+}
+
+.general-feature__label-container {
+  display: inline-flex;
+  justify-content: space-between;
+  width: 20%;
+  padding-right: 8px;
+}
+
+.general-feature__label {
+  font-weight: 600;
+}
+
+.general-feature__percent {
+  display: inline-block;
+}
+
+.general-feature__bar-container {
+  display: inline-block;
+  width: 70%;
+}
+.general-feature__bar {
+  display: inline-block;
+  border-radius: 4px;
+  height: 12px;
+}
+
+.general-feature__bar__positive {
+  background: #80aaff;
+}
+
+.general-feature__bar__negative {
+  background: #d45c43;
+}
+
+.spinner {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+}
+.spinner:after {
+  content: " ";
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #ee4c2c;
+  border-color: #ee4c2c transparent #ee4c2c transparent;
+  animation: spinner 1.2s linear infinite;
+}
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

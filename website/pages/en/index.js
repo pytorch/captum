@@ -35,7 +35,7 @@ class HomeSplash extends React.Component {
 
     const Logo = props => (
       <div className="splashLogo">
-        <img src={props.img_src} alt="Project Logo" />
+        <img src={props.img_src} alt="Project Logo" className="primaryLogoImage"/>
       </div>
     );
 
@@ -63,7 +63,7 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        <Logo img_src={baseUrl + 'img/captum_logo_lockup_top.png'} />
+        <div className="productTitle">Captum</div>
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
@@ -101,7 +101,7 @@ class Index extends React.Component {
           {
             content:
               'This is another description of how this project is useful',
-            image: `${baseUrl}img/captum_logo_lockup_white.svg`,
+            image: `${baseUrl}img/captum-icon.png`,
             imageAlign: 'right',
             title: 'Description',
           },
@@ -210,10 +210,10 @@ Approximation Error:  9.5367431640625e-07
         {[
           {
             content:
-              'Interpret models across different modalities including vision, text, dense and sparse features.',
-            image: `${baseUrl}img/puzzle_pieces.svg`,
+              'Supports interpretability of models across modalities including vision, text, and more.',
+            image: `${baseUrl}img/multi-modal.png`,
             imageAlign: 'top',
-            title: 'Multi-Modal Support',
+            title: 'Multi-Modal',
           },
           {
             content:
@@ -224,7 +224,7 @@ Approximation Error:  9.5367431640625e-07
           },
           {
             content:
-              'Open source, generic framework for interpretability research. Easily implement and benchmark new algorithms. ',
+              'Open source, generic library for interpretability research. Easily implement and benchmark new algorithms. ',
             image: `${baseUrl}img/expanding_arrows.svg`,
             imageAlign: 'top',
             title: 'Extensible',

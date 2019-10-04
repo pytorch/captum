@@ -14,6 +14,8 @@ from .._utils.common import (
     _format_attributions,
     _format_additional_forward_args,
     _expand_additional_forward_args,
+    _expand_target,
+    ExpansionTypes,
 )
 
 
@@ -214,10 +216,22 @@ class NoiseTunnel(Attribution):
             if additional_forward_args is None:
                 return
             additional_forward_args = _expand_additional_forward_args(
-                additional_forward_args, n_samples, expansion_type="repeat_interleave"
+                additional_forward_args,
+                n_samples,
+                expansion_type=ExpansionTypes.repeat_interleave,
             )
             # update kwargs with expanded baseline
             kwargs["additional_forward_args"] = additional_forward_args
+
+        def expand_and_update_target():
+            if "target" not in kwargs:
+                return
+            target = kwargs["target"]
+            target = _expand_target(
+                target, n_samples, expansion_type=ExpansionTypes.repeat_interleave
+            )
+            # update kwargs with expanded baseline
+            kwargs["target"] = target
 
         def compute_expected_attribution_and_sq(attribution):
             bsz = attribution.shape[0] // n_samples
@@ -240,11 +254,12 @@ class NoiseTunnel(Attribution):
 
         delta = 0
         inputs_with_noise = add_noise_to_inputs()
-        # if the algorithm supports baselines and/or additional_forward_args they
-        # will be expanded based on the n_steps and corrsponding kwargs
+        # if the algorithm supports targets, baselines and/or additional_forward_args
+        # they will be expanded based on the n_steps and corrsponding kwargs
         # variables will be updated accordingly
         expand_and_update_baselines()
         expand_and_update_additional_forward_args()
+        expand_and_update_target()
         # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
         attributions = self.attribution_method.attribute(inputs_with_noise, **kwargs)
         if self.is_delta_supported:
@@ -285,3 +300,6 @@ class NoiseTunnel(Attribution):
         attributions = _format_attributions(is_inputs_tuple, attributions)
 
         return (attributions, delta) if self.is_delta_supported else attributions
+
+    def _has_convergence_delta(self):
+        return self.is_delta_supported
