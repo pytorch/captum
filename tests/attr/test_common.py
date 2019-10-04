@@ -65,10 +65,6 @@ class Test(BaseTest):
         with self.assertRaises(AssertionError):
             _select_targets(output_tensor, [(0, 1), (2, 0), (3, 2)])
 
-        # Verify error is raised if any dimension is out of bounds.
-        with self.assertRaises(AssertionError):
-            _select_targets(output_tensor, [(1, 2), (2, 3)])
-
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
             _select_targets(output_tensor, (1, 2, 3))

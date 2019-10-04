@@ -153,21 +153,6 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     )
 
 
-def _convert_index(shape, target):
-    assert len(shape) == len(
-        target
-    ), "The length of each target must equal to the number of output dimensions - 1"
-    total_index = 0
-    current_total = 1
-    for i in range(len(target) - 1, -1, -1):
-        assert (
-            target[i] < shape[i]
-        ), "Index %r cannot be chosen from output with shape %r." % (target, shape)
-        total_index += current_total * target[i]
-        current_total = current_total * shape[i]
-    return total_index
-
-
 def _verify_select_column(output, target):
     target = (target,) if isinstance(target, int) else target
     assert (
@@ -199,13 +184,9 @@ def _select_targets(output, target):
             assert dims == 2, "Output must be 2D to select tensor of targets."
             return torch.gather(output, 1, torch.tensor(target).reshape(len(output), 1))
         elif type(target[0]) is tuple:
-            target_tensor = torch.tensor(
-                [
-                    _convert_index(tuple(output.shape[1:]), targ_elem)
-                    for targ_elem in target
-                ]
-            ).reshape((num_examples, 1))
-            return torch.gather(output.reshape((num_examples, -1)), 1, target_tensor)
+            return torch.stack(
+                [output[(i,) + targ_elem] for i, targ_elem in enumerate(target)]
+            )
         else:
             raise AssertionError("Target element type in list is not valid.")
     else:
