@@ -153,10 +153,11 @@ class AttributionVisualizer(object):
         net = self.models[0]  # TODO process multiple models
         vis_outputs = []
 
-        for i, (inputs, additional_forward_args) in enumerate(
+        for i, (inputs, additional_forward_args, label) in enumerate(
             _batched_generator(
                 inputs=batch_data.inputs,
                 additional_forward_args=batch_data.additional_args,
+                target_ind=batch_data.labels,
                 internal_batch_size=1,  # should be 1 until we have batch label support
             )
         ):
@@ -200,9 +201,7 @@ class AttributionVisualizer(object):
             scores = scores.cpu().squeeze(0)
             predicted = predicted.cpu().squeeze(0)
 
-            label = None if batch_data.labels is None else batch_data.labels[i]
-
-            actual_label = self.classes[label] if label is not None else None
+            actual_label = self.classes[label[0]] if label is not None else None
             predicted_scores = self._get_labels_from_scores(scores, predicted)
 
             # filter predictions here to avoid the cost of calculating attributions
