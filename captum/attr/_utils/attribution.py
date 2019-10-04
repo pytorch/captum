@@ -146,6 +146,7 @@ class NeuronAttribution(InternalAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
+
         Args
 
             forward_func:  The forward function of the model or any modification of it
