@@ -134,7 +134,7 @@ class LayerAttribution(InternalAttribution):
         super().__init__(forward_func, layer)
 
     def interpolate(layer_attribution, interpolate_dims):
-        return F.interpolate(layer_attribution, interpolate_dims)
+        return F.interpolate(layer_attribution, interpolate_dims, mode="bilinear")
 
 
 class NeuronAttribution(InternalAttribution):
