@@ -46,7 +46,7 @@ class LayerGradCam(LayerAttribution):
             output.
 
             GradCAM attributions are generally upsampled and can be viewed as a
-            mask to the input, since a convolutional layer output gneerally
+            mask to the input, since a convolutional layer output generally
             matches the input image spatially. This upsampling can be performed
             using LayerAttribution.interpolate, as shown in the example below.
 
@@ -62,7 +62,7 @@ class LayerGradCam(LayerAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 target (int, optional):  Output index for which gradient is computed
                             (for classification cases, this is the target class).

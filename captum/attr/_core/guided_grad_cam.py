@@ -13,10 +13,7 @@ class GuidedGradCam(GradientAttribution):
         Args
 
             model (nn.Module):  The reference to PyTorch model instance.
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output
-                          dimensions, corresponding to attribution of each neuron
-                          in the output of this layer.
+            layer (torch.nn.Module): Layer for which GradCAM attributions are computed.
                           Currently, only layers with a single tensor output are
                           supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
@@ -90,8 +87,9 @@ class GuidedGradCam(GradientAttribution):
 
             Return
 
-                attributions (tensor): Product of GradCAM and Guided Backprop
-                            attributions for tensor with index chosen_input_index.
+                attributions (tensor): Element-wise product of (upsampled) GradCAM
+                            and Guided Backprop attributions for tensor with index
+                            chosen_input_index.
                             Attributions will be the same size as the input tensor
                             at index chosen_input_index.
 

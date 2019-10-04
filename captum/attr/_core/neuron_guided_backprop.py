@@ -33,7 +33,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GuidedBackprop):
     def attribute(self, inputs, neuron_index, additional_forward_args=None):
         r""""
         Computes attribution of the given neuron using guided backpropagation.
-        Guided backpropagation computes the gradient of the target target
+        Guided backpropagation computes the gradient of the target neuron
         with respect the input, but gradients of ReLU functions are overriden
         so that only non-negative gradients are backpropagated.
 
