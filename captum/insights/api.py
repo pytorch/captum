@@ -84,7 +84,7 @@ class AttributionVisualizer(object):
         self._config = FilterConfig(
             steps=int(settings["approximation_steps"]),
             prediction=settings["prediction"],
-            classes=[],
+            classes=settings["classes"],
             count=4,
         )
 
@@ -141,12 +141,41 @@ class AttributionVisualizer(object):
         return net_contrib.tolist()
 
     def _is_prediction_correct(
-        self, prediction_scores: List[PredictionScore], actual_label: str
+        self,
+        prediction_scores: List[PredictionScore],
+        actual_labels: Union[str, List[str]],
     ):
         if len(prediction_scores) == 0:
             return False
 
-        return actual_label == prediction_scores[0].label
+        predicted_label = prediction_scores[0].label
+
+        if isinstance(actual_labels, List):
+            return predicted_label in actual_labels
+
+        return actual_labels == predicted_label
+
+    def _should_keep_prediction(self, predicted_scores, actual_label):
+        # filter by class
+        if len(self._config.classes) != 0:
+            if not self._is_prediction_correct(
+                predicted_scores, [i["name"] for i in self._config.classes]
+            ):
+                return False
+
+        # filter by accuracy
+        if self._config.prediction == "all":
+            pass
+        elif self._config.prediction == "correct":
+            if not self._is_prediction_correct(predicted_scores, actual_label):
+                return False
+        elif self._config.prediction == "incorrect":
+            if self._is_prediction_correct(predicted_scores, actual_label):
+                return False
+        else:
+            raise Exception(f"Invalid prediction config: {self._config.prediction}")
+
+        return True
 
     def _get_outputs(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
@@ -204,17 +233,9 @@ class AttributionVisualizer(object):
             actual_label = self.classes[label[0]] if label is not None else None
             predicted_scores = self._get_labels_from_scores(scores, predicted)
 
-            # filter predictions here to avoid the cost of calculating attributions
-            if self._config.prediction == "all":
-                pass
-            elif self._config.prediction == "correct":
-                if not self._is_prediction_correct(predicted_scores, actual_label):
-                    continue
-            elif self._config.prediction == "incorrect":
-                if self._is_prediction_correct(predicted_scores, actual_label):
-                    continue
-            else:
-                raise Exception(f"Invalid prediction config: {self._config.prediction}")
+            # Filter based on UI configuration
+            if not self._should_keep_prediction(predicted_scores, actual_label):
+                continue
 
             baselines = [tuple(b) for b in baselines]
 
