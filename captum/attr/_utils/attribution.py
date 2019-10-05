@@ -10,6 +10,7 @@ class Attribution:
     All attribution algorithms extend this class. It enforces its child classes
     to extend and override core `attribute` method.
     """
+
     def attribute(self, inputs, **kwargs):
         r"""
         This method computes and returns the attribution values for each input tensor.
@@ -83,9 +84,9 @@ class GradientAttribution(Attribution):
     forward function, which most commonly is the forward function of the model
     that we want to interpret.
     """
+
     def __init__(self, forward_func):
         r"""
-
         Args:
 
             forward_func:  The forward function of the model or any modification of it
@@ -103,7 +104,6 @@ class InternalAttribution(GradientAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-
         Args:
 
             forward_func:  The forward function of the model or any modification of it
@@ -130,7 +130,6 @@ class LayerAttribution(InternalAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-
         Args:
 
             forward_func:  The forward function of the model or any modification of it
@@ -158,7 +157,6 @@ class NeuronAttribution(InternalAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-
         Args:
 
             forward_func:  The forward function of the model or any modification of it

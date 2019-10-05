@@ -78,11 +78,11 @@ class TokenReferenceBase:
 
         Args
             sequence_length (int): The length of the reference sequence
-            device (torch.device): The device on with the reference tensor will
+            device (torch.device): The device on which the reference tensor will
                           be created.
         Returns
 
-            reference (tensor): A sequence of reference token with dimension `sequence_length`
+            reference (tensor): A sequence of reference token with shape: [sequence_length]
         """
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
 
