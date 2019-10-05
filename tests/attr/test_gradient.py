@@ -13,7 +13,7 @@ from .helpers.utils import assertArraysAlmostEqual, BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,
-    TestModel_MultiLayer,
+    BasicModel_MultiLayer,
 )
 
 
@@ -66,7 +66,7 @@ class Test(BaseTest):
         assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
 
     def test_layer_gradient_linear0(self):
-        model = TestModel_MultiLayer()
+        model = BasicModel_MultiLayer()
         input = torch.tensor([[5.0, -11.0, 23.0]], requires_grad=True)
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear0, input, target_ind=0
@@ -77,7 +77,7 @@ class Test(BaseTest):
         )
 
     def test_layer_gradient_linear1(self):
-        model = TestModel_MultiLayer()
+        model = BasicModel_MultiLayer()
         input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear1, input, target_ind=1
@@ -90,7 +90,7 @@ class Test(BaseTest):
         )
 
     def test_layer_gradient_output(self):
-        model = TestModel_MultiLayer()
+        model = BasicModel_MultiLayer()
         input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear2, input, target_ind=1

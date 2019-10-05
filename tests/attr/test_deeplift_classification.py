@@ -8,9 +8,9 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel
-from .helpers.basic_models import TestModel_ConvNet
-from .helpers.basic_models import TestModel_ConvNet_MaxPool1d
-from .helpers.basic_models import TestModel_ConvNet_MaxPool3d
+from .helpers.basic_models import BasicModel_ConvNet
+from .helpers.basic_models import BasicModel_ConvNet_MaxPool1d
+from .helpers.basic_models import BasicModel_ConvNet_MaxPool3d
 
 
 class Test(BaseTest):
@@ -75,7 +75,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10, 10)
 
-        model = TestModel_ConvNet_MaxPool3d()
+        model = BasicModel_ConvNet_MaxPool3d()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
@@ -84,7 +84,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10)
 
-        model = TestModel_ConvNet()
+        model = BasicModel_ConvNet()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
@@ -93,7 +93,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10)
 
-        model = TestModel_ConvNet_MaxPool1d()
+        model = BasicModel_ConvNet_MaxPool1d()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
