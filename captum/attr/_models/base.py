@@ -82,7 +82,8 @@ class TokenReferenceBase:
                           be created.
         Returns
 
-            reference (tensor): A sequence of reference token with shape: [sequence_length]
+            reference (tensor): A sequence of reference token with shape:
+                          [sequence_length]
         """
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
 
@@ -152,9 +153,10 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
     Args
 
         model (torch.nn.Module): An instance of PyTorch model that contains embeddings
-        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase` that was
-                    originally created in `configure_interpretable_embedding_layer` function
-                    and has to be removed after interpretation is finished.
+        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
+                    that was originally created in
+                    `configure_interpretable_embedding_layer` function and has
+                    to be removed after interpretation is finished.
 
     """
     _set_deep_layer_value(

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-import numpy as np
 
 from enum import Enum
 
