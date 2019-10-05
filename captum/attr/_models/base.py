@@ -13,8 +13,8 @@ class InterpretableEmbeddingBase(Embedding):
         Since some embedding vectors, e.g. word are created and assigned in
         the embedding layers of Pytorch models we need a way to access
         those layers, generate the embeddings and subtract the baseline.
-        To do so, we separate embedding layers from the model, compute the embeddings
-        separately and do all operations needed outside of the model.
+        To do so, we separate embedding layers from the model, compute the
+        embeddings separately and do all operations needed outside of the model.
         The original embedding layer is being replaced by
         `InterpretableEmbeddingBase` layer which passes already
         precomputed embedding vectors to the layers below.
@@ -27,34 +27,35 @@ class InterpretableEmbeddingBase(Embedding):
 
     def forward(self, input):
         r"""
-         The forward pass of embedding layer. This can be for the text or any
-         type of embedding.
+         The forward function of embedding layer that takes token indices and
+         returns corresponding embeddings.
 
          Args
 
-            input: Input embeddings tensor
+            inputs (tensor): Input embedding tensor contains indices of words or
+                   tokens in the vocabulary.
 
          Return
 
-            output: Output tensor is the same as input. It passes through
-                    the embedding tensors to lower layers without any
-                    modifications
+            output (tensor): Returned output tensor is the same as input tensor.
+                   It passes embedding tensors to lower layers without any
+                   modifications.
         """
         return input
 
     def indices_to_embeddings(self, input):
         r"""
-        Maps indices to corresponding embedding vectors
+        Maps indices to corresponding embedding vectors. E.g. word embeddings
 
         Args
 
-            input: a tensor of input indices. A typical example of an input
-                   index is word index.
+            input (tensor): A tensor of input indices. A typical example of an
+                   input index is word or token index.
 
         Returns
 
-            tensor: A tensor of word embeddings corresponding to the indices
-                    specified in the input
+            tensor (tensor): A tensor of word embeddings corresponding to the indices
+                   specified in the input
         """
         return self.embedding(input)
 
@@ -73,11 +74,15 @@ class TokenReferenceBase:
     def generate_reference(self, sequence_length, device):
         r"""
         Generated reference tensor of given `sequence_length` using
-        `reference_token_idx`
+        `reference_token_idx`.
 
+        Args
+            sequence_length (int): The length of the reference sequence
+            device (torch.device): The device on with the reference tensor will
+                          be created.
         Returns
 
-            tensor: a sequence of reference token with dimension [sequence_length]
+            reference (tensor): A sequence of reference token with dimension `sequence_length`
         """
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
 
@@ -106,15 +111,15 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
 
     Args
 
-        model: An instance of PyTorch model that contains embeddings
-        embedding_layer_name: The name of the embedding layer in the `model`
-                              that we would like to make interpretable
+        model (torch.nn.Model): An instance of PyTorch model that contains embeddings.
+        embedding_layer_name (str, optional): The name of the embedding layer
+                    in the `model` that we would like to make interpretable.
 
     Returns
 
-        interpretable_emb: An instance of `InterpretableEmbeddingBase`
-                           embedding layer that wraps model's
-                           embedding layer - `embedding_layer_name`
+        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
+                    embedding layer that wraps model's embedding layer that is being
+                    accessed through `embedding_layer_name`.
     """
     embedding_layer = _get_deep_layer_name(model, embedding_layer_name)
     assert (
@@ -146,10 +151,10 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
 
     Args
 
-        model: An instance of PyTorch model that contains embeddings
-        interpretable_emb: An instance of `InterpretableEmbeddingBase` that was
-            originally created in `configure_interpretable_embedding_layer` function
-            and has to be removed after interpretation is finished.
+        model (torch.nn.Module): An instance of PyTorch model that contains embeddings
+        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase` that was
+                    originally created in `configure_interpretable_embedding_layer` function
+                    and has to be removed after interpretation is finished.
 
     """
     _set_deep_layer_value(
