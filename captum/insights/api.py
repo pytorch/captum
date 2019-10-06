@@ -180,13 +180,11 @@ class AttributionVisualizer(object):
         net = self.models[0]  # TODO process multiple models
         vis_outputs = []
 
-        for i, (inputs, additional_forward_args, label) in enumerate(
-            _batched_generator(
-                inputs=batch_data.inputs,
-                additional_forward_args=batch_data.additional_args,
-                target_ind=batch_data.labels,
-                internal_batch_size=1,  # should be 1 until we have batch label support
-            )
+        for inputs, additional_forward_args, label in _batched_generator(
+            inputs=batch_data.inputs,
+            additional_forward_args=batch_data.additional_args,
+            target_ind=batch_data.labels,
+            internal_batch_size=1,  # should be 1 until we have batch label support
         ):
             # initialize baselines
             baseline_transforms_len = len(self.features[0].baseline_transforms or [])
