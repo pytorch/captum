@@ -78,21 +78,32 @@ class Test(BaseTest):
         self._deeplift_helper(model, DeepLift(model), inputs, baselines)
 
     def _deeplift_helper(self, model, attr_method, inputs, baselines):
+        input_bsz = inputs[0].shape[0]
+        baseline_bsz = baselines[0].shape[0]
         # Run attribution multiple times to make sure that it is working as
         # expected
         for _ in range(5):
             model.zero_grad()
-            attributions, delta = attr_method.attribute(inputs, baselines)
+            attributions, delta = attr_method.attribute(
+                inputs, baselines, return_convergence_delta=True
+            )
 
+            if isinstance(attr_method, DeepLiftShap):
+                self.assertEquals([input_bsz * baseline_bsz], list(delta.shape))
+            else:
+                self.assertEquals([input_bsz], list(delta.shape))
+
+            delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
             self.assertTrue(
-                delta < 0.00001,
+                delta_condition,
                 "The sum of attribution values {} is not "
-                "nearly equal to the difference between the endpoint".format(delta),
+                "nearly equal to the difference between the endpoint for "
+                "some samples".format(delta),
             )
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(input.shape, attribution.shape)
             if inputs[0].shape == baselines[0].shape:
                 # Compare with Integrated Gradients
                 ig = IntegratedGradients(model)
-                attributions_ig, delta_ig = ig.attribute(inputs, baselines)
+                attributions_ig = ig.attribute(inputs, baselines)
                 assertAttributionComparision(self, attributions, attributions_ig)

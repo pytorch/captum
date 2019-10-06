@@ -445,8 +445,6 @@ class Test(BaseTest):
                 attributions_orig = attr_method.attribute(
                     inputs=inputs, target=targets, **kwargs
                 )
-            if attr_method._has_convergence_delta():
-                attributions_orig = attributions_orig[0]
             for i in range(len(inputs)):
                 single_attr = attr_method.attribute(
                     inputs=inputs[i : i + 1],
@@ -458,9 +456,6 @@ class Test(BaseTest):
                     target=targets[i : i + 1] if splice_targets else targets,
                     **kwargs
                 )
-                if attr_method._has_convergence_delta():
-                    single_attr = single_attr[0]
-                    single_attr_target_list = single_attr_target_list[0]
                 assertTensorAlmostEqual(
                     self, attributions_orig[i : i + 1], single_attr, delta=delta
                 )

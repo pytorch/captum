@@ -45,13 +45,14 @@ class Test(BaseTest):
         np.random.seed(0)
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
-        attributions, delta = gradient_shap.attribute((x1, x2), baselines)
-        self._assert_attribution_delta(inputs, attributions, delta)
+        attributions, delta = gradient_shap.attribute((x1, x2), baselines,
+            return_convergence_delta=True)
+        self._assert_attribution_delta(inputs, attributions, 50, delta)
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
-        attributions_ig, delta_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(attributions, attributions)
+        attributions_ig = ig.attribute(inputs, baselines=baselines)
+        self._assert_shap_ig_comparision(attributions, attributions_ig)
 
     def test_classification(self):
         num_in = 40
@@ -64,15 +65,17 @@ class Test(BaseTest):
         model.zero_grad()
 
         gradient_shap = GradientShap(model)
+        n_samples = 10
         attributions, delta = gradient_shap.attribute(
-            inputs, baselines=baselines, target=target, n_samples=1000, stdevs=0.9
+            inputs, baselines=baselines, target=target, n_samples=n_samples, stdevs=0.009,
+            return_convergence_delta=True
         )
-        self._assert_attribution_delta((inputs,), (attributions,), delta)
+        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
 
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
-        attributions_ig, delta_ig = ig.attribute(
+        attributions_ig = ig.attribute(
             inputs, baselines=baselines, target=target
         )
         self._assert_shap_ig_comparision((attributions,), (attributions_ig,))
@@ -89,20 +92,27 @@ class Test(BaseTest):
         baselines = (baseline1, baseline2)
 
         gs = GradientShap(model)
-        attributions, delta = gs.attribute(inputs, baselines=baselines, n_samples=30000)
-        self._assert_attribution_delta(inputs, attributions, delta)
+        n_samples=30000
+        attributions, delta = gs.attribute(inputs, baselines=baselines,
+            n_samples=n_samples, return_convergence_delta=True)
+        self._assert_attribution_delta(inputs, attributions, n_samples, delta)
 
         ig = IntegratedGradients(model)
-        attributions_ig, delta_ig = ig.attribute(inputs, baselines=baselines)
+        attributions_ig = ig.attribute(inputs, baselines=baselines)
         self._assert_shap_ig_comparision(attributions, attributions_ig)
 
-    def _assert_attribution_delta(self, inputs, attributions, delta):
+    def _assert_attribution_delta(self, inputs, attributions, n_samples, delta):
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
+        bsz = inputs[0].shape[0]
+        self.assertEqual([bsz, n_samples], list(delta.shape))
+
+        delta = torch.mean(delta.reshape(bsz, -1), dim=1)
+        delta_condition = all(abs(delta.numpy().flatten()) < 0.0005)
         self.assertTrue(
-            delta < 0.001,
-            "Sum of SHAP values does"
-            " not match the difference of endpoints. %f" % (delta),
+            delta_condition,
+            "Sum of SHAP values {} does"
+            " not match the difference of endpoints.".format(delta),
         )
 
     def _assert_shap_ig_comparision(self, attributions1, attributions2):

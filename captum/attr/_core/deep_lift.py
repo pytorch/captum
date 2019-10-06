@@ -44,7 +44,8 @@ class DeepLift(GradientAttribution):
         self.backward_handles = []
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None
+        self, inputs, baselines=None, target=None, additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r""""
         Implements DeepLIFT algorithm based on the following paper:
@@ -174,18 +175,21 @@ class DeepLift(GradientAttribution):
         # remove hooks from all activations
         self._remove_hooks()
 
-        start_point, end_point = baselines, inputs
-
-        # computes convergence error
-        delta = self._compute_convergence_delta(
-            attributions,
-            start_point,
-            end_point,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_attributions(is_inputs_tuple, attributions), delta
+
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            # computes convergence error
+            delta = self.compute_convergence_delta(
+                attributions,
+                start_point,
+                end_point,
+                additional_forward_args=additional_forward_args,
+                target=target,
+            )
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
@@ -308,7 +312,8 @@ class DeepLiftShap(DeepLift):
         super().__init__(model)
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None
+        self, inputs, baselines=None, target=None, additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r"""
         Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
@@ -430,18 +435,24 @@ class DeepLiftShap(DeepLift):
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
 
-        attributions, delta = super().attribute(
+        attributions = super().attribute(
             expanded_inputs,
             expanded_baselines,
             target=expanded_target,
             additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
         )
+        if return_convergence_delta:
+            attributions, delta = attributions
 
         attributions = tuple(
             compute_mean(inp_bsz, base_bsz, attribution) for attribution in attributions
         )
 
-        return _format_attributions(is_inputs_tuple, attributions), delta / base_bsz
+        if return_convergence_delta:
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
 
 
 def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):

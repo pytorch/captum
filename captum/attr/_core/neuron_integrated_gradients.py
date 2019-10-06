@@ -157,4 +157,4 @@ class NeuronIntegratedGradients(NeuronAttribution):
             n_steps=n_steps,
             method=method,
             internal_batch_size=internal_batch_size,
-        )[0]
+        )

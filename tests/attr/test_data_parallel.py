@@ -315,8 +315,8 @@ class Test(BaseGPUTest):
             else:
                 attributions_dp = attr_dp.attribute(**kwargs)
             if contains_delta:
-                attributions_orig = attributions_orig[0]
-                attributions_dp = attributions_dp[0]
+                attributions_orig = attributions_orig
+                attributions_dp = attributions_dp
             if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
                     torch.sum(torch.abs(attributions_orig - attributions_dp)),

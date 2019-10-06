@@ -34,6 +34,7 @@ class IntegratedGradients(GradientAttribution):
         n_steps=50,
         method="gausslegendre",
         internal_batch_size=None,
+        return_convergence_delta=False,
     ):
         r"""
             Approximates the integral of gradients along the path from a baseline input
@@ -194,19 +195,18 @@ class IntegratedGradients(GradientAttribution):
             total_grad * (input - baseline)
             for total_grad, input, baseline in zip(total_grads, inputs, baselines)
         )
-
-        start_point, end_point = baselines, inputs
-
-        # computes approximation error based on the completeness axiom
-        delta = self._compute_convergence_delta(
-            attributions,
-            start_point,
-            end_point,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
-
-        return _format_attributions(is_inputs_tuple, attributions), delta
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            # computes approximation error based on the completeness axiom
+            delta = self.compute_convergence_delta(
+                attributions,
+                start_point,
+                end_point,
+                additional_forward_args=additional_forward_args,
+                target=target,
+            )
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        return _format_attributions(is_inputs_tuple, attributions)
 
     def _has_convergence_delta(self):
         return True

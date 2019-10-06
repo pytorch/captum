@@ -27,6 +27,7 @@ class GradientShap(GradientAttribution):
         stdevs=0.0,
         target=None,
         additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
@@ -40,17 +41,18 @@ class GradientShap(GradientAttribution):
         GradientShap approximates SHAP values by computing the expectations of
         gradients by randomly sampling from the distribution of baselines/references.
         It adds white noise to each input sample `n_samples` times, selects a
-        random point along the path between baseline and input, and computes the
-        gradient of outputs with respect to those selected random points.
-        The final SHAP values represent the expected values of
-        gradients * (inputs - baselines).
+        random baseline from baselines' distribution and a random point along the
+        path between the baseline and the input, and computes the gradient of outputs
+        with respect to those selected random points. The final SHAP values represent
+        the expected values of gradients * (inputs - baselines).
 
         GradientShap makes an assumption that the input features are independent
-        and that there is a linear relationship between current inputs and the
-        baselines/references. Under those assumptions, SHAP value can be
-        approximated as the expectation of gradients that are computed for randomly
-        generated `n_samples` input samples after adding gaussian noise `n_samples`
-        times to each input for different baselines/references.
+        and that the explanation model is linear, meaning that the explanations
+        are modeled through the additive composition of feature effects.
+        Under those assumptions, SHAP value can be approximated as the expectation
+        of gradients that are computed for randomly generated `n_samples` input
+        samples after adding gaussian noise `n_samples` times to each input for
+        different baselines/references.
 
         In some sense it can be viewed as an approximation of integrated gradients
         by computing the expectations of gradients for different baselines.
@@ -138,7 +140,7 @@ class GradientShap(GradientAttribution):
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
-        attributions, delta = nt.attribute(
+        attributions = nt.attribute(
             inputs,
             nt_type="smoothgrad",
             n_samples=n_samples,
@@ -147,9 +149,10 @@ class GradientShap(GradientAttribution):
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
         )
-        delta = abs(torch.mean(delta.reshape(-1, n_samples), dim=1)).sum().item()
-        return attributions, delta
+
+        return attributions
 
     def _has_convergence_delta(self):
         return True
@@ -166,7 +169,8 @@ class InputBaselineXGradient(GradientAttribution):
         super().__init__(forward_func)
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None
+        self, inputs, baselines=None, target=None,
+        additional_forward_args=None, return_convergence_delta=False,
     ):
         def scale_input(input, baseline, rand_coefficient):
             # batch size
@@ -208,15 +212,17 @@ class InputBaselineXGradient(GradientAttribution):
             for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
         )
 
-        delta = self._compute_convergence_delta(
-            attributions,
-            baselines,
-            inputs,
-            additional_forward_args=additional_forward_args,
-            target=target,
-            delta_per_sample=True,
-        )
-        return _format_attributions(is_inputs_tuple, attributions), delta
+        if return_convergence_delta:
+            delta = self.compute_convergence_delta(
+                attributions,
+                baselines,
+                inputs,
+                additional_forward_args=additional_forward_args,
+                target=target,
+            )
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
 
     def _has_convergence_delta(self):
         return True

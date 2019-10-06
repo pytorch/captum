@@ -47,6 +47,7 @@ class LayerConductance(LayerAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         internal_batch_size=None,
+        return_convergence_delta=False,
     ):
         r"""
             Computes conductance with respect to the given layer. The
@@ -202,15 +203,14 @@ class LayerConductance(LayerAttribution):
             num_examples,
             layer_eval.shape[1:],
         )
-
-        start_point, end_point = baselines, inputs
-
-        delta = self._compute_convergence_delta(
-            (attributions,),
-            start_point,
-            end_point,
-            target=target,
-            additional_forward_args=additional_forward_args,
-        )
-
-        return attributions, delta
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            delta = self.compute_convergence_delta(
+                (attributions,),
+                start_point,
+                end_point,
+                target=target,
+                additional_forward_args=additional_forward_args,
+            )
+            return attributions, delta
+        return attributions

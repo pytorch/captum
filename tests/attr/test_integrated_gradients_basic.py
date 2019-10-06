@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _run_forward, _zeros
+from captum.attr._utils.common import _zeros
 
 from .helpers.basic_models import (
     BasicModel,
@@ -222,7 +222,7 @@ class Test(BaseTest):
         r"""
             attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
-        ig = IntegratedGradients(model.forward)
+        ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)
 
@@ -232,18 +232,6 @@ class Test(BaseTest):
         if baselines is None:
             baselines = _zeros(inputs)
 
-        forward_input = _run_forward(
-            model,
-            inputs,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
-        forward_baseline = _run_forward(
-            model,
-            baselines,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
         for method in [
             "riemann_right",
             "riemann_left",
@@ -257,41 +245,39 @@ class Test(BaseTest):
                     baselines,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=1500,
+                    n_steps=2000,
                     target=target,
+                    return_convergence_delta=True,
                 )
+                self.assertEqual([inputs[0].shape[0]], list(delta.shape))
+                delta_external = ig.compute_convergence_delta(
+                    attributions,
+                    baselines,
+                    inputs,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                )
+                assertArraysAlmostEqual(delta, delta_external, 0.0)
             else:
                 nt = NoiseTunnel(ig)
+                n_samples = 5
                 attributions, delta = nt.attribute(
                     inputs,
                     nt_type=type,
-                    n_samples=20,
+                    n_samples=n_samples,
                     stdevs=0.000002,
                     baselines=baselines,
                     target=target,
                     additional_forward_args=additional_forward_args,
                     method=method,
+                    n_steps=2000,
+                    return_convergence_delta=True,
                 )
+                self.assertEqual((inputs[0].shape[0], n_samples), delta.shape)
 
-            if isinstance(attributions, tuple):
-                attr_sum = sum(
-                    torch.sum(attribution).item() for attribution in attributions
-                )
-                for input, attribution in zip(inputs, attributions):
-                    self.assertEqual(attribution.shape, input.shape)
-            else:
-                attr_sum = torch.sum(attributions).item()
-                expected_delta = abs(
-                    attr_sum
-                    - (forward_input.sum().item() - forward_baseline.sum().item())
-                )
-                self.assertAlmostEqual(
-                    attr_sum,
-                    forward_input.sum().item() - forward_baseline.sum().item(),
-                    delta=0.05,
-                )
-                self.assertAlmostEqual(delta, expected_delta, delta=0.005)
-                self.assertEqual(attributions.shape, inputs.shape)
+            for input, attribution in zip(inputs, attributions):
+                self.assertEqual(attribution.shape, input.shape)
+            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
 
         return attributions
 
@@ -324,6 +310,7 @@ class Test(BaseTest):
                     n_steps=200,
                     target=target,
                     internal_batch_size=internal_batch_size,
+                    return_convergence_delta=True,
                 )
                 total_delta = 0
                 for i in range(inputs[0].shape[0]):
@@ -334,14 +321,17 @@ class Test(BaseTest):
                         method=method,
                         n_steps=200,
                         target=target,
+                        return_convergence_delta=True,
                     )
-                    total_delta += delta_indiv
+                    total_delta += abs(delta_indiv).sum().item()
                     for j in range(len(attributions)):
                         assertArraysAlmostEqual(
                             attributions[j][i : i + 1].squeeze(0).tolist(),
                             attributions_indiv[j].squeeze(0).tolist(),
                         )
-                self.assertAlmostEqual(delta, total_delta, delta=0.005)
+                self.assertAlmostEqual(
+                    abs(delta).sum().item(), total_delta, delta=0.005
+                )
 
 
 if __name__ == "__main__":

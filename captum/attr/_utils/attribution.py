@@ -42,17 +42,35 @@ class Attribution:
     def _has_convergence_delta(self):
         return False
 
-    def _compute_convergence_delta(
+
+class GradientAttribution(Attribution):
+    r"""
+    All gradient based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+    def __init__(self, forward_func):
+        r"""
+        Args
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        super().__init__()
+        self.forward_func = forward_func
+        self.gradient_func = compute_gradients
+
+    def compute_convergence_delta(
         self,
         attributions,
         start_point,
         end_point,
         target=None,
         additional_forward_args=None,
-        delta_per_sample=False,
     ):
         def _sum_rows(input):
-            return torch.tensor([input_row.sum() for input_row in input])
+            return input.view(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
             start_point = _sum_rows(
@@ -68,34 +86,7 @@ class Attribution:
             )
         row_sums = [_sum_rows(attribution) for attribution in attributions]
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
-        # TODO ideally do not sum - we should return deltas as a 1D tensor
-        # of batch size. Let the user to sum it if they need to
-        # Currently this is provided when sample_delta is True, but this
-        # should change to the general behavior.
-        if delta_per_sample:
-            return attr_sum - (end_point - start_point)
-        else:
-            return abs(attr_sum - (end_point - start_point)).sum().item()
-
-
-class GradientAttribution(Attribution):
-    r"""
-    All gradient based attribution algorithms extend this class. It requires a
-    forward function, which most commonly is the forward function of the model
-    that we want to interpret or the model itself.
-    """
-
-    def __init__(self, forward_func):
-        r"""
-        Args:
-
-            forward_func (callable or torch.nn.Module): This can either be an instance
-                        of pytorch model or any modification of model's forward
-                        function.
-        """
-        super().__init__()
-        self.forward_func = forward_func
-        self.gradient_func = compute_gradients
+        return attr_sum - (end_point - start_point)
 
 
 class InternalAttribution(GradientAttribution):

@@ -70,7 +70,7 @@ class AttributionVisualizer(object):
         # TODO support multiple baselines
         baseline = baselines[0] if len(baselines) > 0 else None
         label = None if label is None or label.nelement() == 0 else label
-        attr_ig, _ = ig.attribute(
+        attr_ig = ig.attribute(
             data,
             baselines=baseline,
             additional_forward_args=additional_forward_args,
