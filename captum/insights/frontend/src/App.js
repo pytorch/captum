@@ -22,8 +22,6 @@ class Header extends React.Component {
             <li className="header__nav__item header__nav__item--active">
               Instance Attribution
             </li>
-            <li className="header__nav__item">Direct Target</li>
-            <li className="header__nav__item">Export</li>
           </ul>
         </nav>
       </header>
