@@ -16,27 +16,27 @@ from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivati
 
 from captum.attr._core.neuron_conductance import NeuronConductance
 
-from .helpers.basic_models import TestModel_MultiLayer
+from .helpers.basic_models import BasicModel_MultiLayer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
     def test_simple_target_missing_error(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.zeros((1, 3))
         with self.assertRaises(AssertionError):
             attr = IntegratedGradients(net)
             attr.attribute(inp)
 
     def test_multi_target_error(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.zeros((1, 3))
         with self.assertRaises(AssertionError):
             attr = IntegratedGradients(net)
             attr.attribute(inp, additional_forward_args=(None, True), target=(1, 0))
 
     def test_simple_target_ig(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             IntegratedGradients,
@@ -47,7 +47,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_ig_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             IntegratedGradients,
@@ -58,7 +58,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_ig_single_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             IntegratedGradients,
@@ -70,7 +70,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_ig(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             IntegratedGradients,
@@ -82,19 +82,19 @@ class Test(BaseTest):
         )
 
     def test_simple_target_saliency(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(Saliency, net, inputs=inp, targets=[0, 1, 1, 0])
 
     def test_simple_target_saliency_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             Saliency, net, inputs=inp, targets=torch.tensor([0, 1, 1, 0])
         )
 
     def test_multi_target_saliency(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             Saliency,
@@ -105,12 +105,12 @@ class Test(BaseTest):
         )
 
     def test_simple_target_deep_lift(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(DeepLift, net, inputs=inp, targets=[0, 1, 1, 0])
 
     def test_multi_target_deep_lift(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             DeepLift,
@@ -121,14 +121,14 @@ class Test(BaseTest):
         )
 
     def test_simple_target_deep_lift_shap(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             DeepLiftShap, net, inputs=inp, baselines=0.5 * inp, targets=[0, 1, 1, 0]
         )
 
     def test_simple_target_deep_lift_shap_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             DeepLiftShap,
@@ -139,7 +139,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_deep_lift_shap_single_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             DeepLiftShap,
@@ -151,7 +151,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_deep_lift_shap(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             DeepLiftShap,
@@ -163,7 +163,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_gradient_shap(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             GradientShap,
@@ -177,7 +177,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_gradient_shap_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             GradientShap,
@@ -191,7 +191,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_gradient_shap_single_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             GradientShap,
@@ -206,7 +206,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_gradient_shap(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             GradientShap,
@@ -221,7 +221,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_nt(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NoiseTunnel,
@@ -233,7 +233,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_nt_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NoiseTunnel,
@@ -245,7 +245,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_nt_single_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NoiseTunnel,
@@ -258,7 +258,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_nt(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NoiseTunnel,
@@ -271,14 +271,14 @@ class Test(BaseTest):
         )
 
     def test_simple_target_input_x_gradient(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             InputXGradient, net, inputs=inp, targets=[0, 1, 1, 0]
         )
 
     def test_multi_target_input_x_gradient(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             InputXGradient,
@@ -289,7 +289,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_int_inf(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             InternalInfluence,
@@ -301,7 +301,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_int_inf(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             InternalInfluence,
@@ -314,7 +314,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_layer_cond(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             LayerConductance,
@@ -326,7 +326,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_layer_cond_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             LayerConductance,
@@ -338,7 +338,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_layer_cond(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             LayerConductance,
@@ -351,7 +351,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_layer_gradient_x_act(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             LayerGradientXActivation,
@@ -362,7 +362,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_layer_gradient_x_act(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             LayerGradientXActivation,
@@ -374,7 +374,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_neuron_conductance(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NeuronConductance,
@@ -387,7 +387,7 @@ class Test(BaseTest):
         )
 
     def test_simple_target_neuron_conductance_tensor(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NeuronConductance,
@@ -400,7 +400,7 @@ class Test(BaseTest):
         )
 
     def test_multi_target_neuron_conductance(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             NeuronConductance,

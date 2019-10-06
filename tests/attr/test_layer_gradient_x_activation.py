@@ -5,35 +5,38 @@ import unittest
 import torch
 from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
 
-from .helpers.basic_models import TestModel_MultiLayer, TestModel_MultiLayer_MultiInput
+from .helpers.basic_models import (
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
+)
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
     def test_simple_input_gradient_activation(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 400.0, 0.0])
 
     def test_simple_linear_gradient_activation(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_assert(
             net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
         )
 
     def test_simple_relu_gradient_activation(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
         self._layer_activation_test_assert(net, net.relu, inp, [0.0, 8.0, 8.0, 8.0])
 
     def test_simple_output_gradient_activation(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_assert(net, net.linear2, inp, [392.0, 0.0])
 
     def test_simple_gradient_activation_multi_input_linear2(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 0.0]])
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
@@ -42,7 +45,7 @@ class Test(BaseTest):
         )
 
     def test_simple_gradient_activation_multi_input_relu(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
