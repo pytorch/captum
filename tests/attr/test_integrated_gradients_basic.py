@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _run_forward
+from captum.attr._utils.common import _run_forward, _zeros
 
 from .helpers.basic_models import (
     BasicModel,
@@ -230,7 +230,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = ig.zero_baseline(inputs)
+            baselines = _zeros(inputs)
 
         forward_input = _run_forward(
             model,
@@ -306,7 +306,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = ig.zero_baseline(inputs)
+            baselines = _zeros(inputs)
 
         for method in [
             "riemann_right",
