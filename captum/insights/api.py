@@ -158,9 +158,7 @@ class AttributionVisualizer(object):
     def _should_keep_prediction(self, predicted_scores, actual_label):
         # filter by class
         if len(self._config.classes) != 0:
-            if not self._is_prediction_correct(
-                predicted_scores, [i["name"] for i in self._config.classes]
-            ):
+            if not self._is_prediction_correct(predicted_scores, self._config.classes):
                 return False
 
         # filter by accuracy

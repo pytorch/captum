@@ -77,7 +77,12 @@ class FilterContainer extends React.Component {
   };
 
   handleSubmit = event => {
-    this.props.fetchData(this.state);
+    const data = {
+      prediction: this.state.prediction,
+      approximation_steps: this.state.approximation_steps,
+      classes: this.state.classes.map(i => i["name"])
+    };
+    this.props.fetchData(data);
     event.preventDefault();
   };
 
