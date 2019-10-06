@@ -169,8 +169,12 @@ class InputBaselineXGradient(GradientAttribution):
         super().__init__(forward_func)
 
     def attribute(
-        self, inputs, baselines=None, target=None,
-        additional_forward_args=None, return_convergence_delta=False,
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         def scale_input(input, baseline, rand_coefficient):
             # batch size

@@ -45,8 +45,9 @@ class Test(BaseTest):
         np.random.seed(0)
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
-        attributions, delta = gradient_shap.attribute((x1, x2), baselines,
-            return_convergence_delta=True)
+        attributions, delta = gradient_shap.attribute(
+            (x1, x2), baselines, return_convergence_delta=True
+        )
         self._assert_attribution_delta(inputs, attributions, 50, delta)
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
@@ -67,17 +68,19 @@ class Test(BaseTest):
         gradient_shap = GradientShap(model)
         n_samples = 10
         attributions, delta = gradient_shap.attribute(
-            inputs, baselines=baselines, target=target, n_samples=n_samples, stdevs=0.009,
-            return_convergence_delta=True
+            inputs,
+            baselines=baselines,
+            target=target,
+            n_samples=n_samples,
+            stdevs=0.009,
+            return_convergence_delta=True,
         )
         self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
 
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
-        attributions_ig = ig.attribute(
-            inputs, baselines=baselines, target=target
-        )
+        attributions_ig = ig.attribute(inputs, baselines=baselines, target=target)
         self._assert_shap_ig_comparision((attributions,), (attributions_ig,))
 
     def test_basic_relu_multi_input(self):
@@ -92,9 +95,13 @@ class Test(BaseTest):
         baselines = (baseline1, baseline2)
 
         gs = GradientShap(model)
-        n_samples=30000
-        attributions, delta = gs.attribute(inputs, baselines=baselines,
-            n_samples=n_samples, return_convergence_delta=True)
+        n_samples = 30000
+        attributions, delta = gs.attribute(
+            inputs,
+            baselines=baselines,
+            n_samples=n_samples,
+            return_convergence_delta=True,
+        )
         self._assert_attribution_delta(inputs, attributions, n_samples, delta)
 
         ig = IntegratedGradients(model)

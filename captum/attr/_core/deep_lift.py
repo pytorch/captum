@@ -44,7 +44,11 @@ class DeepLift(GradientAttribution):
         self.backward_handles = []
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None,
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
         return_convergence_delta=False,
     ):
         r""""
@@ -312,7 +316,11 @@ class DeepLiftShap(DeepLift):
         super().__init__(model)
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None,
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
         return_convergence_delta=False,
     ):
         r"""

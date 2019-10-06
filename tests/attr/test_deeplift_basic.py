@@ -5,7 +5,11 @@ import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
-from .helpers.utils import assertAttributionComparision, BaseTest
+from .helpers.utils import (
+    assertAttributionComparision,
+    assertArraysAlmostEqual,
+    BaseTest,
+)
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
@@ -87,11 +91,14 @@ class Test(BaseTest):
             attributions, delta = attr_method.attribute(
                 inputs, baselines, return_convergence_delta=True
             )
-
             if isinstance(attr_method, DeepLiftShap):
-                self.assertEquals([input_bsz * baseline_bsz], list(delta.shape))
+                self.assertEqual([input_bsz * baseline_bsz], list(delta.shape))
             else:
-                self.assertEquals([input_bsz], list(delta.shape))
+                self.assertEqual([input_bsz], list(delta.shape))
+                delta_external = attr_method.compute_convergence_delta(
+                    attributions, baselines, inputs
+                )
+                assertArraysAlmostEqual(delta, delta_external, 0.0)
 
             delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
             self.assertTrue(
