@@ -55,18 +55,18 @@ class InterpretableEmbeddingBase(Embedding):
 
         Returns
 
-            tensor (tensor): A tensor of word embeddings corresponding to the indices
-                   specified in the input
+            embedding (tensor): A tensor of word embeddings corresponding to the
+                    indices specified in the input
         """
         return self.embedding(input)
 
 
 class TokenReferenceBase:
     r"""
-    A base class for creating reference tensor for a sequence of tokens. A typical
-    example of such token is `PAD`. Users need to provide the index of the
-    reference token in the vocabulary as an argument to `TokenReferenceBase`
-    class.
+    A base class for creating reference (aka baseline) tensor for a sequence of
+    tokens. A typical example of such token is `PAD`. Users need to provide the
+    index of the reference token in the vocabulary as an argument to
+    `TokenReferenceBase` class.
     """
 
     def __init__(self, reference_token_idx=0):
