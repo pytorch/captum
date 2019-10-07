@@ -140,35 +140,39 @@ class AttributionVisualizer(object):
 
         return net_contrib.tolist()
 
-    def _is_prediction_correct(
+    def _predictions_matches_labels(
         self,
-        prediction_scores: List[PredictionScore],
+        predicted_scores: List[PredictionScore],
         actual_labels: Union[str, List[str]],
-    ):
-        if len(prediction_scores) == 0:
+    ) -> bool:
+        if len(predicted_scores) == 0:
             return False
 
-        predicted_label = prediction_scores[0].label
+        predicted_label = predicted_scores[0].label
 
         if isinstance(actual_labels, List):
             return predicted_label in actual_labels
 
         return actual_labels == predicted_label
 
-    def _should_keep_prediction(self, predicted_scores, actual_label):
+    def _should_keep_prediction(
+        self, predicted_scores: List[PredictionScore], actual_label: str
+    ) -> bool:
         # filter by class
         if len(self._config.classes) != 0:
-            if not self._is_prediction_correct(predicted_scores, self._config.classes):
+            if not self._predictions_matches_labels(
+                predicted_scores, self._config.classes
+            ):
                 return False
 
         # filter by accuracy
         if self._config.prediction == "all":
             pass
         elif self._config.prediction == "correct":
-            if not self._is_prediction_correct(predicted_scores, actual_label):
+            if not self._predictions_matches_labels(predicted_scores, actual_label):
                 return False
         elif self._config.prediction == "incorrect":
-            if self._is_prediction_correct(predicted_scores, actual_label):
+            if self._predictions_matches_labels(predicted_scores, actual_label):
                 return False
         else:
             raise Exception(f"Invalid prediction config: {self._config.prediction}")
