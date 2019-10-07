@@ -13,7 +13,7 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     TestModel_MultiLayer,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
 
 import unittest
 import torch
@@ -249,6 +249,17 @@ class Test(BaseTest):
                     target=target,
                     return_convergence_delta=True,
                 )
+                model.zero_grad()
+                attributions_without_delta, delta = ig.attribute(
+                    inputs,
+                    baselines,
+                    additional_forward_args=additional_forward_args,
+                    method=method,
+                    n_steps=2000,
+                    target=target,
+                    return_convergence_delta=True,
+                )
+                model.zero_grad()
                 self.assertEqual([inputs[0].shape[0]], list(delta.shape))
                 delta_external = ig.compute_convergence_delta(
                     attributions,
@@ -265,7 +276,7 @@ class Test(BaseTest):
                     inputs,
                     nt_type=type,
                     n_samples=n_samples,
-                    stdevs=0.000002,
+                    stdevs=0.00000002,
                     baselines=baselines,
                     target=target,
                     additional_forward_args=additional_forward_args,
@@ -273,11 +284,31 @@ class Test(BaseTest):
                     n_steps=2000,
                     return_convergence_delta=True,
                 )
+                attributions_without_delta = nt.attribute(
+                    inputs,
+                    nt_type=type,
+                    n_samples=n_samples,
+                    stdevs=0.00000002,
+                    baselines=baselines,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                    method=method,
+                    n_steps=2000,
+                )
                 self.assertEqual((inputs[0].shape[0], n_samples), delta.shape)
 
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(attribution.shape, input.shape)
             self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
+
+            # compare attributions retrieved with and without
+            # `return_convergence_delta` flag
+            for attribution, attribution_without_delta in zip(
+                attributions, attributions_without_delta
+            ):
+                assertTensorAlmostEqual(
+                    self, attribution, attribution_without_delta, delta=0.05
+                )
 
         return attributions
 

@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import _run_forward
+from .common import (
+    _run_forward,
+    _format_input_baseline,
+    _format_tensor_into_tuples,
+    validate_input,
+    validate_target,
+)
 from .gradient import compute_gradients
 
 
@@ -37,10 +43,51 @@ class Attribution:
                         corresponding sized tensors is returned.
 
         """
-        raise NotImplementedError("A derived class should implement attribute method")
+        raise NotImplementedError("Deriving class should implement attribute method")
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
+        r"""
+        This method informs the user whether the attribution algorithm provides
+        a convergence delta (aka an approximation error) or not. Convergence
+        delta may serve as a proxy of trust in an attribution algorithm. If deriving
+        attribution class provides a `compute_convergence_delta` method, it should
+        override both `compute_convergence_delta` and `has_convergence_delta` methods.
+
+        Returns:
+
+            has_convergence_delta (bool): Returns whether the attribution algorithm
+                        provides a convergence delta (aka approximation error) or not.
+
+        """
         return False
+
+    def compute_convergence_delta(self, attributions, *args):
+        r"""
+        Deriving attribution algorithms that provide convergence delta (aka
+        approximation error) should implement this method. Convergence error can
+        be computed based on some properties of the attribution alogrithms.
+        For example, integrated gradients, deeplift and gradient SHAP have
+        the property that the sum of the attributions must be equal to the difference
+        of the model's function at the end and start points of the approximation.
+
+        Args:
+
+                attributions (tensor or tuple of tensors):  Input for which integrated
+                            gradients are computed. If forward_func takes a single
+                            tensor as input, a single input tensor should be provided.
+                            If forward_func takes multiple tensors as input, a tuple
+                            of the input tensors should be provided. It is assumed
+                            that for all given input tensors, dimension 0 corresponds
+                            to the number of examples, and if mutliple input tensors
+                            are provided, the examples must be aligned appropriately.
+                **kwargs (optional):
+
+        Returns:
+
+        """
+        raise NotImplementedError(
+            "Deriving class should implement" " compute_convergence_delta method"
+        )
 
 
 class GradientAttribution(Attribution):
@@ -49,6 +96,7 @@ class GradientAttribution(Attribution):
     forward function, which most commonly is the forward function of the model
     that we want to interpret or the model itself.
     """
+
     def __init__(self, forward_func):
         r"""
         Args
@@ -69,6 +117,53 @@ class GradientAttribution(Attribution):
         target=None,
         additional_forward_args=None,
     ):
+        r"""
+        Args:
+                attributions (tensor or tuple of tensors):
+                start_point (tensor or tuple of tensors, optional):  Baseline define
+                            the starting point from which integral is computed.
+                            If inputs is a single tensor, baselines must also be a
+                            single tensor with exactly the same dimensions as inputs.
+                            If inputs is a tuple of tensors, baselines must also be
+                            a tuple of tensors, with matching dimensions to inputs.
+                            Default: zero tensor for each input tensor
+                end_point (tensor or tuple of tensors):  Input for which integrated
+                            gradients are computed. If forward_func takes a single
+                            tensor as input, a single input tensor should be provided.
+                            If forward_func takes multiple tensors as input, a tuple
+                            of the input tensors should be provided. It is assumed
+                            that for all given input tensors, dimension 0 corresponds
+                            to the number of examples, and if mutliple input tensors
+                            are provided, the examples must be aligned appropriately.
+                target (int, optional):  Output index for which gradient is computed
+                            (for classification cases, this is the target class).
+                            If the network returns a scalar value per example,
+                            no target index is necessary. (Note: Tuples for multi
+                            -dimensional output indices will be supported soon.)
+                            Default: None
+                additional_forward_args (tuple, optional): If the forward function
+                            requires additional arguments other than the inputs for
+                            which attributions should not be computed, this argument
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
+                            For a tensor, the first dimension of the tensor must
+                            correspond to the number of examples.
+                            Default: None
+
+        Returns:
+
+        """
+        end_point, start_point = _format_input_baseline(end_point, start_point)
+        attributions = _format_tensor_into_tuples(attributions)
+
+        num_samples = end_point[0].shape[0]
+        validate_input(end_point, start_point)
+        validate_target(num_samples, target)
+
         def _sum_rows(input):
             return input.view(input.shape[0], -1).sum(1)
 

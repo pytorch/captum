@@ -110,8 +110,8 @@ class IntegratedGradients(GradientAttribution):
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float): The difference between the total approximated and
-                            true integrated gradients.
+                delta (float, optional): The difference between the total approximated
+                            and true integrated gradients.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the integrated gradient.
@@ -208,5 +208,5 @@ class IntegratedGradients(GradientAttribution):
             return _format_attributions(is_inputs_tuple, attributions), delta
         return _format_attributions(is_inputs_tuple, attributions)
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True

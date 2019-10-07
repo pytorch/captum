@@ -36,7 +36,7 @@ class NoiseTunnel(Attribution):
                     Conductance or Saliency.
         """
         self.attribution_method = attribution_method
-        self.is_delta_supported = self.attribution_method._has_convergence_delta()
+        self.is_delta_supported = self.attribution_method.has_convergence_delta()
 
         super().__init__()
 
@@ -176,6 +176,8 @@ class NoiseTunnel(Attribution):
 
             # draws `np.prod(input_expanded_size)` samples from normal distribution
             # with given input parametrization
+            # FIXME it look like it is very difficult to make torch.normal
+            # deterministic this needs an investigation
             noise = torch.normal(0, stdev_expanded)
             return input.repeat_interleave(n_samples, dim=0) + noise
 
@@ -319,5 +321,5 @@ class NoiseTunnel(Attribution):
             else attributions
         )
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return self.is_delta_supported

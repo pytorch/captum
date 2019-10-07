@@ -127,7 +127,7 @@ class DeepLift(GradientAttribution):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float): This is computed using the property that the total
+            delta (float, optional): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must equal the total sum of the attributions computed
                         based on Deeplift's rescale rule.
@@ -307,7 +307,7 @@ class DeepLift(GradientAttribution):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True
 
 
@@ -379,6 +379,8 @@ class DeepLiftShap(DeepLift):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
+            return_convergence_delta (bool, optional):
+                        Default: False
         Returns:
 
             attributions (tensor or tuple of tensors): Attribution score
@@ -389,8 +391,8 @@ class DeepLiftShap(DeepLift):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float): This is computed using the property that the total
-                        sum of forward_func(inputs) - forward_func(baselines)
+            delta (float, optional): This is computed using the property that the
+                        total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
                         Deeplift's rescale rule.

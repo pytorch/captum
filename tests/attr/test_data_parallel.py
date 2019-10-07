@@ -297,7 +297,7 @@ class Test(BaseGPUTest):
         else:
             attr_orig = algorithm(model)
             attr_dp = algorithm(dp_model)
-        contains_delta = attr_orig._has_convergence_delta()
+        contains_delta = attr_orig.has_convergence_delta()
         batch_sizes = [None]
         if test_batches:
             batch_sizes = [None, 1, 8]

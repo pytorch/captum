@@ -91,6 +91,15 @@ class Test(BaseTest):
             attributions, delta = attr_method.attribute(
                 inputs, baselines, return_convergence_delta=True
             )
+            attributions_without_delta = attr_method.attribute(inputs, baselines)
+
+            for attribution, attribution_without_delta in zip(
+                attributions, attributions_without_delta
+            ):
+                self.assertTrue(
+                    torch.all(torch.eq(attribution, attribution_without_delta))
+                )
+
             if isinstance(attr_method, DeepLiftShap):
                 self.assertEqual([input_bsz * baseline_bsz], list(delta.shape))
             else:
