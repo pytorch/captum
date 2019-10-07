@@ -1,27 +1,40 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import zeros, _run_forward
+from .common import _run_forward
 from .gradient import compute_gradients
 
 
 class Attribution:
+    r"""
+    All attribution algorithms extend this class. It enforces its child classes
+    to extend and override core `attribute` method.
+    """
+
     def attribute(self, inputs, **kwargs):
         r"""
-        This method computes and returns the attribution values for each input tensor
+        This method computes and returns the attribution values for each input tensor.
         Deriving classes are responsible for implementing its logic accordingly.
 
         Args:
 
-                inputs:     A single high dimensional input tensor or a tuple of them.
+            inputs (tensor or tuple of tensors):  Input for which attribution
+                        is computed. It can be provided as a single tensor or
+                        a tuple of multiple tensors. If mutliple input tensors
+                        are provided, the batch sizes must be aligned accross all
+                        tensors.
+            **kwargs (Any, optional): Arbitrary keyword arguments used by specific
+                        attribution algorithms that extend this class.
+
 
         Returns:
 
-                attributions: Attribution values for each input vector. The
-                              `attributions` have the dimensionality of inputs
-                              for standard attribution derived classes and the
-                              dimensionality of the given tensor for layer attributions.
-                others ?
+            attributions (tensor or tuple of tensors): Attribution values for each
+                        input vector. The `attributions` have the same shape and
+                        dimensionality as the inputs.
+                        If a single tensor is provided as inputs, a single tensor
+                        is returned. If a tuple is provided for inputs, a tuple of
+                        corresponding sized tensors is returned.
 
         """
         raise NotImplementedError("A derived class should implement attribute method")
@@ -66,24 +79,23 @@ class Attribution:
 
 
 class GradientAttribution(Attribution):
+    r"""
+    All gradient based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
     def __init__(self, forward_func):
         r"""
-        Args
+        Args:
 
-            forward_func:  The forward function of the model or any modification of it
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
         """
         super().__init__()
         self.forward_func = forward_func
         self.gradient_func = compute_gradients
-
-    def zero_baseline(self, inputs):
-        r"""
-        Takes a tuple of tensors as input and returns a tuple that has the same
-        size as the `inputs` which contains zero tensors of the same
-        shape as the `inputs`
-
-        """
-        return zeros(inputs)
 
 
 class InternalAttribution(GradientAttribution):
@@ -94,13 +106,15 @@ class InternalAttribution(GradientAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
-            forward_func:  The forward function of the model or any modification of it
-            layer: Layer for which output attributions are computed.
-                   Output size of attribute matches that of layer output.
-            device_ids: Device ID list, necessary only if forward_func applies a
-                        DataParallel model, which allows reconstruction of
+            forward_func (callable or torch.nn.Module):  This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+            layer (torch.nn.Module): Layer for which output attributions are computed.
+                        Output size of attribute matches that of layer output.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                        applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
                         then it is not neccesary to provide this argument.
@@ -120,43 +134,47 @@ class LayerAttribution(InternalAttribution):
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
-            forward_func:  The forward function of the model or any modification of it
-            layer: Layer for which output attributions are computed.
-                   Output size of attribute matches that of layer output.
-            device_ids: Device ID list, necessary only if forward_func applies a
-                   DataParallel model, which allows reconstruction of
-                   intermediate outputs from batched results across devices.
-                   If forward_func is given as the DataParallel model itself,
-                   then it is not neccesary to provide this argument.
+            forward_func (callable or torch.nn.Module):  This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+            layer (torch.nn.Module): Layer for which output attributions are computed.
+                        Output size of attribute matches that of layer output.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                        applies a DataParallel model, which allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not neccesary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
 
 class NeuronAttribution(InternalAttribution):
     r"""
-    Neuron attribution provides input attribution for a given neuron, quanitfying
-    the importance of each input feature in the activation of a particular neuron.
-    Calling attribute on a NeuronAttribution object requires also providing
-    the index of the neuron in the output of the given layer for which attributions
-    are required.
-    The output attribution of calling attribute on a NeuronAttribution object
-    always matches the size of the input.
+        Neuron attribution provides input attribution for a given neuron, quanitfying
+        the importance of each input feature in the activation of a particular neuron.
+        Calling attribute on a NeuronAttribution object requires also providing
+        the index of the neuron in the output of the given layer for which attributions
+        are required.
+        The output attribution of calling attribute on a NeuronAttribution object
+        always matches the size of the input.
     """
 
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
-            forward_func:  The forward function of the model or any modification of it
-            layer: Layer for which output attributions are computed.
-                   Output size of attribute matches that of layer output.
-            device_ids: Device ID list, necessary only if forward_func applies a
-                   DataParallel model, which allows reconstruction of
-                   intermediate outputs from batched results across devices.
-                   If forward_func is given as the DataParallel model itself,
-                   then it is not neccesary to provide this argument.
+            forward_func (callable or torch.nn.Module):  This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+            layer (torch.nn.Module): Layer for which output attributions are computed.
+                        Output size of attribute matches that of layer output.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                        applies a DataParallel model, which allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not neccesary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -169,17 +187,16 @@ class NeuronAttribution(InternalAttribution):
         Args:
 
                 inputs:     A single high dimensional input tensor or a tuple of them.
-                neuron_index: Tuple providing index of neuron in output of given
-                              layer for which attribution is desired. Length of
-                              this tuple must be one less than the number of
-                              dimensions in the output of the given layer (since
-                              dimension 0 corresponds to number of examples).
+                neuron_index (int or tuple): Tuple providing index of neuron in output
+                        of given layer for which attribution is desired. Length of
+                        this tuple must be one less than the number of
+                        dimensions in the output of the given layer (since
+                        dimension 0 corresponds to number of examples).
 
         Returns:
 
-                attributions: Attribution values for each input vector. The
-                              `attributions` have the dimensionality of inputs.
-                others ?
-
+                attributions (tensor or tuple of tensors): Attribution values for
+                        each input vector. The `attributions` have the
+                        dimensionality of inputs.
         """
         raise NotImplementedError("A derived class should implement attribute method")

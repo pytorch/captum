@@ -1,4 +1,5 @@
 import React from "react";
+import ReactTags from "react-tag-autocomplete";
 import "./App.css";
 
 // helper method to convert an array or object into a valid classname
@@ -21,8 +22,6 @@ class Header extends React.Component {
             <li className="header__nav__item header__nav__item--active">
               Instance Attribution
             </li>
-            <li className="header__nav__item">Direct Target</li>
-            <li className="header__nav__item">Export</li>
           </ul>
         </nav>
       </header>
@@ -41,11 +40,30 @@ function Tooltip(props) {
 class FilterContainer extends React.Component {
   constructor(props) {
     super(props);
+    const suggested_classes = props.config.map((c, i) => ({ id: i, name: c }));
+
     this.state = {
       prediction: "all",
-      approximation_steps: 50
+      approximation_steps: 50,
+      classes: [],
+      suggested_classes: suggested_classes
     };
   }
+
+  handleClassDelete = i => {
+    const classes = this.state.classes.slice(0);
+    const removed_class = classes.splice(i, 1);
+    const suggested_classes = [].concat(this.state.suggestions, removed_class);
+    this.setState({ classes, suggested_classes });
+  };
+
+  handleClassAdd = added_class => {
+    const classes = [].concat(this.state.classes, added_class);
+    const suggested_classes = this.state.suggested_classes.filter(
+      t => t.id !== added_class.id
+    );
+    this.setState({ classes, suggested_classes });
+  };
 
   handleInputChange = event => {
     const target = event.target;
@@ -57,7 +75,12 @@ class FilterContainer extends React.Component {
   };
 
   handleSubmit = event => {
-    this.props.fetchData(this.state);
+    const data = {
+      prediction: this.state.prediction,
+      approximation_steps: this.state.approximation_steps,
+      classes: this.state.classes.map(i => i["name"])
+    };
+    this.props.fetchData(data);
     event.preventDefault();
   };
 
@@ -65,9 +88,29 @@ class FilterContainer extends React.Component {
     return (
       <Filter
         prediction={this.state.prediction}
+        classes={this.state.classes}
+        suggestedClasses={this.state.suggested_classes}
         approximationSteps={this.state.approximation_steps}
+        handleClassAdd={this.handleClassAdd}
+        handleClassDelete={this.handleClassDelete}
         handleInputChange={this.handleInputChange}
         handleSubmit={this.handleSubmit}
+      />
+    );
+  }
+}
+
+class ClassFilter extends React.Component {
+  render() {
+    return (
+      <ReactTags
+        tags={this.props.classes}
+        autofocus={false}
+        suggestions={this.props.suggestedClasses}
+        handleDelete={this.props.handleClassDelete}
+        handleAddition={this.props.handleClassAdd}
+        minQueryLength={0}
+        placeholder="add new class..."
       />
     );
   }
@@ -81,7 +124,12 @@ class Filter extends React.Component {
           <div className="filter-panel__column">
             <div className="filter-panel__column__title">Filter by Classes</div>
             <div className="filter-panel__column__body">
-              Animal and 2 other classes are selected. <a href="">Edit</a>
+              <ClassFilter
+                handleClassDelete={this.props.handleClassDelete}
+                handleClassAdd={this.props.handleClassAdd}
+                suggestedClasses={this.props.suggestedClasses}
+                classes={this.props.classes}
+              />
             </div>
           </div>
           <div className="filter-panel__column">
@@ -109,7 +157,7 @@ class Filter extends React.Component {
             <div className="filter-panel__column__body">
               Approximation steps:{" "}
               <input
-                className="input"
+                className="input input--narrow"
                 name="approximation_steps"
                 type="number"
                 value={this.props.approximationSteps}
@@ -124,6 +172,10 @@ class Filter extends React.Component {
       </form>
     );
   }
+}
+
+function Spinner(_) {
+  return <div className="spinner" />;
 }
 
 // TODO maybe linear interpolate the colors instead of hardcoding them
@@ -308,11 +360,21 @@ class Visualization extends React.Component {
 }
 
 function Visualizations(props) {
+  if (props.loading) {
+    return (
+      <div className="viz">
+        <div className="panel panel--center">
+          <Spinner />
+        </div>
+      </div>
+    );
+  }
+
   if (!props.data || props.data.length === 0) {
     return (
       <div className="viz">
         <div className="panel">
-          <div className="filter-panel__column">
+          <div className="panel__column">
             Please press <strong className="text-feature-word">Fetch</strong> to
             start loading data.
           </div>
@@ -333,11 +395,23 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: []
+      data: [],
+      config: [],
+      loading: false
     };
+    this._fetchInit();
   }
 
+  _fetchInit = () => {
+    fetch("/init")
+      .then(response => response.json())
+      .then(response => {
+        this.setState({ config: response });
+      });
+  };
+
   fetchData = filter_config => {
+    this.setState({ loading: true });
     fetch("/fetch", {
       method: "POST",
       headers: {
@@ -346,15 +420,19 @@ class App extends React.Component {
       body: JSON.stringify(filter_config)
     })
       .then(response => response.json())
-      .then(response => this.setState({ data: response }));
+      .then(response => this.setState({ data: response, loading: false }));
   };
 
   render() {
     return (
       <div className="app">
         <Header />
-        <FilterContainer fetchData={this.fetchData} />
-        <Visualizations data={this.state.data} />
+        <FilterContainer
+          fetchData={this.fetchData}
+          config={this.state.config}
+          key={this.state.config}
+        />
+        <Visualizations data={this.state.data} loading={this.state.loading} />
       </div>
     );
   }

@@ -13,16 +13,16 @@ from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
 
 from .helpers.basic_models import (
-    TestModel_MultiLayer,
-    TestModel_MultiLayer_MultiInput,
-    TestModel_ConvNet,
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
+    BasicModel_ConvNet,
 )
 from .helpers.utils import BaseGPUTest
 
 
 class Test(BaseGPUTest):
     def test_simple_input_internal_inf(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -36,7 +36,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_internal_inf(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -54,7 +54,7 @@ class Test(BaseGPUTest):
         )
 
     def test_simple_layer_activation(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -66,7 +66,7 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(LayerActivation, net, net.relu, inputs=inp)
 
     def test_multi_input_layer_activation(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -82,7 +82,7 @@ class Test(BaseGPUTest):
         )
 
     def test_simple_layer_conductance(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -96,7 +96,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_layer_conductance(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -114,14 +114,14 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_dim_layer_conductance(self):
-        net = TestModel_ConvNet().cuda()
+        net = BasicModel_ConvNet().cuda()
         inp = 100 * torch.randn(4, 1, 10, 10).cuda()
         self._data_parallel_test_assert(
             LayerConductance, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
 
     def test_simple_layer_gradient_x_activation(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -135,7 +135,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_layer_gradient_x_activation(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -152,7 +152,7 @@ class Test(BaseGPUTest):
         )
 
     def test_simple_neuron_conductance(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -166,7 +166,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_neuron_conductance(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -185,7 +185,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_dim_neuron_conductance(self):
-        net = TestModel_ConvNet().cuda()
+        net = BasicModel_ConvNet().cuda()
         inp = 100 * torch.randn(4, 1, 10, 10).cuda()
         self._data_parallel_test_assert(
             NeuronConductance,
@@ -198,7 +198,7 @@ class Test(BaseGPUTest):
         )
 
     def test_simple_neuron_gradient(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -217,7 +217,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_neuron_gradient(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),
@@ -233,7 +233,7 @@ class Test(BaseGPUTest):
         )
 
     def test_simple_neuron_integrated_gradient(self):
-        net = TestModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -252,7 +252,7 @@ class Test(BaseGPUTest):
         )
 
     def test_multi_input_integrated_gradient(self):
-        net = TestModel_MultiLayer_MultiInput().cuda()
+        net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
             10 * torch.randn(12, 3).cuda(),
             5 * torch.randn(12, 3).cuda(),

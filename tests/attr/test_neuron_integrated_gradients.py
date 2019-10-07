@@ -7,36 +7,36 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
 
 from .helpers.basic_models import (
-    TestModel_ConvNet,
-    TestModel_MultiLayer,
-    TestModel_MultiLayer_MultiInput,
+    BasicModel_ConvNet,
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
 )
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
     def test_simple_ig_input_linear2(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._ig_input_test_assert(net, net.linear2, inp, 0, [0.0, 390.0, 0.0])
 
     def test_simple_ig_input_linear1(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._ig_input_test_assert(net, net.linear1, inp, (0,), [0.0, 100.0, 0.0])
 
     def test_simple_ig_input_relu(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 6.0, 14.0]], requires_grad=True)
         self._ig_input_test_assert(net, net.relu, inp, (0,), [0.0, 3.0, 7.0])
 
     def test_simple_ig_input_relu2(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
 
     def test_simple_ig_multi_input_linear2(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 0.0]])
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
@@ -50,7 +50,7 @@ class Test(BaseTest):
         )
 
     def test_simple_ig_multi_input_relu(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 6.0, 14.0]])
         inp2 = torch.tensor([[0.0, 6.0, 14.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
@@ -64,7 +64,7 @@ class Test(BaseTest):
         )
 
     def test_simple_ig_multi_input_relu_batch(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
         inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
@@ -78,7 +78,7 @@ class Test(BaseTest):
         )
 
     def test_matching_output_gradient(self):
-        net = TestModel_ConvNet()
+        net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10, requires_grad=True)
         self._ig_matching_test_assert(net, net.softmax, inp, baseline)

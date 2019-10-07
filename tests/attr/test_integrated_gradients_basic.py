@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _run_forward
+from captum.attr._utils.common import _run_forward, _zeros
 
 from .helpers.basic_models import (
     BasicModel,
@@ -11,7 +11,7 @@ from .helpers.basic_models import (
     BasicModel4_MultiArgs,
     BasicModel5_MultiArgs,
     BasicModel6_MultiTensor,
-    TestModel_MultiLayer,
+    BasicModel_MultiLayer,
 )
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
@@ -188,7 +188,7 @@ class Test(BaseTest):
         )
 
     def _assert_batched_tensor_input(self, type):
-        model = TestModel_MultiLayer()
+        model = BasicModel_MultiLayer()
         input = (
             torch.tensor(
                 [[1.5, 2.0, 1.3], [0.5, 0.1, 2.3], [1.5, 2.0, 1.3]], requires_grad=True
@@ -198,7 +198,7 @@ class Test(BaseTest):
         self._compute_attribution_batch_helper_evaluate(model, input, target=0)
 
     def _assert_batched_tensor_multi_input(self, type):
-        model = TestModel_MultiLayer()
+        model = BasicModel_MultiLayer()
         input = (
             torch.tensor(
                 [[1.5, 2.1, 1.9], [0.5, 0.0, 0.7], [1.5, 2.1, 1.1]], requires_grad=True
@@ -230,7 +230,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = ig.zero_baseline(inputs)
+            baselines = _zeros(inputs)
 
         forward_input = _run_forward(
             model,
@@ -306,7 +306,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = ig.zero_baseline(inputs)
+            baselines = _zeros(inputs)
 
         for method in [
             "riemann_right",
