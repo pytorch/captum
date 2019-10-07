@@ -412,7 +412,8 @@ class DeepLiftShap(DeepLift):
                         Delta is calculated for each example input and baseline pair,
                         meaning that the number of elements in returned delta tensor
                         is equal to the
-                        `number of examples in input` * `number of examples in baseline`.
+                        `number of examples in input` * `number of examples
+                        in baseline`.
 
         Examples::
 
