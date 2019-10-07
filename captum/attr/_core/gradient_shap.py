@@ -114,7 +114,10 @@ class GradientShap(GradientAttribution):
                         Note that the gradients are not computed with respect
                         to these arguments.
                         Default: None
-            return_convergence_delta (bool, optional):
+            return_convergence_delta (bool, optional): Indicates whether to return
+                        convergence delta or not. If `return_convergence_delta`
+                        is set to True convergence delta will be returned in
+                        a tuple followed by attributions.
                         Default: False
         Returns:
 
@@ -126,10 +129,14 @@ class GradientShap(GradientAttribution):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float, optional): This is computed using the property that the total
+            delta (tensor, optional): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must be very colse to the total sum of the attributions
                         based on GradientSHAP.
+                        Delta is calculated for each example in the input after adding
+                        `n_samples` times gaussian noise to each of them. Therefore,
+                        the dimensionality of the deltas tensor is equal to the
+                        `n_samples` * `number of examples in the input`
 
             Examples::
 
@@ -142,7 +149,7 @@ class GradientShap(GradientAttribution):
                 >>> baselines = torch.randn(20, 3, 32, 32)
                 >>> # Computes gradient shap for the input
                 >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution, delta = gradient_shap.attribute(input, baselines,
+                >>> attribution = gradient_shap.attribute(input, baselines,
                                                                  target=5)
 
         """

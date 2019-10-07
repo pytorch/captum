@@ -140,8 +140,8 @@ class NoiseTunnel(Attribution):
                 >>> # Computes integrated gradients for class 3 for each generated
                 >>> # input and averages attributions accros all 10
                 >>> # perturbed inputs per image
-                >>> attribution, delta = nt.attribute(input, nt_type='smoothgrad',
-                >>>                                   n_samples=10, target=3)
+                >>> attribution = nt.attribute(input, nt_type='smoothgrad',
+                >>>                            n_samples=10, target=3)
         """
 
         def add_noise_to_inputs():
@@ -271,8 +271,6 @@ class NoiseTunnel(Attribution):
 
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
-            bsz = inputs[0].shape[0]
-            delta = delta.view(bsz, -1)
 
         expected_attributions = []
         expected_attributions_sq = []

@@ -295,7 +295,7 @@ class Test(BaseTest):
                     method=method,
                     n_steps=2000,
                 )
-                self.assertEqual((inputs[0].shape[0], n_samples), delta.shape)
+                self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(attribution.shape, input.shape)

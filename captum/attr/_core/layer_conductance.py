@@ -35,7 +35,7 @@ class LayerConductance(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True
 
     def attribute(
@@ -119,17 +119,25 @@ class LayerConductance(LayerAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
+                return_convergence_delta (bool, optional): Indicates whether to return
+                            convergence delta or not. If `return_convergence_delta`
+                            is set to True convergence delta will be returned in
+                            a tuple followed by attributions.
+                            Default: False
 
             Return
 
                 attributions (tensor): Conductance of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                delta (float): The difference between the total approximated and
-                            true conductance.
+                delta (tensor, optional): The difference between the total
+                            approximated and true conductance.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the attributions.
+                            Delta is calculated per example, meaning that the number of
+                            elements in returned delta tensor is equal to the number of
+                            of examples in inputs.
 
             Examples::
 

@@ -144,7 +144,7 @@ class Test(BaseTest):
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         bsz = inputs[0].shape[0]
-        self.assertEqual([bsz, n_samples], list(delta.shape))
+        self.assertEqual([bsz * n_samples], list(delta.shape))
 
         delta = torch.mean(delta.reshape(bsz, -1), dim=1)
         self._assert_delta(delta)

@@ -100,7 +100,11 @@ class IntegratedGradients(GradientAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
-
+                return_convergence_delta (bool, optional): Indicates whether to return
+                            convergence delta or not. If `return_convergence_delta`
+                            is set to True convergence delta will be returned in
+                            a tuple followed by attributions.
+                            Default: False
             Return:
 
                 attributions (tensor or tuple of tensors): Integrated gradients with
@@ -110,11 +114,14 @@ class IntegratedGradients(GradientAttribution):
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float, optional): The difference between the total approximated
+                delta (tensor, optional): The difference between the total approximated
                             and true integrated gradients.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the integrated gradient.
+                            Delta is calculated per example, meaning that the number of
+                            elements in returned delta tensor is equal to the number of
+                            of examples in inputs.
 
             Examples::
 
@@ -124,7 +131,7 @@ class IntegratedGradients(GradientAttribution):
                 >>> ig = IntegratedGradients(net)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
                 >>> # Computes integrated gradients for class 3.
-                >>> attribution, delta = ig.attribute(input, target=3)
+                >>> attribution = ig.attribute(input, target=3)
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.

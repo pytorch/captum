@@ -100,7 +100,7 @@ class Test(BaseTest):
                     method=method,
                     return_convergence_delta=True,
                 )
-                self.assertEqual((inputs.shape[0], n_samples), delta.shape)
+                self.assertEqual([inputs.shape[0] * n_samples], list(delta.shape))
 
             self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
             self.assertEqual(attributions.shape, inputs.shape)

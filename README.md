@@ -117,16 +117,19 @@ from captum.attr import (
 class ToyModel(nn.Module):
     def __init__(self):
         super().__init__()
+        self.lin1 = nn.Linear(3, 3)
         self.relu = nn.ReLU()
-        self.lin = nn.Linear(3, 2, bias=True)
+        self.lin2 = nn.Linear(3, 2)
         self.sigmoid = nn.Sigmoid()
 
         # initialize weights and biases
-        self.lin.weight = nn.Parameter(torch.arange(1.0, 7.0).view(2, 3))
-        self.lin.bias = nn.Parameter(torch.zeros(2))
+        self.lin1.weight = nn.Parameter(torch.arange(0.0, 9.0).view(3, 3))
+        self.lin1.bias = nn.Parameter(torch.zeros(1,3))
+        self.lin2.weight = nn.Parameter(torch.arange(0.0, 6.0).view(2, 3))
+        self.lin2.bias = nn.Parameter(torch.ones(1,2))
 
     def forward(self, input):
-        return self.sigmoid(self.lin(self.relu(input)))
+        return self.sigmoid(self.lin2(self.relu(self.lin1(input))))
 ```
 
 Let's create an instance of our model and set it to eval mode.
@@ -148,10 +151,11 @@ mentioned above in order to understand the importance of individual
 neurons/layers and the parts of the input that play an important role in the
 final prediction.
 
-Let's fix random seeds to make computations deterministic.
+To make computations deterministic, let's fix random seeds.
+
 ```
-torch.manual_seed(0)
-np.random.seed(0)
+torch.manual_seed(123)
+np.random.seed(123)
 ```
 
 Let's define our input and baseline tensors. Baselines are used in some
@@ -167,18 +171,22 @@ Next we will use `IntegratedGradients` algorithms to assign attribution
 scores to each input feature with respect to the second target output.
 ```
 ig = IntegratedGradients(model)
-attributions, delta = ig.attribute(input, baseline, target=1)
-print('IG Attributions: ', attributions, ' Approximation error: ', delta)
+attributions, delta = ig.attribute(input, baseline, target=1, return_convergence_delta=True)
+print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output:
 ```
-IG Attributions:  tensor([[0.1556, 0.3011, 0.0416],
-                          [0.0447, 0.1302, 0.3223]])
-Approximation Error: 2.980232238769531e-07
+IG Attributions:  tensor([[0.0628, 0.1314, 0.0747],
+                          [0.0930, 0.0120, 0.1639]])
+Convergence Delta: tensor([0., 0.])
 ```
-The algorithm outputs an attribution score for each input element and an
-approximation error that we would like to minimize. It can also serve as a proxy
-of how much we can trust the attribution scores assigned by an attribution algorithm.
+The algorithm outputs an attribution score for each input element and a
+convergence delta that we would like to minimize. If we choose not to return
+delta, we can simply not provide `return_convergence_delta` input argument.
+The absolute value of the returned deltas can be interpreted as an approximation error
+for each input sample.
+It can also serve as a proxy of how much we can trust the attribution scores
+assigned by an attribution algorithm.
 If the approximation error is large, we can try larger number of integral
 approximation steps by setting `n_steps` to a larger value. Not all algorithms
 return approximation error. Those which do, though, compute it based on the
@@ -191,22 +199,35 @@ Zero attribution score means no contribution from that particular feature.
 
 Similarly, we can apply `GradientShap`, `DeepLift` and other attribution algorithms to the model.
 
+Gradient SHAP first chooses a random baseline from baselines' distribution, then
+ adds gaussian noise with std=0.9 to each input example `n_samples` times.
+Afterwards, it chooses a random point between each example-baseline pair and
+computes the gradients with respect to target class (in this case target=0). Resulting
+attribution is the mean of gradients * (inputs - baselines)
 ```
 gs = GradientShap(model)
 
 # We define a distribution of baselines and draw `n_samples` from that
 # distribution in order to estimate the expectations of gradients across all baselines
-baseline_dist = torch.randn(1000, 3) * 0.01
-attributions, delta = gs.attribute(input, stdevs=0.001, n_samples=2000, baselines=baseline_dist, target=0)
-print('GradientShap Attributions: ', attributions, ' Approximation error: ', delta)
+baseline_dist = torch.randn(10, 3) * 0.001
+attributions, delta = gs.attribute(input, stdevs=0.09, n_samples=4, baselines=baseline_dist,
+                                   target=0, return_convergence_delta=True)
+print('GradientShap Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-GradientShap Attributions:  tensor([[0.0878, 0.2730, 0.0447],
-                                    [0.0209, 0.0989, 0.3109]])
-Approximation Error: 0.00531
+GradientShap Attributions:  tensor([[ 0.0008,  0.0019,  0.0009],
+                                    [ 0.1892, -0.0045,  0.2445]])
+Convergence Delta: tensor([-0.2681, -0.2633, -0.2607, -0.2655, -0.2689, -0.2689,  1.4493, -0.2688])
 
 ```
+Deltas are computed for each `n_samples * input.shape[0]` example. The user can,
+for instance, average them:
+```
+deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
+```
+in order to get per example average delta
+
 
 Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
 `ToyModel` described above. Current implementation of DeepLift supports only
@@ -216,20 +237,25 @@ original paper linked below.
 
 ```
 dl = DeepLift(model)
-attributions, delta = dl.attribute(input, baseline, target=0)
-print('DeepLift Attributions: ', attributions, ' Approximation error: ', delta)
+attributions, delta = dl.attribute(input, baseline, target=0, return_convergence_delta=True)
+print('DeepLift Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-DeepLift Attributions:  tensor([[0.0883, 0.2733, 0.0472],
-                                [0.0216, 0.1007, 0.3116]])
-        Approximation error:  0.0
+DeepLift Attributions:  tensor([[0.0628, 0.1314, 0.0747],
+                                [0.0930, 0.0120, 0.1639]])
+Convergence Delta: tensor([0., 0.])
 ```
 DeepLift assigns similar attribution scores as Integrated Gradients to inputs,
 however it has lower execution time. Another important thing to remember about
 DeepLift is that it currently doesn't support all non-linear activation types.
 For more details on limitations of the current implementation, please read
 DeepLift's original paper linked below.
+
+Similar to integrated gradients, DeepLift returns a convergence delta score
+per input example. The approximation error is then the absolute
+value of the convergence deltas and can serve as a proxy of trust for attribution
+algorithms.
 
 Now let's look into `DeepLiftShap`. Similar to `GradientShap`, `DeepLiftShap` uses
 baseline distribution. In the example below, we use the same baseline distribution
@@ -238,17 +264,27 @@ as for `GradientShap`.
 ```
 dl = DeepLiftShap(model)
 attributions, delta = dl.attribute(input, baseline_dist, target=0)
-print('DeepLiftSHAP Attributions: ', attributions, ' Approximation error: ', delta)
+print('DeepLiftSHAP Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-DeepLift Attributions: tensor([0.0872, 0.2707, 0.0450],
-                              [0.0209, 0.0989, 0.3082]], grad_fn=<MeanBackward1>)
-Approximation error:  5.066394805908203e-07
+DeepLift Attributions: tensor([0.0627, 0.1313, 0.0747],
+                              [0.0929, 0.0120, 0.1637], grad_fn=<MeanBackward1>)
+Convergence Delta:  tensor([-2.9802e-08,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
+         0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  2.9802e-08,
+         0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
+         0.0000e+00,  0.0000e+00,  2.9802e-08,  0.0000e+00,  2.9802e-08])
 ```
 `DeepLiftShap` uses `DeepLift` to compute attribution score for each
 input-baseline pair and averages it for each input across all baselines.
 
+It computes deltas for each input example-baseline pair, thus resulting to
+`input.shape[0] * baseline.shape[0]` delta values.
+
+Similar to GradientShap in order to compute example-based deltas we can average them per example:
+```
+deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
+```
 In order to smooth and improve the quality of the attributions we can run
 `IntegratedGradients` and other attribution methods through a `NoiseTunnel`.
 `NoiseTunnel` allows us to use SmoothGrad, SmoothGrad_Sq and VarGrad techniques
@@ -260,26 +296,39 @@ Here is an example how we can use `NoiseTunnel` with `IntegratedGradients`.
 ```
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
-attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.2, baselines=baseline, target=0)
-print('IG + SmoothGrad Attributions: ', attributions, ' Approximation error: ', delta)
+attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
+      baselines=baseline, target=0, return_convergence_delta=True)
+print('IG + SmoothGrad Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-IG + SmoothGrad Attributions:  tensor([[0.0717, 0.2328, 0.0789],
-                                       [0.0338, 0.0532, 0.3317]])
-Approximation Error:  4.470348358154297e-07
+IG + SmoothGrad Attributions:  tensor([[0.0631, 0.1335, 0.0723],
+                                       [0.0911, 0.0142, 0.1636]])
+Convergence Delta:  tensor([ 1.4901e-07, -8.9407e-08,  1.1921e-07,
+        1.4901e-07,  1.1921e-07, -1.7881e-07, -5.9605e-08,  5.9605e-08])
 
+```
+The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
+In order to get a example-based delta, we can, for example, average them:
+```
+deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
 
 Let's look into the internals of our network and understand which layers
 and neurons are important for the predictions.
+
 We will start with the neuron conductance. Neuron conductance helps us to identify
 input features that are important for a particular neuron in a given
-layer. In this case, we choose to analyze the first neuron in the first layer.
+layer. It decomposes the computation of integrated gradients via the chain rule by
+defining the importance of a neuron as path integral of the derivative of the output
+with respect to the neuron times the derivatives of the neuron with respect to the
+inputs of the model.
+
+In this case, we choose to analyze the first neuron in the linear layer.
 
 ```
-nc = NeuronConductance(model, model.relu)
-attributions = nc.attribute(input, neuron_index=0, target=0)
+nc = NeuronConductance(model, model.lin1)
+attributions = nc.attribute(input, neuron_index=1, target=0)
 print('Neuron Attributions: ', attributions)
 ```
 Output
@@ -289,19 +338,27 @@ Neuron Attributions:  tensor([[0.0000, 0.2854, 0.0000],
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
+It is an extension of path integrated gradients for hidden layers and holds the
+completeness property as well.
+
 It doesn't attribute the contribution scores to the input features
 but shows the importance of each neuron in selected layer.
 ```
-lc = LayerConductance(model, model.relu)
-attributions, delta = lc.attribute(input, baselines=baseline, target=0)
-print('Layer Attributions: ', attributions, ' Approximation Error: ', delta)
+lc = LayerConductance(model, model.lin1)
+attributions, delta = lc.attribute(input, baselines=baseline, target=0, return_convergence_delta=True)
+print('Layer Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Outputs
 ```
 Layer Attributions: tensor([[0.0891, 0.2758, 0.0476],
                             [0.0219, 0.1019, 0.3152]], grad_fn=<SumBackward1>)
-Approximation error: 0.008803457021713257
+Convergence Delta:  tensor([-0.0735, -0.0589])
 ```
+
+Similar to other attribution algorithms that return convergence delta, LayerConductance
+returns the deltas for each example. The approximation error is then the absolute
+value of the convergence deltas and can serve as a proxy of trust for attribution
+algorithms.
 
 More details on the list of supported algorithms and how to apply
 Captum on different types of models can be found in our tutorials.

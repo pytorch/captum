@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import (
-    _run_forward,
-    _format_input_baseline,
-    _format_tensor_into_tuples,
-    validate_input,
-    validate_target,
-)
+from .common import _run_forward, _format_input_baseline, \
+    _format_tensor_into_tuples, validate_input, validate_target
 from .gradient import compute_gradients
 
 
@@ -63,31 +58,34 @@ class Attribution:
 
     def compute_convergence_delta(self, attributions, *args):
         r"""
-        Deriving attribution algorithms that provide convergence delta (aka
-        approximation error) should implement this method. Convergence error can
-        be computed based on some properties of the attribution alogrithms.
-        For example, integrated gradients, deeplift and gradient SHAP have
-        the property that the sum of the attributions must be equal to the difference
-        of the model's function at the end and start points of the approximation.
+        The attribution algorithms which derive `Attribution` class and provide
+        convergence delta (aka approximation error) should implement this method.
+        Convergence delta can be computed based on certain properties of the
+        attribution alogrithms.
 
         Args:
 
-                attributions (tensor or tuple of tensors):  Input for which integrated
-                            gradients are computed. If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
-                            are provided, the examples must be aligned appropriately.
-                **kwargs (optional):
+                attributions (tensor or tuple of tensors): Attribution scores that
+                            are precomputed by an attribution algorithm.
+                            Attributions can be provided in form of a single tensor
+                            or a tuple of those. It is assumed that attribution
+                            tensor's dimension 0 corresponds to the number of
+                            examples, and if mutliple input tensors are provided,
+                            the examples must be aligned appropriately.
+                *args (optional): Additonal arguments that are used by the
+                            sub-classes depending on the specific implementation
+                            of `compute_convergence_delta`.
 
         Returns:
 
+                deltas (tensor): Depending on specific implementaion of
+                            sub-classes, convergence delta can be returned per
+                            sample in form of a tensor or it can be aggregated
+                            across multuple samples and returned in form of a
+                            single floating point tensor.
         """
-        raise NotImplementedError(
-            "Deriving class should implement" " compute_convergence_delta method"
-        )
+        raise NotImplementedError("Deriving sub-class should implement"
+                                  " compute_convergence_delta method")
 
 
 class GradientAttribution(Attribution):
@@ -96,7 +94,6 @@ class GradientAttribution(Attribution):
     forward function, which most commonly is the forward function of the model
     that we want to interpret or the model itself.
     """
-
     def __init__(self, forward_func):
         r"""
         Args
@@ -118,25 +115,40 @@ class GradientAttribution(Attribution):
         additional_forward_args=None,
     ):
         r"""
+        Here we provide a specific implementation for `compute_convergence_delta`
+        which is based on a common property among gradient-based attribution algorithms.
+        In the literature sometimes it is also called completeness axiom. Completeness
+        axiom states that the sum of the attribution must be equal to the differences of
+        NN Models's function at its end and start points. In other words:
+        sum(attributions) - (F(end_point) - F(start_point)) is close to zero.
+
+        This implementation assumes that both the `start_point` and `end_point` have
+        the same shape and dimensionality. It also assumes that the target must have
+        the same number of examples as the `start_point` and the `end_point` in case
+        it is provided in form of a list or a tensor.
         Args:
-                attributions (tensor or tuple of tensors):
-                start_point (tensor or tuple of tensors, optional):  Baseline define
-                            the starting point from which integral is computed.
-                            If inputs is a single tensor, baselines must also be a
-                            single tensor with exactly the same dimensions as inputs.
-                            If inputs is a tuple of tensors, baselines must also be
-                            a tuple of tensors, with matching dimensions to inputs.
-                            Default: zero tensor for each input tensor
-                end_point (tensor or tuple of tensors):  Input for which integrated
-                            gradients are computed. If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
-                            are provided, the examples must be aligned appropriately.
-                target (int, optional):  Output index for which gradient is computed
-                            (for classification cases, this is the target class).
+                attributions (tensor or tuple of tensors): Precomputed attribution
+                            scores. The user can compute those using any attribution
+                            algorithm. It is assumed the the shape and the
+                            dimensionality of attributions must match the shape and
+                            the dimensionality of `start_point` and `end_point`.
+                            It also assumes that the attribution tensor's
+                            dimension 0 corresponds to the number of
+                            examples, and if mutliple input tensors are provided,
+                            the examples must be aligned appropriately.
+                start_point (tensor or tuple of tensors, optional): `start_point`
+                            is passed as an input to model's forward function. It
+                            is the starting point of attributions' approximation.
+                            It is assumed that both `start_point` and `end_point`
+                            have the same shape and dimensionality.
+                end_point (tensor or tuple of tensors):  `end_point`
+                            is passed as an input to model's forward function. It
+                            is the end point of attributions' approximation.
+                            It is assumed that both `start_point` and `end_point`
+                            have the same shape and dimensionality.
+                target (int or list, tuple, tensor, optional):  Output index for which
+                            the attribution is computed. For classification cases,
+                            this is the target class.
                             If the network returns a scalar value per example,
                             no target index is necessary. (Note: Tuples for multi
                             -dimensional output indices will be supported soon.)
@@ -152,10 +164,15 @@ class GradientAttribution(Attribution):
                             arguments in inputs.
                             For a tensor, the first dimension of the tensor must
                             correspond to the number of examples.
+                            `additional_forward_args` is used both for `start_point`
+                            and `end_point` when computing the forward pass.
                             Default: None
 
         Returns:
 
+                deltas (tensor): This implementation returns convergence delta per
+                        sample. Deriving sub-classes may do any type of aggregation
+                        of those values, if necessary.
         """
         end_point, start_point = _format_input_baseline(end_point, start_point)
         attributions = _format_tensor_into_tuples(attributions)

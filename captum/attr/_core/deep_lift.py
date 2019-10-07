@@ -117,6 +117,12 @@ class DeepLift(GradientAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
+            return_convergence_delta (bool, optional): Indicates whether to return
+                        convergence delta or not. If `return_convergence_delta`
+                        is set to True convergence delta will be returned in
+                        a tuple followed by attributions.
+                        Default: False
+
         Returns:
 
             attributions (tensor or tuple of tensors): Attribution score
@@ -127,10 +133,13 @@ class DeepLift(GradientAttribution):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float, optional): This is computed using the property that the total
+            delta (tensor, optional): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must equal the total sum of the attributions computed
                         based on Deeplift's rescale rule.
+                        Delta is calculated per example, meaning that the number of
+                        elements in returned delta tensor is equal to the number of
+                        of examples in input.
 
         Examples::
 
@@ -140,7 +149,7 @@ class DeepLift(GradientAttribution):
             >>> dl = DeepLift(net)
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes deeplift attribution scores for class 3.
-            >>> attribution, delta = dl.attribute(input, target=3)
+            >>> attribution = dl.attribute(input, target=3)
         """
 
         # Keeps track whether original input is a tuple or not before
@@ -379,8 +388,12 @@ class DeepLiftShap(DeepLift):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            return_convergence_delta (bool, optional):
+            return_convergence_delta (bool, optional): Indicates whether to return
+                        convergence delta or not. If `return_convergence_delta`
+                        is set to True convergence delta will be returned in
+                        a tuple followed by attributions.
                         Default: False
+
         Returns:
 
             attributions (tensor or tuple of tensors): Attribution score
@@ -391,11 +404,15 @@ class DeepLiftShap(DeepLift):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float, optional): This is computed using the property that the
+            delta (tensor, optional): This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
                         Deeplift's rescale rule.
+                        Delta is calculated for each example input and baseline pair,
+                        meaning that the number of elements in returned delta tensor
+                        is equal to the
+                        `number of examples in input` * `number of examples in baseline`.
 
         Examples::
 
@@ -405,7 +422,7 @@ class DeepLiftShap(DeepLift):
             >>> dl = DeepLiftShap(net)
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes shap values using deeplift for class 3.
-            >>> attribution, delta = dl.attribute(input, target=3)
+            >>> attribution = dl.attribute(input, target=3)
         """
 
         def compute_mean(inp_bsz, base_bsz, attribution):
