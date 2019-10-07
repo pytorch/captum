@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import _run_forward, _format_input_baseline, \
-    _format_tensor_into_tuples, validate_input, validate_target
+from .common import (
+    _run_forward,
+    _format_input_baseline,
+    _format_tensor_into_tuples,
+    validate_input,
+    validate_target,
+)
 from .gradient import compute_gradients
 
 
@@ -84,8 +89,9 @@ class Attribution:
                             across multuple samples and returned in form of a
                             single floating point tensor.
         """
-        raise NotImplementedError("Deriving sub-class should implement"
-                                  " compute_convergence_delta method")
+        raise NotImplementedError(
+            "Deriving sub-class should implement" " compute_convergence_delta method"
+        )
 
 
 class GradientAttribution(Attribution):
@@ -94,6 +100,7 @@ class GradientAttribution(Attribution):
     forward function, which most commonly is the forward function of the model
     that we want to interpret or the model itself.
     """
+
     def __init__(self, forward_func):
         r"""
         Args
