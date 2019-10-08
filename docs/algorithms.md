@@ -80,7 +80,7 @@ This approach is designed for convolutional neural networks. The chosen layer is
 Guided GradCAM was proposed by the authors of GradCAM as a method to combine the high-resolution nature of Guided Backpropagation with the class-discriminative advantages of GradCAM, which has lower resolution due to upsampling from a convolutional layer.
 
 To learn more about Guided GradCAM, visit the following resources:  
-- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
 ## Layer Attribution
@@ -119,20 +119,20 @@ This procedure sums over the second dimension (# of channels), so the output of 
 Although GradCAM directly attributes the importance of different neurons in the target layer, GradCAM is often used as a general attribution method. To accomplish this, GradCAM attributions are upsampled and viewed as a mask to the input, since a convolutional layer output generally matches the input image spatially.
 
 To learn more about GradCAM, visit the following resources:  
-- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
 ## Neuron Attribution
 ### Neuron Conductance
 Conductance combines the neuron activation with the partial derivatives of both the neuron with respect to the input and the output with respect to the neuron to build a more complete picture of neuron importance.  
 
-Conductance for a particular neuron builds on Integrated Gradients (IG) by looking at the flow of IG attribution from each input through the particular neuron.  The formal definition of conductance of neuron y for the attribution of input i (from the [original paper](https://openreview.net/forum?id=SylKoo0cKm)) is as follows:  
+Conductance for a particular neuron builds on Integrated Gradients (IG) by looking at the flow of IG attribution from each input through the particular neuron.  The formal definition of conductance of neuron y for the attribution of input i (from the [original paper](https://arxiv.org/abs/1805.12233)) is as follows:  
 ![conductance_eq2](/img/conductance_eq_2.png)  
 
 Note that based on this definition, summing the neuron conductance (over all input features) always equals the layer conductance for the particular neuron.
 
 To learn more about Conductance, visit the following resources:  
-- [Original Paper](https://openreview.net/forum?id=SylKoo0cKm)  
+- [Original Paper](https://arxiv.org/abs/1805.12233)  
 - [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/pdf/1807.09946.pdf)  
 
 ### Neuron Gradient
