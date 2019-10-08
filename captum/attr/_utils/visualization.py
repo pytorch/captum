@@ -4,13 +4,16 @@ from enum import Enum
 import numpy as np
 import warnings
 
-from IPython.core.display import display, HTML
-
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+try:
+    from IPython.core.display import display, HTML
+    imported_ipython = True
+except:
+    imported_ipython = False
 
 class ImageVisualizationMethod(Enum):
     heat_map = 1
@@ -486,6 +489,7 @@ def format_word_importances(words, importances):
 
 
 def visualize_text(datarecords: VisualizationDataRecord):
+    assert imported_ipython, "IPython must be available to visualize text."
     dom = ["<table width: 100%>"]
     rows = [
         "<tr><th>Target Label</th>"
