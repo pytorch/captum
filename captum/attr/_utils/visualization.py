@@ -11,9 +11,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 try:
     from IPython.core.display import display, HTML
+
     imported_ipython = True
-except:
+except ImportError:
     imported_ipython = False
+
 
 class ImageVisualizationMethod(Enum):
     heat_map = 1
