@@ -11,6 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 try:
     from IPython.core.display import display, HTML
+
     HAS_IPYTHON = True
 except ImportError:
     HAS_IPYTHON = False
@@ -490,8 +491,10 @@ def format_word_importances(words, importances):
 
 
 def visualize_text(datarecords: VisualizationDataRecord):
-    assert HAS_IPYTHON, ("IPython must be available to visualize text. "
-    "Please run 'pip install ipython'.")
+    assert HAS_IPYTHON, (
+        "IPython must be available to visualize text. "
+        "Please run 'pip install ipython'."
+    )
     dom = ["<table width: 100%>"]
     rows = [
         "<tr><th>Target Label</th>"
