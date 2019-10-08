@@ -72,12 +72,6 @@ class TutorialHome extends React.Component {
                 The tutorial finishes with a demonstration of how to use GradientShap.
                 Find the tutorial <a href="Resnet_TorchVision_Interpret">here</a>.
 
-                <h4>Interpreting vision with CIFAR:</h4>
-                This tutorial demonstrates how to use Captum for interpreting vision focused models.
-                First we create and train (or use a pre-trained) a simple CNN model on the CIFAR dataset.
-                We then interpret the output of an example with a series of overlays using Integrated Gradients and DeepLIFT.
-                Find the tutorial <a href="CIFAR_TorchVision_Interpret">here</a>.
-
                 <h4>Interpreting multimodal models:</h4>
                 To demonstrate interpreting multimodal models we have chosen to look at an open source Visual Question Answer (VQA) model.
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
