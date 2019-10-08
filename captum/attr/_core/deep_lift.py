@@ -413,8 +413,8 @@ class DeepLiftShap(DeepLift):
                         meaning that the number of elements in returned delta tensor
                         is equal to the
                         `number of examples in input` * `number of examples
-                        in baseline`.
-
+                        in baseline`. The deltas are ordered in the first place by
+                        input example, followed by the baseline.
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,

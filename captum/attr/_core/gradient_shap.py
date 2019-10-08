@@ -137,7 +137,9 @@ class GradientShap(GradientAttribution):
                         Delta is calculated for each example in the input after adding
                         `n_samples` times gaussian noise to each of them. Therefore,
                         the dimensionality of the deltas tensor is equal to the
-                        `n_samples` * `number of examples in the input`
+                        `number of examples in the input` * `n_samples`
+                        The deltas are ordered by each input example and `n_samples`
+                        noisy samples generated for it.
 
             Examples::
 
