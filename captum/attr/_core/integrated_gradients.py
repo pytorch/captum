@@ -34,6 +34,7 @@ class IntegratedGradients(GradientAttribution):
         n_steps=50,
         method="gausslegendre",
         internal_batch_size=None,
+        return_convergence_delta=False,
     ):
         r"""
             Approximates the integral of gradients along the path from a baseline input
@@ -51,7 +52,7 @@ class IntegratedGradients(GradientAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 baselines (tensor or tuple of tensors, optional):  Baseline define
                             the starting point from which integral is computed.
@@ -60,7 +61,7 @@ class IntegratedGradients(GradientAttribution):
                             If inputs is a tuple of tensors, baselines must also be
                             a tuple of tensors, with matching dimensions to inputs.
                             Default: zero tensor for each input tensor
-                target (int, tuple, tensor or list, optional):  Output indicies for
+                target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -118,7 +119,11 @@ class IntegratedGradients(GradientAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
-
+                return_convergence_delta (bool, optional): Indicates whether to return
+                            convergence delta or not. If `return_convergence_delta`
+                            is set to True convergence delta will be returned in
+                            a tuple following attributions.
+                            Default: False
             Return:
 
                 attributions (tensor or tuple of tensors): Integrated gradients with
@@ -128,11 +133,14 @@ class IntegratedGradients(GradientAttribution):
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float): The difference between the total approximated and
-                            true integrated gradients.
+                delta (tensor, optional): The difference between the total approximated
+                            and true integrated gradients.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the integrated gradient.
+                            Delta is calculated per example, meaning that the number of
+                            elements in returned delta tensor is equal to the number of
+                            of examples in inputs.
 
             Examples::
 
@@ -142,7 +150,7 @@ class IntegratedGradients(GradientAttribution):
                 >>> ig = IntegratedGradients(net)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
                 >>> # Computes integrated gradients for class 3.
-                >>> attribution, delta = ig.attribute(input, target=3)
+                >>> attribution = ig.attribute(input, target=3)
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
@@ -213,19 +221,18 @@ class IntegratedGradients(GradientAttribution):
             total_grad * (input - baseline)
             for total_grad, input, baseline in zip(total_grads, inputs, baselines)
         )
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            # computes approximation error based on the completeness axiom
+            delta = self.compute_convergence_delta(
+                attributions,
+                start_point,
+                end_point,
+                additional_forward_args=additional_forward_args,
+                target=target,
+            )
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        return _format_attributions(is_inputs_tuple, attributions)
 
-        start_point, end_point = baselines, inputs
-
-        # computes approximation error based on the completeness axiom
-        delta = self._compute_convergence_delta(
-            attributions,
-            start_point,
-            end_point,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
-
-        return _format_attributions(is_inputs_tuple, attributions), delta
-
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True

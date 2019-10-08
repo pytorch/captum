@@ -35,9 +35,9 @@ class Saliency(GradientAttribution):
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples (aka batch size), and if
-                            mutliple input tensors are provided, the examples must
+                            multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                target (int, tuple, tensor or list, optional):  Output indicies for
+                target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,

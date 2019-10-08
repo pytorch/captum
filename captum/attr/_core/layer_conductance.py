@@ -35,7 +35,7 @@ class LayerConductance(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True
 
     def attribute(
@@ -47,6 +47,7 @@ class LayerConductance(LayerAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         internal_batch_size=None,
+        return_convergence_delta=False,
     ):
         r"""
             Computes conductance with respect to the given layer. The
@@ -70,7 +71,7 @@ class LayerConductance(LayerAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 baselines (tensor or tuple of tensors, optional):  Baseline from which
                             integral is computed. If inputs is a single tensor,
@@ -79,7 +80,7 @@ class LayerConductance(LayerAttribution):
                             baselines must also be a tuple of tensors, with matching
                             dimensions to inputs.
                             Default: zero tensor for each input tensor
-                target (int, tuple, tensor or list, optional):  Output indicies for
+                target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
@@ -137,17 +138,25 @@ class LayerConductance(LayerAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
+                return_convergence_delta (bool, optional): Indicates whether to return
+                            convergence delta or not. If `return_convergence_delta`
+                            is set to True convergence delta will be returned in
+                            a tuple following attributions.
+                            Default: False
 
             Return
 
                 attributions (tensor): Conductance of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                delta (float): The difference between the total approximated and
-                            true conductance.
+                delta (tensor, optional): The difference between the total
+                            approximated and true conductance.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal
                             the total sum of the attributions.
+                            Delta is calculated per example, meaning that the number of
+                            elements in returned delta tensor is equal to the number of
+                            of examples in inputs.
 
             Examples::
 
@@ -221,15 +230,14 @@ class LayerConductance(LayerAttribution):
             num_examples,
             layer_eval.shape[1:],
         )
-
-        start_point, end_point = baselines, inputs
-
-        delta = self._compute_convergence_delta(
-            (attributions,),
-            start_point,
-            end_point,
-            target=target,
-            additional_forward_args=additional_forward_args,
-        )
-
-        return attributions, delta
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            delta = self.compute_convergence_delta(
+                (attributions,),
+                start_point,
+                end_point,
+                target=target,
+                additional_forward_args=additional_forward_args,
+            )
+            return attributions, delta
+        return attributions
