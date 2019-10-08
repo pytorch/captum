@@ -26,7 +26,7 @@ class Attribution:
 
             inputs (tensor or tuple of tensors):  Input for which attribution
                         is computed. It can be provided as a single tensor or
-                        a tuple of multiple tensors. If mutliple input tensors
+                        a tuple of multiple tensors. If multiple input tensors
                         are provided, the batch sizes must be aligned accross all
                         tensors.
             **kwargs (Any, optional): Arbitrary keyword arguments used by specific
@@ -49,8 +49,9 @@ class Attribution:
         r"""
         This method informs the user whether the attribution algorithm provides
         a convergence delta (aka an approximation error) or not. Convergence
-        delta may serve as a proxy of trust in an attribution algorithm. If deriving
-        attribution class provides a `compute_convergence_delta` method, it should
+        delta may serve as a proxy of correctness of attribution algorithm's
+        approximation. If deriving attribution class provides a
+        `compute_convergence_delta` method, it should
         override both `compute_convergence_delta` and `has_convergence_delta` methods.
 
         Returns:
@@ -75,7 +76,7 @@ class Attribution:
                             Attributions can be provided in form of a single tensor
                             or a tuple of those. It is assumed that attribution
                             tensor's dimension 0 corresponds to the number of
-                            examples, and if mutliple input tensors are provided,
+                            examples, and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
                 *args (optional): Additonal arguments that are used by the
                             sub-classes depending on the specific implementation
@@ -128,11 +129,12 @@ class GradientAttribution(Attribution):
         axiom states that the sum of the attribution must be equal to the differences of
         NN Models's function at its end and start points. In other words:
         sum(attributions) - (F(end_point) - F(start_point)) is close to zero.
+        Returned delta of this method is defined as above stated difference.
 
         This implementation assumes that both the `start_point` and `end_point` have
         the same shape and dimensionality. It also assumes that the target must have
         the same number of examples as the `start_point` and the `end_point` in case
-        it is provided in form of a list or a tensor.
+        it is provided in form of a list or a non-singleton tensor.
         Args:
                 attributions (tensor or tuple of tensors): Precomputed attribution
                             scores. The user can compute those using any attribution
@@ -141,7 +143,7 @@ class GradientAttribution(Attribution):
                             the dimensionality of `start_point` and `end_point`.
                             It also assumes that the attribution tensor's
                             dimension 0 corresponds to the number of
-                            examples, and if mutliple input tensors are provided,
+                            examples, and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
                 start_point (tensor or tuple of tensors, optional): `start_point`
                             is passed as an input to model's forward function. It

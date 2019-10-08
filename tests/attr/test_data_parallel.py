@@ -297,7 +297,7 @@ class Test(BaseGPUTest):
         else:
             attr_orig = algorithm(model)
             attr_dp = algorithm(dp_model)
-        contains_delta = attr_orig.has_convergence_delta()
+
         batch_sizes = [None]
         if test_batches:
             batch_sizes = [None, 1, 8]
@@ -314,9 +314,7 @@ class Test(BaseGPUTest):
                 )
             else:
                 attributions_dp = attr_dp.attribute(**kwargs)
-            if contains_delta:
-                attributions_orig = attributions_orig
-                attributions_dp = attributions_dp
+
             if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
                     torch.sum(torch.abs(attributions_orig - attributions_dp)),

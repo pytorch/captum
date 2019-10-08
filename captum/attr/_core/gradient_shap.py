@@ -23,7 +23,7 @@ class GradientShap(GradientAttribution):
         self,
         inputs,
         baselines,
-        n_samples=50,
+        n_samples=5,
         stdevs=0.0,
         target=None,
         additional_forward_args=None,
@@ -69,7 +69,7 @@ class GradientShap(GradientAttribution):
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
-                        to the number of examples, and if mutliple input tensors
+                        to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
             baselines (tensor or tuple of tensors, optional):  Baselines define
                         the starting point from which expectation is computed.
@@ -97,6 +97,7 @@ class GradientShap(GradientAttribution):
                         tuple. In this case, each stdev value in the stdevs tuple
                         corresponds to the input with the same index in the inputs
                         tuple.
+                        Default: 0.0
             target (int, optional):  Output index for which gradient is computed
                         (for classification cases, this is the target class).
                         If the network returns a scalar value per example,
@@ -117,7 +118,7 @@ class GradientShap(GradientAttribution):
             return_convergence_delta (bool, optional): Indicates whether to return
                         convergence delta or not. If `return_convergence_delta`
                         is set to True convergence delta will be returned in
-                        a tuple followed by attributions.
+                        a tuple following attributions.
                         Default: False
         Returns:
 
@@ -131,7 +132,7 @@ class GradientShap(GradientAttribution):
                         corresponding sized tensors is returned.
             delta (tensor, optional): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
-                        must be very colse to the total sum of the attributions
+                        must be very close to the total sum of the attributions
                         based on GradientSHAP.
                         Delta is calculated for each example in the input after adding
                         `n_samples` times gaussian noise to each of them. Therefore,

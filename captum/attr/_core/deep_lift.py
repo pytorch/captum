@@ -89,7 +89,7 @@ class DeepLift(GradientAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             baselines (tensor or tuple of tensors, optional): Baselines define
                         reference samples which are compared with the inputs.
@@ -120,7 +120,7 @@ class DeepLift(GradientAttribution):
             return_convergence_delta (bool, optional): Indicates whether to return
                         convergence delta or not. If `return_convergence_delta`
                         is set to True convergence delta will be returned in
-                        a tuple followed by attributions.
+                        a tuple following attributions.
                         Default: False
 
         Returns:
@@ -356,7 +356,7 @@ class DeepLiftShap(DeepLift):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             baselines (tensor or tuple of tensors, optional): Baselines define
                         reference samples which are compared with the inputs.
@@ -391,7 +391,7 @@ class DeepLiftShap(DeepLift):
             return_convergence_delta (bool, optional): Indicates whether to return
                         convergence delta or not. If `return_convergence_delta`
                         is set to True convergence delta will be returned in
-                        a tuple followed by attributions.
+                        a tuple following attributions.
                         Default: False
 
         Returns:

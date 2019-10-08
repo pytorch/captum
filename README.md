@@ -181,19 +181,19 @@ IG Attributions:  tensor([[0.0628, 0.1314, 0.0747],
 Convergence Delta: tensor([0., 0.])
 ```
 The algorithm outputs an attribution score for each input element and a
-convergence delta that we would like to minimize. If we choose not to return
-delta, we can simply not provide `return_convergence_delta` input argument.
-The absolute value of the returned deltas can be interpreted as an approximation error
-for each input sample.
-It can also serve as a proxy of how much we can trust the attribution scores
-assigned by an attribution algorithm.
+convergence delta whose absolute value we would like to minimize. If we choose
+not to return delta, we can simply not provide `return_convergence_delta` input
+argument. The absolute value of the returned deltas can be interpreted as an
+approximation error for each input sample.
+It can also serve as a proxy of how accurate the integral approximation for given
+inputs and baselines is.
 If the approximation error is large, we can try larger number of integral
 approximation steps by setting `n_steps` to a larger value. Not all algorithms
 return approximation error. Those which do, though, compute it based on the
 completeness property of the algorithms.
 
-Positive attribution score means that the input in that particular position positively
-contributed to the final prediction and negative means the opposite.
+Positive attribution score means that the input in that particular position
+positively contributed to the final prediction and negative means the opposite.
 The magnitude of the attribution score signifies the strength of the contribution.
 Zero attribution score means no contribution from that particular feature.
 
@@ -254,8 +254,8 @@ DeepLift's original paper linked below.
 
 Similar to integrated gradients, DeepLift returns a convergence delta score
 per input example. The approximation error is then the absolute
-value of the convergence deltas and can serve as a proxy of trust for attribution
-algorithms.
+value of the convergence deltas and can serve as a proxy of how accurate the
+algorithm's approximation is.
 
 Now let's look into `DeepLiftShap`. Similar to `GradientShap`, `DeepLiftShap` uses
 baseline distribution. In the example below, we use the same baseline distribution
@@ -357,8 +357,8 @@ Convergence Delta:  tensor([-0.0735, -0.0589])
 
 Similar to other attribution algorithms that return convergence delta, LayerConductance
 returns the deltas for each example. The approximation error is then the absolute
-value of the convergence deltas and can serve as a proxy of trust for attribution
-algorithms.
+value of the convergence deltas and can serve as a proxy of how accurate integral
+approximation for given inputs and baselines is.
 
 More details on the list of supported algorithms and how to apply
 Captum on different types of models can be found in our tutorials.

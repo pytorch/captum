@@ -14,18 +14,13 @@ class ExpansionTypes(Enum):
 
 
 def validate_target(num_samples, target):
-    if isinstance(target, list):
+    if isinstance(target, list) or (
+        isinstance(target, torch.Tensor) and torch.numel(target) > 1
+    ):
         assert num_samples == len(target), (
             "The number of samples provied in the"
             "input {} does not match with the number of targets. {}".format(
                 num_samples, len(target)
-            )
-        )
-    if isinstance(target, torch.Tensor) and torch.numel(target) > 1:
-        assert num_samples == len(target), (
-            "The number of samples provied in the"
-            "input {} does not match with the number of targets. {}".format(
-                num_samples, target.shape[0]
             )
         )
 

@@ -56,7 +56,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 neuron_index (int or tuple): Index of neuron in output of given
                               layer for which attribution is desired. Length of
