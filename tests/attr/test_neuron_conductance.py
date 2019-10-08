@@ -133,7 +133,7 @@ class Test(BaseTest):
         self, model, target_layer, test_input, test_baseline=None
     ):
         layer_cond = LayerConductance(model, target_layer)
-        attributions, delta = layer_cond.attribute(
+        attributions = layer_cond.attribute(
             test_input,
             baselines=test_baseline,
             target=0,

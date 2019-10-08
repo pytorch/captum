@@ -5,7 +5,11 @@ import torch
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
-from .helpers.utils import assertAttributionComparision, BaseTest
+from .helpers.utils import (
+    assertAttributionComparision,
+    assertArraysAlmostEqual,
+    BaseTest,
+)
 from .helpers.basic_models import ReLUDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
@@ -78,21 +82,44 @@ class Test(BaseTest):
         self._deeplift_helper(model, DeepLift(model), inputs, baselines)
 
     def _deeplift_helper(self, model, attr_method, inputs, baselines):
+        input_bsz = inputs[0].shape[0]
+        baseline_bsz = baselines[0].shape[0]
         # Run attribution multiple times to make sure that it is working as
         # expected
         for _ in range(5):
             model.zero_grad()
-            attributions, delta = attr_method.attribute(inputs, baselines)
+            attributions, delta = attr_method.attribute(
+                inputs, baselines, return_convergence_delta=True
+            )
+            attributions_without_delta = attr_method.attribute(inputs, baselines)
 
+            for attribution, attribution_without_delta in zip(
+                attributions, attributions_without_delta
+            ):
+                self.assertTrue(
+                    torch.all(torch.eq(attribution, attribution_without_delta))
+                )
+
+            if isinstance(attr_method, DeepLiftShap):
+                self.assertEqual([input_bsz * baseline_bsz], list(delta.shape))
+            else:
+                self.assertEqual([input_bsz], list(delta.shape))
+                delta_external = attr_method.compute_convergence_delta(
+                    attributions, baselines, inputs
+                )
+                assertArraysAlmostEqual(delta, delta_external, 0.0)
+
+            delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
             self.assertTrue(
-                delta < 0.00001,
+                delta_condition,
                 "The sum of attribution values {} is not "
-                "nearly equal to the difference between the endpoint".format(delta),
+                "nearly equal to the difference between the endpoint for "
+                "some samples".format(delta),
             )
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(input.shape, attribution.shape)
             if inputs[0].shape == baselines[0].shape:
                 # Compare with Integrated Gradients
                 ig = IntegratedGradients(model)
-                attributions_ig, delta_ig = ig.attribute(inputs, baselines)
+                attributions_ig = ig.attribute(inputs, baselines)
                 assertAttributionComparision(self, attributions, attributions_ig)
