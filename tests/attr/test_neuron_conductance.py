@@ -7,33 +7,33 @@ from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.neuron_conductance import NeuronConductance
 
 from .helpers.basic_models import (
-    TestModel_ConvNet,
-    TestModel_MultiLayer,
-    TestModel_MultiLayer_MultiInput,
+    BasicModel_ConvNet,
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
 )
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
     def test_simple_conductance_input_linear2(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._conductance_input_test_assert(
             net, net.linear2, inp, (0,), [0.0, 390.0, 0.0]
         )
 
     def test_simple_conductance_input_linear1(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_input_test_assert(net, net.linear1, inp, 0, [0.0, 90.0, 0.0])
 
     def test_simple_conductance_input_relu(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 70.0, 30.0]], requires_grad=True)
         self._conductance_input_test_assert(net, net.relu, inp, (3,), [0.0, 70.0, 30.0])
 
     def test_simple_conductance_multi_input_linear2(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 0.0]])
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
@@ -47,7 +47,7 @@ class Test(BaseTest):
         )
 
     def test_simple_conductance_multi_input_relu(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
@@ -61,7 +61,7 @@ class Test(BaseTest):
         )
 
     def test_simple_conductance_multi_input_batch_relu(self):
-        net = TestModel_MultiLayer_MultiInput()
+        net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 5.0]])
@@ -78,18 +78,18 @@ class Test(BaseTest):
         )
 
     def test_matching_conv2_multi_input_conductance(self):
-        net = TestModel_ConvNet()
+        net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10)
         self._conductance_input_sum_test_assert(net, net.conv2, inp)
 
     def test_matching_relu2_multi_input_conductance(self):
-        net = TestModel_ConvNet()
+        net = BasicModel_ConvNet()
         inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.relu2, inp, baseline)
 
     def test_matching_pool2_multi_input_conductance(self):
-        net = TestModel_ConvNet()
+        net = BasicModel_ConvNet()
         inp = 100 * torch.randn(1, 1, 10, 10)
         baseline = 20 * torch.randn(1, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.pool2, inp, baseline)
@@ -133,7 +133,7 @@ class Test(BaseTest):
         self, model, target_layer, test_input, test_baseline=None
     ):
         layer_cond = LayerConductance(model, target_layer)
-        attributions, delta = layer_cond.attribute(
+        attributions = layer_cond.attribute(
             test_input,
             baselines=test_baseline,
             target=0,

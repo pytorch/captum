@@ -9,12 +9,15 @@
     },
     {
       "id": "CIFAR_TorchVision_Interpret",
-      "title": "Intepreting vision models"
+      "title": "Intepreting vision with CIFAR"
+    },
+    {
+      "id": "Resnet_TorchVision_Interpret",
+      "title": "Interpreting vision with Resnet"
     },
     {
       "id": "Multimodal_VQA_Interpret",
       "title": "Intepreting multimodal models"
     }
-
   ]
 }

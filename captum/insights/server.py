@@ -36,6 +36,11 @@ def fetch():
     return jsonify(clean_output)
 
 
+@app.route("/init")
+def init():
+    return jsonify(visualizer.classes)
+
+
 @app.route("/")
 def index(id=0):
     return render_template("index.html")

@@ -32,11 +32,11 @@ class NoiseTunnel(Attribution):
     def __init__(self, attribution_method):
         r"""
         attribution_method (Attribution): An instance of any attribution algorithm
-            of type `Attribution`. E.g. Integrated Gradients, Conductance or
-            Saliency.
+                    of type `Attribution`. E.g. Integrated Gradients,
+                    Conductance or Saliency.
         """
         self.attribution_method = attribution_method
-        self.is_delta_supported = self.attribution_method._has_convergence_delta()
+        self.is_delta_supported = self.attribution_method.has_convergence_delta()
 
         super().__init__()
 
@@ -140,8 +140,8 @@ class NoiseTunnel(Attribution):
                 >>> # Computes integrated gradients for class 3 for each generated
                 >>> # input and averages attributions accros all 10
                 >>> # perturbed inputs per image
-                >>> attribution, delta = nt.attribute(input, nt_type='smoothgrad',
-                >>>                                   n_samples=10, target=3)
+                >>> attribution = nt.attribute(input, nt_type='smoothgrad',
+                >>>                            n_samples=10, target=3)
         """
 
         def add_noise_to_inputs():
@@ -176,6 +176,8 @@ class NoiseTunnel(Attribution):
 
             # draws `np.prod(input_expanded_size)` samples from normal distribution
             # with given input parametrization
+            # FIXME it look like it is very difficult to make torch.normal
+            # deterministic this needs an investigation
             noise = torch.normal(0, stdev_expanded)
             return input.repeat_interleave(n_samples, dim=0) + noise
 
@@ -262,8 +264,14 @@ class NoiseTunnel(Attribution):
         expand_and_update_target()
         # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
         attributions = self.attribution_method.attribute(inputs_with_noise, **kwargs)
-        if self.is_delta_supported:
+
+        return_convergence_delta = (
+            "return_convergence_delta" in kwargs and kwargs["return_convergence_delta"]
+        )
+
+        if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
+
         expected_attributions = []
         expected_attributions_sq = []
         for attribution in attributions:
@@ -275,12 +283,18 @@ class NoiseTunnel(Attribution):
 
         if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad:
             return self._apply_checks_and_return_attributions(
-                tuple(expected_attributions), is_inputs_tuple, delta
+                tuple(expected_attributions),
+                is_inputs_tuple,
+                return_convergence_delta,
+                delta,
             )
 
         if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad_sq:
             return self._apply_checks_and_return_attributions(
-                tuple(expected_attributions_sq), is_inputs_tuple, delta
+                tuple(expected_attributions_sq),
+                is_inputs_tuple,
+                return_convergence_delta,
+                delta,
             )
 
         vargrad = tuple(
@@ -291,15 +305,19 @@ class NoiseTunnel(Attribution):
         )
 
         return self._apply_checks_and_return_attributions(
-            vargrad, is_inputs_tuple, delta
+            vargrad, is_inputs_tuple, return_convergence_delta, delta
         )
 
     def _apply_checks_and_return_attributions(
-        self, attributions, is_inputs_tuple, delta
+        self, attributions, is_inputs_tuple, return_convergence_delta, delta
     ):
         attributions = _format_attributions(is_inputs_tuple, attributions)
 
-        return (attributions, delta) if self.is_delta_supported else attributions
+        return (
+            (attributions, delta)
+            if self.is_delta_supported and return_convergence_delta
+            else attributions
+        )
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return self.is_delta_supported

@@ -170,7 +170,7 @@ class BasicEmbeddingModel(nn.Module):
         return self.linear2(self.relu(self.linear1(embeddings))).squeeze(1)
 
 
-class TestModel_MultiLayer(nn.Module):
+class BasicModel_MultiLayer(nn.Module):
     def __init__(self):
         super().__init__()
         # Linear 0 is simply identity transform
@@ -198,10 +198,10 @@ class TestModel_MultiLayer(nn.Module):
             return lin2_out
 
 
-class TestModel_MultiLayer_MultiInput(nn.Module):
+class BasicModel_MultiLayer_MultiInput(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = TestModel_MultiLayer()
+        self.model = BasicModel_MultiLayer()
 
     def forward(self, x1, x2, x3, scale):
         return self.model(scale * (x1 + x2 + x3))
@@ -229,7 +229,7 @@ class BasicModel_SmallConvNet(nn.Module):
         return self.relu2(self.fc1(x))
 
 
-class TestModel_ConvNet(nn.Module):
+class BasicModel_ConvNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
@@ -257,7 +257,7 @@ class TestModel_ConvNet(nn.Module):
         return self.softmax(x)
 
 
-class TestModel_ConvNet_MaxPool1d(nn.Module):
+class BasicModel_ConvNet_MaxPool1d(nn.Module):
     """Same as above, but with the MaxPool2d replaced
     with a MaxPool1d. This is useful because the MaxPool modules
     behave differently to other modules from the perspective
@@ -291,7 +291,7 @@ class TestModel_ConvNet_MaxPool1d(nn.Module):
         return self.softmax(x)
 
 
-class TestModel_ConvNet_MaxPool3d(nn.Module):
+class BasicModel_ConvNet_MaxPool3d(nn.Module):
     """Same as above, but with the MaxPool1d replaced
     with a MaxPool3d. This is useful because the MaxPool modules
     behave differently to other modules from the perspective

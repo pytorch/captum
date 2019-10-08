@@ -65,7 +65,7 @@ class InternalInfluence(LayerAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 baselines (tensor or tuple of tensors, optional):  Baseline from which
                             integral is computed. If inputs is a single tensor,

@@ -8,9 +8,9 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
 from .helpers.classification_models import SoftmaxDeepLiftModel
-from .helpers.basic_models import TestModel_ConvNet
-from .helpers.basic_models import TestModel_ConvNet_MaxPool1d
-from .helpers.basic_models import TestModel_ConvNet_MaxPool3d
+from .helpers.basic_models import BasicModel_ConvNet
+from .helpers.basic_models import BasicModel_ConvNet_MaxPool1d
+from .helpers.basic_models import BasicModel_ConvNet_MaxPool3d
 
 
 class Test(BaseTest):
@@ -23,12 +23,14 @@ class Test(BaseTest):
         model = SigmoidDeepLiftModel(num_in, 5, 1)
         dl = DeepLift(model)
         model.zero_grad()
-        attributions, delta = dl.attribute(input, baseline, target=target)
+        attributions, delta = dl.attribute(
+            input, baseline, target=target, return_convergence_delta=True
+        )
         self._assert_attributions(model, attributions, input, baseline, delta, target)
 
         # compare with integrated gradients
         ig = IntegratedGradients(model)
-        attributions_ig, delta_ig = ig.attribute(input, baseline, target=target)
+        attributions_ig = ig.attribute(input, baseline, target=target)
         assertAttributionComparision(self, (attributions,), (attributions_ig,))
 
     def test_softmax_classification_zero_baseline(self):
@@ -75,7 +77,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10, 10)
 
-        model = TestModel_ConvNet_MaxPool3d()
+        model = BasicModel_ConvNet_MaxPool3d()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
@@ -84,7 +86,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10)
 
-        model = TestModel_ConvNet()
+        model = BasicModel_ConvNet()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
@@ -93,7 +95,7 @@ class Test(BaseTest):
         input = 100 * torch.randn(2, 1, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10)
 
-        model = TestModel_ConvNet_MaxPool1d()
+        model = BasicModel_ConvNet_MaxPool1d()
         dl = DeepLift(model)
 
         self.softmax_classification(model, dl, input, baseline)
@@ -103,13 +105,13 @@ class Test(BaseTest):
         # TODO add test cases for multiple different layers
         model.zero_grad()
         attributions, delta = attr_method.attribute(
-            input, baselines=baselines, target=target
+            input, baselines=baselines, target=target, return_convergence_delta=True
         )
         self._assert_attributions(model, attributions, input, baselines, delta, target)
 
         target2 = torch.tensor(1)
         attributions, delta = attr_method.attribute(
-            input, baselines=baselines, target=target2
+            input, baselines=baselines, target=target2, return_convergence_delta=True
         )
 
         self._assert_attributions(model, attributions, input, baselines, delta, target2)
@@ -118,15 +120,16 @@ class Test(BaseTest):
         self, model, attributions, inputs, baselines, delta, target=None
     ):
         self.assertEqual(inputs.shape, attributions.shape)
+
+        delta_condition = all(abs(delta.numpy().flatten()) < 0.003)
         self.assertTrue(
-            delta < 0.02,
-            "The sum of attribution values: {} is not "
-            "nearly equal to the difference between the endpoint".format(delta),
+            delta_condition,
+            "The sum of attribution values {} is not "
+            "nearly equal to the difference between the endpoint for "
+            "some samples".format(delta),
         )
         # compare with integrated gradients
         if inputs.shape == baselines.shape:
             ig = IntegratedGradients(model)
-            attributions_ig, delta_ig = ig.attribute(
-                inputs, baselines=baselines, target=target
-            )
+            attributions_ig = ig.attribute(inputs, baselines=baselines, target=target)
             assertAttributionComparision(self, attributions, attributions_ig)

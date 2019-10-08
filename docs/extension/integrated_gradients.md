@@ -212,10 +212,10 @@ Besides approximation type the user can also specify the number of approximation
 steps using `n_steps` input argument. The latter can be used to find a tradeoff
 between approximation speed and the accuracy.
 
-### More details on how to apply integrated gradients on larger DNN networks can be found here
+#### More details on how to apply integrated gradients on larger DNN networks can be found here
 
-* [A simple classification model and CIFAR Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/CIFAR_TorchVision_Interpret.ipynb)
-* [Torchvision's ResNet18 Model using handpicked images] (TODO add link here)
-* [Sentiment classification model using TorchText and IMDB Dataset] (https://github.com/pytorch/captum/blob/master/tutorials/IMDB_TorchText_Interpret.ipynb)
-* [Visual Question Answering Model] (https://github.com/pytorch/captum/blob/master/tutorials/Multimodal_VQA_Interpret.ipynb)
-* [A simple DNN with 2 hidden layers and Titanic Dataset] (https://github.com/pytorch/captum/blob/master/notebooks/Titanic_Basic_Interpret.ipynb)
+* [A simple classification model and CIFAR Dataset](/tutorials/CIFAR_TorchVision_Interpret)
+* [Torchvision's ResNet18 Model using handpicked images](/tutorials/Resnet_TorchVision_Interpret)
+* [Sentiment classification model using TorchText and IMDB Dataset](/tutorials/IMDB_TorchText_Interpret)
+* [Visual Question Answering Model](/tutorials/Multimodal_VQA_Interpret)
+* [A simple DNN with 2 hidden layers and Titanic Dataset](/tutorials/Titanic_Basic_Interpret)

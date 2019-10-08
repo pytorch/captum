@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-import numpy as np
 
 from enum import Enum
 
@@ -14,15 +13,18 @@ class ExpansionTypes(Enum):
     repeat_interleave = 2
 
 
-def random_baseline(input, start, end):
-    return torch.tensor(
-        start + end * np.random.random(input.shape),
-        dtype=input.dtype,
-        device=input.device,
-    )
+def validate_target(num_samples, target):
+    if isinstance(target, list) or (
+        isinstance(target, torch.Tensor) and torch.numel(target) > 1
+    ):
+        assert num_samples == len(target), (
+            "The number of samples provied in the"
+            "input {} does not match with the number of targets. {}".format(
+                num_samples, len(target)
+            )
+        )
 
 
-# TODO rename maybe to validate_ig_input
 def validate_input(
     inputs,
     baselines,
@@ -91,7 +93,7 @@ def _format_additional_forward_args(additional_forward_args):
 
 def format_baseline(baselines, inputs):
     if baselines is None:
-        baselines = zeros(inputs)
+        baselines = _zeros(inputs)
 
     if not isinstance(baselines, tuple):
         baselines = (baselines,)
@@ -119,7 +121,7 @@ def _format_attributions(is_inputs_tuple, attributions):
     return attributions if is_inputs_tuple else attributions[0]
 
 
-def zeros(inputs):
+def _zeros(inputs):
     r"""
     Takes a tuple of tensors as input and returns a tuple that has the same
     size as the `inputs` which contains zero tensors of the same
