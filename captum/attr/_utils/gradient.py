@@ -85,7 +85,7 @@ def compute_gradients(
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
-            "take gradient with respect to multiple outputs."
+            " take gradient with respect to multiple outputs."
         )
         # torch.unbind(forward_out) is a list of scalar tensor tuples and
         # contains batch_size * #steps elements
@@ -264,8 +264,10 @@ def compute_layer_gradients_and_eval(
 
         hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert output[0].numel() == 1, "Target not provided when necessary, cannot"
-        "take gradient with respect to multiple outputs."
+        assert output[0].numel() == 1, (
+            "Target not provided when necessary, cannot"
+            " take gradient with respect to multiple outputs."
+        )
         # Remove unnecessary forward hook.
         hook.remove()
 

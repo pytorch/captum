@@ -111,10 +111,8 @@ class AttributionVisualizer(object):
     ) -> List[OutputScore]:
         pred_scores = []
         for i in range(len(indices)):
-            score = scores[i].item()
-            pred_scores.append(
-                OutputScore(score, indices[i].item(), self.classes[indices[i]])
-            )
+            score = scores[i]
+            pred_scores.append(OutputScore(score, indices[i], self.classes[indices[i]]))
         return pred_scores
 
     def _transform(
@@ -249,7 +247,7 @@ class AttributionVisualizer(object):
         baselines = [tuple(b) for b in baselines]
 
         if target is None:
-            target = actual_label.index if actual_label is not None else None
+            target = predicted_scores[0].index if len(predicted_scores) > 0 else None
 
         # attributions are given per input*
         # inputs given to the model are described via `self.features`

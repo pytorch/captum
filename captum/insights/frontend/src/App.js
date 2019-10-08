@@ -370,7 +370,7 @@ class Visualization extends React.Component {
           <div className="panel__column">
             <div className="panel__column__title">Predicted</div>
             <div className="panel__column__body">
-              {data.predicted.map((p, i) => (
+              {data.predicted.map(p => (
                 <div className="row row--padding">
                   <LabelButton
                     onTargetClick={this.onTargetClick}
@@ -464,10 +464,8 @@ class App extends React.Component {
 
   _fetchInit = () => {
     fetch("/init")
-      .then(response => response.json())
-      .then(response => {
-        this.setState({ config: response });
-      });
+      .then(r => r.json())
+      .then(r => this.setState({ config: r }));
   };
 
   fetchData = filter_config => {
