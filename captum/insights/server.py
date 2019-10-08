@@ -4,6 +4,7 @@ import threading
 from time import sleep
 from typing import Optional
 
+from torch import Tensor
 from flask import Flask, jsonify, render_template, request
 
 app = Flask(
@@ -14,6 +15,8 @@ port = None
 
 
 def namedtuple_to_dict(obj):
+    if isinstance(obj, Tensor):
+        return obj.item()
     if hasattr(obj, "_asdict"):  # detect namedtuple
         return dict(zip(obj._fields, (namedtuple_to_dict(item) for item in obj)))
     elif isinstance(obj, str):  # iterables - strings
@@ -26,6 +29,16 @@ def namedtuple_to_dict(obj):
         return type(obj)((namedtuple_to_dict(item) for item in obj))
     else:  # non-iterable cannot contain namedtuples
         return obj
+
+
+@app.route("/attribute", methods=["POST"])
+def attribute():
+    r = request.json
+    return jsonify(
+        namedtuple_to_dict(
+            visualizer._calculate_attribution_from_cache(r["instance"], r["labelIndex"])
+        )
+    )
 
 
 @app.route("/fetch", methods=["POST"])
