@@ -13,7 +13,18 @@ class ExpansionTypes(Enum):
     repeat_interleave = 2
 
 
-# TODO rename maybe to validate_ig_input
+def validate_target(num_samples, target):
+    if isinstance(target, list) or (
+        isinstance(target, torch.Tensor) and torch.numel(target) > 1
+    ):
+        assert num_samples == len(target), (
+            "The number of samples provied in the"
+            "input {} does not match with the number of targets. {}".format(
+                num_samples, len(target)
+            )
+        )
+
+
 def validate_input(
     inputs,
     baselines,

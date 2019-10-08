@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import _run_forward
+from .common import (
+    _run_forward,
+    _format_input_baseline,
+    _format_tensor_into_tuples,
+    validate_input,
+    validate_target,
+)
 from .gradient import compute_gradients
 
 
@@ -20,7 +26,7 @@ class Attribution:
 
             inputs (tensor or tuple of tensors):  Input for which attribution
                         is computed. It can be provided as a single tensor or
-                        a tuple of multiple tensors. If mutliple input tensors
+                        a tuple of multiple tensors. If multiple input tensors
                         are provided, the batch sizes must be aligned accross all
                         tensors.
             **kwargs (Any, optional): Arbitrary keyword arguments used by specific
@@ -37,22 +43,155 @@ class Attribution:
                         corresponding sized tensors is returned.
 
         """
-        raise NotImplementedError("A derived class should implement attribute method")
+        raise NotImplementedError("Deriving class should implement attribute method")
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
+        r"""
+        This method informs the user whether the attribution algorithm provides
+        a convergence delta (aka an approximation error) or not. Convergence
+        delta may serve as a proxy of correctness of attribution algorithm's
+        approximation. If deriving attribution class provides a
+        `compute_convergence_delta` method, it should
+        override both `compute_convergence_delta` and `has_convergence_delta` methods.
+
+        Returns:
+
+            has_convergence_delta (bool): Returns whether the attribution algorithm
+                        provides a convergence delta (aka approximation error) or not.
+
+        """
         return False
 
-    def _compute_convergence_delta(
+    def compute_convergence_delta(self, attributions, *args):
+        r"""
+        The attribution algorithms which derive `Attribution` class and provide
+        convergence delta (aka approximation error) should implement this method.
+        Convergence delta can be computed based on certain properties of the
+        attribution alogrithms.
+
+        Args:
+
+                attributions (tensor or tuple of tensors): Attribution scores that
+                            are precomputed by an attribution algorithm.
+                            Attributions can be provided in form of a single tensor
+                            or a tuple of those. It is assumed that attribution
+                            tensor's dimension 0 corresponds to the number of
+                            examples, and if multiple input tensors are provided,
+                            the examples must be aligned appropriately.
+                *args (optional): Additonal arguments that are used by the
+                            sub-classes depending on the specific implementation
+                            of `compute_convergence_delta`.
+
+        Returns:
+
+                deltas (tensor): Depending on specific implementaion of
+                            sub-classes, convergence delta can be returned per
+                            sample in form of a tensor or it can be aggregated
+                            across multuple samples and returned in form of a
+                            single floating point tensor.
+        """
+        raise NotImplementedError(
+            "Deriving sub-class should implement" " compute_convergence_delta method"
+        )
+
+
+class GradientAttribution(Attribution):
+    r"""
+    All gradient based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
+    def __init__(self, forward_func):
+        r"""
+        Args
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        super().__init__()
+        self.forward_func = forward_func
+        self.gradient_func = compute_gradients
+
+    def compute_convergence_delta(
         self,
         attributions,
         start_point,
         end_point,
         target=None,
         additional_forward_args=None,
-        delta_per_sample=False,
     ):
+        r"""
+        Here we provide a specific implementation for `compute_convergence_delta`
+        which is based on a common property among gradient-based attribution algorithms.
+        In the literature sometimes it is also called completeness axiom. Completeness
+        axiom states that the sum of the attribution must be equal to the differences of
+        NN Models's function at its end and start points. In other words:
+        sum(attributions) - (F(end_point) - F(start_point)) is close to zero.
+        Returned delta of this method is defined as above stated difference.
+
+        This implementation assumes that both the `start_point` and `end_point` have
+        the same shape and dimensionality. It also assumes that the target must have
+        the same number of examples as the `start_point` and the `end_point` in case
+        it is provided in form of a list or a non-singleton tensor.
+        Args:
+                attributions (tensor or tuple of tensors): Precomputed attribution
+                            scores. The user can compute those using any attribution
+                            algorithm. It is assumed the the shape and the
+                            dimensionality of attributions must match the shape and
+                            the dimensionality of `start_point` and `end_point`.
+                            It also assumes that the attribution tensor's
+                            dimension 0 corresponds to the number of
+                            examples, and if multiple input tensors are provided,
+                            the examples must be aligned appropriately.
+                start_point (tensor or tuple of tensors, optional): `start_point`
+                            is passed as an input to model's forward function. It
+                            is the starting point of attributions' approximation.
+                            It is assumed that both `start_point` and `end_point`
+                            have the same shape and dimensionality.
+                end_point (tensor or tuple of tensors):  `end_point`
+                            is passed as an input to model's forward function. It
+                            is the end point of attributions' approximation.
+                            It is assumed that both `start_point` and `end_point`
+                            have the same shape and dimensionality.
+                target (int or list, tuple, tensor, optional):  Output index for which
+                            the attribution is computed. For classification cases,
+                            this is the target class.
+                            If the network returns a scalar value per example,
+                            no target index is necessary. (Note: Tuples for multi
+                            -dimensional output indices will be supported soon.)
+                            Default: None
+                additional_forward_args (tuple, optional): If the forward function
+                            requires additional arguments other than the inputs for
+                            which attributions should not be computed, this argument
+                            can be provided. It must be either a single additional
+                            argument of a Tensor or arbitrary (non-tuple) type or a
+                            tuple containing multiple additional arguments including
+                            tensors or any arbitrary python types. These arguments
+                            are provided to forward_func in order following the
+                            arguments in inputs.
+                            For a tensor, the first dimension of the tensor must
+                            correspond to the number of examples.
+                            `additional_forward_args` is used both for `start_point`
+                            and `end_point` when computing the forward pass.
+                            Default: None
+
+        Returns:
+
+                deltas (tensor): This implementation returns convergence delta per
+                        sample. Deriving sub-classes may do any type of aggregation
+                        of those values, if necessary.
+        """
+        end_point, start_point = _format_input_baseline(end_point, start_point)
+        attributions = _format_tensor_into_tuples(attributions)
+
+        num_samples = end_point[0].shape[0]
+        validate_input(end_point, start_point)
+        validate_target(num_samples, target)
+
         def _sum_rows(input):
-            return torch.tensor([input_row.sum() for input_row in input])
+            return input.view(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
             start_point = _sum_rows(
@@ -68,34 +207,7 @@ class Attribution:
             )
         row_sums = [_sum_rows(attribution) for attribution in attributions]
         attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
-        # TODO ideally do not sum - we should return deltas as a 1D tensor
-        # of batch size. Let the user to sum it if they need to
-        # Currently this is provided when sample_delta is True, but this
-        # should change to the general behavior.
-        if delta_per_sample:
-            return attr_sum - (end_point - start_point)
-        else:
-            return abs(attr_sum - (end_point - start_point)).sum().item()
-
-
-class GradientAttribution(Attribution):
-    r"""
-    All gradient based attribution algorithms extend this class. It requires a
-    forward function, which most commonly is the forward function of the model
-    that we want to interpret or the model itself.
-    """
-
-    def __init__(self, forward_func):
-        r"""
-        Args:
-
-            forward_func (callable or torch.nn.Module): This can either be an instance
-                        of pytorch model or any modification of model's forward
-                        function.
-        """
-        super().__init__()
-        self.forward_func = forward_func
-        self.gradient_func = compute_gradients
+        return attr_sum - (end_point - start_point)
 
 
 class InternalAttribution(GradientAttribution):

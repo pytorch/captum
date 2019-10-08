@@ -116,11 +116,13 @@ class Test(BaseTest):
                 method="gausslegendre",
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
+                return_convergence_delta=True,
             )
+            delta_condition = all(abs(delta.numpy().flatten()) < 0.01)
             self.assertTrue(
-                delta < 0.05,
-                "Sum of attributions does"
-                " not match the difference of endpoints. %f" % (delta),
+                delta_condition,
+                "Sum of attributions does {}"
+                " not match the difference of endpoints.".format(delta),
             )
 
             for i in range(len(expected_conductance)):
@@ -151,11 +153,13 @@ class Test(BaseTest):
             target=target_index,
             n_steps=300,
             method="gausslegendre",
+            return_convergence_delta=True,
         )
+        delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
         self.assertTrue(
-            delta < 0.05,
-            "Sum of attributions values does"
-            " not match the difference of endpoints. %f" % (delta),
+            delta_condition,
+            "Sum of attribution values does {} "
+            " not match the difference of endpoints.".format(delta),
         )
 
         attributions_reference = cond_ref.attribute(
@@ -178,7 +182,7 @@ class Test(BaseTest):
         # Test if batching is working correctly for inputs with multiple examples
         if test_input.shape[0] > 1:
             for i in range(test_input.shape[0]):
-                single_attributions, delta = cond.attribute(
+                single_attributions = cond.attribute(
                     test_input[i : i + 1],
                     baselines=test_baseline[i : i + 1]
                     if test_baseline is not None

@@ -63,7 +63,11 @@ class Test(BaseTest):
             model.zero_grad()
             if type == "vanilla":
                 attributions, delta = ig.attribute(
-                    inputs, target=target, method=method, n_steps=1000
+                    inputs,
+                    target=target,
+                    method=method,
+                    n_steps=1000,
+                    return_convergence_delta=True,
                 )
                 # attributions are returned as tuples for the integrated_gradients
                 self.assertAlmostEqual(
@@ -79,17 +83,26 @@ class Test(BaseTest):
                         - model.forward(0 * inputs)[:, target].item()
                     )
                 )
-                self.assertAlmostEqual(delta, delta_expected, delta=0.005)
+                self.assertAlmostEqual(
+                    abs(delta).sum().item(), delta_expected, delta=0.005
+                )
+                self.assertEqual([inputs.shape[0]], list(delta.shape))
             else:
                 nt = NoiseTunnel(ig)
+                n_samples = 10
                 attributions, delta = nt.attribute(
                     inputs,
                     nt_type=type,
-                    n_samples=10,
+                    n_samples=n_samples,
                     stdevs=0.0002,
+                    n_steps=1000,
                     target=target,
                     method=method,
+                    return_convergence_delta=True,
                 )
+                self.assertEqual([inputs.shape[0] * n_samples], list(delta.shape))
+
+            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
             self.assertEqual(attributions.shape, inputs.shape)
 
 

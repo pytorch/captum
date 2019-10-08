@@ -44,7 +44,12 @@ class DeepLift(GradientAttribution):
         self.backward_handles = []
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r""""
         Implements DeepLIFT algorithm based on the following paper:
@@ -84,7 +89,7 @@ class DeepLift(GradientAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             baselines (tensor or tuple of tensors, optional): Baselines define
                         reference samples which are compared with the inputs.
@@ -96,11 +101,31 @@ class DeepLift(GradientAttribution):
                         If inputs is a tuple of tensors, baselines must also be
                         a tuple of tensors, with matching dimensions to inputs.
                         Default: zero tensor for each input tensor
-            target (int, optional):  Output index for which gradient is computed
-                        (for classification cases, this is the target class).
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
                         If the network returns a scalar value per example,
-                        no target index is necessary. (Note: Tuples for multi
-                        -dimensional output indices will be supported soon.)
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
+
+                        - a single integer or a tensor containing a single
+                            integer, which is applied to all input examples
+
+                        - a list of integers or a 1D tensor, with length matching
+                            the number of examples in inputs (dim 0). Each integer
+                            is applied as the target for the corresponding example.
+
+                        For outputs with > 2 dimensions, targets can be either:
+
+                        - A single tuple, which contains #output_dims - 1
+                            elements. This target index is applied to all examples.
+
+                        - A list of tuples with length equal to the number of
+                            examples in inputs (dim 0), and each tuple containing
+                            #output_dims - 1 elements. Each tuple is applied as the
+                            target for the corresponding example.
+
+                        Default: None
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
@@ -112,6 +137,12 @@ class DeepLift(GradientAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
+            return_convergence_delta (bool, optional): Indicates whether to return
+                        convergence delta or not. If `return_convergence_delta`
+                        is set to True convergence delta will be returned in
+                        a tuple following attributions.
+                        Default: False
+
         Returns:
 
             attributions (tensor or tuple of tensors): Attribution score
@@ -122,10 +153,13 @@ class DeepLift(GradientAttribution):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float): This is computed using the property that the total
+            delta (tensor, optional): This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must equal the total sum of the attributions computed
                         based on Deeplift's rescale rule.
+                        Delta is calculated per example, meaning that the number of
+                        elements in returned delta tensor is equal to the number of
+                        of examples in input.
 
         Examples::
 
@@ -135,7 +169,7 @@ class DeepLift(GradientAttribution):
             >>> dl = DeepLift(net)
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes deeplift attribution scores for class 3.
-            >>> attribution, delta = dl.attribute(input, target=3)
+            >>> attribution = dl.attribute(input, target=3)
         """
 
         # Keeps track whether original input is a tuple or not before
@@ -174,18 +208,21 @@ class DeepLift(GradientAttribution):
         # remove hooks from all activations
         self._remove_hooks()
 
-        start_point, end_point = baselines, inputs
-
-        # computes convergence error
-        delta = self._compute_convergence_delta(
-            attributions,
-            start_point,
-            end_point,
-            additional_forward_args=additional_forward_args,
-            target=target,
-        )
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_attributions(is_inputs_tuple, attributions), delta
+
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            # computes convergence error
+            delta = self.compute_convergence_delta(
+                attributions,
+                start_point,
+                end_point,
+                additional_forward_args=additional_forward_args,
+                target=target,
+            )
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
@@ -299,7 +336,7 @@ class DeepLift(GradientAttribution):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
 
-    def _has_convergence_delta(self):
+    def has_convergence_delta(self):
         return True
 
 
@@ -308,7 +345,12 @@ class DeepLiftShap(DeepLift):
         super().__init__(model)
 
     def attribute(
-        self, inputs, baselines=None, target=None, additional_forward_args=None
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r"""
         Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
@@ -334,7 +376,7 @@ class DeepLiftShap(DeepLift):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             baselines (tensor or tuple of tensors, optional): Baselines define
                         reference samples which are compared with the inputs.
@@ -350,11 +392,31 @@ class DeepLiftShap(DeepLift):
                         first dimension. It is recommended that the number of
                         samples in the baselines' tensors is larger than one.
                         Default: zero tensor for each input tensor
-            target (int, optional):  Output index for which gradient is computed
-                        (for classification cases, this is the target class).
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
                         If the network returns a scalar value per example,
-                        no target index is necessary. (Note: Tuples for multi
-                        -dimensional output indices will be supported soon.)
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
+
+                        - a single integer or a tensor containing a single
+                            integer, which is applied to all input examples
+
+                        - a list of integers or a 1D tensor, with length matching
+                            the number of examples in inputs (dim 0). Each integer
+                            is applied as the target for the corresponding example.
+
+                        For outputs with > 2 dimensions, targets can be either:
+
+                        - A single tuple, which contains #output_dims - 1
+                            elements. This target index is applied to all examples.
+
+                        - A list of tuples with length equal to the number of
+                            examples in inputs (dim 0), and each tuple containing
+                            #output_dims - 1 elements. Each tuple is applied as the
+                            target for the corresponding example.
+
+                        Default: None
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
@@ -366,6 +428,12 @@ class DeepLiftShap(DeepLift):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
+            return_convergence_delta (bool, optional): Indicates whether to return
+                        convergence delta or not. If `return_convergence_delta`
+                        is set to True convergence delta will be returned in
+                        a tuple following attributions.
+                        Default: False
+
         Returns:
 
             attributions (tensor or tuple of tensors): Attribution score
@@ -376,12 +444,17 @@ class DeepLiftShap(DeepLift):
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (float): This is computed using the property that the total
-                        sum of forward_func(inputs) - forward_func(baselines)
+            delta (tensor, optional): This is computed using the property that the
+                        total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
                         Deeplift's rescale rule.
-
+                        Delta is calculated for each example input and baseline pair,
+                        meaning that the number of elements in returned delta tensor
+                        is equal to the
+                        `number of examples in input` * `number of examples
+                        in baseline`. The deltas are ordered in the first place by
+                        input example, followed by the baseline.
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -390,7 +463,7 @@ class DeepLiftShap(DeepLift):
             >>> dl = DeepLiftShap(net)
             >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
             >>> # Computes shap values using deeplift for class 3.
-            >>> attribution, delta = dl.attribute(input, target=3)
+            >>> attribution = dl.attribute(input, target=3)
         """
 
         def compute_mean(inp_bsz, base_bsz, attribution):
@@ -430,18 +503,24 @@ class DeepLiftShap(DeepLift):
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
 
-        attributions, delta = super().attribute(
+        attributions = super().attribute(
             expanded_inputs,
             expanded_baselines,
             target=expanded_target,
             additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
         )
+        if return_convergence_delta:
+            attributions, delta = attributions
 
         attributions = tuple(
             compute_mean(inp_bsz, base_bsz, attribution) for attribution in attributions
         )
 
-        return _format_attributions(is_inputs_tuple, attributions), delta / base_bsz
+        if return_convergence_delta:
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
 
 
 def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
