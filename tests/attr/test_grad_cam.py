@@ -5,7 +5,7 @@ import unittest
 import torch
 from captum.attr._core.grad_cam import LayerGradCam
 
-from .helpers.basic_models import TestModel_MultiLayer, BasicModel_SmallConvNet
+from .helpers.basic_models import BasicModel_MultiLayer, BasicModel_SmallConvNet
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 
