@@ -171,7 +171,7 @@ Next we will use `IntegratedGradients` algorithms to assign attribution
 scores to each input feature with respect to the second target output.
 ```
 ig = IntegratedGradients(model)
-attributions, delta = ig.attribute(input, baseline, target=1, return_convergence_delta=True)
+attributions, delta = ig.attribute(input, baseline, target=0, return_convergence_delta=True)
 print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output:
@@ -181,8 +181,9 @@ IG Attributions:  tensor([[0.0628, 0.1314, 0.0747],
 Convergence Delta: tensor([0., 0.])
 ```
 The algorithm outputs an attribution score for each input element and a
-convergence delta whose absolute value we would like to minimize. If we choose
-not to return delta, we can simply not provide `return_convergence_delta` input
+convergence delta. The lower the absolute value of the convergence delta the better
+is the approximation. If we choose not to return delta,
+we can simply not provide `return_convergence_delta` input
 argument. The absolute value of the returned deltas can be interpreted as an
 approximation error for each input sample.
 It can also serve as a proxy of how accurate the integral approximation for given
@@ -200,7 +201,7 @@ Zero attribution score means no contribution from that particular feature.
 Similarly, we can apply `GradientShap`, `DeepLift` and other attribution algorithms to the model.
 
 Gradient SHAP first chooses a random baseline from baselines' distribution, then
- adds gaussian noise with std=0.9 to each input example `n_samples` times.
+ adds gaussian noise with std=0.09 to each input example `n_samples` times.
 Afterwards, it chooses a random point between each example-baseline pair and
 computes the gradients with respect to target class (in this case target=0). Resulting
 attribution is the mean of gradients * (inputs - baselines)
@@ -226,7 +227,7 @@ for instance, average them:
 ```
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
-in order to get per example average delta
+in order to get per example average delta.
 
 
 Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
@@ -263,13 +264,13 @@ as for `GradientShap`.
 
 ```
 dl = DeepLiftShap(model)
-attributions, delta = dl.attribute(input, baseline_dist, target=0)
+attributions, delta = dl.attribute(input, baseline_dist, target=0, return_convergence_delta=True)
 print('DeepLiftSHAP Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-DeepLift Attributions: tensor([0.0627, 0.1313, 0.0747],
-                              [0.0929, 0.0120, 0.1637], grad_fn=<MeanBackward1>)
+DeepLiftShap Attributions: tensor([0.0627, 0.1313, 0.0747],
+                                  [0.0929, 0.0120, 0.1637], grad_fn=<MeanBackward1>)
 Convergence Delta:  tensor([-2.9802e-08,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
          0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  2.9802e-08,
          0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
@@ -333,8 +334,8 @@ print('Neuron Attributions: ', attributions)
 ```
 Output
 ```
-Neuron Attributions:  tensor([[0.0000, 0.2854, 0.0000],
-                              [0.0000, 0.1238, 0.0000]])
+Neuron Attributions:  tensor([[0.0106, 0.0247, 0.0150],
+                              [0.0144, 0.0021, 0.0301]])
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
@@ -350,9 +351,9 @@ print('Layer Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Outputs
 ```
-Layer Attributions: tensor([[0.0891, 0.2758, 0.0476],
-                            [0.0219, 0.1019, 0.3152]], grad_fn=<SumBackward1>)
-Convergence Delta:  tensor([-0.0735, -0.0589])
+Layer Attributions: tensor([[0.0000, 0.0515, 0.1811],
+                            [0.0000, 0.0477, 0.1652]], grad_fn=<SumBackward1>)
+Convergence Delta:  tensor([-0.0363, -0.0560])
 ```
 
 Similar to other attribution algorithms that return convergence delta, LayerConductance
