@@ -45,12 +45,13 @@ class Test(BaseTest):
         np.random.seed(0)
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
+        n_samples = 50
         attributions, delta = gradient_shap.attribute(
-            (x1, x2), baselines, return_convergence_delta=True
+            (x1, x2), baselines, n_samples=n_samples, return_convergence_delta=True
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
-        self._assert_attribution_delta(inputs, attributions, 50, delta)
+        self._assert_attribution_delta(inputs, attributions, n_samples, delta)
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
