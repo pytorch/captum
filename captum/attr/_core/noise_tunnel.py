@@ -129,21 +129,21 @@ class NoiseTunnel(Attribution):
                         across all `n_sample` pertubed tensors for that input.
 
 
-            Examples::
+        Examples::
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> net = ImageClassifier()
-                >>> ig = IntegratedGradients(net)
-                >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Creates noise tunnel
-                >>> nt = NoiseTunnel(ig)
-                >>> # Generates 10 perturbed input tensors per image.
-                >>> # Computes integrated gradients for class 3 for each generated
-                >>> # input and averages attributions accros all 10
-                >>> # perturbed inputs per image
-                >>> attribution = nt.attribute(input, nt_type='smoothgrad',
-                >>>                            n_samples=10, target=3)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> ig = IntegratedGradients(net)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Creates noise tunnel
+            >>> nt = NoiseTunnel(ig)
+            >>> # Generates 10 perturbed input tensors per image.
+            >>> # Computes integrated gradients for class 3 for each generated
+            >>> # input and averages attributions accros all 10
+            >>> # perturbed inputs per image
+            >>> attribution = nt.attribute(input, nt_type='smoothgrad',
+            >>>                            n_samples=10, target=3)
         """
 
         def add_noise_to_inputs():
