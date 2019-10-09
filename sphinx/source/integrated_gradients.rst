@@ -1,5 +1,5 @@
-Captum.IntegratedGradients
-==========================
+IntegratedGradients
+====================
 
 .. automodule:: captum.attr._core.integrated_gradients
 
