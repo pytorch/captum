@@ -127,16 +127,15 @@ class ToyModel(nn.Module):
         self.lin1 = nn.Linear(3, 3)
         self.relu = nn.ReLU()
         self.lin2 = nn.Linear(3, 2)
-        self.sigmoid = nn.Sigmoid()
 
         # initialize weights and biases
-        self.lin1.weight = nn.Parameter(torch.arange(0.0, 9.0).view(3, 3))
+        self.lin1.weight = nn.Parameter(torch.arange(-4.0, 5.0).view(3, 3))
         self.lin1.bias = nn.Parameter(torch.zeros(1,3))
-        self.lin2.weight = nn.Parameter(torch.arange(0.0, 6.0).view(2, 3))
+        self.lin2.weight = nn.Parameter(torch.arange(-3.0, 3.0).view(2, 3))
         self.lin2.bias = nn.Parameter(torch.ones(1,2))
 
     def forward(self, input):
-        return self.sigmoid(self.lin2(self.relu(self.lin1(input))))
+        return self.lin2(self.relu(self.lin1(input)))
 
 
 model = ToyModel()
@@ -160,9 +159,9 @@ print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
     `;
 
     const igOutput = `${pre}python
-IG Attributions:  tensor([[0.0628, 0.1314, 0.0747],
-                          [0.0930, 0.0120, 0.1639]])
-Convergence Delta: tensor([0., 0.])
+IG Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
+                          [ 0.0000, -0.2219, -5.1991]])
+Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
     `;
     //
     const QuickStart = () => (
