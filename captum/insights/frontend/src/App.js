@@ -178,7 +178,7 @@ function Spinner(_) {
   return <div className="spinner" />;
 }
 
-function getPercentageColor(percentage, zeroDefault = false) {
+function calcHSLFromScore(percentage, zeroDefault = false) {
   const blue_hsl = [220, 100, 80];
   const red_hsl = [10, 100, 67];
 
@@ -235,9 +235,9 @@ function TextFeature(props) {
       <>
         <span
           style={{
-            backgroundColor: getPercentageColor(props.data.modified[i], false)
+            backgroundColor: calcHSLFromScore(props.data.modified[i], false)
           }}
-          className={cx(["text-feature-word"])}
+          className={"text-feature-word"}
         >
           {w}
           <Tooltip label={props.data.modified[i].toFixed(3)} />
@@ -306,10 +306,10 @@ class Contributions extends React.Component {
       return (
         <div className="bar-chart__group">
           <div
-            className={cx(["bar-chart__group__bar"])}
+            className={"bar-chart__group__bar"}
             style={{
               height: bar_height + "px",
-              backgroundColor: getPercentageColor(contribution)
+              backgroundColor: calcHSLFromScore(contribution)
             }}
           />
           <div className="bar-chart__group__title">{f.name}</div>
