@@ -82,10 +82,10 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             are provided to forward_func in order following the
                             arguments in inputs.
                             For a tensor, the first dimension of the tensor must
-                            correspond to the number of examples. It will be repeated
-                             for each of `n_steps` along the integrated path.
-                            For all other types, the given argument is used for
-                            all forward evaluations.
+                            correspond to the number of examples. It will be
+                            repeated for each of `n_steps` along the integrated
+                            path. For all other types, the given argument is used
+                            for all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
