@@ -69,7 +69,7 @@ class NeuronGradient(NeuronAttribution):
                             Default: None
 
             Return
-                *tensor* or tuple of *tensors* of **atributions**:
+                *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             Gradients of particular neuron with respect to each input
                             feature. Attributions will always be the same size as the

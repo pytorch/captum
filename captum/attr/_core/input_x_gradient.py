@@ -69,7 +69,7 @@ class InputXGradient(GradientAttribution):
                         Default: None
 
         Return:
-                *tensor* or tuple of *tensors* of **atributions**:
+                *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             The input x gradient with
                             respect to each input feature. Attributions will always be

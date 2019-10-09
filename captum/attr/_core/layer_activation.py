@@ -52,7 +52,7 @@ class LayerActivation(LayerAttribution):
                             Default: None
 
             Return
-                *tensor* of **atributions**:
+                *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Activation of each neuron in given layer output.
                             Attributions will always be the same size as the

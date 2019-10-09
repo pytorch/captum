@@ -79,7 +79,7 @@ class LayerGradientXActivation(LayerAttribution):
                             Default: None
 
             Return
-                *tensor* of **atributions**:
+                *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Product of gradient and activation for each
                             neuron in given layer output.

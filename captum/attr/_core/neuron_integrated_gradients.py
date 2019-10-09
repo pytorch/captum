@@ -107,7 +107,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             Default: None
 
             Return:
-                *tensor* or tuple of *tensors* of **atributions**:
+                *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             Integrated gradients for particular neuron with
                             respect to each input feature.
