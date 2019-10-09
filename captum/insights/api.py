@@ -45,6 +45,7 @@ class AttributionVisualizer(object):
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Data],
         score_func: Optional[Callable] = None,
+        use_label_for_attr: bool = True,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -59,6 +60,7 @@ class AttributionVisualizer(object):
         self.score_func = score_func
         self._outputs = []
         self._config = FilterConfig(steps=25, prediction="all", classes=[], count=4)
+        self._use_label_for_attr = use_label_for_attr
 
     def _calculate_attribution_from_cache(
         self, index: int, target: Optional[Tensor]
@@ -79,7 +81,11 @@ class AttributionVisualizer(object):
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
         baseline = baselines[0] if len(baselines) > 0 else None
-        label = None if label is None or label.nelement() == 0 else label
+        label = (
+            None
+            if not self._use_label_for_attr or label is None or label.nelement() == 0
+            else label
+        )
         attr_ig = ig.attribute(
             data,
             baselines=baseline,
