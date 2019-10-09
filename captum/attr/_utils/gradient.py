@@ -68,7 +68,7 @@ def compute_gradients(
         Computes gradients of the output with respect to inputs for an
         arbitrary forward function.
 
-        Args
+        Args:
 
             forward_fn: forward function. This can be for example model's
                         forward function.
@@ -227,7 +227,7 @@ def compute_layer_gradients_and_eval(
         the separate inputs in a dictionary protected by a lock, analogous to the
         gather implementation for the core PyTorch DataParallel implementation.
 
-        Args
+        Args:
 
             forward_fn: forward function. This can be for example model's
                         forward function.
@@ -241,10 +241,12 @@ def compute_layer_gradients_and_eval(
                         additional arguments are required
 
 
-        Return
-
-            gradients:  Gradients of output with respect to target layer output.
-            evals:      Target layer output for given input.
+        Returns:
+            2-element tuple of **gradients**, **evals**:
+            - **gradients**:
+                Gradients of output with respect to target layer output.
+            - **evals**:
+                Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
         saved_layer_outputs = {}

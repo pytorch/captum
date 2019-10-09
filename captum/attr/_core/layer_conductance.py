@@ -17,7 +17,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class LayerConductance(LayerAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -63,7 +63,7 @@ class LayerConductance(LayerAttribution):
             features, utilize NeuronConductance instead, and provide the target
             neuron index.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which layer
                             conductance is computed. If forward_func takes a single
@@ -144,12 +144,14 @@ class LayerConductance(LayerAttribution):
                             a tuple following attributions.
                             Default: False
 
-            Return
-
-                attributions (tensor): Conductance of each neuron in given layer output.
+            Returns:
+                **attributions** or 2-element tuple of **attributions**, **delta**:
+                - **attributions** (*tensor*):
+                            Conductance of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                delta (tensor, optional): The difference between the total
+                - **delta** (*tensor*, returned if return_convergence_delta=True):
+                            The difference between the total
                             approximated and true conductance.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal

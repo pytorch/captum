@@ -8,7 +8,7 @@ from .integrated_gradients import IntegratedGradients
 class NeuronIntegratedGradients(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -106,10 +106,11 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             processed in one batch.
                             Default: None
 
-            Return:
-
-                attributions (tensor or tuple of tensors): Integrated gradients for
-                            particular neuron with respect to each input feature.
+            Returns:
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Integrated gradients for particular neuron with
+                            respect to each input feature.
                             Attributions will always be the same size as the provided
                             inputs, with each value providing the attribution of the
                             corresponding input index.

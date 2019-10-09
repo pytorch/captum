@@ -7,7 +7,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class LayerGradientXActivation(LayerAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -30,7 +30,7 @@ class LayerGradientXActivation(LayerAttribution):
             Computes element-wise product of gradient and activation for selected
             layer on given inputs.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which attributions
                             are computed. If forward_func takes a single
@@ -78,9 +78,10 @@ class LayerGradientXActivation(LayerAttribution):
                             to these arguments.
                             Default: None
 
-            Return
-
-                attributions (tensor): Product of gradient and activation for each
+            Returns:
+                *tensor* of **attributions**:
+                - **attributions** (*tensor*):
+                            Product of gradient and activation for each
                             neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
