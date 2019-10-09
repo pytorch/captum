@@ -3,6 +3,7 @@ import socket
 import threading
 from time import sleep
 from typing import Optional
+import os
 
 from torch import Tensor
 from flask import Flask, jsonify, render_template, request
@@ -79,6 +80,7 @@ def start_server(
 
     global port
     if port is None:
+        os.environ["WERKZEUG_RUN_MAIN"] = "true"  # hides starting message
         if not debug:
             log = logging.getLogger("werkzeug")
             log.disabled = True
