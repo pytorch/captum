@@ -19,7 +19,7 @@ const users = [];
 const siteConfig = {
   title: 'Captum',
   tagline: 'Model Interpretability for PyTorch',
-  url: 'https://captum.org',
+  url: 'https://captum.ai',
   baseUrl: baseUrl,
   cleanUrl: true, // No .html extensions for paths
 
