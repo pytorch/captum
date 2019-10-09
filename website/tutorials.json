@@ -18,6 +18,10 @@
     {
       "id": "Multimodal_VQA_Interpret",
       "title": "Intepreting multimodal models"
+    },
+    {
+      "id": "CIFAR_TorchVision_Captum_Insights",
+      "title": "Getting started with Captum Insights"
     }
   ]
 }

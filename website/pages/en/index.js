@@ -118,53 +118,50 @@ import torch
 import torch.nn as nn
 
 from captum.attr import (
-    GradientShap,
-    IntegratedGradients,
-    LayerConductance,
-    NeuronConductance,
-    NoiseTunnel,
+    IntegratedGradients
 )
 
 class ToyModel(nn.Module):
     def __init__(self):
         super().__init__()
-
-        self.lin1 = nn.Linear(3, 4)
-        self.lin1.weight = nn.Parameter(torch.ones(4, 3))
-        self.lin1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+        self.lin1 = nn.Linear(3, 3)
         self.relu = nn.ReLU()
-        self.lin2 = nn.Linear(4, 1)
-        self.lin2.weight = nn.Parameter(torch.ones(1, 4))
-        self.lin2.bias = nn.Parameter(torch.tensor([-3.0]))
+        self.lin2 = nn.Linear(3, 2)
+
+        # initialize weights and biases
+        self.lin1.weight = nn.Parameter(torch.arange(-4.0, 5.0).view(3, 3))
+        self.lin1.bias = nn.Parameter(torch.zeros(1,3))
+        self.lin2.weight = nn.Parameter(torch.arange(-3.0, 3.0).view(2, 3))
+        self.lin2.bias = nn.Parameter(torch.ones(1,2))
 
     def forward(self, input):
-        lin1 = self.lin1(input)
-        relu = self.relu(lin1)
-        lin2 = self.lin2(relu)
-        return lin2
+        return self.lin2(self.relu(self.lin1(input)))
 
 
 model = ToyModel()
 model.eval()
-torch.manual_seed(123)
-np.random.seed(124)
     `;
     // Example for defining an acquisition function
     const defineInputBaseline = `${pre}python
 input = torch.rand(2, 3)
 baseline = torch.zeros(2, 3)
     `;
+
+    const randomSeedsDefinition = `${pre}python
+torch.manual_seed(123)
+np.random.seed(123)
+    `;
     // Example for optimizing candidates
     const instantiateApply = `${pre}python
 ig = IntegratedGradients(model)
-attributions, delta = ig.attribute(input, baseline)
-print('IG Attributions: ', attributions, ' Approximation error: ', delta)
+attributions, delta = ig.attribute(input, baseline, target=0, return_convergence_delta=True)
+print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
     `;
 
     const igOutput = `${pre}python
-IG Attributions:  tensor([[0.8883, 1.5497, 0.7550],
-                          [2.0657, 0.2219, 2.5996]])
-Approximation Error:  9.5367431640625e-07
+IG Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
+                          [ 0.0000, -0.2219, -5.1991]])
+Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
     `;
     //
     const QuickStart = () => (
@@ -185,6 +182,10 @@ Approximation Error:  9.5367431640625e-07
             <li>
               <h4>Create and prepare model:</h4>
               <MarkdownBlock>{createModelExample}</MarkdownBlock>
+            </li>
+            <li>
+              <h4>To make computations deterministic, let's fix random seeds:</h4>
+              <MarkdownBlock>{randomSeedsDefinition}</MarkdownBlock>
             </li>
             <li>
               <h4>Define input and baseline tensors:</h4>
