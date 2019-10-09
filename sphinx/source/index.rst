@@ -18,7 +18,7 @@ Captum API Reference
    input_x_gradient
    integrated_gradients
    noise_tunnel
-   base
+   utilities
    neuron
    layer
 
