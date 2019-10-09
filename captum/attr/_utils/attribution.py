@@ -139,7 +139,9 @@ class GradientAttribution(Attribution):
         the same shape and dimensionality. It also assumes that the target must have
         the same number of examples as the `start_point` and the `end_point` in case
         it is provided in form of a list or a non-singleton tensor.
+
         Args:
+
                 attributions (tensor or tuple of tensors): Precomputed attribution
                             scores. The user can compute those using any attribution
                             algorithm. It is assumed the the shape and the
