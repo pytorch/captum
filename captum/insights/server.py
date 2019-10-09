@@ -1,11 +1,12 @@
 import logging
+import os
 import socket
 import threading
 from time import sleep
 from typing import Optional
 
-from torch import Tensor
 from flask import Flask, jsonify, render_template, request
+from torch import Tensor
 
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
@@ -79,6 +80,7 @@ def start_server(
 
     global port
     if port is None:
+        os.environ["WERKZEUG_RUN_MAIN"] = "true"  # hides starting message
         if not debug:
             log = logging.getLogger("werkzeug")
             log.disabled = True

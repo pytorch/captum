@@ -19,13 +19,13 @@ SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 
 class FilterConfig(NamedTuple):
-    steps: int = 25
+    steps: int = 20
     prediction: str = "all"
     classes: List[str] = []
     count: int = 4
 
 
-class Data:
+class Batch:
     def __init__(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -43,7 +43,7 @@ class AttributionVisualizer(object):
         models: Union[List[Module], Module],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
-        dataset: Iterable[Data],
+        dataset: Iterable[Batch],
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ):

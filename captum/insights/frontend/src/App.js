@@ -44,7 +44,7 @@ class FilterContainer extends React.Component {
 
     this.state = {
       prediction: "all",
-      approximation_steps: 50,
+      approximation_steps: 20,
       classes: [],
       suggested_classes: suggested_classes
     };
@@ -53,7 +53,10 @@ class FilterContainer extends React.Component {
   handleClassDelete = i => {
     const classes = this.state.classes.slice(0);
     const removed_class = classes.splice(i, 1);
-    const suggested_classes = [].concat(this.state.suggestions, removed_class);
+    const suggested_classes = [].concat(
+      this.state.suggested_classes,
+      removed_class
+    );
     this.setState({ classes, suggested_classes });
   };
 
