@@ -17,7 +17,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class InternalInfluence(LayerAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -57,7 +57,7 @@ class InternalInfluence(LayerAttribution):
             taking the layer as input, integrating the gradient of the layer with
             respect to the output.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which internal
                             influence is computed. If forward_func takes a single

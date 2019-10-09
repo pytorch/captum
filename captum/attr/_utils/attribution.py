@@ -108,7 +108,7 @@ class GradientAttribution(Attribution):
 
     def __init__(self, forward_func):
         r"""
-        Args
+        Args:
 
             forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward

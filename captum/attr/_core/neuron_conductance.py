@@ -19,7 +19,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class NeuronConductance(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it

@@ -17,7 +17,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class LayerConductance(LayerAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -63,7 +63,7 @@ class LayerConductance(LayerAttribution):
             features, utilize NeuronConductance instead, and provide the target
             neuron index.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which layer
                             conductance is computed. If forward_func takes a single

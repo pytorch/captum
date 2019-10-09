@@ -23,7 +23,7 @@ SUPPORTED_METHODS = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
 def approximation_parameters(method):
     r"""Retrieves parameters for the input approximation `method`
 
-        Args
+        Args:
             method: The name of the approximation method. Currently only `riemann`
                     and gauss legendre are
     """

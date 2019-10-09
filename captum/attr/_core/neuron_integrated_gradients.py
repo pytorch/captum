@@ -8,7 +8,7 @@ from .integrated_gradients import IntegratedGradients
 class NeuronIntegratedGradients(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
