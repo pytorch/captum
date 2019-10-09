@@ -438,8 +438,8 @@ class DeepLiftShap(DeepLift):
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):
-                        Attribution score computed based on DeepLift rescale rule with respect
-                        to each input feature. Attributions will always be
+                        Attribution score computed based on DeepLift rescale rule with
+                        respect to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value
                         providing the attribution of the corresponding input index.
                         If a single tensor is provided as inputs, a single tensor is
