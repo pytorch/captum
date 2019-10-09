@@ -31,16 +31,17 @@ class InterpretableEmbeddingBase(Embedding):
          embedding layer. It allows embeddings to be created outside of the model
          and passes them seamlessly to the preceding layers of the model.
 
-         Args
+         Args:
 
             inputs (tensor): Input embedding tensor containing the embedding vectors
                     of each word or token in the sequence.
 
-         Return
+         Returns:
 
-            output (tensor): Returns output tensor which is the same as input tensor.
-                   It passes embedding tensors to lower layers without any
-                   modifications.
+            tensor:
+            Returns output tensor which is the same as input tensor.
+            It passes embedding tensors to lower layers without any
+            modifications.
         """
         return input
 
@@ -48,15 +49,16 @@ class InterpretableEmbeddingBase(Embedding):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
 
-        Args
+        Args:
 
             input (tensor): A tensor of input indices. A typical example of an
                    input index is word or token index.
 
-        Returns
+        Returns:
 
-            embedding (tensor): A tensor of word embeddings corresponding to the
-                    indices specified in the input
+            tensor:
+            A tensor of word embeddings corresponding to the
+            indices specified in the input
         """
         return self.embedding(input)
 
@@ -77,13 +79,14 @@ class TokenReferenceBase:
         Generated reference tensor of given `sequence_length` using
         `reference_token_idx`.
 
-        Args
+        Args:
             sequence_length (int): The length of the reference sequence
             device (torch.device): The device on which the reference tensor will
                           be created.
-        Returns
+        Returns:
 
-            reference (tensor): A sequence of reference token with shape:
+            tensor:
+            A sequence of reference token with shape:
                           [sequence_length]
         """
         return torch.tensor([self.reference_token_idx] * sequence_length, device=device)
@@ -111,13 +114,13 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
     This method wraps model's embedding layer with an interpretable embedding
     layer that allows us to access the embeddings through their indices.
 
-    Args
+    Args:
 
         model (torch.nn.Model): An instance of PyTorch model that contains embeddings.
         embedding_layer_name (str, optional): The name of the embedding layer
                     in the `model` that we would like to make interpretable.
 
-    Returns
+    Returns:
 
         interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
                     embedding layer that wraps model's embedding layer that is being
@@ -176,7 +179,7 @@ def remove_interpretable_embedding_layer(model, interpretable_emb):
     Removes interpretable embedding layer and sets back original
     embedding layer in the model.
 
-    Args
+    Args:
 
         model (torch.nn.Module): An instance of PyTorch model that contains embeddings
         interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`
