@@ -348,7 +348,7 @@ def visualize_image_attr_multiple(
                         `show_colorbar`, `alpha_overlay`, `cmap`, etc.
 
 
-        Return:
+        Returns:
             2-element tuple of **figure**, **axis**:
             - **figure** (*matplotlib.pyplot.figure*):
                         Figure object on which visualization
