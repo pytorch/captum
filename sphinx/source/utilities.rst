@@ -1,16 +1,14 @@
-base
-=====
+Utilities
+==========
 
 visualization
 ^^^^^^^^^^^^^^
 
 .. automodule:: captum.attr._utils.visualization
 
+.. autofunction:: visualize_image_attr
 
-.. autoclass:: VisualizeSign
-    :members:
-
-.. autoclass:: visualize_image_attr_multiple
+.. autofunction:: visualize_image_attr_multiple
 
 .. autoclass:: VisualizationDataRecord
     :members:
@@ -36,20 +34,6 @@ Token Reference Base
 .. autofunction:: _set_deep_layer_value
 .. autofunction:: configure_interpretable_embedding_layer
 .. autofunction:: remove_interpretable_embedding_layer
-
-configure_interpretable_embedding_layer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: captum.attr._models.base
-
-.. function:: configure_interpretable_embedding_layer
-
-remove_interpretable_embedding_layer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: captum.attr._models.base
-
-.. function:: remove_interpretable_embedding_layer
 
 Attribution
 ^^^^^^^^^^^^
