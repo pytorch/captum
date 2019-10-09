@@ -118,6 +118,7 @@ button {
   border: solid 1px #ee4c2c;
   text-align: center;
   font-weight: 600;
+  font-size: 1em;
   border-radius: 4px;
   padding: 6px 8px;
   display: inline-block;
@@ -150,6 +151,15 @@ button {
   display: block;
 }
 
+.loading {
+  margin-top: 150px;
+  position: absolute;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
 .panel {
   margin: 16px;
   padding: 24px;
@@ -157,6 +167,12 @@ button {
   border-radius: 8px;
   display: flex;
   box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.18);
+  transition: opacity 0.2s; /* for loading */
+}
+
+.panel--loading {
+  opacity: 0.5;
+  pointer-events: none; /* disables all interactions inside panel */
 }
 
 .panel--center {
