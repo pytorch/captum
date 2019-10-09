@@ -35,8 +35,10 @@ class Attribution:
 
         Returns:
 
-            attributions (tensor or tuple of tensors): Attribution values for each
-                        input vector. The `attributions` have the same shape and
+            *tensor* or tuple of *tensors* of **atributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution values for each
+                        input tensor. The `attributions` have the same shape and
                         dimensionality as the inputs.
                         If a single tensor is provided as inputs, a single tensor
                         is returned. If a tuple is provided for inputs, a tuple of
@@ -55,9 +57,9 @@ class Attribution:
         override both `compute_convergence_delta` and `has_convergence_delta` methods.
 
         Returns:
-
-            has_convergence_delta (bool): Returns whether the attribution algorithm
-                        provides a convergence delta (aka approximation error) or not.
+            bool:
+            Returns whether the attribution algorithm
+            provides a convergence delta (aka approximation error) or not.
 
         """
         return False
@@ -84,11 +86,13 @@ class Attribution:
 
         Returns:
 
-                deltas (tensor): Depending on specific implementaion of
-                            sub-classes, convergence delta can be returned per
-                            sample in form of a tensor or it can be aggregated
-                            across multuple samples and returned in form of a
-                            single floating point tensor.
+                *tensor* of **deltas**:
+                - **deltas** (*tensor*):
+                    Depending on specific implementaion of
+                    sub-classes, convergence delta can be returned per
+                    sample in form of a tensor or it can be aggregated
+                    across multuple samples and returned in form of a
+                    single floating point tensor.
         """
         raise NotImplementedError(
             "Deriving sub-class should implement" " compute_convergence_delta method"
@@ -179,9 +183,11 @@ class GradientAttribution(Attribution):
 
         Returns:
 
-                deltas (tensor): This implementation returns convergence delta per
-                        sample. Deriving sub-classes may do any type of aggregation
-                        of those values, if necessary.
+                *tensor* of **deltas**:
+                - **deltas** (*tensor*):
+                    This implementation returns convergence delta per
+                    sample. Deriving sub-classes may do any type of aggregation
+                    of those values, if necessary.
         """
         end_point, start_point = _format_input_baseline(end_point, start_point)
         attributions = _format_tensor_into_tuples(attributions)
@@ -307,7 +313,9 @@ class NeuronAttribution(InternalAttribution):
 
         Returns:
 
-                attributions (tensor or tuple of tensors): Attribution values for
+                *tensor* or tuple of *tensors* of **atributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution values for
                         each input vector. The `attributions` have the
                         dimensionality of inputs.
         """

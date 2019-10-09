@@ -242,9 +242,11 @@ def compute_layer_gradients_and_eval(
 
 
         Return
-
-            gradients:  Gradients of output with respect to target layer output.
-            evals:      Target layer output for given input.
+            2-element tuple of **gradients**, **evals**:
+            - **gradients**:
+                Gradients of output with respect to target layer output.
+            - **evals**:
+                Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
         saved_layer_outputs = {}

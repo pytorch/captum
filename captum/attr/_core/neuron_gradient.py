@@ -69,12 +69,12 @@ class NeuronGradient(NeuronAttribution):
                             Default: None
 
             Return
-
-                attributions (tensor or tuple of tensors): Gradients of
-                            particular neuron with respect to each input feature.
-                            Attributions will always be the same size as the provided
-                            inputs, with each value providing the attribution of the
-                            corresponding input index.
+                *tensor* or tuple of *tensors* of **atributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Gradients of particular neuron with respect to each input
+                            feature. Attributions will always be the same size as the
+                            provided inputs, with each value providing the attribution
+                            of the corresponding input index.
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.

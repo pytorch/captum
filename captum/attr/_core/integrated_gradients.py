@@ -125,22 +125,22 @@ class IntegratedGradients(GradientAttribution):
                             a tuple following attributions.
                             Default: False
             Return:
-
-                attributions (tensor or tuple of tensors): Integrated gradients with
-                            respect to each input feature. attributions will always be
-                            the same size as the provided inputs, with each value
-                            providing the attribution of the corresponding input index.
-                            If a single tensor is provided as inputs, a single tensor is
-                            returned. If a tuple is provided for inputs, a tuple of
-                            corresponding sized tensors is returned.
-                delta (tensor, optional): The difference between the total approximated
-                            and true integrated gradients.
-                            This is computed using the property that the total sum of
-                            forward_func(inputs) - forward_func(baselines) must equal
-                            the total sum of the integrated gradient.
-                            Delta is calculated per example, meaning that the number of
-                            elements in returned delta tensor is equal to the number of
-                            of examples in inputs.
+                **attributions** or 2-element tuple of **attributions**, **delta**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                        Integrated gradients with respect to each input feature. attributions
+                        will always be the same size as the provided inputs, with each value
+                        providing the attribution of the corresponding input index.
+                        If a single tensor is provided as inputs, a single tensor is
+                        returned. If a tuple is provided for inputs, a tuple of
+                        corresponding sized tensors is returned.
+                - **delta** (*tensor*, returned if return_convergence_delta=True):
+                        The difference between the total approximated and true integrated gradients.
+                        This is computed using the property that the total sum of
+                        forward_func(inputs) - forward_func(baselines) must equal
+                        the total sum of the integrated gradient.
+                        Delta is calculated per example, meaning that the number of
+                        elements in returned delta tensor is equal to the number of
+                        of examples in inputs.
 
             Examples::
 

@@ -134,8 +134,9 @@ class InternalInfluence(LayerAttribution):
                             Default: None
 
             Return
-
-                attributions (tensor): Internal influence of each neuron in given
+                tensor of **atributions**:
+                - **attributions** (*tensor*):
+                            Internal influence of each neuron in given
                             layer output. Attributions will always be the same size
                             as the output of the given layer.
 

@@ -52,8 +52,9 @@ class LayerActivation(LayerAttribution):
                             Default: None
 
             Return
-
-                attributions (tensor): Activation of each neuron in given layer output.
+                *tensor* of **atributions**:
+                - **attributions** (*tensor*):
+                            Activation of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
 

@@ -139,8 +139,9 @@ class NeuronConductance(NeuronAttribution):
                             Default: None
 
             Return:
-
-                attributions (tensor or tuple of tensors): Conductance for
+                *tensor* or tuple of *tensors* of **atributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Conductance for
                             particular neuron with respect to each input feature.
                             Attributions will always be the same size as the provided
                             inputs, with each value providing the attribution of the

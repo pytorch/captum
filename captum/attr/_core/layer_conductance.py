@@ -145,11 +145,13 @@ class LayerConductance(LayerAttribution):
                             Default: False
 
             Return
-
-                attributions (tensor): Conductance of each neuron in given layer output.
+                **attributions** or 2-element tuple of **attributions**, **delta**:
+                - **attributions** (*tensor*):
+                            Conductance of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                delta (tensor, optional): The difference between the total
+                - delta (*tensor*, returned if return_convergence_delta=True):
+                            The difference between the total
                             approximated and true conductance.
                             This is computed using the property that the total sum of
                             forward_func(inputs) - forward_func(baselines) must equal

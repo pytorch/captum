@@ -110,15 +110,17 @@ class NoiseTunnel(Attribution):
                             `additional_forward_args` and `baselines`.
 
             Return:
-
-                attributions (tensor or tuple of tensors): Attribution with
+                **attributions** or 2-element tuple of **attributions**, **delta**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Attribution with
                             respect to each input feature. attributions will always be
                             the same size as the provided inputs, with each value
                             providing the attribution of the corresponding input index.
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
-                delta (float, optional): Approximation error computed by the
+                - **delta** (*float*, returned if return_convergence_delta=True):
+                            Approximation error computed by the
                             attribution algorithm. Not all attribution algorithms
                             return delta value. It is computed only for some
                             algorithms, e.g. integrated gradients.
