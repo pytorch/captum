@@ -70,6 +70,8 @@ Guided backpropagation computes the gradient of the target output with respect t
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
 
+Note: this method is currently available in master and will be available in pip / conda releases soon.
+
 ### Guided GradCAM
 Guided GradCAM computes the element-wise product of [guided backpropagation](###Guided-Backpropagation) attributions with upsampled (layer) [GradCAM](###GradCAM) attributions. GradCAM attributions are computed
 with respect to a given layer, and attributions are upsampled to match the input size.
@@ -81,6 +83,8 @@ Guided GradCAM was proposed by the authors of GradCAM as a method to combine the
 To learn more about Guided GradCAM, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
+
+Note: this method is currently available in master and will be available in pip / conda releases soon.
 
 ## Layer Attribution
 ### Layer Conductance
@@ -121,6 +125,8 @@ To learn more about GradCAM, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
+Note: this method is currently available in master and will be available in pip / conda releases soon.
+
 ## Neuron Attribution
 ### Neuron Conductance
 Conductance combines the neuron activation with the partial derivatives of both the neuron with respect to the input and the output with respect to the neuron to build a more complete picture of neuron importance.  
@@ -149,6 +155,8 @@ Neuron guided backpropagation is the analog of guided backpropagation for a part
 
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
+
+Note: this method is currently available in master and will be available in pip / conda releases soon.
 
 ## Noise Tunnel
 Noise Tunnel is a method that can be used on top of any of the attribution methods. Noise tunnel computes attribution multiple times, adding Gaussian noise to the input each time, and combines the calculated attributions based on the chosen type. The supported types for noise tunnel are:
