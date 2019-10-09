@@ -11,7 +11,7 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 class Test(BaseTest):
     def test_simple_input_non_conv(self):
-        net = TestModel_MultiLayer()
+        net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._grad_cam_test_assert(net, net.linear0, inp, [400.0])
 
