@@ -170,7 +170,7 @@ class AttributionVisualizer(object):
         return labels == predicted_label
 
     def _should_keep_prediction(
-        self, predicted_scores: List[OutputScore], actual_label: str
+        self, predicted_scores: List[OutputScore], actual_label: OutputScore
     ) -> bool:
         # filter by class
         if len(self._config.classes) != 0:
@@ -180,13 +180,14 @@ class AttributionVisualizer(object):
                 return False
 
         # filter by accuracy
+        label_name = actual_label.label
         if self._config.prediction == "all":
             pass
         elif self._config.prediction == "correct":
-            if not self._predictions_matches_labels(predicted_scores, actual_label):
+            if not self._predictions_matches_labels(predicted_scores, label_name):
                 return False
         elif self._config.prediction == "incorrect":
-            if self._predictions_matches_labels(predicted_scores, actual_label):
+            if self._predictions_matches_labels(predicted_scores, label_name):
                 return False
         else:
             raise Exception(f"Invalid prediction config: {self._config.prediction}")
@@ -238,16 +239,16 @@ class AttributionVisualizer(object):
         predicted = predicted.cpu().squeeze(0)
 
         if label is not None and len(label) > 0:
-            actual_label = OutputScore(
-                score=0, index=label[0], label=self.classes[label[0]]
+            actual_label_output = OutputScore(
+                score=100, index=label[0], label=self.classes[label[0]]
             )
         else:
-            actual_label = None
+            actual_label_output = None
 
         predicted_scores = self._get_labels_from_scores(scores, predicted)
 
         # Filter based on UI configuration
-        if not self._should_keep_prediction(predicted_scores, actual_label):
+        if not self._should_keep_prediction(predicted_scores, actual_label_output):
             return None
 
         baselines = [tuple(b) for b in baselines]
@@ -277,9 +278,9 @@ class AttributionVisualizer(object):
 
         return VisualizationOutput(
             feature_outputs=features_per_input,
-            actual=actual_label,
+            actual=actual_label_output,
             predicted=predicted_scores,
-            active_index=target if target is not None else actual_label.index,
+            active_index=target if target is not None else actual_label_output.index,
         )
 
     def _get_outputs(self) -> List[VisualizationOutput]:
