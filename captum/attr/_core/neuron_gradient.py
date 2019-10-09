@@ -68,7 +68,7 @@ class NeuronGradient(NeuronAttribution):
                             to these arguments.
                             Default: None
 
-            Return
+            Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             Gradients of particular neuron with respect to each input

@@ -124,7 +124,7 @@ class IntegratedGradients(GradientAttribution):
                             is set to True convergence delta will be returned in
                             a tuple following attributions.
                             Default: False
-            Return:
+            Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                         Integrated gradients with respect to each input feature.

@@ -51,7 +51,7 @@ class LayerActivation(LayerAttribution):
                             to these arguments.
                             Default: None
 
-            Return
+            Returns:
                 *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Activation of each neuron in given layer output.

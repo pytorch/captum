@@ -109,7 +109,7 @@ class NoiseTunnel(Attribution):
                             For instance, such arguments include
                             `additional_forward_args` and `baselines`.
 
-            Return:
+            Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             Attribution with

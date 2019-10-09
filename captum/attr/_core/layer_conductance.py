@@ -144,7 +144,7 @@ class LayerConductance(LayerAttribution):
                             a tuple following attributions.
                             Default: False
 
-            Return
+            Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor*):
                             Conductance of each neuron in given layer output.

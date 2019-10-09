@@ -133,7 +133,7 @@ class InternalInfluence(LayerAttribution):
                             are processed in one batch.
                             Default: None
 
-            Return
+            Returns:
                 *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Internal influence of each neuron in given

@@ -79,8 +79,7 @@ class Saliency(GradientAttribution):
                             to these arguments.
                             Default: None
 
-        Return:
-
+        Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             The gradients with respect to each input feature.

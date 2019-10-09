@@ -138,7 +138,7 @@ class NeuronConductance(NeuronAttribution):
                             processed in one batch.
                             Default: None
 
-            Return:
+            Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             Conductance for

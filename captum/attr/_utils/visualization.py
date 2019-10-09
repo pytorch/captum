@@ -171,7 +171,7 @@ def visualize_image_attr(
                         figure object without showing.
                         Default: True.
 
-        Return:
+        Returns:
             2-element tuple of **figure**, **axis**:
             - **figure** (*matplotlib.pyplot.figure*):
                         Figure object on which visualization

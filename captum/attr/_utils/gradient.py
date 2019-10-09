@@ -241,7 +241,7 @@ def compute_layer_gradients_and_eval(
                         additional arguments are required
 
 
-        Return
+        Returns:
             2-element tuple of **gradients**, **evals**:
             - **gradients**:
                 Gradients of output with respect to target layer output.

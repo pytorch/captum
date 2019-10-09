@@ -78,7 +78,7 @@ class LayerGradientXActivation(LayerAttribution):
                             to these arguments.
                             Default: None
 
-            Return
+            Returns:
                 *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Product of gradient and activation for each
