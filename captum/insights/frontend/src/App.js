@@ -181,22 +181,29 @@ function Spinner(_) {
   return <div className="spinner" />;
 }
 
-// TODO maybe linear interpolate the colors instead of hardcoding them
-function getPercentageColor(percentage, zeroDefault = false) {
-  if (percentage > 50) {
-    return "percentage-blue";
-  } else if (percentage > 10) {
-    return "percentage-light-blue";
-  } else if (percentage > -10) {
-    if (zeroDefault) {
-      return "percentage-white";
-    }
-    return "percentage-gray";
-  } else if (percentage > -50) {
-    return "percentage-light-red";
+function calcHSLFromScore(percentage, zeroDefault = false) {
+  const blue_hsl = [220, 100, 80];
+  const red_hsl = [10, 100, 67];
+
+  let target_hsl = null;
+  if (percentage > 0) {
+    target_hsl = blue_hsl;
   } else {
-    return "percentage-red";
+    target_hsl = red_hsl;
   }
+
+  const default_hsl = [0, 40, zeroDefault ? 100 : 90];
+  const abs_percent = Math.abs(percentage * 0.01);
+  if (abs_percent < 0.02) {
+    return default_hsl;
+  }
+
+  const color = [
+    target_hsl[0],
+    (target_hsl[1] - default_hsl[1]) * abs_percent + default_hsl[1],
+    (target_hsl[2] - default_hsl[2]) * abs_percent + default_hsl[2]
+  ];
+  return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`;
 }
 
 function ImageFeature(props) {
@@ -230,10 +237,10 @@ function TextFeature(props) {
     return (
       <>
         <span
-          className={cx([
-            getPercentageColor(props.data.modified[i], /* zeroDefault */ true),
-            "text-feature-word"
-          ])}
+          style={{
+            backgroundColor: calcHSLFromScore(props.data.modified[i], false)
+          }}
+          className={"text-feature-word"}
         >
           {w}
           <Tooltip label={props.data.modified[i].toFixed(3)} />
@@ -302,11 +309,11 @@ class Contributions extends React.Component {
       return (
         <div className="bar-chart__group">
           <div
-            className={cx([
-              "bar-chart__group__bar",
-              getPercentageColor(contribution)
-            ])}
-            style={{ height: bar_height + "px" }}
+            className={"bar-chart__group__bar"}
+            style={{
+              height: bar_height + "px",
+              backgroundColor: calcHSLFromScore(contribution)
+            }}
           />
           <div className="bar-chart__group__title">{f.name}</div>
         </div>
