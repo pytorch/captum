@@ -60,8 +60,8 @@ class ImageFeature(BaseFeature):
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        attribution.squeeze_()
-        data.squeeze_()
+        attribution = attribution.squeeze()
+        data = data.squeeze()
         data_t = np.transpose(data.cpu().detach().numpy(), (1, 2, 0))
         attribution_t = np.transpose(
             attribution.squeeze().cpu().detach().numpy(), (1, 2, 0)
@@ -111,8 +111,8 @@ class TextFeature(BaseFeature):
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
         text = self.visualization_transform(data)
 
-        attribution.squeeze_(0)
-        data.squeeze_(0)
+        attribution = attribution.squeeze(0)
+        data = data.squeeze(0)
         attribution = attribution.sum(dim=1)
 
         # L-Infinity norm
@@ -142,8 +142,8 @@ class GeneralFeature(BaseFeature):
         return "general"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        attribution.squeeze_(0)
-        data.squeeze_(0)
+        attribution = attribution.squeeze(0)
+        data = data.squeeze(0)
 
         # L-2 norm
         normalized_attribution = attribution / attribution.norm()
