@@ -1,7 +1,0 @@
-{
-  "docs": {
-    "About": ["introduction"],
-    "General": ["getting_started", "captum_insights", "algorithms"],
-    "Usage": ["extension/integrated_gradients"]
-  }
-}

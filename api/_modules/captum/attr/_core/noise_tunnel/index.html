@@ -1,0 +1,414 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.org/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.org/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.org/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.noise_tunnel</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">Attribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">validate_noise_tunnel_type</span><span class="p">,</span>
+    <span class="n">validate_input</span><span class="p">,</span>
+    <span class="n">format_baseline</span><span class="p">,</span>
+    <span class="n">format_input</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">ExpansionTypes</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">NoiseTunnelType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">smoothgrad</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">smoothgrad_sq</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">vargrad</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="NoiseTunnel"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel">[docs]</a><span class="k">class</span> <span class="nc">NoiseTunnel</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribution_method</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        attribution_method (Attribution): An instance of any attribution algorithm</span>
+<span class="sd">                    of type `Attribution`. E.g. Integrated Gradients,</span>
+<span class="sd">                    Conductance or Saliency.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span> <span class="o">=</span> <span class="n">attribution_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">has_convergence_delta</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="NoiseTunnel.attribute"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">nt_type</span><span class="o">=</span><span class="s2">"smoothgrad"</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">stdevs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Adds gaussian noise to each input in the batch `n_samples` times</span>
+<span class="sd">        and applies the given attribution algorithm to each of the samples.</span>
+<span class="sd">        The attributions of the samples are combined based on the given noise</span>
+<span class="sd">        tunnel type (nt_type):</span>
+<span class="sd">        If nt_type is `smoothgrad`, the mean of the sampled attributions is</span>
+<span class="sd">        returned. This approximates smoothing the given attribution method</span>
+<span class="sd">        with a Gaussian Kernel.</span>
+<span class="sd">        If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions</span>
+<span class="sd">        is returned.</span>
+<span class="sd">        If nt_type is `vargrad`, the variance of the sample attributions is</span>
+<span class="sd">        returned.</span>
+
+<span class="sd">        More details about adding noise can be found in the following papers:</span>
+<span class="sd">            https://arxiv.org/abs/1810.03292</span>
+<span class="sd">            https://arxiv.org/abs/1810.03307</span>
+<span class="sd">            https://arxiv.org/abs/1706.03825</span>
+<span class="sd">            https://arxiv.org/pdf/1806.10758</span>
+<span class="sd">        This method currently also supports batches of multiple examples input,</span>
+<span class="sd">        however it can be computationally expensive depending on the model,</span>
+<span class="sd">        the dimensionality of the data and execution environment.</span>
+<span class="sd">        It is assumed that the batch size is the first dimension of input tensors.</span>
+
+<span class="sd">            Args:</span>
+
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which integrated</span>
+<span class="sd">                            gradients are computed. If forward_func takes a single</span>
+<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                            of the input tensors should be provided. It is assumed</span>
+<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                            to the number of examples, and if mutliple input tensors</span>
+<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
+<span class="sd">                nt_type (string, optional): Smoothing type of the attributions.</span>
+<span class="sd">                            `smoothgrad`, `smoothgrad_sq` or `vargrad`</span>
+<span class="sd">                            Default: `smoothgrad` if `type` is not provided.</span>
+<span class="sd">                n_samples (int, optional):  The number of randomly generated examples</span>
+<span class="sd">                            per sample in the input batch. Random examples are</span>
+<span class="sd">                            generated by adding gaussian random noise to each sample.</span>
+<span class="sd">                            Default: `5` if `n_samples` is not provided.</span>
+<span class="sd">                stdevs    (float, or a tuple of floats optional): The standard deviation</span>
+<span class="sd">                            of gaussian noise with zero mean that is added to each</span>
+<span class="sd">                            input in the batch. If `stdevs` is a single float value</span>
+<span class="sd">                            then that same value is used for all inputs. If it is</span>
+<span class="sd">                            a tuple, then it must have the same length as the inputs</span>
+<span class="sd">                            tuple. In this case, each stdev value in the stdevs tuple</span>
+<span class="sd">                            corresponds to the input with the same index in the inputs</span>
+<span class="sd">                            tuple.</span>
+<span class="sd">                            Default: `1.0` if `stdevs` is not provided.</span>
+<span class="sd">                draw_baseline_from_distrib (bool, optional): Indicates whether to</span>
+<span class="sd">                            randomly draw baseline samples from the `baselines`</span>
+<span class="sd">                            distribution provided as an input tensor.</span>
+<span class="sd">                            Default: False</span>
+<span class="sd">                **kwargs (Any, optional): Contains a list of arguments that are passed</span>
+<span class="sd">                            to `attribution_method` attribution algorithm.</span>
+<span class="sd">                            Any additional arguments that should be used for the</span>
+<span class="sd">                            chosen attribution method should be included here.</span>
+<span class="sd">                            For instance, such arguments include</span>
+<span class="sd">                            `additional_forward_args` and `baselines`.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                            Attribution with</span>
+<span class="sd">                            respect to each input feature. attributions will always be</span>
+<span class="sd">                            the same size as the provided inputs, with each value</span>
+<span class="sd">                            providing the attribution of the corresponding input index.</span>
+<span class="sd">                            If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                            returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                            corresponding sized tensors is returned.</span>
+<span class="sd">                - **delta** (*float*, returned if return_convergence_delta=True):</span>
+<span class="sd">                            Approximation error computed by the</span>
+<span class="sd">                            attribution algorithm. Not all attribution algorithms</span>
+<span class="sd">                            return delta value. It is computed only for some</span>
+<span class="sd">                            algorithms, e.g. integrated gradients.</span>
+<span class="sd">                            Delta is computed for each input in the batch</span>
+<span class="sd">                            and represents the arithmetic mean</span>
+<span class="sd">                            across all `n_sample` pertubed tensors for that input.</span>
+
+
+<span class="sd">            Examples::</span>
+
+<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">                &gt;&gt;&gt; ig = IntegratedGradients(net)</span>
+<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">                &gt;&gt;&gt; # Creates noise tunnel</span>
+<span class="sd">                &gt;&gt;&gt; nt = NoiseTunnel(ig)</span>
+<span class="sd">                &gt;&gt;&gt; # Generates 10 perturbed input tensors per image.</span>
+<span class="sd">                &gt;&gt;&gt; # Computes integrated gradients for class 3 for each generated</span>
+<span class="sd">                &gt;&gt;&gt; # input and averages attributions accros all 10</span>
+<span class="sd">                &gt;&gt;&gt; # perturbed inputs per image</span>
+<span class="sd">                &gt;&gt;&gt; attribution = nt.attribute(input, nt_type='smoothgrad',</span>
+<span class="sd">                &gt;&gt;&gt;                            n_samples=10, target=3)</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span> <span class="nf">add_noise_to_inputs</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stdevs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="p">(</span>
+                    <span class="s2">"The number of input tensors "</span>
+                    <span class="s2">"in </span><span class="si">{}</span><span class="s2"> must be equal to the number of stdevs values </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdevs</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">stdevs</span><span class="p">,</span> <span class="nb">float</span>
+                <span class="p">),</span> <span class="s2">"stdevs must be type float. "</span> <span class="s2">"Given: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stdevs</span><span class="p">))</span>
+                <span class="n">stdevs_</span> <span class="o">=</span> <span class="p">(</span><span class="n">stdevs</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">stdevs_</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">add_noise_to_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">stdev</span><span class="p">):</span>
+            <span class="c1"># batch size</span>
+            <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># expand input size by the number of drawn samples</span>
+            <span class="n">input_expanded_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span> <span class="o">*</span> <span class="n">n_samples</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+            <span class="c1"># expand stdev for the shape of the input and number of drawn samples</span>
+            <span class="n">stdev_expanded</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">stdev</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+                <span class="n">input_expanded_size</span>
+            <span class="p">)</span>
+
+            <span class="c1"># draws `np.prod(input_expanded_size)` samples from normal distribution</span>
+            <span class="c1"># with given input parametrization</span>
+            <span class="c1"># FIXME it look like it is very difficult to make torch.normal</span>
+            <span class="c1"># deterministic this needs an investigation</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdev_expanded</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
+
+        <span class="k">def</span> <span class="nf">expand_and_update_baselines</span><span class="p">():</span>
+            <span class="c1"># TODO allow to add noise to baselines as well</span>
+            <span class="c1"># expand baselines to match the sizes of input</span>
+            <span class="k">if</span> <span class="s2">"baselines"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span>
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+            <span class="n">validate_input</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="n">draw_baseline_from_distrib</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">draw_baseline_from_distrib</span><span class="p">:</span>
+                <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">num_ref_samples</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">rand_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                    <span class="n">num_ref_samples</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">*</span> <span class="n">bsz</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="n">baselines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">baseline</span><span class="p">[</span><span class="n">rand_indices</span><span class="p">]</span> <span class="k">for</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="n">baselines</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">baselines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="n">baseline</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="n">baselines</span>
+                <span class="p">)</span>
+            <span class="c1"># update kwargs with expanded baseline</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span> <span class="o">=</span> <span class="n">baselines</span>
+
+        <span class="k">def</span> <span class="nf">expand_and_update_additional_forward_args</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">"additional_forward_args"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"additional_forward_args"</span><span class="p">]</span>
+            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+                <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">n_samples</span><span class="p">,</span>
+                <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># update kwargs with expanded baseline</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"additional_forward_args"</span><span class="p">]</span> <span class="o">=</span> <span class="n">additional_forward_args</span>
+
+        <span class="k">def</span> <span class="nf">expand_and_update_target</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">"target"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
+                <span class="n">target</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span>
+            <span class="p">)</span>
+            <span class="c1"># update kwargs with expanded baseline</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+
+        <span class="k">def</span> <span class="nf">compute_expected_attribution_and_sq</span><span class="p">(</span><span class="n">attribution</span><span class="p">):</span>
+            <span class="n">bsz</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">n_samples</span>
+            <span class="n">attribution_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">attribution_shape</span> <span class="o">+=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+            <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_shape</span><span class="p">)</span>
+            <span class="n">expected_attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">expected_attribution_sq</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">attribution</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">expected_attribution</span><span class="p">,</span> <span class="n">expected_attribution_sq</span>
+
+        <span class="c1"># Keeps track whether original input is a tuple or not before</span>
+        <span class="c1"># converting it into a tuple.</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="n">validate_noise_tunnel_type</span><span class="p">(</span><span class="n">nt_type</span><span class="p">,</span> <span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span><span class="p">)</span>
+
+        <span class="n">delta</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">inputs_with_noise</span> <span class="o">=</span> <span class="n">add_noise_to_inputs</span><span class="p">()</span>
+        <span class="c1"># if the algorithm supports targets, baselines and/or additional_forward_args</span>
+        <span class="c1"># they will be expanded based on the n_steps and corrsponding kwargs</span>
+        <span class="c1"># variables will be updated accordingly</span>
+        <span class="n">expand_and_update_baselines</span><span class="p">()</span>
+        <span class="n">expand_and_update_additional_forward_args</span><span class="p">()</span>
+        <span class="n">expand_and_update_target</span><span class="p">()</span>
+        <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">return_convergence_delta</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"return_convergence_delta"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"return_convergence_delta"</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
+
+        <span class="n">expected_attributions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">expected_attributions_sq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">:</span>
+            <span class="n">expected_attr</span><span class="p">,</span> <span class="n">expected_attr_sq</span> <span class="o">=</span> <span class="n">compute_expected_attribution_and_sq</span><span class="p">(</span>
+                <span class="n">attribution</span>
+            <span class="p">)</span>
+            <span class="n">expected_attributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expected_attr</span><span class="p">)</span>
+            <span class="n">expected_attributions_sq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expected_attr_sq</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">expected_attributions</span><span class="p">),</span>
+                <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                <span class="n">return_convergence_delta</span><span class="p">,</span>
+                <span class="n">delta</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad_sq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">expected_attributions_sq</span><span class="p">),</span>
+                <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                <span class="n">return_convergence_delta</span><span class="p">,</span>
+                <span class="n">delta</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">vargrad</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">expected_attribution_sq</span> <span class="o">-</span> <span class="n">expected_attribution</span> <span class="o">*</span> <span class="n">expected_attribution</span>
+            <span class="k">for</span> <span class="n">expected_attribution</span><span class="p">,</span> <span class="n">expected_attribution_sq</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">expected_attributions</span><span class="p">,</span> <span class="n">expected_attributions_sq</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
+            <span class="n">vargrad</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_apply_checks_and_return_attributions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
+    <span class="p">):</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span>
+            <span class="k">else</span> <span class="n">attributions</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="NoiseTunnel.has_convergence_delta"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span></div></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
