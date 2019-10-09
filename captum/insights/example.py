@@ -1,6 +1,6 @@
 import os
 
-from captum.insights.api import AttributionVisualizer, Data
+from captum.insights import AttributionVisualizer, Batch
 from captum.insights.features import ImageFeature
 
 import torch
@@ -71,7 +71,7 @@ def formatted_data_iter():
     )
     while True:
         images, labels = next(dataloader)
-        yield Data(inputs=images, labels=labels)
+        yield Batch(inputs=images, labels=labels)
 
 
 if __name__ == "__main__":
