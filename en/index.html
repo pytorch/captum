@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div><div class="homeContainer"><div class="homeSplashFade"><div class="wrapper homeWrapper"><div class="productTitle">Captum</div><div class="inner"><h2 class="projectTitle"><small>Model Interpretability for PyTorch</small></h2><div class="section promoSection"><div class="promoRow"><div class="pluginRowBlock"><div class="pluginWrapper buttonWrapper"><a class="button" href="/docs/en/introduction.html">Introduction</a></div><div class="pluginWrapper buttonWrapper"><a class="button" href="#quickstart">Get Started</a></div><div class="pluginWrapper buttonWrapper"><a class="button" href="/tutorials/">Tutorials</a></div></div></div></div></div></div></div></div><div class="landingPage mainContainer"><div class="productShowcaseSection" style="text-align:center"><h2>Key Features</h2><div class="container paddingBottom paddingTop"><div class="wrapper"><div class="gridBlock"><div class="blockElement alignCenter imageAlignTop threeByGridBlock"><div class="blockImage"><img src="/img/multi-modal.png"/></div><div class="blockContent"><h2><div><span><p>Multi-Modal</p>
+</span></div></h2><div><span><p>Supports interpretability of models across modalities including vision, text, and more.</p>
+</span></div></div></div><div class="blockElement alignCenter imageAlignTop threeByGridBlock"><div class="blockImage"><img src="/img/pytorch_logo.svg"/></div><div class="blockContent"><h2><div><span><p>Built on PyTorch</p>
+</span></div></h2><div><span><p>Supports most types of PyTorch models and can be used with minimal modification to the original neural network.</p>
+</span></div></div></div><div class="blockElement alignCenter imageAlignTop threeByGridBlock"><div class="blockImage"><img src="/img/expanding_arrows.svg"/></div><div class="blockContent"><h2><div><span><p>Extensible</p>
+</span></div></h2><div><span><p>Open source, generic library for interpretability research. Easily implement and benchmark new algorithms.</p>
+</span></div></div></div></div></div></div></div><div class="productShowcaseSection" id="quickstart" style="text-align:center"><h2>Get Started</h2><div class="container"><div class="wrapper"><ol><li><h4>Install Captum:</h4><a>via conda (recommended):</a><div><span><pre><code class="hljs css language-bash">conda install captum -c pytorch
+</code></pre>
+</span></div><a>via pip:</a><div><span><pre><code class="hljs css language-bash">pip install captum
+</code></pre>
+</span></div></li><li><h4>Create and prepare model:</h4><div><span><pre><code class="hljs css language-python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+
+<span class="hljs-keyword">import</span> torch
+<span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn
+
+<span class="hljs-keyword">from</span> captum.attr <span class="hljs-keyword">import</span> (
+    IntegratedGradients
+)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ToyModel</span><span class="hljs-params">(nn.Module)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        super().__init__()
+        self.lin1 = nn.Linear(<span class="hljs-number">3</span>, <span class="hljs-number">3</span>)
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(<span class="hljs-number">3</span>, <span class="hljs-number">2</span>)
+
+        <span class="hljs-comment"># initialize weights and biases</span>
+        self.lin1.weight = nn.Parameter(torch.arange(<span class="hljs-number">-4.0</span>, <span class="hljs-number">5.0</span>).view(<span class="hljs-number">3</span>, <span class="hljs-number">3</span>))
+        self.lin1.bias = nn.Parameter(torch.zeros(<span class="hljs-number">1</span>,<span class="hljs-number">3</span>))
+        self.lin2.weight = nn.Parameter(torch.arange(<span class="hljs-number">-3.0</span>, <span class="hljs-number">3.0</span>).view(<span class="hljs-number">2</span>, <span class="hljs-number">3</span>))
+        self.lin2.bias = nn.Parameter(torch.ones(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(self, input)</span>:</span>
+        <span class="hljs-keyword">return</span> self.lin2(self.relu(self.lin1(input)))
+
+
+model = ToyModel()
+model.eval()
+</code></pre>
+</span></div></li><li><h4>To make computations deterministic, let&#x27;s fix random seeds:</h4><div><span><pre><code class="hljs css language-python">torch.manual_seed(<span class="hljs-number">123</span>)
+np.random.seed(<span class="hljs-number">123</span>)
+</code></pre>
+</span></div></li><li><h4>Define input and baseline tensors:</h4><div><span><pre><code class="hljs css language-python">input = torch.rand(<span class="hljs-number">2</span>, <span class="hljs-number">3</span>)
+baseline = torch.zeros(<span class="hljs-number">2</span>, <span class="hljs-number">3</span>)
+</code></pre>
+</span></div></li><li><h4>Select algorithm to instantiate and apply (Integrated Gradients in this example):</h4><div><span><pre><code class="hljs css language-python">ig = IntegratedGradients(model)
+attributions, delta = ig.attribute(input, baseline, target=<span class="hljs-number">0</span>, return_convergence_delta=<span class="hljs-literal">True</span>)
+print(<span class="hljs-string">'IG Attributions: '</span>, attributions, <span class="hljs-string">' Convergence Delta: '</span>, delta)
+</code></pre>
+</span></div></li><li><h4>View Output:</h4><div><span><pre><code class="hljs css language-python">IG Attributions:  tensor([[<span class="hljs-number">-0.5922</span>, <span class="hljs-number">-1.5497</span>, <span class="hljs-number">-1.0067</span>],
+                          [ <span class="hljs-number">0.0000</span>, <span class="hljs-number">-0.2219</span>, <span class="hljs-number">-5.1991</span>]])
+Convergence Delta: tensor([<span class="hljs-number">2.3842e-07</span>, <span class="hljs-number">-4.7684e-07</span>])
+</code></pre>
+</span></div></li></ol></div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

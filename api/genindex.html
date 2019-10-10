@@ -1,0 +1,379 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1 id="index">Index</h1>
+<div class="genindex-jumpbox">
+<a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+</div>
+<h2 id="_">_</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common._extend_index_list">_extend_index_list() (in module captum.attr._utils.common)</a>
+</li>
+<li><a href="common.html#captum.attr._utils.common._format_attributions">_format_attributions() (in module captum.attr._utils.common)</a>
+</li>
+<li><a href="utilities.html#captum.attr._models.base._get_deep_layer_name">_get_deep_layer_name() (in module captum.attr._models.base)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common._reshape_and_sum">_reshape_and_sum() (in module captum.attr._utils.common)</a>
+</li>
+<li><a href="common.html#captum.attr._utils.common._run_forward">_run_forward() (in module captum.attr._utils.common)</a>
+</li>
+<li><a href="utilities.html#captum.attr._models.base._set_deep_layer_value">_set_deep_layer_value() (in module captum.attr._models.base)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="A">A</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common.MaxList.add">add() (captum.attr._utils.common.MaxList method)</a>
+</li>
+<li><a href="deep_lift.html#captum.attr._core.deep_lift.DeepLift.attribute">attribute() (captum.attr._core.deep_lift.DeepLift method)</a>
+<ul>
+<li><a href="deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap.attribute">(captum.attr._core.deep_lift.DeepLiftShap method)</a>
+</li>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.GradientShap.attribute">(captum.attr._core.gradient_shap.GradientShap method)</a>
+</li>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.attribute">(captum.attr._core.gradient_shap.InputBaselineXGradient method)</a>
+</li>
+<li><a href="input_x_gradient.html#captum.attr._core.input_x_gradient.InputXGradient.attribute">(captum.attr._core.input_x_gradient.InputXGradient method)</a>
+</li>
+<li><a href="integrated_gradients.html#captum.attr._core.integrated_gradients.IntegratedGradients.attribute">(captum.attr._core.integrated_gradients.IntegratedGradients method)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.internal_influence.InternalInfluence.attribute">(captum.attr._core.internal_influence.InternalInfluence method)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.layer_activation.LayerActivation.attribute">(captum.attr._core.layer_activation.LayerActivation method)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.layer_conductance.LayerConductance.attribute">(captum.attr._core.layer_conductance.LayerConductance method)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation.attribute">(captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation method)</a>
+</li>
+<li><a href="neuron.html#captum.attr._core.neuron_conductance.NeuronConductance.attribute">(captum.attr._core.neuron_conductance.NeuronConductance method)</a>
+</li>
+<li><a href="neuron.html#captum.attr._core.neuron_gradient.NeuronGradient.attribute">(captum.attr._core.neuron_gradient.NeuronGradient method)</a>
+</li>
+<li><a href="neuron.html#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute">(captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients method)</a>
+</li>
+<li><a href="noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.attribute">(captum.attr._core.noise_tunnel.NoiseTunnel method)</a>
+</li>
+<li><a href="saliency.html#captum.attr._core.saliency.Saliency.attribute">(captum.attr._core.saliency.Saliency method)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.attribution.Attribution.attribute">(captum.attr._utils.attribution.Attribution method)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.attribution.NeuronAttribution.attribute">(captum.attr._utils.attribution.NeuronAttribution method)</a>
+</li>
+</ul></li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._utils.attribution.Attribution">Attribution (class in captum.attr._utils.attribution)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="C">C</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="deep_lift.html#module-captum.attr._core.deep_lift">captum.attr._core.deep_lift (module)</a>, <a href="deep_lift_shap.html#module-captum.attr._core.deep_lift">[1]</a>
+</li>
+<li><a href="gradient_shap.html#module-captum.attr._core.gradient_shap">captum.attr._core.gradient_shap (module)</a>
+</li>
+<li><a href="input_x_gradient.html#module-captum.attr._core.input_x_gradient">captum.attr._core.input_x_gradient (module)</a>
+</li>
+<li><a href="integrated_gradients.html#module-captum.attr._core.integrated_gradients">captum.attr._core.integrated_gradients (module)</a>
+</li>
+<li><a href="layer.html#module-captum.attr._core.internal_influence">captum.attr._core.internal_influence (module)</a>
+</li>
+<li><a href="layer.html#module-captum.attr._core.layer_activation">captum.attr._core.layer_activation (module)</a>
+</li>
+<li><a href="layer.html#module-captum.attr._core.layer_conductance">captum.attr._core.layer_conductance (module)</a>
+</li>
+<li><a href="layer.html#module-captum.attr._core.layer_gradient_x_activation">captum.attr._core.layer_gradient_x_activation (module)</a>
+</li>
+<li><a href="neuron.html#module-captum.attr._core.neuron_conductance">captum.attr._core.neuron_conductance (module)</a>
+</li>
+<li><a href="neuron.html#module-captum.attr._core.neuron_gradient">captum.attr._core.neuron_gradient (module)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="neuron.html#module-captum.attr._core.neuron_integrated_gradients">captum.attr._core.neuron_integrated_gradients (module)</a>
+</li>
+<li><a href="noise_tunnel.html#module-captum.attr._core.noise_tunnel">captum.attr._core.noise_tunnel (module)</a>
+</li>
+<li><a href="saliency.html#module-captum.attr._core.saliency">captum.attr._core.saliency (module)</a>
+</li>
+<li><a href="utilities.html#module-captum.attr._models.base">captum.attr._models.base (module)</a>, <a href="utilities.html#module-captum.attr._models.base">[1]</a>
+</li>
+<li><a href="approximation_methods.html#module-captum.attr._utils.approximation_methods">captum.attr._utils.approximation_methods (module)</a>
+</li>
+<li><a href="utilities.html#module-captum.attr._utils.attribution">captum.attr._utils.attribution (module)</a>, <a href="utilities.html#module-captum.attr._utils.attribution">[1]</a>, <a href="utilities.html#module-captum.attr._utils.attribution">[2]</a>, <a href="utilities.html#module-captum.attr._utils.attribution">[3]</a>
+</li>
+<li><a href="common.html#module-captum.attr._utils.common">captum.attr._utils.common (module)</a>
+</li>
+<li><a href="utilities.html#module-captum.attr._utils.visualization">captum.attr._utils.visualization (module)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.attribution.Attribution.compute_convergence_delta">compute_convergence_delta() (captum.attr._utils.attribution.Attribution method)</a>
+<ul>
+<li><a href="utilities.html#captum.attr._utils.attribution.GradientAttribution.compute_convergence_delta">(captum.attr._utils.attribution.GradientAttribution method)</a>
+</li>
+</ul></li>
+<li><a href="utilities.html#captum.attr._models.base.configure_interpretable_embedding_layer">configure_interpretable_embedding_layer() (in module captum.attr._models.base)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="D">D</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="deep_lift.html#captum.attr._core.deep_lift.DeepLift">DeepLift (class in captum.attr._core.deep_lift)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap">DeepLiftShap (class in captum.attr._core.deep_lift)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="F">F</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common.format_input">format_input() (in module captum.attr._utils.common)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.forward">forward() (captum.attr._models.base.InterpretableEmbeddingBase method)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="G">G</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._models.base.TokenReferenceBase.generate_reference">generate_reference() (captum.attr._models.base.TokenReferenceBase method)</a>
+</li>
+<li><a href="common.html#captum.attr._utils.common.MaxList.get_list">get_list() (captum.attr._utils.common.MaxList method)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._utils.attribution.GradientAttribution">GradientAttribution (class in captum.attr._utils.attribution)</a>
+</li>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.GradientShap">GradientShap (class in captum.attr._core.gradient_shap)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="H">H</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="deep_lift.html#captum.attr._core.deep_lift.DeepLift.has_convergence_delta">has_convergence_delta() (captum.attr._core.deep_lift.DeepLift method)</a>
+<ul>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.GradientShap.has_convergence_delta">(captum.attr._core.gradient_shap.GradientShap method)</a>
+</li>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.has_convergence_delta">(captum.attr._core.gradient_shap.InputBaselineXGradient method)</a>
+</li>
+<li><a href="integrated_gradients.html#captum.attr._core.integrated_gradients.IntegratedGradients.has_convergence_delta">(captum.attr._core.integrated_gradients.IntegratedGradients method)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.layer_conductance.LayerConductance.has_convergence_delta">(captum.attr._core.layer_conductance.LayerConductance method)</a>
+</li>
+<li><a href="noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.has_convergence_delta">(captum.attr._core.noise_tunnel.NoiseTunnel method)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.attribution.Attribution.has_convergence_delta">(captum.attr._utils.attribution.Attribution method)</a>
+</li>
+</ul></li>
+</ul></td>
+</tr></table>
+<h2 id="I">I</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">indices_to_embeddings() (captum.attr._models.base.InterpretableEmbeddingBase method)</a>
+</li>
+<li><a href="gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient">InputBaselineXGradient (class in captum.attr._core.gradient_shap)</a>
+</li>
+<li><a href="input_x_gradient.html#captum.attr._core.input_x_gradient.InputXGradient">InputXGradient (class in captum.attr._core.input_x_gradient)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="integrated_gradients.html#captum.attr._core.integrated_gradients.IntegratedGradients">IntegratedGradients (class in captum.attr._core.integrated_gradients)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.internal_influence.InternalInfluence">InternalInfluence (class in captum.attr._core.internal_influence)</a>
+</li>
+<li><a href="utilities.html#captum.attr._models.base.InterpretableEmbeddingBase">InterpretableEmbeddingBase (class in captum.attr._models.base)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="L">L</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="layer.html#captum.attr._core.layer_activation.LayerActivation">LayerActivation (class in captum.attr._core.layer_activation)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.attribution.LayerAttribution">LayerAttribution (class in captum.attr._utils.attribution)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="layer.html#captum.attr._core.layer_conductance.LayerConductance">LayerConductance (class in captum.attr._core.layer_conductance)</a>
+</li>
+<li><a href="layer.html#captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation">LayerGradientXActivation (class in captum.attr._core.layer_gradient_x_activation)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="M">M</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common.MaxList">MaxList (class in captum.attr._utils.common)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="N">N</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._utils.attribution.NeuronAttribution">NeuronAttribution (class in captum.attr._utils.attribution)</a>
+</li>
+<li><a href="neuron.html#captum.attr._core.neuron_conductance.NeuronConductance">NeuronConductance (class in captum.attr._core.neuron_conductance)</a>
+</li>
+<li><a href="neuron.html#captum.attr._core.neuron_gradient.NeuronGradient">NeuronGradient (class in captum.attr._core.neuron_gradient)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="neuron.html#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients">NeuronIntegratedGradients (class in captum.attr._core.neuron_integrated_gradients)</a>
+</li>
+<li><a href="noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel">NoiseTunnel (class in captum.attr._core.noise_tunnel)</a>
+</li>
+<li><a href="deep_lift_shap.html#captum.attr._core.deep_lift.nonlinear">nonlinear() (in module captum.attr._core.deep_lift)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="R">R</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._models.base.remove_interpretable_embedding_layer">remove_interpretable_embedding_layer() (in module captum.attr._models.base)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="approximation_methods.html#captum.attr._utils.approximation_methods.Riemann">Riemann (class in captum.attr._utils.approximation_methods)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="S">S</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="saliency.html#captum.attr._core.saliency.Saliency">Saliency (class in captum.attr._core.saliency)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="T">T</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._models.base.TokenReferenceBase">TokenReferenceBase (class in captum.attr._models.base)</a>
+</li>
+</ul></td>
+</tr></table>
+<h2 id="V">V</h2>
+<table class="indextable genindextable" style="width: 100%"><tr>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="common.html#captum.attr._utils.common.validate_input">validate_input() (in module captum.attr._utils.common)</a>
+</li>
+<li><a href="common.html#captum.attr._utils.common.validate_noise_tunnel_type">validate_noise_tunnel_type() (in module captum.attr._utils.common)</a>
+</li>
+</ul></td>
+<td style="width: 33%; vertical-align: top;"><ul>
+<li><a href="utilities.html#captum.attr._utils.visualization.VisualizationDataRecord">VisualizationDataRecord (class in captum.attr._utils.visualization)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.visualization.visualize_image_attr">visualize_image_attr() (in module captum.attr._utils.visualization)</a>
+</li>
+<li><a href="utilities.html#captum.attr._utils.visualization.visualize_image_attr_multiple">visualize_image_attr_multiple() (in module captum.attr._utils.visualization)</a>
+</li>
+</ul></td>
+</tr></table>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3>Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input name="q" type="text"/>
+<input type="submit" value="Go"/>
+<input name="check_keywords" type="hidden" value="yes"/>
+<input name="area" type="hidden" value="default"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
