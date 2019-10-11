@@ -3,7 +3,7 @@ import threading
 import torch
 import warnings
 
-from .common import _run_forward, _extend_index_list
+from .common import _run_forward, _verify_select_column
 from .batching import _reduce_list, _sort_key_list
 
 
@@ -100,12 +100,9 @@ def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_ind
             current_out_tensor = saved_layer_outputs[key]
             gradient_tensors.append(
                 torch.autograd.grad(
-                    [
-                        current_out_tensor[index]
-                        for index in _extend_index_list(
-                            current_out_tensor.shape[0], gradient_neuron_index
-                        )
-                    ],
+                    torch.unbind(
+                        _verify_select_column(current_out_tensor, gradient_neuron_index)
+                    ),
                     inputs,
                 )
             )
