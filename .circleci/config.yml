@@ -151,5 +151,5 @@ workflows:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
           filters: *exclude_ghpages_fbconfig
-       - test_cuda_multi_gpu:
+      - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
