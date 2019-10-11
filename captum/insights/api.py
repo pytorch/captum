@@ -47,6 +47,37 @@ class AttributionVisualizer(object):
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ):
+        r"""
+        Args:
+
+            models (torch.nn.module): PyTorch module for attribution visualization.
+                          We plan to support visulizing and comparing multiple models
+                          in the future, but currently this supports only a single
+                          model.
+            classes (list of strings): List of strings corresponding to the names of
+                          classes for classification.
+            features (list of BaseFeatures): List of BaseFeatures, which correspond
+                          to input arguments to the model. Each feature object defines
+                          relevant transformations for converting to model input,
+                          visualizing and constructing baselines. The length of the
+                          features list should exactly match the number of (tensor)
+                          arguments expected by the given model.
+                          For instance, an image classifier should only provide
+                          a single BaseFeature, while a multimodal classifier may
+                          provide a list of features, each corresponding to a different
+                          tensor input and potentially different modalities.
+            dataset (iterable of Batch): Defines dataset to visualize attributions for.
+                          This must be an iterable of batch objects, each of which may
+                          contain multiple input examples.
+            score_func (callable, optional): This function converts
+
+            use_label_for_attr (boolean, optional): If true, the class index is passed
+                          to the relevant attribution method. This is necessary in most
+                          cases where there is an output neuron corresponding to each
+                          class. When the model output is a scalar and class index
+                          (e.g. positive, negative) is inferred from the output value,
+                          this argument should be False.
+        """
         if not isinstance(models, List):
             models = [models]
 
