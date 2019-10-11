@@ -27,7 +27,7 @@ class GuidedGradCam(GradientAttribution):
         self.guided_backprop = GuidedBackprop(model)
 
     def attribute(
-        self, inputs, target=None, additional_forward_args=None, chosen_input_index=0
+        self, inputs, target=None, additional_forward_args=None, chosen_input_index=0, interpolate_mode="nearest"
     ):
         r"""
             Computes element-wise product of guided backpropagation attributions
@@ -42,6 +42,9 @@ class GuidedGradCam(GradientAttribution):
             should be spatially alligned with the chosen layer for the results
             to be meaningful, e.g. an input image tensor for a convolutional layer.
 
+            In addition, this tensor must have the same number of dimensions as the
+            chosen layer's output, and must be either 3D, 4D or 5D.
+
             More details regarding GuidedGradCAM can be found in the original
             GradCAM paper here:
             https://arxiv.org/pdf/1610.02391.pdf
@@ -50,7 +53,7 @@ class GuidedGradCam(GradientAttribution):
             given model are performed using a module (nn.module.ReLU).
             If nn.functional.ReLU is used, gradients are not overriden appropriately.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which attributions
                             are computed. If forward_func takes a single
@@ -103,14 +106,27 @@ class GuidedGradCam(GradientAttribution):
                             spatially alligned with the given layer for the results
                             to be meaningful, e.g. an input image tensor for a
                             convolutional layer.
+                interpolate_mode (str, optional): Method for interpolation, which
+                            muat be a valid input interpolation mode for
+                            torch.nn.functional. These methods are
+                            "nearest", "area", "linear" (3D-only), "bilinear"
+                            (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
+                            based on the number of dimensions of the chosen layer
+                            output (which must also match the number of
+                            dimensions for inputs[chosen_input_index]). Note that
+                            the original GradCAM paper uses "bilinear"
+                            interpolation, but we default to "nearest" for
+                            applicability to any of 3D, 4D or 5D tensors.
+                            Default: "nearest"
 
-            Return
-
-                attributions (tensor): Element-wise product of (upsampled) GradCAM
-                            and Guided Backprop attributions for tensor with index
-                            chosen_input_index.
-                            Attributions will be the same size as the input tensor
-                            at index chosen_input_index.
+            Returns:
+                *tensor* of **attributions**:
+                - **attributions** (*tensor*):
+                        Element-wise product of (upsampled) GradCAM
+                        and Guided Backprop attributions for tensor with index
+                        chosen_input_index.
+                        Attributions will be the same size as the input tensor
+                        at index chosen_input_index.
 
             Examples::
 
@@ -139,5 +155,5 @@ class GuidedGradCam(GradientAttribution):
             additional_forward_args=additional_forward_args,
         )
         return guided_backprop_attr[chosen_input_index] * LayerAttribution.interpolate(
-            grad_cam_attr, inputs[chosen_input_index].shape[2:]
+            grad_cam_attr, inputs[chosen_input_index].shape[2:], interpolate_mode=interpolate_mode
         )

@@ -75,8 +75,9 @@ class NeuronGuidedBackprop(NeuronAttribution, GuidedBackprop):
                         to these arguments.
                         Default: None
         Returns:
-
-            attributions (tensor or tuple of tensors): Guided backprop attribution of
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Guided backprop attribution of
                         particular neuron with respect to each input feature.
                         Attributions will always be the same size as the provided
                         inputs, with each value providing the attribution of the

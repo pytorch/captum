@@ -54,7 +54,7 @@ class LayerGradCam(LayerAttribution):
             original paper here:
             https://arxiv.org/pdf/1610.02391.pdf
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which attributions
                             are computed. If forward_func takes a single
@@ -102,9 +102,10 @@ class LayerGradCam(LayerAttribution):
                             to these arguments.
                             Default: None
 
-            Return
-
-                attributions (tensor): Attributions based on GradCAM method.
+            Returns:
+                *tensor* of **attributions**:
+                - **attributions** (*tensor*):
+                            Attributions based on GradCAM method.
                             Attributions will be the same size as the
                             output of the given layer, except for dimension 2,
                             which will be 1 due to summing over channels.

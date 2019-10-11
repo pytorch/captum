@@ -288,8 +288,34 @@ class LayerAttribution(InternalAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def interpolate(layer_attribution, interpolate_dims):
-        return F.interpolate(layer_attribution, interpolate_dims)
+    def interpolate(layer_attribution, interpolate_dims, interpolate_mode="nearest"):
+        r"""
+        Interpolates given 3D, 4D or 5D layer attribution to given dimensions.
+        This is often utilized to upsample the attribution of a convolutional layer
+        to the size of an input, which allows visualizing in the input space.
+
+        Args:
+
+            layer_attribution (torch.Tensor):  Tensor of given layer attributions.
+            interpolate_dims (int or tuple): Upsampled dimensions. The
+                        number of elements must be the number of dimensions
+                        of layer_attribution - 2, since the first dimension
+                        corresponds to number of examples and the second is
+                        assumed to correspond to the number of channels.
+            interpolate_mode (str):  Method for interpolation, which
+                        muat be a valid input interpolation mode for
+                        torch.nn.functional. These methods are
+                        "nearest", "area", "linear" (3D-only), "bilinear"
+                        (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
+                        based on the number of dimensions of the given layer
+                        attribution.
+
+        Returns:
+            torch.Tensor:
+            Upsampled layer attributions with first 2 dimensions matching
+            layer_attribution and remaining dimensions given by interpolate_dims.
+        """
+        return F.interpolate(layer_attribution, interpolate_dims, mode=interpolate_mode)
 
 
 class NeuronAttribution(InternalAttribution):
