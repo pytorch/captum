@@ -5,13 +5,13 @@ from .._utils.attribution import NeuronAttribution
 from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
-    _extend_index_list,
     _format_input_baseline,
     _format_additional_forward_args,
     validate_input,
     _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
+    _verify_select_column,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
 
@@ -216,13 +216,10 @@ class NeuronConductance(NeuronAttribution):
             device_ids=self.device_ids,
         )
 
-        # Creates list of target neuron across batched examples (dimension 0)
-        indices = _extend_index_list(total_batch, neuron_index)
-
         # Multiplies by appropriate gradient of output with respect to hidden neurons
         # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
         # containing mid layer gradient for each input step.
-        mid_grads = torch.stack([layer_gradients[index] for index in indices])
+        mid_grads = _verify_select_column(layer_gradients, neuron_index)
 
         scaled_input_gradients = tuple(
             input_grad
