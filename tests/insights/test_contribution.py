@@ -3,12 +3,11 @@ from __future__ import print_function
 import unittest
 from typing import Callable, List, Optional, Union
 
-from captum.insights.api import AttributionVisualizer, Data, FilterConfig
-from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
-from tests.attr.helpers.utils import BaseTest
-
 import torch
 import torch.nn as nn
+from captum.insights import AttributionVisualizer, Batch, FilterConfig
+from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
+from tests.attr.helpers.utils import BaseTest
 
 
 class RealFeature(BaseFeature):
@@ -131,7 +130,7 @@ def to_iter(data_loader):
         # NOTE: torch.utils.data.DataLoader returns a list in this case
         if not isinstance(x, list):
             x = (x,)
-        yield Data(inputs=tuple(x), labels=y)
+        yield Batch(inputs=tuple(x), labels=y)
 
 
 class Test(BaseTest):

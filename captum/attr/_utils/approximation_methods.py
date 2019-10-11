@@ -23,7 +23,7 @@ SUPPORTED_METHODS = SUPPORTED_RIEMANN_METHODS + ["gausslegendre"]
 def approximation_parameters(method):
     r"""Retrieves parameters for the input approximation `method`
 
-        Args
+        Args:
             method: The name of the approximation method. Currently only `riemann`
                     and gauss legendre are
     """
@@ -43,12 +43,14 @@ def riemann_builders(method=Riemann.trapezoid):
              method: `left`, `right`, `middle` and `trapezoid` riemann
 
         Returns:
-
-            step_sizes (callable): `step_sizes` takes the number of steps as an
+            2-element tuple of **step_sizes**, **alphas**:
+            - **step_sizes** (*callable*):
+                        `step_sizes` takes the number of steps as an
                         input argument and returns an array of steps sizes which
                         sum is smaller than or equal to one.
 
-            alphas (callable): `alphas` takes the number of steps as an input argument
+            - **alphas** (*callable*):
+                        `alphas` takes the number of steps as an input argument
                         and returns the multipliers/coefficients for the inputs
                         of integrand in the range of [0, 1]
 
@@ -97,16 +99,16 @@ def gauss_legendre_builders():
         n (int): The number of integration steps
 
     Returns:
+        2-element tuple of **step_sizes**, **alphas**:
+        - **step_sizes** (*callable*):
+                    `step_sizes` takes the number of steps as an
+                    input argument and returns an array of steps sizes which
+                    sum is smaller than or equal to one.
 
-        step_sizes (callable): `step_sizes` takes the number of steps as an input
-                    argument and returns an array of steps sizes which sum is
-                    smaller than or equal to one. In the literature it is also
-                    known as weights.
-
-        alphas (callable): `alphas` takes the number of steps as an input argument
+        - **alphas** (*callable*):
+                    `alphas` takes the number of steps as an input argument
                     and returns the multipliers/coefficients for the inputs
                     of integrand in the range of [0, 1]
-
 
     """
 

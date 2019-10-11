@@ -5,13 +5,13 @@ from .._utils.attribution import NeuronAttribution
 from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
-    _extend_index_list,
     _format_input_baseline,
     _format_additional_forward_args,
     validate_input,
     _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
+    _verify_select_column,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
 
@@ -19,7 +19,7 @@ from .._utils.gradient import compute_layer_gradients_and_eval
 class NeuronConductance(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -79,11 +79,30 @@ class NeuronConductance(NeuronAttribution):
                             baselines must also be a tuple of tensors, with matching
                             dimensions to inputs.
                             Default: zero tensor for each input tensor
-                target (int, optional):  Output index for which gradient is computed
-                            (for classification cases, this is the target class).
+                target (int, tuple, tensor or list, optional):  Output indices for
+                            which gradients are computed (for classification cases,
+                            this is usually the target class).
                             If the network returns a scalar value per example,
-                            no target index is necessary. (Note: Tuples for multi
-                            -dimensional output indices will be supported soon.)
+                            no target index is necessary.
+                            For general 2D outputs, targets can be either:
+
+                            - a single integer or a tensor containing a single
+                                integer, which is applied to all input examples
+
+                            - a list of integers or a 1D tensor, with length matching
+                                the number of examples in inputs (dim 0). Each integer
+                                is applied as the target for the corresponding example.
+
+                            For outputs with > 2 dimensions, targets can be either:
+
+                            - A single tuple, which contains #output_dims - 1
+                                elements. This target index is applied to all examples.
+
+                            - A list of tuples with length equal to the number of
+                                examples in inputs (dim 0), and each tuple containing
+                                #output_dims - 1 elements. Each tuple is applied as the
+                                target for the corresponding example.
+
                             Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
@@ -95,10 +114,10 @@ class NeuronConductance(NeuronAttribution):
                             are provided to forward_func in order following the
                             arguments in inputs.
                             For a tensor, the first dimension of the tensor must
-                            correspond to the number of examples. It will be repeated
-                             for each of `n_steps` along the integrated path.
-                            For all other types, the given argument is used for
-                            all forward evaluations.
+                            correspond to the number of examples. It will be
+                            repeated for each of `n_steps` along the integrated
+                            path. For all other types, the given argument is used
+                            for all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
@@ -119,9 +138,10 @@ class NeuronConductance(NeuronAttribution):
                             processed in one batch.
                             Default: None
 
-            Return:
-
-                attributions (tensor or tuple of tensors): Conductance for
+            Returns:
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Conductance for
                             particular neuron with respect to each input feature.
                             Attributions will always be the same size as the provided
                             inputs, with each value providing the attribution of the
@@ -196,13 +216,10 @@ class NeuronConductance(NeuronAttribution):
             device_ids=self.device_ids,
         )
 
-        # Creates list of target neuron across batched examples (dimension 0)
-        indices = _extend_index_list(total_batch, neuron_index)
-
         # Multiplies by appropriate gradient of output with respect to hidden neurons
         # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
         # containing mid layer gradient for each input step.
-        mid_grads = torch.stack([layer_gradients[index] for index in indices])
+        mid_grads = _verify_select_column(layer_gradients, neuron_index)
 
         scaled_input_gradients = tuple(
             input_grad

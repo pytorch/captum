@@ -15,7 +15,7 @@ from .._utils.gradient import (
 class NeuronGradient(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
@@ -38,7 +38,7 @@ class NeuronGradient(NeuronAttribution):
             Computes the gradient of the output of a particular neuron with
             respect to the inputs of the network.
 
-            Args
+            Args:
 
                 inputs (tensor or tuple of tensors):  Input for which neuron
                             gradients are computed. If forward_func takes a single
@@ -68,13 +68,13 @@ class NeuronGradient(NeuronAttribution):
                             to these arguments.
                             Default: None
 
-            Return
-
-                attributions (tensor or tuple of tensors): Gradients of
-                            particular neuron with respect to each input feature.
-                            Attributions will always be the same size as the provided
-                            inputs, with each value providing the attribution of the
-                            corresponding input index.
+            Returns:
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                            Gradients of particular neuron with respect to each input
+                            feature. Attributions will always be the same size as the
+                            provided inputs, with each value providing the attribution
+                            of the corresponding input index.
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.

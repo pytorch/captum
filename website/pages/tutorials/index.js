@@ -77,6 +77,10 @@ class TutorialHome extends React.Component {
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
                 of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
+                <h4>Getting Started with Captum Insights:</h4>
+                This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision
+                CNN model is loaded and then used on the CIFAR dataset.  Captum Insights is then loaded to visualize the interpretation of specific examples.
+                Find the tutorial <a href="CIFAR_TorchVision_Captum_Insights">here</a>.
               </p>
             </body>
           </div>

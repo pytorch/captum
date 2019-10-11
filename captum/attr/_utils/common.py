@@ -131,20 +131,6 @@ def _zeros(inputs):
     return tuple(0 * input for input in inputs)
 
 
-def _extend_index_list(dim_max, base_index):
-    r"""
-    Returns list of index tuples in the form [(0, base_index_tuple),
-    (1, base_index_tuple), ... (dim_max, base_index_tuple)]
-    where base_index_tuple is either an int or tuple of arbitrary length.
-    """
-    assert isinstance(base_index, tuple) or isinstance(
-        base_index, int
-    ), "Base index must be either an integer or tuple"
-    if isinstance(base_index, int):
-        base_index = (base_index,)
-    return [(ind,) + base_index for ind in range(dim_max)]
-
-
 def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     # Used for attribution methods which perform integration
     # Sums across integration steps by reshaping tensor to

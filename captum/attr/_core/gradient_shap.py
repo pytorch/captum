@@ -98,11 +98,31 @@ class GradientShap(GradientAttribution):
                         corresponds to the input with the same index in the inputs
                         tuple.
                         Default: 0.0
-            target (int, optional):  Output index for which gradient is computed
-                        (for classification cases, this is the target class).
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
                         If the network returns a scalar value per example,
-                        no target index is necessary. (Note: Tuples for multi
-                        -dimensional output indices will be supported soon.)
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
+
+                        - a single integer or a tensor containing a single
+                            integer, which is applied to all input examples
+
+                        - a list of integers or a 1D tensor, with length matching
+                            the number of examples in inputs (dim 0). Each integer
+                            is applied as the target for the corresponding example.
+
+                        For outputs with > 2 dimensions, targets can be either:
+
+                        - A single tuple, which contains #output_dims - 1
+                            elements. This target index is applied to all examples.
+
+                        - A list of tuples with length equal to the number of
+                            examples in inputs (dim 0), and each tuple containing
+                            #output_dims - 1 elements. Each tuple is applied as the
+                            target for the corresponding example.
+
+                        Default: None
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
@@ -121,16 +141,17 @@ class GradientShap(GradientAttribution):
                         a tuple following attributions.
                         Default: False
         Returns:
-
-            attributions (tensor or tuple of tensors): Attribution score
-                        computed based on GradientSHAP with respect
+            **attributions** or 2-element tuple of **attributions**, **delta**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution score computed based on GradientSHAP with respect
                         to each input feature. Attributions will always be
                         the same size as the provided inputs, with each value
                         providing the attribution of the corresponding input index.
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
-            delta (tensor, optional): This is computed using the property that the total
+            - **delta** (*tensor*, returned if return_convergence_delta=True):
+                        This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of the attributions
                         based on GradientSHAP.

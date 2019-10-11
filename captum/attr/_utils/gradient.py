@@ -3,7 +3,7 @@ import threading
 import torch
 import warnings
 
-from .common import _run_forward, _extend_index_list
+from .common import _run_forward, _verify_select_column
 from .batching import _reduce_list, _sort_key_list
 
 
@@ -68,7 +68,7 @@ def compute_gradients(
         Computes gradients of the output with respect to inputs for an
         arbitrary forward function.
 
-        Args
+        Args:
 
             forward_fn: forward function. This can be for example model's
                         forward function.
@@ -83,8 +83,10 @@ def compute_gradients(
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert output[0].numel() == 1, "Target not provided when necessary, cannot"
-        "take gradient with respect to multiple outputs."
+        assert output[0].numel() == 1, (
+            "Target not provided when necessary, cannot"
+            " take gradient with respect to multiple outputs."
+        )
         # torch.unbind(forward_out) is a list of scalar tensor tuples and
         # contains batch_size * #steps elements
         grads = torch.autograd.grad(torch.unbind(output), inputs)
@@ -98,12 +100,9 @@ def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_ind
             current_out_tensor = saved_layer_outputs[key]
             gradient_tensors.append(
                 torch.autograd.grad(
-                    [
-                        current_out_tensor[index]
-                        for index in _extend_index_list(
-                            current_out_tensor.shape[0], gradient_neuron_index
-                        )
-                    ],
+                    torch.unbind(
+                        _verify_select_column(current_out_tensor, gradient_neuron_index)
+                    ),
                     inputs,
                 )
             )
@@ -225,7 +224,7 @@ def compute_layer_gradients_and_eval(
         the separate inputs in a dictionary protected by a lock, analogous to the
         gather implementation for the core PyTorch DataParallel implementation.
 
-        Args
+        Args:
 
             forward_fn: forward function. This can be for example model's
                         forward function.
@@ -239,10 +238,12 @@ def compute_layer_gradients_and_eval(
                         additional arguments are required
 
 
-        Return
-
-            gradients:  Gradients of output with respect to target layer output.
-            evals:      Target layer output for given input.
+        Returns:
+            2-element tuple of **gradients**, **evals**:
+            - **gradients**:
+                Gradients of output with respect to target layer output.
+            - **evals**:
+                Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
         saved_layer_outputs = {}
@@ -262,8 +263,10 @@ def compute_layer_gradients_and_eval(
 
         hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert output[0].numel() == 1, "Target not provided when necessary, cannot"
-        "take gradient with respect to multiple outputs."
+        assert output[0].numel() == 1, (
+            "Target not provided when necessary, cannot"
+            " take gradient with respect to multiple outputs."
+        )
         # Remove unnecessary forward hook.
         hook.remove()
 

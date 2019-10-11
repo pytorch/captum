@@ -171,12 +171,14 @@ def visualize_image_attr(
                         figure object without showing.
                         Default: True.
 
-        Return:
-
-            figure (matplotlib.pyplot.figure): Figure object on which visualization
+        Returns:
+            2-element tuple of **figure**, **axis**:
+            - **figure** (*matplotlib.pyplot.figure*):
+                        Figure object on which visualization
                         is created. If plt_fig_axis argument is given, this is the
                         same figure provided.
-            axis (matplotlib.pyplot.axis): Axis object on which visualization
+            - **axis** (*matplotlib.pyplot.axis*):
+                        Axis object on which visualization
                         is created. If plt_fig_axis argument is given, this is the
                         same axis provided.
 
@@ -346,12 +348,14 @@ def visualize_image_attr_multiple(
                         `show_colorbar`, `alpha_overlay`, `cmap`, etc.
 
 
-        Return:
-
-            figure (matplotlib.pyplot.figure): Figure object on which visualization
+        Returns:
+            2-element tuple of **figure**, **axis**:
+            - **figure** (*matplotlib.pyplot.figure*):
+                        Figure object on which visualization
                         is created. If plt_fig_axis argument is given, this is the
                         same figure provided.
-            axis (matplotlib.pyplot.axis): Axis object on which visualization
+            - **axis** (*matplotlib.pyplot.axis*):
+                        Axis object on which visualization
                         is created. If plt_fig_axis argument is given, this is the
                         same axis provided.
 

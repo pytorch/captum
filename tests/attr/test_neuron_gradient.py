@@ -5,7 +5,6 @@ import unittest
 import torch
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron_gradient import NeuronGradient
-from captum.attr._utils.common import _extend_index_list
 from captum.attr._utils.gradient import _forward_layer_eval
 
 from .helpers.basic_models import (
@@ -108,12 +107,9 @@ class Test(BaseTest):
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
-                lambda x: torch.stack(
-                    [
-                        _forward_layer_eval(model, x, output_layer)[index]
-                        for index in _extend_index_list(test_input.shape[0], neuron)
-                    ]
-                )
+                lambda x: _forward_layer_eval(model, x, output_layer)[
+                    (slice(None), *neuron)
+                ]
             )
             sal_vals = input_attrib.attribute(test_input, abs=False)
             grad_vals = gradient_attrib.attribute(test_input, neuron)

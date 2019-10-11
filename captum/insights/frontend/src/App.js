@@ -44,7 +44,7 @@ class FilterContainer extends React.Component {
 
     this.state = {
       prediction: "all",
-      approximation_steps: 50,
+      approximation_steps: 20,
       classes: [],
       suggested_classes: suggested_classes
     };
@@ -53,7 +53,10 @@ class FilterContainer extends React.Component {
   handleClassDelete = i => {
     const classes = this.state.classes.slice(0);
     const removed_class = classes.splice(i, 1);
-    const suggested_classes = [].concat(this.state.suggestions, removed_class);
+    const suggested_classes = [].concat(
+      this.state.suggested_classes,
+      removed_class
+    );
     this.setState({ classes, suggested_classes });
   };
 
@@ -178,22 +181,29 @@ function Spinner(_) {
   return <div className="spinner" />;
 }
 
-// TODO maybe linear interpolate the colors instead of hardcoding them
-function getPercentageColor(percentage, zeroDefault = false) {
-  if (percentage > 50) {
-    return "percentage-blue";
-  } else if (percentage > 10) {
-    return "percentage-light-blue";
-  } else if (percentage > -10) {
-    if (zeroDefault) {
-      return "percentage-white";
-    }
-    return "percentage-gray";
-  } else if (percentage > -50) {
-    return "percentage-light-red";
+function calcHSLFromScore(percentage, zeroDefault = false) {
+  const blue_hsl = [220, 100, 80];
+  const red_hsl = [10, 100, 67];
+
+  let target_hsl = null;
+  if (percentage > 0) {
+    target_hsl = blue_hsl;
   } else {
-    return "percentage-red";
+    target_hsl = red_hsl;
   }
+
+  const default_hsl = [0, 40, zeroDefault ? 100 : 90];
+  const abs_percent = Math.abs(percentage * 0.01);
+  if (abs_percent < 0.02) {
+    return default_hsl;
+  }
+
+  const color = [
+    target_hsl[0],
+    (target_hsl[1] - default_hsl[1]) * abs_percent + default_hsl[1],
+    (target_hsl[2] - default_hsl[2]) * abs_percent + default_hsl[2]
+  ];
+  return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`;
 }
 
 function ImageFeature(props) {
@@ -227,10 +237,10 @@ function TextFeature(props) {
     return (
       <>
         <span
-          className={cx([
-            getPercentageColor(props.data.modified[i], /* zeroDefault */ true),
-            "text-feature-word"
-          ])}
+          style={{
+            backgroundColor: calcHSLFromScore(props.data.modified[i], false)
+          }}
+          className={"text-feature-word"}
         >
           {w}
           <Tooltip label={props.data.modified[i].toFixed(3)} />
@@ -299,11 +309,11 @@ class Contributions extends React.Component {
       return (
         <div className="bar-chart__group">
           <div
-            className={cx([
-              "bar-chart__group__bar",
-              getPercentageColor(contribution)
-            ])}
-            style={{ height: bar_height + "px" }}
+            className={"bar-chart__group__bar"}
+            style={{
+              height: bar_height + "px",
+              backgroundColor: calcHSLFromScore(contribution)
+            }}
           />
           <div className="bar-chart__group__title">{f.name}</div>
         </div>
@@ -312,49 +322,104 @@ class Contributions extends React.Component {
   }
 }
 
+class LabelButton extends React.Component {
+  onClick = e => {
+    e.preventDefault();
+    this.props.onTargetClick(this.props.labelIndex, this.props.instance);
+  };
+
+  render() {
+    return (
+      <button
+        onClick={this.onClick}
+        className={cx({
+          btn: true,
+          "btn--solid": this.props.active,
+          "btn--outline": !this.props.active
+        })}
+      >
+        {this.props.children}
+      </button>
+    );
+  }
+}
+
 class Visualization extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loading: false
+    };
+  }
+
+  onTargetClick = (labelIndex, instance) => {
+    this.setState({ loading: true });
+    this.props.onTargetClick(labelIndex, instance, () =>
+      this.setState({ loading: false })
+    );
+  };
+
   render() {
     const data = this.props.data;
     const features = data.feature_outputs.map(f => <Feature data={f} />);
 
     return (
-      <div className="panel panel--long">
-        <div className="panel__column">
-          <div className="panel__column__title">Predicted</div>
-          <div className="panel__column__body">
-            {data.predicted.map((p, i) => (
-              <div className="row row--padding">
-                <div
-                  className={cx({
-                    btn: true,
-                    "btn--solid": i === 0,
-                    "btn--outline": i !== 0
-                  })}
-                >
-                  {p.label} ({p.score.toFixed(3)})
+      <>
+        {this.state.loading && (
+          <div className="loading">
+            <Spinner />
+          </div>
+        )}
+        <div
+          className={cx({
+            panel: true,
+            "panel--long": true,
+            "panel--loading": this.state.loading
+          })}
+        >
+          <div className="panel__column">
+            <div className="panel__column__title">Predicted</div>
+            <div className="panel__column__body">
+              {data.predicted.map(p => (
+                <div className="row row--padding">
+                  <LabelButton
+                    onTargetClick={this.onTargetClick}
+                    labelIndex={p.index}
+                    instance={this.props.instance}
+                    active={p.index === data.active_index}
+                  >
+                    {p.label} ({p.score.toFixed(3)})
+                  </LabelButton>
                 </div>
+              ))}
+            </div>
+          </div>
+          <div className="panel__column">
+            <div className="panel__column__title">Label</div>
+            <div className="panel__column__body">
+              <div className="row row--padding">
+                <LabelButton
+                  onTargetClick={this.onTargetClick}
+                  labelIndex={data.actual.index}
+                  instance={this.props.instance}
+                  active={data.actual.index === data.active_index}
+                >
+                  {data.actual.label}
+                </LabelButton>
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="panel__column">
-          <div className="panel__column__title">Label</div>
-          <div className="panel__column__body">
-            <div className="row row--padding">
-              <div className="btn btn--outline">{data.actual}</div>
             </div>
           </div>
-        </div>
-        <div className="panel__column">
-          <div className="panel__column__title">Contribution</div>
-          <div className="panel__column__body">
-            <div className="bar-chart">
-              <Contributions feature_outputs={data.feature_outputs} />
+          <div className="panel__column">
+            <div className="panel__column__title">Contribution</div>
+            <div className="panel__column__body">
+              <div className="bar-chart">
+                <Contributions feature_outputs={data.feature_outputs} />
+              </div>
             </div>
           </div>
+          <div className="panel__column panel__column--stretch">{features}</div>
         </div>
-        <div className="panel__column panel__column--stretch">{features}</div>
-      </div>
+      </>
     );
   }
 }
@@ -385,7 +450,12 @@ function Visualizations(props) {
   return (
     <div className="viz">
       {props.data.map((v, i) => (
-        <Visualization data={v} key={i} />
+        <Visualization
+          data={v}
+          instance={i}
+          key={i}
+          onTargetClick={props.onTargetClick}
+        />
       ))}
     </div>
   );
@@ -404,10 +474,8 @@ class App extends React.Component {
 
   _fetchInit = () => {
     fetch("/init")
-      .then(response => response.json())
-      .then(response => {
-        this.setState({ config: response });
-      });
+      .then(r => r.json())
+      .then(r => this.setState({ config: r }));
   };
 
   fetchData = filter_config => {
@@ -423,6 +491,23 @@ class App extends React.Component {
       .then(response => this.setState({ data: response, loading: false }));
   };
 
+  onTargetClick = (labelIndex, instance, callback) => {
+    fetch("/attribute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ labelIndex, instance })
+    })
+      .then(response => response.json())
+      .then(response => {
+        const data = Object.assign([], this.state.data);
+        data[instance] = response;
+        this.setState({ data });
+        callback();
+      });
+  };
+
   render() {
     return (
       <div className="app">
@@ -432,7 +517,11 @@ class App extends React.Component {
           config={this.state.config}
           key={this.state.config}
         />
-        <Visualizations data={this.state.data} loading={this.state.loading} />
+        <Visualizations
+          data={this.state.data}
+          loading={this.state.loading}
+          onTargetClick={this.onTargetClick}
+        />
       </div>
     );
   }

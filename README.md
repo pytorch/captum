@@ -98,7 +98,7 @@ For simplicity, we will use the following architecture, but users are welcome
 to use any PyTorch model of their choice.
 
 
-```
+```python
 import numpy as np
 
 import torch
@@ -120,20 +120,19 @@ class ToyModel(nn.Module):
         self.lin1 = nn.Linear(3, 3)
         self.relu = nn.ReLU()
         self.lin2 = nn.Linear(3, 2)
-        self.sigmoid = nn.Sigmoid()
 
         # initialize weights and biases
-        self.lin1.weight = nn.Parameter(torch.arange(0.0, 9.0).view(3, 3))
+        self.lin1.weight = nn.Parameter(torch.arange(-4.0, 5.0).view(3, 3))
         self.lin1.bias = nn.Parameter(torch.zeros(1,3))
-        self.lin2.weight = nn.Parameter(torch.arange(0.0, 6.0).view(2, 3))
+        self.lin2.weight = nn.Parameter(torch.arange(-3.0, 3.0).view(2, 3))
         self.lin2.bias = nn.Parameter(torch.ones(1,2))
 
     def forward(self, input):
-        return self.sigmoid(self.lin2(self.relu(self.lin1(input))))
+        return self.lin2(self.relu(self.lin1(input)))
 ```
 
 Let's create an instance of our model and set it to eval mode.
-```
+```python
 model = ToyModel()
 model.eval()
 ```
@@ -153,7 +152,7 @@ final prediction.
 
 To make computations deterministic, let's fix random seeds.
 
-```
+```python
 torch.manual_seed(123)
 np.random.seed(123)
 ```
@@ -163,22 +162,22 @@ interpretability algorithms such as `IntegratedGradients, DeepLift,
 GradientShap, NeuronConductance, LayerConductance, InternalInfluence and
 NeuronIntegratedGradients`.
 
-```
+```python
 input = torch.rand(2, 3)
 baseline = torch.zeros(2, 3)
 ```
 Next we will use `IntegratedGradients` algorithms to assign attribution
 scores to each input feature with respect to the second target output.
-```
+```python
 ig = IntegratedGradients(model)
 attributions, delta = ig.attribute(input, baseline, target=0, return_convergence_delta=True)
 print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output:
 ```
-IG Attributions:  tensor([[0.0628, 0.1314, 0.0747],
-                          [0.0930, 0.0120, 0.1639]])
-Convergence Delta: tensor([0., 0.])
+IG Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
+                          [ 0.0000, -0.2219, -5.1991]])
+Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
 ```
 The algorithm outputs an attribution score for each input element and a
 convergence delta. The lower the absolute value of the convergence delta the better
@@ -205,7 +204,7 @@ Gradient SHAP first chooses a random baseline from baselines' distribution, then
 Afterwards, it chooses a random point between each example-baseline pair and
 computes the gradients with respect to target class (in this case target=0). Resulting
 attribution is the mean of gradients * (inputs - baselines)
-```
+```python
 gs = GradientShap(model)
 
 # We define a distribution of baselines and draw `n_samples` from that
@@ -217,14 +216,14 @@ print('GradientShap Attributions: ', attributions, ' Convergence Delta: ', delta
 ```
 Output
 ```
-GradientShap Attributions:  tensor([[ 0.0008,  0.0019,  0.0009],
-                                    [ 0.1892, -0.0045,  0.2445]])
-Convergence Delta: tensor([-0.2681, -0.2633, -0.2607, -0.2655, -0.2689, -0.2689,  1.4493, -0.2688])
+GradientShap Attributions:  tensor([[-0.1542, -1.6229, -1.5835],
+                                    [-0.3916, -0.2836, -4.6851]])
+Convergence Delta: tensor([ 0.0000, -0.0005, -0.0029, -0.0084, -0.0087, -0.0405,  0.0000, -0.0084])
 
 ```
 Deltas are computed for each `n_samples * input.shape[0]` example. The user can,
 for instance, average them:
-```
+```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
 in order to get per example average delta.
@@ -236,15 +235,15 @@ Below is an example of how we can apply `DeepLift` and `DeepLiftShap` on the
 For more details on alternative implementations, please read DeepLift's
 original paper linked below.
 
-```
+```python
 dl = DeepLift(model)
 attributions, delta = dl.attribute(input, baseline, target=0, return_convergence_delta=True)
 print('DeepLift Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-DeepLift Attributions:  tensor([[0.0628, 0.1314, 0.0747],
-                                [0.0930, 0.0120, 0.1639]])
+DeepLift Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
+                                [ 0.0000, -0.2219, -5.1991])
 Convergence Delta: tensor([0., 0.])
 ```
 DeepLift assigns similar attribution scores as Integrated Gradients to inputs,
@@ -262,19 +261,19 @@ Now let's look into `DeepLiftShap`. Similar to `GradientShap`, `DeepLiftShap` us
 baseline distribution. In the example below, we use the same baseline distribution
 as for `GradientShap`.
 
-```
+```python
 dl = DeepLiftShap(model)
 attributions, delta = dl.attribute(input, baseline_dist, target=0, return_convergence_delta=True)
 print('DeepLiftSHAP Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Output
 ```
-DeepLiftShap Attributions: tensor([0.0627, 0.1313, 0.0747],
-                                  [0.0929, 0.0120, 0.1637], grad_fn=<MeanBackward1>)
-Convergence Delta:  tensor([-2.9802e-08,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
-         0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  2.9802e-08,
-         0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00,
-         0.0000e+00,  0.0000e+00,  2.9802e-08,  0.0000e+00,  2.9802e-08])
+DeepLiftShap Attributions: tensor([[-5.9169e-01, -1.5491e+00, -1.0076e+00],
+        [-4.7101e-03, -2.2300e-01, -5.1926e+00]], grad_fn=<MeanBackward1>)
+Convergence Delta:  tensor([-4.6120e-03, -1.6267e-03, -5.1045e-04, -1.4184e-03, -6.8886e-03,
+        -2.2224e-02,  0.0000e+00, -2.8790e-02, -4.1285e-03, -2.7295e-02,
+        -3.2349e-03, -1.6265e-03, -4.7684e-07, -1.4191e-03, -6.8889e-03,
+        -2.2224e-02,  0.0000e+00, -2.4792e-02, -4.1289e-03, -2.7296e-02])
 ```
 `DeepLiftShap` uses `DeepLift` to compute attribution score for each
 input-baseline pair and averages it for each input across all baselines.
@@ -283,7 +282,7 @@ It computes deltas for each input example-baseline pair, thus resulting to
 `input.shape[0] * baseline.shape[0]` delta values.
 
 Similar to GradientShap in order to compute example-based deltas we can average them per example:
-```
+```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
 In order to smooth and improve the quality of the attributions we can run
@@ -294,7 +293,7 @@ samples that were generated by adding gaussian noise.
 
 Here is an example how we can use `NoiseTunnel` with `IntegratedGradients`.
 
-```
+```python
 ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
 attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
@@ -303,15 +302,15 @@ print('IG + SmoothGrad Attributions: ', attributions, ' Convergence Delta: ', de
 ```
 Output
 ```
-IG + SmoothGrad Attributions:  tensor([[0.0631, 0.1335, 0.0723],
-                                       [0.0911, 0.0142, 0.1636]])
-Convergence Delta:  tensor([ 1.4901e-07, -8.9407e-08,  1.1921e-07,
-        1.4901e-07,  1.1921e-07, -1.7881e-07, -5.9605e-08,  5.9605e-08])
+IG + SmoothGrad Attributions:  tensor([[-0.4574, -1.5493, -1.0893],
+                                       [ 0.0000, -0.2647, -5.1619]])
+Convergence Delta:  tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00,
+        -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
 The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
 In order to get a example-based delta, we can, for example, average them:
-```
+```python
 deltas_per_example = torch.mean(delta.reshape(input.shape[0], -1), dim=1)
 ```
 
@@ -327,15 +326,15 @@ inputs of the model.
 
 In this case, we choose to analyze the first neuron in the linear layer.
 
-```
+```python
 nc = NeuronConductance(model, model.lin1)
 attributions = nc.attribute(input, neuron_index=1, target=0)
 print('Neuron Attributions: ', attributions)
 ```
 Output
 ```
-Neuron Attributions:  tensor([[0.0106, 0.0247, 0.0150],
-                              [0.0144, 0.0021, 0.0301]])
+Neuron Attributions:  tensor([[ 0.0000,  0.0000,  0.0000],
+                              [ 1.3358,  0.0000, -1.6811]])
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
@@ -344,16 +343,16 @@ completeness property as well.
 
 It doesn't attribute the contribution scores to the input features
 but shows the importance of each neuron in selected layer.
-```
+```python
 lc = LayerConductance(model, model.lin1)
 attributions, delta = lc.attribute(input, baselines=baseline, target=0, return_convergence_delta=True)
 print('Layer Attributions: ', attributions, ' Convergence Delta: ', delta)
 ```
 Outputs
 ```
-Layer Attributions: tensor([[0.0000, 0.0515, 0.1811],
-                            [0.0000, 0.0477, 0.1652]], grad_fn=<SumBackward1>)
-Convergence Delta:  tensor([-0.0363, -0.0560])
+Layer Attributions: tensor([[ 0.0000,  0.0000, -3.0856],
+                            [ 0.0000, -0.3488, -4.9638]], grad_fn=<SumBackward1>)
+Convergence Delta:  tensor([0.0630, 0.1084])
 ```
 
 Similar to other attribution algorithms that return convergence delta, LayerConductance

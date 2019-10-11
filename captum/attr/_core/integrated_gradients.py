@@ -61,11 +61,30 @@ class IntegratedGradients(GradientAttribution):
                             If inputs is a tuple of tensors, baselines must also be
                             a tuple of tensors, with matching dimensions to inputs.
                             Default: zero tensor for each input tensor
-                target (int, optional):  Output index for which gradient is computed
-                            (for classification cases, this is the target class).
+                target (int, tuple, tensor or list, optional):  Output indices for
+                            which gradients are computed (for classification cases,
+                            this is usually the target class).
                             If the network returns a scalar value per example,
-                            no target index is necessary. (Note: Tuples for multi
-                            -dimensional output indices will be supported soon.)
+                            no target index is necessary.
+                            For general 2D outputs, targets can be either:
+
+                            - a single integer or a tensor containing a single
+                                integer, which is applied to all input examples
+
+                            - a list of integers or a 1D tensor, with length matching
+                                the number of examples in inputs (dim 0). Each integer
+                                is applied as the target for the corresponding example.
+
+                            For outputs with > 2 dimensions, targets can be either:
+
+                            - A single tuple, which contains #output_dims - 1
+                                elements. This target index is applied to all examples.
+
+                            - A list of tuples with length equal to the number of
+                                examples in inputs (dim 0), and each tuple containing
+                                #output_dims - 1 elements. Each tuple is applied as the
+                                target for the corresponding example.
+
                             Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
@@ -77,10 +96,10 @@ class IntegratedGradients(GradientAttribution):
                             are provided to forward_func in order following the
                             arguments in inputs.
                             For a tensor, the first dimension of the tensor must
-                            correspond to the number of examples. It will be repeated
-                             for each of `n_steps` along the integrated path.
-                            For all other types, the given argument is used for
-                            all forward evaluations.
+                            correspond to the number of examples. It will be
+                            repeated for each of `n_steps` along the integrated
+                            path. For all other types, the given argument is used
+                            for all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
@@ -105,23 +124,25 @@ class IntegratedGradients(GradientAttribution):
                             is set to True convergence delta will be returned in
                             a tuple following attributions.
                             Default: False
-            Return:
-
-                attributions (tensor or tuple of tensors): Integrated gradients with
-                            respect to each input feature. attributions will always be
-                            the same size as the provided inputs, with each value
-                            providing the attribution of the corresponding input index.
-                            If a single tensor is provided as inputs, a single tensor is
-                            returned. If a tuple is provided for inputs, a tuple of
-                            corresponding sized tensors is returned.
-                delta (tensor, optional): The difference between the total approximated
-                            and true integrated gradients.
-                            This is computed using the property that the total sum of
-                            forward_func(inputs) - forward_func(baselines) must equal
-                            the total sum of the integrated gradient.
-                            Delta is calculated per example, meaning that the number of
-                            elements in returned delta tensor is equal to the number of
-                            of examples in inputs.
+            Returns:
+                **attributions** or 2-element tuple of **attributions**, **delta**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                        Integrated gradients with respect to each input feature.
+                        attributions will always be the same size as the provided
+                        inputs, with each value providing the attribution of the
+                        corresponding input index.
+                        If a single tensor is provided as inputs, a single tensor is
+                        returned. If a tuple is provided for inputs, a tuple of
+                        corresponding sized tensors is returned.
+                - **delta** (*tensor*, returned if return_convergence_delta=True):
+                        The difference between the total approximated and true
+                        integrated gradients. This is computed using the property
+                        that the total sum of forward_func(inputs) -
+                        forward_func(baselines) must equal the total sum of the
+                        integrated gradient.
+                        Delta is calculated per example, meaning that the number of
+                        elements in returned delta tensor is equal to the number of
+                        of examples in inputs.
 
             Examples::
 

@@ -36,8 +36,10 @@ class Attribution:
 
         Returns:
 
-            attributions (tensor or tuple of tensors): Attribution values for each
-                        input vector. The `attributions` have the same shape and
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution values for each
+                        input tensor. The `attributions` have the same shape and
                         dimensionality as the inputs.
                         If a single tensor is provided as inputs, a single tensor
                         is returned. If a tuple is provided for inputs, a tuple of
@@ -56,9 +58,9 @@ class Attribution:
         override both `compute_convergence_delta` and `has_convergence_delta` methods.
 
         Returns:
-
-            has_convergence_delta (bool): Returns whether the attribution algorithm
-                        provides a convergence delta (aka approximation error) or not.
+            bool:
+            Returns whether the attribution algorithm
+            provides a convergence delta (aka approximation error) or not.
 
         """
         return False
@@ -85,11 +87,13 @@ class Attribution:
 
         Returns:
 
-                deltas (tensor): Depending on specific implementaion of
-                            sub-classes, convergence delta can be returned per
-                            sample in form of a tensor or it can be aggregated
-                            across multuple samples and returned in form of a
-                            single floating point tensor.
+                *tensor* of **deltas**:
+                - **deltas** (*tensor*):
+                    Depending on specific implementaion of
+                    sub-classes, convergence delta can be returned per
+                    sample in form of a tensor or it can be aggregated
+                    across multuple samples and returned in form of a
+                    single floating point tensor.
         """
         raise NotImplementedError(
             "Deriving sub-class should implement" " compute_convergence_delta method"
@@ -105,7 +109,7 @@ class GradientAttribution(Attribution):
 
     def __init__(self, forward_func):
         r"""
-        Args
+        Args:
 
             forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
@@ -136,7 +140,9 @@ class GradientAttribution(Attribution):
         the same shape and dimensionality. It also assumes that the target must have
         the same number of examples as the `start_point` and the `end_point` in case
         it is provided in form of a list or a non-singleton tensor.
+
         Args:
+
                 attributions (tensor or tuple of tensors): Precomputed attribution
                             scores. The user can compute those using any attribution
                             algorithm. It is assumed the the shape and the
@@ -156,12 +162,30 @@ class GradientAttribution(Attribution):
                             is the end point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`
                             have the same shape and dimensionality.
-                target (int or list, tuple, tensor, optional):  Output index for which
-                            the attribution is computed. For classification cases,
-                            this is the target class.
+                target (int, tuple, tensor or list, optional):  Output indices for
+                            which gradients are computed (for classification cases,
+                            this is usually the target class).
                             If the network returns a scalar value per example,
-                            no target index is necessary. (Note: Tuples for multi
-                            -dimensional output indices will be supported soon.)
+                            no target index is necessary.
+                            For general 2D outputs, targets can be either:
+
+                            - a single integer or a tensor containing a single
+                                integer, which is applied to all input examples
+
+                            - a list of integers or a 1D tensor, with length matching
+                                the number of examples in inputs (dim 0). Each integer
+                                is applied as the target for the corresponding example.
+
+                            For outputs with > 2 dimensions, targets can be either:
+
+                            - A single tuple, which contains #output_dims - 1
+                                elements. This target index is applied to all examples.
+
+                            - A list of tuples with length equal to the number of
+                                examples in inputs (dim 0), and each tuple containing
+                                #output_dims - 1 elements. Each tuple is applied as the
+                                target for the corresponding example.
+
                             Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
@@ -180,9 +204,11 @@ class GradientAttribution(Attribution):
 
         Returns:
 
-                deltas (tensor): This implementation returns convergence delta per
-                        sample. Deriving sub-classes may do any type of aggregation
-                        of those values, if necessary.
+                *tensor* of **deltas**:
+                - **deltas** (*tensor*):
+                    This implementation returns convergence delta per
+                    sample. Deriving sub-classes may do any type of aggregation
+                    of those values, if necessary.
         """
         end_point, start_point = _format_input_baseline(end_point, start_point)
         attributions = _format_tensor_into_tuples(attributions)
@@ -311,7 +337,9 @@ class NeuronAttribution(InternalAttribution):
 
         Returns:
 
-                attributions (tensor or tuple of tensors): Attribution values for
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution values for
                         each input vector. The `attributions` have the
                         dimensionality of inputs.
         """

@@ -10,21 +10,22 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-PredictionScore = namedtuple("PredictionScore", "score label")
+OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
-    "VisualizationOutput", "feature_outputs actual predicted"
+    "VisualizationOutput", "feature_outputs actual predicted active_index"
 )
 Contribution = namedtuple("Contribution", "name percent")
+SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 
 class FilterConfig(NamedTuple):
-    steps: int = 25
+    steps: int = 20
     prediction: str = "all"
     classes: List[str] = []
     count: int = 4
 
 
-class Data:
+class Batch:
     def __init__(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -42,8 +43,9 @@ class AttributionVisualizer(object):
         models: Union[List[Module], Module],
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
-        dataset: Iterable[Data],
+        dataset: Iterable[Batch],
         score_func: Optional[Callable] = None,
+        use_label_for_attr: bool = True,
     ):
         if not isinstance(models, List):
             models = [models]
@@ -56,7 +58,17 @@ class AttributionVisualizer(object):
         self.features = features
         self.dataset = dataset
         self.score_func = score_func
+        self._outputs = []
         self._config = FilterConfig(steps=25, prediction="all", classes=[], count=4)
+        self._use_label_for_attr = use_label_for_attr
+
+    def _calculate_attribution_from_cache(
+        self, index: int, target: Optional[Tensor]
+    ) -> VisualizationOutput:
+        c = self._outputs[index][1]
+        return self._calculate_vis_output(
+            c.inputs, c.additional_forward_args, c.label, torch.tensor(target)
+        )
 
     def _calculate_attribution(
         self,
@@ -64,12 +76,16 @@ class AttributionVisualizer(object):
         baselines: Optional[List[Tuple[Tensor, ...]]],
         data: Tuple[Tensor, ...],
         additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Optional[Tensor],
+        label: Optional[Union[Tensor]],
     ) -> Tensor:
         ig = IntegratedGradients(net)
         # TODO support multiple baselines
         baseline = baselines[0] if len(baselines) > 0 else None
-        label = None if label is None or label.nelement() == 0 else label
+        label = (
+            None
+            if not self._use_label_for_attr or label is None or label.nelement() == 0
+            else label
+        )
         attr_ig = ig.attribute(
             data,
             baselines=baseline,
@@ -98,11 +114,11 @@ class AttributionVisualizer(object):
 
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
-    ) -> List[PredictionScore]:
+    ) -> List[OutputScore]:
         pred_scores = []
         for i in range(len(indices)):
-            score = scores[i].item()
-            pred_scores.append(PredictionScore(score, self.classes[indices[i]]))
+            score = scores[i]
+            pred_scores.append(OutputScore(score, indices[i], self.classes[indices[i]]))
         return pred_scores
 
     def _transform(
@@ -123,7 +139,7 @@ class AttributionVisualizer(object):
             transformed_inputs = transforms(transformed_inputs)
 
         if batch:
-            transformed_inputs.unsqueeze_(0)
+            transformed_inputs = transformed_inputs.unsqueeze(0)
 
         return transformed_inputs
 
@@ -141,22 +157,20 @@ class AttributionVisualizer(object):
         return net_contrib.tolist()
 
     def _predictions_matches_labels(
-        self,
-        predicted_scores: List[PredictionScore],
-        actual_labels: Union[str, List[str]],
+        self, predicted_scores: List[OutputScore], labels: Union[str, List[str]]
     ) -> bool:
         if len(predicted_scores) == 0:
             return False
 
         predicted_label = predicted_scores[0].label
 
-        if isinstance(actual_labels, List):
-            return predicted_label in actual_labels
+        if isinstance(labels, List):
+            return predicted_label in labels
 
-        return actual_labels == predicted_label
+        return labels == predicted_label
 
     def _should_keep_prediction(
-        self, predicted_scores: List[PredictionScore], actual_label: str
+        self, predicted_scores: List[OutputScore], actual_label: OutputScore
     ) -> bool:
         # filter by class
         if len(self._config.classes) != 0:
@@ -166,22 +180,111 @@ class AttributionVisualizer(object):
                 return False
 
         # filter by accuracy
+        label_name = actual_label.label
         if self._config.prediction == "all":
             pass
         elif self._config.prediction == "correct":
-            if not self._predictions_matches_labels(predicted_scores, actual_label):
+            if not self._predictions_matches_labels(predicted_scores, label_name):
                 return False
         elif self._config.prediction == "incorrect":
-            if self._predictions_matches_labels(predicted_scores, actual_label):
+            if self._predictions_matches_labels(predicted_scores, label_name):
                 return False
         else:
             raise Exception(f"Invalid prediction config: {self._config.prediction}")
 
         return True
 
+    def _calculate_vis_output(
+        self, inputs, additional_forward_args, label, target=None
+    ) -> Optional[VisualizationOutput]:
+        net = self.models[0]  # TODO process multiple models
+
+        # initialize baselines
+        baseline_transforms_len = len(self.features[0].baseline_transforms or [])
+        baselines = [
+            [None] * len(self.features) for _ in range(baseline_transforms_len)
+        ]
+        transformed_inputs = list(inputs)
+
+        # transformed_inputs = list([i.clone() for i in inputs])
+        for feature_i, feature in enumerate(self.features):
+            if feature.input_transforms is not None:
+                transformed_inputs[feature_i] = self._transform(
+                    feature.input_transforms, transformed_inputs[feature_i], True
+                )
+            if feature.baseline_transforms is not None:
+                assert baseline_transforms_len == len(
+                    feature.baseline_transforms
+                ), "Must have same number of baselines across all features"
+
+                for baseline_i, baseline_transform in enumerate(
+                    feature.baseline_transforms
+                ):
+                    baselines[baseline_i][feature_i] = self._transform(
+                        baseline_transform, transformed_inputs[feature_i], True
+                    )
+
+        outputs = _run_forward(net, tuple(transformed_inputs), additional_forward_args)
+
+        if self.score_func is not None:
+            outputs = self.score_func(outputs)
+
+        if outputs.nelement() == 1:
+            scores = outputs
+            predicted = scores.round().to(torch.int)
+        else:
+            scores, predicted = outputs.topk(min(4, outputs.shape[-1]))
+
+        scores = scores.cpu().squeeze(0)
+        predicted = predicted.cpu().squeeze(0)
+
+        if label is not None and len(label) > 0:
+            actual_label_output = OutputScore(
+                score=100, index=label[0], label=self.classes[label[0]]
+            )
+        else:
+            actual_label_output = None
+
+        predicted_scores = self._get_labels_from_scores(scores, predicted)
+
+        # Filter based on UI configuration
+        if not self._should_keep_prediction(predicted_scores, actual_label_output):
+            return None
+
+        baselines = [tuple(b) for b in baselines]
+
+        if target is None:
+            target = predicted_scores[0].index if len(predicted_scores) > 0 else None
+
+        # attributions are given per input*
+        # inputs given to the model are described via `self.features`
+        #
+        # *an input contains multiple features that represent it
+        #   e.g. all the pixels that describe an image is an input
+
+        attrs_per_input_feature = self._calculate_attribution(
+            net, baselines, tuple(transformed_inputs), additional_forward_args, target
+        )
+
+        net_contrib = self._calculate_net_contrib(attrs_per_input_feature)
+
+        # the features per input given
+        features_per_input = [
+            feature.visualize(attr, data, contrib)
+            for feature, attr, data, contrib in zip(
+                self.features, attrs_per_input_feature, inputs, net_contrib
+            )
+        ]
+
+        return VisualizationOutput(
+            feature_outputs=features_per_input,
+            actual=actual_label_output,
+            predicted=predicted_scores,
+            active_index=target if target is not None else actual_label_output.index,
+        )
+
     def _get_outputs(self) -> List[VisualizationOutput]:
         batch_data = next(self.dataset)
-        net = self.models[0]  # TODO process multiple models
         vis_outputs = []
 
         for inputs, additional_forward_args, label in _batched_generator(
@@ -190,93 +293,18 @@ class AttributionVisualizer(object):
             target_ind=batch_data.labels,
             internal_batch_size=1,  # should be 1 until we have batch label support
         ):
-            # initialize baselines
-            baseline_transforms_len = len(self.features[0].baseline_transforms or [])
-            baselines = [
-                [None] * len(self.features) for _ in range(baseline_transforms_len)
-            ]
-            transformed_inputs = list(inputs)
-
-            for feature_i, feature in enumerate(self.features):
-                if feature.input_transforms is not None:
-                    transformed_inputs[feature_i] = self._transform(
-                        feature.input_transforms, transformed_inputs[feature_i], True
-                    )
-                if feature.baseline_transforms is not None:
-                    assert baseline_transforms_len == len(
-                        feature.baseline_transforms
-                    ), "Must have same number of baselines across all features"
-
-                    for baseline_i, baseline_transform in enumerate(
-                        feature.baseline_transforms
-                    ):
-                        baselines[baseline_i][feature_i] = self._transform(
-                            baseline_transform, transformed_inputs[feature_i], True
-                        )
-
-            outputs = _run_forward(
-                net, tuple(transformed_inputs), additional_forward_args
-            )
-
-            if self.score_func is not None:
-                outputs = self.score_func(outputs)
-
-            if outputs.nelement() == 1:
-                scores = outputs
-                predicted = scores.round().to(torch.int)
-            else:
-                scores, predicted = outputs.topk(min(4, outputs.shape[-1]))
-
-            scores = scores.cpu().squeeze(0)
-            predicted = predicted.cpu().squeeze(0)
-
-            actual_label = self.classes[label[0]] if label is not None else None
-            predicted_scores = self._get_labels_from_scores(scores, predicted)
-
-            # Filter based on UI configuration
-            if not self._should_keep_prediction(predicted_scores, actual_label):
-                continue
-
-            baselines = [tuple(b) for b in baselines]
-
-            # attributions are given per input*
-            # inputs given to the model are described via `self.features`
-            #
-            # *an input contains multiple features that represent it
-            #   e.g. all the pixels that describe an image is an input
-            attrs_per_input_feature = self._calculate_attribution(
-                net,
-                baselines,
-                tuple(transformed_inputs),
-                additional_forward_args,
-                label,
-            )
-
-            net_contrib = self._calculate_net_contrib(attrs_per_input_feature)
-
-            # the features per input given
-            features_per_input = [
-                feature.visualize(attr, data, contrib)
-                for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_input_feature, inputs, net_contrib
-                )
-            ]
-
-            output = VisualizationOutput(
-                feature_outputs=features_per_input,
-                actual=actual_label,
-                predicted=predicted_scores,
-            )
-
-            vis_outputs.append(output)
+            output = self._calculate_vis_output(inputs, additional_forward_args, label)
+            if output is not None:
+                cache = SampleCache(inputs, additional_forward_args, label)
+                vis_outputs.append((output, cache))
 
         return vis_outputs
 
     def visualize(self):
-        output_list = []
-        while len(output_list) < self._config.count:
+        self._outputs = []
+        while len(self._outputs) < self._config.count:
             try:
-                output_list.extend(self._get_outputs())
+                self._outputs.extend(self._get_outputs())
             except StopIteration:
                 break
-        return output_list
+        return [o[0] for o in self._outputs]
