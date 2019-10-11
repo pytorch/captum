@@ -27,7 +27,12 @@ class GuidedGradCam(GradientAttribution):
         self.guided_backprop = GuidedBackprop(model)
 
     def attribute(
-        self, inputs, target=None, additional_forward_args=None, chosen_input_index=0, interpolate_mode="nearest"
+        self,
+        inputs,
+        target=None,
+        additional_forward_args=None,
+        chosen_input_index=0,
+        interpolate_mode="nearest",
     ):
         r"""
             Computes element-wise product of guided backpropagation attributions
@@ -155,5 +160,7 @@ class GuidedGradCam(GradientAttribution):
             additional_forward_args=additional_forward_args,
         )
         return guided_backprop_attr[chosen_input_index] * LayerAttribution.interpolate(
-            grad_cam_attr, inputs[chosen_input_index].shape[2:], interpolate_mode=interpolate_mode
+            grad_cam_attr,
+            inputs[chosen_input_index].shape[2:],
+            interpolate_mode=interpolate_mode,
         )
