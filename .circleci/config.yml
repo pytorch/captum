@@ -122,6 +122,15 @@ jobs:
       - unit_tests
       - sphinx
 
+  test_cuda_multi_gpu:
+    docker:
+      - image: continuumio/miniconda3
+    resource_class: gpu.medium
+    steps:
+      - checkout
+      - conda_install:
+          args: "-n"
+      - unit_tests
 
 aliases:
 
@@ -141,4 +150,6 @@ workflows:
       - lint_test_py36_pip_release:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
+          filters: *exclude_ghpages_fbconfig
+       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
