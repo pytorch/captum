@@ -124,7 +124,7 @@ jobs:
 
   test_cuda_multi_gpu:
     docker:
-      - image: continuumio/miniconda3
+      - image: soumith/conda-cuda
     resource_class: gpu.medium
     steps:
       - checkout
