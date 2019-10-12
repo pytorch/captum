@@ -123,8 +123,7 @@ jobs:
       - sphinx
 
   test_cuda_multi_gpu:
-    docker:
-      - image: soumith/conda-cuda
+    docker_image: soumith/conda-cuda
     resource_class: gpu.medium
     steps:
       - checkout
