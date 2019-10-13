@@ -41,7 +41,6 @@ class Test(BaseTest):
         model = TanhDeepLiftModel()
         self._deeplift_helper(model, DeepLift(model), inputs, baselines)
 
-
     def test_relu_deeplift_batch(self):
         x1 = torch.tensor([[1.0], [1.0], [1.0], [1.0]], requires_grad=True)
         x2 = torch.tensor([[2.0], [2.0], [2.0], [2.0]], requires_grad=True)
