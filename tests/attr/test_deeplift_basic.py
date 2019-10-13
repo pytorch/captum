@@ -10,7 +10,7 @@ from .helpers.utils import (
     assertArraysAlmostEqual,
     BaseTest,
 )
-from .helpers.basic_models import ReLUDeepLiftModel
+from .helpers.basic_models import ReLUDeepLiftModel, TanhDeepLiftModel
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
 
@@ -27,6 +27,20 @@ class Test(BaseTest):
 
         model = ReLUDeepLiftModel()
         self._deeplift_helper(model, DeepLift(model), inputs, baselines)
+
+    def test_tanh_deeplift(self):
+        x1 = torch.tensor([-1.0], requires_grad=True)
+        x2 = torch.tensor([-2.0], requires_grad=True)
+
+        b1 = torch.tensor([0.0], requires_grad=True)
+        b2 = torch.tensor([0.0], requires_grad=True)
+
+        inputs = (x1, x2)
+        baselines = (b1, b2)
+
+        model = TanhDeepLiftModel()
+        self._deeplift_helper(model, DeepLift(model), inputs, baselines)
+
 
     def test_relu_deeplift_batch(self):
         x1 = torch.tensor([[1.0], [1.0], [1.0], [1.0]], requires_grad=True)
