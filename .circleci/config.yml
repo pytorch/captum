@@ -124,7 +124,7 @@ jobs:
 
   test_cuda_multi_gpu:
     machine:
-      image: circleci/classic:201808-01
+      image: ubuntu-1604:201903-01
     resource_class: gpu.medium
     steps:
       - checkout
