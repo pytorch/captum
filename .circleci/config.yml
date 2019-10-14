@@ -143,8 +143,11 @@ jobs:
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
       - run: 'dir /usr/local/cuda-8.0/bin/'
-      - run: 'export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}'
-      - run: 'export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}'
+      - run:
+          name: "Set environment variables"
+          command: |
+            echo "export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}" >> $BASH_ENV
+            echo "export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> $BASH_ENV
       - run: 'nvidia-smi'
       - run: 'nvcc --version'
       - run: 'sudo python -m pip install pip'
