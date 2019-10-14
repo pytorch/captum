@@ -133,8 +133,8 @@ jobs:
           command: |
             pyenv versions
             pyenv global 3.7.0
-      - run: 'sudo python3.7 -m pip install pip'
-      - run: 'python3.7 -m pip install -e .[dev]'
+      - run: 'sudo python -m pip install pip'
+      - run: 'python -m pip install -e .[dev]'
       - unit_tests
 
 aliases:
