@@ -142,6 +142,7 @@ jobs:
             sudo dpkg -i cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
+      - run: 'export PATH=/usr/local/cuda-8.0/bin:/usr/local/cuda-8.0/NsightCompute-2019.1${PATH:+:${PATH}}'
       - run: 'nvidia-smi'
       - run: 'nvcc --version'
       - run: 'sudo python -m pip install pip'
