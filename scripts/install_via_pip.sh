@@ -20,13 +20,13 @@ while getopts 'ndf' flag; do
 # but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
-sudo apt install apt-transport-https ca-certificates
-curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-sudo apt update
-sudo apt install nodejs
-sudo apt install yarn
+#sudo apt install apt-transport-https ca-certificates
+#curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+#curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+#echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+#sudo apt update
+#sudo apt install nodejs
+#sudo apt install yarn
 
 # yarn needs terminal info
 export TERM=xterm
@@ -41,7 +41,7 @@ sudo pip install --upgrade pip
 
 # install captum with dev deps
 sudo pip install -e .[dev]
-sudo BUILD_INSIGHTS=1 python setup.py develop
+#sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
