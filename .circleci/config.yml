@@ -128,9 +128,9 @@ jobs:
     resource_class: gpu.medium
     steps:
       - checkout
-      - run: 'sudo apt install python3-pip'
-      - pip_install:
-          args: "-f"
+      - run: 'sudo apt-get install python3.7'
+      - run: 'sudo python3.7 -m pip install pip'
+      - run: 'python3.7 -m pip install -e .[dev]'
       - unit_tests
 
 aliases:
