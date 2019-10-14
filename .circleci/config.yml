@@ -43,7 +43,7 @@ commands:
     steps:
       - run:
           name: "Run unit tests"
-          command: pytest -ra --cov=. --cov-report term-missing
+          command: python -m pytest -ra --cov=. --cov-report term-missing
 
   sphinx:
     description: "Run sphinx"
