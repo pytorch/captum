@@ -147,6 +147,11 @@ jobs:
           command: |
             echo "export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}" >> $BASH_ENV
             echo "export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> $BASH_ENV
+      - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
       - run: 'sudo python -m pip install pip'
       - run: 'sudo python -m pip install pytest'
       - run: 'python -m pip install -e .[dev]'
