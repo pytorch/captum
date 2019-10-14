@@ -128,7 +128,7 @@ jobs:
     resource_class: gpu.medium
     steps:
       - checkout
-      - run: 'apt update'
+      - run: 'sudo apt update'
       - run: 'sudo apt install software-properties-common'
       - run: 'sudo add-apt-repository ppa:deadsnakes/ppa'
       - run: 'sudo apt-get install python3.7'
