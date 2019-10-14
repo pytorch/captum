@@ -134,6 +134,7 @@ jobs:
             pyenv versions
             pyenv global 3.7.0
       - run: 'sudo python -m pip install pip'
+      - run: 'sudo python -m pip install pytest'
       - run: 'python -m pip install -e .[dev]'
       - unit_tests
 
