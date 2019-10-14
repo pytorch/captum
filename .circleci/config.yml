@@ -128,8 +128,11 @@ jobs:
     resource_class: gpu.medium
     steps:
       - checkout
-      - conda_install:
-          args: "-n"
+      - run:
+        command: |
+          sudo apt install pip
+      - pip_install:
+          args: "-f"
       - unit_tests
 
 aliases:
