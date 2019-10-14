@@ -142,14 +142,11 @@ jobs:
             sudo dpkg -i cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
-      - run: 'dir /usr/local/cuda-8.0/bin/'
       - run:
           name: "Set environment variables"
           command: |
             echo "export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}" >> $BASH_ENV
             echo "export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> $BASH_ENV
-      - run: 'nvidia-smi'
-      - run: 'nvcc --version'
       - run: 'sudo python -m pip install pip'
       - run: 'sudo python -m pip install pytest'
       - run: 'python -m pip install -e .[dev]'
