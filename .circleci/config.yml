@@ -142,6 +142,7 @@ jobs:
             sudo dpkg -i cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
+      - run: 'dir /usr/local/cuda-8.0/bin/'
       - run: 'export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}'
       - run: 'export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}'
       - run: 'nvidia-smi'
