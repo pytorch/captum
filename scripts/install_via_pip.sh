@@ -37,10 +37,10 @@ export TERM=xterm
 # since we'd need to source the environemnt in each step.
 
 # upgrade pip
-sudo pip install --upgrade pip
+sudo pip3 install --upgrade pip
 
 # install captum with dev deps
-sudo pip install -e .[dev]
+sudo pip3 install -e .[dev]
 #sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
