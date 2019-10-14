@@ -129,8 +129,7 @@ jobs:
     steps:
       - checkout
       - run:
-        command: |
-          sudo apt install pip
+        command: 'sudo apt install pip'
       - pip_install:
           args: "-f"
       - unit_tests
