@@ -13,6 +13,13 @@ commands:
           name: "Install dependencies via pip"
           command: ./scripts/install_via_pip.sh << parameters.args >>
 
+  simple_pip_install:
+    description: "Simple install of Captum via pip. Does not include extra dependencies such as yarn and nodejs needed for building insights."
+    steps:
+      - run:
+          name: "Simple PIP install"
+          command: python -m pip install -e .[dev]
+
   conda_install:
     description: "Install dependencies via conda"
     parameters:
@@ -106,8 +113,6 @@ commands:
             sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
-            echo 'export PATH=/usr/local/cuda-8.0/bin:$PATH' >> $BASH_ENV
-            echo 'export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH' >> $BASH_ENV
 
 jobs:
 
@@ -155,9 +160,7 @@ jobs:
       - checkout
       - set_py_3_7
       - install_cuda
-      - pip_install:
-          args: "-n -f"
-      #- run: 'python -m pip install -e .[dev]'
+      - simple_pip_install
       - unit_tests
 
 aliases:
