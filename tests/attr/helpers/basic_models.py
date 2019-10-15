@@ -104,6 +104,21 @@ class ReLUDeepLiftModel(nn.Module):
         return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
 
 
+class TanhDeepLiftModel(nn.Module):
+    r"""
+        Same as the ReLUDeepLiftModel, but with activations
+        that can have negative outputs
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.tanh1 = nn.Tanh()
+        self.tanh2 = nn.Tanh()
+
+    def forward(self, x1, x2):
+        return 2 * self.tanh1(x1) + 2 * self.tanh2(x2 - 1.5)
+
+
 class ReLULinearDeepLiftModel(nn.Module):
     r"""
         Architecture is based on:

@@ -534,14 +534,18 @@ def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
     grad_input[0] = torch.where(
-        delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
+        abs(delta_in[0]) < eps,
+        grad_input[0],
+        grad_output[0] * delta_out[0] / delta_in[0],
     )
     return grad_input
 
 
 def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
     grad_input_unnorm = torch.where(
-        delta_in[0] < eps, grad_input[0], grad_output[0] * delta_out[0] / delta_in[0]
+        abs(delta_in[0]) < eps,
+        grad_input[0],
+        grad_output[0] * delta_out[0] / delta_in[0],
     )
     # normalizing
     n = np.prod(grad_input[0].shape)
@@ -634,7 +638,7 @@ def maxpool(
         )
 
     new_grad_input = torch.where(
-        delta_in[0] < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
+        abs(delta_in[0]) < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
     )
 
     # If the module is invalid, save the newly computed gradients
