@@ -136,10 +136,10 @@ jobs:
       - run:
           name: "Install CUDA"
           command: |
-            wget https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
+            wget http://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
             sudo apt-get update
             export OS_RELEASE=$(uname -r)
-            sudo dpkg -i cuda-repo-ubuntu1604-8-0-local_8.0.44-1_amd64-deb
+            sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
             sudo apt-get update
             sudo apt-get --yes --force-yes install cuda
       - run:
