@@ -90,8 +90,8 @@ commands:
           name: "Simple PIP install"
           command: python -m pip install -e .[dev]
 
-  set_py_3_7:
-    description: "Set python version to 3.7"
+  py_3_7_setup:
+    description: "Set python version to 3.7 and install pip and pytest"
     steps:
       - run:
           name: "Switch to Python v3.7"
@@ -155,11 +155,11 @@ jobs:
   test_cuda_multi_gpu:
     machine:
       image: ubuntu-1604:201903-01
-    resource_class: gpu.medium
+    resource_class: gpu.large
     steps:
       - checkout
-      - set_py_3_7
       - install_cuda
+      - py_3_7_setup
       - simple_pip_install
       - unit_tests
 
