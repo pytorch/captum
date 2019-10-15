@@ -3,7 +3,7 @@
 import torch
 
 from enum import Enum
-
+from inspect import signature
 
 from .approximation_methods import SUPPORTED_METHODS
 
@@ -93,10 +93,14 @@ def _format_additional_forward_args(additional_forward_args):
 
 def format_baseline(baselines, inputs):
     if baselines is None:
-        baselines = _zeros(inputs)
+        return _zeros(inputs)
 
     if not isinstance(baselines, tuple):
         baselines = (baselines,)
+
+    assert isinstance(baselines[0], torch.Tensor), \
+        ("baselines input argument must be either a torch.Tensor or a tuple of \
+          those however {} detected".format(type(baselines[0])))
 
     return baselines
 
@@ -105,6 +109,27 @@ def _format_input_baseline(inputs, baselines):
     inputs = format_input(inputs)
     baselines = format_baseline(baselines, inputs)
     return inputs, baselines
+
+
+# This function can potentially be merged with the `format_baseline` function
+# however, since currently not all algorithms support baselines of type
+# callable this will be kept in a separate function.
+def _format_callable_baseline(baselines, inputs):
+    if callable(baselines):
+        # Note: this assumes that if baselines is a function and if it takes
+        # arguments, then the first argument is the `inputs`.
+        # This can be expanded in the future with better type checks
+        baseline_parameters = signature(baselines).parameters
+        if len(baseline_parameters) == 0:
+            baselines = baselines()
+        else:
+            baselines = baselines(inputs)
+        # check the type of the baselines and make sure that it is either a
+        # tensor or a list of tensors
+        assert isinstance(baselines, tuple) or isinstance(baselines, torch.Tensor), \
+            ("`baselines` function should either return a torch.Tensor \
+             or a tuple of those")
+    return format_baseline(baselines, inputs)
 
 
 def _format_attributions(is_inputs_tuple, attributions):

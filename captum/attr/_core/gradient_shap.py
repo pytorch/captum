@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_attributions
+from .._utils.common import _format_attributions, _format_callable_baseline
 
 from .noise_tunnel import NoiseTunnel
 
@@ -73,11 +73,15 @@ class GradientShap(GradientAttribution):
                         are provided, the examples must be aligned appropriately.
             baselines (tensor or tuple of tensors, optional):  Baselines define
                         the starting point from which expectation is computed.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor.
+                        `baselines` can be either a single tensor, a tuple of
+                        tensors or a callable function that either returns a single
+                        tensor or a tuple of those.
+                        If inputs is a single tensor, baselines must also be either
+                        a single tensor or a function that returns a single tensor.
                         If inputs is a tuple of tensors, baselines must also be
-                        a tuple of tensors, with the same number of tensors as
-                        the inputs. The first dimension in baseline tensors
+                        either a tuple of tensors or a function that returns a
+                        tuple of tensors.
+                        The first dimension in baseline tensors
                         defines the distribution from which we randomly draw
                         samples. All other dimensions starting after
                         the first dimension should match with the inputs'
@@ -180,6 +184,11 @@ class GradientShap(GradientAttribution):
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
+
+        # since `baselines` is a distribution, we can generate it using a function
+        # rather than passing it as an input argument
+        baselines = _format_callable_baseline(baselines, inputs)
+
         attributions = nt.attribute(
             inputs,
             nt_type="smoothgrad",
