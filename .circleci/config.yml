@@ -43,7 +43,7 @@ commands:
     steps:
       - run:
           name: "Run unit tests"
-          command: pytest -ra --cov=. --cov-report term-missing
+          command: python -m pytest -ra --cov=. --cov-report term-missing
 
   sphinx:
     description: "Run sphinx"
@@ -155,7 +155,9 @@ jobs:
       - checkout
       - set_py_3_7
       - install_cuda
-      - run: 'python -m pip install -e .[dev]'
+      - pip_install:
+          args: "-n -f"
+      #- run: 'python -m pip install -e .[dev]'
       - unit_tests
 
 aliases:
