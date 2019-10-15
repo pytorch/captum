@@ -14,7 +14,7 @@ while getopts 'nf' flag; do
   done
 
 # update conda
-conda update --force -y -n base -c defaults conda
+conda update -y -n base -c defaults conda
 
 # required to use conda develop
 conda install -y conda-build
