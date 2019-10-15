@@ -13,13 +13,6 @@ commands:
           name: "Install dependencies via pip"
           command: ./scripts/install_via_pip.sh << parameters.args >>
 
-  simple_pip_install:
-    description: "Simple install of Captum via pip. Does not include extra dependencies such as yarn and nodejs needed for building insights."
-    steps:
-      - run:
-          name: "Simple PIP install"
-          command: python -m pip install -e .[dev]
-
   conda_install:
     description: "Install dependencies via conda"
     parameters:
@@ -89,6 +82,13 @@ commands:
             else
               echo "Skipping deploy."
             fi
+
+  simple_pip_install:
+    description: "Simple install of Captum via pip. Does not include extra dependencies such as yarn and nodejs needed for building insights."
+    steps:
+      - run:
+          name: "Simple PIP install"
+          command: python -m pip install -e .[dev]
 
   set_py_3_7:
     description: "Set python version to 3.7"
