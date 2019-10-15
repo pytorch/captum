@@ -43,7 +43,7 @@ commands:
     steps:
       - run:
           name: "Run unit tests"
-          command: python -m pytest -ra --cov=. --cov-report term-missing
+          command: pytest -ra --cov=. --cov-report term-missing
 
   sphinx:
     description: "Run sphinx"
@@ -149,7 +149,7 @@ jobs:
 
   test_cuda_multi_gpu:
     machine:
-      image: ubuntu-1604:201903-01
+      - image: ubuntu-1604:201903-01
     resource_class: gpu.medium
     steps:
       - checkout
