@@ -303,7 +303,7 @@ class LayerAttribution(InternalAttribution):
                         corresponds to number of examples and the second is
                         assumed to correspond to the number of channels.
             interpolate_mode (str):  Method for interpolation, which
-                        muat be a valid input interpolation mode for
+                        must be a valid input interpolation mode for
                         torch.nn.functional. These methods are
                         "nearest", "area", "linear" (3D-only), "bilinear"
                         (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)

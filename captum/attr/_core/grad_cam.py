@@ -114,7 +114,7 @@ class LayerGradCam(LayerAttribution):
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
                 >>> # and returns an Nx10 tensor of class probabilities.
-                >>> # It contains an attribute conv4, which is an instance of nn.conv2d,
+                >>> # It contains a layer conv4, which is an instance of nn.conv2d,
                 >>> # and the output of this layer has dimensions Nx50x8x8.
                 >>> # It is the last convolution layer, which is the recommended
                 >>> # use case for GradCAM.

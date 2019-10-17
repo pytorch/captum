@@ -112,7 +112,7 @@ class GuidedGradCam(GradientAttribution):
                             to be meaningful, e.g. an input image tensor for a
                             convolutional layer.
                 interpolate_mode (str, optional): Method for interpolation, which
-                            muat be a valid input interpolation mode for
+                            must be a valid input interpolation mode for
                             torch.nn.functional. These methods are
                             "nearest", "area", "linear" (3D-only), "bilinear"
                             (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
