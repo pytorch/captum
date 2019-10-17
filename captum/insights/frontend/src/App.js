@@ -1,5 +1,6 @@
 import React from "react";
 import ReactTags from "react-tag-autocomplete";
+import styles from "./App.module.css";
 import "./App.css";
 
 // helper method to convert an array or object into a valid classname
@@ -15,11 +16,11 @@ function cx(obj) {
 class Header extends React.Component {
   render() {
     return (
-      <header className="header">
-        <div className="header__name">Captum Insights</div>
-        <nav className="header__nav">
+      <header className={styles.header}>
+        <div className={styles.header__name}>Captum Insights</div>
+        <nav className={styles.header__nav}>
           <ul>
-            <li className="header__nav__item header__nav__item--active">
+            <li className={cx([styles.header__nav__item, styles['header__nav__item--active']])}>
               Instance Attribution
             </li>
           </ul>
@@ -31,8 +32,8 @@ class Header extends React.Component {
 
 function Tooltip(props) {
   return (
-    <div className="tooltip">
-      <div className="tooltip__label">{props.label}</div>
+    <div className={styles.tooltip}>
+      <div className={styles['tooltip__label']}>{props.label}</div>
     </div>
   );
 }
@@ -123,10 +124,10 @@ class Filter extends React.Component {
   render() {
     return (
       <form onSubmit={this.props.handleSubmit}>
-        <div className="filter-panel">
-          <div className="filter-panel__column">
-            <div className="filter-panel__column__title">Filter by Classes</div>
-            <div className="filter-panel__column__body">
+        <div className={styles["filter-panel"]}>
+          <div className={styles["filter-panel__column"]}>
+            <div className={styles["filter-panel__column__title"]}>Filter by Classes</div>
+            <div className={styles["filter-panel__column__body"]}>
               <ClassFilter
                 handleClassDelete={this.props.handleClassDelete}
                 handleClassAdd={this.props.handleClassAdd}
@@ -135,14 +136,14 @@ class Filter extends React.Component {
               />
             </div>
           </div>
-          <div className="filter-panel__column">
-            <div className="filter-panel__column__title">
+          <div className={styles["filter-panel__column"]}>
+            <div className={styles["filter-panel__column__title"]}>
               Filter by Instances
             </div>
-            <div className="filter-panel__column__body">
+            <div className={styles["filter-panel__column__body"]}>
               Prediction:{" "}
               <select
-                className="select"
+                className={styles.select}
                 name="prediction"
                 onChange={this.props.handleInputChange}
                 value={this.props.prediction}
@@ -153,14 +154,14 @@ class Filter extends React.Component {
               </select>
             </div>
           </div>
-          <div className="filter-panel__column">
-            <div className="filter-panel__column__title">
+          <div className={styles["filter-panel__column"]}>
+            <div className={styles["filter-panel__column__title"]}>
               Integrated Gradients
             </div>
-            <div className="filter-panel__column__body">
+            <div className={styles["filter-panel__column__body"]}>
               Approximation steps:{" "}
               <input
-                className="input input--narrow"
+                className={cx([styles.input, styles["input--narrow"]])}
                 name="approximation_steps"
                 type="number"
                 value={this.props.approximationSteps}
@@ -168,8 +169,8 @@ class Filter extends React.Component {
               />
             </div>
           </div>
-          <div className="filter-panel__column filter-panel__column--end">
-            <button className="btn btn--outline btn--large">Fetch</button>
+          <div className={cx([styles["filter-panel__column"], styles["filter-panel__column--end"]])}>
+            <button className={cx([styles.btn, styles["btn--outline"], styles["btn--large"]])}>Fetch</button>
           </div>
         </div>
       </form>
@@ -178,7 +179,7 @@ class Filter extends React.Component {
 }
 
 function Spinner(_) {
-  return <div className="spinner" />;
+  return <div className={styles.spinner} />;
 }
 
 function calcHSLFromScore(percentage, zeroDefault = false) {
@@ -209,20 +210,20 @@ function calcHSLFromScore(percentage, zeroDefault = false) {
 function ImageFeature(props) {
   return (
     <>
-      <div className="panel__column__title">{props.data.name} (Image)</div>
-      <div className="panel__column__body">
-        <div className="gallery">
-          <div className="gallery__item">
-            <div className="gallery__item__image">
+      <div className={styles["panel__column__title"]}>{props.data.name} (Image)</div>
+      <div className={styles["panel__column__body"]}>
+        <div className={styles.gallery}>
+          <div className={styles["gallery__item"]}>
+            <div className={styles["gallery__item__image"]}>
               <img src={"data:image/png;base64," + props.data.base} />
             </div>
-            <div className="gallery__item__description">Original</div>
+            <div className={styles["gallery__item__description"]}>Original</div>
           </div>
-          <div className="gallery__item">
-            <div className="gallery__item__image">
+          <div className={styles["gallery__item"]}>
+            <div className={styles["gallery__item__image"]}>
               <img src={"data:image/png;base64," + props.data.modified} />
             </div>
-            <div className="gallery__item__description">
+            <div className={styles["gallery__item__description"]}>
               Attribution Magnitude
             </div>
           </div>
@@ -250,8 +251,8 @@ function TextFeature(props) {
   });
   return (
     <>
-      <div className="panel__column__title">{props.data.name} (Text)</div>
-      <div className="panel__column__body">{color_words}</div>
+      <div className={styles["panel__column__title"]}>{props.data.name} (Text)</div>
+      <div className={styles["panel__column__body"]}>{color_words}</div>
     </>
   );
 }
@@ -263,14 +264,14 @@ function GeneralFeature(props) {
       "general-feature__bar__" + (percent > 0 ? "positive" : "negative");
     const width_percent = Math.abs(percent) + "%";
     return (
-      <div className="general-feature">
-        <span className="general-feature__label-container">
-          <span className="general-feature__label">{w}</span>
-          <span className="general-feature__percent">{percent}</span>
+      <div className={styles["general-feature"]}>
+        <span className={styles["general-feature__label-container"]}>
+          <span className={styles["general-feature__label"]}>{w}</span>
+          <span className={styles["general-feature__percent"]}>{percent}</span>
         </span>
-        <div className="general-feature__bar-container">
+        <div className={styles["general-feature__bar-container"]}>
           <span
-            className={cx(["general-feature__bar", color])}
+            className={cx([styles["general-feature__bar"], color])}
             style={{ width: width_percent }}
           ></span>
         </div>
@@ -279,8 +280,8 @@ function GeneralFeature(props) {
   });
   return (
     <>
-      <div className="panel__column__title">{props.data.name} (General)</div>
-      <div className="panel__column__body">{bars}</div>
+      <div className={styles["panel__column__title"]}>{props.data.name} (General)</div>
+      <div className={styles["panel__column__body"]}>{bars}</div>
     </>
   );
 }
@@ -307,15 +308,15 @@ class Contributions extends React.Component {
       const contribution = f.contribution * 100;
       const bar_height = contribution > 10 ? contribution : contribution + 10;
       return (
-        <div className="bar-chart__group">
+        <div className={styles["bar-chart__group"]}>
           <div
-            className={"bar-chart__group__bar"}
+            className={styles["bar-chart__group__bar"]}
             style={{
               height: bar_height + "px",
               backgroundColor: calcHSLFromScore(contribution)
             }}
           />
-          <div className="bar-chart__group__title">{f.name}</div>
+          <div className={styles["bar-chart__group__title"]}>{f.name}</div>
         </div>
       );
     });
@@ -333,9 +334,9 @@ class LabelButton extends React.Component {
       <button
         onClick={this.onClick}
         className={cx({
-          btn: true,
-          "btn--solid": this.props.active,
-          "btn--outline": !this.props.active
+          [styles.btn]: true,
+          [styles["btn--solid"]]: this.props.active,
+          [styles["btn--outline"]]: !this.props.active
         })}
       >
         {this.props.children}
@@ -366,22 +367,22 @@ class Visualization extends React.Component {
     return (
       <>
         {this.state.loading && (
-          <div className="loading">
+          <div className={styles.loading}>
             <Spinner />
           </div>
         )}
         <div
           className={cx({
-            panel: true,
-            "panel--long": true,
-            "panel--loading": this.state.loading
+            [styles.panel]: true,
+            [styles["panel--long"]]: true,
+            [styles["panel--loading"]]: this.state.loading
           })}
         >
-          <div className="panel__column">
-            <div className="panel__column__title">Predicted</div>
-            <div className="panel__column__body">
+          <div className={styles["panel__column"]}>
+            <div className={styles["panel__column__title"]}>Predicted</div>
+            <div className={styles["panel__column__body"]}>
               {data.predicted.map(p => (
-                <div className="row row--padding">
+                <div className={cx([styles.row, styles["row--padding"]])}>
                   <LabelButton
                     onTargetClick={this.onTargetClick}
                     labelIndex={p.index}
@@ -394,10 +395,10 @@ class Visualization extends React.Component {
               ))}
             </div>
           </div>
-          <div className="panel__column">
-            <div className="panel__column__title">Label</div>
-            <div className="panel__column__body">
-              <div className="row row--padding">
+          <div className={styles["panel__column"]}>
+            <div className={styles["panel__column__title"]}>Label</div>
+            <div className={styles["panel__column__body"]}>
+              <div className={styles["row row--padding"]}>
                 <LabelButton
                   onTargetClick={this.onTargetClick}
                   labelIndex={data.actual.index}
@@ -409,15 +410,15 @@ class Visualization extends React.Component {
               </div>
             </div>
           </div>
-          <div className="panel__column">
-            <div className="panel__column__title">Contribution</div>
-            <div className="panel__column__body">
-              <div className="bar-chart">
+          <div className={styles["panel__column"]}>
+            <div className={styles["panel__column__title"]}>Contribution</div>
+            <div className={styles["panel__column__body"]}>
+              <div className={styles["bar-chart"]}>
                 <Contributions feature_outputs={data.feature_outputs} />
               </div>
             </div>
           </div>
-          <div className="panel__column panel__column--stretch">{features}</div>
+          <div className={cx([styles["panel__column"], styles["panel__column--stretch"]])}>{features}</div>
         </div>
       </>
     );
@@ -428,7 +429,7 @@ function Visualizations(props) {
   if (props.loading) {
     return (
       <div className="viz">
-        <div className="panel panel--center">
+        <div className={cx([styles.panel, styles["panel--center"]])}>
           <Spinner />
         </div>
       </div>
@@ -437,10 +438,10 @@ function Visualizations(props) {
 
   if (!props.data || props.data.length === 0) {
     return (
-      <div className="viz">
-        <div className="panel">
-          <div className="panel__column">
-            Please press <strong className="text-feature-word">Fetch</strong> to
+      <div className={styles.viz}>
+        <div className={styles.panel}>
+          <div className={styles["panel__column"]}>
+            Please press <strong className={styles["text-feature-word"]}>Fetch</strong> to
             start loading data.
           </div>
         </div>
@@ -448,7 +449,7 @@ function Visualizations(props) {
     );
   }
   return (
-    <div className="viz">
+    <div className={styles.viz}>
       {props.data.map((v, i) => (
         <Visualization
           data={v}
@@ -468,7 +469,7 @@ class AppBase extends React.Component {
 
   render() {
     return (
-      <div className="app">
+      <div className={styles.app}>
         <Header />
         <FilterContainer
           fetchData={this.props.fetchData}
