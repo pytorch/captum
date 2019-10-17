@@ -2,14 +2,14 @@
 from collections import namedtuple
 from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 
+import torch
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward
 from captum.insights.features import BaseFeature
-
-import torch
 from torch import Tensor
 from torch.nn import Module
+
 
 OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
@@ -105,13 +105,17 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self, blocking=False, debug=False, port=None):
-        from IPython.display import IFrame, display
+    def render(self):
+        from IPython.display import display
+        from captum.insights.widget import CaptumInsights
+
+        widget = CaptumInsights(visualizer=self)
+        display(widget)
+
+    def serve(self, blocking=False, debug=False):
         from captum.insights.server import start_server
 
-        port = start_server(self, blocking, debug, port)
-
-        display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
+        start_server(self, blocking=blocking, debug=debug)
 
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor

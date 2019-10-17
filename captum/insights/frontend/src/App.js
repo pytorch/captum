@@ -461,70 +461,28 @@ function Visualizations(props) {
   );
 }
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: [],
-      config: [],
-      loading: false
-    };
-    this._fetchInit();
+class AppBase extends React.Component {
+  componentDidMount() {
+    this.props.fetchInit();
   }
-
-  _fetchInit = () => {
-    fetch("/init")
-      .then(r => r.json())
-      .then(r => this.setState({ config: r }));
-  };
-
-  fetchData = filter_config => {
-    this.setState({ loading: true });
-    fetch("/fetch", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(filter_config)
-    })
-      .then(response => response.json())
-      .then(response => this.setState({ data: response, loading: false }));
-  };
-
-  onTargetClick = (labelIndex, instance, callback) => {
-    fetch("/attribute", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ labelIndex, instance })
-    })
-      .then(response => response.json())
-      .then(response => {
-        const data = Object.assign([], this.state.data);
-        data[instance] = response;
-        this.setState({ data });
-        callback();
-      });
-  };
 
   render() {
     return (
       <div className="app">
         <Header />
         <FilterContainer
-          fetchData={this.fetchData}
-          config={this.state.config}
-          key={this.state.config}
+          fetchData={this.props.fetchData}
+          config={this.props.config}
+          key={this.props.config}
         />
         <Visualizations
-          data={this.state.data}
-          loading={this.state.loading}
-          onTargetClick={this.onTargetClick}
+          data={this.props.data}
+          loading={this.props.loading}
+          onTargetClick={this.props.onTargetClick}
         />
       </div>
     );
   }
 }
 
-export default App;
+export default AppBase;
