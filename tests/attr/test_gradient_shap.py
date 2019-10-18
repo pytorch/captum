@@ -65,6 +65,56 @@ class Test(BaseTest):
         ):
             assertTensorAlmostEqual(self, attribution, attribution_without_delta)
 
+    def test_classification_baselines_as_function(self):
+        num_in = 40
+        inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
+
+        def generate_baselines():
+            return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
+
+        def generate_baselines_with_inputs(inputs):
+            return torch.arange(0.0, inputs.shape[1] * 2.0).reshape(2, inputs.shape[1])
+
+        def generate_baselines_returns_array():
+            return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
+
+        # 10-class classification model
+        model = SoftmaxModel(num_in, 20, 10)
+        model.eval()
+        model.zero_grad()
+
+        gradient_shap = GradientShap(model)
+        n_samples = 10
+        attributions, delta = gradient_shap.attribute(
+            inputs,
+            baselines=generate_baselines,
+            target=torch.tensor(1),
+            n_samples=n_samples,
+            stdevs=0.009,
+            return_convergence_delta=True,
+        )
+        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
+
+        attributions, delta = gradient_shap.attribute(
+            inputs,
+            baselines=generate_baselines_with_inputs,
+            target=torch.tensor(1),
+            n_samples=n_samples,
+            stdevs=0.00001,
+            return_convergence_delta=True,
+        )
+        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
+
+        with self.assertRaises(AssertionError):
+            attributions, delta = gradient_shap.attribute(
+                inputs,
+                baselines=generate_baselines_returns_array,
+                target=torch.tensor(1),
+                n_samples=n_samples,
+                stdevs=0.00001,
+                return_convergence_delta=True,
+            )
+
     def test_classification(self):
         num_in = 40
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)

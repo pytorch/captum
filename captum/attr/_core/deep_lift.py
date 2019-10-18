@@ -9,6 +9,7 @@ import numpy as np
 from .._utils.common import (
     format_input,
     format_baseline,
+    _format_callable_baseline,
     _format_attributions,
     _format_tensor_into_tuples,
     _run_forward,
@@ -179,6 +180,7 @@ class DeepLift(GradientAttribution):
 
         inputs = format_input(inputs)
         baselines = format_baseline(baselines, inputs)
+
         gradient_mask = apply_gradient_requirements(inputs)
 
         validate_input(inputs, baselines)
@@ -379,15 +381,22 @@ class DeepLiftShap(DeepLift):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor or tuple of tensors, optional): Baselines define
-                        reference samples which are compared with the inputs.
+            baselines (tensor, tuple of tensors or callable, optional): Baselines
+                        define reference samples which are compared with the inputs.
                         In order to assign attribution scores DeepLift computes
                         the differences between the inputs and references and
                         corresponding outputs.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor. If inputs is a tuple of tensors, baselines
-                        must also be a tuple of tensors. The first dimension in
-                        baseline tensors defines the distribution of baselines.
+                        `baselines` can be either a single tensor, a tuple of
+                        tensors or a callable function that, optionally takes
+                        `inputs` as an argument and either returns a single tensor
+                        or a tuple of those.
+                        If inputs is a single tensor, baselines must also be either
+                        a single tensor or a function that returns a single tensor.
+                        If inputs is a tuple of tensors, baselines must also be
+                        either a tuple of tensors or a function that returns a
+                        tuple of tensors.
+                        The first dimension in baseline tensors defines the
+                        distribution of baselines.
                         All other dimensions starting after the first dimension
                         should match with the inputs' dimensions after the
                         first dimension. It is recommended that the number of
@@ -480,7 +489,7 @@ class DeepLiftShap(DeepLift):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
-        baselines = format_baseline(baselines, inputs)
+        baselines = _format_callable_baseline(baselines, inputs)
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]
