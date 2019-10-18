@@ -179,7 +179,7 @@ class DeepLift(GradientAttribution):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
-        baselines = _format_callable_baseline(baselines, inputs)
+        baselines = format_baseline(baselines, inputs)
 
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -488,7 +488,7 @@ class DeepLiftShap(DeepLift):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs = format_input(inputs)
-        baselines = format_baseline(baselines, inputs)
+        baselines = _format_callable_baseline(baselines, inputs)
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]

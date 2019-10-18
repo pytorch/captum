@@ -10,6 +10,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from .helpers.utils import (
     assertAttributionComparision,
     assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
     BaseTest,
 )
 from .helpers.basic_models import ReLUDeepLiftModel, TanhDeepLiftModel
@@ -118,14 +119,18 @@ class Test(BaseTest):
 
         inputs = (x1, x2)
 
-        self._deeplift_assert(model, DeepLiftShap(model), inputs, gen_baselines)
-        self._deeplift_assert(
-            model, DeepLiftShap(model), inputs, gen_baselines_with_inputs
-        )
+        dl_shap = DeepLiftShap(model)
+        self._deeplift_assert(model, dl_shap, inputs, gen_baselines)
+        self._deeplift_assert(model, dl_shap, inputs, gen_baselines_with_inputs)
         with self.assertRaises(AssertionError):
             self._deeplift_assert(
                 model, DeepLiftShap(model), inputs, gen_baselines_returns_array
             )
+        baselines = gen_baselines()
+        attributions = dl_shap.attribute(inputs, baselines)
+        attributions_with_func = dl_shap.attribute(inputs, gen_baselines)
+        assertTensorAlmostEqual(self, attributions[0], attributions_with_func[0])
+        assertTensorAlmostEqual(self, attributions[1], attributions_with_func[1])
 
     def _deeplift_assert(self, model, attr_method, inputs, baselines):
         input_bsz = len(inputs[0])
@@ -137,8 +142,8 @@ class Test(BaseTest):
                 baselines = baselines()
 
         baseline_bsz = len(baselines[0])
-        # Run attribution multiple times to make sure that it is working as
-        # expected
+        # Run attribution multiple times to make sure that it is
+        # working as expected
         for _ in range(5):
             model.zero_grad()
             attributions, delta = attr_method.attribute(

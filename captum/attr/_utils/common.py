@@ -98,10 +98,11 @@ def format_baseline(baselines, inputs):
     if not isinstance(baselines, tuple):
         baselines = (baselines,)
 
+    # TODO create a separate PR to support scalar baselines
     assert isinstance(
         baselines[0], torch.Tensor
-    ), "baselines input argument must be either a torch.Tensor or a tuple of \
-          those however {} detected".format(
+    ), "baselines input argument must be either a torch.Tensor or a tuple \
+         of those however {} detected".format(
         type(baselines[0])
     )
 
