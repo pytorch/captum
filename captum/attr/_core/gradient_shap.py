@@ -74,8 +74,9 @@ class GradientShap(GradientAttribution):
             baselines (tensor or tuple of tensors, optional):  Baselines define
                         the starting point from which expectation is computed.
                         `baselines` can be either a single tensor, a tuple of
-                        tensors or a callable function that either returns a single
-                        tensor or a tuple of those.
+                        tensors or a callable function that, optionally, takes inputs
+                        as an argument and either returns a single tensor or
+                        a tuple of those.
                         If inputs is a single tensor, baselines must also be either
                         a single tensor or a function that returns a single tensor.
                         If inputs is a tuple of tensors, baselines must also be
