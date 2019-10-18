@@ -68,8 +68,8 @@ def get_free_tcp_port():
     return port
 
 
-def run_app():
-    app.run(port=port, use_reloader=False)
+def run_app(debug: bool = True):
+    app.run(port=port, use_reloader=False, debug=debug)
 
 
 def start_server(
@@ -89,7 +89,7 @@ def start_server(
         port = _port or get_free_tcp_port()
         print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
         # Start in a new thread to not block notebook execution
-        t = threading.Thread(target=run_app).start()
+        t = threading.Thread(target=run_app, kwargs={"debug": debug}).start()
         sleep(0.01)  # add a short delay to allow server to start up
         if blocking:
             t.join()
