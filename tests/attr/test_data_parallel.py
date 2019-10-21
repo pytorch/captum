@@ -3,6 +3,7 @@ from __future__ import print_function
 import unittest
 
 import torch
+from captum.attr._core.grad_cam import LayerGradCam
 from captum.attr._core.internal_influence import InternalInfluence
 from captum.attr._core.layer_activation import LayerActivation
 from captum.attr._core.layer_conductance import LayerConductance
@@ -149,6 +150,13 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
+        )
+
+    def test_multi_dim_layer_grad_cam(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            LayerGradCam, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
 
     def test_simple_neuron_conductance(self):
