@@ -129,10 +129,17 @@ class GuidedGradCam(GradientAttribution):
                 *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                         Element-wise product of (upsampled) GradCAM
-                        and Guided Backprop attributions for tensor with index
-                        chosen_input_index.
-                        Attributions will be the same size as the input tensor
-                        at index chosen_input_index.
+                        and Guided Backprop attributions.
+                        If a single tensor is provided as inputs, a single tensor is
+                        returned. If a tuple is provided for inputs, a tuple of
+                        corresponding sized tensors is returned.
+                        Attributions will be the same size as the provided inputs,
+                        with each value providing the attribution of the
+                        corresponding input index.
+                        If the GradCAM attributions cannot be upsampled to the shape
+                        of a given input tensor, None is returned in the corresponding
+                        index position.
+
 
             Examples::
 
