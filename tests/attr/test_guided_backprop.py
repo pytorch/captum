@@ -6,13 +6,13 @@ import torch
 from captum.attr._core.guided_backprop import GuidedBackprop
 from captum.attr._core.neuron_guided_backprop import NeuronGuidedBackprop
 
-from .helpers.basic_models import BasicModel_SmallConvNet
+from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
     def test_simple_input_conv_gb(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         exp = [
             [0.0, 1.0, 1.0, 1.0],
@@ -23,7 +23,7 @@ class Test(BaseTest):
         self._guided_backprop_test_assert(net, (inp,), (exp,))
 
     def test_simple_input_conv_neuron_gb(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         exp = [
             [0.0, 1.0, 1.0, 1.0],
@@ -34,7 +34,7 @@ class Test(BaseTest):
         self._neuron_guided_backprop_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
     def test_simple_multi_input_conv_gb(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
@@ -46,7 +46,7 @@ class Test(BaseTest):
         self._guided_backprop_test_assert(net, (inp, inp2), (ex_attr, ex_attr))
 
     def test_simple_multi_input_conv_neuron_gb(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
@@ -60,7 +60,7 @@ class Test(BaseTest):
         )
 
     def test_gb_matching(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = 100.0 * torch.randn(1, 1, 4, 4)
         self._guided_backprop_matching_assert(net, net.relu2, inp)
 

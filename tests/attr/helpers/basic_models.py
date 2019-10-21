@@ -207,7 +207,7 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
-class BasicModel_SmallConvNet(nn.Module):
+class BasicModel_ConvNet_One_Conv(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)

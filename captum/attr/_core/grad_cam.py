@@ -37,8 +37,14 @@ class LayerGradCam(LayerAttribution):
             GradCAM computes the gradients of the target output with respect to
             the given layer, averages for each output channel (dimension 2 of
             output), and multiplies the average gradient for each channel by the
-            layer activations. The results are summed over all channels and a ReLU
-            is applied to the output, returning only non-negative attributions.
+            layer activations. The results are summed over all channels.
+
+            Note that in the original GradCAM algorithm described in the paper,
+            ReLU is applied to the output, returning only non-negative attributions.
+            For providing more flexibility to the user, we choose to not perform the
+            ReLU internally and return the sign information. To match the original
+            GradCAM algorithm, it is necessary to perform ReLU on the returned
+            attributions or alternatively only visualize the positive attributions.
 
             Note: this procedure sums over the second dimension (# of channels),
             so the output of GradCAM attributions will have a second
@@ -151,7 +157,6 @@ class LayerGradCam(LayerAttribution):
             keepdim=True,
         )
 
-        non_neg_scaled_act = F.relu(
-            torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
-        )
+        non_neg_scaled_act = torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
+
         return non_neg_scaled_act

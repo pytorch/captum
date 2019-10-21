@@ -36,8 +36,9 @@ class GuidedGradCam(GradientAttribution):
     ):
         r"""
             Computes element-wise product of guided backpropagation attributions
-            with upsampled GradCAM attributions. GradCAM attributions are computed
-            with respect to the layer provided in the constructor, and attributions
+            with upsampled (non-negative) GradCAM attributions.
+            GradCAM attributions are computed with respect to the layer
+            provided in the constructor, and attributions
             are upsampled to match the input size. GradCAM is designed for
             convolutional neural networks, and is usually applied to the last
             convolutional layer.
@@ -149,11 +150,11 @@ class GuidedGradCam(GradientAttribution):
                 >>> attribution = guided_gc.attribute(input, 3)
         """
         inputs = format_input(inputs)
-        grad_cam_attr = self.grad_cam.attribute(
+        grad_cam_attr = F.relu(self.grad_cam.attribute(
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,
-        )
+        ))
         guided_backprop_attr = self.guided_backprop.attribute(
             inputs=inputs,
             target=target,

@@ -311,9 +311,11 @@ class LayerAttribution(InternalAttribution):
                         attribution.
 
         Returns:
-            torch.Tensor:
-            Upsampled layer attributions with first 2 dimensions matching
-            layer_attribution and remaining dimensions given by interpolate_dims.
+            *tensor* of upsampled **attributions**:
+            - **attributions** (*tensor*):
+                Upsampled layer attributions with first 2 dimensions matching
+                slayer_attribution and remaining dimensions given by
+                interpolate_dims.
         """
         return F.interpolate(layer_attribution, interpolate_dims, mode=interpolate_mode)
 

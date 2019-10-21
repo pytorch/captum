@@ -113,6 +113,9 @@ class NeuronGuidedBackprop(NeuronAttribution, GuidedBackprop):
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients
+        warnings.warn("Setting backward hooks on ReLU activations."
+        "The hooks will be removed after the attribution is finished")
+
         self.model.apply(self._register_hooks)
 
         _, input_grads = _forward_layer_eval_with_neuron_grads(

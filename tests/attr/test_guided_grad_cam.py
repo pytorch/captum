@@ -5,13 +5,13 @@ import unittest
 import torch
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 
-from .helpers.basic_models import BasicModel_SmallConvNet
+from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
     def test_simple_input_conv(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         ex = [
             [0.0, 0.0, 4.0, 4.0],
@@ -22,7 +22,7 @@ class Test(BaseTest):
         self._guided_grad_cam_test_assert(net, net.relu1, (inp,), (ex,))
 
     def test_simple_multi_input_conv(self):
-        net = BasicModel_SmallConvNet()
+        net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
