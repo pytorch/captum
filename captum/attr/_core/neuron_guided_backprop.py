@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import warnings
+
 from .._utils.attribution import NeuronAttribution
 from .._utils.common import format_input, _format_attributions
 from .._utils.gradient import (
@@ -113,8 +115,10 @@ class NeuronGuidedBackprop(NeuronAttribution, GuidedBackprop):
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients
-        warnings.warn("Setting backward hooks on ReLU activations."
-        "The hooks will be removed after the attribution is finished")
+        warnings.warn(
+            "Setting backward hooks on ReLU activations."
+            "The hooks will be removed after the attribution is finished"
+        )
 
         self.model.apply(self._register_hooks)
 

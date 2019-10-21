@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 import torch
 import torch.nn.functional as F
 
@@ -115,8 +116,10 @@ class GuidedBackprop(GradientAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients
-        warnings.warn("Setting backward hooks on ReLU activations."
-        "The hooks will be removed after the attribution is finished")
+        warnings.warn(
+            "Setting backward hooks on ReLU activations."
+            "The hooks will be removed after the attribution is finished"
+        )
 
         self.model.apply(self._register_hooks)
 

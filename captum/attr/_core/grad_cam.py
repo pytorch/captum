@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import torch
-import torch.nn.functional as F
 
 from .._utils.attribution import LayerAttribution
 from .._utils.common import format_input, _format_additional_forward_args

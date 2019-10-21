@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
 from .._utils.common import format_input
@@ -150,11 +151,13 @@ class GuidedGradCam(GradientAttribution):
                 >>> attribution = guided_gc.attribute(input, 3)
         """
         inputs = format_input(inputs)
-        grad_cam_attr = F.relu(self.grad_cam.attribute(
-            inputs=inputs,
-            target=target,
-            additional_forward_args=additional_forward_args,
-        ))
+        grad_cam_attr = F.relu(
+            self.grad_cam.attribute(
+                inputs=inputs,
+                target=target,
+                additional_forward_args=additional_forward_args,
+            )
+        )
         guided_backprop_attr = self.guided_backprop.attribute(
             inputs=inputs,
             target=target,
