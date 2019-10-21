@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import warnings
 import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import format_input
+from .._utils.common import format_input, _format_attributions
 
 from .grad_cam import LayerGradCam
 from .guided_backprop import GuidedBackprop
@@ -32,7 +33,6 @@ class GuidedGradCam(GradientAttribution):
         inputs,
         target=None,
         additional_forward_args=None,
-        chosen_input_index=0,
         interpolate_mode="nearest",
     ):
         r"""
@@ -44,13 +44,18 @@ class GuidedGradCam(GradientAttribution):
             convolutional neural networks, and is usually applied to the last
             convolutional layer.
 
-            Note that if multiple input tensors are provided, only attributions
-            for the tensor with index chosen_input_index are returned. This tensor
-            should be spatially alligned with the chosen layer for the results
-            to be meaningful, e.g. an input image tensor for a convolutional layer.
+            Note that if multiple input tensors are provided, attributions for
+            each input tensor are computed by upsampling the GradCAM
+            attributions to match that input's dimensions. If interpolation is
+            not possible for the input tensor dimensions and interpolation mode,
+            then None is returned in the attributions for the corresponding
+            position of that input tensor. This can occur if the input tensor
+            does not have the same number of dimensions as the chosen layer's
+            output or is not either 3D, 4D or 5D.
 
-            In addition, this tensor must have the same number of dimensions as the
-            chosen layer's output, and must be either 3D, 4D or 5D.
+            Note that attributions are only meaningful for input tensors
+            which are spatially alligned with the chosen layer, e.g. an input
+            image tensor for a convolutional layer.
 
             More details regarding GuidedGradCAM can be found in the original
             GradCAM paper here:
@@ -107,12 +112,6 @@ class GuidedGradCam(GradientAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                chosen_input_index (int, optional): If multiple input tensors are
-                            provided, this argument defines the tensor for which
-                            attributions should be computed. This tensor should be
-                            spatially alligned with the given layer for the results
-                            to be meaningful, e.g. an input image tensor for a
-                            convolutional layer.
                 interpolate_mode (str, optional): Method for interpolation, which
                             must be a valid input interpolation mode for
                             torch.nn.functional. These methods are
@@ -120,7 +119,7 @@ class GuidedGradCam(GradientAttribution):
                             (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
                             based on the number of dimensions of the chosen layer
                             output (which must also match the number of
-                            dimensions for inputs[chosen_input_index]). Note that
+                            dimensions for the input tensor). Note that
                             the original GradCAM paper uses "bilinear"
                             interpolation, but we default to "nearest" for
                             applicability to any of 3D, 4D or 5D tensors.
@@ -150,6 +149,7 @@ class GuidedGradCam(GradientAttribution):
                 >>> # attribution size matches input size, Nx3x32x32
                 >>> attribution = guided_gc.attribute(input, 3)
         """
+        is_inputs_tuple = isinstance(inputs, tuple)
         inputs = format_input(inputs)
         grad_cam_attr = F.relu(
             self.grad_cam.attribute(
@@ -163,8 +163,22 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        return guided_backprop_attr[chosen_input_index] * LayerAttribution.interpolate(
-            grad_cam_attr,
-            inputs[chosen_input_index].shape[2:],
-            interpolate_mode=interpolate_mode,
-        )
+        output_attr = []
+        for i in range(len(inputs)):
+            try:
+                output_attr.append(
+                    guided_backprop_attr[i]
+                    * LayerAttribution.interpolate(
+                        grad_cam_attr,
+                        inputs[i].shape[2:],
+                        interpolate_mode=interpolate_mode,
+                    )
+                )
+            except (RuntimeError, NotImplementedError):
+                warnings.warn(
+                    "Couldn't appropriately interpolate GradCAM attributions for "
+                    "some input tensors, returning None for corresponding attributions."
+                )
+                output_attr.append(None)
+
+        return _format_attributions(is_inputs_tuple, tuple(output_attr))
