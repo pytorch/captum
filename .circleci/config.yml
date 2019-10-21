@@ -43,7 +43,7 @@ commands:
     steps:
       - run:
           name: "Run unit tests"
-          command: pytest -ra --cov=. --cov-report term-missing
+          command: python -m pytest -ra --cov=. --cov-report term-missing
 
   sphinx:
     description: "Run sphinx"
@@ -83,6 +83,36 @@ commands:
               echo "Skipping deploy."
             fi
 
+  simple_pip_install:
+    description: "Simple install of Captum via pip. Does not include extra dependencies such as yarn and nodejs needed for building insights."
+    steps:
+      - run:
+          name: "Simple PIP install"
+          command: python -m pip install -e .[dev]
+
+  py_3_7_setup:
+    description: "Set python version to 3.7 and install pip and pytest"
+    steps:
+      - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
+            sudo python -m pip install pip
+            sudo python -m pip install pytest
+
+  install_cuda:
+    description: "Install CUDA for GPU Machine"
+    steps:
+      - run:
+          name: "Install CUDA"
+          command: |
+            wget http://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
+            sudo apt-get update
+            export OS_RELEASE=$(uname -r)
+            sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
+            sudo apt-get update
+            sudo apt-get --yes --force-yes install cuda
 
 jobs:
 
@@ -122,6 +152,16 @@ jobs:
       - unit_tests
       - sphinx
 
+  test_cuda_multi_gpu:
+    machine:
+      image: ubuntu-1604:201903-01
+    resource_class: gpu.large
+    steps:
+      - checkout
+      - install_cuda
+      - py_3_7_setup
+      - simple_pip_install
+      - unit_tests
 
 aliases:
 
@@ -141,4 +181,6 @@ workflows:
       - lint_test_py36_pip_release:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
+          filters: *exclude_ghpages_fbconfig
+      - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
