@@ -32,6 +32,17 @@ class Batch:
         labels: Optional[Tensor],
         additional_args=None,
     ):
+        r"""
+        Args:
+
+            inputs (any): PyTorch module for attribution visualization.
+                          We plan to support visulizing and comparing multiple models
+                          in the future, but currently this supports only a single
+                          model.
+            labels (tensor): List of strings corresponding to the names of
+                          classes for classification.
+            additional_args (tuple, optional):
+        """
         self.inputs = inputs
         self.labels = labels
         self.additional_args = additional_args
@@ -69,8 +80,12 @@ class AttributionVisualizer(object):
             dataset (iterable of Batch): Defines dataset to visualize attributions for.
                           This must be an iterable of batch objects, each of which may
                           contain multiple input examples.
-            score_func (callable, optional): This function converts
-
+            score_func (callable, optional): This function is applied to the model
+                          output to obtain the score for each class. For instance,
+                          this function could be the softmax or final non-linearity
+                          of the network, applied to the model output. The indices
+                          of the second dimension of the output should correspond
+                          to the class names provided.
             use_label_for_attr (boolean, optional): If true, the class index is passed
                           to the relevant attribution method. This is necessary in most
                           cases where there is an output neuron corresponding to each
