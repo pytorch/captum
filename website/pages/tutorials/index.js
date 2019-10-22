@@ -34,7 +34,7 @@ class TutorialHome extends React.Component {
               <p>
                 If you are new to Captum, the easiest way to get started is
                 with the{' '}
-                <a href="https://pytorch.org/tutorials/beginner/blitz/tensor_tutorial.html#sphx-glr-beginner-blitz-tensor-tutorial-py">
+                <a href="Titanic_Basic_Interpret">
                   Getting started with Captum
                 </a>{' '}
                 tutorial.
