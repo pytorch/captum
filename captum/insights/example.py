@@ -91,4 +91,4 @@ if __name__ == "__main__":
         dataset=formatted_data_iter(),
     )
 
-    visualizer.render()
+    visualizer.render(debug=True)
