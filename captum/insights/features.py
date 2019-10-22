@@ -118,7 +118,7 @@ class TextFeature(BaseFeature):
         # L-Infinity norm
         normalized_attribution = attribution
         attr_max = abs(attribution).max()
-        if attr_max > 0:
+        if attr_max != 0.0:
             normalized_attribution /= attr_max
 
         modified = [x * 100 for x in normalized_attribution.tolist()]
@@ -152,7 +152,7 @@ class GeneralFeature(BaseFeature):
         # L-2 norm
         normalized_attribution = attribution
         l2_norm = attribution.norm()
-        if l2_norm > 0:
+        if l2_norm != 0.0:
             normalized_attribution /= l2_norm
 
         modified = [x * 100 for x in normalized_attribution.tolist()]
