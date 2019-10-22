@@ -33,15 +33,30 @@ class Batch:
         additional_args=None,
     ):
         r"""
+        Constructs batch of inputs to be attributed and visualized.
+
         Args:
 
-            inputs (any): PyTorch module for attribution visualization.
-                          We plan to support visulizing and comparing multiple models
-                          in the future, but currently this supports only a single
-                          model.
-            labels (tensor): List of strings corresponding to the names of
-                          classes for classification.
-            additional_args (tuple, optional):
+            inputs (tensor or tuple of tensors): Batch of inputs for a model.
+                        These may be either a Tensor or tuple of tensors. Each tensor
+                        must correspond to a feature for AttributionVisualizer, and
+                        the corresponding input transform function of the feature
+                        is applied to each input tensor prior to passing it to the
+                        model. It is assumed that the first dimension of each
+                        input tensor corresponds to the number of examples
+                        (batch size) and is aligned for all input tensors.
+            labels (tensor): Tensor containing correct labels for input examples.
+            additional_args (tuple, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        For a tensor, the first dimension of the tensor must
+                        correspond to the number of examples.
         """
         self.inputs = inputs
         self.labels = labels
@@ -61,7 +76,8 @@ class AttributionVisualizer(object):
         r"""
         Args:
 
-            models (torch.nn.module): PyTorch module for attribution visualization.
+            models (torch.nn.module): PyTorch module (model) for attribution
+                          visualization.
                           We plan to support visulizing and comparing multiple models
                           in the future, but currently this supports only a single
                           model.
@@ -70,7 +86,7 @@ class AttributionVisualizer(object):
             features (list of BaseFeatures): List of BaseFeatures, which correspond
                           to input arguments to the model. Each feature object defines
                           relevant transformations for converting to model input,
-                          visualizing and constructing baselines. The length of the
+                          constructing baselines, and visualizing. The length of the
                           features list should exactly match the number of (tensor)
                           arguments expected by the given model.
                           For instance, an image classifier should only provide
@@ -85,13 +101,17 @@ class AttributionVisualizer(object):
                           this function could be the softmax or final non-linearity
                           of the network, applied to the model output. The indices
                           of the second dimension of the output should correspond
-                          to the class names provided.
+                          to the class names provided. If None, the model outputs
+                          are taken directly and assumed to correspond to the
+                          class scores.
+                          Default: None
             use_label_for_attr (boolean, optional): If true, the class index is passed
                           to the relevant attribution method. This is necessary in most
                           cases where there is an output neuron corresponding to each
                           class. When the model output is a scalar and class index
                           (e.g. positive, negative) is inferred from the output value,
                           this argument should be False.
+                          Default: True
         """
         if not isinstance(models, List):
             models = [models]
