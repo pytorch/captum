@@ -6,7 +6,7 @@ from .._utils.common import format_input, _format_attributions
 from .._utils.gradient import (
     construct_neuron_grad_fn,
 )
-from .guided_backprop import GuidedBackprop, Deconvolution
+from .modified_relu_grad import GuidedBackprop, Deconvolution
 
 
 class NeuronDeconvolution(NeuronAttribution):

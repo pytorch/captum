@@ -3,8 +3,8 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attr._core.guided_backprop import GuidedBackprop
-from captum.attr._core.neuron_guided_backprop import NeuronGuidedBackprop
+from captum.attr._core.modified_relu_grad import GuidedBackprop
+from captum.attr._core.neuron_modified_relu_grad import NeuronGuidedBackprop
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
