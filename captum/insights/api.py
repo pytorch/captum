@@ -104,11 +104,11 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self, blocking=False, debug=False):
+    def render(self, blocking=False, debug=False, port=None):
         from IPython.display import IFrame, display
         from captum.insights.server import start_server
 
-        port = start_server(self, blocking, debug)
+        port = start_server(self, blocking, debug, port)
 
         display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
 
@@ -224,7 +224,11 @@ class AttributionVisualizer(object):
                         baseline_transform, transformed_inputs[feature_i], True
                     )
 
-        outputs = _run_forward(net, tuple(transformed_inputs), additional_forward_args)
+        outputs = _run_forward(
+            net,
+            tuple(transformed_inputs),
+            additional_forward_args=additional_forward_args,
+        )
 
         if self.score_func is not None:
             outputs = self.score_func(outputs)
