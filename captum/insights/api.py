@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from collections import namedtuple
 from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 

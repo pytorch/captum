@@ -1,4 +1,4 @@
-from __future__ import print_function
+#!/usr/bin/env python3
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
