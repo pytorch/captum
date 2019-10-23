@@ -46,6 +46,8 @@ class Batch:
                         input tensor corresponds to the number of examples
                         (batch size) and is aligned for all input tensors.
             labels (tensor): Tensor containing correct labels for input examples.
+                        This must be a 1D tensor with length matching the first
+                        dimension of each input tensor.
             additional_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
