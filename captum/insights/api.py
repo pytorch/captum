@@ -224,7 +224,11 @@ class AttributionVisualizer(object):
                         baseline_transform, transformed_inputs[feature_i], True
                     )
 
-        outputs = _run_forward(net, tuple(transformed_inputs), additional_forward_args=additional_forward_args)
+        outputs = _run_forward(
+            net,
+            tuple(transformed_inputs),
+            additional_forward_args=additional_forward_args,
+        )
 
         if self.score_func is not None:
             outputs = self.score_func(outputs)
