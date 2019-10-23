@@ -27,7 +27,7 @@ class NeuronDeconvolution(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super(NeuronAttribution, self).__init__(model, layer, device_ids)
+        super().__init__(model, layer, device_ids)
         self.deconv = Deconvolution(model)
 
 
@@ -130,7 +130,7 @@ class NeuronGuidedBackprop(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not neccesary to provide this argument.
         """
-        super(NeuronAttribution, self).__init__(model, layer, device_ids)
+        super().__init__(model, layer, device_ids)
         self.guided_backprop = GuidedBackprop(model)
 
     def attribute(self, inputs, neuron_index, additional_forward_args=None):

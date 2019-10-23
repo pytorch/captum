@@ -12,6 +12,7 @@ from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivati
 from captum.attr._core.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
+from captum.attr._core.neuron_modified_relu_grad import NeuronDeconvolution, NeuronGuidedBackprop
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -274,6 +275,38 @@ class Test(BaseGPUTest):
             additional_forward_args=(inp3, 5),
             neuron_index=(3,),
             test_batches=True,
+        )
+
+    def test_multi_input_guided_backprop(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        self._data_parallel_test_assert(
+            NeuronGuidedBackprop,
+            net,
+            net.model.relu,
+            inputs=(inp1, inp2),
+            additional_forward_args=(inp3, 5),
+            neuron_index=(3,),
+        )
+
+    def test_multi_input_deconv(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        self._data_parallel_test_assert(
+            NeuronDeconvolution,
+            net,
+            net.model.relu,
+            inputs=(inp1, inp2),
+            additional_forward_args=(inp3, 5),
+            neuron_index=(3,),
         )
 
     def _alt_device_list(self):
