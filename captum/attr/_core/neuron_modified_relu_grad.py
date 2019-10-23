@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-import warnings
-
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import format_input, _format_attributions
-from .._utils.gradient import (
-    construct_neuron_grad_fn,
-)
+from .._utils.gradient import construct_neuron_grad_fn
 from .modified_relu_grad import GuidedBackprop, Deconvolution
 
 
@@ -29,7 +24,6 @@ class NeuronDeconvolution(NeuronAttribution):
         """
         super().__init__(model, layer, device_ids)
         self.deconv = Deconvolution(model)
-
 
     def attribute(self, inputs, neuron_index, additional_forward_args=None):
         r""""
@@ -108,7 +102,9 @@ class NeuronDeconvolution(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_deconv.attribute(input, (4,1,2))
         """
-        self.deconv.gradient_func = construct_neuron_grad_fn(self.layer, neuron_index, self.device_ids)
+        self.deconv.gradient_func = construct_neuron_grad_fn(
+            self.layer, neuron_index, self.device_ids
+        )
         return self.deconv.attribute(inputs, None, additional_forward_args)
 
 
@@ -207,5 +203,7 @@ class NeuronGuidedBackprop(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_gb.attribute(input, (4,1,2))
         """
-        self.guided_backprop.gradient_func = construct_neuron_grad_fn(self.layer, neuron_index, self.device_ids)
+        self.guided_backprop.gradient_func = construct_neuron_grad_fn(
+            self.layer, neuron_index, self.device_ids
+        )
         return self.guided_backprop.attribute(inputs, None, additional_forward_args)

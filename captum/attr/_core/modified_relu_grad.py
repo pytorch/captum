@@ -84,7 +84,6 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         """
         super().__init__(model, relu_grad_output=False)
 
-
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
         Computes attribution using guided backpropagation. Guided backpropagation
@@ -180,7 +179,6 @@ class Deconvolution(ModifiedReluGradientAttribution):
             model (nn.Module):  The reference to PyTorch model instance.
         """
         super().__init__(model, relu_grad_output=True)
-
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""

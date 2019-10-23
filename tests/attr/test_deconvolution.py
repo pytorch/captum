@@ -64,9 +64,7 @@ class Test(BaseTest):
         inp = 100.0 * torch.randn(1, 1, 4, 4)
         self._deconv_matching_assert(net, net.relu2, inp)
 
-    def _deconv_test_assert(
-        self, model, test_input, expected, additional_input=None
-    ):
+    def _deconv_test_assert(self, model, test_input, expected, additional_input=None):
         deconv = Deconvolution(model)
         attributions = deconv.attribute(
             test_input, target=0, additional_forward_args=additional_input
