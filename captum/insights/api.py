@@ -150,9 +150,10 @@ class AttributionVisualizer(object):
         )
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
+        from captum.attr._utils.common import safe_div
+
         norm = torch.norm(net_contrib, p=1)
-        if norm > 0:
-            net_contrib /= norm
+        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
 
         return net_contrib.tolist()
 
