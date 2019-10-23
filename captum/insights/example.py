@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 
 from captum.insights import AttributionVisualizer, Batch
