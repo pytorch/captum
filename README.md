@@ -167,7 +167,7 @@ input = torch.rand(2, 3)
 baseline = torch.zeros(2, 3)
 ```
 Next we will use `IntegratedGradients` algorithms to assign attribution
-scores to each input feature with respect to the second target output.
+scores to each input feature with respect to the first target output.
 ```python
 ig = IntegratedGradients(model)
 attributions, delta = ig.attribute(input, baseline, target=0, return_convergence_delta=True)
