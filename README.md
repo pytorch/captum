@@ -390,6 +390,23 @@ BUILD_INSIGHTS=1 python setup.py develop
 python captum/insights/example.py
 ```
 
+### Captum Insights Jupyter Widget
+Captum Insights also has a Jupyter widget providing the same user interface as the web app. 
+To install and enable the widget, run
+
+```
+jupyter nbextension install --py --symlink --sys-prefix captum.insights.widget
+jupyter nbextension enable captum.insights.widget --py --sys-prefix
+```
+
+To build the widget from a checkout in a conda environment run
+
+```
+conda install -c conda-forge yarn
+BUILD_INSIGHTS=1 python setup.py develop
+```
+
+
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 

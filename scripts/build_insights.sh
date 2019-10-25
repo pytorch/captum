@@ -46,5 +46,16 @@ echo "Building Captum Insights"
 echo "-----------------------------------"
 yarn build
 
+pushd widget || exit
+
+echo "-----------------------------------"
+echo "Building Captum Insights widget"
+echo "-----------------------------------"
+
+../node_modules/.bin/webpack-cli --config webpack.config.js
+
+# exit subdir
+popd || exit
+
 # exit subdir
 popd || exit
