@@ -33,7 +33,7 @@ def _check_valid_module(inputs, outputs):
 
 
 class DeepLift(GradientAttribution):
-    def __init__(self, model):
+    def __init__(self, model, target_output_layer=None):
         r"""
         Args:
 
@@ -43,6 +43,13 @@ class DeepLift(GradientAttribution):
         self.model = model
         self.forward_handles = []
         self.backward_handles = []
+
+        self.target_layer = target_output_layer
+        self.use_target_layer = False
+        if self.target_layer is not None:
+            # replace the gradient function
+            self.use_target_layer = True
+            self.gradient_func = self.compute_interim_output_gradient
 
     def attribute(
         self,
@@ -197,6 +204,11 @@ class DeepLift(GradientAttribution):
 
         # set hook for inputs
         self._traverse_modules(self.model, self._register_hooks)
+
+        if self.use_target_layer:
+            target_handle = self.target_layer.register_forward_hook(self._interim_hook)
+            self.forward_handles.append(target_handle)
+
         gradients = self.gradient_func(
             self.forward_func,
             inputs,
@@ -229,6 +241,10 @@ class DeepLift(GradientAttribution):
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
+
+    def _interim_hook(self, module, inputs, outputs):
+        interim_attr_name = "target_output"
+        setattr(module, interim_attr_name, outputs)
 
     # we need forward hook to access and detach the inputs and outputs of a neuron
     def _forward_hook(self, module, inputs, outputs):
@@ -341,6 +357,38 @@ class DeepLift(GradientAttribution):
 
     def has_convergence_delta(self):
         return True
+
+    def compute_interim_output_gradient(
+            self, forward_fn, inputs, target_ind=None, additional_forward_args=None
+    ):
+        r"""
+            Computes gradients of the output with respect to inputs for an
+            arbitrary forward function.
+
+            Args:
+
+                forward_fn: forward function. This can be for example model's
+                            forward function.
+                input:      Input at which gradients are evaluated,
+                            will be passed to forward_fn.
+                target_ind: Index of the target class for which gradients
+                            must be computed (classification only).
+                args:       Additional input arguments that forward function requires.
+                            It takes an empty tuple (no additional arguments) if no
+                            additional arguments are required
+        """
+        with torch.autograd.set_grad_enabled(True):
+            # runs forward pass
+            _ = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
+            output = self.target_layer.target_output
+            assert output[0].numel() == 1, (
+                "Target not provided when necessary, cannot"
+                " take gradient with respect to multiple outputs."
+            )
+            # torch.unbind(forward_out) is a list of scalar tensor tuples and
+            # contains batch_size * #steps elements
+            grads = torch.autograd.grad(torch.unbind(output), inputs)
+        return grads
 
 
 class DeepLiftShap(DeepLift):
