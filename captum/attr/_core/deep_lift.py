@@ -362,11 +362,12 @@ class DeepLift(GradientAttribution):
         return True
 
     def compute_interim_output_gradient(
-            self, forward_fn, inputs, target_ind=None, additional_forward_args=None
+        self, forward_fn, inputs, target_ind=None, additional_forward_args=None
     ):
         r"""
             Computes gradients of the output with respect to inputs for an
-            arbitrary forward function.
+            arbitrary forward function. The gradient is calculated with respect
+            to the output of a defined target layer.
 
             Args:
 
