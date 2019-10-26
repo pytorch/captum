@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import torch
+from torch import nn
 
 from inspect import signature
 
@@ -70,6 +71,39 @@ class Test(BaseTest):
 
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
+
+    def test_deeplift_with_interim_output(self):
+        x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
+
+        b1 = torch.tensor([[0.0, 0.0, 0.0]], requires_grad=True)
+        b2 = torch.tensor([[0.0, 0.0, 0.0]], requires_grad=True)
+
+        inputs = (x1, x2)
+        baselines = (b1, b2)
+
+        class NewModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.main_model = ReLULinearDeepLiftModel()
+                self.additional = nn.Sigmoid()
+
+            def forward(self, x1, x2):
+                output = self.main_model(x1, x2)
+                return self.additional(output)
+
+        model = NewModel()
+        main_model = ReLULinearDeepLiftModel()
+
+        dl_truncated = DeepLift(model, target_output_layer=model.main_model)
+        dl_main = DeepLift(main_model)
+
+        attrs_truncated = dl_truncated.attribute(inputs, baselines)
+        attrs_main = dl_main.attribute(inputs, baselines)
+
+        # same as assertAttributeComparison, but we care about exact equalities
+        for attribution1, attribution2 in zip(attrs_truncated, attrs_main):
+            assert (attribution1 == attribution2).all()
 
     def test_relu_deepliftshap_batch_4D_input(self):
         x1 = torch.ones(4, 1, 1, 1)
