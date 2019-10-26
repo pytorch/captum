@@ -38,6 +38,9 @@ class DeepLift(GradientAttribution):
         Args:
 
             model (nn.Module):  The reference to PyTorch model instance.
+            target_output_layer (nn.Module, optional): If a target_output_layer
+                is passed, the contributions are calculated with respect to the
+                target_output_layer instead of the final output of the model.
         """
         super().__init__(model)
         self.model = model
@@ -381,6 +384,8 @@ class DeepLift(GradientAttribution):
             # runs forward pass
             _ = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
             output = self.target_layer.target_output
+            # remove the target_output attribute
+            del self.target_layer.target_output
             assert output[0].numel() == 1, (
                 "Target not provided when necessary, cannot"
                 " take gradient with respect to multiple outputs."
@@ -392,8 +397,8 @@ class DeepLift(GradientAttribution):
 
 
 class DeepLiftShap(DeepLift):
-    def __init__(self, model):
-        super().__init__(model)
+    def __init__(self, model, target_output_layer=None):
+        super().__init__(model, target_output_layer)
 
     def attribute(
         self,
