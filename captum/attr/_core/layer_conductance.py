@@ -48,6 +48,7 @@ class LayerConductance(LayerAttribution):
         method="riemann_trapezoid",
         internal_batch_size=None,
         return_convergence_delta=False,
+        attribute_to_layer_input=False,
     ):
         r"""
             Computes conductance with respect to the given layer. The
@@ -143,13 +144,26 @@ class LayerConductance(LayerAttribution):
                             is set to True convergence delta will be returned in
                             a tuple following attributions.
                             Default: False
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attributions with respect to layer input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            layer inputs, otherwise it will be computed with respect
+                            to layer outputs.
+                            Note that currently it assumes that both the inputs and
+                            outputs of internal layers are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor*):
-                            Conductance of each neuron in given layer output.
-                            Attributions will always be the same size as the
-                            output of the given layer.
+                            Conductance of each neuron in given layer input or
+                            output. Attributions will always be the same size as
+                            the input or output of the given layer, depending on
+                            whether we attribute to the inputs or outputs
+                            of the layer which is decided by the input flag
+                            `attribute_to_layer_input`.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                             The difference between the total
                             approximated and true conductance.
@@ -216,6 +230,7 @@ class LayerConductance(LayerAttribution):
             layer=self.layer,
             target_ind=expanded_target,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
 
         # Compute differences between consecutive evaluations of layer_eval.

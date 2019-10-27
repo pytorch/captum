@@ -13,11 +13,11 @@ class NeuronIntegratedGradients(NeuronAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Attributions for a particular neuron in the output of
-                          this layer are computed using the argument neuron_index
-                          in the attribute method.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Attributions for a particular neuron in the input or
+                          output of this layer are computed using the argument
+                          neuron_index in the attribute method.
+                          Currently, only layers with a single tensor input or output
+                          are supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -35,6 +35,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         n_steps=50,
         method="gausslegendre",
         internal_batch_size=None,
+        attribute_to_neuron_input=False,
     ):
         r"""
             Approximates the integral of gradients for a particular neuron
@@ -105,6 +106,16 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
+                attribute_to_neuron_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the neuron input
+                            or output. If `attribute_to_neuron_input` is set to True
+                            then the attributions will be computed with respect to
+                            neuron inputs, otherwise it will be computed with respect
+                            to neuron outputs.
+                            Note that currently it assumes that both the inputs and
+                            outputs of internal neurons are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* or tuple of *tensors* of **attributions**:

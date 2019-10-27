@@ -25,7 +25,13 @@ class LayerGradientXActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, target=None, additional_forward_args=None):
+    def attribute(
+        self,
+        inputs,
+        target=None,
+        additional_forward_args=None,
+        attribute_to_layer_input=False,
+    ):
         r"""
             Computes element-wise product of gradient and activation for selected
             layer on given inputs.
@@ -77,6 +83,16 @@ class LayerGradientXActivation(LayerAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the layer input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            layer inputs, otherwise it will be computed with respect
+                            to layer outputs.
+                            Note that currently it assumes that both the inputs and
+                            outputs of internal layers are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
@@ -112,5 +128,6 @@ class LayerGradientXActivation(LayerAttribution):
             target,
             additional_forward_args,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         return layer_gradients * layer_eval

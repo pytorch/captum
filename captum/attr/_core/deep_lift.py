@@ -40,8 +40,12 @@ class DeepLift(GradientAttribution):
             model (nn.Module):  The reference to PyTorch model instance.
         """
         super().__init__(model)
-        self.model = model
+        if isinstance(model, nn.DataParallel):
+            self.model = model.module
+        else:
+            self.model = model
         self.forward_handles = []
+        self.forward_handles_refs = []
         self.backward_handles = []
 
     def attribute(
@@ -66,7 +70,8 @@ class DeepLift(GradientAttribution):
         This implementation supports only Rescale rule. RevealCancel rule will
         be supported in later releases.
         In addition to that, in order to keep the implementation cleaner, DeepLIFT
-        for internal neurons and layers will be implemented separately.
+        for internal neurons and layers extends current implementation and is
+        implemented separately in LayerDeepLift and NeuronDeepLift.
         Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
         Integrated Gradients, it runs significantly faster than Integrated
         Gradients and is preferred for large datasets.
@@ -77,7 +82,7 @@ class DeepLift(GradientAttribution):
         Note: As we know, currently we cannot access the building blocks,
         of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
         Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
-        with performance similar to built-in ones with TorchScript.
+        with performance similar to built-in ones using TorchScript.
         More details on how to build custom RNNs can be found here:
         https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
 
@@ -186,19 +191,21 @@ class DeepLift(GradientAttribution):
         validate_input(inputs, baselines)
 
         # set hooks for baselines
-        self._traverse_modules(self.model, self._register_hooks, input_type="ref")
+        self.model.apply(self._register_hooks)
+
         # make forward pass and remove baseline hooks
         _run_forward(
-            self.forward_func,
+            self.model,
             baselines,
             target=target,
             additional_forward_args=additional_forward_args,
         )
+        # remove forward hook set for baselines
+        for forward_handles_ref in self.forward_handles_refs:
+            forward_handles_ref.remove()
 
-        # set hook for inputs
-        self._traverse_modules(self.model, self._register_hooks)
         gradients = self.gradient_func(
-            self.forward_func,
+            self.model,
             inputs,
             target_ind=target,
             additional_forward_args=additional_forward_args,
@@ -213,8 +220,27 @@ class DeepLift(GradientAttribution):
 
         undo_gradient_requirements(inputs, gradient_mask)
 
+        return self._compute_conv_delta_and_format_attrs(
+            return_convergence_delta,
+            attributions,
+            baselines,
+            inputs,
+            additional_forward_args,
+            target,
+            is_inputs_tuple,
+        )
+
+    def _compute_conv_delta_and_format_attrs(
+        self,
+        return_convergence_delta,
+        attributions,
+        start_point,
+        end_point,
+        additional_forward_args,
+        target,
+        is_inputs_tuple,
+    ):
         if return_convergence_delta:
-            start_point, end_point = baselines, inputs
             # computes convergence error
             delta = self.compute_convergence_delta(
                 attributions,
@@ -260,11 +286,6 @@ class DeepLift(GradientAttribution):
         input_attr_name = "input_ref"
         output_attr_name = "output_ref"
         self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
-        # since it is a reference forward hook remove it from the module after
-        # detaching the variables
-        module.ref_handle.remove()
-        # remove attribute `ref_handle`
-        del module.ref_handle
 
     def _detach_tensors(
         self, input_attr_name, output_attr_name, module, inputs, outputs
@@ -301,7 +322,7 @@ class DeepLift(GradientAttribution):
 
         return multipliers
 
-    def _register_hooks(self, module, input_type="non_ref"):
+    def _register_hooks(self, module):
         # TODO find a better way of checking if a module is a container or not
         module_fullname = str(type(module))
         has_already_hooks = len(module._backward_hooks) > 0
@@ -312,26 +333,12 @@ class DeepLift(GradientAttribution):
         ):
             return
         # adds forward hook to leaf nodes that are non-linear
-        if input_type != "ref":
-            forward_handle = module.register_forward_hook(self._forward_hook)
-            backward_handle = module.register_backward_hook(self._backward_hook)
-            self.forward_handles.append(forward_handle)
-            self.backward_handles.append(backward_handle)
-        else:
-            handle = module.register_forward_hook(self._forward_hook_ref)
-            ref_handle = "ref_handle"
-            setattr(module, ref_handle, handle)
-
-    def _traverse_modules(self, module, hook_fn, input_type="non_ref"):
-        warnings.warn(
-            """Setting forward, backward hooks and attributes on non-linear
-               activations. The hooks and attributes will be removed
-            after the attribution is finished"""
-        )
-        children = module.children()
-        for child in children:
-            self._traverse_modules(child, hook_fn, input_type)
-            hook_fn(child, input_type)
+        forward_handle = module.register_forward_hook(self._forward_hook)
+        forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
+        backward_handle = module.register_backward_hook(self._backward_hook)
+        self.forward_handles.append(forward_handle)
+        self.forward_handles_refs.append(forward_handle_ref)
+        self.backward_handles.append(backward_handle)
 
     def _remove_hooks(self):
         for forward_handle in self.forward_handles:
@@ -345,6 +352,11 @@ class DeepLift(GradientAttribution):
 
 class DeepLiftShap(DeepLift):
     def __init__(self, model):
+        r"""
+        Args:
+
+            model (nn.Module):  The reference to PyTorch model instance.
+        """
         super().__init__(model)
 
     def attribute(
@@ -476,14 +488,6 @@ class DeepLiftShap(DeepLift):
             >>> # Computes shap values using deeplift for class 3.
             >>> attribution = dl.attribute(input, target=3)
         """
-
-        def compute_mean(inp_bsz, base_bsz, attribution):
-            # Average for multiple references
-            attr_shape = (inp_bsz, base_bsz)
-            if len(attribution.shape) > 1:
-                attr_shape += attribution.shape[1:]
-            return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
-
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
@@ -494,8 +498,34 @@ class DeepLiftShap(DeepLift):
         # batch sizes
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
-        # match the sizes of inputs and baselines in case of multiple references
-        # for a single input
+
+        exp_inp, exp_base, exp_tgt = self._expand_inputs_baselines_targets(
+            base_bsz, inp_bsz, baselines, inputs, target
+        )
+
+        attributions = super().attribute(
+            exp_inp,
+            exp_base,
+            target=exp_tgt,
+            additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
+        )
+        if return_convergence_delta:
+            attributions, delta = attributions
+
+        attributions = tuple(
+            self._compute_mean_across_baselines(inp_bsz, base_bsz, attribution)
+            for attribution in attributions
+        )
+
+        if return_convergence_delta:
+            return _format_attributions(is_inputs_tuple, attributions), delta
+        else:
+            return _format_attributions(is_inputs_tuple, attributions)
+
+    def _expand_inputs_baselines_targets(
+        self, base_bsz, inp_bsz, baselines, inputs, target
+    ):
         expanded_inputs = tuple(
             [
                 input.repeat_interleave(base_bsz, dim=0).requires_grad_()
@@ -513,25 +543,14 @@ class DeepLiftShap(DeepLift):
         expanded_target = _expand_target(
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
+        return expanded_inputs, expanded_baselines, expanded_target
 
-        attributions = super().attribute(
-            expanded_inputs,
-            expanded_baselines,
-            target=expanded_target,
-            additional_forward_args=additional_forward_args,
-            return_convergence_delta=return_convergence_delta,
-        )
-        if return_convergence_delta:
-            attributions, delta = attributions
-
-        attributions = tuple(
-            compute_mean(inp_bsz, base_bsz, attribution) for attribution in attributions
-        )
-
-        if return_convergence_delta:
-            return _format_attributions(is_inputs_tuple, attributions), delta
-        else:
-            return _format_attributions(is_inputs_tuple, attributions)
+    def _compute_mean_across_baselines(self, inp_bsz, base_bsz, attribution):
+        # Average for multiple references
+        attr_shape = (inp_bsz, base_bsz)
+        if len(attribution.shape) > 1:
+            attr_shape += attribution.shape[1:]
+        return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
 
 def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
@@ -651,7 +670,7 @@ def maxpool(
     )
 
     # If the module is invalid, save the newly computed gradients
-    # The original_grad_input will be overriden later in the Tensor hook
+    # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
         module.saved_grad = new_grad_input
         return original_grad_input

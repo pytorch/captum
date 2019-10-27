@@ -24,11 +24,11 @@ class NeuronConductance(NeuronAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          Attributions for a particular neuron in the output of
-                          this layer are computed using the argument neuron_index
+                          Attributions for a particular neuron in the input or output
+                          of this layer are computed using the argument neuron_index
                           in the attribute method.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Currently, only layers with a single tensor input or output
+                          are supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -47,6 +47,7 @@ class NeuronConductance(NeuronAttribution):
         n_steps=50,
         method="riemann_trapezoid",
         internal_batch_size=None,
+        attribute_to_neuron_input=False,
     ):
         r"""
             Computes conductance with respect to particular hidden neuron. The
@@ -137,6 +138,16 @@ class NeuronConductance(NeuronAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
+                attribute_to_neuron_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the neuron input
+                            or output. If `attribute_to_neuron_input` is set to True
+                            then the attributions will be computed with respect to
+                            neuron inputs, otherwise it will be computed with respect
+                            to layer outputs.
+                            Note that currently it assumes that both the inputs and
+                            outputs of internal neurons are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -214,6 +225,7 @@ class NeuronConductance(NeuronAttribution):
             target_ind=expanded_target,
             gradient_neuron_index=neuron_index,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_neuron_input,
         )
 
         # Multiplies by appropriate gradient of output with respect to hidden neurons

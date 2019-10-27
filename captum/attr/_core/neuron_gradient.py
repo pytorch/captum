@@ -20,11 +20,11 @@ class NeuronGradient(NeuronAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          Attributions for a particular neuron in the output of
-                          this layer are computed using the argument neuron_index
+                          Attributions for a particular neuron in the input or output
+                          of this layer are computed using the argument neuron_index
                           in the attribute method.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Currently, only layers with a single tensor input and output
+                          are supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -33,7 +33,13 @@ class NeuronGradient(NeuronAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, neuron_index, additional_forward_args=None):
+    def attribute(
+        self,
+        inputs,
+        neuron_index,
+        additional_forward_args=None,
+        attribute_to_neuron_input=False,
+    ):
         r"""
             Computes the gradient of the output of a particular neuron with
             respect to the inputs of the network.
@@ -67,6 +73,16 @@ class NeuronGradient(NeuronAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
+                attribute_to_neuron_input (bool, optional): Indicates whether to
+                            compute the attributions with respect to the neuron input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            neuron's inputs, otherwise it will be computed with respect
+                            to neuron's outputs.
+                            Note that currently it assumes that both the inputs and
+                            outputs of internal layers are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -111,6 +127,7 @@ class NeuronGradient(NeuronAttribution):
             additional_forward_args,
             neuron_index,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_neuron_input,
         )
 
         undo_gradient_requirements(inputs, gradient_mask)

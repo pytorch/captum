@@ -93,11 +93,11 @@ def compute_gradients(
     return grads
 
 
-def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_index):
+def _neuron_gradients(inputs, saved_layer, key_list, gradient_neuron_index):
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
-            current_out_tensor = saved_layer_outputs[key]
+            current_out_tensor = saved_layer[key]
             gradient_tensors.append(
                 torch.autograd.grad(
                     torch.unbind(
@@ -110,7 +110,12 @@ def _neuron_gradients(inputs, saved_layer_outputs, key_list, gradient_neuron_ind
 
 
 def _forward_layer_eval(
-    forward_fn, inputs, layer, additional_forward_args=None, device_ids=None
+    forward_fn,
+    inputs,
+    layer,
+    additional_forward_args=None,
+    device_ids=None,
+    attribute_to_layer_input=False,
 ):
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
@@ -119,6 +124,7 @@ def _forward_layer_eval(
         additional_forward_args=additional_forward_args,
         gradient_neuron_index=None,
         device_ids=device_ids,
+        attribute_to_layer_input=attribute_to_layer_input,
     )
 
 
@@ -129,6 +135,7 @@ def _forward_layer_eval_with_neuron_grads(
     additional_forward_args=None,
     gradient_neuron_index=None,
     device_ids=None,
+    attribute_to_layer_input=False,
 ):
     """
     This method computes forward evaluation for a particular layer using a
@@ -146,7 +153,7 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    saved_layer_outputs = {}
+    saved_layer = {}
     lock = threading.Lock()
 
     # Set a forward hook on specified module and run forward pass to
@@ -154,24 +161,32 @@ def _forward_layer_eval_with_neuron_grads(
     # For DataParallel models, each partition adds entry to dictionary
     # with key as device and value as corresponding Tensor.
     def forward_hook(module, inp, out):
+        eval_tsr = inp if attribute_to_layer_input else out
+
+        # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
+        if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
+            eval_tsr = eval_tsr[0]
+
         assert isinstance(
-            out, torch.Tensor
-        ), "Layers with multiple output tensors are not yet supported."
+            eval_tsr, torch.Tensor
+        ), "Layers with multiple inputs or output tensors are not supported yet."
         with lock:
-            nonlocal saved_layer_outputs
-            saved_layer_outputs[out.device] = out
+            nonlocal saved_layer
+            # TODO we need to think what will be the best way of storing eval
+            # tensors per device for each input per example. This implementation
+            # doesn't support a tuple of inputs
+            saved_layer[eval_tsr.device] = eval_tsr
 
     hook = layer.register_forward_hook(forward_hook)
     _run_forward(forward_fn, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
-
-    if len(saved_layer_outputs) == 0:
+    if len(saved_layer) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
     # Multiple devices / keys implies a DataParallel model, so we look for
     # device IDs if given or available from forward function
     # (DataParallel model object).
-    if len(saved_layer_outputs) > 1 and device_ids is None:
+    if len(saved_layer) > 1 and device_ids is None:
         if (
             isinstance(forward_fn, torch.nn.DataParallel)
             and forward_fn.device_ids is not None
@@ -186,17 +201,18 @@ def _forward_layer_eval_with_neuron_grads(
     # Identifies correct device ordering based on device ids.
     # key_list is a list of devices in appropriate ordering for concatenation.
     # If only one key exists (standard model), key list simply has one element.
-    key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
+    key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
     if gradient_neuron_index is not None:
+        print('_neuron_gradients')
         inp_grads = _neuron_gradients(
-            inputs, saved_layer_outputs, key_list, gradient_neuron_index
+            inputs, saved_layer, key_list, gradient_neuron_index
         )
         return (
-            torch.cat([saved_layer_outputs[device_id] for device_id in key_list]),
+            torch.cat([saved_layer[device_id] for device_id in key_list]),
             inp_grads,
         )
     else:
-        return torch.cat([saved_layer_outputs[device_id] for device_id in key_list])
+        return torch.cat([saved_layer[device_id] for device_id in key_list])
 
 
 def compute_layer_gradients_and_eval(
@@ -207,6 +223,7 @@ def compute_layer_gradients_and_eval(
     additional_forward_args=None,
     gradient_neuron_index=None,
     device_ids=None,
+    attribute_to_layer_input=False,
 ):
     r"""
         Computes gradients of the output with respect to a given layer as well
@@ -246,7 +263,7 @@ def compute_layer_gradients_and_eval(
                 Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
-        saved_layer_outputs = {}
+        saved_layer = {}
         lock = threading.Lock()
 
         # Set a forward hook on specified module and run forward pass to
@@ -254,12 +271,20 @@ def compute_layer_gradients_and_eval(
         # For DataParallel models, each partition adds entry to dictionary
         # with key as device and value as corresponding Tensor.
         def forward_hook(module, inp, out):
+            eval_tsr = inp if attribute_to_layer_input else out
+
+            # if `inp` or `out` is a tuple of one tensor, assign that
+            # tensor to `eval_tsr`
+            if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
+                eval_tsr = eval_tsr[0]
+
             with lock:
-                assert isinstance(
-                    out, torch.Tensor
-                ), "Layers with multiple output tensors are not yet supported."
-                nonlocal saved_layer_outputs
-                saved_layer_outputs[out.device] = out
+                assert isinstance(eval_tsr, torch.Tensor), (
+                    "Layers with multiple input or output tensors are not"
+                    "yet supported."
+                )
+                nonlocal saved_layer
+                saved_layer[eval_tsr.device] = eval_tsr
 
         hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
@@ -270,7 +295,7 @@ def compute_layer_gradients_and_eval(
         # Remove unnecessary forward hook.
         hook.remove()
 
-        if len(saved_layer_outputs) == 0:
+        if len(saved_layer) == 0:
             raise AssertionError(
                 "Forward hook did not obtain any outputs for given layer"
             )
@@ -278,7 +303,7 @@ def compute_layer_gradients_and_eval(
         # Multiple devices / keys implies a DataParallel model, so we look for
         # device IDs if given or available from forward function
         # (DataParallel model object).
-        if len(saved_layer_outputs) > 1 and device_ids is None:
+        if len(saved_layer) > 1 and device_ids is None:
             if (
                 isinstance(forward_fn, torch.nn.DataParallel)
                 and forward_fn.device_ids is not None
@@ -293,16 +318,14 @@ def compute_layer_gradients_and_eval(
         # Identifies correct device ordering based on device ids.
         # key_list is a list of devices in appropriate ordering for concatenation.
         # If only one key exists (standard model), key list simply has one element.
-        key_list = _sort_key_list(list(saved_layer_outputs.keys()), device_ids)
-        all_outputs = _reduce_list(
-            [saved_layer_outputs[device_id] for device_id in key_list]
-        )
-        grad_inputs = tuple(saved_layer_outputs[device_id] for device_id in key_list)
+        key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
+        all_outputs = _reduce_list([saved_layer[device_id] for device_id in key_list])
+        grad_inputs = tuple(saved_layer[device_id] for device_id in key_list)
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
         all_grads = torch.cat(saved_grads)
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(
-                inputs, saved_layer_outputs, key_list, gradient_neuron_index
+                inputs, saved_layer, key_list, gradient_neuron_index
             )
             return all_grads, all_outputs, inp_grads
         else:
