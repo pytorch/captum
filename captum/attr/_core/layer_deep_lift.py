@@ -229,7 +229,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            False, # currently both the input and output of layer can only be a tensor
+            False,  # currently both the input and output of layer can only be a tensor
         )
 
 

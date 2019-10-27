@@ -139,14 +139,14 @@ class NeuronConductance(NeuronAttribution):
                             processed in one batch.
                             Default: None
                 attribute_to_neuron_input (bool, optional): Indicates whether to
-                            compute the attribution with respect to the neuron input
+                            compute the attribution with respect to neuron input
                             or output. If `attribute_to_neuron_input` is set to True
                             then the attributions will be computed with respect to
                             neuron inputs, otherwise it will be computed with respect
                             to layer outputs.
                             Note that currently it assumes that both the inputs and
                             outputs of internal neurons are single tensors.
-                            Support for multiple tensors will be added later.
+                            Support for multiple tensors will be added soon.
                             Default: False
 
             Returns:

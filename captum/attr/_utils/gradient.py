@@ -203,7 +203,6 @@ def _forward_layer_eval_with_neuron_grads(
     # If only one key exists (standard model), key list simply has one element.
     key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
     if gradient_neuron_index is not None:
-        print('_neuron_gradients')
         inp_grads = _neuron_gradients(
             inputs, saved_layer, key_list, gradient_neuron_index
         )

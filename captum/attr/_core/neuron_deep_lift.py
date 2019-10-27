@@ -128,6 +128,7 @@ class NeuronDeepLift(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
+
         def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
             _, grads = _forward_layer_eval_with_neuron_grads(
                 forward_fn,
@@ -262,6 +263,7 @@ class NeuronDeepLiftShap(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
+
         def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
             _, grads = _forward_layer_eval_with_neuron_grads(
                 forward_fn,

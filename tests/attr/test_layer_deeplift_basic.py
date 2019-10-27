@@ -7,8 +7,6 @@ import torch
 from .helpers.utils import BaseTest, assertArraysAlmostEqual, assert_delta
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
-from captum.attr._core.deep_lift import DeepLift
-from captum.attr._core.neuron_deep_lift import NeuronDeepLift
 from captum.attr._core.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
 

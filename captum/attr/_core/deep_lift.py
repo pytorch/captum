@@ -191,6 +191,11 @@ class DeepLift(GradientAttribution):
         validate_input(inputs, baselines)
 
         # set hooks for baselines
+        warnings.warn(
+            """Setting forward, backward hooks and attributes on non-linear
+               activations. The hooks and attributes will be removed
+            after the attribution is finished"""
+        )
         self.model.apply(self._register_hooks)
 
         # make forward pass and remove baseline hooks

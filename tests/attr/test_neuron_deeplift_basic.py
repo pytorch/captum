@@ -22,12 +22,10 @@ class Test(BaseTest):
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
         inputs = (x1, x2)
-        #baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        # baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLift(model, model.relu)
-        attributions = neuron_dl.attribute(
-            inputs, 0, attribute_to_neuron_input=True
-        )
+        attributions = neuron_dl.attribute(inputs, 0, attribute_to_neuron_input=True)
         assertArraysAlmostEqual(
             np.array([[-30.0, 1.0, -0.0]]), attributions[0].detach().numpy()
         )
@@ -35,9 +33,7 @@ class Test(BaseTest):
             np.array([[0.0, 0.0, 0.0]]), attributions[1].detach().numpy()
         )
 
-        attributions = neuron_dl.attribute(
-            inputs, 0, attribute_to_neuron_input=False
-        )
+        attributions = neuron_dl.attribute(inputs, 0, attribute_to_neuron_input=False)
         assertArraysAlmostEqual(
             np.array([[0.0, 0.0, 0.0]]), attributions[0].detach().numpy()
         )
