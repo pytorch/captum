@@ -16,7 +16,7 @@ class ExpansionTypes(Enum):
 def safe_div(denom, quotient, default_value=None):
     r"""
         A simple utility function to perform `denom / quotient`
-        if `quotient` == 0 => result will be `default_value`
+        if the statement is undefined => result will be `default_value`
     """
     return denom / quotient if quotient != 0.0 else default_value
 
