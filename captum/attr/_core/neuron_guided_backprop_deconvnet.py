@@ -29,7 +29,7 @@ class NeuronDeconvolution(NeuronAttribution):
         r""""
         Computes attribution of the given neuron using deconvolution.
         Deconvolution computes the gradient of the target output with
-        respect the input, but gradients of ReLU functions are overriden so
+        respect to the input, but gradients of ReLU functions are overriden so
         that the gradient of the ReLU input is simply computed taking ReLU of
         the output gradient, essentially only propagating non-negative gradients
         (without dependence on the sign of the ReLU input).
@@ -133,7 +133,7 @@ class NeuronGuidedBackprop(NeuronAttribution):
         r""""
         Computes attribution of the given neuron using guided backpropagation.
         Guided backpropagation computes the gradient of the target neuron
-        with respect the input, but gradients of ReLU functions are overriden
+        with respect to the input, but gradients of ReLU functions are overriden
         so that only non-negative gradients are backpropagated.
 
         More details regarding the guided backpropagation algorithm can be found
