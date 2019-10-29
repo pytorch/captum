@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import _forward_layer_eval_with_neuron_grads
+from .._utils.gradient import construct_neuron_grad_fn
 
 from .integrated_gradients import IntegratedGradients
 
@@ -136,20 +136,10 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-
-        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-            _, grads = _forward_layer_eval_with_neuron_grads(
-                forward_fn,
-                inputs,
-                self.layer,
-                additional_forward_args,
-                neuron_index,
-                device_ids=self.device_ids,
-            )
-            return grads
-
         ig = IntegratedGradients(self.forward_func)
-        ig.gradient_func = grad_fn
+        ig.gradient_func = construct_neuron_grad_fn(
+            self.layer, neuron_index, self.device_ids
+        )
         # Return only attributions and not delta
         return ig.attribute(
             inputs,
