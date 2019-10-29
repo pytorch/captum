@@ -66,7 +66,9 @@ class ModifiedReluGradientAttribution(GradientAttribution):
     def _backward_hook(self, module, grad_input, grad_output):
         to_override_grads = grad_output if self.use_relu_grad_output else grad_input
         if isinstance(to_override_grads, tuple):
-            return tuple(F.relu(to_override_grad) for to_override_grad in to_override_grads)
+            return tuple(
+                F.relu(to_override_grad) for to_override_grad in to_override_grads
+            )
         else:
             return F.relu(to_override_grads)
 
