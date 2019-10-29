@@ -3,8 +3,8 @@ from __future__ import print_function
 import unittest
 
 import torch
-from captum.attr._core.modified_relu_grad import Deconvolution
-from captum.attr._core.neuron_modified_relu_grad import NeuronDeconvolution
+from captum.attr._core.guided_backprop_deconvnet import Deconvolution
+from captum.attr._core.neuron_guided_backprop_deconvnet import NeuronDeconvolution
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest

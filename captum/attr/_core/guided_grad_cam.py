@@ -6,7 +6,7 @@ from .._utils.attribution import GradientAttribution, LayerAttribution
 from .._utils.common import format_input, _format_attributions
 
 from .grad_cam import LayerGradCam
-from .modified_relu_grad import GuidedBackprop
+from .guided_backprop_deconvnet import GuidedBackprop
 
 
 class GuidedGradCam(GradientAttribution):

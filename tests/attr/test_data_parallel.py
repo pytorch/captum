@@ -12,7 +12,7 @@ from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivati
 from captum.attr._core.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
-from captum.attr._core.neuron_modified_relu_grad import (
+from captum.attr._core.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )

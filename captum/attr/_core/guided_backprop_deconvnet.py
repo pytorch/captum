@@ -9,7 +9,7 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):
-    def __init__(self, model, relu_grad_output=False):
+    def __init__(self, model, use_relu_grad_output=False):
         r"""
         Args:
 
@@ -18,7 +18,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         super().__init__(model)
         self.model = model
         self.backward_hooks = []
-        self.relu_grad_output = relu_grad_output
+        self.use_relu_grad_output = use_relu_grad_output
         assert isinstance(self.model, torch.nn.Module), (
             "Given model must be an instance of torch.nn.Module to properly hook"
             " ReLU layers."
@@ -27,7 +27,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
         Computes attribution by overriding relu gradients. Based on constructor
-        flag relu_grad_output, performs either GuidedBackpropagation if False
+        flag use_relu_grad_output, performs either GuidedBackpropagation if False
         and Deconvolution if True. This class is the parent class of both these
         methods, more information on usage can be found in the docstrings for each
         implementing class.
@@ -64,11 +64,11 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             self.backward_hooks.append(hook)
 
     def _backward_hook(self, module, grad_input, grad_output):
-        to_override = grad_output if self.relu_grad_output else grad_input
-        if isinstance(to_override, tuple):
-            return tuple(F.relu(tensor) for tensor in to_override)
+        to_override_grads = grad_output if self.use_relu_grad_output else grad_input
+        if isinstance(to_override_grads, tuple):
+            return tuple(F.relu(to_override_grad) for to_override_grad in to_override_grads)
         else:
-            return F.relu(to_override)
+            return F.relu(to_override_grads)
 
     def _remove_hooks(self):
         for hook in self.backward_hooks:
@@ -82,12 +82,12 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model, relu_grad_output=False)
+        super().__init__(model, use_relu_grad_output=False)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
         Computes attribution using guided backpropagation. Guided backpropagation
-        computes the gradient of the target output with respect the input,
+        computes the gradient of the target output with respect to the input,
         but gradients of ReLU functions are overriden so that only
         non-negative gradients are backpropagated.
 
@@ -178,12 +178,12 @@ class Deconvolution(ModifiedReluGradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model, relu_grad_output=True)
+        super().__init__(model, use_relu_grad_output=True)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
         Computes attribution using deconvolution. Deconvolution
-        computes the gradient of the target output with respect the input,
+        computes the gradient of the target output with respect to the input,
         but gradients of ReLU functions are overriden so that the gradient
         of the ReLU input is simply computed taking ReLU of the output gradient,
         essentially only propagating non-negative gradients (without
