@@ -398,7 +398,6 @@ See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 * `IntegratedGradients`, `NeuronIntegratedGradient`: [Axiomatic Attribution for Deep Networks, Mukund Sundararajan et al. 2017](https://arxiv.org/abs/1703.01365)
 * `InputXGradient`: [Investigating the influence of noise and distractors on the interpretation of neural networks, Pieter-Jan Kindermans et al. 2016](https://arxiv.org/abs/1611.07270)
 * `SmoothGrad`: [SmoothGrad: removing noise by adding noise, Daniel Smilkov et al. 2017](https://arxiv.org/abs/1706.03825)
-* [Local Explanation Methods for Deep Neural Networks Lack Sensitivity to Parameter Values, Julius Adebayo et al. 2018](https://arxiv.org/abs/1810.03307)
 * `NoiseTunnel`: [Sanity Checks for Saliency Maps, Julius Adebayo et al. 2018](https://arxiv.org/abs/1810.03292)
 * `NeuronConductance`: [How Important is a neuron?, Kedar Dhamdhere et al. 2018](https://arxiv.org/abs/1805.12233)
 * `LayerConductance`: [Computationally Efficient Measures of Internal Neuron Importance, Avanti Shrikumar et al. 2018](https://arxiv.org/pdf/1807.09946.pdf)
