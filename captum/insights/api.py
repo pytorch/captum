@@ -5,7 +5,7 @@ from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 import torch
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.attr._utils.common import _run_forward
+from captum.attr._utils.common import _run_forward, safe_div
 from captum.insights.features import BaseFeature
 from torch import Tensor
 from torch.nn import Module
@@ -156,8 +156,7 @@ class AttributionVisualizer(object):
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
         norm = torch.norm(net_contrib, p=1)
-        if norm > 0:
-            net_contrib /= norm
+        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
 
         return net_contrib.tolist()
 

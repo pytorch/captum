@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Callable, List, Optional, Union
 
 from captum.attr._utils import visualization as viz
+from captum.attr._utils.common import safe_div
 
 import numpy as np
 
@@ -97,7 +98,7 @@ class TextFeature(BaseFeature):
         name: str,
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
-        visualization_transform: Optional[Callable],
+        visualization_transform: Callable,
     ):
         super().__init__(
             name,
@@ -117,7 +118,11 @@ class TextFeature(BaseFeature):
         attribution = attribution.sum(dim=1)
 
         # L-Infinity norm
-        normalized_attribution = attribution / abs(attribution).max()
+        attr_max = abs(attribution).max()
+        normalized_attribution = safe_div(
+            attribution, attr_max, default_value=attribution
+        )
+
         modified = [x * 100 for x in normalized_attribution.tolist()]
 
         return FeatureOutput(
@@ -147,7 +152,11 @@ class GeneralFeature(BaseFeature):
         data = data.squeeze(0)
 
         # L-2 norm
-        normalized_attribution = attribution / attribution.norm()
+        l2_norm = attribution.norm()
+        normalized_attribution = safe_div(
+            attribution, l2_norm, default_value=attribution
+        )
+
         modified = [x * 100 for x in normalized_attribution.tolist()]
 
         base = [f"{c}: {d:.2f}" for c, d in zip(self.categories, data.tolist())]
