@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
 from .._utils.gradient import construct_neuron_grad_fn
-from .modified_relu_grad import GuidedBackprop, Deconvolution
+from .guided_backprop_deconvnet import GuidedBackprop, Deconvolution
 
 
 class NeuronDeconvolution(NeuronAttribution):
