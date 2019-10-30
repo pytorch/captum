@@ -72,7 +72,7 @@ commands:
           name: "Deploy website to GitHub Pages"
             # TODO: make the installation above conditional on there being relevant changes (no need to install if there are none)
           command: |
-            if ! git diff-tree --no-commit-id --name-only -r HEAD | grep -E "(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
+            if ! git diff --name-only HEAD^ | grep -E "(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
               echo "Skipping deploy. No relevant website files have changed"
             elif [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
