@@ -1,4 +1,4 @@
-<a href="https://captum.org">
+<a href="https://captum.ai">
   <img width="350" src="./captum_logo_lockup.svg" alt="Captum Logo" />
 </a>
 
