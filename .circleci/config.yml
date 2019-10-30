@@ -163,6 +163,21 @@ jobs:
       - simple_pip_install
       - unit_tests
 
+  auto_deploy_site:
+    docker:
+      - image: circleci/python:3.6.8-node
+    steps:
+      - checkout
+      - pip_install:
+          args: "-n -f -d"
+      - lint_flake8
+      - lint_black
+      - unit_tests
+      - sphinx
+      - configure_github_bot
+      - deploy_site
+
+
 aliases:
 
   - &exclude_ghpages_fbconfig
@@ -184,3 +199,11 @@ workflows:
           filters: *exclude_ghpages_fbconfig
       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
+
+  auto_deploy_site:
+    jobs:
+      - auto_deploy_site:
+          filters:
+            branches:
+              only:
+                - master
