@@ -92,6 +92,20 @@ class Footer extends React.Component {
           )}{" "}
           Copyright &copy; {currentYear} Facebook Inc.
         </section>
+        {process.env.NODE_ENV !== 'development' &&
+          <script dangerouslySetInnerHTML={{__html:`
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== '${this.props.config.url}') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = '${this.props.config.url}${this.props.config.baseUrl}' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          `}} />
+        }
       </footer>
     );
   }
