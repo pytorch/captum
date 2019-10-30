@@ -97,7 +97,6 @@ ENV/
 sphinx/build/
 
 # Docusaurus
-website/yarn.lock
 website/build/
 website/i18n/
 website/node_modules/
