@@ -1,0 +1,383 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._models.pytext</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">pytext.models.model</span> <span class="k">import</span> <span class="n">EmbeddingList</span><span class="p">,</span> <span class="n">EmbeddingBase</span>
+<span class="kn">from</span> <span class="nn">pytext.models.embeddings.word_embedding</span> <span class="k">import</span> <span class="n">WordEmbedding</span>
+<span class="kn">from</span> <span class="nn">pytext.models.embeddings.dict_embedding</span> <span class="k">import</span> <span class="n">DictEmbedding</span>
+
+
+<div class="viewcode-block" id="PyTextInterpretableEmbedding"><a class="viewcode-back" href="../../../../pytext.html#captum.attr._models.pytext.PyTextInterpretableEmbedding">[docs]</a><span class="k">class</span> <span class="nc">PyTextInterpretableEmbedding</span><span class="p">(</span><span class="n">EmbeddingBase</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        In PyText DocNN models we need a way to access word embedding layers,</span>
+<span class="sd">        generate the embeddings and subtract the baseline.</span>
+<span class="sd">        To do so, we separate embedding layers from the model, compute the embeddings</span>
+<span class="sd">        separately and do all operations needed outside of the model.</span>
+<span class="sd">        The original embedding layer is being replaced by `PyTextInterpretableEmbedding`</span>
+<span class="sd">        layer which passes precomputed embedding vectors to lower layers.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">embedding</span><span class="o">.</span><span class="n">embedding_dim</span> <span class="k">for</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">embeddings</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embedding_dims</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">embeddings</span>
+
+<div class="viewcode-block" id="PyTextInterpretableEmbedding.forward"><a class="viewcode-back" href="../../../../pytext.html#captum.attr._models.pytext.PyTextInterpretableEmbedding.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">         The forward pass of embedding layer. This can be for the text or any</span>
+<span class="sd">         type of embedding.</span>
+
+<span class="sd">         Args</span>
+
+<span class="sd">            input: Input embeddings tensor</span>
+
+<span class="sd">         Return</span>
+
+<span class="sd">            output: Output tensor is the same as input. It passes through</span>
+<span class="sd">                    the embedding tensors to lower layers without any</span>
+<span class="sd">                    modifications</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="nb">input</span></div>
+
+<div class="viewcode-block" id="PyTextInterpretableEmbedding.get_attribution_map"><a class="viewcode-back" href="../../../../pytext.html#captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_attribution_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">         After attribution scores are computed for an input embedding vector</span>
+<span class="sd">         we need to split it up into attribution sub tensors for each</span>
+<span class="sd">         feature type: word, dict and other types</span>
+
+<span class="sd">         TODO: we can potentally also output tuples of attributions. This might be</span>
+<span class="sd">         a better option. We'll work on this in a separate diff.</span>
+
+<span class="sd">         Args</span>
+
+<span class="sd">            attributions: A tensor that contains attribution values for each input</span>
+<span class="sd">                          field. It usually has the same dimensions as the input</span>
+<span class="sd">                          tensor</span>
+
+<span class="sd">         Return</span>
+
+<span class="sd">            attribution_map: A dictionary of feature_type and attribution values</span>
+
+<span class="sd">        """</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">attribution_map</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">embedding_size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_dims</span><span class="p">):</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">begin</span> <span class="o">+</span> <span class="n">embedding_size</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="n">WordEmbedding</span><span class="p">):</span>
+                <span class="n">attribution_map</span><span class="p">[</span><span class="s2">"word"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attributions</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="n">DictEmbedding</span><span class="p">):</span>
+                <span class="n">attribution_map</span><span class="p">[</span><span class="s2">"dict"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attributions</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s2">"Currently only word and dict "</span> <span class="s2">"embeddings are supported"</span>
+                <span class="p">)</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">end</span>
+
+        <span class="k">return</span> <span class="n">attribution_map</span></div></div>
+
+
+<div class="viewcode-block" id="BaselineGenerator"><a class="viewcode-back" href="../../../../pytext.html#captum.attr._models.pytext.BaselineGenerator">[docs]</a><span class="k">class</span> <span class="nc">BaselineGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    This is an example input baseline generator for DocNN model which uses</span>
+<span class="sd">    word and dict features.</span>
+<span class="sd">    """</span>
+    <span class="n">PAD</span> <span class="o">=</span> <span class="s2">"&lt;pad&gt;"</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">data_handler</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_handler</span> <span class="o">=</span> <span class="n">data_handler</span>
+        <span class="k">if</span> <span class="s2">"dict_feat"</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vocab_dict</span> <span class="o">=</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"dict_feat"</span><span class="p">]</span><span class="o">.</span><span class="n">vocab</span>
+        <span class="k">if</span> <span class="s2">"word_feat"</span> <span class="ow">in</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vocab_word</span> <span class="o">=</span> <span class="n">data_handler</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"word_feat"</span><span class="p">]</span><span class="o">.</span><span class="n">vocab</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_word_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_baseline_single_word_feature</span><span class="p">(</span>
+            <span class="n">device</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_dict_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_baseline_single_dict_feature</span><span class="p">(</span>
+            <span class="n">device</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BaselineGenerator.generate_baseline"><a class="viewcode-back" href="../../../../pytext.html#captum.attr._models.pytext.BaselineGenerator.generate_baseline">[docs]</a>    <span class="k">def</span> <span class="nf">generate_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">integ_grads_embeddings</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Generates baseline for input word and dict features. In the future we</span>
+<span class="sd">        will extend it to support char and other features as well.</span>
+<span class="sd">        This baseline is entirely based on the `&lt;pad&gt;` token.</span>
+
+<span class="sd">        Args</span>
+
+<span class="sd">            integ_grads_embeddings: A reference to integrated gradients embedding</span>
+<span class="sd">                                    layer</span>
+<span class="sd">            seq_length: The length of each sequence which depends on batch size</span>
+
+<span class="sd">        Return</span>
+<span class="sd">                baseline: A tuple of feature baselines</span>
+<span class="sd">                          Each feature type has a corresponding baseline tensor</span>
+<span class="sd">                          in the tuple.</span>
+<span class="sd">                          Currently only Dict and Word feature types are supported</span>
+<span class="sd">        """</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">embedding</span> <span class="ow">in</span> <span class="n">integ_grads_embeddings</span><span class="o">.</span><span class="n">embeddings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="n">WordEmbedding</span><span class="p">):</span>
+                <span class="n">baseline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_word_baseline</span><span class="p">(</span><span class="n">seq_length</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="n">DictEmbedding</span><span class="p">):</span>
+                <span class="n">baseline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_dict_baseline</span><span class="p">(</span><span class="n">seq_length</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s2">"Currently only word and dict "</span> <span class="s2">"embeddings are supported"</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_generate_baseline_single_word_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vocab_word</span><span class="o">.</span><span class="n">stoi</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">PAD</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"vocab_word"</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_baseline_single_dict_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">""" Generate dict features based on Assistant's case study by using</span>
+<span class="sd">             sia_transformer:</span>
+<span class="sd">             fbcode/assistant/sia/transformer/sia_transformer.py</span>
+<span class="sd">             sia_transformer generates dict features in a special gazetter format</span>
+<span class="sd">             See `fbsource/fbcode/pytext/models/embeddings/dict_embedding.py`</span>
+
+<span class="sd">             It generates word dict feature embeddings for each word token.</span>
+
+<span class="sd">             The output of SIATransformer after running it on `&lt;pad&gt;` token</span>
+<span class="sd">             looks as following:</span>
+<span class="sd">            OutputRecord(tokens=['&lt;', 'pad', '&gt;'],</span>
+<span class="sd">                         token_ranges=[(0, 1), (1, 4), (4, 5)],</span>
+<span class="sd">                         gazetteer_feats=['&lt;pad&gt;', '&lt;pad&gt;', '&lt;pad&gt;'],</span>
+<span class="sd">                         gazetteer_feat_lengths=[1, 1, 1],</span>
+<span class="sd">                         gazetteer_feat_weights=[0.0, 0.0, 0.0],</span>
+<span class="sd">                         characters=[['&lt;', '&lt;pad&gt;', '&lt;pad&gt;'],</span>
+<span class="sd">                                    ['p', 'a', 'd'], ['&gt;', '&lt;pad&gt;', '&lt;pad&gt;']],</span>
+<span class="sd">                         pretrained_token_embedding=[ ], dense_feats=None)</span>
+<span class="sd">        """</span>
+        <span class="n">gazetteer_feats</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">PAD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PAD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PAD</span><span class="p">]</span>
+        <span class="n">gazetteer_feat_lengths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">gazetteer_feat_weights</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="n">gazetteer_feat_id</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vocab_dict</span><span class="o">.</span><span class="n">stoi</span><span class="p">[</span><span class="n">gazetteer_feat</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"vocab_dict"</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">gazetteer_feat</span> <span class="ow">in</span> <span class="n">gazetteer_feats</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">gazetteer_feat_weights</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">gazetteer_feat_weights</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">gazetteer_feat_lengths</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">gazetteer_feat_lengths</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">gazetteer_feat_id</span><span class="p">,</span> <span class="n">gazetteer_feat_weights</span><span class="p">,</span> <span class="n">gazetteer_feat_lengths</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_word_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_word_feature</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_dict_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_dict_feature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_dict_feature</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_single_dict_feature</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">configure_task_integ_grads_embeddings</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Wraps Pytext's DocNN model embedding with `IntegratedGradientsEmbedding` for</span>
+<span class="sd">    a given input task.</span>
+<span class="sd">    IntegratedGradientsEmbedding allows to perform baseline related operations</span>
+
+<span class="sd">    Args</span>
+
+<span class="sd">        task: DocNN task reference</span>
+
+<span class="sd">    Returns</span>
+
+<span class="sd">        integrated_gradients_embedding_lst: The embedding layer which contains</span>
+<span class="sd">                    IntegratedGradientsEmbedding as a wrapper over the original</span>
+<span class="sd">                    embeddings of the model</span>
+
+<span class="sd">    """</span>
+    <span class="n">integrated_gradients_embedding_lst</span> <span class="o">=</span> <span class="n">configure_model_integ_grads_embeddings</span><span class="p">(</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">model</span>
+    <span class="p">)</span>
+    <span class="n">task</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">integrated_gradients_embedding_lst</span>
+    <span class="k">return</span> <span class="n">integrated_gradients_embedding_lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">configure_model_integ_grads_embeddings</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Wraps Pytext's DocNN model embedding with `IntegratedGradientsEmbedding`</span>
+<span class="sd">    IntegratedGradientsEmbedding allows to perform baseline related operations</span>
+
+<span class="sd">    Args</span>
+
+<span class="sd">        model: a reference to DocModel</span>
+
+<span class="sd">    Returns</span>
+
+<span class="sd">        integrated_gradients_embedding_lst: The embedding layer which contains</span>
+<span class="sd">                    IntegratedGradientsEmbedding as a wrapper over the original</span>
+<span class="sd">                    embeddings of the model</span>
+
+<span class="sd">    """</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">embedding</span>
+    <span class="n">integrated_gradients_embedding</span> <span class="o">=</span> <span class="n">PyTextInterpretableEmbedding</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EmbeddingList</span><span class="p">([</span><span class="n">integrated_gradients_embedding</span><span class="p">],</span> <span class="kc">False</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">reshape_word_features</span><span class="p">(</span><span class="n">word_features</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">     Creates one-sample batch for word features for sanity check purposes</span>
+
+<span class="sd">    Args</span>
+
+<span class="sd">        word_features: A tensor of diemnsions #words x #embeddings</span>
+
+<span class="sd">    Return</span>
+
+<span class="sd">        word_features: A tensor of dimensions 1 x #words x #embeddings</span>
+
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">word_features</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">reshape_dict_features</span><span class="p">(</span>
+    <span class="n">dict_feature_id_batch</span><span class="p">,</span> <span class="n">dict_weight_batch</span><span class="p">,</span> <span class="n">dict_seq_len_batch</span><span class="p">,</span> <span class="n">seq_length</span><span class="p">,</span> <span class="n">idx</span>
+<span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Creates one-sample batch for dict features for sanity check purposes</span>
+<span class="sd">    It reads and reshapes id, weight and seq_length feature arrays for given</span>
+<span class="sd">    input index `idx` from the input batch</span>
+
+<span class="sd">    Args</span>
+
+<span class="sd">        dict_feature_id_batch: The batch tensor for ids</span>
+<span class="sd">        dict_weight_matrix: The batch tensor for weights</span>
+<span class="sd">        dict_seq_len_matrix: The batch tensor for sequence length</span>
+<span class="sd">        seq_length: The number of tokens per sequence</span>
+<span class="sd">        idx: The index of sample in the batch</span>
+
+<span class="sd">    Return</span>
+
+<span class="sd">        dict_feature_ids: A tensor of dimensions [ bsz x # dict feature embeddings]</span>
+<span class="sd">        dict_feature_weights: [ bsz x # dict feature embeddings]</span>
+<span class="sd">        dict_feature_lens: [ bsz * seq_length ]</span>
+
+<span class="sd">    """</span>
+    <span class="n">dict_feature_ids</span> <span class="o">=</span> <span class="n">dict_feature_id_batch</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dict_feature_weights</span> <span class="o">=</span> <span class="n">dict_weight_batch</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dict_feature_lens</span> <span class="o">=</span> <span class="n">dict_seq_len_batch</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">dict_feature_ids</span><span class="p">,</span> <span class="n">dict_feature_weights</span><span class="p">,</span> <span class="n">dict_feature_lens</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

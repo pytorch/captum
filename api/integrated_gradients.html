@@ -62,7 +62,7 @@ single tensor with exactly the same dimensions as inputs.
 If inputs is a tuple of tensors, baselines must also be
 a tuple of tensors, with matching dimensions to inputs.
 Default: zero tensor for each input tensor</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -98,7 +98,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – <p>If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -108,23 +108,20 @@ tensors or any arbitrary python types. These arguments
 are provided to forward_func in order following the
 arguments in inputs.
 For a tensor, the first dimension of the tensor must
-correspond to the number of examples. It will be repeated</p>
-<blockquote>
-<div><p>for each of <cite>n_steps</cite> along the integrated path.</p>
-</div></blockquote>
-<p>For all other types, the given argument is used for
-all forward evaluations.
+correspond to the number of examples. It will be
+repeated for each of <cite>n_steps</cite> along the integrated
+path. For all other types, the given argument is used
+for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
-Default: None</p>
-</p></li>
-<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
+Default: None</p></li>
+<li><p><strong>n_steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – The number of steps used by the approximation
 method. Default: 50.</p></li>
 <li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Method for approximating the integral,
 one of <cite>riemann_right</cite>, <cite>riemann_left</cite>, <cite>riemann_middle</cite>,
 <cite>riemann_trapezoid</cite> or <cite>gausslegendre</cite>.
 Default: <cite>gausslegendre</cite> if no method is provided.</p></li>
-<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
+<li><p><strong>internal_batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Divides total #steps * #examples
 data points into chunks of size internal_batch_size,
 which are computed (forward / backward passes)
 sequentially.
@@ -134,7 +131,7 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
-<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to return
+<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to return
 convergence delta or not. If <cite>return_convergence_delta</cite>
 is set to True convergence delta will be returned in
 a tuple following attributions.
@@ -199,7 +196,7 @@ override both <cite>compute_convergence_delta</cite> and <cite>has_convergence_d
 provides a convergence delta (aka approximation error) or not.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -247,7 +244,18 @@ provides a convergence delta (aka approximation error) or not.</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

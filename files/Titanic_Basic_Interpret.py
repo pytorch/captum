@@ -7,7 +7,7 @@
 #   
 #   **Note:** Before running this tutorial, please install the scipy, pandas, and matplotlib packages.
 
-# In[1]:
+# In[2]:
 
 
 # Initial imports
@@ -29,7 +29,7 @@ import pandas as pd
 
 # We will begin by importing and cleaning the dataset. Download the dataset from http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv and update the cell below with the path to the dataset csv.
 
-# In[2]:
+# In[3]:
 
 
 # Download dataset from: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv
@@ -37,7 +37,7 @@ import pandas as pd
 dataset_path = "titanic3.csv"
 
 
-# In[3]:
+# In[4]:
 
 
 # Read dataset from csv file.
@@ -46,7 +46,7 @@ titanic_data = pd.read_csv(dataset_path)
 
 # With the data loaded, we now preprocess the data by converting some categorical features such as gender, location of embarcation, and passenger class into one-hot encodings (separate feature columns for each class with 0 / 1). We also remove some features that are more difficult to analyze, such as name, and fill missing values in age and fare with the average values.
 
-# In[4]:
+# In[5]:
 
 
 titanic_data = pd.concat([titanic_data,
@@ -77,7 +77,7 @@ titanic_data = titanic_data.drop(['name','ticket','cabin','boat','body','home.de
 
 # We now convert the data to numpy arrays and separate the training and test sets.
 
-# In[5]:
+# In[6]:
 
 
 # Set random seed for reproducibility.
@@ -100,7 +100,7 @@ test_labels = labels[test_indices]
 
 # We are now ready to define the neural network architecture we will use for the task. We have defined a simple architecture using 2 hidden layers, the first with 12 hidden units and the second with 8 hidden units, each with Sigmoid non-linearity. The final layer performs a softmax operation and has 2 units, corresponding to the outputs of either survived (1) or not survived (0).
 
-# In[6]:
+# In[8]:
 
 
 import torch
@@ -123,33 +123,39 @@ class TitanicSimpleNNModel(nn.Module):
         return self.softmax(self.linear3(sigmoid_out2))
 
 
-# We train the network using the training data for 200 epochs.
+# We can either use a pretrained model or train the network using the training data for 200 epochs. Note that the results of later steps may not match if retraining.
 
-# In[7]:
+# In[12]:
 
-
-criterion = nn.CrossEntropyLoss()
-num_epochs = 200
 
 net = TitanicSimpleNNModel()
-optimizer = torch.optim.Adam(net.parameters(), lr=0.1)
-input_tensor = torch.from_numpy(train_features).type(torch.FloatTensor)
-label_tensor = torch.from_numpy(train_labels)
-for epoch in range(num_epochs):    
-    output = net(input_tensor)
-    loss = criterion(output, label_tensor)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    if epoch % 20 == 0:
-        print ('Epoch {}/{} => Loss: {:.2f}'.format(epoch+1, num_epochs, loss.item()))
+USE_PRETRAINED_MODEL = True
 
-    
+if USE_PRETRAINED_MODEL:
+    net.load_state_dict(torch.load('models/titanic_model.pt'))
+    print("Model Loaded!")
+else:
+    criterion = nn.CrossEntropyLoss()
+    num_epochs = 200
+
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.1)
+    input_tensor = torch.from_numpy(train_features).type(torch.FloatTensor)
+    label_tensor = torch.from_numpy(train_labels)
+    for epoch in range(num_epochs):    
+        output = net(input_tensor)
+        loss = criterion(output, label_tensor)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        if epoch % 20 == 0:
+            print ('Epoch {}/{} => Loss: {:.2f}'.format(epoch+1, num_epochs, loss.item()))
+
+    torch.save(net.state_dict(), 'models/titanic_model.pt')
 
 
 # We can now evaluate the training and test accuracies of our model.
 
-# In[8]:
+# In[13]:
 
 
 out_probs = net(input_tensor).detach().numpy()
@@ -157,7 +163,7 @@ out_classes = np.argmax(out_probs, axis=1)
 print("Train Accuracy:", sum(out_classes == train_labels) / len(train_labels))
 
 
-# In[9]:
+# In[14]:
 
 
 test_input_tensor = torch.from_numpy(test_features).type(torch.FloatTensor)
@@ -172,7 +178,7 @@ print("Test Accuracy:", sum(out_classes == test_labels) / len(test_labels))
 
 # To apply integrated gradients, we first create an IntegratedGradients object, providing the model object.
 
-# In[10]:
+# In[15]:
 
 
 ig = IntegratedGradients(net)
@@ -184,7 +190,7 @@ ig = IntegratedGradients(net)
 # 
 # The returned values of the attribute method are the attributions, which match the size of the given inputs, and delta, which approximates the error between the approximated integral and true integral.
 
-# In[11]:
+# In[16]:
 
 
 test_input_tensor.requires_grad_()
@@ -194,7 +200,7 @@ attr = attr.detach().numpy()
 
 # To understand these attributions, we can first average them across all the inputs and print / visualize the average attribution for each feature.
 
-# In[12]:
+# In[17]:
 
 
 # Helper method to print importances and visualize distribution
@@ -218,7 +224,7 @@ visualize_importances(feature_names, np.mean(attr, axis=0))
 # 
 # For instance, we can visualize the distribution of attributions for sibsp, the number of siblings / spouses.
 
-# In[13]:
+# In[18]:
 
 
 plt.hist(attr[:,1], 100);
@@ -229,7 +235,7 @@ plt.title("Distribution of Sibsp Attribution Values");
 
 # To better understand this, we can bucket the examples by the value of the sibsp feature and plot the average attribution for the feature. In the plot below, the size of the dot is proportional to the number of examples with that value.
 
-# In[14]:
+# In[19]:
 
 
 bin_means, bin_edges, _ = stats.binned_statistic(test_features[:,1], attr[:,1], statistic='mean', bins=6)
@@ -250,7 +256,7 @@ plt.ylabel("Average Attribution");
 
 # To use Layer Conductance, we create a LayerConductance object passing in the model as well as the module (layer) whose output we would like to understand. In this case, we choose net.sigmoid1, the output of the first hidden layer.
 
-# In[15]:
+# In[20]:
 
 
 cond = LayerConductance(net, net.sigmoid1)
@@ -258,7 +264,7 @@ cond = LayerConductance(net, net.sigmoid1)
 
 # We can now obtain the conductance values for all the test examples by calling attribute on the LayerConductance object. LayerConductance also requires a target index for networks with mutliple outputs, defining the index of the output for which gradients are computed. Similar to feature attributions, we provide target = 1, corresponding to survival. LayerConductance also utilizes a baseline, but we simply use the default zero baseline as in integrated gradients.
 
-# In[16]:
+# In[21]:
 
 
 cond_vals = cond.attribute(test_input_tensor,target=1)
@@ -267,7 +273,7 @@ cond_vals = cond_vals.detach().numpy()
 
 # We can begin by visualizing the average conductance for each neuron.
 
-# In[17]:
+# In[22]:
 
 
 visualize_importances(range(12),np.mean(cond_vals, axis=0),title="Average Neuron Importances", axis_title="Neurons")
@@ -275,7 +281,7 @@ visualize_importances(range(12),np.mean(cond_vals, axis=0),title="Average Neuron
 
 # We can also look at the distribution of each neuron's attributions. Below we look at the distributions for neurons 7 and 9, and we can confirm that their attribution distributions are very close to 0, suggesting they are not learning substantial features.
 
-# In[18]:
+# In[23]:
 
 
 plt.hist(cond_vals[:,9], 100);
@@ -287,7 +293,7 @@ plt.title("Neuron 7 Distribution");
 
 # Now, we can look at the distributions of neurons 0 and 10, which appear to be learning strong features negatively correlated with survival.
 
-# In[19]:
+# In[24]:
 
 
 plt.hist(cond_vals[:,0], 100);
@@ -303,7 +309,7 @@ plt.title("Neuron 10 Distribution");
 
 # To use Neuron Conductance, we create a NeuronConductance object, analogously to Conductance, passing in the model as well as the module (layer) whose output we would like to understand, in this case, net.sigmoid1, as before.
 
-# In[20]:
+# In[25]:
 
 
 neuron_cond = NeuronConductance(net, net.sigmoid1)
@@ -311,19 +317,19 @@ neuron_cond = NeuronConductance(net, net.sigmoid1)
 
 # We can now obtain the neuron conductance values for all the test examples by calling attribute on the NeuronConductance object. Neuron Conductance requires the neuron index in the target layer for which attributions are requested as well as the target index for networks with mutliple outputs, similar to layer conductance. As before, we provide target = 1, corresponding to survival, and compute neuron conductance for neurons 0 and 10, the significant neurons identified above. The neuron index can be provided either as a tuple or as just an integer if the layer output is 1-dimensional.
 
-# In[21]:
+# In[26]:
 
 
 neuron_cond_vals_10 = neuron_cond.attribute(test_input_tensor, neuron_index=10, target=1)
 
 
-# In[22]:
+# In[27]:
 
 
 neuron_cond_vals_0 = neuron_cond.attribute(test_input_tensor, neuron_index=0, target=1)
 
 
-# In[23]:
+# In[28]:
 
 
 visualize_importances(feature_names, neuron_cond_vals_0.mean(dim=0).detach().numpy(), title="Average Feature Importances for Neuron 0")
@@ -331,7 +337,7 @@ visualize_importances(feature_names, neuron_cond_vals_0.mean(dim=0).detach().num
 
 # From the data above, it appears that the primary input feature used by neuron 0 is age, with limited importance for all other features.
 
-# In[24]:
+# In[29]:
 
 
 visualize_importances(feature_names, neuron_cond_vals_10.mean(dim=0).detach().numpy(), title="Average Feature Importances for Neuron 10")

@@ -32,13 +32,13 @@
 <span class="kn">from</span> <span class="nn">.._utils.batching</span> <span class="k">import</span> <span class="n">_batched_operator</span>
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">_reshape_and_sum</span><span class="p">,</span>
-    <span class="n">_extend_index_list</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">validate_input</span><span class="p">,</span>
     <span class="n">_format_attributions</span><span class="p">,</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">_verify_select_column</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">compute_layer_gradients_and_eval</span>
 
@@ -141,10 +141,10 @@
 <span class="sd">                            are provided to forward_func in order following the</span>
 <span class="sd">                            arguments in inputs.</span>
 <span class="sd">                            For a tensor, the first dimension of the tensor must</span>
-<span class="sd">                            correspond to the number of examples. It will be repeated</span>
-<span class="sd">                             for each of `n_steps` along the integrated path.</span>
-<span class="sd">                            For all other types, the given argument is used for</span>
-<span class="sd">                            all forward evaluations.</span>
+<span class="sd">                            correspond to the number of examples. It will be</span>
+<span class="sd">                            repeated for each of `n_steps` along the integrated</span>
+<span class="sd">                            path. For all other types, the given argument is used</span>
+<span class="sd">                            for all forward evaluations.</span>
 <span class="sd">                            Note that attributions are not computed with respect</span>
 <span class="sd">                            to these arguments.</span>
 <span class="sd">                            Default: None</span>
@@ -243,13 +243,10 @@
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Creates list of target neuron across batched examples (dimension 0)</span>
-        <span class="n">indices</span> <span class="o">=</span> <span class="n">_extend_index_list</span><span class="p">(</span><span class="n">total_batch</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">)</span>
-
         <span class="c1"># Multiplies by appropriate gradient of output with respect to hidden neurons</span>
         <span class="c1"># mid_grads is a 1D Tensor of length num_steps*internal_batch_size,</span>
         <span class="c1"># containing mid layer gradient for each input step.</span>
-        <span class="n">mid_grads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">layer_gradients</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="n">mid_grads</span> <span class="o">=</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">layer_gradients</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">)</span>
 
         <span class="n">scaled_input_gradients</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">input_grad</span>
@@ -320,7 +317,18 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

@@ -8,7 +8,6 @@ Captum.Utils
 .. autofunction:: format_input
 .. autofunction:: _format_attributions
 .. autofunction:: zeros
-.. autofunction:: _extend_index_list
 .. autofunction:: _reshape_and_sum
 .. autofunction:: _run_forward
 .. autoclass:: MaxList

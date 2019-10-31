@@ -24,8 +24,87 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="captum-models">
-<h1>Captum.Models<a class="headerlink" href="#captum-models" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-captum.attr._models.pytext">
+<span id="captum-models"></span><h1>Captum.Models<a class="headerlink" href="#module-captum.attr._models.pytext" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">PyTextInterpretableEmbedding</code><span class="sig-paren">(</span><em class="sig-param">embeddings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>In PyText DocNN models we need a way to access word embedding layers,
+generate the embeddings and subtract the baseline.
+To do so, we separate embedding layers from the model, compute the embeddings
+separately and do all operations needed outside of the model.
+The original embedding layer is being replaced by <cite>PyTextInterpretableEmbedding</cite>
+layer which passes precomputed embedding vectors to lower layers.</p>
+<dl class="method">
+<dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>The forward pass of embedding layer. This can be for the text or any
+type of embedding.</p>
+<p>Args</p>
+<blockquote>
+<div><p>input: Input embeddings tensor</p>
+</div></blockquote>
+<p>Return</p>
+<blockquote>
+<div><dl class="simple">
+<dt>output: Output tensor is the same as input. It passes through</dt><dd><p>the embedding tensors to lower layers without any
+modifications</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+<dl class="method">
+<dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map">
+<code class="sig-name descname">get_attribution_map</code><span class="sig-paren">(</span><em class="sig-param">attributions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.get_attribution_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>After attribution scores are computed for an input embedding vector
+we need to split it up into attribution sub tensors for each
+feature type: word, dict and other types</p>
+<p>TODO: we can potentally also output tuples of attributions. This might be
+a better option. We’ll work on this in a separate diff.</p>
+<p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>attributions: A tensor that contains attribution values for each input</dt><dd><p>field. It usually has the same dimensions as the input
+tensor</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>Return</p>
+<blockquote>
+<div><p>attribution_map: A dictionary of feature_type and attribution values</p>
+</div></blockquote>
+</dd></dl>
+</dd></dl>
+<dl class="class">
+<dt id="captum.attr._models.pytext.BaselineGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">BaselineGenerator</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">data_handler</em>, <em class="sig-param">device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an example input baseline generator for DocNN model which uses
+word and dict features.</p>
+<dl class="method">
+<dt id="captum.attr._models.pytext.BaselineGenerator.generate_baseline">
+<code class="sig-name descname">generate_baseline</code><span class="sig-paren">(</span><em class="sig-param">integ_grads_embeddings</em>, <em class="sig-param">seq_length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator.generate_baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator.generate_baseline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates baseline for input word and dict features. In the future we
+will extend it to support char and other features as well.
+This baseline is entirely based on the <cite>&lt;pad&gt;</cite> token.</p>
+<p>Args</p>
+<blockquote>
+<div><dl class="simple">
+<dt>integ_grads_embeddings: A reference to integrated gradients embedding</dt><dd><p>layer</p>
+</dd>
+</dl>
+<p>seq_length: The length of each sequence which depends on batch size</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return</dt><dd><dl class="simple">
+<dt>baseline: A tuple of feature baselines</dt><dd><p>Each feature type has a corresponding baseline tensor
+in the tuple.
+Currently only Dict and Word feature types are supported</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
 </div>
 </div>
 </div>
@@ -67,7 +146,18 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

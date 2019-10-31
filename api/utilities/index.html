@@ -92,11 +92,11 @@ be represented in these modes.</p>
 </dl>
 <p>Default: <cite>absolute_value</cite></p>
 </p></li>
-<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
+<li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis
 on which to visualize. If None is provided, then a new figure
 and axis are created.
 Default: None</p></li>
-<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a><em>, </em><em>optional</em>) – Top attribution values which correspond
+<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Top attribution values which correspond
 to a total of outlier_perc percentage of the total attribution
 are set to 1 and scaling is performed using the minimum of
 these values. For sign=`all`, outliers and scale value are
@@ -108,7 +108,7 @@ sign, “Blues” for absolute value, “Greens” for positive sign,
 and a spectrum from red to green for all. Note that this
 argument is only used for visualizations displaying heatmaps.
 Default: None</p></li>
-<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
+<li><p><strong>alpha_overlay</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha to set for heatmap when using
 <cite>blended_heat_map</cite> visualization mode, which overlays the
 heat map over the greyscaled original image.
 Default: 0.5</p></li>
@@ -121,7 +121,7 @@ Default: False</p></li>
 <li><p><strong>title</strong> (<em>string</em><em>, </em><em>optional</em>) – Title string for plot. If None, no title is
 set.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (6,6)</p></li>
 <li><p><strong>use_pyplot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
@@ -193,7 +193,7 @@ string argument for sign to visualize_image_attr.</p></li>
 a title string for each plot. If None is provided, no titles
 are added to subplots.
 Default: None</p></li>
-<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
+<li><p><strong>fig_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – Size of figure created.
 Default: (8, 6)</p></li>
 <li><p><strong>use_pyplot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, uses pyplot to create and show
 figure and displays the figure after creating. If False,
@@ -267,40 +267,38 @@ precomputed embedding vectors to the layers below.</p>
 <dd><p>The forward function of a wrapper embedding layer that takes and returns
 embedding layer. It allows embeddings to be created outside of the model
 and passes them seamlessly to the preceding layers of the model.</p>
-<p>Args</p>
-<blockquote>
-<div><dl class="simple">
-<dt>inputs (tensor): Input embedding tensor containing the embedding vectors</dt><dd><p>of each word or token in the sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>tensor</em>) – Input embedding tensor containing the embedding vectors
+of each word or token in the sequence.</p>
 </dd>
-</dl>
-</div></blockquote>
-<p>Return</p>
-<blockquote>
-<div><dl class="simple">
-<dt>output (tensor): Returns output tensor which is the same as input tensor.</dt><dd><p>It passes embedding tensors to lower layers without any
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns output tensor which is the same as input tensor.
+It passes embedding tensors to lower layers without any
 modifications.</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tensor</p>
+</dd>
 </dl>
-</div></blockquote>
 </dd></dl>
 <dl class="method">
 <dt id="captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">
 <code class="sig-name descname">indices_to_embeddings</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maps indices to corresponding embedding vectors. E.g. word embeddings</p>
-<p>Args</p>
-<blockquote>
-<div><dl class="simple">
-<dt>input (tensor): A tensor of input indices. A typical example of an</dt><dd><p>input index is word or token index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>tensor</em>) – A tensor of input indices. A typical example of an
+input index is word or token index.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A tensor of word embeddings corresponding to the
+indices specified in the input</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tensor</p>
 </dd>
 </dl>
-</div></blockquote>
-<p>Returns</p>
-<blockquote>
-<div><dl class="simple">
-<dt>embedding (tensor): A tensor of word embeddings corresponding to the</dt><dd><p>indices specified in the input</p>
-</dd>
-</dl>
-</div></blockquote>
 </dd></dl>
 </dd></dl>
 </div>
@@ -318,21 +316,25 @@ index of the reference token in the vocabulary as an argument to
 <code class="sig-name descname">generate_reference</code><span class="sig-paren">(</span><em class="sig-param">sequence_length</em>, <em class="sig-param">device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generated reference tensor of given <cite>sequence_length</cite> using
 <cite>reference_token_idx</cite>.</p>
-<dl>
-<dt>Args</dt><dd><p>sequence_length (int): The length of the reference sequence
-device (torch.device): The device on which the reference tensor will</p>
-<blockquote>
-<div><p>be created.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The length of the reference sequence</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – The device on which the reference tensor will
+be created.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A sequence of reference token with shape:</dt><dd><p>[sequence_length]</p>
 </dd>
 </dl>
-<p>Returns</p>
-<blockquote>
-<div><dl class="simple">
-<dt>reference (tensor): A sequence of reference token with shape:</dt><dd><p>[sequence_length]</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tensor</p>
 </dd>
 </dl>
-</div></blockquote>
 </dd></dl>
 </dd></dl>
 <dl class="function">
@@ -352,22 +354,26 @@ dot in order to access the embedding layer and update its value.</p>
 <code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">configure_interpretable_embedding_layer</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">embedding_layer_name='embedding'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.configure_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method wraps model’s embedding layer with an interpretable embedding
 layer that allows us to access the embeddings through their indices.</p>
-<p>Args</p>
-<blockquote>
-<div><p>model (torch.nn.Model): An instance of PyTorch model that contains embeddings.
-embedding_layer_name (str, optional): The name of the embedding layer</p>
-<blockquote>
-<div><p>in the <cite>model</cite> that we would like to make interpretable.</p>
-</div></blockquote>
-</div></blockquote>
-<p>Returns</p>
-<blockquote>
-<div><dl class="simple">
-<dt>interpretable_emb (tensor): An instance of <cite>InterpretableEmbeddingBase</cite></dt><dd><p>embedding layer that wraps model’s embedding layer that is being
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Model</em>) – An instance of PyTorch model that contains embeddings.</p></li>
+<li><p><strong>embedding_layer_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the embedding layer
+in the <cite>model</cite> that we would like to make interpretable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>An instance of <cite>InterpretableEmbeddingBase</cite></dt><dd><p>embedding layer that wraps model’s embedding layer that is being
 accessed through <cite>embedding_layer_name</cite>.</p>
 </dd>
 </dl>
-</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>interpretable_emb (tensor)</p>
+</dd>
+</dl>
 <p>Examples:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Let's assume that we have a DocumentClassifier model that</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># has a word embedding layer named 'embedding'.</span>
@@ -398,16 +404,17 @@ accessed through <cite>embedding_layer_name</cite>.</p>
 <code class="sig-prename descclassname">captum.attr._models.base.</code><code class="sig-name descname">remove_interpretable_embedding_layer</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">interpretable_emb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.base.remove_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes interpretable embedding layer and sets back original
 embedding layer in the model.</p>
-<p>Args</p>
-<blockquote>
-<div><p>model (torch.nn.Module): An instance of PyTorch model that contains embeddings
-interpretable_emb (tensor): An instance of <cite>InterpretableEmbeddingBase</cite></p>
-<blockquote>
-<div><p>that was originally created in
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
+<li><p><strong>interpretable_emb</strong> (<em>tensor</em>) – An instance of <cite>InterpretableEmbeddingBase</cite>
+that was originally created in
 <cite>configure_interpretable_embedding_layer</cite> function and has
-to be removed after interpretation is finished.</p>
-</div></blockquote>
-</div></blockquote>
+to be removed after interpretation is finished.</p></li>
+</ul>
+</dd>
+</dl>
 <p>Examples:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Let's assume that we have a DocumentClassifier model that</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># has a word embedding layer named 'embedding'.</span>
@@ -534,7 +541,7 @@ override both <cite>compute_convergence_delta</cite> and <cite>has_convergence_d
 provides a convergence delta (aka approximation error) or not.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -552,12 +559,12 @@ the size of the layer output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.2.0a0+8554416 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of model’s forward
 function.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.2.0a0+8554416 ))"><em>torch.nn.Module</em></a>) – Layer for which output attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which output attributions are computed.
 Output size of attribute matches that of layer output.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model, which allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -565,6 +572,47 @@ then it is not neccesary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="captum.attr._utils.attribution.LayerAttribution.interpolate">
+<code class="sig-name descname">interpolate</code><span class="sig-paren">(</span><em class="sig-param">interpolate_dims</em>, <em class="sig-param">interpolate_mode='nearest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution.interpolate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.LayerAttribution.interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates given 3D, 4D or 5D layer attribution to given dimensions.
+This is often utilized to upsample the attribution of a convolutional layer
+to the size of an input, which allows visualizing in the input space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer_attribution</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.Tensor</em></a>) – Tensor of given layer attributions.</p></li>
+<li><p><strong>interpolate_dims</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a>) – Upsampled dimensions. The
+number of elements must be the number of dimensions
+of layer_attribution - 2, since the first dimension
+corresponds to number of examples and the second is
+assumed to correspond to the number of channels.</p></li>
+<li><p><strong>interpolate_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Method for interpolation, which
+must be a valid input interpolation mode for
+torch.nn.functional. These methods are
+“nearest”, “area”, “linear” (3D-only), “bilinear”
+(4D-only), “bicubic” (4D-only), “trilinear” (5D-only)
+based on the number of dimensions of the given layer
+attribution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Upsampled layer attributions with first 2 dimensions matching
+slayer_attribution and remaining dimensions given by
+interpolate_dims.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><em>tensor</em> of upsampled <strong>attributions</strong></p>
+</dd>
+</dl>
+</dd></dl>
 </dd></dl>
 </div>
 <div class="section" id="module-captum.attr._utils.attribution">
@@ -582,12 +630,12 @@ always matches the size of the input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.2.0a0+8554416 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
+<li><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of model’s forward
 function.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.2.0a0+8554416 ))"><em>torch.nn.Module</em></a>) – Layer for which output attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which output attributions are computed.
 Output size of attribute matches that of layer output.</p></li>
-<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
+<li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model, which allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
@@ -605,7 +653,7 @@ its logic accordingly.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> – A single high dimensional input tensor or a tuple of them.</p></li>
-<li><p><strong>neuron_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – Tuple providing index of neuron in output
+<li><p><strong>neuron_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a>) – Tuple providing index of neuron in output
 of given layer for which attribution is desired. Length of
 this tuple must be one less than the number of
 dimensions in the output of the given layer (since
@@ -641,7 +689,7 @@ forward function, which most commonly is the forward function of the model
 that we want to interpret or the model itself.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.2.0a0+8554416 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – This can either be an instance
 of pytorch model or any modification of model’s forward
 function.</p>
 </dd>
@@ -659,21 +707,19 @@ Returned delta of this method is defined as above stated difference.</p>
 <p>This implementation assumes that both the <cite>start_point</cite> and <cite>end_point</cite> have
 the same shape and dimensionality. It also assumes that the target must have
 the same number of examples as the <cite>start_point</cite> and the <cite>end_point</cite> in case
-it is provided in form of a list or a non-singleton tensor.
-:param attributions: Precomputed attribution</p>
-<blockquote>
-<div><p>scores. The user can compute those using any attribution
+it is provided in form of a list or a non-singleton tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributions</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Precomputed attribution
+scores. The user can compute those using any attribution
 algorithm. It is assumed the the shape and the
 dimensionality of attributions must match the shape and
 the dimensionality of <cite>start_point</cite> and <cite>end_point</cite>.
 It also assumes that the attribution tensor’s
 dimension 0 corresponds to the number of
 examples, and if multiple input tensors are provided,
-the examples must be aligned appropriately.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+the examples must be aligned appropriately.</p></li>
 <li><p><strong>start_point</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – <cite>start_point</cite>
 is passed as an input to model’s forward function. It
 is the starting point of attributions’ approximation.
@@ -684,7 +730,7 @@ is passed as an input to model’s forward function. It
 is the end point of attributions’ approximation.
 It is assumed that both <cite>start_point</cite> and <cite>end_point</cite>
 have the same shape and dimensionality.</p></li>
-<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
 If the network returns a scalar value per example,
@@ -720,7 +766,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -807,7 +853,18 @@ of those values, if necessary.</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

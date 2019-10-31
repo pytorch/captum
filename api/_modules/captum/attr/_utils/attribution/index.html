@@ -27,6 +27,7 @@
 <h1>Source code for captum.attr._utils.attribution</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
 <span class="kn">from</span> <span class="nn">.common</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">_run_forward</span><span class="p">,</span>
@@ -166,7 +167,9 @@
 <span class="sd">        the same shape and dimensionality. It also assumes that the target must have</span>
 <span class="sd">        the same number of examples as the `start_point` and the `end_point` in case</span>
 <span class="sd">        it is provided in form of a list or a non-singleton tensor.</span>
+
 <span class="sd">        Args:</span>
+
 <span class="sd">                attributions (tensor or tuple of tensors): Precomputed attribution</span>
 <span class="sd">                            scores. The user can compute those using any attribution</span>
 <span class="sd">                            algorithm. It is assumed the the shape and the</span>
@@ -310,7 +313,38 @@
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
 <span class="sd">                        then it is not neccesary to provide this argument.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.LayerAttribution.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">interpolate_mode</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Interpolates given 3D, 4D or 5D layer attribution to given dimensions.</span>
+<span class="sd">        This is often utilized to upsample the attribution of a convolutional layer</span>
+<span class="sd">        to the size of an input, which allows visualizing in the input space.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            layer_attribution (torch.Tensor):  Tensor of given layer attributions.</span>
+<span class="sd">            interpolate_dims (int or tuple): Upsampled dimensions. The</span>
+<span class="sd">                        number of elements must be the number of dimensions</span>
+<span class="sd">                        of layer_attribution - 2, since the first dimension</span>
+<span class="sd">                        corresponds to number of examples and the second is</span>
+<span class="sd">                        assumed to correspond to the number of channels.</span>
+<span class="sd">            interpolate_mode (str):  Method for interpolation, which</span>
+<span class="sd">                        must be a valid input interpolation mode for</span>
+<span class="sd">                        torch.nn.functional. These methods are</span>
+<span class="sd">                        "nearest", "area", "linear" (3D-only), "bilinear"</span>
+<span class="sd">                        (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)</span>
+<span class="sd">                        based on the number of dimensions of the given layer</span>
+<span class="sd">                        attribution.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* of upsampled **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor*):</span>
+<span class="sd">                Upsampled layer attributions with first 2 dimensions matching</span>
+<span class="sd">                slayer_attribution and remaining dimensions given by</span>
+<span class="sd">                interpolate_dims.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
@@ -408,7 +442,18 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

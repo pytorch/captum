@@ -43,7 +43,7 @@ commands:
     steps:
       - run:
           name: "Run unit tests"
-          command: pytest -ra --cov=. --cov-report term-missing
+          command: python -m pytest -ra --cov=. --cov-report term-missing
 
   sphinx:
     description: "Run sphinx"
@@ -62,7 +62,7 @@ commands:
             if [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               git config --global user.email "docusaurus-bot@users.noreply.github.com"
               git config --global user.name "Captum website deployment script"
-              echo "machine github.com login docusaurus-bot password $GITHUB_TOKEN" > ~/.netrc
+              echo "machine github.com login docusaurus-bot password $DOCUSAURUS_GITHUB_TOKEN" > ~/.netrc
             fi
 
   deploy_site:
@@ -72,17 +72,47 @@ commands:
           name: "Deploy website to GitHub Pages"
             # TODO: make the installation above conditional on there being relevant changes (no need to install if there are none)
           command: |
-            if ! git diff-tree --no-commit-id --name-only -r HEAD | grep -E "(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
+            if ! git diff --name-only HEAD^ | grep -E "(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
               echo "Skipping deploy. No relevant website files have changed"
             elif [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
               ./scripts/build_docs.sh -b
               cd website
-              GIT_USER=docusaurus-bot USE_SSH=false yarn run publish-gh-pages
+              GIT_USER=docusaurus-bot yarn run publish-gh-pages
             else
               echo "Skipping deploy."
             fi
 
+  simple_pip_install:
+    description: "Simple install of Captum via pip. Does not include extra dependencies such as yarn and nodejs needed for building insights."
+    steps:
+      - run:
+          name: "Simple PIP install"
+          command: python -m pip install -e .[dev]
+
+  py_3_7_setup:
+    description: "Set python version to 3.7 and install pip and pytest"
+    steps:
+      - run:
+          name: "Switch to Python v3.7"
+          command: |
+            pyenv versions
+            pyenv global 3.7.0
+            sudo python -m pip install pip
+            sudo python -m pip install pytest
+
+  install_cuda:
+    description: "Install CUDA for GPU Machine"
+    steps:
+      - run:
+          name: "Install CUDA"
+          command: |
+            wget http://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
+            sudo apt-get update
+            export OS_RELEASE=$(uname -r)
+            sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.243-418.87.00_1.0-1_amd64.deb
+            sudo apt-get update
+            sudo apt-get --yes --force-yes install cuda
 
 jobs:
 
@@ -122,6 +152,31 @@ jobs:
       - unit_tests
       - sphinx
 
+  test_cuda_multi_gpu:
+    machine:
+      image: ubuntu-1604:201903-01
+    resource_class: gpu.large
+    steps:
+      - checkout
+      - install_cuda
+      - py_3_7_setup
+      - simple_pip_install
+      - unit_tests
+
+  auto_deploy_site:
+    docker:
+      - image: circleci/python:3.6.8-node
+    steps:
+      - checkout
+      - pip_install:
+          args: "-n -f -d"
+      - lint_flake8
+      - lint_black
+      - unit_tests
+      - sphinx
+      - configure_github_bot
+      - deploy_site
+
 
 aliases:
 
@@ -142,3 +197,13 @@ workflows:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
           filters: *exclude_ghpages_fbconfig
+      - test_cuda_multi_gpu:
+          filters: *exclude_ghpages_fbconfig
+
+  auto_deploy_site:
+    jobs:
+      - auto_deploy_site:
+          filters:
+            branches:
+              only:
+                - master

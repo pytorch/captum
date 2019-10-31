@@ -30,7 +30,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
-
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">signature</span>
 
 <span class="kn">from</span> <span class="nn">.approximation_methods</span> <span class="k">import</span> <span class="n">SUPPORTED_METHODS</span>
 
@@ -38,6 +38,14 @@
 <span class="k">class</span> <span class="nc">ExpansionTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">repeat_interleave</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<span class="k">def</span> <span class="nf">safe_div</span><span class="p">(</span><span class="n">denom</span><span class="p">,</span> <span class="n">quotient</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        A simple utility function to perform `denom / quotient`</span>
+<span class="sd">        if the statement is undefined =&gt; result will be `default_value`</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">denom</span> <span class="o">/</span> <span class="n">quotient</span> <span class="k">if</span> <span class="n">quotient</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">default_value</span>
 
 
 <span class="k">def</span> <span class="nf">validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
@@ -120,10 +128,18 @@
 
 <span class="k">def</span> <span class="nf">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">baselines</span> <span class="o">=</span> <span class="n">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="n">baselines</span> <span class="o">=</span> <span class="p">(</span><span class="n">baselines</span><span class="p">,)</span>
+
+    <span class="c1"># TODO create a separate PR to support scalar baselines</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="p">),</span> <span class="s2">"baselines input argument must be either a torch.Tensor or a tuple </span><span class="se">\</span>
+<span class="s2">         of those however </span><span class="si">{}</span><span class="s2"> detected"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="nb">type</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">baselines</span>
 
@@ -132,6 +148,28 @@
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="n">baselines</span> <span class="o">=</span> <span class="n">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
+
+
+<span class="c1"># This function can potentially be merged with the `format_baseline` function</span>
+<span class="c1"># however, since currently not all algorithms support baselines of type</span>
+<span class="c1"># callable this will be kept in a separate function.</span>
+<span class="k">def</span> <span class="nf">_format_callable_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">baselines</span><span class="p">):</span>
+        <span class="c1"># Note: this assumes that if baselines is a function and if it takes</span>
+        <span class="c1"># arguments, then the first argument is the `inputs`.</span>
+        <span class="c1"># This can be expanded in the future with better type checks</span>
+        <span class="n">baseline_parameters</span> <span class="o">=</span> <span class="n">signature</span><span class="p">(</span><span class="n">baselines</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">baseline_parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">baselines</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="c1"># check the type of the baselines and make sure that it is either a</span>
+        <span class="c1"># tensor or a list of tensors</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">baselines</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+        <span class="p">),</span> <span class="s2">"`baselines` function should either return a torch.Tensor </span><span class="se">\</span>
+<span class="s2">             or a tuple of those"</span>
+    <span class="k">return</span> <span class="n">format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="_format_attributions"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._format_attributions">[docs]</a><span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">):</span>
@@ -156,20 +194,6 @@
 
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="nb">input</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="_extend_index_list"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._extend_index_list">[docs]</a><span class="k">def</span> <span class="nf">_extend_index_list</span><span class="p">(</span><span class="n">dim_max</span><span class="p">,</span> <span class="n">base_index</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Returns list of index tuples in the form [(0, base_index_tuple),</span>
-<span class="sd">    (1, base_index_tuple), ... (dim_max, base_index_tuple)]</span>
-<span class="sd">    where base_index_tuple is either an int or tuple of arbitrary length.</span>
-<span class="sd">    """</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">base_index</span><span class="p">,</span> <span class="nb">int</span>
-    <span class="p">),</span> <span class="s2">"Base index must be either an integer or tuple"</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">base_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_index</span><span class="p">,)</span>
-    <span class="k">return</span> <span class="p">[(</span><span class="n">ind</span><span class="p">,)</span> <span class="o">+</span> <span class="n">base_index</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim_max</span><span class="p">)]</span></div>
 
 
 <div class="viewcode-block" id="_reshape_and_sum"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._reshape_and_sum">[docs]</a><span class="k">def</span> <span class="nf">_reshape_and_sum</span><span class="p">(</span><span class="n">tensor_input</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">layer_size</span><span class="p">):</span>
@@ -502,7 +526,18 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

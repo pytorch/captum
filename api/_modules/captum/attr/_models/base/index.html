@@ -58,16 +58,17 @@
 <span class="sd">         embedding layer. It allows embeddings to be created outside of the model</span>
 <span class="sd">         and passes them seamlessly to the preceding layers of the model.</span>
 
-<span class="sd">         Args</span>
+<span class="sd">         Args:</span>
 
 <span class="sd">            inputs (tensor): Input embedding tensor containing the embedding vectors</span>
 <span class="sd">                    of each word or token in the sequence.</span>
 
-<span class="sd">         Return</span>
+<span class="sd">         Returns:</span>
 
-<span class="sd">            output (tensor): Returns output tensor which is the same as input tensor.</span>
-<span class="sd">                   It passes embedding tensors to lower layers without any</span>
-<span class="sd">                   modifications.</span>
+<span class="sd">            tensor:</span>
+<span class="sd">            Returns output tensor which is the same as input tensor.</span>
+<span class="sd">            It passes embedding tensors to lower layers without any</span>
+<span class="sd">            modifications.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">input</span></div>
 
@@ -75,15 +76,16 @@
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Maps indices to corresponding embedding vectors. E.g. word embeddings</span>
 
-<span class="sd">        Args</span>
+<span class="sd">        Args:</span>
 
 <span class="sd">            input (tensor): A tensor of input indices. A typical example of an</span>
 <span class="sd">                   input index is word or token index.</span>
 
-<span class="sd">        Returns</span>
+<span class="sd">        Returns:</span>
 
-<span class="sd">            embedding (tensor): A tensor of word embeddings corresponding to the</span>
-<span class="sd">                    indices specified in the input</span>
+<span class="sd">            tensor:</span>
+<span class="sd">            A tensor of word embeddings corresponding to the</span>
+<span class="sd">            indices specified in the input</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span></div></div>
 
@@ -104,13 +106,14 @@
 <span class="sd">        Generated reference tensor of given `sequence_length` using</span>
 <span class="sd">        `reference_token_idx`.</span>
 
-<span class="sd">        Args</span>
+<span class="sd">        Args:</span>
 <span class="sd">            sequence_length (int): The length of the reference sequence</span>
 <span class="sd">            device (torch.device): The device on which the reference tensor will</span>
 <span class="sd">                          be created.</span>
-<span class="sd">        Returns</span>
+<span class="sd">        Returns:</span>
 
-<span class="sd">            reference (tensor): A sequence of reference token with shape:</span>
+<span class="sd">            tensor:</span>
+<span class="sd">            A sequence of reference token with shape:</span>
 <span class="sd">                          [sequence_length]</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_token_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span></div></div>
@@ -138,13 +141,13 @@
 <span class="sd">    This method wraps model's embedding layer with an interpretable embedding</span>
 <span class="sd">    layer that allows us to access the embeddings through their indices.</span>
 
-<span class="sd">    Args</span>
+<span class="sd">    Args:</span>
 
 <span class="sd">        model (torch.nn.Model): An instance of PyTorch model that contains embeddings.</span>
 <span class="sd">        embedding_layer_name (str, optional): The name of the embedding layer</span>
 <span class="sd">                    in the `model` that we would like to make interpretable.</span>
 
-<span class="sd">    Returns</span>
+<span class="sd">    Returns:</span>
 
 <span class="sd">        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`</span>
 <span class="sd">                    embedding layer that wraps model's embedding layer that is being</span>
@@ -203,7 +206,7 @@
 <span class="sd">    Removes interpretable embedding layer and sets back original</span>
 <span class="sd">    embedding layer in the model.</span>
 
-<span class="sd">    Args</span>
+<span class="sd">    Args:</span>
 
 <span class="sd">        model (torch.nn.Module): An instance of PyTorch model that contains embeddings</span>
 <span class="sd">        interpretable_emb (tensor): An instance of `InterpretableEmbeddingBase`</span>
@@ -282,7 +285,18 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

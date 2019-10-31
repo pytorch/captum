@@ -46,13 +46,6 @@ tensor we take the first element of the attributions’ tuple to match the
 same shape signatues of the inputs</p>
 </dd></dl>
 <dl class="function">
-<dt id="captum.attr._utils.common._extend_index_list">
-<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_extend_index_list</code><span class="sig-paren">(</span><em class="sig-param">dim_max</em>, <em class="sig-param">base_index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_extend_index_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._extend_index_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of index tuples in the form [(0, base_index_tuple),
-(1, base_index_tuple), … (dim_max, base_index_tuple)]
-where base_index_tuple is either an int or tuple of arbitrary length.</p>
-</dd></dl>
-<dl class="function">
 <dt id="captum.attr._utils.common._reshape_and_sum">
 <code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_reshape_and_sum</code><span class="sig-paren">(</span><em class="sig-param">tensor_input</em>, <em class="sig-param">num_steps</em>, <em class="sig-param">num_examples</em>, <em class="sig-param">layer_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_reshape_and_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._reshape_and_sum" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -97,7 +90,7 @@ ml.getlist() -&gt; [“Mermaid Man!!!!”, “Hello World”]</p>
 <dd class="field-odd"><p>the sorted list of maximal items</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -143,7 +136,18 @@ ml.getlist() -&gt; [“Mermaid Man!!!!”, “Hello World”]</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials">Tutorials</a><a href="/api">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;
