@@ -78,7 +78,7 @@ commands:
               mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
               ./scripts/build_docs.sh -b
               cd website
-              GIT_USER=docusaurus-bot USE_SSH=true yarn run publish-gh-pages
+              GIT_USER=docusaurus-bot yarn run publish-gh-pages
             else
               echo "Skipping deploy."
             fi
