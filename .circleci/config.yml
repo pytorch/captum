@@ -62,7 +62,7 @@ commands:
             if [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               git config --global user.email "docusaurus-bot@users.noreply.github.com"
               git config --global user.name "Captum website deployment script"
-              echo "machine github.com login docusaurus-bot password $GITHUB_TOKEN" > ~/.netrc
+              echo "machine github.com login docusaurus-bot password $DOCUSAURUS_GITHUB_TOKEN" > ~/.netrc
             fi
 
   deploy_site:
@@ -72,7 +72,7 @@ commands:
           name: "Deploy website to GitHub Pages"
             # TODO: make the installation above conditional on there being relevant changes (no need to install if there are none)
           command: |
-            if ! git diff --name-only HEAD^ | grep -E "(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
+            if ! git diff --name-only HEAD^ | grep -E "(^\.circleci\/.*)|(^docs\/.*)|(^website\/.*)|(^scripts\/.*)|(^sphinx\/.*)|(^tutorials\/.*)"; then
               echo "Skipping deploy. No relevant website files have changed"
             elif [[ $CIRCLE_PROJECT_USERNAME == "pytorch" && -z $CI_PULL_REQUEST && -z $CIRCLE_PR_USERNAME ]]; then
               mkdir -p website/static/.circleci && cp -a .circleci/. website/static/.circleci/.
