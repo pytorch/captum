@@ -323,7 +323,7 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             LayerDeepLift,
             net,
-            net.model.l3,
+            net.l3,
             inputs=(inp1, inp2),
             additional_forward_args=None,
             test_batches=False,
@@ -344,7 +344,7 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             LayerDeepLiftShap,
             net,
-            net.model.l3,
+            net.l3,
             inputs=(inp1, inp2),
             baselines=(base1, base2),
             additional_forward_args=None,
@@ -359,7 +359,7 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             NeuronDeepLift,
             net,
-            net.model.l3,
+            net.l3,
             inputs=(inp1, inp2),
             neuron_index=0,
             additional_forward_args=None,
@@ -381,7 +381,7 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             NeuronDeepLiftShap,
             net,
-            net.model.l3,
+            net.l3,
             inputs=(inp1, inp2),
             neuron_index=0,
             baselines=(base1, base2),
