@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import warnings
 import torch.nn as nn
 from .._utils.attribution import LayerAttribution
 from .._core.deep_lift import DeepLift, DeepLiftShap
@@ -29,10 +29,15 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that both inputs and ouputs of
-                          the layer can only be a single tensor.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution, can only be a single tensor.
         """
         if isinstance(model, nn.DataParallel):
+            warnings.warn(
+                """Although input model is of type `nn.DataParallel` it will run
+                only on one device. Support for multiple devices will be added soon."""
+            )
             model = model.module
 
         super(LayerAttribution, self).__init__(model, layer)
@@ -141,8 +146,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         then the attributions will be computed with respect to the
                         layer inputs, otherwise it will be computed with respect
                         to layer outputs.
-                        Note that currently it assumes that both the inputs and
-                        outputs of internal layers are single tensors.
+                        Note that currently it is assumed that either the inputs
+                        or the outputs of internal layers, depending on whether we
+                        attribute to the inputs or outputs, are single tensors.
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
@@ -183,7 +189,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         validate_input(inputs, baselines)
 
         # set hooks for baselines
-        self.model.apply(self._register_hooks)
+        self.model.apply(self._register_hooks_ref)
 
         attr_baselines = _forward_layer_eval(
             self.model,
@@ -199,6 +205,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         # remove forward hook set for baselines
         for forward_handles_ref in self.forward_handles_refs:
             forward_handles_ref.remove()
+
+        self.model.apply(self._register_hooks)
 
         gradients, attr_inputs = compute_layer_gradients_and_eval(
             self.model,
@@ -403,15 +411,20 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
-        exp_inp, exp_base, exp_target = DeepLiftShap._expand_inputs_baselines_targets(
-            self, base_bsz, inp_bsz, baselines, inputs, target
+        (
+            exp_inp,
+            exp_base,
+            exp_target,
+            exp_addit_args,
+        ) = DeepLiftShap._expand_inputs_baselines_targets(
+            self, baselines, inputs, target, additional_forward_args
         )
         attributions = LayerDeepLift.attribute(
             self,
             exp_inp,
             exp_base,
             target=exp_target,
-            additional_forward_args=additional_forward_args,
+            additional_forward_args=exp_addit_args,
             return_convergence_delta=return_convergence_delta,
             attribute_to_layer_input=attribute_to_layer_input,
         )

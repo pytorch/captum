@@ -331,7 +331,9 @@ def compute_layer_gradients_and_eval(
             return all_grads, all_outputs
 
 
-def construct_neuron_grad_fn(layer, neuron_index, device_ids):
+def construct_neuron_grad_fn(
+    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
+):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads = _forward_layer_eval_with_neuron_grads(
             forward_fn,
@@ -340,6 +342,7 @@ def construct_neuron_grad_fn(layer, neuron_index, device_ids):
             additional_forward_args,
             neuron_index,
             device_ids=device_ids,
+            attribute_to_layer_input=attribute_to_neuron_input,
         )
         return grads
 

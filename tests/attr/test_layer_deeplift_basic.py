@@ -1,10 +1,8 @@
 from __future__ import print_function
 
-import numpy as np
-
 import torch
 
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assert_delta
+from .helpers.utils import BaseTest, assertTensorAlmostEqual, assert_delta
 from .helpers.basic_models import ReLULinearDeepLiftModel
 
 from captum.attr._core.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
@@ -22,7 +20,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[0.0, 15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
 
     def test_linear_layer_deeplift(self):
@@ -36,7 +34,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[0.0, 15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
 
         attributions, delta = layer_dl.attribute(
@@ -45,14 +43,15 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=False,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[15.0]])
         assert_delta(self, delta)
 
     def test_relu_layer_deepliftshap(self):
         model = ReLULinearDeepLiftModel()
-        inputs, baselines = (
-            _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
-        )
+        (
+            inputs,
+            baselines,
+        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         layer_dl_shap = LayerDeepLiftShap(model, model.relu)
         attributions, delta = layer_dl_shap.attribute(
             inputs,
@@ -60,14 +59,15 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[0.0, 15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
 
     def test_linear_layer_deepliftshap(self):
         model = ReLULinearDeepLiftModel()
-        inputs, baselines = (
-            _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
-        )
+        (
+            inputs,
+            baselines,
+        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         layer_dl_shap = LayerDeepLiftShap(model, model.l3)
         attributions, delta = layer_dl_shap.attribute(
             inputs,
@@ -75,7 +75,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[0.0, 15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
         attributions, delta = layer_dl_shap.attribute(
             inputs,
@@ -83,7 +83,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=False,
             return_convergence_delta=True,
         )
-        assertArraysAlmostEqual(np.array([[15.0]]), attributions.detach().numpy())
+        assertTensorAlmostEqual(self, attributions, [[15.0]])
         assert_delta(self, delta)
 
 

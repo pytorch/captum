@@ -1,5 +1,5 @@
 from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import _forward_layer_eval_with_neuron_grads
+from .._utils.gradient import construct_neuron_grad_fn
 
 from .deep_lift import DeepLift, DeepLiftShap
 
@@ -14,8 +14,9 @@ class NeuronDeepLift(NeuronAttribution):
                           Attributions for a particular neuron for the input or output
                           of this layer are computed using the argument neuron_index
                           in the attribute method.
-                          Currently, only layers with a single tensor input and output
-                          are supported.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution, can only be a single tensor.
         """
         super(NeuronAttribution, self).__init__(model, layer)
 
@@ -99,8 +100,9 @@ class NeuronDeepLift(NeuronAttribution):
                         then the attributions will be computed with respect to
                         neuron's inputs, otherwise it will be computed with respect
                         to neuron's outputs.
-                        Note that currently it assumes that both the inputs and
-                        outputs of internal layers are single tensors.
+                        Note that currently it is assumed that either the inputs
+                        or the outputs of internal layers, depending on whether we
+                        attribute to the inputs or outputs, are single tensors.
                         Support for multiple tensors will be added later.
                         Default: False
         Returns:
@@ -128,20 +130,12 @@ class NeuronDeepLift(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-
-        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-            _, grads = _forward_layer_eval_with_neuron_grads(
-                forward_fn,
-                inputs,
-                self.layer,
-                additional_forward_args,
-                neuron_index,
-                attribute_to_layer_input=attribute_to_neuron_input,
-            )
-            return grads
-
         dl = DeepLift(self.forward_func)
-        dl.gradient_func = grad_fn
+        dl.gradient_func = construct_neuron_grad_fn(
+            self.layer,
+            neuron_index,
+            attribute_to_neuron_input=attribute_to_neuron_input,
+        )
 
         return dl.attribute(
             inputs, baselines, additional_forward_args=additional_forward_args
@@ -263,20 +257,12 @@ class NeuronDeepLiftShap(NeuronAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-
-        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-            _, grads = _forward_layer_eval_with_neuron_grads(
-                forward_fn,
-                inputs,
-                self.layer,
-                additional_forward_args,
-                neuron_index,
-                attribute_to_layer_input=attribute_to_neuron_input,
-            )
-            return grads
-
         dl = DeepLiftShap(self.forward_func)
-        dl.gradient_func = grad_fn
+        dl.gradient_func = construct_neuron_grad_fn(
+            self.layer,
+            neuron_index,
+            attribute_to_neuron_input=attribute_to_neuron_input,
+        )
 
         return dl.attribute(
             inputs, baselines, additional_forward_args=additional_forward_args

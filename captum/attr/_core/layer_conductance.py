@@ -22,11 +22,14 @@ class LayerConductance(LayerAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output
-                          dimensions, corresponding to attribution of each neuron
-                          in the output of this layer.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -150,8 +153,9 @@ class LayerConductance(LayerAttribution):
                             then the attributions will be computed with respect to
                             layer inputs, otherwise it will be computed with respect
                             to layer outputs.
-                            Note that currently it assumes that both the inputs and
-                            outputs of internal layers are single tensors.
+                            Note that currently it is assumed that either the inputs
+                            or the outputs of internal layers, depending on whether we
+                            attribute to the inputs or outputs, are single tensors.
                             Support for multiple tensors will be added later.
                             Default: False
 

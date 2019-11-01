@@ -15,6 +15,7 @@ from .._utils.common import (
     _run_forward,
     validate_input,
     _expand_target,
+    _expand_additional_forward_args,
     ExpansionTypes,
 )
 from .._utils.attribution import GradientAttribution
@@ -41,6 +42,10 @@ class DeepLift(GradientAttribution):
         """
         super().__init__(model)
         if isinstance(model, nn.DataParallel):
+            warnings.warn(
+                """Although input model is of type `nn.DataParallel` it will run
+                only on one device. Support for multiple devices will be added soon."""
+            )
             self.model = model.module
         else:
             self.model = model
@@ -196,7 +201,7 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-        self.model.apply(self._register_hooks)
+        self.model.apply(self._register_hooks_ref)
 
         # make forward pass and remove baseline hooks
         _run_forward(
@@ -209,6 +214,7 @@ class DeepLift(GradientAttribution):
         for forward_handles_ref in self.forward_handles_refs:
             forward_handles_ref.remove()
 
+        self.model.apply(self._register_hooks)
         gradients = self.gradient_func(
             self.model,
             inputs,
@@ -327,22 +333,29 @@ class DeepLift(GradientAttribution):
 
         return multipliers
 
-    def _register_hooks(self, module):
+    def _can_register_hook(self, module):
         # TODO find a better way of checking if a module is a container or not
         module_fullname = str(type(module))
         has_already_hooks = len(module._backward_hooks) > 0
-        if (
+        return not (
             "nn.modules.container" in module_fullname
             or has_already_hooks
             or not self._is_non_linear(module)
-        ):
+        )
+
+    def _register_hooks_ref(self, module):
+        if not self._can_register_hook(module):
+            return
+        forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
+        self.forward_handles_refs.append(forward_handle_ref)
+
+    def _register_hooks(self, module):
+        if not self._can_register_hook(module):
             return
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
-        forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
         backward_handle = module.register_backward_hook(self._backward_hook)
         self.forward_handles.append(forward_handle)
-        self.forward_handles_refs.append(forward_handle_ref)
         self.backward_handles.append(backward_handle)
 
     def _remove_hooks(self):
@@ -504,15 +517,20 @@ class DeepLiftShap(DeepLift):
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
-        exp_inp, exp_base, exp_tgt = self._expand_inputs_baselines_targets(
-            base_bsz, inp_bsz, baselines, inputs, target
+        (
+            exp_inp,
+            exp_base,
+            exp_tgt,
+            exp_addit_args,
+        ) = self._expand_inputs_baselines_targets(
+            baselines, inputs, target, additional_forward_args
         )
 
         attributions = super().attribute(
             exp_inp,
             exp_base,
             target=exp_tgt,
-            additional_forward_args=additional_forward_args,
+            additional_forward_args=exp_addit_args,
             return_convergence_delta=return_convergence_delta,
         )
         if return_convergence_delta:
@@ -529,8 +547,11 @@ class DeepLiftShap(DeepLift):
             return _format_attributions(is_inputs_tuple, attributions)
 
     def _expand_inputs_baselines_targets(
-        self, base_bsz, inp_bsz, baselines, inputs, target
+        self, baselines, inputs, target, additional_forward_args
     ):
+        inp_bsz = inputs[0].shape[0]
+        base_bsz = baselines[0].shape[0]
+
         expanded_inputs = tuple(
             [
                 input.repeat_interleave(base_bsz, dim=0).requires_grad_()
@@ -548,7 +569,17 @@ class DeepLiftShap(DeepLift):
         expanded_target = _expand_target(
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
-        return expanded_inputs, expanded_baselines, expanded_target
+        input_additional_args = (
+            _expand_additional_forward_args(additional_forward_args, base_bsz)
+            if additional_forward_args is not None
+            else None
+        )
+        return (
+            expanded_inputs,
+            expanded_baselines,
+            expanded_target,
+            input_additional_args,
+        )
 
     def _compute_mean_across_baselines(self, inp_bsz, base_bsz, attribution):
         # Average for multiple references

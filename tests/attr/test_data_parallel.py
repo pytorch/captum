@@ -313,6 +313,7 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             neuron_index=(3,),
+        )
 
     def test_multi_input_layer_deeplift(self):
         net = ReLULinearDeepLiftModel().cuda()
@@ -325,7 +326,7 @@ class Test(BaseGPUTest):
             net.model.l3,
             inputs=(inp1, inp2),
             additional_forward_args=None,
-            test_batches=True,
+            test_batches=False,
         )
 
     def test_multi_input_layer_deeplift_shap(self):
@@ -333,13 +334,21 @@ class Test(BaseGPUTest):
         inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
         inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
 
+        base1 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+        base2 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+
         self._data_parallel_test_assert(
             LayerDeepLiftShap,
             net,
             net.model.l3,
             inputs=(inp1, inp2),
+            baselines=(base1, base2),
             additional_forward_args=None,
-            test_batches=True,
+            test_batches=False,
         )
 
     def test_multi_input_neuron_deeplift(self):
@@ -352,8 +361,9 @@ class Test(BaseGPUTest):
             net,
             net.model.l3,
             inputs=(inp1, inp2),
+            neuron_index=0,
             additional_forward_args=None,
-            test_batches=True,
+            test_batches=False,
         )
 
     def test_multi_input_neuron_deeplift_shap(self):
@@ -361,13 +371,22 @@ class Test(BaseGPUTest):
         inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
         inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
 
+        base1 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+        base2 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+
         self._data_parallel_test_assert(
             NeuronDeepLiftShap,
             net,
             net.model.l3,
             inputs=(inp1, inp2),
+            neuron_index=0,
+            baselines=(base1, base2),
             additional_forward_args=None,
-            test_batches=True,
+            test_batches=False,
         )
 
     def _alt_device_list(self):
