@@ -121,21 +121,22 @@ class TanhDeepLiftModel(nn.Module):
 
 class ReLULinearDeepLiftModel(nn.Module):
     r"""
-        Architecture is based on:
-        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/
-        tests/test_tensorflow.py#L65
+        Simple architecture similar to:
+        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
     def __init__(self):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
-        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0], [0.0, 1.0, 3.0]]))
-        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0], [0.0, 1.0, 2.0]]))
+        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))
+        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))
         self.relu = nn.ReLU()
+        self.l3 = nn.Linear(2, 1, bias=False)
+        self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
     def forward(self, x1, x2):
-        return self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)).sum(axis=1)
+        return self.l3(self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)))
 
 
 class TextModule(nn.Module):

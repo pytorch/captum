@@ -22,11 +22,14 @@ class InternalInfluence(LayerAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output
-                          dimensions, corresponding to attribution of each neuron
-                          in the output of this layer.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -44,6 +47,7 @@ class InternalInfluence(LayerAttribution):
         n_steps=50,
         method="gausslegendre",
         internal_batch_size=None,
+        attribute_to_layer_input=False,
     ):
         r"""
             Computes internal influence by approximating the integral of gradients
@@ -132,13 +136,26 @@ class InternalInfluence(LayerAttribution):
                             If internal_batch_size is None, then all evaluations
                             are processed in one batch.
                             Default: None
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the layer input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            layer inputs, otherwise it will be computed with respect
+                            to layer outputs.
+                            Note that currently it is assumed that either the input
+                            or the output of internal layer, depending on whether we
+                            attribute to the input or output, is a single tensor.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
                 - **attributions** (*tensor*):
                             Internal influence of each neuron in given
                             layer output. Attributions will always be the same size
-                            as the output of the given layer.
+                            as the output or input of the given layer depending on
+                            whether `attribute_to_layer_input` is set to `False` or
+                            `True`respectively.
 
             Examples::
 
@@ -193,6 +210,7 @@ class InternalInfluence(LayerAttribution):
             layer=self.layer,
             target_ind=expanded_target,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         # flattening grads so that we can multipy it with step-size
         # calling contigous to avoid `memory whole` problems

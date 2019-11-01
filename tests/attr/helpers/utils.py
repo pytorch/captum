@@ -39,6 +39,16 @@ def assertAttributionComparision(test, attributions1, attributions2):
                 test.assertAlmostEqual(attr_row1, attr_row2, delta=0.05)
 
 
+def assert_delta(test, delta):
+    delta_condition = all(abs(delta.numpy().flatten()) < 0.00001)
+    test.assertTrue(
+        delta_condition,
+        "The sum of attribution values {} for relu layer is not "
+        "nearly equal to the difference between the endpoint for "
+        "some samples".format(delta),
+    )
+
+
 class BaseTest(unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
