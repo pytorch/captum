@@ -141,16 +141,17 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         a tuple following attributions.
                         Default: False
             attribute_to_layer_input (bool, optional): Indicates whether to
-                        compute the attributions with respect to the layer input
+                        compute the attribution with respect to the layer input
                         or output. If `attribute_to_layer_input` is set to True
-                        then the attributions will be computed with respect to the
-                        layer inputs, otherwise it will be computed with respect
-                        to layer outputs.
-                        Note that currently it is assumed that either the inputs
-                        or the outputs of internal layers, depending on whether we
-                        attribute to the inputs or outputs, are single tensors.
+                        then the attributions will be computed with respect to
+                        layer input, otherwise it will be computed with respect
+                        to layer output.
+                        Note that currently it is assumed that either the input
+                        or the output of internal layer, depending on whether we
+                        attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):

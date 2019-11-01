@@ -27,7 +27,13 @@ class LayerGradCam(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, target=None, additional_forward_args=None):
+    def attribute(
+        self,
+        inputs,
+        target=None,
+        additional_forward_args=None,
+        attribute_to_layer_input=False,
+    ):
         r"""
             Computes GradCAM attribution for chosen layer. GradCAM is designed for
             convolutional neural networks, and is usually applied to the last
@@ -106,6 +112,17 @@ class LayerGradCam(LayerAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attributions with respect to the layer input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to the
+                            layer input, otherwise it will be computed with respect
+                            to layer output.
+                            Note that currently it is assumed that either the input
+                            or the outputs of internal layers, depending on whether we
+                            attribute to the input or output, are single tensors.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
@@ -149,6 +166,7 @@ class LayerGradCam(LayerAttribution):
             target,
             additional_forward_args,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         summed_grads = torch.mean(
             layer_gradients,

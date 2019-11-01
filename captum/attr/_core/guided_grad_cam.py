@@ -34,6 +34,7 @@ class GuidedGradCam(GradientAttribution):
         target=None,
         additional_forward_args=None,
         interpolate_mode="nearest",
+        attribute_to_layer_input=False,
     ):
         r"""
             Computes element-wise product of guided backpropagation attributions
@@ -124,6 +125,18 @@ class GuidedGradCam(GradientAttribution):
                             interpolation, but we default to "nearest" for
                             applicability to any of 3D, 4D or 5D tensors.
                             Default: "nearest"
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the layer input
+                            or output in `LayerGradCam`.
+                            If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            layer inputs, otherwise it will be computed with respect
+                            to layer outputs.
+                            Note that currently it is assumed that either the input
+                            or the output of internal layer, depending on whether we
+                            attribute to the input or output, is a single tensor.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
@@ -163,6 +176,7 @@ class GuidedGradCam(GradientAttribution):
                 inputs=inputs,
                 target=target,
                 additional_forward_args=additional_forward_args,
+                attribute_to_layer_input=attribute_to_layer_input,
             )
         )
         guided_backprop_attr = self.guided_backprop.attribute(

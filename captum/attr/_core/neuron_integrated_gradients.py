@@ -110,14 +110,14 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             processed in one batch.
                             Default: None
                 attribute_to_neuron_input (bool, optional): Indicates whether to
-                            compute the attribution with respect to the neuron input
+                            compute the attributions with respect to the neuron input
                             or output. If `attribute_to_neuron_input` is set to True
                             then the attributions will be computed with respect to
-                            neuron inputs, otherwise it will be computed with respect
-                            to neuron outputs.
-                            Note that currently it is assumed that either the inputs
-                            or the outputs of internal layers, depending on whether we
-                            attribute to the inputs or outputs, are single tensors.
+                            neuron's inputs, otherwise it will be computed with respect
+                            to neuron's outputs.
+                            Note that currently it is assumed that either the input
+                            or the output of internal neuron, depending on whether we
+                            attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
 
@@ -153,7 +153,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         """
         ig = IntegratedGradients(self.forward_func)
         ig.gradient_func = construct_neuron_grad_fn(
-            self.layer, neuron_index, self.device_ids
+            self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
         )
         # Return only attributions and not delta
         return ig.attribute(
