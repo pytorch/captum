@@ -95,9 +95,9 @@ class AttributionVisualizer(object):
                           a single BaseFeature, while a multimodal classifier may
                           provide a list of features, each corresponding to a different
                           tensor input and potentially different modalities.
-            dataset (iterable of Batch): Defines the dataset to visualize attributions for.
-                          This must be an iterable of batch objects, each of which may
-                          contain multiple input examples.
+            dataset (iterable of Batch): Defines the dataset to visualize attributions
+                          for. This must be an iterable of batch objects, each of which
+                          may contain multiple input examples.
             score_func (callable, optional): This function is applied to the model
                           output to obtain the score for each class. For instance,
                           this function could be the softmax or final non-linearity
