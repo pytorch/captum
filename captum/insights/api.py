@@ -80,12 +80,12 @@ class AttributionVisualizer(object):
 
             models (torch.nn.module): PyTorch module (model) for attribution
                           visualization.
-                          We plan to support visulizing and comparing multiple models
+                          We plan to support visualizing and comparing multiple models
                           in the future, but currently this supports only a single
                           model.
-            classes (list of strings): List of strings corresponding to the names of
+            classes (list of string): List of strings corresponding to the names of
                           classes for classification.
-            features (list of BaseFeatures): List of BaseFeatures, which correspond
+            features (list of BaseFeature): List of BaseFeatures, which correspond
                           to input arguments to the model. Each feature object defines
                           relevant transformations for converting to model input,
                           constructing baselines, and visualizing. The length of the
@@ -95,7 +95,7 @@ class AttributionVisualizer(object):
                           a single BaseFeature, while a multimodal classifier may
                           provide a list of features, each corresponding to a different
                           tensor input and potentially different modalities.
-            dataset (iterable of Batch): Defines dataset to visualize attributions for.
+            dataset (iterable of Batch): Defines the dataset to visualize attributions for.
                           This must be an iterable of batch objects, each of which may
                           contain multiple input examples.
             score_func (callable, optional): This function is applied to the model
