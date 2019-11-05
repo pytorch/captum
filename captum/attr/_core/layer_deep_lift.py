@@ -15,6 +15,7 @@ from .._utils.common import (
     _format_baseline,
     _format_callable_baseline,
     _validate_input,
+    _tensorize_baseline,
 )
 
 
@@ -192,6 +193,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         # set hooks for baselines
         self.model.apply(self._register_hooks_ref)
 
+        baselines = _tensorize_baseline(inputs, baselines)
         attr_baselines = _forward_layer_eval(
             self.model,
             baselines,
