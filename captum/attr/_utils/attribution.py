@@ -212,7 +212,10 @@ class GradientAttribution(Attribution):
                     of those values, if necessary.
         """
         end_point, start_point = _format_input_baseline(end_point, start_point)
+
         # tensorizing start_point in case it is a scalar
+        # If the batch size is large we could potentially also tensorize only one
+        # sample and expand the output to the rest of the elements in the batch
         start_point = _tensorize_baseline(end_point, start_point)
 
         attributions = _format_tensor_into_tuples(attributions)

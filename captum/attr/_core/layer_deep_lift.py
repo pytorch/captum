@@ -193,6 +193,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         # set hooks for baselines
         self.model.apply(self._register_hooks_ref)
 
+        # If the batch size is large we could potentially also tensorize only one
+        # sample and expand the output to the rest of the elements in the batch
         baselines = _tensorize_baseline(inputs, baselines)
         attr_baselines = _forward_layer_eval(
             self.model,
