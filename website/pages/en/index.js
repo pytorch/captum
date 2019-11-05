@@ -117,9 +117,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from captum.attr import (
-    IntegratedGradients
-)
+from captum.attr import IntegratedGradients
 
 class ToyModel(nn.Module):
     def __init__(self):

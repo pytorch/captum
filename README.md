@@ -248,7 +248,7 @@ Convergence Delta: tensor([0., 0.])
 `DeepLift` assigns similar attribution scores as `IntegratedGradients` to inputs,
 however it has lower execution time. Another important thing to remember about
 DeepLift is that it currently doesn't support all non-linear activation types.
-For more details on limitations of the current implementation, please see the 
+For more details on limitations of the current implementation, please see the
 [DeepLift paper](https://arxiv.org/abs/1704.02685).
 
 Similar to integrated gradients, DeepLift returns a convergence delta score
@@ -390,7 +390,7 @@ python captum/insights/example.py
 ```
 
 ### Captum Insights Jupyter Widget
-Captum Insights also has a Jupyter widget providing the same user interface as the web app. 
+Captum Insights also has a Jupyter widget providing the same user interface as the web app.
 To install and enable the widget, run
 
 ```
@@ -412,7 +412,7 @@ See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 
 ## References for algorithms mentioned here
 
-* `IntegratedGradients`, `NeuronIntegratedGradient`: [Axiomatic Attribution for Deep Networks, Mukund Sundararajan et al. 2017](https://arxiv.org/abs/1703.01365)
+* `IntegratedGradients`, `NeuronIntegratedGradient`: [Axiomatic Attribution for Deep Networks, Mukund Sundararajan et al. 2017](https://arxiv.org/abs/1703.01365) and [Did the Model Understand the Question?, Pramod K. Mudrakarta, et al. 2018](https://arxiv.org/abs/1805.05492)
 * `InputXGradient`: [Investigating the influence of noise and distractors on the interpretation of neural networks, Pieter-Jan Kindermans et al. 2016](https://arxiv.org/abs/1611.07270)
 * `SmoothGrad`: [SmoothGrad: removing noise by adding noise, Daniel Smilkov et al. 2017](https://arxiv.org/abs/1706.03825)
 * `NoiseTunnel`: [Sanity Checks for Saliency Maps, Julius Adebayo et al. 2018](https://arxiv.org/abs/1810.03292)
