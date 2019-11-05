@@ -55,7 +55,7 @@ class FeatureAblation(PerturbationAttribution):
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
                 target (int, tuple, tensor or list, optional):  Output indices for
-                            which gradients are computed (for classification cases,
+                            which difference is computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
                             no target index is necessary.
@@ -93,6 +93,21 @@ class FeatureAblation(PerturbationAttribution):
                             the given argument is used for all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
+                            Default: None
+                feature_mask (tensor or tuple of tensors, optional):
+                            feature_mask defines a mask for the input, grouping
+                            features which should be ablated together. feature_mask
+                            should contain the same number of tensors as inputs,
+                            and features within each input tensor are ablated
+                            independetly (not across tensors). Each tensor should
+                            be the same size as the corresponding input or
+                            broadcastable to match the input tensor. Each tensor
+                            should contain integers in the range 0 to num_features
+                            - 1, and indices corresponding to the same feature should
+                            have the same value.
+                            If None, then a feature mask is constructed which assigns
+                            each scalar within a tensor as a separate feature, which
+                            is ablated independently.
                             Default: None
                 baselines (scalar, tensor, tuple of scalars or tensors, optional):
                             Baselines define reference value which replaces each feature
@@ -149,10 +164,11 @@ class FeatureAblation(PerturbationAttribution):
             >>> # and returns an Nx10 tensor of class probabilities.
             >>> net = ImageClassifier()
             >>> # Generating random input with size 2x3x3x32
-            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-            >>> # Defining Saliency interpreter
+            >>> input = torch.randn(2, 3, 32, 32)
+            >>> # Defining FeatureAblation interpreter
             >>> ablator = FeatureAblation(net)
-            >>> # Computes ablation attribution.
+            >>> # Computes ablation attribution, ablating each scalar input
+            >>> # independently.
             >>> attribution = ablator.attribute(input, target=3)
         """
         # Keeps track whether original input is a tuple or not before
