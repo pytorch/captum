@@ -11,10 +11,10 @@ from .._utils.gradient import (
 )
 
 from .._utils.common import (
-    format_input,
-    format_baseline,
+    _format_input,
+    _format_baseline,
     _format_callable_baseline,
-    validate_input,
+    _validate_input,
 )
 
 
@@ -183,11 +183,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             >>> # Computes deeplift attribution scores for conv4 layer and class 3.
             >>> attribution = dl.attribute(input, target=1)
         """
-        inputs = format_input(inputs)
-        baselines = format_baseline(baselines, inputs)
+        inputs = _format_input(inputs)
+        baselines = _format_baseline(baselines, inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
-        validate_input(inputs, baselines)
+        _validate_input(inputs, baselines)
 
         # set hooks for baselines
         self.model.apply(self._register_hooks_ref)
@@ -405,7 +405,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             >>> # Computes shap values using deeplift for class 3.
             >>> attribution = dl.attribute(input, target=3)
         """
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
 
         # batch sizes

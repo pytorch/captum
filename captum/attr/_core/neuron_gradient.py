@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
 from .._utils.common import (
-    format_input,
+    _format_input,
     _format_additional_forward_args,
     _format_attributions,
 )
@@ -118,7 +118,7 @@ class NeuronGradient(NeuronAttribution):
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
         is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )

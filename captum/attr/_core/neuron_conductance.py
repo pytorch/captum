@@ -7,7 +7,7 @@ from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
-    validate_input,
+    _validate_input,
     _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
@@ -191,7 +191,7 @@ class NeuronConductance(NeuronAttribution):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
         total_batch = num_examples * n_steps

@@ -7,10 +7,10 @@ from enum import Enum
 
 from .._utils.attribution import Attribution
 from .._utils.common import (
-    validate_noise_tunnel_type,
-    validate_input,
-    format_baseline,
-    format_input,
+    _validate_noise_tunnel_type,
+    _validate_input,
+    _format_baseline,
+    _format_input,
     _format_attributions,
     _format_additional_forward_args,
     _expand_additional_forward_args,
@@ -184,27 +184,34 @@ class NoiseTunnel(Attribution):
             return input.repeat_interleave(n_samples, dim=0) + noise
 
         def expand_and_update_baselines():
+            def get_random_baseline_indices(bsz, baseline):
+                num_ref_samples = baseline.shape[0]
+                return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
+
             # TODO allow to add noise to baselines as well
             # expand baselines to match the sizes of input
             if "baselines" not in kwargs:
                 return
 
             baselines = kwargs["baselines"]
-            baselines = format_baseline(baselines, inputs)
-            validate_input(
+            baselines = _format_baseline(baselines, inputs)
+            _validate_input(
                 inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
             )
 
             if draw_baseline_from_distrib:
                 bsz = inputs[0].shape[0]
-                num_ref_samples = baselines[0].shape[0]
-                rand_indices = np.random.choice(
-                    num_ref_samples, n_samples * bsz
-                ).tolist()
-                baselines = tuple(baseline[rand_indices] for baseline in baselines)
+                baselines = tuple(
+                    baseline[get_random_baseline_indices(bsz, baseline)]
+                    if isinstance(baseline, torch.Tensor)
+                    else baseline
+                    for baseline in baselines
+                )
             else:
                 baselines = tuple(
                     baseline.repeat_interleave(n_samples, dim=0)
+                    if isinstance(baseline, torch.Tensor)
+                    else baseline
                     for baseline in baselines
                 )
             # update kwargs with expanded baseline
@@ -252,9 +259,9 @@ class NoiseTunnel(Attribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
 
-        validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
+        _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
         delta = 0
         inputs_with_noise = add_noise_to_inputs()

@@ -20,6 +20,14 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
 
+    def test_simple_input_with_scalar_baseline_conductance(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        cond = LayerConductance(net, net.linear0)
+        attributions = cond.attribute(inp, 0.0001, target=0)
+        assertArraysAlmostEqual(attributions.squeeze(0).tolist(),
+                                [-0.00039,  390.0, -0.00039])
+
     def test_simple_linear_conductance(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
@@ -92,12 +100,6 @@ class Test(BaseTest):
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(4, 1, 10, 10, requires_grad=True)
         self._conductance_reference_test_assert(net, net.relu3, inp)
-
-    def test_matching_conv_with_baseline_conductance(self):
-        net = BasicModel_ConvNet()
-        inp = 100 * torch.randn(3, 1, 10, 10)
-        baseline = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
-        self._conductance_reference_test_assert(net, net.fc1, inp, baseline)
 
     def _conductance_test_assert(
         self,

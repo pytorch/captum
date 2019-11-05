@@ -4,7 +4,7 @@ import torch
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.batching import _batched_operator
 from .._utils.common import (
-    validate_input,
+    _validate_input,
     _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
@@ -160,7 +160,7 @@ class IntegratedGradients(GradientAttribution):
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
 
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         # retrieve step size and scaling factor for specified approximation method
         step_sizes_func, alphas_func = approximation_parameters(method)

@@ -3,7 +3,7 @@ import warnings
 import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions
 
 from .grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
@@ -170,7 +170,7 @@ class GuidedGradCam(GradientAttribution):
                 >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         grad_cam_attr = F.relu(
             self.grad_cam.attribute(
                 inputs=inputs,

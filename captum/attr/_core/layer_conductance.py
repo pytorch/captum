@@ -8,7 +8,7 @@ from .._utils.common import (
     _format_input_baseline,
     _format_additional_forward_args,
     _expand_additional_forward_args,
-    validate_input,
+    _validate_input,
     _expand_target,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
@@ -192,7 +192,7 @@ class LayerConductance(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input, target=3)
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
 

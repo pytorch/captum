@@ -6,7 +6,7 @@ from .._utils.batching import _batched_operator
 from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
-    validate_input,
+    _validate_input,
     _format_additional_forward_args,
     _expand_additional_forward_args,
     _expand_target,
@@ -171,7 +171,7 @@ class InternalInfluence(LayerAttribution):
                 >>> attribution = layer_int_inf.attribute(input)
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         # Retrieve step size and scaling factor for specified approximation method
         step_sizes_func, alphas_func = approximation_parameters(method)

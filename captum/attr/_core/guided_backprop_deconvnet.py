@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
@@ -37,7 +37,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients

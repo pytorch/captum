@@ -2,7 +2,7 @@
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _zeros
+from captum.attr._utils.common import _zeros, _tensorize_baseline
 
 from .helpers.basic_models import (
     BasicModel,
@@ -134,7 +134,7 @@ class Test(BaseTest):
         self._compute_attribution_and_evaluate(
             model,
             torch.tensor([-1.0], requires_grad=True),
-            torch.tensor([0.0]),
+            0.00001,
             type=type,
         )
 
@@ -146,7 +146,7 @@ class Test(BaseTest):
                 torch.tensor([[1.5, 2.0, 34.3]], requires_grad=True),
                 torch.tensor([[3.0, 3.5, 23.2]], requires_grad=True),
             ),
-            baselines=(torch.zeros((1, 3)), torch.zeros((1, 3))),
+            baselines=(0.0, torch.zeros((1, 3))),
             additional_forward_args=torch.arange(1.0, 4.0).reshape(1, 3),
             type=type,
         )
@@ -158,7 +158,7 @@ class Test(BaseTest):
                 torch.tensor([[1.5, 2.0, 34.3], [3.4, 1.2, 2.0]], requires_grad=True),
                 torch.tensor([[3.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True),
             ),
-            baselines=(torch.zeros((2, 3)), torch.zeros((2, 3))),
+            baselines=(torch.zeros((2, 3)), 0.0),
             additional_forward_args=(torch.arange(1.0, 7.0).reshape(2, 3), 1),
             type=type,
         )
@@ -171,7 +171,7 @@ class Test(BaseTest):
                 torch.tensor([[1.5, 2.0, 34.3], [3.4, 1.2, 2.0]], requires_grad=True),
                 torch.tensor([[3.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True),
             ),
-            baselines=(torch.zeros((2, 3)), torch.zeros((2, 3))),
+            baselines=(0.0, 0.00001),
             additional_forward_args=([2, 3], 1),
             type=type,
         )
@@ -230,7 +230,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = _zeros(inputs)
+            baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
         for method in [
             "riemann_right",
@@ -325,7 +325,7 @@ class Test(BaseTest):
             baselines = (baselines,)
 
         if baselines is None:
-            baselines = _zeros(inputs)
+            baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
         for method in [
             "riemann_right",

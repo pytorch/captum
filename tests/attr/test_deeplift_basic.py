@@ -62,11 +62,8 @@ class Test(BaseTest):
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
-        b1 = torch.tensor([[0.0, 0.0, 0.0]], requires_grad=True)
-        b2 = torch.tensor([[0.0, 0.0, 0.0]], requires_grad=True)
-
         inputs = (x1, x2)
-        baselines = (b1, b2)
+        baselines = (0.0, 0.0001)
 
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
@@ -107,6 +104,9 @@ class Test(BaseTest):
             b2 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
             return (b1, b2)
 
+        def gen_baselines_scalar():
+            return (0.0, 0.0001)
+
         def gen_baselines_with_inputs(inputs):
             b1 = inputs[0].mean(0, keepdim=True)
             b2 = inputs[1].mean(0, keepdim=True)
@@ -126,6 +126,9 @@ class Test(BaseTest):
             self._deeplift_assert(
                 model, DeepLiftShap(model), inputs, gen_baselines_returns_array
             )
+        with self.assertRaises(AssertionError):
+            self._deeplift_assert(model, dl_shap, inputs, gen_baselines_scalar)
+
         baselines = gen_baselines()
         attributions = dl_shap.attribute(inputs, baselines)
         attributions_with_func = dl_shap.attribute(inputs, gen_baselines)
@@ -141,7 +144,7 @@ class Test(BaseTest):
             else:
                 baselines = baselines()
 
-        baseline_bsz = len(baselines[0])
+        baseline_bsz = len(baselines[0]) if isinstance(baselines[0], torch.Tensor) else 1.0
         # Run attribution multiple times to make sure that it is
         # working as expected
         for _ in range(5):
@@ -176,7 +179,7 @@ class Test(BaseTest):
             )
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(input.shape, attribution.shape)
-            if inputs[0].shape == baselines[0].shape:
+            if isinstance(baselines[0], (int, float)) or inputs[0].shape == baselines[0].shape:
                 # Compare with Integrated Gradients
                 ig = IntegratedGradients(model)
                 attributions_ig = ig.attribute(inputs, baselines)

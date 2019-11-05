@@ -90,6 +90,15 @@ class BasicModel6_MultiTensor(nn.Module):
         return 1 - F.relu(1 - input)[:, 1]
 
 
+class BasicLinearModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(7, 1)
+
+    def forward(self, x1, x2):
+        return self.linear(torch.cat((x1, x2), dim=-1))
+
+
 class ReLUDeepLiftModel(nn.Module):
     r"""
         https://www.youtube.com/watch?v=f_iAM0NPwnM

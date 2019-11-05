@@ -7,15 +7,16 @@ import torch.nn.functional as F
 import numpy as np
 
 from .._utils.common import (
-    format_input,
-    format_baseline,
+    _format_input,
+    _format_baseline,
     _format_callable_baseline,
     _format_attributions,
     _format_tensor_into_tuples,
     _run_forward,
-    validate_input,
+    _validate_input,
     _expand_target,
     _expand_additional_forward_args,
+    _tensorize_baseline,
     ExpansionTypes,
 )
 from .._utils.attribution import GradientAttribution
@@ -102,16 +103,30 @@ class DeepLift(GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor or tuple of tensors, optional): Baselines define
-                        reference samples which are compared with the inputs.
-                        In order to assign attribution scores DeepLift computes
-                        the differences between the inputs and references and
-                        corresponding outputs.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor with exactly the same dimensions as inputs.
-                        If inputs is a tuple of tensors, baselines must also be
-                        a tuple of tensors, with matching dimensions to inputs.
-                        Default: zero tensor for each input tensor
+            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                        Baselines define reference samples that are compared with
+                        the inputs. In order to assign attribution scores DeepLift
+                        computes the differences between the inputs and references
+                        and corresponding outputs.
+                        Baselines can be provided either as :
+
+                        - a single tensor, if inputs is a single tensor, with
+                            exactly the same dimensions as inputs.
+
+                        - a tuple of tensors, if inputs is a tuple of tensors,
+                            with matching dimensions to inputs.
+
+                        - a single scalar, if inputs is a single tensor, which will
+                            be broadcasted for each input value in input tensor.
+
+                        - a tuple of scalars, if inputs is a tuple of tensors, with
+                            exactly the same number of elements as inputs tuple.
+                            Each scalar element in baselines' tuple is broadcasted
+                            for each input tensor at the same index in inputs
+                            tuple.
+
+                        Default: zero scalar for each input tensor
+
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
@@ -188,12 +203,12 @@ class DeepLift(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
-        baselines = format_baseline(baselines, inputs)
+        inputs = _format_input(inputs)
+        baselines = _format_baseline(baselines, inputs)
 
         gradient_mask = apply_gradient_requirements(inputs)
 
-        validate_input(inputs, baselines)
+        _validate_input(inputs, baselines)
 
         # set hooks for baselines
         warnings.warn(
@@ -204,6 +219,7 @@ class DeepLift(GradientAttribution):
         self.model.apply(self._register_hooks_ref)
 
         # make forward pass and remove baseline hooks
+        baselines = _tensorize_baseline(inputs, baselines)
         _run_forward(
             self.model,
             baselines,
@@ -510,8 +526,13 @@ class DeepLiftShap(DeepLift):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
+
+        assert isinstance(baselines[0], torch.Tensor), \
+        ("Baselines distribution has to be provided in form of a torch.Tensor but"
+        " found: {}. If baselines are provided in shape of scalars, `DeepLift`"
+        " approach can be used instead.".format(type(baselines[0])))
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]

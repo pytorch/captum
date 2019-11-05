@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .._utils.attribution import LayerAttribution
-from .._utils.common import format_input, _format_additional_forward_args
+from .._utils.common import _format_input, _format_additional_forward_args
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -119,7 +119,7 @@ class LayerGradientXActivation(LayerAttribution):
                 >>> # attribution size matches layer output, Nx12x32x32
                 >>> attribution = layer_ga.attribute(input, 3)
         """
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
