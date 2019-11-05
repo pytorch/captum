@@ -56,9 +56,7 @@ def _validate_input(
                 "The samples in input and baseline batches must have"
                 " the same shape or the baseline corresponding to the"
                 " input tensor must be a scalar."
-                " Found baseline: {} and input: {} ".format(
-                    baseline, input
-                )
+                " Found baseline: {} and input: {} ".format(baseline, input)
             )
         else:
             assert (
@@ -66,9 +64,7 @@ def _validate_input(
             ), (
                 "Input and baseline must have the same shape or the"
                 " baseline corresponding to each input tensor must be a scalar."
-                " Found baseline: {} and input: {}".format(
-                    baseline, input
-                )
+                " Found baseline: {} and input: {}".format(baseline, input)
             )
 
     assert (

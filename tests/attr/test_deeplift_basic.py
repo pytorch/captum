@@ -144,7 +144,9 @@ class Test(BaseTest):
             else:
                 baselines = baselines()
 
-        baseline_bsz = len(baselines[0]) if isinstance(baselines[0], torch.Tensor) else 1.0
+        baseline_bsz = (
+            len(baselines[0]) if isinstance(baselines[0], torch.Tensor) else 1.0
+        )
         # Run attribution multiple times to make sure that it is
         # working as expected
         for _ in range(5):
@@ -179,7 +181,10 @@ class Test(BaseTest):
             )
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(input.shape, attribution.shape)
-            if isinstance(baselines[0], (int, float)) or inputs[0].shape == baselines[0].shape:
+            if (
+                isinstance(baselines[0], (int, float))
+                or inputs[0].shape == baselines[0].shape
+            ):
                 # Compare with Integrated Gradients
                 ig = IntegratedGradients(model)
                 attributions_ig = ig.attribute(inputs, baselines)

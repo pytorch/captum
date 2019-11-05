@@ -3,8 +3,6 @@
 import torch
 import numpy as np
 
-from torch import nn
-
 from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
 from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2, BasicLinearModel
@@ -75,10 +73,12 @@ class Test(BaseTest):
         attributions_base_tnsrs, _ = gradient_shap.attribute(
             inputs, baselines_tensors, n_samples=50, return_convergence_delta=True
         )
-        assertTensorAlmostEqual(self, attributions_base_scalars[0],
-                                attributions_base_tnsrs[0])
-        assertTensorAlmostEqual(self, attributions_base_scalars[1],
-                                attributions_base_tnsrs[1])
+        assertTensorAlmostEqual(
+            self, attributions_base_scalars[0], attributions_base_tnsrs[0]
+        )
+        assertTensorAlmostEqual(
+            self, attributions_base_scalars[1], attributions_base_tnsrs[1]
+        )
 
     def test_classification_baselines_as_function(self):
         num_in = 40

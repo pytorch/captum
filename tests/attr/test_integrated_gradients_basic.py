@@ -132,10 +132,7 @@ class Test(BaseTest):
             model, torch.tensor([0.0]), torch.tensor([0.0]), type=type
         )
         self._compute_attribution_and_evaluate(
-            model,
-            torch.tensor([-1.0], requires_grad=True),
-            0.00001,
-            type=type,
+            model, torch.tensor([-1.0], requires_grad=True), 0.00001, type=type,
         )
 
     def _assert_multi_argument(self, type):

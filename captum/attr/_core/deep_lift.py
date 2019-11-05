@@ -529,10 +529,11 @@ class DeepLiftShap(DeepLift):
         inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
 
-        assert isinstance(baselines[0], torch.Tensor), \
-        ("Baselines distribution has to be provided in form of a torch.Tensor but"
-        " found: {}. If baselines are provided in shape of scalars, `DeepLift`"
-        " approach can be used instead.".format(type(baselines[0])))
+        assert isinstance(baselines[0], torch.Tensor), (
+            "Baselines distribution has to be provided in form of a torch.Tensor but"
+            " found: {}. If baselines are provided in shape of scalars, `DeepLift`"
+            " approach can be used instead.".format(type(baselines[0]))
+        )
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]

@@ -25,8 +25,9 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         cond = LayerConductance(net, net.linear0)
         attributions = cond.attribute(inp, 0.0001, target=0)
-        assertArraysAlmostEqual(attributions.squeeze(0).tolist(),
-                                [-0.00039,  390.0, -0.00039])
+        assertArraysAlmostEqual(
+            attributions.squeeze(0).tolist(), [-0.00039, 390.0, -0.00039]
+        )
 
     def test_simple_linear_conductance(self):
         net = BasicModel_MultiLayer()
