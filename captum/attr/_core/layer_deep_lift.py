@@ -16,6 +16,7 @@ from .._utils.common import (
     _format_callable_baseline,
     _validate_input,
     _tensorize_baseline,
+    _expand_baselines_based_on_inputs,
 )
 
 
@@ -196,6 +197,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         # If the batch size is large we could potentially also tensorize only one
         # sample and expand the output to the rest of the elements in the batch
         baselines = _tensorize_baseline(inputs, baselines)
+        # expand baselines to match inputs in case baselines are provided as a
+        # single tensor because targets, e.g. have input shape
+        baselines = _expand_baselines_based_on_inputs(inputs, baselines)
+
         attr_baselines = _forward_layer_eval(
             self.model,
             baselines,

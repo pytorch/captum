@@ -181,7 +181,6 @@ def _tensorize_baseline(inputs, baselines):
             type(baselines), type(inputs)
         )
     )
-
     return tuple(
         torch.full_like(input, baseline)
         if isinstance(baseline, (int, float))
@@ -252,6 +251,15 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
         else inputs
     )
     return _select_targets(output, target)
+
+
+def _expand_baselines_based_on_inputs(inputs, baselines):
+    return tuple(
+        torch.cat([baseline] * input.shape[0])
+        if input.shape[0] > baseline.shape[0]
+        else baseline
+        for input, baseline in zip(inputs, baselines)
+    )
 
 
 def _expand_additional_forward_args(

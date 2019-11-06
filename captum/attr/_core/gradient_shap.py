@@ -265,7 +265,6 @@ class InputBaselineXGradient(GradientAttribution):
             input_baseline_diff * grad
             for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
         )
-
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
                 attributions,

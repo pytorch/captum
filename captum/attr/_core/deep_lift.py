@@ -14,6 +14,7 @@ from .._utils.common import (
     _format_tensor_into_tuples,
     _run_forward,
     _validate_input,
+    _expand_baselines_based_on_inputs,
     _expand_target,
     _expand_additional_forward_args,
     _tensorize_baseline,
@@ -224,7 +225,9 @@ class DeepLift(GradientAttribution):
         baselines = _tensorize_baseline(inputs, baselines)
 
         # expand baselines to match inputs in case baselines are provided as a
-        # single tensor input
+        # single tensor because targets, e.g. have input shape
+        baselines = _expand_baselines_based_on_inputs(inputs, baselines)
+
         _run_forward(
             self.model,
             baselines,
