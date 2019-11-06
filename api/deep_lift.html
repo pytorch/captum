@@ -49,7 +49,8 @@ deep neural networks,  Marco Ancona, et.al.
 <p>This implementation supports only Rescale rule. RevealCancel rule will
 be supported in later releases.
 In addition to that, in order to keep the implementation cleaner, DeepLIFT
-for internal neurons and layers will be implemented separately.
+for internal neurons and layers extends current implementation and is
+implemented separately in LayerDeepLift and NeuronDeepLift.
 Although DeepLIFT’s(Rescale Rule) attribution quality is comparable with
 Integrated Gradients, it runs significantly faster than Integrated
 Gradients and is preferred for large datasets.</p>
@@ -58,7 +59,7 @@ but the plan is to expand the list in the future.</p>
 <p>Note: As we know, currently we cannot access the building blocks,
 of PyTorch’s built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
 Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
-with performance similar to built-in ones with TorchScript.
+with performance similar to built-in ones using TorchScript.
 More details on how to build custom RNNs can be found here:
 <a class="reference external" href="https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/">https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</a></p>
 <dl class="field-list simple">

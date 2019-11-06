@@ -36,12 +36,15 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
-Attributions for a particular neuron in the output of
-this layer are computed using the argument neuron_index
-in the attribute method.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -52,7 +55,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.neuron_gradient.NeuronGradient.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_gradient.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_gradient.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the gradient of the output of a particular neuron with
 respect to the inputs of the network.</p>
 <dl class="field-list simple">
@@ -85,6 +88,17 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attributions with respect to the neuron input
+or output. If <cite>attribute_to_neuron_input</cite> is set to True
+then the attributions will be computed with respect to
+neuron’s inputs, otherwise it will be computed with respect
+to neuron’s outputs.
+Note that currently it is assumed that either the input
+or the output of internal neurons, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -139,11 +153,14 @@ corresponding sized tensors is returned.</p>
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
-Attributions for a particular neuron in the output of
-this layer are computed using the argument neuron_index
-in the attribute method.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -154,7 +171,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_integrated_gradients.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximates the integral of gradients for a particular neuron
 along the path from a baseline input to the given input.
 If no baseline is provided, the default baseline is the zero tensor.
@@ -221,6 +238,17 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attributions with respect to the neuron input
+or output. If <cite>attribute_to_neuron_input</cite> is set to True
+then the attributions will be computed with respect to
+neuron’s inputs, otherwise it will be computed with respect
+to neuron’s outputs.
+Note that currently it is assumed that either the input
+or the output of internal neuron, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -276,11 +304,20 @@ corresponding sized tensors is returned.</p>
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
-Attributions for a particular neuron in the output of
-this layer are computed using the argument neuron_index
+Attributions for a particular neuron in the input or output
+of this layer are computed using the argument neuron_index
 in the attribute method.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Currently, only layers with a single tensor input or output
+are supported.</p></li>
+<li><p><strong>layer</strong> – Layer for which attributions are computed.
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -291,7 +328,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.neuron_conductance.NeuronConductance.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_conductance.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.neuron_conductance.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to particular hidden neuron. The
 returned output is in the shape of the input, showing the attribution
 / conductance of each input feature to the selected hidden layer neuron.
@@ -391,6 +428,17 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
+<li><p><strong>attribute_to_neuron_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attributions with respect to the neuron input
+or output. If <cite>attribute_to_neuron_input</cite> is set to True
+then the attributions will be computed with respect to
+neuron’s inputs, otherwise it will be computed with respect
+to neuron’s outputs.
+Note that currently it is assumed that either the input
+or the output of internal neuron, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

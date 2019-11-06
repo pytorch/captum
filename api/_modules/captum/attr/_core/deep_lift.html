@@ -42,6 +42,7 @@
     <span class="n">_run_forward</span><span class="p">,</span>
     <span class="n">validate_input</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">ExpansionTypes</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
@@ -67,8 +68,16 @@
 <span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sd">"""Although input model is of type `nn.DataParallel` it will run</span>
+<span class="sd">                only on one device. Support for multiple devices will be added soon."""</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">module</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="DeepLift.attribute"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -93,7 +102,8 @@
 <span class="sd">        This implementation supports only Rescale rule. RevealCancel rule will</span>
 <span class="sd">        be supported in later releases.</span>
 <span class="sd">        In addition to that, in order to keep the implementation cleaner, DeepLIFT</span>
-<span class="sd">        for internal neurons and layers will be implemented separately.</span>
+<span class="sd">        for internal neurons and layers extends current implementation and is</span>
+<span class="sd">        implemented separately in LayerDeepLift and NeuronDeepLift.</span>
 <span class="sd">        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with</span>
 <span class="sd">        Integrated Gradients, it runs significantly faster than Integrated</span>
 <span class="sd">        Gradients and is preferred for large datasets.</span>
@@ -104,7 +114,7 @@
 <span class="sd">        Note: As we know, currently we cannot access the building blocks,</span>
 <span class="sd">        of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.</span>
 <span class="sd">        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs</span>
-<span class="sd">        with performance similar to built-in ones with TorchScript.</span>
+<span class="sd">        with performance similar to built-in ones using TorchScript.</span>
 <span class="sd">        More details on how to build custom RNNs can be found here:</span>
 <span class="sd">        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
 
@@ -213,19 +223,27 @@
         <span class="n">validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
 
         <span class="c1"># set hooks for baselines</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">"ref"</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sd">"""Setting forward, backward hooks and attributes on non-linear</span>
+<span class="sd">               activations. The hooks and attributes will be removed</span>
+<span class="sd">            after the attribution is finished"""</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks_ref</span><span class="p">)</span>
+
         <span class="c1"># make forward pass and remove baseline hooks</span>
         <span class="n">_run_forward</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># remove forward hook set for baselines</span>
+        <span class="k">for</span> <span class="n">forward_handles_ref</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span><span class="p">:</span>
+            <span class="n">forward_handles_ref</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
-        <span class="c1"># set hook for inputs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
         <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">target_ind</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
@@ -240,8 +258,27 @@
 
         <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+            <span class="n">return_convergence_delta</span><span class="p">,</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">is_inputs_tuple</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">,</span>
+        <span class="n">attributions</span><span class="p">,</span>
+        <span class="n">start_point</span><span class="p">,</span>
+        <span class="n">end_point</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span>
             <span class="c1"># computes convergence error</span>
             <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
                 <span class="n">attributions</span><span class="p">,</span>
@@ -252,7 +289,7 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_is_non_linear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -287,11 +324,6 @@
         <span class="n">input_attr_name</span> <span class="o">=</span> <span class="s2">"input_ref"</span>
         <span class="n">output_attr_name</span> <span class="o">=</span> <span class="s2">"output_ref"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detach_tensors</span><span class="p">(</span><span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-        <span class="c1"># since it is a reference forward hook remove it from the module after</span>
-        <span class="c1"># detaching the variables</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">ref_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-        <span class="c1"># remove attribute `ref_handle`</span>
-        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">ref_handle</span>
 
     <span class="k">def</span> <span class="nf">_detach_tensors</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span>
@@ -328,37 +360,30 @@
 
         <span class="k">return</span> <span class="n">multipliers</span>
 
-    <span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">"non_ref"</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_can_register_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="c1"># TODO find a better way of checking if a module is a container or not</span>
         <span class="n">module_fullname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
         <span class="n">has_already_hooks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">_backward_hooks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="p">(</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span>
             <span class="s2">"nn.modules.container"</span> <span class="ow">in</span> <span class="n">module_fullname</span>
             <span class="ow">or</span> <span class="n">has_already_hooks</span>
             <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_non_linear</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
-        <span class="p">):</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_hooks_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_register_hook</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">forward_handle_ref</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook_ref</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle_ref</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_register_hook</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="c1"># adds forward hook to leaf nodes that are non-linear</span>
-        <span class="k">if</span> <span class="n">input_type</span> <span class="o">!=</span> <span class="s2">"ref"</span><span class="p">:</span>
-            <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
-            <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook_ref</span><span class="p">)</span>
-            <span class="n">ref_handle</span> <span class="o">=</span> <span class="s2">"ref_handle"</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">ref_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_traverse_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">hook_fn</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">"non_ref"</span><span class="p">):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="sd">"""Setting forward, backward hooks and attributes on non-linear</span>
-<span class="sd">               activations. The hooks and attributes will be removed</span>
-<span class="sd">            after the attribution is finished"""</span>
-        <span class="p">)</span>
-        <span class="n">children</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">children</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_traverse_modules</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">hook_fn</span><span class="p">,</span> <span class="n">input_type</span><span class="p">)</span>
-            <span class="n">hook_fn</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">input_type</span><span class="p">)</span>
+        <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
+        <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>
@@ -372,6 +397,11 @@
 
 <div class="viewcode-block" id="DeepLiftShap"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DeepLiftShap.attribute"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -503,14 +533,6 @@
 <span class="sd">            &gt;&gt;&gt; # Computes shap values using deeplift for class 3.</span>
 <span class="sd">            &gt;&gt;&gt; attribution = dl.attribute(input, target=3)</span>
 <span class="sd">        """</span>
-
-        <span class="k">def</span> <span class="nf">compute_mean</span><span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">):</span>
-            <span class="c1"># Average for multiple references</span>
-            <span class="n">attr_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">attr_shape</span> <span class="o">+=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attr_shape</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
         <span class="c1"># Keeps track whether original input is a tuple or not before</span>
         <span class="c1"># converting it into a tuple.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
@@ -521,8 +543,42 @@
         <span class="c1"># batch sizes</span>
         <span class="n">inp_bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">base_bsz</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="c1"># match the sizes of inputs and baselines in case of multiple references</span>
-        <span class="c1"># for a single input</span>
+
+        <span class="p">(</span>
+            <span class="n">exp_inp</span><span class="p">,</span>
+            <span class="n">exp_base</span><span class="p">,</span>
+            <span class="n">exp_tgt</span><span class="p">,</span>
+            <span class="n">exp_addit_args</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expand_inputs_baselines_targets</span><span class="p">(</span>
+            <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">exp_inp</span><span class="p">,</span>
+            <span class="n">exp_base</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">exp_tgt</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">exp_addit_args</span><span class="p">,</span>
+            <span class="n">return_convergence_delta</span><span class="o">=</span><span class="n">return_convergence_delta</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
+
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_expand_inputs_baselines_targets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+    <span class="p">):</span>
+        <span class="n">inp_bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">base_bsz</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
         <span class="n">expanded_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">base_bsz</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
@@ -540,25 +596,24 @@
         <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
             <span class="n">target</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span>
         <span class="p">)</span>
-
-        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+        <span class="n">input_additional_args</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_expand_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
             <span class="n">expanded_inputs</span><span class="p">,</span>
             <span class="n">expanded_baselines</span><span class="p">,</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">expanded_target</span><span class="p">,</span>
-            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
-            <span class="n">return_convergence_delta</span><span class="o">=</span><span class="n">return_convergence_delta</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
-
-        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">compute_mean</span><span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span>
+            <span class="n">expanded_target</span><span class="p">,</span>
+            <span class="n">input_additional_args</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div></div>
+    <span class="k">def</span> <span class="nf">_compute_mean_across_baselines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attribution</span><span class="p">):</span>
+        <span class="c1"># Average for multiple references</span>
+        <span class="n">attr_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">attr_shape</span> <span class="o">+=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attr_shape</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="nonlinear"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.nonlinear">[docs]</a><span class="k">def</span> <span class="nf">nonlinear</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
@@ -678,7 +733,7 @@
     <span class="p">)</span>
 
     <span class="c1"># If the module is invalid, save the newly computed gradients</span>
-    <span class="c1"># The original_grad_input will be overriden later in the Tensor hook</span>
+    <span class="c1"># The original_grad_input will be overridden later in the Tensor hook</span>
     <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
         <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="n">new_grad_input</span>
         <span class="k">return</span> <span class="n">original_grad_input</span>

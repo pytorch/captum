@@ -37,11 +37,14 @@
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
-Output size of attribute matches this layer’s output
-dimensions, corresponding to attribution of each neuron
-in the output of this layer.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -52,7 +55,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.layer_conductance.LayerConductance.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_conductance.html#LayerConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_conductance.LayerConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_conductance.html#LayerConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_conductance.LayerConductance.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to the given layer. The
 returned output is in the shape of the layer’s output, showing the total
 conductance of each hidden layer neuron.</p>
@@ -155,14 +158,28 @@ convergence delta or not. If <cite>return_convergence_delta</cite>
 is set to True convergence delta will be returned in
 a tuple following attributions.
 Default: False</p></li>
+<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attribution with respect to the layer input
+or output. If <cite>attribute_to_layer_input</cite> is set to True
+then the attributions will be computed with respect to
+layer inputs, otherwise it will be computed with respect
+to layer outputs.
+Note that currently it is assumed that either the input
+or the output of internal layer, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Conductance of each neuron in given layer output.
-Attributions will always be the same size as the
-output of the given layer.</p>
+<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Conductance of each neuron in given layer input or
+output. Attributions will always be the same size as
+the input or output of the given layer, depending on
+whether we attribute to the inputs or outputs
+of the layer which is decided by the input flag
+<cite>attribute_to_layer_input</cite>.</p>
 </dd>
 </dl>
 </li>
@@ -231,11 +248,14 @@ provides a convergence delta (aka approximation error) or not.</p>
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
-Output size of attribute matches this layer’s output
-dimensions, corresponding to attribution of each neuron
-in the output of this layer.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -246,7 +266,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.layer_activation.LayerActivation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_activation.html#LayerActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_activation.LayerActivation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_activation.html#LayerActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_activation.LayerActivation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes activation of selected layer for given input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -271,6 +291,17 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
+<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attribution with respect to the layer input
+or output. If <cite>attribute_to_layer_input</cite> is set to True
+then the attributions will be computed with respect to
+layer input, otherwise it will be computed with respect
+to layer output.
+Note that currently it is assumed that either the input
+or the output of internal layer, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -316,11 +347,14 @@ output of the given layer.</p>
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
-Output size of attribute matches this layer’s output
-dimensions, corresponding to attribution of each neuron
-in the output of this layer.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -331,7 +365,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.internal_influence.InternalInfluence.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/internal_influence.html#InternalInfluence.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.internal_influence.InternalInfluence.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/internal_influence.html#InternalInfluence.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.internal_influence.InternalInfluence.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes internal influence by approximating the integral of gradients
 for a particular layer along the path from a baseline input to the
 given input.
@@ -428,6 +462,17 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations
 are processed in one batch.
 Default: None</p></li>
+<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attribution with respect to the layer input
+or output. If <cite>attribute_to_layer_input</cite> is set to True
+then the attributions will be computed with respect to
+layer inputs, otherwise it will be computed with respect
+to layer outputs.
+Note that currently it is assumed that either the input
+or the output of internal layer, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -435,7 +480,9 @@ Default: None</p></li>
 <li><dl class="simple">
 <dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Internal influence of each neuron in given
 layer output. Attributions will always be the same size
-as the output of the given layer.</p>
+as the output or input of the given layer depending on
+whether <cite>attribute_to_layer_input</cite> is set to <cite>False</cite> or
+<a href="#id1"><span class="problematic" id="id2">`</span></a>True`respectively.</p>
 </dd>
 </dl>
 </li>
@@ -473,11 +520,14 @@ as the output of the given layer.</p>
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
 <li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+de394b6 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
-Output size of attribute matches this layer’s output
-dimensions, corresponding to attribution of each neuron
-in the output of this layer.
-Currently, only layers with a single tensor output are
-supported.</p></li>
+Output size of attribute matches this layer’s input or
+output dimensions, depending on whether we attribute to
+the inputs or outputs of the layer, corresponding to
+attribution of each neuron in the input or output of
+this layer.
+Currently, it is assumed that the inputs or the outputs
+of the layer, depending on which one is used for
+attribution, can only be a single tensor.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -488,7 +538,7 @@ then it is not neccesary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_gradient_x_activation.html#LayerGradientXActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer_gradient_x_activation.html#LayerGradientXActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.layer_gradient_x_activation.LayerGradientXActivation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes element-wise product of gradient and activation for selected
 layer on given inputs.</p>
 <dl class="field-list simple">
@@ -550,6 +600,17 @@ arguments in inputs.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
+<li><p><strong>attribute_to_layer_input</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to
+compute the attribution with respect to the layer input
+or output. If <cite>attribute_to_layer_input</cite> is set to True
+then the attributions will be computed with respect to
+layer input, otherwise it will be computed with respect
+to layer output.
+Note that currently it is assumed that either the input
+or the output of internal layer, depending on whether we
+attribute to the input or output, is a single tensor.
+Support for multiple tensors will be added later.
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
