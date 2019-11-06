@@ -256,7 +256,7 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
 def _expand_baselines_based_on_inputs(inputs, baselines):
     return tuple(
         torch.cat([baseline] * input.shape[0])
-        if input.shape[0] > baseline.shape[0]
+        if input.shape[0] > baseline.shape[0] and baseline.shape[0] == 1
         else baseline
         for input, baseline in zip(inputs, baselines)
     )
