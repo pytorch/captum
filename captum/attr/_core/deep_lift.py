@@ -221,11 +221,11 @@ class DeepLift(GradientAttribution):
         )
         self.model.apply(self._register_hooks_ref)
 
-        # make forward pass and remove baseline hooks
         baselines = _tensorize_baseline(inputs, baselines)
 
-        # expand baselines to match inputs in case baselines are provided as a
-        # single tensor because targets, e.g. have input shape
+        # expand baselines to match inputs in case baselines are provided
+        # as a one example tensor because targets, e.g. match the number of examples
+        # from inputs
         baselines = _expand_baselines_based_on_inputs(inputs, baselines)
 
         _run_forward(
