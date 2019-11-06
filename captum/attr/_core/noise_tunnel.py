@@ -186,6 +186,8 @@ class NoiseTunnel(Attribution):
         def expand_and_update_baselines():
             def get_random_baseline_indices(bsz, baseline):
                 num_ref_samples = baseline.shape[0]
+                if baseline.shape[0] == 1:
+                    return 0
                 return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
 
             # TODO allow to add noise to baselines as well
@@ -211,8 +213,9 @@ class NoiseTunnel(Attribution):
                 baselines = tuple(
                     baseline.repeat_interleave(n_samples, dim=0)
                     if isinstance(baseline, torch.Tensor)
+                    and baseline.shape[0] == input.shape[0]
                     else baseline
-                    for baseline in baselines
+                    for input, baseline in zip(inputs, baselines)
                 )
             # update kwargs with expanded baseline
             kwargs["baselines"] = baselines

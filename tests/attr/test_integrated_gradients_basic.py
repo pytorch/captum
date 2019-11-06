@@ -172,6 +172,18 @@ class Test(BaseTest):
             additional_forward_args=([2, 3], 1),
             type=type,
         )
+        # similar to previous case plus baseline consists of a tensor and
+        # a single example
+        self._compute_attribution_and_evaluate(
+            model,
+            (
+                torch.tensor([[1.5, 2.0, 34.3], [3.4, 1.2, 2.0]], requires_grad=True),
+                torch.tensor([[3.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True),
+            ),
+            baselines=(torch.zeros((1, 3)), 0.00001),
+            additional_forward_args=([2, 3], 1),
+            type=type,
+        )
 
     def _assert_multi_tensor_input(self, type):
         model = BasicModel6_MultiTensor()
@@ -323,7 +335,6 @@ class Test(BaseTest):
 
         if baselines is None:
             baselines = _tensorize_baseline(inputs, _zeros(inputs))
-
         for method in [
             "riemann_right",
             "riemann_left",

@@ -43,7 +43,7 @@ def _validate_input(
     assert len(inputs) == len(baselines), (
         "Input and baseline must have the same "
         "dimensions, baseline has {} features whereas input has {}.".format(
-            len(baselines), len(inputs)
+            baselines, inputs
         )
     )
 
@@ -60,11 +60,16 @@ def _validate_input(
             )
         else:
             assert (
-                isinstance(baseline, (int, float)) or input.shape == baseline.shape
+                isinstance(baseline, (int, float))
+                or input.shape == baseline.shape
+                or baseline.shape[0] == 1
             ), (
-                "Input and baseline must have the same shape or the"
-                " baseline corresponding to each input tensor must be a scalar."
-                " Found baseline: {} and input: {}".format(baseline, input)
+                "Baseline can be provided as a tensor for just one input and"
+                " broadcasted to the batch or input and baseline must have the"
+                " same shape or the baseline corresponding to each input tensor"
+                " must be a scalar. Found baseline: {} and input: {}".format(
+                    baseline, input
+                )
             )
 
     assert (

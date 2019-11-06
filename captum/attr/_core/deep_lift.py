@@ -111,7 +111,9 @@ class DeepLift(GradientAttribution):
                         Baselines can be provided either as :
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs.
+                            exactly the same dimensions as inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
                             with matching dimensions to inputs.
@@ -220,6 +222,9 @@ class DeepLift(GradientAttribution):
 
         # make forward pass and remove baseline hooks
         baselines = _tensorize_baseline(inputs, baselines)
+
+        # expand baselines to match inputs in case baselines are provided as a
+        # single tensor input
         _run_forward(
             self.model,
             baselines,
@@ -246,7 +251,6 @@ class DeepLift(GradientAttribution):
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
-
         return self._compute_conv_delta_and_format_attrs(
             return_convergence_delta,
             attributions,
@@ -529,10 +533,12 @@ class DeepLiftShap(DeepLift):
         inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
 
-        assert isinstance(baselines[0], torch.Tensor), (
-            "Baselines distribution has to be provided in form of a torch.Tensor but"
-            " found: {}. If baselines are provided in shape of scalars, `DeepLift`"
-            " approach can be used instead.".format(type(baselines[0]))
+        assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (
+            "Baselines distribution has to be provided in form of a torch.Tensor"
+            " with more than one example but found: {}."
+            " If baselines are provided in shape of scalars or with a single"
+            " baseline example, `DeepLift`"
+            " approach can be used instead.".format(baselines[0])
         )
 
         # batch sizes
