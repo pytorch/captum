@@ -207,7 +207,6 @@ class BasicModel_MultiLayer(nn.Module):
         lin1_out = self.linear1(lin0_out)
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
-        # used to test handling of inplace excess operations
         if multidim_output:
             stack_mid = torch.stack((lin2_out, 2 * lin2_out), dim=2)
             return torch.stack((stack_mid, 4 * stack_mid), dim=3)

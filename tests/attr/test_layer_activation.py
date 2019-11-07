@@ -19,6 +19,20 @@ class Test(BaseTest):
         self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 100.0, 0.0])
 
     def test_simple_linear_activation(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._layer_activation_test_assert(
+            net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
+        )
+
+    def test_simple_relu_activation_input_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[2.0, -5.0, 4.0]])
+        self._layer_activation_test_assert(
+            net, net.relu, inp, [-9.0, 2.0, 2.0, 2.0], attribute_to_layer_input=True
+        )
+
+    def test_simple_linear_activation_inplace(self):
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[2.0, -5.0, 4.0]])
         self._layer_activation_test_assert(net, net.linear1, inp, [-9.0, 2.0, 2.0, 2.0])
@@ -58,10 +72,13 @@ class Test(BaseTest):
         test_input,
         expected_activation,
         additional_input=None,
+        attribute_to_layer_input=False,
     ):
         layer_act = LayerActivation(model, target_layer)
         attributions = layer_act.attribute(
-            test_input, additional_forward_args=additional_input
+            test_input,
+            additional_forward_args=additional_input,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         assertArraysAlmostEqual(
             attributions.squeeze(0).tolist(), expected_activation, delta=0.01
