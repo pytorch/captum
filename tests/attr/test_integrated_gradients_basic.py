@@ -245,7 +245,7 @@ class Test(BaseTest):
                     baselines,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=2000,
+                    n_steps=100,
                     target=target,
                     return_convergence_delta=True,
                 )
@@ -255,7 +255,7 @@ class Test(BaseTest):
                     baselines,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=2000,
+                    n_steps=100,
                     target=target,
                     return_convergence_delta=True,
                 )
@@ -281,7 +281,7 @@ class Test(BaseTest):
                     target=target,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=2000,
+                    n_steps=100,
                     return_convergence_delta=True,
                 )
                 attributions_without_delta = nt.attribute(
@@ -293,13 +293,15 @@ class Test(BaseTest):
                     target=target,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=2000,
+                    n_steps=100,
                 )
                 self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
             for input, attribution in zip(inputs, attributions):
                 self.assertEqual(attribution.shape, input.shape)
-            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
+            # TODO (T57097503): Separate tests for different
+            # integration methods and decrease threshold.
+            self.assertTrue(all(abs(delta.numpy().flatten()) < 0.4))
 
             # compare attributions retrieved with and without
             # `return_convergence_delta` flag
@@ -338,7 +340,7 @@ class Test(BaseTest):
                     baselines,
                     additional_forward_args=additional_forward_args,
                     method=method,
-                    n_steps=200,
+                    n_steps=100,
                     target=target,
                     internal_batch_size=internal_batch_size,
                     return_convergence_delta=True,
@@ -350,7 +352,7 @@ class Test(BaseTest):
                         tuple(baseline[i : i + 1] for baseline in baselines),
                         additional_forward_args=additional_forward_args,
                         method=method,
-                        n_steps=200,
+                        n_steps=100,
                         target=target,
                         return_convergence_delta=True,
                     )
