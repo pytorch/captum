@@ -25,6 +25,13 @@ class Test(BaseTest):
             net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
         )
 
+    def test_simple_linear_internal_inf_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._internal_influence_test_assert(
+            net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
+        )
+
     def test_simple_relu_internal_inf(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)

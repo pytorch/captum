@@ -26,6 +26,11 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
 
+    def test_simple_gradient_input_linear1_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
+
     def test_simple_gradient_input_relu(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
