@@ -130,7 +130,7 @@ target_class_index = 5
 
 # applying integrated gradients on the SoftmaxModel and input data point
 ig = IntegratedGradients(model)
-attributions, approximation_error = ig.attribute(input, target=target)
+attributions, approximation_error = ig.attribute(input, target=target_class_index)
 
 # The input and returned corresponding attribution have the
 # same shape and dimensionality.
