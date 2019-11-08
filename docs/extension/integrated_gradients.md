@@ -66,7 +66,8 @@ baseline2 = torch.tensor([0.0])
 ig = IntegratedGradients(model)
 attributions, approximation_error = ig.attribute((input1, input2),
                                                  baselines=(baseline1, baseline2),
-                                                 method='gausslegendre')
+                                                 method='gausslegendre',
+                                                 return_convergence_delta=True)
 output
 
 ...................
@@ -130,7 +131,8 @@ target_class_index = 5
 
 # applying integrated gradients on the SoftmaxModel and input data point
 ig = IntegratedGradients(model)
-attributions, approximation_error = ig.attribute(input, target=target_class_index)
+attributions, approximation_error = ig.attribute(input, target=target_class_index,
+                                    return_convergence_delta=True)
 
 # The input and returned corresponding attribution have the
 # same shape and dimensionality.
@@ -195,7 +197,7 @@ model = ToyModel_With_Additional_Forward_Args()
 # Applying integrated gradients on the input
 ig = IntegratedGradients(model)
 (input1_attr, input2_attr), delta = ig.attribute((input1, input2), n_steps=100,
-                                    additional_forward_args=1)
+                                    additional_forward_args=1, return_convergence_delta=True)
 output
 .........
 input1_attr: tensor([[0.0000, 0.0000],
