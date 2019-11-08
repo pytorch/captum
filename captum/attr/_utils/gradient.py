@@ -178,7 +178,7 @@ def _forward_layer_eval_with_neuron_grads(
             saved_layer[eval_tsr.device] = eval_tsr.clone()
 
     if attribute_to_layer_input:
-        hook = layer.register_forward_hook(forward_hook)
+        hook = layer.register_forward_pre_hook(forward_hook)
     else:
         hook = layer.register_forward_hook(forward_hook)
     _run_forward(forward_fn, inputs, additional_forward_args=additional_forward_args)
@@ -298,7 +298,7 @@ def compute_layer_gradients_and_eval(
                 return eval_tsr.clone()
 
         if attribute_to_layer_input:
-            hook = layer.register_forward_hook(forward_hook)
+            hook = layer.register_forward_pre_hook(forward_hook)
         else:
             hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
