@@ -212,6 +212,7 @@ class NoiseTunnel(Attribution):
                     baseline.repeat_interleave(n_samples, dim=0)
                     if isinstance(baseline, torch.Tensor)
                     and baseline.shape[0] == input.shape[0]
+                    and baseline.shape[0] > 1
                     else baseline
                     for input, baseline in zip(inputs, baselines)
                 )

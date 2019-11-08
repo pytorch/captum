@@ -10,7 +10,6 @@ from .common import (
     _validate_input,
     _validate_target,
     _tensorize_baseline,
-    _expand_baselines_based_on_inputs,
 )
 from .gradient import compute_gradients
 
@@ -217,15 +216,10 @@ class GradientAttribution(Attribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        # tensorizing start_point in case it is a scalar
+        # tensorizing start_point in case it is a scalar or one example baseline
         # If the batch size is large we could potentially also tensorize only one
         # sample and expand the output to the rest of the elements in the batch
         start_point = _tensorize_baseline(end_point, start_point)
-
-        # expand start_points to match end_points in case start_points are provided
-        # as a one example tensor because targets, e.g. match the number of examples
-        # from end_points
-        start_point = _expand_baselines_based_on_inputs(end_point, start_point)
 
         attributions = _format_tensor_into_tuples(attributions)
 

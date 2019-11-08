@@ -63,7 +63,7 @@ class Test(BaseTest):
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
         inputs = (x1, x2)
-        baselines = (0.0, 0.0001)
+        baselines = (0, 0.0001)
 
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
@@ -155,7 +155,7 @@ class Test(BaseTest):
                 baselines = baselines()
 
         baseline_bsz = (
-            len(baselines[0]) if isinstance(baselines[0], torch.Tensor) else 1.0
+            len(baselines[0]) if isinstance(baselines[0], torch.Tensor) else 1
         )
         # Run attribution multiple times to make sure that it is
         # working as expected

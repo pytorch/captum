@@ -14,7 +14,6 @@ from .._utils.common import (
     _format_tensor_into_tuples,
     _run_forward,
     _validate_input,
-    _expand_baselines_based_on_inputs,
     _expand_target,
     _expand_additional_forward_args,
     _tensorize_baseline,
@@ -117,7 +116,9 @@ class DeepLift(GradientAttribution):
                             with inputs.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with matching dimensions to inputs.
+                            with matching dimensions to inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
                             be broadcasted for each input value in input tensor.
@@ -128,7 +129,9 @@ class DeepLift(GradientAttribution):
                             for each input tensor at the same index in inputs
                             tuple.
 
-                        Default: zero scalar for each input tensor
+                        Default: None
+                            In this case we internally use zero scalar
+                            corresponding to each input tensor
 
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
@@ -222,11 +225,6 @@ class DeepLift(GradientAttribution):
         self.model.apply(self._register_hooks_ref)
 
         baselines = _tensorize_baseline(inputs, baselines)
-
-        # expand baselines to match inputs in case baselines are provided
-        # as a one example tensor because targets, e.g. match the number of examples
-        # from inputs
-        baselines = _expand_baselines_based_on_inputs(inputs, baselines)
 
         _run_forward(
             self.model,

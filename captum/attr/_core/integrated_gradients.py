@@ -5,9 +5,9 @@ from .._utils.approximation_methods import approximation_parameters
 from .._utils.batching import _batched_operator
 from .._utils.common import (
     _validate_input,
-    _format_input_baseline,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input_baseline,
     _reshape_and_sum,
     _expand_additional_forward_args,
     _expand_target,

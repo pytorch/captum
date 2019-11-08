@@ -43,7 +43,7 @@ def _validate_input(
     assert len(inputs) == len(baselines), (
         "Input and baseline must have the same "
         "dimensions, baseline has {} features whereas input has {}.".format(
-            baselines, inputs
+            len(baselines), len(inputs)
         )
     )
 
@@ -175,6 +175,13 @@ def _zeros(inputs):
 
 
 def _tensorize_baseline(inputs, baselines):
+    def _tensorize_single_baseline(baseline, input):
+        if isinstance(baseline, (int, float)):
+            return torch.full_like(input, baseline)
+        if input.shape[0] > baseline.shape[0] and baseline.shape[0] == 1:
+            return torch.cat([baseline] * input.shape[0])
+        return baseline
+
     assert isinstance(inputs, tuple) and isinstance(baselines, tuple), (
         "inputs and baselines must"
         "have tuple type but found baselines: {} and inputs: {}".format(
@@ -182,9 +189,7 @@ def _tensorize_baseline(inputs, baselines):
         )
     )
     return tuple(
-        torch.full_like(input, baseline)
-        if isinstance(baseline, (int, float))
-        else baseline
+        _tensorize_single_baseline(baseline, input)
         for baseline, input in zip(baselines, inputs)
     )
 
@@ -251,15 +256,6 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
         else inputs
     )
     return _select_targets(output, target)
-
-
-def _expand_baselines_based_on_inputs(inputs, baselines):
-    return tuple(
-        torch.cat([baseline] * input.shape[0])
-        if input.shape[0] > baseline.shape[0] and baseline.shape[0] == 1
-        else baseline
-        for input, baseline in zip(inputs, baselines)
-    )
 
 
 def _expand_additional_forward_args(
