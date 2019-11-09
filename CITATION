@@ -1,0 +1,8 @@
+@misc{captum2019github,
+  author = {Kokhlikyan, Narine and Miglani, Vivek and Martin, Miguel and Wang, Edward and Reynolds, Jonathan and Melnikov, Alexander and Lunova, Natalia and Reblitz-Richardson, Orion},
+  title = {PyTorch Captum},
+  year = {2019},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/pytorch/captum}},
+}
