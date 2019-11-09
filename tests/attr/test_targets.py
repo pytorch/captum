@@ -9,6 +9,7 @@ from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._core.feature_ablation import FeatureAblation
 
 from captum.attr._core.internal_influence import InternalInfluence
 from captum.attr._core.layer_conductance import LayerConductance
@@ -98,6 +99,31 @@ class Test(BaseTest):
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
             Saliency,
+            net,
+            inputs=inp,
+            additional_forward_args=(None, True),
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_ablation(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            FeatureAblation, net, inputs=inp, targets=[0, 1, 1, 0]
+        )
+
+    def test_simple_target_ablation_tensor(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            FeatureAblation, net, inputs=inp, targets=torch.tensor([0, 1, 1, 0])
+        )
+
+    def test_multi_target_ablation(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            FeatureAblation,
             net,
             inputs=inp,
             additional_forward_args=(None, True),
