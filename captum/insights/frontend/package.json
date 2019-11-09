@@ -3,10 +3,13 @@
   "version": "0.2.0",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "babel-loader": "^8.0.6",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-scripts": "3.2.0",
-    "react-tag-autocomplete": "^5.11.1"
+    "react-tag-autocomplete": "^5.11.1",
+    "webpack-cli": "^3.3.9"
   },
   "scripts": {
     "start": "react-scripts start",

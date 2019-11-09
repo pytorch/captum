@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import _forward_layer_eval_with_neuron_grads
+from .._utils.gradient import construct_neuron_grad_fn
 
 from .integrated_gradients import IntegratedGradients
 
@@ -13,11 +13,14 @@ class NeuronIntegratedGradients(NeuronAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Attributions for a particular neuron in the output of
-                          this layer are computed using the argument neuron_index
-                          in the attribute method.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -35,6 +38,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
         n_steps=50,
         method="gausslegendre",
         internal_batch_size=None,
+        attribute_to_neuron_input=False,
     ):
         r"""
             Approximates the integral of gradients for a particular neuron
@@ -105,6 +109,17 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             If internal_batch_size is None, then all evaluations are
                             processed in one batch.
                             Default: None
+                attribute_to_neuron_input (bool, optional): Indicates whether to
+                            compute the attributions with respect to the neuron input
+                            or output. If `attribute_to_neuron_input` is set to True
+                            then the attributions will be computed with respect to
+                            neuron's inputs, otherwise it will be computed with respect
+                            to neuron's outputs.
+                            Note that currently it is assumed that either the input
+                            or the output of internal neuron, depending on whether we
+                            attribute to the input or output, is a single tensor.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -136,20 +151,10 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-
-        def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-            _, grads = _forward_layer_eval_with_neuron_grads(
-                forward_fn,
-                inputs,
-                self.layer,
-                additional_forward_args,
-                neuron_index,
-                device_ids=self.device_ids,
-            )
-            return grads
-
         ig = IntegratedGradients(self.forward_func)
-        ig.gradient_func = grad_fn
+        ig.gradient_func = construct_neuron_grad_fn(
+            self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
+        )
         # Return only attributions and not delta
         return ig.attribute(
             inputs,

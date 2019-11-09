@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2017-present, Facebook, Inc.
  *
- * This source code is licensed under the MIT license found in the
+ * This source code is licensed under the BSD license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @format
@@ -117,9 +117,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from captum.attr import (
-    IntegratedGradients
-)
+from captum.attr import IntegratedGradients
 
 class ToyModel(nn.Module):
     def __init__(self):

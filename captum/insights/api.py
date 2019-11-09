@@ -2,14 +2,14 @@
 from collections import namedtuple
 from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 
+import torch
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.attr._utils.common import _run_forward
+from captum.attr._utils.common import _run_forward, safe_div
 from captum.insights.features import BaseFeature
-
-import torch
 from torch import Tensor
 from torch.nn import Module
+
 
 OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
@@ -33,6 +33,34 @@ class Batch:
         labels: Optional[Tensor],
         additional_args=None,
     ):
+        r"""
+        Constructs batch of inputs to be attributed and visualized.
+
+        Args:
+
+            inputs (tensor or tuple of tensors): Batch of inputs for a model.
+                        These may be either a Tensor or tuple of tensors. Each tensor
+                        must correspond to a feature for AttributionVisualizer, and
+                        the corresponding input transform function of the feature
+                        is applied to each input tensor prior to passing it to the
+                        model. It is assumed that the first dimension of each
+                        input tensor corresponds to the number of examples
+                        (batch size) and is aligned for all input tensors.
+            labels (tensor): Tensor containing correct labels for input examples.
+                        This must be a 1D tensor with length matching the first
+                        dimension of each input tensor.
+            additional_args (tuple, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        For a tensor, the first dimension of the tensor must
+                        correspond to the number of examples.
+        """
         self.inputs = inputs
         self.labels = labels
         self.additional_args = additional_args
@@ -48,6 +76,46 @@ class AttributionVisualizer(object):
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
     ):
+        r"""
+        Args:
+
+            models (torch.nn.module): PyTorch module (model) for attribution
+                          visualization.
+                          We plan to support visualizing and comparing multiple models
+                          in the future, but currently this supports only a single
+                          model.
+            classes (list of string): List of strings corresponding to the names of
+                          classes for classification.
+            features (list of BaseFeature): List of BaseFeatures, which correspond
+                          to input arguments to the model. Each feature object defines
+                          relevant transformations for converting to model input,
+                          constructing baselines, and visualizing. The length of the
+                          features list should exactly match the number of (tensor)
+                          arguments expected by the given model.
+                          For instance, an image classifier should only provide
+                          a single BaseFeature, while a multimodal classifier may
+                          provide a list of features, each corresponding to a different
+                          tensor input and potentially different modalities.
+            dataset (iterable of Batch): Defines the dataset to visualize attributions
+                          for. This must be an iterable of batch objects, each of which
+                          may contain multiple input examples.
+            score_func (callable, optional): This function is applied to the model
+                          output to obtain the score for each class. For instance,
+                          this function could be the softmax or final non-linearity
+                          of the network, applied to the model output. The indices
+                          of the second dimension of the output should correspond
+                          to the class names provided. If None, the model outputs
+                          are taken directly and assumed to correspond to the
+                          class scores.
+                          Default: None
+            use_label_for_attr (boolean, optional): If true, the class index is passed
+                          to the relevant attribution method. This is necessary in most
+                          cases where there is an output neuron corresponding to each
+                          class. When the model output is a scalar and class index
+                          (e.g. positive, negative) is inferred from the output value,
+                          this argument should be False.
+                          Default: True
+        """
         if not isinstance(models, List):
             models = [models]
 
@@ -105,13 +173,17 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self, blocking=False, debug=False, port=None):
-        from IPython.display import IFrame, display
+    def render(self):
+        from IPython.display import display
+        from captum.insights.widget import CaptumInsights
+
+        widget = CaptumInsights(visualizer=self)
+        display(widget)
+
+    def serve(self, blocking=False, debug=False):
         from captum.insights.server import start_server
 
-        port = start_server(self, blocking, debug, port)
-
-        display(IFrame(src=f"http://127.0.0.1:{port}", width="100%", height="500px"))
+        start_server(self, blocking=blocking, debug=debug)
 
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
@@ -152,8 +224,7 @@ class AttributionVisualizer(object):
 
         # normalise the contribution, s.t. sum(abs(x_i)) = 1
         norm = torch.norm(net_contrib, p=1)
-        if norm > 0:
-            net_contrib /= norm
+        net_contrib = safe_div(net_contrib, norm, default_value=net_contrib)
 
         return net_contrib.tolist()
 

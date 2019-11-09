@@ -12,11 +12,14 @@ class LayerGradientXActivation(LayerAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's output
-                          dimensions, corresponding to attribution of each neuron
-                          in the output of this layer.
-                          Currently, only layers with a single tensor output are
-                          supported.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -25,7 +28,13 @@ class LayerGradientXActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(self, inputs, target=None, additional_forward_args=None):
+    def attribute(
+        self,
+        inputs,
+        target=None,
+        additional_forward_args=None,
+        attribute_to_layer_input=False,
+    ):
         r"""
             Computes element-wise product of gradient and activation for selected
             layer on given inputs.
@@ -77,6 +86,17 @@ class LayerGradientXActivation(LayerAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the layer input
+                            or output. If `attribute_to_layer_input` is set to True
+                            then the attributions will be computed with respect to
+                            layer input, otherwise it will be computed with respect
+                            to layer output.
+                            Note that currently it is assumed that either the input
+                            or the output of internal layer, depending on whether we
+                            attribute to the input or output, is a single tensor.
+                            Support for multiple tensors will be added later.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
@@ -112,5 +132,6 @@ class LayerGradientXActivation(LayerAttribution):
             target,
             additional_forward_args,
             device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         return layer_gradients * layer_eval

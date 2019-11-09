@@ -13,6 +13,14 @@ class ExpansionTypes(Enum):
     repeat_interleave = 2
 
 
+def safe_div(denom, quotient, default_value=None):
+    r"""
+        A simple utility function to perform `denom / quotient`
+        if the statement is undefined => result will be `default_value`
+    """
+    return denom / quotient if quotient != 0.0 else default_value
+
+
 def validate_target(num_samples, target):
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1
