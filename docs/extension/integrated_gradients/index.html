@@ -123,7 +123,8 @@ baseline2 = torch.tensor([0.0])
 ig = IntegratedGradients(model)
 attributions, approximation_error = ig.attribute((input1, input2),
                                                  baselines=(baseline1, baseline2),
-                                                 <span class="hljs-attribute">method</span>=<span class="hljs-string">'gausslegendre'</span>)
+                                                 <span class="hljs-attribute">method</span>=<span class="hljs-string">'gausslegendre'</span>,
+                                                 <span class="hljs-attribute">return_convergence_delta</span>=<span class="hljs-literal">True</span>)
 output
 
 <span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span>.
@@ -174,14 +175,15 @@ num_in = 40
 input = torch.arange(0.0, num_in * 1.0, <span class="hljs-attribute">requires_grad</span>=<span class="hljs-literal">True</span>).unsqueeze(0)
 
 <span class="hljs-comment"># 10-class classification model</span>
-model = SoftmaxModel(num_in, 20, 10)
+model = ToySoftmaxModel(num_in, 20, 10)
 
 <span class="hljs-comment"># attribution score will be computed with respect to target class</span>
 target_class_index = 5
 
 <span class="hljs-comment"># applying integrated gradients on the SoftmaxModel and input data point</span>
 ig = IntegratedGradients(model)
-attributions, approximation_error = ig.attribute(input, <span class="hljs-attribute">target</span>=target)
+attributions, approximation_error = ig.attribute(input, <span class="hljs-attribute">target</span>=target_class_index,
+                                    <span class="hljs-attribute">return_convergence_delta</span>=<span class="hljs-literal">True</span>)
 
 <span class="hljs-comment"># The input and returned corresponding attribution have the</span>
 <span class="hljs-comment"># same shape and dimensionality.</span>
@@ -231,23 +233,23 @@ In this case, batch size is equal to two.</p>
 </code></pre>
 <p>Now, let's apply integrated gradients on the model defined above and specify
 <code>additional_forward_args</code> parameter in addition to others.</p>
-<pre><code class="hljs"><span class="hljs-keyword">from</span> captum.attr <span class="hljs-keyword">import</span> IntegratedGradients
+<pre><code class="hljs"><span class="hljs-keyword">from</span> captum.attr import IntegratedGradients
 
-input1 = torch.tensor([[<span class="hljs-number">1.0</span>, <span class="hljs-number">3.0</span>], [<span class="hljs-number">3.0</span>, <span class="hljs-number">5.0</span>]], requires_grad=True)
-input2 = torch.tensor([[<span class="hljs-number">1.0</span>, <span class="hljs-number">4.0</span>], [<span class="hljs-number">0.0</span>, <span class="hljs-number">2.0</span>]], requires_grad=True)
-# Initializing our toy model
+input1 = torch.tensor([[1.0, 3.0], [3.0, 5.0]], <span class="hljs-attribute">requires_grad</span>=<span class="hljs-literal">True</span>)
+input2 = torch.tensor([[1.0, 4.0], [0.0, 2.0]], <span class="hljs-attribute">requires_grad</span>=<span class="hljs-literal">True</span>)
+<span class="hljs-comment"># Initializing our toy model</span>
 model = ToyModel_With_Additional_Forward_Args()
-# Applying <span class="hljs-built_in">int</span>egrated gradients on the input
+<span class="hljs-comment"># Applying integrated gradients on the input</span>
 ig = IntegratedGradients(model)
-(input1_attr, input2_attr), delta = ig.attribute((input1, input2), n_steps=<span class="hljs-number">100</span>,
-                                    additional_forward_args=<span class="hljs-number">1</span>)
+(input1_attr, input2_attr), delta = ig.attribute((input1, input2), <span class="hljs-attribute">n_steps</span>=100,
+                                    <span class="hljs-attribute">additional_forward_args</span>=1, <span class="hljs-attribute">return_convergence_delta</span>=<span class="hljs-literal">True</span>)
 output
-.........
-input1_attr: tensor([[<span class="hljs-number">0.0000</span>, <span class="hljs-number">0.0000</span>],
-                     [<span class="hljs-number">0.0000</span>, <span class="hljs-number">3.3428</span>]], grad_fn=&lt;MulBackward0&gt;)
-input2_attr:  tensor([[ <span class="hljs-number">0.0000</span>,  <span class="hljs-number">0.0000</span>],
-                      [<span class="hljs-number">0.0000</span>, <span class="hljs-number">-1.3371</span>]], grad_fn=&lt;MulBackward0&gt;)
-approximation_error (aka delta): <span class="hljs-number">0.005693793296813965</span>
+<span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span><span class="hljs-built_in">..</span>.
+input1_attr: tensor([[0.0000, 0.0000],
+                     [0.0000, 3.3428]], <span class="hljs-attribute">grad_fn</span>=&lt;MulBackward0&gt;)
+input2_attr:  tensor([[ 0.0000,  0.0000],
+                      [0.0000, -1.3371]], <span class="hljs-attribute">grad_fn</span>=&lt;MulBackward0&gt;)
+approximation_error (aka delta): 0.005693793296813965
 </code></pre>
 <p>In addition to the parameters described above integrated gradients also allows to specify
 integral approximation type with the argument <code>method</code> which accepts the following values:
