@@ -21,12 +21,11 @@ class InterpretableEmbeddingBase(Embedding):
     """
 
     def __init__(self, embedding, full_name):
-        super().__init__(embedding.num_embeddings if hasattr(embedding, 'num_embeddings') else 0,
-                         embedding.embedding_dim if hasattr(embedding, 'embedding_dim') else 0)
+        super().__init__(embedding.num_embeddings, embedding.embedding_dim)
         self.embedding = embedding
         self.full_name = full_name
 
-    def forward(self, input, **kwargs):
+    def forward(self, input):
         r"""
          The forward function of a wrapper embedding layer that takes and returns
          embedding layer. It allows embeddings to be created outside of the model
@@ -46,7 +45,7 @@ class InterpretableEmbeddingBase(Embedding):
         """
         return input
 
-    def indices_to_embeddings(self, *input):
+    def indices_to_embeddings(self, input):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
 
@@ -61,7 +60,7 @@ class InterpretableEmbeddingBase(Embedding):
             A tensor of word embeddings corresponding to the
             indices specified in the input
         """
-        return self.embedding(*input)
+        return self.embedding(input)
 
 
 class TokenReferenceBase:
