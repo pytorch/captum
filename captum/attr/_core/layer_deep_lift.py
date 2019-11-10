@@ -91,16 +91,35 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         corresponds to the number of examples (aka batch size),
                         and if multiple input tensors are provided, the examples
                         must be aligned appropriately.
-            baselines (tensor or tuple of tensors, optional): Baselines define
-                        reference samples which are compared with the inputs.
-                        In order to assign attribution scores DeepLift computes
-                        the differences between the inputs and references and
-                        corresponding outputs.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor with exactly the same dimensions as inputs.
-                        If inputs is a tuple of tensors, baselines must also be
-                        a tuple of tensors, with matching dimensions to inputs.
-                        Default: zero tensor for each input tensor
+            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                        Baselines define reference samples that are compared with
+                        the inputs. In order to assign attribution scores DeepLift
+                        computes the differences between the inputs and references
+                        and corresponding outputs.
+                        Baselines can be provided either as:
+
+                        - a single tensor, if inputs is a single tensor, with
+                            exactly the same dimensions as inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
+
+                        - a single scalar, if inputs is a single tensor, which will
+                            be broadcasted for each input value in input tensor.
+
+                        - a tuple of tensors or scalars, the baseline corresponding
+                            to each tensor in the inputs' tuple can be:
+                            - either a tensor with matching dimensions to
+                                corresponding tensor in the inputs' tuple
+                                or the first dimension is one and the remaining
+                                dimensions match with the corresponding
+                                input tensor.
+                            - or a scalar, corresponding to a tensor in the
+                                inputs' tuple. This scalar value is broadcasted
+                                for corresponding input tensor.
+
+                        Default: None
+                            In this case we internally use zero scalar
+                            corresponding to each input tensor
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
@@ -301,27 +320,35 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (tensor, tuple of tensors or callable, optional): Baselines
-                        define reference samples which are compared with the inputs.
-                        In order to assign attribution scores DeepLift computes
-                        the differences between the inputs and references and
-                        corresponding outputs.
-                        `baselines` can be either a single tensor, a tuple of
-                        tensors or a callable function that, optionally takes
-                        `inputs` as an argument and either returns a single tensor
-                        or a tuple of those.
-                        If inputs is a single tensor, baselines must also be either
-                        a single tensor or a function that returns a single tensor.
-                        If inputs is a tuple of tensors, baselines must also be
-                        either a tuple of tensors or a function that returns a
-                        tuple of tensors.
-                        The first dimension in baseline tensors defines the
-                        distribution of baselines.
-                        All other dimensions starting after the first dimension
-                        should match with the inputs' dimensions after the
-                        first dimension. It is recommended that the number of
-                        samples in the baselines' tensors is larger than one.
-                        Default: zero tensor for each input tensor
+            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
+                        Baselines define reference samples that are compared with
+                        the inputs. In order to assign attribution scores DeepLift
+                        computes the differences between the inputs and references
+                        and corresponding outputs.
+                        Baselines can be provided either as:
+
+                        - a single tensor, if inputs is a single tensor, with
+                            exactly the same dimensions as inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
+
+                        - a tuple of tensors, the baseline corresponding
+                            to each tensor in the inputs' tuple is either a tensor
+                            with matching dimensions to corresponding tensor in
+                            the inputs' tuple or the first dimension is one and the
+                            remaining dimensions match with the corresponding input
+                            tensor.
+
+                        - callable function, optionally takes `inputs` as an
+                            argument and either returns a single tensor
+                            or a tuple of those.
+                        The number of samples in the baselines' tensors must be
+                        larger than one.
+
+                        Default: None
+                            In this case we internally use zero scalar
+                            corresponding to each input tensor
+
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).
@@ -410,6 +437,14 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         """
         inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
+
+        assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (
+            "Baselines distribution has to be provided in form of a torch.Tensor"
+            " with more than one example but found: {}."
+            " If baselines are provided in shape of scalars or with a single"
+            " baseline example, `LayerDeepLift`"
+            " approach can be used instead.".format(baselines[0])
+        )
 
         # batch sizes
         inp_bsz = inputs[0].shape[0]
