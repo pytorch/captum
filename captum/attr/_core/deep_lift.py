@@ -106,8 +106,8 @@ class DeepLift(GradientAttribution):
             baselines (scalar, tensor, tuple of scalars or tensors, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
-                        computes the differences between the inputs and references
-                        and corresponding outputs.
+                        computes the differences between the inputs/outputs and
+                        corresponding references.
                         Baselines can be provided either as:
 
                         - a single tensor, if inputs is a single tensor, with
@@ -434,8 +434,8 @@ class DeepLiftShap(DeepLift):
             baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
-                        computes the differences between the inputs and references
-                        and corresponding outputs.
+                        computes the differences between the inputs/outputs and
+                        corresponding references.
                         Baselines can be provided either as:
 
                         - a single tensor, if inputs is a single tensor, with
