@@ -72,8 +72,8 @@ class InternalInfluence(LayerAttribution):
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 baselines scalar, tensor, tuple of scalars or tensors, optional):
-                            Baselines from which integral is computed.
-                            Baselines can be provided either as:
+                            Baselines define a starting point from which integral
+                            is computed and can be provided either as:
 
                             - a single tensor, if inputs is a single tensor, with
                                 exactly the same dimensions as inputs or the first

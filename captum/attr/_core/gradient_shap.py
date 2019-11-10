@@ -73,8 +73,7 @@ class GradientShap(GradientAttribution):
                         are provided, the examples must be aligned appropriately.
             baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
                         Baselines define the starting point from which expectation
-                        is computed.
-                        Baselines can be provided either as:
+                        is computed and can be provided either as:
 
                         - a single tensor, if inputs is a single tensor, with
                             exactly the same dimensions as inputs or the first

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import warnings
+import torch
 import torch.nn as nn
 from .._utils.attribution import LayerAttribution
 from .._core.deep_lift import DeepLift, DeepLiftShap
