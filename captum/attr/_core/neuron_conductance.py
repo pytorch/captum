@@ -231,7 +231,7 @@ class NeuronConductance(NeuronAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguements
+        # currently, number of steps is applied only to additional forward arguments
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
