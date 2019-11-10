@@ -34,7 +34,7 @@ class InternalInfluence(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -208,7 +208,7 @@ class InternalInfluence(LayerAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguements
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
@@ -231,8 +231,8 @@ class InternalInfluence(LayerAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        # flattening grads so that we can multipy it with step-size
-        # calling contigous to avoid `memory whole` problems
+        # flattening grads so that we can multiply it with step-size
+        # calling contiguous to avoid `memory whole` problems
         scaled_grads = layer_gradients.contiguous().view(n_steps, -1) * torch.tensor(
             step_sizes
         ).view(n_steps, 1).to(layer_gradients.device)

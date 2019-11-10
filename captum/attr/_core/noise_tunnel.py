@@ -80,7 +80,7 @@ class NoiseTunnel(Attribution):
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
-                        to the number of examples, and if mutliple input tensors
+                        to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
             nt_type (string, optional): Smoothing type of the attributions.
                         `smoothgrad`, `smoothgrad_sq` or `vargrad`
@@ -126,7 +126,7 @@ class NoiseTunnel(Attribution):
                         algorithms, e.g. integrated gradients.
                         Delta is computed for each input in the batch
                         and represents the arithmetic mean
-                        across all `n_sample` pertubed tensors for that input.
+                        across all `n_sample` perturbed tensors for that input.
 
 
         Examples::
@@ -268,7 +268,7 @@ class NoiseTunnel(Attribution):
         delta = 0
         inputs_with_noise = add_noise_to_inputs()
         # if the algorithm supports targets, baselines and/or additional_forward_args
-        # they will be expanded based on the n_steps and corrsponding kwargs
+        # they will be expanded based on the n_steps and corresponding kwargs
         # variables will be updated accordingly
         expand_and_update_baselines()
         expand_and_update_additional_forward_args()

@@ -186,7 +186,7 @@ class NeuronDeepLiftShap(NeuronAttribution):
         attribute_to_neuron_input=False,
     ):
         r"""
-        Extends NeuronAttribution and uses LayerDeepLiftShap alogrithms and
+        Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
         approximates SHAP values for given input `layer` and `neuron_index`.
         For each input sample - baseline pair it computes DeepLift attributions
         with respect to inputs or outputs of given `layer` and `neuron_index`

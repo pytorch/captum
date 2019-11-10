@@ -34,7 +34,7 @@ class LayerConductance(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -231,7 +231,7 @@ class LayerConductance(LayerAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguments
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
@@ -261,7 +261,7 @@ class LayerConductance(LayerAttribution):
         # by the step size.
         grad_diffs = layer_eval[num_examples:] - layer_eval[:-num_examples]
 
-        # Element-wise mutliply gradient of output with respect to hidden layer
+        # Element-wise multiply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum
         # across stepped inputs.
         attributions = _reshape_and_sum(

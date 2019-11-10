@@ -198,7 +198,7 @@ class IntegratedGradients(GradientAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguements
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
@@ -219,8 +219,8 @@ class IntegratedGradients(GradientAttribution):
             target_ind=expanded_target,
         )
 
-        # flattening grads so that we can multipy it with step-size
-        # calling contigous to avoid `memory whole` problems
+        # flattening grads so that we can multilpy it with step-size
+        # calling contiguous to avoid `memory whole` problems
         scaled_grads = [
             grad.contiguous().view(n_steps, -1)
             * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
@@ -228,7 +228,7 @@ class IntegratedGradients(GradientAttribution):
         ]
 
         # aggregates across all steps for each tensor in the input tuple
-        # total_grads has the same dimentionality as inputs
+        # total_grads has the same dimensionality as inputs
         total_grads = [
             _reshape_and_sum(
                 scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
@@ -237,7 +237,7 @@ class IntegratedGradients(GradientAttribution):
         ]
 
         # computes attribution for each tensor in input tuple
-        # attributions has the same dimentionality as inputs
+        # attributions has the same dimensionality as inputs
         attributions = tuple(
             total_grad * (input - baseline)
             for total_grad, input, baseline in zip(total_grads, inputs, baselines)

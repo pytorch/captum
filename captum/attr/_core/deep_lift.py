@@ -406,7 +406,7 @@ class DeepLiftShap(DeepLift):
         return_convergence_delta=False,
     ):
         r"""
-        Extends DeepLift alogrithm and approximates SHAP values using Deeplift.
+        Extends DeepLift algorithm and approximates SHAP values using Deeplift.
         For each input sample it computes DeepLift attribution with respect to
         each baseline and averages resulting attributions.
         More details about the algorithm can be found here:

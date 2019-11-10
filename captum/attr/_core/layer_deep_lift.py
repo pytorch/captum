@@ -292,7 +292,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         attribute_to_layer_input=False,
     ):
         r"""
-        Extends LayerDeepLift and DeepLiftShap alogrithms and approximates SHAP
+        Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
         values for given input `layer`.
         For each input sample - baseline pair it computes DeepLift attributions
         with respect to inputs or outputs of given `layer` averages

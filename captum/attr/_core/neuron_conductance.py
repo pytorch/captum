@@ -42,7 +42,7 @@ class NeuronConductance(NeuronAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -231,7 +231,7 @@ class NeuronConductance(NeuronAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguements
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
@@ -282,7 +282,7 @@ class NeuronConductance(NeuronAttribution):
         )
 
         # computes attribution for each tensor in input tuple
-        # attributions has the same dimentionality as inputs
+        # attributions has the same dimensionality as inputs
         attributions = tuple(
             total_grad * (input - baseline)
             for total_grad, input, baseline in zip(total_grads, inputs, baselines)
