@@ -72,7 +72,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 baselines (scalar, tensor, tuple of scalars or tensors, optional):
                             Baselines define the starting point from which integral
                             is computed.
-                            Baselines can be provided either as:
+                            Baselines can be provided as:
 
                             - a single tensor, if inputs is a single tensor, with
                                 exactly the same dimensions as inputs or the first

@@ -108,7 +108,7 @@ class DeepLift(GradientAttribution):
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
                         corresponding references.
-                        Baselines can be provided either as:
+                        Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
                             exactly the same dimensions as inputs or the first
@@ -436,7 +436,7 @@ class DeepLiftShap(DeepLift):
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
                         corresponding references.
-                        Baselines can be provided either as:
+                        Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
                             exactly the same dimensions as inputs or the first
