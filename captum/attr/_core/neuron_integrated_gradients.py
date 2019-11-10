@@ -93,9 +93,10 @@ class NeuronIntegratedGradients(NeuronAttribution):
                                     inputs' tuple. This scalar value is broadcasted
                                     for corresponding input tensor.
 
+                            In the cases when `baselines` is not provided, we internally
+                            use zero scalar corresponding to each input tensor.
+
                             Default: None
-                                In this case we internally use zero scalar
-                                corresponding to each input tensor
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument

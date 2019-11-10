@@ -100,9 +100,10 @@ class LayerConductance(LayerAttribution):
                                     inputs' tuple. This scalar value is broadcasted
                                     for corresponding input tensor.
 
+                            In the cases when `baselines` is not provided, we internally
+                            use zero scalar corresponding to each input tensor.
+
                             Default: None
-                                In this case we internally use zero scalar
-                                corresponding to each input tensor
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
