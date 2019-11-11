@@ -420,6 +420,8 @@ class Test(BaseGPUTest):
             attr_dp = algorithm(dp_model)
 
         batch_sizes = [None]
+        delta_orig = None
+        delta_dp = None
         if test_batches:
             batch_sizes = [None, 1, 8]
         for batch_size in batch_sizes:
@@ -429,7 +431,7 @@ class Test(BaseGPUTest):
                 )
             else:
                 if attr_orig.has_convergence_delta():
-                    attributions_orig = attr_orig.attribute(
+                    attributions_orig, delta_orig = attr_orig.attribute(
                         return_convergence_delta=True, **kwargs
                     )
                 else:
@@ -440,7 +442,7 @@ class Test(BaseGPUTest):
                 )
             else:
                 if attr_orig.has_convergence_delta():
-                    attributions_dp = attr_dp.attribute(
+                    attributions_dp, delta_dp = attr_dp.attribute(
                         return_convergence_delta=True, **kwargs
                     )
                 else:
@@ -459,6 +461,13 @@ class Test(BaseGPUTest):
                         0,
                         delta=0.0001,
                     )
+
+            if delta_dp is not None:
+                self.assertAlmostEqual(
+                    torch.sum(torch.abs(delta_orig - delta_dp)),
+                    0,
+                    delta=0.0001,
+                )
 
 
 if __name__ == "__main__":
