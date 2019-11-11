@@ -3,11 +3,9 @@
 import torch
 import numpy as np
 
-from torch import nn
-
 from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
 from .helpers.classification_models import SoftmaxModel
-from .helpers.basic_models import BasicModel2
+from .helpers.basic_models import BasicModel2, BasicLinearModel
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
@@ -30,15 +28,7 @@ class Test(BaseTest):
             torch.zeros(batch_size_baselines, 4),
         )
 
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.linear = nn.Linear(7, 1)
-
-            def forward(self, x1, x2):
-                return self.linear(torch.cat((x1, x2), dim=-1))
-
-        model = Net()
+        model = BasicLinearModel()
         model.eval()
         model.zero_grad()
 
@@ -47,7 +37,7 @@ class Test(BaseTest):
         gradient_shap = GradientShap(model)
         n_samples = 50
         attributions, delta = gradient_shap.attribute(
-            (x1, x2), baselines, n_samples=n_samples, return_convergence_delta=True
+            inputs, baselines, n_samples=n_samples, return_convergence_delta=True
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
@@ -64,6 +54,31 @@ class Test(BaseTest):
             attributions, attributions_without_delta
         ):
             assertTensorAlmostEqual(self, attribution, attribution_without_delta)
+
+    def test_basic_scalar_baselines_multi_input(self):
+        inputs = (torch.ones(10, 3), torch.rand(10, 4))
+        baselines_scalars = (0.0, 0.0)
+        baselines_tensors = (
+            torch.zeros(1, 3),
+            torch.zeros(10, 4),
+        )
+
+        model = BasicLinearModel()
+        model.eval()
+
+        gradient_shap = GradientShap(model)
+        attributions_base_scalars, _ = gradient_shap.attribute(
+            inputs, baselines_scalars, n_samples=50, return_convergence_delta=True
+        )
+        attributions_base_tnsrs, _ = gradient_shap.attribute(
+            inputs, baselines_tensors, n_samples=50, return_convergence_delta=True
+        )
+        assertTensorAlmostEqual(
+            self, attributions_base_scalars[0], attributions_base_tnsrs[0]
+        )
+        assertTensorAlmostEqual(
+            self, attributions_base_scalars[1], attributions_base_tnsrs[1]
+        )
 
     def test_classification_baselines_as_function(self):
         num_in = 40

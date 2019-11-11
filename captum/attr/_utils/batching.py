@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 
-from .common import format_input, _format_additional_forward_args
+from .common import _format_input, _format_additional_forward_args
 
 
 def _tuple_splice_range(inputs, start, end):
@@ -79,7 +79,7 @@ def _batched_generator(
     assert internal_batch_size is None or (
         isinstance(internal_batch_size, int) and internal_batch_size > 0
     ), "Batch size must be greater than 0."
-    inputs = format_input(inputs)
+    inputs = _format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
     if internal_batch_size is None:

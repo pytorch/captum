@@ -80,13 +80,21 @@ class Test(BaseTest):
     def test_matching_conv2_multi_input_conductance(self):
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10)
-        self._conductance_input_sum_test_assert(net, net.conv2, inp)
+        self._conductance_input_sum_test_assert(net, net.conv2, inp, 0.0)
+
+        # trying different baseline
+        self._conductance_input_sum_test_assert(net, net.conv2, inp, 0.000001)
 
     def test_matching_relu2_multi_input_conductance(self):
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.relu2, inp, baseline)
+
+    def test_matching_relu2_with_scalar_base_multi_input_conductance(self):
+        net = BasicModel_ConvNet()
+        inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
+        self._conductance_input_sum_test_assert(net, net.relu2, inp, 0.0)
 
     def test_matching_pool2_multi_input_conductance(self):
         net = BasicModel_ConvNet()

@@ -8,7 +8,7 @@ from .._utils.common import (
     _format_input_baseline,
     _format_additional_forward_args,
     _expand_additional_forward_args,
-    validate_input,
+    _validate_input,
     _expand_target,
 )
 from .._utils.gradient import compute_layer_gradients_and_eval
@@ -34,7 +34,7 @@ class LayerConductance(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -77,13 +77,33 @@ class LayerConductance(LayerAttribution):
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
-                baselines (tensor or tuple of tensors, optional):  Baseline from which
-                            integral is computed. If inputs is a single tensor,
-                            baselines must also be a single tensor with exactly the same
-                            dimensions as inputs. If inputs is a tuple of tensors,
-                            baselines must also be a tuple of tensors, with matching
-                            dimensions to inputs.
-                            Default: zero tensor for each input tensor
+                baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                            Baselines define the starting point from which integral
+                            is computed and can be provided as:
+
+                            - a single tensor, if inputs is a single tensor, with
+                                exactly the same dimensions as inputs or the first
+                                dimension is one and the remaining dimensions match
+                                with inputs.
+
+                            - a single scalar, if inputs is a single tensor, which will
+                                be broadcasted for each input value in input tensor.
+
+                            - a tuple of tensors or scalars, the baseline corresponding
+                                to each tensor in the inputs' tuple can be:
+                                - either a tensor with matching dimensions to
+                                    corresponding tensor in the inputs' tuple
+                                    or the first dimension is one and the remaining
+                                    dimensions match with the corresponding
+                                    input tensor.
+                                - or a scalar, corresponding to a tensor in the
+                                    inputs' tuple. This scalar value is broadcasted
+                                    for corresponding input tensor.
+
+                            In the cases when `baselines` is not provided, we internally
+                            use zero scalar corresponding to each input tensor.
+
+                            Default: None
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
@@ -192,7 +212,7 @@ class LayerConductance(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input, target=3)
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
 
@@ -212,7 +232,7 @@ class LayerConductance(LayerAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguments
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
@@ -242,7 +262,7 @@ class LayerConductance(LayerAttribution):
         # by the step size.
         grad_diffs = layer_eval[num_examples:] - layer_eval[:-num_examples]
 
-        # Element-wise mutliply gradient of output with respect to hidden layer
+        # Element-wise multiply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum
         # across stepped inputs.
         attributions = _reshape_and_sum(

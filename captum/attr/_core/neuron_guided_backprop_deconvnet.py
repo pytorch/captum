@@ -23,7 +23,7 @@ class NeuronDeconvolution(NeuronAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(model, layer, device_ids)
         self.deconv = Deconvolution(model)
@@ -61,7 +61,7 @@ class NeuronDeconvolution(NeuronAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             neuron_index (int or tuple): Index of neuron in output of given
                           layer for which attribution is desired. Length of
@@ -144,7 +144,7 @@ class NeuronGuidedBackprop(NeuronAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(model, layer, device_ids)
         self.guided_backprop = GuidedBackprop(model)
@@ -179,7 +179,7 @@ class NeuronGuidedBackprop(NeuronAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             neuron_index (int or tuple): Index of neuron in output of given
                           layer for which attribution is desired. Length of

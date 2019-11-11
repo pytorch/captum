@@ -3,7 +3,7 @@ import warnings
 import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions
 
 from .grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
@@ -22,7 +22,7 @@ class GuidedGradCam(GradientAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(model)
         self.grad_cam = LayerGradCam(model, layer, device_ids)
@@ -64,7 +64,7 @@ class GuidedGradCam(GradientAttribution):
 
             Warning: Ensure that all ReLU operations in the forward function of the
             given model are performed using a module (nn.module.ReLU).
-            If nn.functional.ReLU is used, gradients are not overriden appropriately.
+            If nn.functional.ReLU is used, gradients are not overridden appropriately.
 
             Args:
 
@@ -74,7 +74,7 @@ class GuidedGradCam(GradientAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
@@ -170,7 +170,7 @@ class GuidedGradCam(GradientAttribution):
                 >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         grad_cam_attr = F.relu(
             self.grad_cam.attribute(
                 inputs=inputs,

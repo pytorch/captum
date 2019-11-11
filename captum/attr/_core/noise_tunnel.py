@@ -7,10 +7,10 @@ from enum import Enum
 
 from .._utils.attribution import Attribution
 from .._utils.common import (
-    validate_noise_tunnel_type,
-    validate_input,
-    format_baseline,
-    format_input,
+    _validate_noise_tunnel_type,
+    _validate_input,
+    _format_baseline,
+    _format_input,
     _format_attributions,
     _format_additional_forward_args,
     _expand_additional_forward_args,
@@ -80,7 +80,7 @@ class NoiseTunnel(Attribution):
                         If forward_func takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
-                        to the number of examples, and if mutliple input tensors
+                        to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
             nt_type (string, optional): Smoothing type of the attributions.
                         `smoothgrad`, `smoothgrad_sq` or `vargrad`
@@ -126,7 +126,7 @@ class NoiseTunnel(Attribution):
                         algorithms, e.g. integrated gradients.
                         Delta is computed for each input in the batch
                         and represents the arithmetic mean
-                        across all `n_sample` pertubed tensors for that input.
+                        across all `n_sample` perturbed tensors for that input.
 
 
         Examples::
@@ -184,28 +184,37 @@ class NoiseTunnel(Attribution):
             return input.repeat_interleave(n_samples, dim=0) + noise
 
         def expand_and_update_baselines():
+            def get_random_baseline_indices(bsz, baseline):
+                num_ref_samples = baseline.shape[0]
+                return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
+
             # TODO allow to add noise to baselines as well
             # expand baselines to match the sizes of input
             if "baselines" not in kwargs:
                 return
 
             baselines = kwargs["baselines"]
-            baselines = format_baseline(baselines, inputs)
-            validate_input(
+            baselines = _format_baseline(baselines, inputs)
+            _validate_input(
                 inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
             )
 
             if draw_baseline_from_distrib:
                 bsz = inputs[0].shape[0]
-                num_ref_samples = baselines[0].shape[0]
-                rand_indices = np.random.choice(
-                    num_ref_samples, n_samples * bsz
-                ).tolist()
-                baselines = tuple(baseline[rand_indices] for baseline in baselines)
+                baselines = tuple(
+                    baseline[get_random_baseline_indices(bsz, baseline)]
+                    if isinstance(baseline, torch.Tensor)
+                    else baseline
+                    for baseline in baselines
+                )
             else:
                 baselines = tuple(
                     baseline.repeat_interleave(n_samples, dim=0)
-                    for baseline in baselines
+                    if isinstance(baseline, torch.Tensor)
+                    and baseline.shape[0] == input.shape[0]
+                    and baseline.shape[0] > 1
+                    else baseline
+                    for input, baseline in zip(inputs, baselines)
                 )
             # update kwargs with expanded baseline
             kwargs["baselines"] = baselines
@@ -252,14 +261,14 @@ class NoiseTunnel(Attribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
 
-        validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
+        _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
         delta = 0
         inputs_with_noise = add_noise_to_inputs()
         # if the algorithm supports targets, baselines and/or additional_forward_args
-        # they will be expanded based on the n_steps and corrsponding kwargs
+        # they will be expanded based on the n_steps and corresponding kwargs
         # variables will be updated accordingly
         expand_and_update_baselines()
         expand_and_update_additional_forward_args()

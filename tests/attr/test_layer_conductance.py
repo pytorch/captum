@@ -20,6 +20,13 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
 
+    def test_simple_input_with_scalar_baseline_conductance(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._conductance_test_assert(
+            net, net.linear0, inp, [[0.0, 390.0, 0.0]], baselines=0.0
+        )
+
     def test_simple_linear_conductance(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
@@ -43,7 +50,11 @@ class Test(BaseTest):
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
         inp3 = torch.tensor([[0.0, 5.0, 0.0]])
         self._conductance_test_assert(
-            net, net.model.linear2, (inp1, inp2, inp3), [[390.0, 0.0]], (4,)
+            net,
+            net.model.linear2,
+            (inp1, inp2, inp3),
+            [[390.0, 0.0]],
+            additional_args=(4,),
         )
 
     def test_simple_multi_input_relu_conductance(self):
@@ -52,7 +63,11 @@ class Test(BaseTest):
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
         self._conductance_test_assert(
-            net, net.model.relu, (inp1, inp2), [[90.0, 100.0, 100.0, 100.0]], (inp3, 5)
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            [[90.0, 100.0, 100.0, 100.0]],
+            additional_args=(inp3, 5),
         )
 
     def test_simple_multi_input_relu_conductance_batch(self):
@@ -65,7 +80,7 @@ class Test(BaseTest):
             net.model.relu,
             (inp1, inp2),
             [[90.0, 100.0, 100.0, 100.0], [100.0, 100.0, 100.0, 100.0]],
-            (inp3, 5),
+            additional_args=(inp3, 5),
         )
 
     def test_matching_conv1_conductance(self):
@@ -105,12 +120,14 @@ class Test(BaseTest):
         target_layer,
         test_input,
         expected_conductance,
+        baselines=None,
         additional_args=None,
     ):
         cond = LayerConductance(model, target_layer)
         for internal_batch_size in (None, 1, 20):
             attributions, delta = cond.attribute(
                 test_input,
+                baselines=baselines,
                 target=0,
                 n_steps=500,
                 method="gausslegendre",
