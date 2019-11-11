@@ -25,6 +25,20 @@ class Test(BaseTest):
             net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
         )
 
+    def test_simple_relu_input_internal_inf_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._internal_influence_test_assert(
+            net, net.relu, inp, [[0.9, 1.0, 1.0, 1.0]], attribute_to_layer_input=True
+        )
+
+    def test_simple_linear_internal_inf_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._internal_influence_test_assert(
+            net, net.linear1, inp, [[0.9, 1.0, 1.0, 1.0]]
+        )
+
     def test_simple_relu_internal_inf(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[3.0, 4.0, 0.0]], requires_grad=True)
@@ -123,6 +137,7 @@ class Test(BaseTest):
         expected_activation,
         baseline=None,
         additional_args=None,
+        attribute_to_layer_input=False,
     ):
         for internal_batch_size in [None, 1, 20]:
             int_inf = InternalInfluence(model, target_layer)
@@ -134,6 +149,7 @@ class Test(BaseTest):
                 method="riemann_trapezoid",
                 additional_forward_args=additional_args,
                 internal_batch_size=internal_batch_size,
+                attribute_to_layer_input=attribute_to_layer_input,
             )
             for i in range(len(expected_activation)):
                 assertArraysAlmostEqual(

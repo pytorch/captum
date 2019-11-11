@@ -196,7 +196,7 @@ class BasicEmbeddingModel(nn.Module):
 
 
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self):
+    def __init__(self, inplace=False):
         super().__init__()
         # Linear 0 is simply identity transform
         self.linear0 = nn.Linear(3, 3)
@@ -205,7 +205,7 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear1 = nn.Linear(3, 4)
         self.linear1.weight = nn.Parameter(torch.ones(4, 3))
         self.linear1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
@@ -233,10 +233,10 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
 
 
 class BasicModel_ConvNet_One_Conv(nn.Module):
-    def __init__(self):
+    def __init__(self, inplace=False):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
-        self.relu1 = nn.ReLU()
+        self.relu1 = nn.ReLU(inplace=inplace)
         self.softmax = nn.Softmax(dim=1)
         self.fc1 = nn.Linear(8, 4)
         self.conv1.weight = nn.Parameter(torch.ones(2, 1, 3, 3))
@@ -244,7 +244,7 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         self.fc1.weight = nn.Parameter(
             torch.cat([torch.ones(4, 5), -1 * torch.ones(4, 3)], dim=1)
         )
-        self.relu2 = nn.ReLU()
+        self.relu2 = nn.ReLU(inplace=inplace)
 
     def forward(self, x, x2=None):
         if x2 is not None:

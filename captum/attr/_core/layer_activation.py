@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import torch
+
 from .._utils.attribution import LayerAttribution
 from .._utils.gradient import _forward_layer_eval
 
@@ -87,11 +89,12 @@ class LayerActivation(LayerAttribution):
                 >>> # attribution is layer output, with size Nx12x32x32
                 >>> attribution = layer_cond.attribute(input)
         """
-        return _forward_layer_eval(
-            self.forward_func,
-            inputs,
-            self.layer,
-            additional_forward_args,
-            device_ids=self.device_ids,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
+        with torch.no_grad():
+            return _forward_layer_eval(
+                self.forward_func,
+                inputs,
+                self.layer,
+                additional_forward_args,
+                device_ids=self.device_ids,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )

@@ -30,7 +30,7 @@ from .helpers.utils import BaseGPUTest
 
 class Test(BaseGPUTest):
     def test_simple_input_internal_inf(self):
-        net = BasicModel_MultiLayer().cuda()
+        net = BasicModel_MultiLayer(inplace=True).cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
