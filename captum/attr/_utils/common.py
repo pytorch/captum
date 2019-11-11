@@ -21,7 +21,7 @@ def safe_div(denom, quotient, default_value=None):
     return denom / quotient if quotient != 0.0 else default_value
 
 
-def validate_target(num_samples, target):
+def _validate_target(num_samples, target):
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1
     ):
@@ -33,7 +33,7 @@ def validate_target(num_samples, target):
         )
 
 
-def validate_input(
+def _validate_input(
     inputs,
     baselines,
     n_steps=50,
@@ -49,15 +49,27 @@ def validate_input(
 
     for input, baseline in zip(inputs, baselines):
         if draw_baseline_from_distrib:
-            assert input.shape[1:] == baseline.shape[1:], (
+            assert (
+                isinstance(baseline, (int, float))
+                or input.shape[1:] == baseline.shape[1:]
+            ), (
                 "The samples in input and baseline batches must have"
-                " the same shape. {} != {}".format(baseline.shape[1:], input.shape[1:])
+                " the same shape or the baseline corresponding to the"
+                " input tensor must be a scalar."
+                " Found baseline: {} and input: {} ".format(baseline, input)
             )
         else:
             assert (
-                input.shape == baseline.shape
-            ), "Input and baseline must have the same shape. {} != {}".format(
-                baseline.shape, input.shape
+                isinstance(baseline, (int, float))
+                or input.shape == baseline.shape
+                or baseline.shape[0] == 1
+            ), (
+                "Baseline can be provided as a tensor for just one input and"
+                " broadcasted to the batch or input and baseline must have the"
+                " same shape or the baseline corresponding to each input tensor"
+                " must be a scalar. Found baseline: {} and input: {}".format(
+                    baseline, input
+                )
             )
 
     assert (
@@ -70,7 +82,7 @@ def validate_input(
     )
 
 
-def validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
+def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
     assert nt_type in supported_noise_tunnel_types, (
         "Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "
         "Given {}".format(nt_type)
@@ -86,8 +98,7 @@ def _format_tensor_into_tuples(inputs):
     return inputs
 
 
-# TODO write test case here
-def format_input(inputs):
+def _format_input(inputs):
     return _format_tensor_into_tuples(inputs)
 
 
@@ -99,27 +110,27 @@ def _format_additional_forward_args(additional_forward_args):
     return additional_forward_args
 
 
-def format_baseline(baselines, inputs):
+def _format_baseline(baselines, inputs):
     if baselines is None:
         return _zeros(inputs)
 
     if not isinstance(baselines, tuple):
         baselines = (baselines,)
 
-    # TODO create a separate PR to support scalar baselines
-    assert isinstance(
-        baselines[0], torch.Tensor
-    ), "baselines input argument must be either a torch.Tensor or a tuple \
-         of those however {} detected".format(
-        type(baselines[0])
-    )
+    for baseline in baselines:
+        assert isinstance(
+            baseline, (torch.Tensor, int, float)
+        ), "baseline input argument must be either a torch.Tensor or a number \
+            however {} detected".format(
+            type(baseline)
+        )
 
     return baselines
 
 
 def _format_input_baseline(inputs, baselines):
-    inputs = format_input(inputs)
-    baselines = format_baseline(baselines, inputs)
+    inputs = _format_input(inputs)
+    baselines = _format_baseline(baselines, inputs)
     return inputs, baselines
 
 
@@ -136,13 +147,7 @@ def _format_callable_baseline(baselines, inputs):
             baselines = baselines()
         else:
             baselines = baselines(inputs)
-        # check the type of the baselines and make sure that it is either a
-        # tensor or a list of tensors
-        assert isinstance(baselines, tuple) or isinstance(
-            baselines, torch.Tensor
-        ), "`baselines` function should either return a torch.Tensor \
-             or a tuple of those"
-    return format_baseline(baselines, inputs)
+    return _format_baseline(baselines, inputs)
 
 
 def _format_attributions(is_inputs_tuple, attributions):
@@ -166,7 +171,27 @@ def _zeros(inputs):
     shape as the `inputs`
 
     """
-    return tuple(0 * input for input in inputs)
+    return tuple(0.0 for input in inputs)
+
+
+def _tensorize_baseline(inputs, baselines):
+    def _tensorize_single_baseline(baseline, input):
+        if isinstance(baseline, (int, float)):
+            return torch.full_like(input, baseline)
+        if input.shape[0] > baseline.shape[0] and baseline.shape[0] == 1:
+            return torch.cat([baseline] * input.shape[0])
+        return baseline
+
+    assert isinstance(inputs, tuple) and isinstance(baselines, tuple), (
+        "inputs and baselines must"
+        "have tuple type but found baselines: {} and inputs: {}".format(
+            type(baselines), type(inputs)
+        )
+    )
+    return tuple(
+        _tensorize_single_baseline(baseline, input)
+        for baseline, input in zip(baselines, inputs)
+    )
 
 
 def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
@@ -222,7 +247,7 @@ def _select_targets(output, target):
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
-    inputs = format_input(inputs)
+    inputs = _format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
 
     output = forward_func(

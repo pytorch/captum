@@ -7,7 +7,7 @@ from .._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
-    validate_input,
+    _validate_input,
     _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
@@ -42,7 +42,7 @@ class NeuronConductance(NeuronAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -82,13 +82,33 @@ class NeuronConductance(NeuronAttribution):
                               dimension 0 corresponds to number of examples).
                               An integer may be provided instead of a tuple of
                               length 1.
-                baselines (tensor or tuple of tensors, optional):  Baseline from which
-                            integral is computed. If inputs is a single tensor,
-                            baselines must also be a single tensor with exactly the same
-                            dimensions as inputs. If inputs is a tuple of tensors,
-                            baselines must also be a tuple of tensors, with matching
-                            dimensions to inputs.
-                            Default: zero tensor for each input tensor
+                baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                            Baselines define the starting point from which integral
+                            is computed and can be provided as:
+
+                            - a single tensor, if inputs is a single tensor, with
+                                exactly the same dimensions as inputs or the first
+                                dimension is one and the remaining dimensions match
+                                with inputs.
+
+                            - a single scalar, if inputs is a single tensor, which will
+                                be broadcasted for each input value in input tensor.
+
+                            - a tuple of tensors or scalars, the baseline corresponding
+                                to each tensor in the inputs' tuple can be:
+                                - either a tensor with matching dimensions to
+                                    corresponding tensor in the inputs' tuple
+                                    or the first dimension is one and the remaining
+                                    dimensions match with the corresponding
+                                    input tensor.
+                                - or a scalar, corresponding to a tensor in the
+                                    inputs' tuple. This scalar value is broadcasted
+                                    for corresponding input tensor.
+
+                            In the cases when `baselines` is not provided, we internally
+                            use zero scalar corresponding to each input tensor.
+
+                            Default: None
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
                             this is usually the target class).
@@ -191,7 +211,7 @@ class NeuronConductance(NeuronAttribution):
         is_inputs_tuple = isinstance(inputs, tuple)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
-        validate_input(inputs, baselines, n_steps, method)
+        _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
         total_batch = num_examples * n_steps
@@ -212,7 +232,7 @@ class NeuronConductance(NeuronAttribution):
             additional_forward_args
         )
         # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguemnts
+        # currently, number of steps is applied only to additional forward arguments
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
@@ -263,7 +283,7 @@ class NeuronConductance(NeuronAttribution):
         )
 
         # computes attribution for each tensor in input tuple
-        # attributions has the same dimentionality as inputs
+        # attributions has the same dimensionality as inputs
         attributions = tuple(
             total_grad * (input - baseline)
             for total_grad, input, baseline in zip(total_grads, inputs, baselines)

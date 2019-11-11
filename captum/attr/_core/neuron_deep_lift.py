@@ -73,16 +73,36 @@ class NeuronDeepLift(NeuronAttribution):
                         dimension 0 corresponds to number of examples).
                         An integer may be provided instead of a tuple of
                         length 1.
-            baselines (tensor or tuple of tensors, optional): Baselines define
-                        reference samples which are compared with the inputs.
-                        In order to assign attribution scores DeepLift computes
-                        the differences between the inputs and references and
-                        corresponding outputs.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor with exactly the same dimensions as inputs.
-                        If inputs is a tuple of tensors, baselines must also be
-                        a tuple of tensors, with matching dimensions to inputs.
-                        Default: zero tensor for each input tensor
+            baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                        Baselines define reference samples that are compared with
+                        the inputs. In order to assign attribution scores DeepLift
+                        computes the differences between the inputs/outputs and
+                        corresponding references.
+                        Baselines can be provided as:
+
+                        - a single tensor, if inputs is a single tensor, with
+                            exactly the same dimensions as inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
+
+                        - a single scalar, if inputs is a single tensor, which will
+                            be broadcasted for each input value in input tensor.
+
+                        - a tuple of tensors or scalars, the baseline corresponding
+                            to each tensor in the inputs' tuple can be:
+                            - either a tensor with matching dimensions to
+                                corresponding tensor in the inputs' tuple
+                                or the first dimension is one and the remaining
+                                dimensions match with the corresponding
+                                input tensor.
+                            - or a scalar, corresponding to a tensor in the
+                                inputs' tuple. This scalar value is broadcasted
+                                for corresponding input tensor.
+
+                        In the cases when `baselines` is not provided, we internally
+                        use zero scalar corresponding to each input tensor.
+
+                        Default: None
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
@@ -167,7 +187,7 @@ class NeuronDeepLiftShap(NeuronAttribution):
         attribute_to_neuron_input=False,
     ):
         r"""
-        Extends NeuronAttribution and uses LayerDeepLiftShap alogrithms and
+        Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
         approximates SHAP values for given input `layer` and `neuron_index`.
         For each input sample - baseline pair it computes DeepLift attributions
         with respect to inputs or outputs of given `layer` and `neuron_index`
@@ -202,16 +222,35 @@ class NeuronDeepLiftShap(NeuronAttribution):
                         dimension 0 corresponds to number of examples).
                         An integer may be provided instead of a tuple of
                         length 1.
-            baselines (tensor or tuple of tensors, optional): Baselines define
-                        reference samples which are compared with the inputs.
-                        In order to assign attribution scores DeepLift computes
-                        the differences between the inputs and references and
-                        corresponding outputs.
-                        If inputs is a single tensor, baselines must also be a
-                        single tensor with exactly the same dimensions as inputs.
-                        If inputs is a tuple of tensors, baselines must also be
-                        a tuple of tensors, with matching dimensions to inputs.
-                        Default: zero tensor for each input tensor
+            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
+                        Baselines define reference samples that are compared with
+                        the inputs. In order to assign attribution scores DeepLift
+                        computes the differences between the inputs/outputs and
+                        corresponding references.
+                        Baselines can be provided as:
+
+                        - a single tensor, if inputs is a single tensor, with
+                            exactly the same dimensions as inputs or the first
+                            dimension is one and the remaining dimensions match
+                            with inputs.
+
+                        - a tuple of tensors, the baseline corresponding
+                            to each tensor in the inputs' tuple is either a tensor
+                            with matching dimensions to corresponding tensor in
+                            the inputs' tuple or the first dimension is one and the
+                            remaining dimensions match with the corresponding input
+                            tensor.
+
+                        - callable function, optionally takes `inputs` as an
+                            argument and either returns a single tensor
+                            or a tuple of those.
+                        The number of samples in the baselines' tensors must be
+                        larger than one.
+
+                        In the cases when `baselines` is not provided, we internally
+                        use zero scalar corresponding to each input tensor.
+
+                        Default: None
             additional_forward_args (tuple, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument

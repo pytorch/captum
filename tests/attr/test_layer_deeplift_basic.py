@@ -37,6 +37,28 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
 
+    def test_linear_layer_deeplift_batch(self):
+        model = ReLULinearDeepLiftModel()
+        _, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        x1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [-10.0, 1.0, -5.0], [-10.0, 1.0, -5.0]],
+            requires_grad=True,
+        )
+        x2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [3.0, 3.0, 1.0], [3.0, 3.0, 1.0]], requires_grad=True
+        )
+        inputs = (x1, x2)
+
+        layer_dl = LayerDeepLift(model, model.l3)
+        attributions, delta = layer_dl.attribute(
+            inputs,
+            baselines,
+            attribute_to_layer_input=True,
+            return_convergence_delta=True,
+        )
+        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assert_delta(self, delta)
+
         attributions, delta = layer_dl.attribute(
             inputs,
             baselines,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from .._utils.common import format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
@@ -29,7 +29,7 @@ class InputXGradient(GradientAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
@@ -96,7 +96,7 @@ class InputXGradient(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         gradients = self.gradient_func(
