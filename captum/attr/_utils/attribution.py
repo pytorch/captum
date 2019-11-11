@@ -233,7 +233,7 @@ class GradientAttribution(Attribution):
                 )
             )
         row_sums = [_sum_rows(attribution) for attribution in attributions]
-        attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
+        attr_sum = torch.stack([sum(row_sum) for row_sum in zip(*row_sums)])
         return attr_sum - (end_point - start_point)
 
 

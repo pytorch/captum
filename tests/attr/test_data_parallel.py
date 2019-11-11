@@ -428,13 +428,23 @@ class Test(BaseGPUTest):
                     internal_batch_size=batch_size, **kwargs
                 )
             else:
-                attributions_orig = attr_orig.attribute(**kwargs)
+                if attr_orig.has_convergence_delta():
+                    attributions_orig = attr_orig.attribute(
+                        return_convergence_delta=True, **kwargs
+                    )
+                else:
+                    attributions_orig = attr_orig.attribute(**kwargs)
             if batch_size:
                 attributions_dp = attr_dp.attribute(
                     internal_batch_size=batch_size, **kwargs
                 )
             else:
-                attributions_dp = attr_dp.attribute(**kwargs)
+                if attr_orig.has_convergence_delta():
+                    attributions_dp = attr_dp.attribute(
+                        return_convergence_delta=True, **kwargs
+                    )
+                else:
+                    attributions_dp = attr_dp.attribute(**kwargs)
 
             if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
