@@ -464,9 +464,7 @@ class Test(BaseGPUTest):
 
             if delta_dp is not None:
                 self.assertAlmostEqual(
-                    torch.sum(torch.abs(delta_orig - delta_dp)),
-                    0,
-                    delta=0.0001,
+                    torch.sum(torch.abs(delta_orig - delta_dp)), 0, delta=0.0001
                 )
 
 
