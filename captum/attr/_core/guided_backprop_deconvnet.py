@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
@@ -37,7 +37,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
         # set hooks for overriding ReLU gradients
@@ -90,7 +90,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         r""""
         Computes attribution using guided backpropagation. Guided backpropagation
         computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overriden so that only
+        but gradients of ReLU functions are overridden so that only
         non-negative gradients are backpropagated.
 
         More details regarding the guided backpropagation algorithm can be found
@@ -99,7 +99,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
         Warning: Ensure that all ReLU operations in the forward function of the
         given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overriden appropriately.
+        If nn.functional.ReLU is used, gradients are not overridden appropriately.
 
         Args:
 
@@ -110,7 +110,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
@@ -186,7 +186,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         r""""
         Computes attribution using deconvolution. Deconvolution
         computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overriden so that the gradient
+        but gradients of ReLU functions are overridden so that the gradient
         of the ReLU input is simply computed taking ReLU of the output gradient,
         essentially only propagating non-negative gradients (without
         dependence on the sign of the ReLU input).
@@ -198,7 +198,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
 
         Warning: Ensure that all ReLU operations in the forward function of the
         given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overriden appropriately.
+        If nn.functional.ReLU is used, gradients are not overridden appropriately.
 
         Args:
 
@@ -209,7 +209,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples (aka batch size), and if
-                        mutliple input tensors are provided, the examples must
+                        multiple input tensors are provided, the examples must
                         be aligned appropriately.
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,

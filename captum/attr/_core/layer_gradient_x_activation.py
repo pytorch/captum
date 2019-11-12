@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .._utils.attribution import LayerAttribution
-from .._utils.common import format_input, _format_additional_forward_args
+from .._utils.common import _format_input, _format_additional_forward_args
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -24,7 +24,7 @@ class LayerGradientXActivation(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -47,7 +47,7 @@ class LayerGradientXActivation(LayerAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which gradients are computed (for classification cases,
@@ -119,7 +119,7 @@ class LayerGradientXActivation(LayerAttribution):
                 >>> # attribution size matches layer output, Nx12x32x32
                 >>> attribution = layer_ga.attribute(input, 3)
         """
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )

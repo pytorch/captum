@@ -41,7 +41,7 @@ class Test(BaseTest):
         model = SoftmaxDeepLiftModel(num_in, 20, 10)
         dl = DeepLift(model)
 
-        self.softmax_classification(model, dl, input, baselines)
+        self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
     def test_softmax_classification_batch_zero_baseline(self):
         num_in = 40
@@ -51,7 +51,20 @@ class Test(BaseTest):
         model = SoftmaxDeepLiftModel(num_in, 20, 10)
         dl = DeepLift(model)
 
-        self.softmax_classification(model, dl, input, baselines)
+        self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
+
+    def test_softmax_classification_batch_multi_target(self):
+        num_in = 40
+        inputs = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
+        baselines = torch.range(1.0, num_in).unsqueeze(0)
+        print(inputs.shape)
+        print(baselines.shape)
+        model = SoftmaxDeepLiftModel(num_in, 20, 10)
+        dl = DeepLift(model)
+
+        self.softmax_classification(
+            model, dl, inputs, baselines, torch.tensor([2, 2, 2])
+        )
 
     def test_softmax_classification_multi_baseline(self):
         num_in = 40
@@ -61,7 +74,7 @@ class Test(BaseTest):
         model = SoftmaxDeepLiftModel(num_in, 20, 10)
         dl = DeepLiftShap(model)
 
-        self.softmax_classification(model, dl, input, baselines)
+        self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
     def test_softmax_classification_batch_multi_baseline(self):
         num_in = 40
@@ -71,7 +84,7 @@ class Test(BaseTest):
         model = SoftmaxDeepLiftModel(num_in, 20, 10)
         dl = DeepLiftShap(model)
 
-        self.softmax_classification(model, dl, input, baselines)
+        self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
     def test_convnet_with_maxpool3d(self):
         input = 100 * torch.randn(2, 1, 10, 10, 10, requires_grad=True)
@@ -80,7 +93,7 @@ class Test(BaseTest):
         model = BasicModel_ConvNet_MaxPool3d()
         dl = DeepLift(model)
 
-        self.softmax_classification(model, dl, input, baseline)
+        self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
     def test_convnet_with_maxpool2d(self):
         input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
@@ -89,7 +102,7 @@ class Test(BaseTest):
         model = BasicModel_ConvNet()
         dl = DeepLift(model)
 
-        self.softmax_classification(model, dl, input, baseline)
+        self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
     def test_convnet_with_maxpool1d(self):
         input = 100 * torch.randn(2, 1, 10, requires_grad=True)
@@ -98,10 +111,9 @@ class Test(BaseTest):
         model = BasicModel_ConvNet_MaxPool1d()
         dl = DeepLift(model)
 
-        self.softmax_classification(model, dl, input, baseline)
+        self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def softmax_classification(self, model, attr_method, input, baselines):
-        target = torch.tensor(2)
+    def softmax_classification(self, model, attr_method, input, baselines, target):
         # TODO add test cases for multiple different layers
         model.zero_grad()
         attributions, delta = attr_method.attribute(

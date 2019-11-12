@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import torch
+
 from .._utils.attribution import LayerAttribution
 from .._utils.gradient import _forward_layer_eval
 
@@ -23,7 +25,7 @@ class LayerActivation(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -41,7 +43,7 @@ class LayerActivation(LayerAttribution):
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if mutliple input tensors
+                            to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
@@ -87,11 +89,12 @@ class LayerActivation(LayerAttribution):
                 >>> # attribution is layer output, with size Nx12x32x32
                 >>> attribution = layer_cond.attribute(input)
         """
-        return _forward_layer_eval(
-            self.forward_func,
-            inputs,
-            self.layer,
-            additional_forward_args,
-            device_ids=self.device_ids,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
+        with torch.no_grad():
+            return _forward_layer_eval(
+                self.forward_func,
+                inputs,
+                self.layer,
+                additional_forward_args,
+                device_ids=self.device_ids,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )

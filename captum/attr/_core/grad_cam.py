@@ -2,7 +2,7 @@
 import torch
 
 from .._utils.attribution import LayerAttribution
-from .._utils.common import format_input, _format_additional_forward_args
+from .._utils.common import _format_input, _format_additional_forward_args
 from .._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -23,7 +23,7 @@ class LayerGradCam(LayerAttribution):
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
-                          then it is not neccesary to provide this argument.
+                          then it is not necessary to provide this argument.
         """
         super().__init__(forward_func, layer, device_ids)
 
@@ -153,7 +153,7 @@ class LayerGradCam(LayerAttribution):
                 >>> # This can be done with LayerAttribution's interpolate method.
                 >>> upsampled_attr = LayerAttribution.interpolate(attr, (32, 32))
         """
-        inputs = format_input(inputs)
+        inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )

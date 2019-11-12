@@ -33,6 +33,32 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, ex))
 
+    def test_simple_multi_input_relu_input_inplace(self):
+        net = BasicModel_ConvNet_One_Conv(inplace=True)
+        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp2 = torch.ones((1, 1, 4, 4))
+        ex = [
+            [14.5, 29.0, 38.0, 19.0],
+            [29.0, 58.0, 76.0, 38.0],
+            [65.0, 130.0, 148.0, 74.0],
+            [32.5, 65.0, 74.0, 37.0],
+        ]
+        self._guided_grad_cam_test_assert(
+            net, net.relu1, (inp, inp2), (ex, ex), attribute_to_layer_input=True
+        )
+
+    def test_simple_multi_input_conv_inplace(self):
+        net = BasicModel_ConvNet_One_Conv(inplace=True)
+        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp2 = torch.ones((1, 1, 4, 4))
+        ex = [
+            [14.5, 29.0, 38.0, 19.0],
+            [29.0, 58.0, 76.0, 38.0],
+            [65.0, 130.0, 148.0, 74.0],
+            [32.5, 65.0, 74.0, 37.0],
+        ]
+        self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, ex))
+
     def test_improper_dims_multi_input_conv(self):
         net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
@@ -61,6 +87,7 @@ class Test(BaseTest):
         expected,
         additional_input=None,
         interpolate_mode="nearest",
+        attribute_to_layer_input=False,
     ):
         guided_gc = GuidedGradCam(model, target_layer)
         attributions = guided_gc.attribute(
@@ -68,6 +95,7 @@ class Test(BaseTest):
             target=0,
             additional_forward_args=additional_input,
             interpolate_mode=interpolate_mode,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         if isinstance(test_input, tuple):
             for i in range(len(test_input)):

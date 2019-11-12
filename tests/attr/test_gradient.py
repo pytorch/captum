@@ -89,6 +89,32 @@ class Test(BaseTest):
             eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
         )
 
+    def test_layer_gradient_linear1_inplace(self):
+        model = BasicModel_MultiLayer(inplace=True)
+        input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
+        grads, eval = compute_layer_gradients_and_eval(
+            model, model.linear1, input, target_ind=1
+        )
+        assertArraysAlmostEqual(
+            grads.squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
+        )
+        assertArraysAlmostEqual(
+            eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
+        )
+
+    def test_layer_gradient_relu_input_inplace(self):
+        model = BasicModel_MultiLayer(inplace=True)
+        input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
+        grads, eval = compute_layer_gradients_and_eval(
+            model, model.relu, input, target_ind=1, attribute_to_layer_input=True
+        )
+        assertArraysAlmostEqual(
+            grads.squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
+        )
+        assertArraysAlmostEqual(
+            eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
+        )
+
     def test_layer_gradient_output(self):
         model = BasicModel_MultiLayer()
         input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)
