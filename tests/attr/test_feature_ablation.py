@@ -184,7 +184,7 @@ class Test(BaseTest):
         feature_mask=None,
         additional_input=None,
         ablations_per_eval=(1,),
-        baselines=0,
+        baselines=None,
     ):
         for batch_size in ablations_per_eval:
             ablation = FeatureAblation(model)

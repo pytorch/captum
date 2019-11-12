@@ -4,7 +4,8 @@ import torch
 
 from .._utils.common import (
     _format_attributions,
-    format_input,
+    _format_input,
+    _format_input_baseline,
     _run_forward,
     _expand_additional_forward_args,
     _expand_target,
@@ -27,7 +28,7 @@ class FeatureAblation(PerturbationAttribution):
     def attribute(
         self,
         inputs,
-        baselines=0,
+        baselines=None,
         target=None,
         additional_forward_args=None,
         feature_mask=None,
@@ -57,31 +58,25 @@ class FeatureAblation(PerturbationAttribution):
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
                 baselines (scalar, tensor, tuple of scalars or tensors, optional):
-                            Baselines define reference value which replaces each feature
-                            when ablated. In order to assign attribution scores DeepLift
-                            computes the differences between the inputs and references
-                            and corresponding outputs.
-                            Baselines can be provided either as :
-
+                            Baselines define reference value which replaces each
+                            feature when ablated.
+                            Baselines can be provided as:
                             - a single tensor, if inputs is a single tensor, with
-                                exactly the same dimensions as inputs (first dimension
-                                can be 1, which applies the same baseline to all
-                                input examples).
-
-                            - a tuple of tensors, if inputs is a tuple of tensors,
-                                with matching dimensions to inputs (first dimension
-                                can be 1, which applies the same baseline to all
-                                input examples).
-
+                                exactly the same dimensions as inputs or
+                                broadcastable to match the dimensions of inputs
                             - a single scalar, if inputs is a single tensor, which will
                                 be broadcasted for each input value in input tensor.
-
-                            - a tuple of scalars, if inputs is a tuple of tensors, with
-                                exactly the same number of elements as inputs tuple.
-                                Each scalar element in baselines' tuple is broadcasted
-                                for each input tensor at the same index in inputs
-                                tuple.
-                            Default: zero scalar for each input tensor
+                            - a tuple of tensors or scalars, the baseline corresponding
+                                to each tensor in the inputs' tuple can be:
+                                - either a tensor with
+                                    exactly the same dimensions as inputs or
+                                    broadcastable to match the dimensions of inputs
+                                - or a scalar, corresponding to a tensor in the
+                                    inputs' tuple. This scalar value is broadcasted
+                                    for corresponding input tensor.
+                            In the cases when `baselines` is not provided, we internally
+                            use zero scalar corresponding to each input tensor.
+                            Default: None
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
@@ -199,12 +194,12 @@ class FeatureAblation(PerturbationAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = format_input(inputs)
+        inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
         num_examples = inputs[0].shape[0]
-        feature_mask = format_input(feature_mask) if feature_mask is not None else None
+        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
         assert (
             isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
