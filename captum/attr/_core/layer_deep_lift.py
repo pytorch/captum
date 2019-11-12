@@ -17,6 +17,7 @@ from .._utils.common import (
     _format_callable_baseline,
     _validate_input,
     _tensorize_baseline,
+    _call_custom_attribution_func,
 )
 
 
@@ -53,6 +54,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         additional_forward_args=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
+        custom_attribution_func=None,
     ):
         r""""
         Implements DeepLIFT algorithm for the layer based on the following paper:
@@ -245,10 +247,17 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         attr_inputs = (attr_inputs,)
         gradients = (gradients,)
 
-        attributions = tuple(
-            (input - baseline) * gradient
-            for input, baseline, gradient in zip(attr_inputs, attr_baselines, gradients)
-        )
+        if custom_attribution_func:
+            attributions = _call_custom_attribution_func(
+                custom_attribution_func, gradients, attr_inputs, attr_baselines
+            )
+        else:
+            attributions = tuple(
+                (input - baseline) * gradient
+                for input, baseline, gradient in zip(
+                    attr_inputs, attr_baselines, gradients
+                )
+            )
 
         # remove hooks from all activations
         self._remove_hooks()
@@ -291,6 +300,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         additional_forward_args=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
+        custom_attribution_func=None,
     ):
         r"""
         Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
@@ -468,6 +478,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             additional_forward_args=exp_addit_args,
             return_convergence_delta=return_convergence_delta,
             attribute_to_layer_input=attribute_to_layer_input,
+            custom_attribution_func=custom_attribution_func,
         )
         if return_convergence_delta:
             attributions, delta = attributions

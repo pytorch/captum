@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
 from .._utils.gradient import construct_neuron_grad_fn
 
@@ -27,6 +28,7 @@ class NeuronDeepLift(NeuronAttribution):
         baselines=None,
         additional_forward_args=None,
         attribute_to_neuron_input=False,
+        custom_attribution_func=None,
     ):
         r""""
         Implements DeepLIFT algorithm for the neuron based on the following paper:
@@ -159,7 +161,10 @@ class NeuronDeepLift(NeuronAttribution):
         )
 
         return dl.attribute(
-            inputs, baselines, additional_forward_args=additional_forward_args
+            inputs,
+            baselines,
+            additional_forward_args=additional_forward_args,
+            custom_attribution_func=custom_attribution_func,
         )
 
 
@@ -185,6 +190,7 @@ class NeuronDeepLiftShap(NeuronAttribution):
         baselines=None,
         additional_forward_args=None,
         attribute_to_neuron_input=False,
+        custom_attribution_func=None,
     ):
         r"""
         Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
@@ -306,5 +312,8 @@ class NeuronDeepLiftShap(NeuronAttribution):
         )
 
         return dl.attribute(
-            inputs, baselines, additional_forward_args=additional_forward_args
+            inputs,
+            baselines,
+            additional_forward_args=additional_forward_args,
+            custom_attribution_func=custom_attribution_func,
         )
