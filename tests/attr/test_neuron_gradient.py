@@ -26,6 +26,18 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
 
+    def test_simple_gradient_input_relu_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(
+            net, net.relu, inp, (0,), [1.0, 1.0, 1.0], attribute_to_neuron_input=True
+        )
+
+    def test_simple_gradient_input_linear1_inplace(self):
+        net = BasicModel_MultiLayer(inplace=True)
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(net, net.linear1, inp, (0,), [1.0, 1.0, 1.0])
+
     def test_simple_gradient_input_relu(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]], requires_grad=True)
@@ -82,10 +94,14 @@ class Test(BaseTest):
         test_neuron,
         expected_input_gradient,
         additional_input=None,
+        attribute_to_neuron_input=False,
     ):
         grad = NeuronGradient(model, target_layer)
         attributions = grad.attribute(
-            test_input, test_neuron, additional_forward_args=additional_input
+            test_input,
+            test_neuron,
+            additional_forward_args=additional_input,
+            attribute_to_neuron_input=attribute_to_neuron_input,
         )
         if isinstance(expected_input_gradient, tuple):
             for i in range(len(expected_input_gradient)):

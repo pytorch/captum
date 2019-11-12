@@ -160,7 +160,7 @@ def _forward_layer_eval_with_neuron_grads(
     # get layer output tensor(s).
     # For DataParallel models, each partition adds entry to dictionary
     # with key as device and value as corresponding Tensor.
-    def forward_hook(module, inp, out):
+    def forward_hook(module, inp, out=None):
         eval_tsr = inp if attribute_to_layer_input else out
 
         # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
@@ -175,9 +175,12 @@ def _forward_layer_eval_with_neuron_grads(
             # TODO we need to think what will be the best way of storing eval
             # tensors per device for each input per example. This implementation
             # doesn't support a tuple of inputs
-            saved_layer[eval_tsr.device] = eval_tsr
+            saved_layer[eval_tsr.device] = eval_tsr.clone()
 
-    hook = layer.register_forward_hook(forward_hook)
+    if attribute_to_layer_input:
+        hook = layer.register_forward_pre_hook(forward_hook)
+    else:
+        hook = layer.register_forward_hook(forward_hook)
     _run_forward(forward_fn, inputs, additional_forward_args=additional_forward_args)
     hook.remove()
     if len(saved_layer) == 0:
@@ -240,6 +243,14 @@ def compute_layer_gradients_and_eval(
         the separate inputs in a dictionary protected by a lock, analogous to the
         gather implementation for the core PyTorch DataParallel implementation.
 
+        NOTE: To properly handle inplace operations, a clone of the layer output
+        is stored. This structure inhibits execution of a backward hook on the last
+        module for the layer output when computing the gradient with respect to
+        the input, since we store an intermediate clone, as
+        opposed to the true module output. If backward module hooks are necessary
+        for the final module when computing input gradients, utilize
+        _forward_layer_eval_with_neuron_grads instead.
+
         Args:
 
             forward_fn: forward function. This can be for example model's
@@ -269,7 +280,7 @@ def compute_layer_gradients_and_eval(
         # get layer output tensor(s).
         # For DataParallel models, each partition adds entry to dictionary
         # with key as device and value as corresponding Tensor.
-        def forward_hook(module, inp, out):
+        def forward_hook(module, inp, out=None):
             eval_tsr = inp if attribute_to_layer_input else out
 
             # if `inp` or `out` is a tuple of one tensor, assign that
@@ -284,8 +295,12 @@ def compute_layer_gradients_and_eval(
                 )
                 nonlocal saved_layer
                 saved_layer[eval_tsr.device] = eval_tsr
+                return eval_tsr.clone()
 
-        hook = layer.register_forward_hook(forward_hook)
+        if attribute_to_layer_input:
+            hook = layer.register_forward_pre_hook(forward_hook)
+        else:
+            hook = layer.register_forward_hook(forward_hook)
         output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
