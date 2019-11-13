@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import torch
+import numpy as np
 
 from .._utils.common import (
     _format_attributions,
     _format_input,
-    _format_input_baseline,
     _run_forward,
     _expand_additional_forward_args,
     _expand_target,
@@ -13,8 +13,9 @@ from .._utils.common import (
 )
 from .._utils.attribution import PerturbationAttribution
 
+from .feature_ablation import FeatureAblation
 
-class FeatureAblation(PerturbationAttribution):
+class Occlusion(FeatureAblation):
     def __init__(self, forward_func):
         r"""
         Args:
@@ -23,17 +24,16 @@ class FeatureAblation(PerturbationAttribution):
                         any modification of it
         """
         super().__init__(forward_func)
-        self.use_weights = False
+        self.use_weights = True
 
     def attribute(
         self,
         inputs,
+        occlusion_shapes,
         baselines=None,
         target=None,
         additional_forward_args=None,
-        feature_mask=None,
         ablations_per_eval=1,
-        **kwargs
     ):
         r""""
         A perturbation based approach to computing attribution, involving
@@ -166,7 +166,7 @@ class FeatureAblation(PerturbationAttribution):
             >>> input = torch.randn(2, 4, 4)
             >>> # Defining FeatureAblation interpreter
             >>> ablator = FeatureAblation(net)
-            >>> # Computes ablation attribution, ablating each of the 16
+            >>> # Computes ablation attribution, ablating each of each of the 16
             >>> # scalar input independently.
             >>> attr = ablator.attribute(input, target=1)
 
@@ -192,178 +192,25 @@ class FeatureAblation(PerturbationAttribution):
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
         """
-        # Keeps track whether original input is a tuple or not before
-        # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
-        inputs, baselines = _format_input_baseline(inputs, baselines)
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-        num_examples = inputs[0].shape[0]
-        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
-        assert (
-            isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
-        ), "Ablations per evaluation must be at least 1."
+        formatted_inputs = _format_input(inputs)
 
-        # Computes initial evaluation with all features, which is compared
-        # to each ablated result.
-        initial_eval = _run_forward(
-            self.forward_func, inputs, target, additional_forward_args
-        )
-        assert (
-            initial_eval[0].numel() == 1
-        ), "Target should identify a single element in the model output."
-        initial_eval = initial_eval.reshape(1, num_examples)
+        # Construct occlusion blocks
+        if not isinstance(occlusion_shapes[0], tuple):
+            occlusion_shapes = (occlusion_shapes,)
+        assert len(occlusion_shapes) == len(formatted_inputs), "Must provide occlusion dimensions for each tensor."
+        occlusion_tensors = tuple(torch.ones(occ_shape) for occ_shape in occlusion_shapes)
 
-        # Initialize attribution totals and counts
-        total_attrib = [torch.zeros_like(input) for input in inputs]
-        # Weights are used in cases where ablations may be overlapping.
-        if self.use_weights:
-            weights = [torch.zeros_like(input) for input in inputs]
+        # Construct feature masks
+        feature_masks = []
+        for i, inp in enumerate(formatted_inputs):
+            current_shape = np.subtract(np.add(tuple(inp.shape[1:]), 1), occlusion_shapes[i])
+            feature_masks.append(torch.reshape(
+                    torch.arange(int(np.prod(current_shape)), device=formatted_inputs[i].device),
+                    tuple(current_shape),
+                ))
 
-        # Iterate through each feature tensor for ablation
-        for i in range(len(inputs)):
-            # Obtain feature mask for selected input tensor, matches size of
-            # 1 input example, (1 x inputs[i].shape[1:])
-            input_mask = (
-                torch.reshape(
-                    torch.arange(torch.numel(inputs[i][0]), device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-                if feature_mask is None
-                else feature_mask[i]
-            )
-            for (
-                current_inputs,
-                current_add_args,
-                current_target,
-                current_mask,
-            ) in self._ablation_generator(
-                i,
-                inputs,
-                additional_forward_args,
-                target,
-                baselines,
-                input_mask,
-                ablations_per_eval,
-                **kwargs
-            ):
-                # modified_eval dimensions: 1D tensor with length
-                # equal to #num_examples * #features in batch
-                modified_eval = _run_forward(
-                    self.forward_func, current_inputs, current_target, current_add_args
-                )
-                # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
-                # (contains 1 more dimension than inputs). This adds extra dimensions
-                # of 1 to make the tensor broadcastable with the inputs tensor.
-                eval_diff = (
-                    initial_eval - modified_eval.reshape(-1, num_examples)
-                ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
-                if self.use_weights:
-                    weights[i] += current_mask.float().sum(dim=0)
-                total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
-
-        # Divide total attributions by counts and return formatted attributions
-        if self.use_weights:
-            attrib = tuple(
-                single_attrib / weight
-                for single_attrib, weight in zip(total_attrib, weights)
-            )
-        else:
-            attrib = tuple(total_attrib)
-        return _format_attributions(is_inputs_tuple, attrib)
-
-    def _ablation_generator(
-        self,
-        i,
-        inputs,
-        additional_args,
-        target,
-        baselines,
-        input_mask,
-        ablations_per_eval,
-        **kwargs
-    ):
-        num_features = torch.max(input_mask).item() + 1
-        num_examples = inputs[0].shape[0]
-        ablations_per_eval = min(ablations_per_eval, num_features)
-        baseline = baselines[i] if isinstance(baselines, tuple) else baselines
-        if isinstance(baseline, torch.Tensor):
-            baseline = baseline.reshape((1,) + baseline.shape)
-
-        extra_args = {}
-        for key, value in kwargs.items():
-            if isinstance(value, tuple):
-                extra_args[key] = value[i]
-            else:
-                extra_args[key] = value
-
-        # Repeat features and additional args for batch size.
-        all_features_repeated = [
-            torch.cat([inputs[j]] * ablations_per_eval, dim=0)
-            for j in range(len(inputs))
-        ]
-        additional_args_repeated = (
-            _expand_additional_forward_args(additional_args, ablations_per_eval)
-            if additional_args is not None
-            else None
-        )
-        target_repeated = _expand_target(target, ablations_per_eval)
-
-        num_features_processed = torch.min(input_mask).item()
-        while num_features_processed < num_features:
-            current_num_features = min(
-                ablations_per_eval, num_features - num_features_processed
-            )
-
-            # Store appropriate inputs and additional args based on batch size.
-            if current_num_features != ablations_per_eval:
-                current_features = [
-                    tensor[0 : current_num_features * num_examples]
-                    for tensor in all_features_repeated
-                ]
-                current_additional_args = (
-                    _expand_additional_forward_args(
-                        additional_args, current_num_features
-                    )
-                    if additional_args is not None
-                    else None
-                )
-                current_target = _expand_target(target, current_num_features)
-            else:
-                current_features = all_features_repeated
-                current_additional_args = additional_args_repeated
-                current_target = target_repeated
-
-            # Store existing tensor before modifying
-            original_tensor = current_features[i]
-            # Construct ablated batch for features in range num_features_processed
-            # to num_features_processed + current_num_features and return mask with
-            # same size as ablated batch. ablated_features has dimension
-            # (current_num_features, num_examples, + inputs[i].shape[1:])
-            ablated_features, current_mask = self._construct_ablated_input(
-                current_features[i].reshape(
-                    (current_num_features, num_examples) + current_features[i].shape[1:]
-                ),
-                input_mask,
-                baseline,
-                num_features_processed,
-                num_features_processed + current_num_features,
-                **extra_args
-            )
-
-            # current_features[i] has dimension
-            # (current_num_features * num_examples, inputs[i].shape[1:]),
-            # which can be provided to the model as input.
-            current_features[i] = ablated_features.reshape(
-                (-1,) + ablated_features.shape[2:]
-            )
-            yield tuple(
-                current_features
-            ), current_additional_args, current_target, current_mask
-            # Replace existing tensor at index i.
-            current_features[i] = original_tensor
-            num_features_processed += current_num_features
+        # Use ablation attribute method
+        return super().attribute(inputs, baselines=baselines, target=target, feature_mask=tuple(feature_masks), additional_forward_args=additional_forward_args, ablations_per_eval=ablations_per_eval, occlusion_tensors=occlusion_tensors)
 
     def _construct_ablated_input(
         self, feature_tensor, input_mask, baseline, start_feature, end_feature, **kwargs
@@ -385,9 +232,17 @@ class FeatureAblation(PerturbationAttribution):
         thus counted towards ablations for that feature) and 0s otherwise.
         """
         current_mask = torch.stack(
-            [input_mask == j for j in range(start_feature, end_feature)], dim=0
+            [self._occlusion_mask(feature_tensor, input_mask, j, kwargs["occlusion_tensors"]) for j in range(start_feature, end_feature)], dim=0
         ).long()
         ablated_tensor = (feature_tensor * (1 - current_mask).float()) + (
             baseline * current_mask.float()
         )
         return ablated_tensor, current_mask
+
+    def _occlusion_mask(self, input, mask, feature_number, occlusion_tensor):
+        index = (mask == feature_number).nonzero()[0].tolist()
+        val_list = []
+        for i in range(len(index)-1, -1, -1):
+            val_list.append(index[i])
+            val_list.append(input.shape[i + 2] - index[i] - occlusion_tensor.shape[i])
+        return torch.nn.functional.pad(occlusion_tensor, tuple(val_list))
