@@ -247,6 +247,25 @@ class GradientAttribution(Attribution):
             return attr_sum - (end_point - start_point)
 
 
+class PerturbationAttribution(Attribution):
+    r"""
+    All perturbation based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
+    def __init__(self, forward_func):
+        r"""
+        Args:
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        super().__init__()
+        self.forward_func = forward_func
+
+
 class InternalAttribution(GradientAttribution):
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,

@@ -237,7 +237,6 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU(inplace=inplace)
-        self.softmax = nn.Softmax(dim=1)
         self.fc1 = nn.Linear(8, 4)
         self.conv1.weight = nn.Parameter(torch.ones(2, 1, 3, 3))
         self.conv1.bias = nn.Parameter(torch.tensor([-50.0, -75.0]))

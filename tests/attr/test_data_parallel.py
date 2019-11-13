@@ -3,6 +3,9 @@
 import unittest
 
 import torch
+
+from captum.attr._core.feature_ablation import FeatureAblation
+
 from captum.attr._core.grad_cam import LayerGradCam
 from captum.attr._core.internal_influence import InternalInfluence
 from captum.attr._core.layer_activation import LayerActivation
@@ -388,6 +391,19 @@ class Test(BaseGPUTest):
             additional_forward_args=None,
             test_batches=False,
         )
+
+    def test_simple_feature_ablation(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                FeatureAblation,
+                net,
+                None,
+                inputs=inp,
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
 
     def _alt_device_list(self):
         return [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]
