@@ -38,12 +38,6 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_deeplift_with_custom_attr_func(self):
-        def custom_attr_func(multipliers, inputs, baselines):
-            return tuple(
-                multiplier * (input - baseline)
-                for multiplier, input, baseline in zip(multipliers, inputs, baselines)
-            )
-
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         attr_method = LayerDeepLift(model, model.l3)
@@ -121,12 +115,6 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_deepliftshap_with_custom_attr_func(self):
-        def custom_attr_func(multipliers, inputs, baselines):
-            return tuple(
-                multiplier * (input - baseline)
-                for multiplier, input, baseline in zip(multipliers, inputs, baselines)
-            )
-
         model = ReLULinearDeepLiftModel()
         (
             inputs,

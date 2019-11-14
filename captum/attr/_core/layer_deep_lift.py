@@ -185,7 +185,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
-                        `inputs` and `outputs` are provided in tuples of same length.
+                        `inputs` and `baselines` are provided in tuples of same length.
                         `custom_attribution_func` returns a tuple of attribution
                         tensors that have the same length as the `inputs`.
                         Default: None
