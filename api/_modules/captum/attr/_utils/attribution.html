@@ -33,8 +33,10 @@
     <span class="n">_run_forward</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
-    <span class="n">validate_input</span><span class="p">,</span>
-    <span class="n">validate_target</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_validate_input</span><span class="p">,</span>
+    <span class="n">_validate_target</span><span class="p">,</span>
+    <span class="n">_tensorize_baseline</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.gradient</span> <span class="k">import</span> <span class="n">compute_gradients</span>
 
@@ -238,11 +240,28 @@
 <span class="sd">                    of those values, if necessary.</span>
 <span class="sd">        """</span>
         <span class="n">end_point</span><span class="p">,</span> <span class="n">start_point</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">end_point</span><span class="p">,</span> <span class="n">start_point</span><span class="p">)</span>
+        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+            <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+        <span class="c1"># tensorizing start_point in case it is a scalar or one example baseline</span>
+        <span class="c1"># If the batch size is large we could potentially also tensorize only one</span>
+        <span class="c1"># sample and expand the output to the rest of the elements in the batch</span>
+        <span class="n">start_point</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">end_point</span><span class="p">,</span> <span class="n">start_point</span><span class="p">)</span>
+
         <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
 
+        <span class="c1"># verify that the attributions and end_point match on 1st dimension</span>
+        <span class="k">for</span> <span class="n">attribution</span><span class="p">,</span> <span class="n">end_point_tnsr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">end_point</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">end_point_tnsr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span>
+                <span class="s2">"Attributions tensor and the end_point must match on the first"</span>
+                <span class="s2">" dimension but found attribution: </span><span class="si">{}</span><span class="s2"> and end_point: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">end_point_tnsr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
         <span class="n">num_samples</span> <span class="o">=</span> <span class="n">end_point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">validate_input</span><span class="p">(</span><span class="n">end_point</span><span class="p">,</span> <span class="n">start_point</span><span class="p">)</span>
-        <span class="n">validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">_validate_input</span><span class="p">(</span><span class="n">end_point</span><span class="p">,</span> <span class="n">start_point</span><span class="p">)</span>
+        <span class="n">_validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">_sum_rows</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -259,9 +278,28 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-        <span class="n">row_sums</span> <span class="o">=</span> <span class="p">[</span><span class="n">_sum_rows</span><span class="p">(</span><span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">]</span>
-        <span class="n">attr_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">row_sum</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_sum</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">row_sums</span><span class="p">)])</span>
-        <span class="k">return</span> <span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_point</span> <span class="o">-</span> <span class="n">start_point</span><span class="p">)</span></div></div>
+            <span class="n">row_sums</span> <span class="o">=</span> <span class="p">[</span><span class="n">_sum_rows</span><span class="p">(</span><span class="n">attribution</span><span class="p">)</span> <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span><span class="p">]</span>
+            <span class="n">attr_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="nb">sum</span><span class="p">(</span><span class="n">row_sum</span><span class="p">)</span> <span class="k">for</span> <span class="n">row_sum</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">row_sums</span><span class="p">)])</span>
+            <span class="k">return</span> <span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_point</span> <span class="o">-</span> <span class="n">start_point</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    All perturbation based attribution algorithms extend this class. It requires a</span>
+<span class="sd">    forward function, which most commonly is the forward function of the model</span>
+<span class="sd">    that we want to interpret or the model itself.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            forward_func (callable or torch.nn.Module): This can either be an instance</span>
+<span class="sd">                        of pytorch model or any modification of model's forward</span>
+<span class="sd">                        function.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
 
 <span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>

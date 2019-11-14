@@ -49,7 +49,7 @@ attribution, can only be a single tensor.</p></li>
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
-then it is not neccesary to provide this argument.</p></li>
+then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
@@ -67,7 +67,7 @@ tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
-to the number of examples, and if mutliple input tensors
+to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
 <li><p><strong>neuron_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a>) – Index of neuron in output of given
 layer for which attribution is desired. Length of
@@ -165,7 +165,7 @@ attribution, can only be a single tensor.</p></li>
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
-then it is not neccesary to provide this argument.</p></li>
+then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
@@ -198,13 +198,47 @@ dimensions in the output of the given layer (since
 dimension 0 corresponds to number of examples).
 An integer may be provided instead of a tuple of
 length 1.</p></li>
-<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baseline from which
-integral is computed. If inputs is a single tensor,
-baselines must also be a single tensor with exactly the same
-dimensions as inputs. If inputs is a tuple of tensors,
-baselines must also be a tuple of tensors, with matching
-dimensions to inputs.
-Default: zero tensor for each input tensor</p></li>
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+is computed.
+Baselines can be provided as:</p>
+<ul>
+<li><dl class="simple">
+<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+dimension is one and the remaining dimensions match
+with inputs.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:
+- either a tensor with matching dimensions to</p>
+<blockquote>
+<div><p>corresponding tensor in the inputs’ tuple
+or the first dimension is one and the remaining
+dimensions match with the corresponding
+input tensor.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>or a scalar, corresponding to a tensor in the</dt><dd><p>inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In the cases when <cite>baselines</cite> is not provided, we internally
+use zero scalar corresponding to each input tensor.</p>
+<p>Default: None</p>
+</p></li>
 <li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
@@ -322,7 +356,7 @@ attribution, can only be a single tensor.</p></li>
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
-then it is not neccesary to provide this argument.</p></li>
+then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
@@ -352,13 +386,46 @@ dimensions in the output of the given layer (since
 dimension 0 corresponds to number of examples).
 An integer may be provided instead of a tuple of
 length 1.</p></li>
-<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baseline from which
-integral is computed. If inputs is a single tensor,
-baselines must also be a single tensor with exactly the same
-dimensions as inputs. If inputs is a tuple of tensors,
-baselines must also be a tuple of tensors, with matching
-dimensions to inputs.
-Default: zero tensor for each input tensor</p></li>
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
+is computed and can be provided as:</p>
+<ul>
+<li><dl class="simple">
+<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+dimension is one and the remaining dimensions match
+with inputs.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:
+- either a tensor with matching dimensions to</p>
+<blockquote>
+<div><p>corresponding tensor in the inputs’ tuple
+or the first dimension is one and the remaining
+dimensions match with the corresponding
+input tensor.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>or a scalar, corresponding to a tensor in the</dt><dd><p>inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In the cases when <cite>baselines</cite> is not provided, we internally
+use zero scalar corresponding to each input tensor.</p>
+<p>Default: None</p>
+</p></li>
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).

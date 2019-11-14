@@ -26,7 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.input_x_gradient</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="n">format_input</span><span class="p">,</span> <span class="n">_format_attributions</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_attributions</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
 
@@ -56,7 +56,7 @@
 <span class="sd">                        of the input tensors should be provided. It is assumed</span>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
-<span class="sd">                        mutliple input tensors are provided, the examples must</span>
+<span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
 <span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
@@ -123,7 +123,7 @@
         <span class="c1"># converting it into a tuple.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
 
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>

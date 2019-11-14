@@ -26,6 +26,8 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer_activation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">_forward_layer_eval</span>
 
@@ -50,7 +52,7 @@
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
 <span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                          then it is not neccesary to provide this argument.</span>
+<span class="sd">                          then it is not necessary to provide this argument.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
@@ -68,7 +70,7 @@
 <span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
 <span class="sd">                            of the input tensors should be provided. It is assumed</span>
 <span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
-<span class="sd">                            to the number of examples, and if mutliple input tensors</span>
+<span class="sd">                            to the number of examples, and if multiple input tensors</span>
 <span class="sd">                            are provided, the examples must be aligned appropriately.</span>
 <span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
@@ -114,14 +116,15 @@
 <span class="sd">                &gt;&gt;&gt; # attribution is layer output, with size Nx12x32x32</span>
 <span class="sd">                &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
-            <span class="n">inputs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
-            <span class="n">additional_forward_args</span><span class="p">,</span>
-            <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
-            <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
+                <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>

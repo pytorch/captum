@@ -98,25 +98,40 @@
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            baselines (tensor or tuple of tensors, optional):  Baselines define</span>
-<span class="sd">                        the starting point from which expectation is computed.</span>
-<span class="sd">                        `baselines` can be either a single tensor, a tuple of</span>
-<span class="sd">                        tensors or a callable function that, optionally, takes inputs</span>
-<span class="sd">                        as an argument and either returns a single tensor or</span>
-<span class="sd">                        a tuple of those.</span>
-<span class="sd">                        If inputs is a single tensor, baselines must also be either</span>
-<span class="sd">                        a single tensor or a function that returns a single tensor.</span>
-<span class="sd">                        If inputs is a tuple of tensors, baselines must also be</span>
-<span class="sd">                        either a tuple of tensors or a function that returns a</span>
-<span class="sd">                        tuple of tensors.</span>
-<span class="sd">                        The first dimension in baseline tensors</span>
-<span class="sd">                        defines the distribution from which we randomly draw</span>
-<span class="sd">                        samples. All other dimensions starting after</span>
-<span class="sd">                        the first dimension should match with the inputs'</span>
-<span class="sd">                        dimensions after the first dimension. It is recommended that</span>
-<span class="sd">                        the number of samples in the baselines' tensors is larger</span>
-<span class="sd">                        than one.</span>
-<span class="sd">                        Default: zero tensor for each input tensor</span>
+<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):</span>
+<span class="sd">                        Baselines define the starting point from which expectation</span>
+<span class="sd">                        is computed and can be provided as:</span>
+
+<span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                            exactly the same dimensions as inputs or the first</span>
+<span class="sd">                            dimension is one and the remaining dimensions match</span>
+<span class="sd">                            with inputs.</span>
+
+<span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                            be broadcasted for each input value in input tensor.</span>
+
+<span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                            - either a tensor with matching dimensions to</span>
+<span class="sd">                                corresponding tensor in the inputs' tuple</span>
+<span class="sd">                                or the first dimension is one and the remaining</span>
+<span class="sd">                                dimensions match with the corresponding</span>
+<span class="sd">                                input tensor.</span>
+<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                for corresponding input tensor.</span>
+
+<span class="sd">                        - callable function, optionally takes `inputs` as an</span>
+<span class="sd">                            argument and either returns a single tensor</span>
+<span class="sd">                            or a tuple of those.</span>
+
+<span class="sd">                        It is recommended that the number of samples in the baselines'</span>
+<span class="sd">                        tensors is larger than one.</span>
+
+<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                        use zero scalar corresponding to each input tensor.</span>
+
+<span class="sd">                        Default: None</span>
 <span class="sd">            n_samples (int, optional):  The number of randomly generated examples</span>
 <span class="sd">                        per sample in the input batch. Random examples are</span>
 <span class="sd">                        generated by adding gaussian random noise to each sample.</span>

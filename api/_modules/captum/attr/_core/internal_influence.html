@@ -33,7 +33,7 @@
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
     <span class="n">_reshape_and_sum</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
-    <span class="n">validate_input</span><span class="p">,</span>
+    <span class="n">_validate_input</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
@@ -61,7 +61,7 @@
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
 <span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                          then it is not neccesary to provide this argument.</span>
+<span class="sd">                          then it is not necessary to provide this argument.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
@@ -98,13 +98,33 @@
 <span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                            to the number of examples, and if multiple input tensors</span>
 <span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                baselines (tensor or tuple of tensors, optional):  Baseline from which</span>
-<span class="sd">                            integral is computed. If inputs is a single tensor,</span>
-<span class="sd">                            baselines must also be a single tensor with exactly the same</span>
-<span class="sd">                            dimensions as inputs. If inputs is a tuple of tensors,</span>
-<span class="sd">                            baselines must also be a tuple of tensors, with matching</span>
-<span class="sd">                            dimensions to inputs.</span>
-<span class="sd">                            Default: zero tensor for each input tensor</span>
+<span class="sd">                baselines scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                            Baselines define a starting point from which integral</span>
+<span class="sd">                            is computed and can be provided as:</span>
+
+<span class="sd">                            - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                                exactly the same dimensions as inputs or the first</span>
+<span class="sd">                                dimension is one and the remaining dimensions match</span>
+<span class="sd">                                with inputs.</span>
+
+<span class="sd">                            - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                                be broadcasted for each input value in input tensor.</span>
+
+<span class="sd">                            - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                                to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                                - either a tensor with matching dimensions to</span>
+<span class="sd">                                    corresponding tensor in the inputs' tuple</span>
+<span class="sd">                                    or the first dimension is one and the remaining</span>
+<span class="sd">                                    dimensions match with the corresponding</span>
+<span class="sd">                                    input tensor.</span>
+<span class="sd">                                - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                    inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                    for corresponding input tensor.</span>
+
+<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                            use zero scalar corresponding to each input tensor.</span>
+
+<span class="sd">                            Default: None</span>
 <span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
 <span class="sd">                            which gradients are computed (for classification cases,</span>
 <span class="sd">                            this is usually the target class).</span>
@@ -198,7 +218,7 @@
 <span class="sd">                &gt;&gt;&gt; attribution = layer_int_inf.attribute(input)</span>
 <span class="sd">        """</span>
         <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-        <span class="n">validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="n">_validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
 
         <span class="c1"># Retrieve step size and scaling factor for specified approximation method</span>
         <span class="n">step_sizes_func</span><span class="p">,</span> <span class="n">alphas_func</span> <span class="o">=</span> <span class="n">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
@@ -216,7 +236,7 @@
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
         <span class="c1"># apply number of steps to additional forward args</span>
-        <span class="c1"># currently, number of steps is applied only to additional forward arguemnts</span>
+        <span class="c1"># currently, number of steps is applied only to additional forward arguments</span>
         <span class="c1"># that are nd-tensors. It is assumed that the first dimension is</span>
         <span class="c1"># the number of batches.</span>
         <span class="c1"># dim -&gt; (bsz * #steps x additional_forward_args[0].shape[1:], ...)</span>
@@ -239,8 +259,8 @@
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># flattening grads so that we can multipy it with step-size</span>
-        <span class="c1"># calling contigous to avoid `memory whole` problems</span>
+        <span class="c1"># flattening grads so that we can multiply it with step-size</span>
+        <span class="c1"># calling contiguous to avoid `memory whole` problems</span>
         <span class="n">scaled_grads</span> <span class="o">=</span> <span class="n">layer_gradients</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
             <span class="n">step_sizes</span>
         <span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">layer_gradients</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>

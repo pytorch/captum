@@ -36,7 +36,7 @@
 </dl>
 <dl class="method">
 <dt id="captum.attr._core.deep_lift.DeepLift.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLift.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLift.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
 Implements DeepLIFT algorithm based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
@@ -74,16 +74,49 @@ that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
 be aligned appropriately.</p></li>
-<li><p><strong>baselines</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em><em>, </em><em>optional</em>) – Baselines define
-reference samples which are compared with the inputs.
-In order to assign attribution scores DeepLift computes
-the differences between the inputs and references and
-corresponding outputs.
-If inputs is a single tensor, baselines must also be a
-single tensor with exactly the same dimensions as inputs.
-If inputs is a tuple of tensors, baselines must also be
-a tuple of tensors, with matching dimensions to inputs.
-Default: zero tensor for each input tensor</p></li>
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference samples that are compared with
+the inputs. In order to assign attribution scores DeepLift
+computes the differences between the inputs/outputs and
+corresponding references.
+Baselines can be provided as:</p>
+<ul>
+<li><dl class="simple">
+<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+dimension is one and the remaining dimensions match
+with inputs.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:
+- either a tensor with matching dimensions to</p>
+<blockquote>
+<div><p>corresponding tensor in the inputs’ tuple
+or the first dimension is one and the remaining
+dimensions match with the corresponding
+input tensor.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>or a scalar, corresponding to a tensor in the</dt><dd><p>inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>In the cases when <cite>baselines</cite> is not provided, we internally
+use zero scalar corresponding to each input tensor.</p>
+<p>Default: None</p>
+</p></li>
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
@@ -136,6 +169,26 @@ convergence delta or not. If <cite>return_convergence_delta</cite>
 is set to True convergence delta will be returned in
 a tuple following attributions.
 Default: False</p></li>
+<li><p><strong>custom_attribution_func</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A custom function for
+computing final attribution scores. This function can take
+at least one and at most three arguments with the
+following signature:</p>
+<blockquote>
+<div><ul>
+<li><p>custom_attribution_func(multipliers)</p></li>
+<li><p>custom_attribution_func(multipliers, inputs)</p></li>
+<li><p>custom_attribution_func(multipliers, inputs, baselines)</p></li>
+</ul>
+</div></blockquote>
+<p>In case this function is not provided, we use the default
+logic defined as: multipliers * (inputs - baselines)
+It is assumed that all input arguments, <cite>multipliers</cite>,
+<cite>inputs</cite> and <cite>baselines</cite> are provided in tuples of same
+length. <cite>custom_attribution_func</cite> returns a tuple of
+attribution tensors that have the same length as the
+<cite>inputs</cite>.</p>
+<p>Default: None</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -155,10 +208,14 @@ corresponding sized tensors is returned.</p>
 <dt><strong>delta</strong> (<em>tensor</em>, returned if return_convergence_delta=True):</dt><dd><p>This is computed using the property that
 the total sum of forward_func(inputs) - forward_func(baselines)
 must equal the total sum of the attributions computed
-based on Deeplift’s rescale rule.
+based on DeepLift’s rescale rule.
 Delta is calculated per example, meaning that the number of
 elements in returned delta tensor is equal to the number of
-of examples in input.</p>
+of examples in input.
+Note that the logic described for deltas is guaranteed when the
+default logic for attribution computations is used, meaning that the
+<cite>custom_attribution_func=None</cite>, otherwise it is not guaranteed and
+depends on the specifics of the <cite>custom_attribution_func</cite>.</p>
 </dd>
 </dl>
 </li>
