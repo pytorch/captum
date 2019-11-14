@@ -52,7 +52,8 @@ class Test(BaseTest):
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
-        self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines)
+        expected = ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+        self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def test_relu_neuron_deeplift_shap(self):
         model = ReLULinearDeepLiftModel()
@@ -102,21 +103,15 @@ class Test(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         neuron_dl = NeuronDeepLiftShap(model, model.l3)
-        self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines)
+        expected = (torch.zeros(3, 3), torch.zeros(3, 3))
+        self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
-    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines):
+    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines, expected):
         def custom_attr_func(multipliers, inputs, baselines):
-            return tuple(
-                multiplier * (input - baseline)
-                for multiplier, input, baseline in zip(multipliers, inputs, baselines)
-            )
+            return tuple(multiplier * 0.0 for multiplier in multipliers)
 
-        attr_w_func = attr_method.attribute(
+        attr = attr_method.attribute(
             inputs, 0, baselines, custom_attribution_func=custom_attr_func
         )
-        attr = attr_method.attribute(inputs, 0, baselines)
-        self.assertEqual(attr_w_func[0].shape, inputs[0].shape)
-        self.assertEqual(attr_w_func[1].shape, inputs[1].shape)
-
-        assertTensorAlmostEqual(self, attr[0], attr_w_func[0], 0.0)
-        assertTensorAlmostEqual(self, attr[1], attr_w_func[1], 0.0)
+        assertTensorAlmostEqual(self, attr[0], expected[0], 0.0)
+        assertTensorAlmostEqual(self, attr[1], expected[1], 0.0)
