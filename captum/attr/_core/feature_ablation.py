@@ -184,8 +184,8 @@ class FeatureAblation(PerturbationAttribution):
             >>> # | 2 | 2 | 3 | 3 |
             >>> # +---+---+---+---+
             >>> # With this mask, all inputs with the same value are ablated
-            >>> # simultaneously, and the attribution for all inputs in the same
-            >>> # group (0, 1, 2, and 3) are the same.
+            >>> # simultaneously, and the attribution for each input in the same
+            >>> # group (0, 1, 2, and 3) per example are the same.
             >>> # The attributions can be calculated as follows:
             >>> # feature mask has dimensions 1 x 4 x 4
             >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
@@ -319,8 +319,8 @@ class FeatureAblation(PerturbationAttribution):
             # Store appropriate inputs and additional args based on batch size.
             if current_num_features != ablations_per_eval:
                 current_features = [
-                    tensor[0 : current_num_features * num_examples]
-                    for tensor in all_features_repeated
+                    feature_repeated[0 : current_num_features * num_examples]
+                    for feature_repeated in all_features_repeated
                 ]
                 current_additional_args = (
                     _expand_additional_forward_args(
@@ -370,17 +370,17 @@ class FeatureAblation(PerturbationAttribution):
     ):
         r"""
         Ablates given feature tensor with given input feature mask, feature range,
-        and baselines. feature_tensor shape is (num_features, num_examples, ...)
+        and baselines. feature_tensor shape is (`num_features`, `num_examples`, ...)
         with remaining dimensions corresponding to remaining original tensor
-        dimensions and num_features = end_feature - start_feature.
+        dimensions and `num_features` = `end_feature` - `start_feature`.
         input_mask has same number of dimensions as original input tensor (one less
-        than feature_tensor), and can have first dimension either 1, applying same
-        feature mask to all examples, or num_examples. baseline is expected to
-        be broadcastable to match feature_tensor.
+        than `feature_tensor`), and can have first dimension either 1, applying same
+        feature mask to all examples, or `num_examples`. baseline is expected to
+        be broadcastable to match `feature_tensor`.
 
         This method returns the ablated feature tensor, which has the same
-        dimensionality as feature_tensor as well as the corresponding mask with
-        either the same dimensionality as feature_tensor or second dimension
+        dimensionality as `feature_tensor` as well as the corresponding mask with
+        either the same dimensionality as `feature_tensor` or second dimension
         being 1. This mask contains 1s in locations which have been ablated (and
         thus counted towards ablations for that feature) and 0s otherwise.
         """

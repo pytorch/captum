@@ -242,9 +242,28 @@ class GradientAttribution(Attribution):
                     self.forward_func, end_point, target, additional_forward_args
                 )
             )
-        row_sums = [_sum_rows(attribution) for attribution in attributions]
-        attr_sum = torch.tensor([sum(row_sum) for row_sum in zip(*row_sums)])
-        return attr_sum - (end_point - start_point)
+            row_sums = [_sum_rows(attribution) for attribution in attributions]
+            attr_sum = torch.stack([sum(row_sum) for row_sum in zip(*row_sums)])
+            return attr_sum - (end_point - start_point)
+
+
+class PerturbationAttribution(Attribution):
+    r"""
+    All perturbation based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
+    def __init__(self, forward_func):
+        r"""
+        Args:
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        super().__init__()
+        self.forward_func = forward_func
 
 
 class PerturbationAttribution(Attribution):
