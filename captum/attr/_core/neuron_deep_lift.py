@@ -127,6 +127,21 @@ class NeuronDeepLift(NeuronAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -279,6 +294,22 @@ class NeuronDeepLiftShap(NeuronAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
+
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):

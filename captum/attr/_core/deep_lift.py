@@ -186,9 +186,10 @@ class DeepLift(GradientAttribution):
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
-                        `inputs` and `outputs` are provided in tuples of same length.
-                        `custom_attribution_func` returns a tuple of attribution
-                        tensors that have the same length as the `inputs`.
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
 
                         Default: None
 
@@ -539,10 +540,11 @@ class DeepLiftShap(DeepLift):
                             - custom_attribution_func(multipliers, inputs, baselines)
                         In case this function is not provided we use the default
                         logic defined as: multipliers * (inputs - baselines)
-                        It is assumed that `custom_attribution_func` returns a
-                        tuple of attribution tensors that have the same shape and
-                        dimensionality as the `inputs`.
-
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
                         Default: None
 
         Returns:
