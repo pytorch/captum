@@ -223,6 +223,15 @@ class GradientAttribution(Attribution):
 
         attributions = _format_tensor_into_tuples(attributions)
 
+        # verify that the attributions and end_point match on 1st dimension
+        for attribution, end_point_tnsr in zip(attributions, end_point):
+            assert end_point_tnsr.shape[0] == attribution.shape[0], (
+                "Attributions tensor and the end_point must match on the first"
+                " dimension but found attribution: {} and end_point: {}".format(
+                    attribution.shape[0], end_point_tnsr.shape[0]
+                )
+            )
+
         num_samples = end_point[0].shape[0]
         _validate_input(end_point, start_point)
         _validate_target(num_samples, target)

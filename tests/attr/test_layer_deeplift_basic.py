@@ -47,7 +47,7 @@ class TestDeepLift(BaseTest):
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         attr_method = LayerDeepLift(model, model.l3)
-        self._relu_custom_attr_func_assert(attr_method, inputs, baselines)
+        self._relu_custom_attr_func_assert(attr_method, inputs, baselines, [[2.0]])
 
     def test_linear_layer_deeplift_batch(self):
         model = ReLULinearDeepLiftModel()
@@ -133,27 +133,22 @@ class TestDeepLift(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         attr_method = LayerDeepLiftShap(model, model.l3)
-        self._relu_custom_attr_func_assert(attr_method, inputs, baselines)
+        self._relu_custom_attr_func_assert(
+            attr_method, inputs, baselines, [[2.0], [2.0]]
+        )
 
-    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines):
+    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines, expected):
         def custom_attr_func(multipliers, inputs, baselines):
-            return tuple(
-                multiplier * (input - baseline)
-                for multiplier, input, baseline in zip(multipliers, inputs, baselines)
-            )
+            return tuple(multiplier * 2 for multiplier in multipliers)
 
-        attr_w_func, delta_w_func = attr_method.attribute(
+        attr = attr_method.attribute(
             inputs,
             baselines,
-            return_convergence_delta=True,
             custom_attribution_func=custom_attr_func,
-        )
-        attr, delta = attr_method.attribute(
-            inputs, baselines, return_convergence_delta=True
+            return_convergence_delta=True,
         )
 
-        assertTensorAlmostEqual(self, attr, attr_w_func, 0.0)
-        assertTensorAlmostEqual(self, delta_w_func, delta, 0.0)
+        assertTensorAlmostEqual(self, attr[0], expected, 1e-19)
 
 
 def _create_inps_and_base_for_deeplift_neuron_layer_testing():

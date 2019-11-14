@@ -160,10 +160,7 @@ class Test(BaseTest):
 
     def test_relu_deepliftshap_with_custom_attr_func(self):
         def custom_attr_func(multipliers, inputs, baselines):
-            return tuple(
-                multiplier * (input - baseline)
-                for multiplier, input, baseline in zip(multipliers, inputs, baselines)
-            )
+            return tuple(multiplier * 0.0 for multiplier in multipliers)
 
         model = ReLULinearDeepLiftModel()
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
@@ -173,19 +170,12 @@ class Test(BaseTest):
         inputs = (x1, x2)
         baselines = (b1, b2)
         dls = DeepLiftShap(model)
-        attr_w_func, delta_w_func = dls.attribute(
-            inputs,
-            baselines,
-            custom_attribution_func=custom_attr_func,
-            return_convergence_delta=True,
+        attr_w_func = dls.attribute(
+            inputs, baselines, custom_attribution_func=custom_attr_func
         )
-        attr, delta = dls.attribute(inputs, baselines, return_convergence_delta=True)
-        self.assertEqual(attr_w_func[0].shape, x1.shape)
-        self.assertEqual(attr_w_func[1].shape, x2.shape)
 
-        assertTensorAlmostEqual(self, attr[0], attr_w_func[0], 0.0)
-        assertTensorAlmostEqual(self, attr[1], attr_w_func[1], 0.0)
-        assertTensorAlmostEqual(self, delta_w_func, delta, 0.0)
+        assertTensorAlmostEqual(self, attr_w_func[0], [[0.0, 0.0, 0.0]], 0.0)
+        assertTensorAlmostEqual(self, attr_w_func[1], [[0.0, 0.0, 0.0]], 0.0)
 
     def test_relu_deepliftshap_with_hypothetical_contrib_func(self):
         model = Conv1dDeepLiftModel()
@@ -267,7 +257,7 @@ def _hypothetical_contrib_func(multipliers, inputs, baselines):
     r"""
     Implements hypothetical input contributions based on the logic described here:
     https://github.com/kundajelab/deeplift/pull/36/files
-    This is not using a dummy model for test purposes
+    This is using a dummy model for test purposes
     """
     # we assume that multiplies, inputs and baselines have the following shape:
     # tuple((bsz x len x channel), )

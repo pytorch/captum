@@ -183,11 +183,12 @@ class DeepLift(GradientAttribution):
                             - custom_attribution_func(multipliers)
                             - custom_attribution_func(multipliers, inputs)
                             - custom_attribution_func(multipliers, inputs, baselines)
-                        In case this function is not provided we use the default
+                        In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
-                        It is assumed that `custom_attribution_func` returns a
-                        tuple of attribution tensors that have the same shape and
-                        dimensionality as the `inputs`.
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `outputs` are provided in tuples of same length.
+                        `custom_attribution_func` returns a tuple of attribution
+                        tensors that have the same length as the `inputs`.
 
                         Default: None
 
@@ -205,10 +206,14 @@ class DeepLift(GradientAttribution):
                 This is computed using the property that
                 the total sum of forward_func(inputs) - forward_func(baselines)
                 must equal the total sum of the attributions computed
-                based on Deeplift's rescale rule.
+                based on DeepLift's rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
                 of examples in input.
+                Note that the logic described for deltas is guaranteed when the
+                default logic for attribution computations is used, meaning that the
+                `custom_attribution_func=None`, otherwise it is not guaranteed and
+                depends on the specifics of the `custom_attribution_func`.
 
         Examples::
 
@@ -260,14 +265,14 @@ class DeepLift(GradientAttribution):
             additional_forward_args=additional_forward_args,
         )
 
-        if custom_attribution_func:
-            attributions = _call_custom_attribution_func(
-                custom_attribution_func, gradients, inputs, baselines
-            )
-        else:
+        if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
                 for input, baseline, gradient in zip(inputs, baselines, gradients)
+            )
+        else:
+            attributions = _call_custom_attribution_func(
+                custom_attribution_func, gradients, inputs, baselines
             )
 
         # remove hooks from all activations
@@ -562,6 +567,12 @@ class DeepLiftShap(DeepLift):
                         `number of examples in input` * `number of examples
                         in baseline`. The deltas are ordered in the first place by
                         input example, followed by the baseline.
+                        Note that the logic described for deltas is guaranteed
+                        when the default logic for attribution computations is used,
+                        meaning that the `custom_attribution_func=None`, otherwise
+                        it is not guaranteed and depends on the specifics of the
+                        `custom_attribution_func`.
+
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
