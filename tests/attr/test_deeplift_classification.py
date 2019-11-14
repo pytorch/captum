@@ -57,8 +57,6 @@ class Test(BaseTest):
         num_in = 40
         inputs = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
         baselines = torch.range(1.0, num_in).unsqueeze(0)
-        print(inputs.shape)
-        print(baselines.shape)
         model = SoftmaxDeepLiftModel(num_in, 20, 10)
         dl = DeepLift(model)
 

@@ -37,6 +37,12 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
         assert_delta(self, delta)
 
+    def test_relu_deeplift_with_custom_attr_func(self):
+        model = ReLULinearDeepLiftModel()
+        inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+        attr_method = LayerDeepLift(model, model.l3)
+        self._relu_custom_attr_func_assert(attr_method, inputs, baselines, [[2.0]])
+
     def test_linear_layer_deeplift_batch(self):
         model = ReLULinearDeepLiftModel()
         _, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
@@ -107,6 +113,30 @@ class TestDeepLift(BaseTest):
         )
         assertTensorAlmostEqual(self, attributions, [[15.0]])
         assert_delta(self, delta)
+
+    def test_relu_deepliftshap_with_custom_attr_func(self):
+        model = ReLULinearDeepLiftModel()
+        (
+            inputs,
+            baselines,
+        ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
+        attr_method = LayerDeepLiftShap(model, model.l3)
+        self._relu_custom_attr_func_assert(
+            attr_method, inputs, baselines, [[2.0], [2.0]]
+        )
+
+    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines, expected):
+        def custom_attr_func(multipliers, inputs, baselines):
+            return tuple(multiplier * 2 for multiplier in multipliers)
+
+        attr = attr_method.attribute(
+            inputs,
+            baselines,
+            custom_attribution_func=custom_attr_func,
+            return_convergence_delta=True,
+        )
+
+        assertTensorAlmostEqual(self, attr[0], expected, 1e-19)
 
 
 def _create_inps_and_base_for_deeplift_neuron_layer_testing():

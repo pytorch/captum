@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from .._utils.attribution import NeuronAttribution
 from .._utils.gradient import construct_neuron_grad_fn
 
@@ -27,6 +28,7 @@ class NeuronDeepLift(NeuronAttribution):
         baselines=None,
         additional_forward_args=None,
         attribute_to_neuron_input=False,
+        custom_attribution_func=None,
     ):
         r""""
         Implements DeepLIFT algorithm for the neuron based on the following paper:
@@ -125,6 +127,21 @@ class NeuronDeepLift(NeuronAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -159,7 +176,10 @@ class NeuronDeepLift(NeuronAttribution):
         )
 
         return dl.attribute(
-            inputs, baselines, additional_forward_args=additional_forward_args
+            inputs,
+            baselines,
+            additional_forward_args=additional_forward_args,
+            custom_attribution_func=custom_attribution_func,
         )
 
 
@@ -185,6 +205,7 @@ class NeuronDeepLiftShap(NeuronAttribution):
         baselines=None,
         additional_forward_args=None,
         attribute_to_neuron_input=False,
+        custom_attribution_func=None,
     ):
         r"""
         Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
@@ -273,6 +294,22 @@ class NeuronDeepLiftShap(NeuronAttribution):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
+
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):
@@ -306,5 +343,8 @@ class NeuronDeepLiftShap(NeuronAttribution):
         )
 
         return dl.attribute(
-            inputs, baselines, additional_forward_args=additional_forward_args
+            inputs,
+            baselines,
+            additional_forward_args=additional_forward_args,
+            custom_attribution_func=custom_attribution_func,
         )

@@ -17,6 +17,7 @@ from .._utils.common import (
     _format_callable_baseline,
     _validate_input,
     _tensorize_baseline,
+    _call_custom_attribution_func,
 )
 
 
@@ -53,6 +54,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         additional_forward_args=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
+        custom_attribution_func=None,
     ):
         r""""
         Implements DeepLIFT algorithm for the layer based on the following paper:
@@ -173,6 +175,20 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         attribute to the input or output, is a single tensor.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same length.
+                        `custom_attribution_func` returns a tuple of attribution
+                        tensors that have the same length as the `inputs`.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -187,11 +203,16 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that the total sum of
                 forward_func(inputs) - forward_func(baselines) must equal the
-                total sum of the attributions computed based on Deeplift's
+                total sum of the attributions computed based on DeepLift's
                 rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
                 of examples in input.
+                Note that the logic described for deltas is guaranteed
+                when the default logic for attribution computations is used,
+                meaning that the `custom_attribution_func=None`, otherwise
+                it is not guaranteed and depends on the specifics of the
+                `custom_attribution_func`.
 
         Examples::
 
@@ -245,10 +266,17 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         attr_inputs = (attr_inputs,)
         gradients = (gradients,)
 
-        attributions = tuple(
-            (input - baseline) * gradient
-            for input, baseline, gradient in zip(attr_inputs, attr_baselines, gradients)
-        )
+        if custom_attribution_func is None:
+            attributions = tuple(
+                (input - baseline) * gradient
+                for input, baseline, gradient in zip(
+                    attr_inputs, attr_baselines, gradients
+                )
+            )
+        else:
+            attributions = _call_custom_attribution_func(
+                custom_attribution_func, gradients, attr_inputs, attr_baselines
+            )
 
         # remove hooks from all activations
         self._remove_hooks()
@@ -291,6 +319,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         additional_forward_args=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
+        custom_attribution_func=None,
     ):
         r"""
         Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
@@ -402,6 +431,21 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         outputs of internal layers are single tensors.
                         Support for multiple tensors will be added later.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -418,13 +462,18 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         total sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of attributions
                         computed based on approximated SHAP values using
-                        Deeplift's rescale rule.
+                        DeepLift's rescale rule.
                         Delta is calculated for each example input and baseline pair,
                         meaning that the number of elements in returned delta tensor
                         is equal to the
                         `number of examples in input` * `number of examples
                         in baseline`. The deltas are ordered in the first place by
                         input example, followed by the baseline.
+                        Note that the logic described for deltas is guaranteed
+                        when the default logic for attribution computations is used,
+                        meaning that the `custom_attribution_func=None`, otherwise
+                        it is not guaranteed and depends on the specifics of the
+                        `custom_attribution_func`.
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -468,6 +517,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             additional_forward_args=exp_addit_args,
             return_convergence_delta=return_convergence_delta,
             attribute_to_layer_input=attribute_to_layer_input,
+            custom_attribution_func=custom_attribution_func,
         )
         if return_convergence_delta:
             attributions, delta = attributions

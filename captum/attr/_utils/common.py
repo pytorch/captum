@@ -313,6 +313,28 @@ def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
     return target
 
 
+def _call_custom_attribution_func(
+    custom_attribution_func, multipliers, inputs, baselines
+):
+    assert callable(custom_attribution_func), (
+        "`custom_attribution_func`"
+        " must be a callable function but {} provided".format(
+            type(custom_attribution_func)
+        )
+    )
+    custom_attr_func_params = signature(custom_attribution_func).parameters
+    assert len(custom_attr_func_params) in range(1, 4), (
+        "`custom_attribution_func`" " must take at least one and at most 3 arguments"
+    )
+
+    if len(custom_attr_func_params) == 1:
+        return custom_attribution_func(multipliers)
+    elif len(custom_attr_func_params) == 2:
+        return custom_attribution_func(multipliers, inputs)
+    elif len(custom_attr_func_params) == 3:
+        return custom_attribution_func(multipliers, inputs, baselines)
+
+
 class MaxList:
     """Keep track of N maximal items
 
