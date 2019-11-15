@@ -2,10 +2,10 @@ from __future__ import print_function
 
 import torch
 
-from .helpers.utils import BaseTest, assertTensorAlmostEqual, assert_delta
-from .helpers.basic_models import ReLULinearDeepLiftModel
+from ..helpers.utils import BaseTest, assertTensorAlmostEqual, assert_delta
+from ..helpers.basic_models import ReLULinearDeepLiftModel
 
-from captum.attr._core.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
 
 class TestDeepLift(BaseTest):

@@ -4,15 +4,15 @@ import unittest
 
 import torch
 from captum.attr._core.saliency import Saliency
-from captum.attr._core.neuron_gradient import NeuronGradient
+from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._utils.gradient import _forward_layer_eval
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

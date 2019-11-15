@@ -5,11 +5,11 @@ import torch.nn.functional as F
 from .._utils.attribution import GradientAttribution, LayerAttribution
 from .._utils.common import _format_input, _format_attributions
 
-from .grad_cam import LayerGradCam
+from .layer.grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
 
 
-class GuidedGradCam(GradientAttribution):
+class   GuidedGradCam(GradientAttribution):
     def __init__(self, model, layer, device_ids=None):
         r"""
         Args

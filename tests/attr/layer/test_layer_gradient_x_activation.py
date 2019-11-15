@@ -3,13 +3,13 @@
 import unittest
 
 import torch
-from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
