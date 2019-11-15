@@ -4,7 +4,9 @@ import unittest
 
 import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.neuron.neuron_integrated_gradients import NeuronIntegratedGradients
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet,

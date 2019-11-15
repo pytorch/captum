@@ -15,7 +15,9 @@ from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLift
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
-from captum.attr._core.neuron.neuron_integrated_gradients import NeuronIntegratedGradients
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
