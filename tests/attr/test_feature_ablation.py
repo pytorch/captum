@@ -66,6 +66,38 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
+    def test_single_sample_ablation_with_mask_scalar(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1]])
+
+        # testing int, float, 0d and 1d tensor output
+        for func in [lambda inp: torch.sum(net(inp)).item(),lambda inp: torch.sum(net(inp)), lambda inp: torch.sum(net(inp)).reshape(1,), lambda inp: int(torch.sum(net(inp)).item())]:
+            self._ablation_test_assert(
+                func,
+                inp,
+                [[82.0, 82.0, 24.0]],
+                feature_mask=mask,
+                ablations_per_eval=(1,),
+                target=None,
+            )
+
+    def test_multi_sample_ablation_with_mask_scalar(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1]])
+
+        # testing int, float, 0d and 1d tensor output
+        for func in [lambda inp: torch.sum(net(inp)).item(),lambda inp: torch.sum(net(inp)), lambda inp: torch.sum(net(inp)).reshape(1,), lambda inp: int(torch.sum(net(inp)).item())]:
+            self._ablation_test_assert(
+                func,
+                inp,
+                [[642.0, 642.0, 264.0]],
+                feature_mask=mask,
+                ablations_per_eval=(1,),
+                target=None,
+            )
+
     def test_multi_input_ablation_with_mask(self):
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
@@ -108,6 +140,31 @@ class Test(BaseTest):
             baselines=(2, 3.0, 4),
             ablations_per_eval=(1, 2, 3),
         )
+
+    def test_multi_input_scalar_ablation_with_mask(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
+        mask1 = torch.tensor([[1, 1, 1]])
+        mask2 = torch.tensor([[0, 1, 2]])
+        mask3 = torch.tensor([[0, 1, 2]])
+        expected = (
+            [[1784.0, 1784.0, 1784.0]],
+            [[160.0, 1200.0, 240.0]],
+            [[16.0, 880.0, 104.0]],
+        )
+        # testing int, float, 0d and 1d tensor output
+        for func in [lambda *inp: torch.sum(net(*inp)).item(),lambda *inp: torch.sum(net(*inp)), lambda *inp: torch.sum(net(*inp)).reshape(1,), lambda *inp: int(torch.sum(net(*inp)).item())]:
+            self._ablation_test_assert(
+                func,
+                (inp1, inp2, inp3),
+                expected,
+                additional_input=(1,),
+                feature_mask=(mask1, mask2, mask3),
+                ablations_per_eval=(1,),
+                target=None,
+            )
 
     def test_multi_input_ablation(self):
         net = BasicModel_MultiLayer_MultiInput()
@@ -185,12 +242,13 @@ class Test(BaseTest):
         additional_input=None,
         ablations_per_eval=(1,),
         baselines=None,
+        target=0,
     ):
         for batch_size in ablations_per_eval:
             ablation = FeatureAblation(model)
             attributions = ablation.attribute(
                 test_input,
-                target=0,
+                target=target,
                 feature_mask=feature_mask,
                 additional_forward_args=additional_input,
                 baselines=baselines,
