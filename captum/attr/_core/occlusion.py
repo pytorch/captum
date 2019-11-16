@@ -15,6 +15,7 @@ from .._utils.attribution import PerturbationAttribution
 
 from .feature_ablation import FeatureAblation
 
+
 class Occlusion(FeatureAblation):
     def __init__(self, forward_func):
         r"""
@@ -30,6 +31,7 @@ class Occlusion(FeatureAblation):
         self,
         inputs,
         occlusion_shapes,
+        strides=None,
         baselines=None,
         target=None,
         additional_forward_args=None,
@@ -37,19 +39,19 @@ class Occlusion(FeatureAblation):
     ):
         r""""
         A perturbation based approach to computing attribution, involving
-        replacing each input feature with a given baseline / reference, and
-        computing the difference in output. By default, each scalar value within
-        each input tensor is taken as a feature and replaced independently. Passing
-        a feature mask, allows grouping features to be ablated together. This can
-        be used in cases such as images, where an entire segment or region
-        can be ablated, measuring the importance of the segment (feature group).
-        Each input scalar in the group will be given the same attribution value
-        equal to the change in target as a result of ablating the entire feature
-        group.
+        replacing each contiguous rectangular region with a given baseline /
+        reference, and computing the difference in output. For features located
+        in multiple regions (hyperrectangles), the corresponding output differences
+        are averaged to compute the attribution for that feature.
+
+        The first patch is applied with the corner aligned with all indices 0,
+        and strides are applied until the entire dimension range is covered. Note
+        that this may cause the final patch applied in a direction to be cut-off
+        and thus smaller than the target occlusion shape.
 
         Args:
 
-                inputs (tensor or tuple of tensors):  Input for which ablation
+                inputs (tensor or tuple of tensors):  Input for which occlusion
                             attributions are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -58,9 +60,32 @@ class Occlusion(FeatureAblation):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
+                occlusion_shapes (tuple or tuple of tuples):  Shape of patch (hyperrectangle)
+                            to occlude each input. For a single input tensor, this
+                            must be a tuple of length equal to the number of dimensions
+                            of the input tensor - 1, defining the dimensions of the patch.
+                            For multiple input tensors, this must be a tuple containing
+                            one tuple for each input tensor defining the dimensions
+                            of the patch for that input tensor, as described for the
+                            single tensor case.
+                strides (int or tuple or tuple of ints or tuple of tuples, optional):
+                            This defines the step by which the occlusion hyperrectangle
+                            should be shifted by in each direction for each iteration.
+                            For a single tensor input, this can be either a single
+                            integer, which is used as the step size in each direction,
+                            or a tuple of integers matching the number of dimensions
+                            in the occlusion shape, defining the step size in the
+                            corresponding dimension. For multiple tensor inputs, this
+                            can be either a tuple of integers, one for each input
+                            tensor (used for all dimensions of the corresponding tensor),
+                            or a tuple of tuples, providing the stride per dimension
+                            for each tensor.
+                            If None is provided, a stride of 1 is used for each
+                            dimension of each input tensor.
+                            Default: None
                 baselines (scalar, tensor, tuple of scalars or tensors, optional):
                             Baselines define reference value which replaces each
-                            feature when ablated.
+                            feature when occluded.
                             Baselines can be provided as:
                             - a single tensor, if inputs is a single tensor, with
                                 exactly the same dimensions as inputs or
@@ -118,23 +143,7 @@ class Occlusion(FeatureAblation):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                feature_mask (tensor or tuple of tensors, optional):
-                            feature_mask defines a mask for the input, grouping
-                            features which should be ablated together. feature_mask
-                            should contain the same number of tensors as inputs.
-                            Each tensor should
-                            be the same size as the corresponding input or
-                            broadcastable to match the input tensor. Each tensor
-                            should contain integers in the range 0 to num_features
-                            - 1, and indices corresponding to the same feature should
-                            have the same value.
-                            Note that features within each input tensor are ablated
-                            independently (not across tensors).
-                            If None, then a feature mask is constructed which assigns
-                            each scalar within a tensor as a separate feature, which
-                            is ablated independently.
-                            Default: None
-                ablations_per_eval (int, optional): Allows ablation of multiple features
+                ablations_per_eval (int, optional): Allows multiple occlusions
                             to be processed simultaneously in one call to forward_fn.
                             Each forward pass will contain a maximum of
                             ablations_per_eval * #examples samples.
@@ -165,52 +174,55 @@ class Occlusion(FeatureAblation):
             >>> # Generating random input with size 2 x 4 x 4
             >>> input = torch.randn(2, 4, 4)
             >>> # Defining FeatureAblation interpreter
-            >>> ablator = FeatureAblation(net)
-            >>> # Computes ablation attribution, ablating each of each of the 16
-            >>> # scalar input independently.
-            >>> attr = ablator.attribute(input, target=1)
-
-            >>> # Alternatively, we may want to ablate features in groups, e.g.
-            >>> # grouping each 2x2 square of the inputs and ablating them together.
-            >>> # This can be done by creating a feature mask as follows, which
-            >>> # defines the feature groups, e.g.:
-            >>> # +---+---+---+---+
-            >>> # | 0 | 0 | 1 | 1 |
-            >>> # +---+---+---+---+
-            >>> # | 0 | 0 | 1 | 1 |
-            >>> # +---+---+---+---+
-            >>> # | 2 | 2 | 3 | 3 |
-            >>> # +---+---+---+---+
-            >>> # | 2 | 2 | 3 | 3 |
-            >>> # +---+---+---+---+
-            >>> # With this mask, all inputs with the same value are ablated
-            >>> # simultaneously, and the attribution for all inputs in the same
-            >>> # group (0, 1, 2, and 3) are the same.
-            >>> # The attributions can be calculated as follows:
-            >>> # feature mask has dimensions 1 x 4 x 4
-            >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
-            >>>                             [2,2,3,3],[2,2,3,3]]])
-            >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
+            >>> ablator = Occlusion(net)
+            >>> # Computes occlusion attribution, ablating each 1x3x3 patch,
+            >>> # shifting in each direction by the default of 1.
+            >>> attr = ablator.attribute(input, target=1,occlusion_shapes=(1,3,3))
         """
         formatted_inputs = _format_input(inputs)
+
+        # Formatting strides
+        if strides is None:
+            strides = tuple(1 for input in formatted_inputs)
+        if len(formatted_inputs) == 1 and not (
+            isinstance(strides, tuple) and len(strides) == 1
+        ):
+            strides = (strides,)
+        assert isinstance(strides, tuple) and len(strides) == len(
+            formatted_inputs
+        ), "Strides must be provided for each input tensor."
 
         # Construct occlusion blocks
         if not isinstance(occlusion_shapes[0], tuple):
             occlusion_shapes = (occlusion_shapes,)
-        assert len(occlusion_shapes) == len(formatted_inputs), "Must provide occlusion dimensions for each tensor."
-        occlusion_tensors = tuple(torch.ones(occ_shape) for occ_shape in occlusion_shapes)
+        assert len(occlusion_shapes) == len(
+            formatted_inputs
+        ), "Must provide occlusion dimensions for each tensor."
+        occlusion_tensors = tuple(
+            torch.ones(occ_shape) for occ_shape in occlusion_shapes
+        )
 
-        # Construct feature masks
-        feature_masks = []
+        # Construct counts, defining number of steps to make of occlusion block in each dimension.
+        shift_counts = []
         for i, inp in enumerate(formatted_inputs):
-            current_shape = np.subtract(np.add(tuple(inp.shape[1:]), 1), occlusion_shapes[i])
-            feature_masks.append(torch.reshape(
-                    torch.arange(int(np.prod(current_shape)), device=formatted_inputs[i].device),
-                    tuple(current_shape),
-                ))
+            current_shape = np.subtract(inp.shape[1:], occlusion_shapes[i])
+            shift_counts.append(
+                tuple(
+                    np.add(np.ceil(np.divide(current_shape, strides[i])).astype(int), 1)
+                )
+            )
 
         # Use ablation attribute method
-        return super().attribute(inputs, baselines=baselines, target=target, feature_mask=tuple(feature_masks), additional_forward_args=additional_forward_args, ablations_per_eval=ablations_per_eval, occlusion_tensors=occlusion_tensors)
+        return super().attribute(
+            inputs,
+            baselines=baselines,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            ablations_per_eval=ablations_per_eval,
+            occlusion_tensors=occlusion_tensors,
+            shift_counts=tuple(shift_counts),
+            strides=strides,
+        )
 
     def _construct_ablated_input(
         self, feature_tensor, input_mask, baseline, start_feature, end_feature, **kwargs
@@ -232,17 +244,46 @@ class Occlusion(FeatureAblation):
         thus counted towards ablations for that feature) and 0s otherwise.
         """
         current_mask = torch.stack(
-            [self._occlusion_mask(feature_tensor, input_mask, j, kwargs["occlusion_tensors"]) for j in range(start_feature, end_feature)], dim=0
+            [
+                self._occlusion_mask(
+                    feature_tensor,
+                    input_mask,
+                    j,
+                    kwargs["occlusion_tensors"],
+                    kwargs["strides"],
+                    kwargs["shift_counts"],
+                )
+                for j in range(start_feature, end_feature)
+            ],
+            dim=0,
         ).long()
         ablated_tensor = (feature_tensor * (1 - current_mask).float()) + (
             baseline * current_mask.float()
         )
         return ablated_tensor, current_mask
 
-    def _occlusion_mask(self, input, mask, feature_number, occlusion_tensor):
-        index = (mask == feature_number).nonzero()[0].tolist()
-        val_list = []
-        for i in range(len(index)-1, -1, -1):
-            val_list.append(index[i])
-            val_list.append(input.shape[i + 2] - index[i] - occlusion_tensor.shape[i])
-        return torch.nn.functional.pad(occlusion_tensor, tuple(val_list))
+    def _occlusion_mask(
+        self, input, mask, feature_number, occlusion_tensor, strides, shift_counts
+    ):
+        current_total = feature_number
+        current_index = []
+        for i, val in enumerate(shift_counts):
+            stride = strides[i] if isinstance(strides, tuple) else strides
+            current_index.append((current_total % val) * stride)
+            current_total = current_total // val
+
+        remaining_padding = np.subtract(
+            input.shape[2:], np.add(current_index, occlusion_tensor.shape)
+        )
+        pad_values = [
+            val for pair in zip(remaining_padding, current_index) for val in pair
+        ]
+        pad_values.reverse()
+        print(shift_counts)
+        print(pad_values)
+        padded_tensor = torch.nn.functional.pad(occlusion_tensor, tuple(pad_values))
+        return padded_tensor.reshape((1,) + padded_tensor.shape)
+
+    def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
+        feature_max = np.prod(kwargs["shift_counts"])
+        return 0, feature_max, None

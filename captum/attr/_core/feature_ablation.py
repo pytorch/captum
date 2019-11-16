@@ -214,7 +214,7 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
         initial_eval = initial_eval.reshape(1, num_examples)
-
+        print(initial_eval.shape)
         # Initialize attribution totals and counts
         total_attrib = [torch.zeros_like(input) for input in inputs]
         # Weights are used in cases where ablations may be overlapping.
@@ -223,16 +223,6 @@ class FeatureAblation(PerturbationAttribution):
 
         # Iterate through each feature tensor for ablation
         for i in range(len(inputs)):
-            # Obtain feature mask for selected input tensor, matches size of
-            # 1 input example, (1 x inputs[i].shape[1:])
-            input_mask = (
-                torch.reshape(
-                    torch.arange(torch.numel(inputs[i][0]), device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-                if feature_mask is None
-                else feature_mask[i]
-            )
             for (
                 current_inputs,
                 current_add_args,
@@ -244,7 +234,7 @@ class FeatureAblation(PerturbationAttribution):
                 additional_forward_args,
                 target,
                 baselines,
-                input_mask,
+                feature_mask[i] if feature_mask is not None else None,
                 ablations_per_eval,
                 **kwargs
             ):
@@ -253,6 +243,8 @@ class FeatureAblation(PerturbationAttribution):
                 modified_eval = _run_forward(
                     self.forward_func, current_inputs, current_target, current_add_args
                 )
+                print(current_inputs)
+                print(modified_eval.shape)
                 # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
                 # (contains 1 more dimension than inputs). This adds extra dimensions
                 # of 1 to make the tensor broadcastable with the inputs tensor.
@@ -261,6 +253,8 @@ class FeatureAblation(PerturbationAttribution):
                 ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
                 if self.use_weights:
                     weights[i] += current_mask.float().sum(dim=0)
+                print(eval_diff.shape)
+                print(current_mask.shape)
                 total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
 
         # Divide total attributions by counts and return formatted attributions
@@ -284,19 +278,21 @@ class FeatureAblation(PerturbationAttribution):
         ablations_per_eval,
         **kwargs
     ):
-        num_features = torch.max(input_mask).item() + 1
-        num_examples = inputs[0].shape[0]
-        ablations_per_eval = min(ablations_per_eval, num_features)
-        baseline = baselines[i] if isinstance(baselines, tuple) else baselines
-        if isinstance(baseline, torch.Tensor):
-            baseline = baseline.reshape((1,) + baseline.shape)
-
         extra_args = {}
         for key, value in kwargs.items():
             if isinstance(value, tuple):
                 extra_args[key] = value[i]
             else:
                 extra_args[key] = value
+
+        num_features_processed, num_features, input_mask = self._get_feature_range_and_mask(
+            inputs[i], input_mask, **extra_args
+        )
+        num_examples = inputs[0].shape[0]
+        ablations_per_eval = min(ablations_per_eval, num_features)
+        baseline = baselines[i] if isinstance(baselines, tuple) else baselines
+        if isinstance(baseline, torch.Tensor):
+            baseline = baseline.reshape((1,) + baseline.shape)
 
         # Repeat features and additional args for batch size.
         all_features_repeated = [
@@ -310,7 +306,6 @@ class FeatureAblation(PerturbationAttribution):
         )
         target_repeated = _expand_target(target, ablations_per_eval)
 
-        num_features_processed = torch.min(input_mask).item()
         while num_features_processed < num_features:
             current_num_features = min(
                 ablations_per_eval, num_features - num_features_processed
@@ -387,7 +382,23 @@ class FeatureAblation(PerturbationAttribution):
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
+        print(current_mask.shape)
         ablated_tensor = (feature_tensor * (1 - current_mask).float()) + (
             baseline * current_mask.float()
         )
+        print(ablated_tensor.shape)
         return ablated_tensor, current_mask
+
+    def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
+        if input_mask is None:
+            # Obtain feature mask for selected input tensor, matches size of
+            # 1 input example, (1 x inputs[i].shape[1:])
+            input_mask = torch.reshape(
+                torch.arange(torch.numel(input[0]), device=input.device),
+                input[0:1].shape,
+            ).long()
+        return (
+            torch.min(input_mask).item(),
+            torch.max(input_mask).item() + 1,
+            input_mask,
+        )
