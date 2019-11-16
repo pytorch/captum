@@ -225,12 +225,26 @@ class FeatureAblation(PerturbationAttribution):
         initial_eval = _run_forward(
             self.forward_func, inputs, target, additional_forward_args
         )
-        if isinstance(initial_eval, int) or isinstance(initial_eval, float) or (isinstance(initial_eval, torch.Tensor) and (len(initial_eval.shape) == 0 or (num_examples > 1 and initial_eval.numel() == 1))):
+        if (
+            isinstance(initial_eval, int)
+            or isinstance(initial_eval, float)
+            or (
+                isinstance(initial_eval, torch.Tensor)
+                and (
+                    len(initial_eval.shape) == 0
+                    or (num_examples > 1 and initial_eval.numel() == 1)
+                )
+            )
+        ):
             single_output_mode = True
-            assert ablations_per_eval == 1, "Cannot perform multiple ablations simultaneously when function returns scalar."
+            assert (
+                ablations_per_eval == 1
+            ), "Cannot have ablations_per_eval > 1 when function returns scalar."
             if feature_mask is not None:
                 for single_mask in feature_mask:
-                    assert single_mask.shape[0] == 1, "Cannot provide multiple feature masks when function returns a scalar."
+                    assert (
+                        single_mask.shape[0] == 1
+                    ), "Cannot provide multiple masks when function returns a scalar."
         else:
             single_output_mode = False
             assert (

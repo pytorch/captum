@@ -72,7 +72,12 @@ class Test(BaseTest):
         mask = torch.tensor([[0, 0, 1]])
 
         # testing int, float, 0d and 1d tensor output
-        for func in [lambda inp: torch.sum(net(inp)).item(),lambda inp: torch.sum(net(inp)), lambda inp: torch.sum(net(inp)).reshape(1,), lambda inp: int(torch.sum(net(inp)).item())]:
+        for func in [
+            lambda inp: torch.sum(net(inp)).item(),
+            lambda inp: torch.sum(net(inp)),
+            lambda inp: torch.sum(net(inp)).reshape(1),
+            lambda inp: int(torch.sum(net(inp)).item()),
+        ]:
             self._ablation_test_assert(
                 func,
                 inp,
@@ -88,7 +93,12 @@ class Test(BaseTest):
         mask = torch.tensor([[0, 0, 1]])
 
         # testing int, float, 0d and 1d tensor output
-        for func in [lambda inp: torch.sum(net(inp)).item(),lambda inp: torch.sum(net(inp)), lambda inp: torch.sum(net(inp)).reshape(1,), lambda inp: int(torch.sum(net(inp)).item())]:
+        for func in [
+            lambda inp: torch.sum(net(inp)).item(),
+            lambda inp: torch.sum(net(inp)),
+            lambda inp: torch.sum(net(inp)).reshape(1),
+            lambda inp: int(torch.sum(net(inp)).item()),
+        ]:
             self._ablation_test_assert(
                 func,
                 inp,
@@ -155,7 +165,12 @@ class Test(BaseTest):
             [[16.0, 880.0, 104.0]],
         )
         # testing int, float, 0d and 1d tensor output
-        for func in [lambda *inp: torch.sum(net(*inp)).item(),lambda *inp: torch.sum(net(*inp)), lambda *inp: torch.sum(net(*inp)).reshape(1,), lambda *inp: int(torch.sum(net(*inp)).item())]:
+        for func in [
+            lambda *inp: torch.sum(net(*inp)).item(),
+            lambda *inp: torch.sum(net(*inp)),
+            lambda *inp: torch.sum(net(*inp)).reshape(1),
+            lambda *inp: int(torch.sum(net(*inp)).item()),
+        ]:
             self._ablation_test_assert(
                 func,
                 (inp1, inp2, inp3),
