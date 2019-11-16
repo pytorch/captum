@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union
+
 import torch
+from torch import Tensor
 
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.batching import _batched_operator
@@ -16,7 +19,7 @@ from .._utils.attribution import GradientAttribution
 
 
 class IntegratedGradients(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable):
         r"""
         Args:
 
@@ -27,15 +30,15 @@ class IntegratedGradients(GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
+        inputs: Union[Tensor],
+        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        target: Optional[Union[int, Tuple[int, ...], Tensor]] = None,
         additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-    ):
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        return_convergence_delta: Optional[bool] = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Approximates the integral of gradients along the path from a baseline input
             to the given input. If no baseline is provided, the default baseline
@@ -256,5 +259,5 @@ class IntegratedGradients(GradientAttribution):
             return _format_attributions(is_inputs_tuple, attributions), delta
         return _format_attributions(is_inputs_tuple, attributions)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
