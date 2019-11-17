@@ -3,13 +3,13 @@
 import unittest
 
 import torch
-from captum.attr._core.internal_influence import InternalInfluence
+from captum.attr._core.layer.internal_influence import InternalInfluence
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

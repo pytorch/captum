@@ -2,11 +2,11 @@ from __future__ import print_function
 
 import torch
 
-from .helpers.utils import BaseTest, assertTensorAlmostEqual
-from .helpers.basic_models import ReLULinearDeepLiftModel
+from ..helpers.utils import BaseTest, assertTensorAlmostEqual
+from ..helpers.basic_models import ReLULinearDeepLiftModel
 
-from captum.attr._core.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from .test_layer_deeplift_basic import (
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )

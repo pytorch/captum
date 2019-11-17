@@ -4,13 +4,13 @@ import unittest
 
 import torch
 import torch.nn as nn
-from captum.attr._core.layer_activation import LayerActivation
+from captum.attr._core.layer.layer_activation import LayerActivation
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest, assertTensorAlmostEqual
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

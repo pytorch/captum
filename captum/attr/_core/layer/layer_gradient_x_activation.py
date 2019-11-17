@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-from .._utils.attribution import NeuronAttribution
-from .._utils.common import (
-    _format_input,
-    _format_additional_forward_args,
-    _format_attributions,
-)
-from .._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
-    _forward_layer_eval_with_neuron_grads,
-)
+from ..._utils.attribution import LayerAttribution
+from ..._utils.common import _format_input, _format_additional_forward_args
+from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
-class NeuronGradient(NeuronAttribution):
+class LayerGradientXActivation(LayerAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -39,31 +31,49 @@ class NeuronGradient(NeuronAttribution):
     def attribute(
         self,
         inputs,
-        neuron_index,
+        target=None,
         additional_forward_args=None,
-        attribute_to_neuron_input=False,
+        attribute_to_layer_input=False,
     ):
         r"""
-            Computes the gradient of the output of a particular neuron with
-            respect to the inputs of the network.
+            Computes element-wise product of gradient and activation for selected
+            layer on given inputs.
 
             Args:
 
-                inputs (tensor or tuple of tensors):  Input for which neuron
-                            gradients are computed. If forward_func takes a single
+                inputs (tensor or tuple of tensors):  Input for which attributions
+                            are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
-                neuron_index (int or tuple): Index of neuron in output of given
-                              layer for which attribution is desired. Length of
-                              this tuple must be one less than the number of
-                              dimensions in the output of the given layer (since
-                              dimension 0 corresponds to number of examples).
-                              An integer may be provided instead of a tuple of
-                              length 1.
+                target (int, tuple, tensor or list, optional):  Output indices for
+                            which gradients are computed (for classification cases,
+                            this is usually the target class).
+                            If the network returns a scalar value per example,
+                            no target index is necessary.
+                            For general 2D outputs, targets can be either:
+
+                            - a single integer or a tensor containing a single
+                                integer, which is applied to all input examples
+
+                            - a list of integers or a 1D tensor, with length matching
+                                the number of examples in inputs (dim 0). Each integer
+                                is applied as the target for the corresponding example.
+
+                            For outputs with > 2 dimensions, targets can be either:
+
+                            - A single tuple, which contains #output_dims - 1
+                                elements. This target index is applied to all examples.
+
+                            - A list of tuples with length equal to the number of
+                                examples in inputs (dim 0), and each tuple containing
+                                #output_dims - 1 elements. Each tuple is applied as the
+                                target for the corresponding example.
+
+                            Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
@@ -76,28 +86,25 @@ class NeuronGradient(NeuronAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                attribute_to_neuron_input (bool, optional): Indicates whether to
-                            compute the attributions with respect to the neuron input
-                            or output. If `attribute_to_neuron_input` is set to True
+                attribute_to_layer_input (bool, optional): Indicates whether to
+                            compute the attribution with respect to the layer input
+                            or output. If `attribute_to_layer_input` is set to True
                             then the attributions will be computed with respect to
-                            neuron's inputs, otherwise it will be computed with respect
-                            to neuron's outputs.
+                            layer input, otherwise it will be computed with respect
+                            to layer output.
                             Note that currently it is assumed that either the input
-                            or the output of internal neurons, depending on whether we
+                            or the output of internal layer, depending on whether we
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
 
             Returns:
-                *tensor* or tuple of *tensors* of **attributions**:
-                - **attributions** (*tensor* or tuple of *tensors*):
-                            Gradients of particular neuron with respect to each input
-                            feature. Attributions will always be the same size as the
-                            provided inputs, with each value providing the attribution
-                            of the corresponding input index.
-                            If a single tensor is provided as inputs, a single tensor is
-                            returned. If a tuple is provided for inputs, a tuple of
-                            corresponding sized tensors is returned.
+                *tensor* of **attributions**:
+                - **attributions** (*tensor*):
+                            Product of gradient and activation for each
+                            neuron in given layer output.
+                            Attributions will always be the same size as the
+                            output of the given layer.
 
             Examples::
 
@@ -106,33 +113,25 @@ class NeuronGradient(NeuronAttribution):
                 >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
                 >>> # and the output of this layer has dimensions Nx12x32x32.
                 >>> net = ImageClassifier()
-                >>> neuron_ig = NeuronGradient(net, net.conv1)
+                >>> layer_ga = LayerGradientXActivation(net, net.conv1)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # To compute neuron attribution, we need to provide the neuron
-                >>> # index for which attribution is desired. Since the layer output
-                >>> # is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)
-                >>> # which indexes a particular neuron in the layer output.
-                >>> # For this example, we choose the index (4,1,2).
-                >>> # Computes neuron gradient for neuron with
-                >>> # index (4,1,2).
-                >>> attribution = neuron_ig.attribute(input, (4,1,2))
+                >>> # Computes layer activation x gradient for class 3.
+                >>> # attribution size matches layer output, Nx12x32x32
+                >>> attribution = layer_ga.attribute(input, 3)
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        gradient_mask = apply_gradient_requirements(inputs)
-
-        _, input_grads = _forward_layer_eval_with_neuron_grads(
+        # Returns gradient of output with respect to
+        # hidden layer and hidden layer evaluated at each input.
+        layer_gradients, layer_eval = compute_layer_gradients_and_eval(
             self.forward_func,
-            inputs,
             self.layer,
+            inputs,
+            target,
             additional_forward_args,
-            neuron_index,
             device_ids=self.device_ids,
-            attribute_to_layer_input=attribute_to_neuron_input,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
-
-        undo_gradient_requirements(inputs, gradient_mask)
-        return _format_attributions(is_inputs_tuple, input_grads)
+        return layer_gradients * layer_eval
