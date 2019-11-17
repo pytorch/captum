@@ -214,7 +214,6 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
         initial_eval = initial_eval.reshape(1, num_examples)
-        print(initial_eval.shape)
         # Initialize attribution totals and counts
         total_attrib = [torch.zeros_like(input) for input in inputs]
         # Weights are used in cases where ablations may be overlapping.
@@ -243,8 +242,6 @@ class FeatureAblation(PerturbationAttribution):
                 modified_eval = _run_forward(
                     self.forward_func, current_inputs, current_target, current_add_args
                 )
-                print(current_inputs)
-                print(modified_eval.shape)
                 # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
                 # (contains 1 more dimension than inputs). This adds extra dimensions
                 # of 1 to make the tensor broadcastable with the inputs tensor.
@@ -253,8 +250,6 @@ class FeatureAblation(PerturbationAttribution):
                 ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
                 if self.use_weights:
                     weights[i] += current_mask.float().sum(dim=0)
-                print(eval_diff.shape)
-                print(current_mask.shape)
                 total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
 
         # Divide total attributions by counts and return formatted attributions
@@ -382,11 +377,9 @@ class FeatureAblation(PerturbationAttribution):
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
-        print(current_mask.shape)
         ablated_tensor = (feature_tensor * (1 - current_mask).float()) + (
             baseline * current_mask.float()
         )
-        print(ablated_tensor.shape)
         return ablated_tensor, current_mask
 
     def _get_feature_range_and_mask(self, input, input_mask, **kwargs):

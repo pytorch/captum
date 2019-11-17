@@ -10,10 +10,12 @@ from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.occlusion import Occlusion
 
 from captum.attr._core.internal_influence import InternalInfluence
 from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer_ablation import LayerAblation
 
 from captum.attr._core.neuron_conductance import NeuronConductance
 
@@ -128,6 +130,29 @@ class Test(BaseTest):
             inputs=inp,
             additional_forward_args=(None, True),
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_neuron_ablation_tensor(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            LayerAblation,
+            net,
+            inputs=inp,
+            target_layer=net.relu,
+            targets=torch.tensor([0, 1, 1, 0]),
+        )
+
+    def test_multi_target_occlusion(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            Occlusion,
+            net,
+            inputs=inp,
+            additional_forward_args=(None, True),
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            occlusion_shapes=(2,),
         )
 
     def test_simple_target_deep_lift(self):

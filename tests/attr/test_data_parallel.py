@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.occlusion import Occlusion
 
 from captum.attr._core.grad_cam import LayerGradCam
 from captum.attr._core.internal_influence import InternalInfluence
@@ -12,7 +13,9 @@ from captum.attr._core.layer_activation import LayerActivation
 from captum.attr._core.layer_conductance import LayerConductance
 from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer_ablation import LayerAblation
 
+from captum.attr._core.neuron_ablation import NeuronAblation
 from captum.attr._core.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron_gradient import NeuronGradient
 from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
@@ -402,6 +405,105 @@ class Test(BaseGPUTest):
                 None,
                 inputs=inp,
                 target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_simple_occlusion(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=inp,
+                occlusion_shapes=(1, 4, 2),
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_occlusion(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                occlusion_shapes=((2,), (1,)),
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_neuron_ablation(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                NeuronAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+                alt_device_ids=True,
+            )
+
+    def test_multi_input_neuron_ablation_with_baseline(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+
+        base1 = torch.tensor([[1.0, 0.0, 1.0]], requires_grad=True).cuda()
+        base2 = torch.tensor([[0.0, 1.0, 0.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                NeuronAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                baselines=(base1, base2),
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_layer_ablation(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                LayerAblation,
+                net,
+                net.model.relu,
+                alt_device_ids=False,
+                inputs=(inp1, inp2),
+                additional_forward_args=(inp3, 5),
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_dim_layer_ablation(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                LayerAblation,
+                net,
+                net.conv2,
+                alt_device_ids=True,
+                inputs=inp,
+                target=1,
                 ablations_per_eval=ablations_per_eval,
             )
 

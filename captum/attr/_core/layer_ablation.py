@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
 import torch
+from torch.nn.parallel.scatter_gather import scatter_kwargs
 
 from .._utils.attribution import LayerAttribution
-from .._utils.common import (
-    _format_input,
-    _format_additional_forward_args,
-    _format_attributions,
-    _verify_select_column,
-    _run_forward,
-)
-from .._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
-    _forward_layer_eval,
-)
+from .._utils.common import _format_input, _format_additional_forward_args, _run_forward
+from .._utils.gradient import _forward_layer_eval
 
 from .feature_ablation import FeatureAblation
 
@@ -211,10 +202,29 @@ class LayerAblation(LayerAttribution):
         def layer_forward_func(*args):
             layer_input = args[0]
             original_inputs = args[1:]
+
+            device_ids = self.device_ids
+            if (
+                device_ids is None
+                and isinstance(self.forward_func, torch.nn.DataParallel)
+                and self.forward_func.device_ids is not None
+            ):
+                device_ids = self.forward_func.device_ids
+
+            all_layer_inputs = {}
+            if device_ids is not None:
+                scattered_layer_input, _ = scatter_kwargs(
+                    (layer_input,), None, target_gpus=device_ids
+                )
+                for tensor in scattered_layer_input:
+                    all_layer_inputs[tensor[0].device] = tensor[0]
+            else:
+                all_layer_inputs[layer_input.device] = layer_input
+
             with torch.no_grad():
 
                 def forward_hook(module, inp, out=None):
-                    return layer_input
+                    return all_layer_inputs[inp[0].device]
 
                 if attribute_to_layer_input:
                     hook = self.layer.register_forward_pre_hook(forward_hook)

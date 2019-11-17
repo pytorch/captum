@@ -2,17 +2,8 @@
 import torch
 
 from .._utils.attribution import NeuronAttribution
-from .._utils.common import (
-    _format_input,
-    _format_additional_forward_args,
-    _format_attributions,
-    _verify_select_column,
-)
-from .._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
-    _forward_layer_eval,
-)
+from .._utils.common import _verify_select_column
+from .._utils.gradient import _forward_layer_eval
 
 from .feature_ablation import FeatureAblation
 

@@ -3,15 +3,7 @@
 import torch
 import numpy as np
 
-from .._utils.common import (
-    _format_attributions,
-    _format_input,
-    _run_forward,
-    _expand_additional_forward_args,
-    _expand_target,
-    _format_additional_forward_args,
-)
-from .._utils.attribution import PerturbationAttribution
+from .._utils.common import _format_input
 
 from .feature_ablation import FeatureAblation
 
@@ -60,14 +52,14 @@ class Occlusion(FeatureAblation):
                             to the number of examples (aka batch size), and if
                             multiple input tensors are provided, the examples must
                             be aligned appropriately.
-                occlusion_shapes (tuple or tuple of tuples):  Shape of patch (hyperrectangle)
-                            to occlude each input. For a single input tensor, this
-                            must be a tuple of length equal to the number of dimensions
-                            of the input tensor - 1, defining the dimensions of the patch.
-                            For multiple input tensors, this must be a tuple containing
-                            one tuple for each input tensor defining the dimensions
-                            of the patch for that input tensor, as described for the
-                            single tensor case.
+                occlusion_shapes (tuple or tuple of tuples): Shape of patch
+                            (hyperrectangle) to occlude each input. For a single
+                            input tensor, this must be a tuple of length equal to the
+                            number of dimensions of the input tensor - 1, defining
+                            the dimensions of the patch. For multiple input tensors,
+                            this must be a tuple containing one tuple for each input
+                            tensor defining the dimensions of the patch for that
+                            input tensor, as described for the single tensor case.
                 strides (int or tuple or tuple of ints or tuple of tuples, optional):
                             This defines the step by which the occlusion hyperrectangle
                             should be shifted by in each direction for each iteration.
@@ -77,9 +69,9 @@ class Occlusion(FeatureAblation):
                             in the occlusion shape, defining the step size in the
                             corresponding dimension. For multiple tensor inputs, this
                             can be either a tuple of integers, one for each input
-                            tensor (used for all dimensions of the corresponding tensor),
-                            or a tuple of tuples, providing the stride per dimension
-                            for each tensor.
+                            tensor (used for all dimensions of the corresponding
+                            tensor), or a tuple of tuples, providing the stride per
+                            dimension for each tensor.
                             If None is provided, a stride of 1 is used for each
                             dimension of each input tensor.
                             Default: None
@@ -199,10 +191,12 @@ class Occlusion(FeatureAblation):
             formatted_inputs
         ), "Must provide occlusion dimensions for each tensor."
         occlusion_tensors = tuple(
-            torch.ones(occ_shape) for occ_shape in occlusion_shapes
+            torch.ones(occ_shape, device=formatted_inputs[i].device)
+            for i, occ_shape in enumerate(occlusion_shapes)
         )
 
-        # Construct counts, defining number of steps to make of occlusion block in each dimension.
+        # Construct counts, defining number of steps to make of occlusion block in
+        # each dimension.
         shift_counts = []
         for i, inp in enumerate(formatted_inputs):
             current_shape = np.subtract(inp.shape[1:], occlusion_shapes[i])
@@ -279,8 +273,6 @@ class Occlusion(FeatureAblation):
             val for pair in zip(remaining_padding, current_index) for val in pair
         ]
         pad_values.reverse()
-        print(shift_counts)
-        print(pad_values)
         padded_tensor = torch.nn.functional.pad(occlusion_tensor, tuple(pad_values))
         return padded_tensor.reshape((1,) + padded_tensor.shape)
 
