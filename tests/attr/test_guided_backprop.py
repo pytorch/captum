@@ -4,7 +4,9 @@ import unittest
 
 import torch
 from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
-from captum.attr._core.neuron_guided_backprop_deconvnet import NeuronGuidedBackprop
+from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
+    NeuronGuidedBackprop,
+)
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest

@@ -17,6 +17,7 @@ from .._utils.common import (
     _expand_target,
     _expand_additional_forward_args,
     _tensorize_baseline,
+    _call_custom_attribution_func,
     ExpansionTypes,
 )
 from .._utils.attribution import GradientAttribution
@@ -61,6 +62,7 @@ class DeepLift(GradientAttribution):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
+        custom_attribution_func=None,
     ):
         r""""
         Implements DeepLIFT algorithm based on the following paper:
@@ -174,6 +176,22 @@ class DeepLift(GradientAttribution):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided, we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -189,10 +207,14 @@ class DeepLift(GradientAttribution):
                 This is computed using the property that
                 the total sum of forward_func(inputs) - forward_func(baselines)
                 must equal the total sum of the attributions computed
-                based on Deeplift's rescale rule.
+                based on DeepLift's rescale rule.
                 Delta is calculated per example, meaning that the number of
                 elements in returned delta tensor is equal to the number of
                 of examples in input.
+                Note that the logic described for deltas is guaranteed when the
+                default logic for attribution computations is used, meaning that the
+                `custom_attribution_func=None`, otherwise it is not guaranteed and
+                depends on the specifics of the `custom_attribution_func`.
 
         Examples::
 
@@ -243,10 +265,16 @@ class DeepLift(GradientAttribution):
             target_ind=target,
             additional_forward_args=additional_forward_args,
         )
-        attributions = tuple(
-            (input - baseline) * gradient
-            for input, baseline, gradient in zip(inputs, baselines, gradients)
-        )
+
+        if custom_attribution_func is None:
+            attributions = tuple(
+                (input - baseline) * gradient
+                for input, baseline, gradient in zip(inputs, baselines, gradients)
+            )
+        else:
+            attributions = _call_custom_attribution_func(
+                custom_attribution_func, gradients, inputs, baselines
+            )
 
         # remove hooks from all activations
         self._remove_hooks()
@@ -405,6 +433,7 @@ class DeepLiftShap(DeepLift):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
+        custom_attribution_func=None,
     ):
         r"""
         Extends DeepLift algorithm and approximates SHAP values using Deeplift.
@@ -502,6 +531,21 @@ class DeepLiftShap(DeepLift):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
+            custom_attribution_func (callable, optional): A custom function for
+                        computing final attribution scores. This function can take
+                        at least one and at most three arguments with the
+                        following signature:
+                            - custom_attribution_func(multipliers)
+                            - custom_attribution_func(multipliers, inputs)
+                            - custom_attribution_func(multipliers, inputs, baselines)
+                        In case this function is not provided we use the default
+                        logic defined as: multipliers * (inputs - baselines)
+                        It is assumed that all input arguments, `multipliers`,
+                        `inputs` and `baselines` are provided in tuples of same
+                        length. `custom_attribution_func` returns a tuple of
+                        attribution tensors that have the same length as the
+                        `inputs`.
+                        Default: None
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
@@ -525,6 +569,12 @@ class DeepLiftShap(DeepLift):
                         `number of examples in input` * `number of examples
                         in baseline`. The deltas are ordered in the first place by
                         input example, followed by the baseline.
+                        Note that the logic described for deltas is guaranteed
+                        when the default logic for attribution computations is used,
+                        meaning that the `custom_attribution_func=None`, otherwise
+                        it is not guaranteed and depends on the specifics of the
+                        `custom_attribution_func`.
+
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -569,6 +619,7 @@ class DeepLiftShap(DeepLift):
             target=exp_tgt,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=return_convergence_delta,
+            custom_attribution_func=custom_attribution_func,
         )
         if return_convergence_delta:
             attributions, delta = attributions

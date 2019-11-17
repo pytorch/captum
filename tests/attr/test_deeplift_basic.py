@@ -14,7 +14,7 @@ from .helpers.utils import (
     BaseTest,
 )
 from .helpers.basic_models import ReLUDeepLiftModel, TanhDeepLiftModel
-from .helpers.basic_models import ReLULinearDeepLiftModel
+from .helpers.basic_models import ReLULinearDeepLiftModel, Conv1dDeepLiftModel
 
 
 class Test(BaseTest):
@@ -78,6 +78,19 @@ class Test(BaseTest):
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
+    def test_relu_deeplift_with_hypothetical_contrib_func(self):
+        model = Conv1dDeepLiftModel()
+        rand_seq_data = torch.abs(torch.randn(2, 4, 1000))
+        rand_seq_ref = torch.abs(torch.randn(2, 4, 1000))
+        dls = DeepLift(model)
+        attr = dls.attribute(
+            rand_seq_data,
+            rand_seq_ref,
+            custom_attribution_func=_hypothetical_contrib_func,
+            target=(1, 0),
+        )
+        self.assertEqual(attr.shape, rand_seq_data.shape)
+
     def test_relu_deepliftshap_batch_4D_input(self):
         x1 = torch.ones(4, 1, 1, 1)
         x2 = torch.tensor([[[[2.0]]]] * 4)
@@ -104,7 +117,7 @@ class Test(BaseTest):
         model = ReLUDeepLiftModel()
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
-    def test_relu_deepliftshap_baselines_as_function(self):
+    def test_relu_deepliftshap_baselines_as_func(self):
         model = ReLULinearDeepLiftModel()
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
@@ -145,7 +158,41 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], attributions_with_func[0])
         assertTensorAlmostEqual(self, attributions[1], attributions_with_func[1])
 
-    def _deeplift_assert(self, model, attr_method, inputs, baselines):
+    def test_relu_deepliftshap_with_custom_attr_func(self):
+        def custom_attr_func(multipliers, inputs, baselines):
+            return tuple(multiplier * 0.0 for multiplier in multipliers)
+
+        model = ReLULinearDeepLiftModel()
+        x1 = torch.tensor([[-10.0, 1.0, -5.0]])
+        x2 = torch.tensor([[3.0, 3.0, 1.0]])
+        b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        b2 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        inputs = (x1, x2)
+        baselines = (b1, b2)
+        dls = DeepLiftShap(model)
+        attr_w_func = dls.attribute(
+            inputs, baselines, custom_attribution_func=custom_attr_func
+        )
+
+        assertTensorAlmostEqual(self, attr_w_func[0], [[0.0, 0.0, 0.0]], 0.0)
+        assertTensorAlmostEqual(self, attr_w_func[1], [[0.0, 0.0, 0.0]], 0.0)
+
+    def test_relu_deepliftshap_with_hypothetical_contrib_func(self):
+        model = Conv1dDeepLiftModel()
+        rand_seq_data = torch.abs(torch.randn(2, 4, 1000))
+        rand_seq_ref = torch.abs(torch.randn(3, 4, 1000))
+        dls = DeepLiftShap(model)
+        attr = dls.attribute(
+            rand_seq_data,
+            rand_seq_ref,
+            custom_attribution_func=_hypothetical_contrib_func,
+            target=(0, 0),
+        )
+        self.assertEqual(attr.shape, rand_seq_data.shape)
+
+    def _deeplift_assert(
+        self, model, attr_method, inputs, baselines, custom_attr_func=None
+    ):
         input_bsz = len(inputs[0])
         if callable(baselines):
             baseline_parameters = signature(baselines).parameters
@@ -162,9 +209,14 @@ class Test(BaseTest):
         for _ in range(5):
             model.zero_grad()
             attributions, delta = attr_method.attribute(
-                inputs, baselines, return_convergence_delta=True
+                inputs,
+                baselines,
+                return_convergence_delta=True,
+                custom_attribution_func=custom_attr_func,
             )
-            attributions_without_delta = attr_method.attribute(inputs, baselines)
+            attributions_without_delta = attr_method.attribute(
+                inputs, baselines, custom_attribution_func=custom_attr_func
+            )
 
             for attribution, attribution_without_delta in zip(
                 attributions, attributions_without_delta
@@ -199,3 +251,35 @@ class Test(BaseTest):
                 ig = IntegratedGradients(model)
                 attributions_ig = ig.attribute(inputs, baselines)
                 assertAttributionComparision(self, attributions, attributions_ig)
+
+
+def _hypothetical_contrib_func(multipliers, inputs, baselines):
+    r"""
+    Implements hypothetical input contributions based on the logic described here:
+    https://github.com/kundajelab/deeplift/pull/36/files
+    This is using a dummy model for test purposes
+    """
+    # we assume that multiplies, inputs and baselines have the following shape:
+    # tuple((bsz x len x channel), )
+    assert len(multipliers[0].shape) == 3, multipliers[0].shape
+    assert len(inputs[0].shape) == 3, inputs[0].shape
+    assert len(baselines[0].shape) == 3, baselines[0].shape
+    assert len(multipliers) == len(inputs) and len(inputs) == len(baselines), (
+        "multipliers, inputs and baselines must have the same shape but"
+        "multipliers: {}, inputs: {}, baselines: {}".format(
+            len(multipliers), len(inputs), len(baselines)
+        )
+    )
+
+    attributions = []
+    for k in range(len(multipliers)):
+        sub_attributions = torch.zeros_like(inputs[k])
+        for i in range(inputs[k].shape[-1]):
+            hypothetical_input = torch.zeros_like(inputs[k])
+            hypothetical_input[:, :, i] = 1.0
+            hypothetical_input_ref_diff = hypothetical_input - baselines[k]
+            sub_attributions[:, :, i] = torch.sum(
+                hypothetical_input_ref_diff * multipliers[k], axis=-1
+            )
+        attributions.append(sub_attributions)
+    return tuple(attributions)

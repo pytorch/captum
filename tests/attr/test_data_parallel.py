@@ -3,21 +3,26 @@
 import unittest
 
 import torch
-from captum.attr._core.grad_cam import LayerGradCam
-from captum.attr._core.internal_influence import InternalInfluence
-from captum.attr._core.layer_activation import LayerActivation
-from captum.attr._core.layer_conductance import LayerConductance
-from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
-from captum.attr._core.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
-from captum.attr._core.neuron_conductance import NeuronConductance
-from captum.attr._core.neuron_gradient import NeuronGradient
-from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
-from captum.attr._core.neuron_guided_backprop_deconvnet import (
+from captum.attr._core.feature_ablation import FeatureAblation
+
+from captum.attr._core.layer.grad_cam import LayerGradCam
+from captum.attr._core.layer.internal_influence import InternalInfluence
+from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+
+from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._core.neuron.neuron_gradient import NeuronGradient
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
+from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from captum.attr._core.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -388,6 +393,19 @@ class Test(BaseGPUTest):
             additional_forward_args=None,
             test_batches=False,
         )
+
+    def test_simple_feature_ablation(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                FeatureAblation,
+                net,
+                None,
+                inputs=inp,
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
 
     def _alt_device_list(self):
         return [0] + [x for x in range(torch.cuda.device_count() - 1, 0, -1)]

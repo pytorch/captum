@@ -223,6 +223,15 @@ class GradientAttribution(Attribution):
 
         attributions = _format_tensor_into_tuples(attributions)
 
+        # verify that the attributions and end_point match on 1st dimension
+        for attribution, end_point_tnsr in zip(attributions, end_point):
+            assert end_point_tnsr.shape[0] == attribution.shape[0], (
+                "Attributions tensor and the end_point must match on the first"
+                " dimension but found attribution: {} and end_point: {}".format(
+                    attribution.shape[0], end_point_tnsr.shape[0]
+                )
+            )
+
         num_samples = end_point[0].shape[0]
         _validate_input(end_point, start_point)
         _validate_target(num_samples, target)
@@ -245,6 +254,25 @@ class GradientAttribution(Attribution):
             row_sums = [_sum_rows(attribution) for attribution in attributions]
             attr_sum = torch.stack([sum(row_sum) for row_sum in zip(*row_sums)])
             return attr_sum - (end_point - start_point)
+
+
+class PerturbationAttribution(Attribution):
+    r"""
+    All perturbation based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
+    def __init__(self, forward_func):
+        r"""
+        Args:
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        super().__init__()
+        self.forward_func = forward_func
 
 
 class InternalAttribution(GradientAttribution):
