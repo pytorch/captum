@@ -148,6 +148,15 @@ class ReLULinearDeepLiftModel(nn.Module):
         return self.l3(self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)))
 
 
+class Conv1dDeepLiftModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.seq = nn.Sequential(nn.Conv1d(4, 2, 1), nn.ReLU(), nn.Linear(1000, 1))
+
+    def forward(self, inputs):
+        return self.seq(inputs)
+
+
 class TextModule(nn.Module):
     r"""Basic model that has inner embedding layer. This layer can be pluged
     into a larger network such as `BasicEmbeddingModel` and help us to test

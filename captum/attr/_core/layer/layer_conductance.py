@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import torch
-from .._utils.approximation_methods import approximation_parameters
-from .._utils.attribution import LayerAttribution
-from .._utils.batching import _batched_operator
-from .._utils.common import (
+from ..._utils.approximation_methods import approximation_parameters
+from ..._utils.attribution import LayerAttribution
+from ..._utils.batching import _batched_operator
+from ..._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
@@ -11,7 +11,7 @@ from .._utils.common import (
     _validate_input,
     _expand_target,
 )
-from .._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
 class LayerConductance(LayerAttribution):

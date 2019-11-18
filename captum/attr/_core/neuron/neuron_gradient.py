@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import construct_neuron_grad_fn
+from ..._utils.attribution import NeuronAttribution
+from ..._utils.common import (
+    _format_input,
+    _format_additional_forward_args,
+    _format_attributions,
+)
+from ..._utils.gradient import (
+    apply_gradient_requirements,
+    undo_gradient_requirements,
+    _forward_layer_eval_with_neuron_grads,
+)
 
-from .integrated_gradients import IntegratedGradients
 
-
-class NeuronIntegratedGradients(NeuronAttribution):
+class NeuronGradient(NeuronAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -33,28 +40,16 @@ class NeuronIntegratedGradients(NeuronAttribution):
         self,
         inputs,
         neuron_index,
-        baselines=None,
         additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
         attribute_to_neuron_input=False,
     ):
         r"""
-            Approximates the integral of gradients for a particular neuron
-            along the path from a baseline input to the given input.
-            If no baseline is provided, the default baseline is the zero tensor.
-            More details regarding the integrated gradient method can be found in the
-            original paper here:
-            https://arxiv.org/abs/1703.01365
-
-            Note that this method is equivalent to applying integrated gradients
-            where the output is the output of the identified neuron.
-
+            Computes the gradient of the output of a particular neuron with
+            respect to the inputs of the network.
 
             Args:
 
-                inputs (tensor or tuple of tensors):  Input for which neuron integrated
+                inputs (tensor or tuple of tensors):  Input for which neuron
                             gradients are computed. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -69,34 +64,6 @@ class NeuronIntegratedGradients(NeuronAttribution):
                               dimension 0 corresponds to number of examples).
                               An integer may be provided instead of a tuple of
                               length 1.
-                baselines (scalar, tensor, tuple of scalars or tensors, optional):
-                            Baselines define the starting point from which integral
-                            is computed.
-                            Baselines can be provided as:
-
-                            - a single tensor, if inputs is a single tensor, with
-                                exactly the same dimensions as inputs or the first
-                                dimension is one and the remaining dimensions match
-                                with inputs.
-
-                            - a single scalar, if inputs is a single tensor, which will
-                                be broadcasted for each input value in input tensor.
-
-                            - a tuple of tensors or scalars, the baseline corresponding
-                                to each tensor in the inputs' tuple can be:
-                                - either a tensor with matching dimensions to
-                                    corresponding tensor in the inputs' tuple
-                                    or the first dimension is one and the remaining
-                                    dimensions match with the corresponding
-                                    input tensor.
-                                - or a scalar, corresponding to a tensor in the
-                                    inputs' tuple. This scalar value is broadcasted
-                                    for corresponding input tensor.
-
-                            In the cases when `baselines` is not provided, we internally
-                            use zero scalar corresponding to each input tensor.
-
-                            Default: None
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
@@ -106,29 +73,8 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             tensors or any arbitrary python types. These arguments
                             are provided to forward_func in order following the
                             arguments in inputs.
-                            For a tensor, the first dimension of the tensor must
-                            correspond to the number of examples. It will be
-                            repeated for each of `n_steps` along the integrated
-                            path. For all other types, the given argument is used
-                            for all forward evaluations.
                             Note that attributions are not computed with respect
                             to these arguments.
-                            Default: None
-                n_steps (int, optional): The number of steps used by the approximation
-                            method. Default: 50.
-                method (string, optional): Method for approximating the integral,
-                            one of `riemann_right`, `riemann_left`, `riemann_middle`,
-                            `riemann_trapezoid` or `gausslegendre`.
-                            Default: `gausslegendre` if no method is provided.
-                internal_batch_size (int, optional): Divides total #steps * #examples
-                            data points into chunks of size internal_batch_size,
-                            which are computed (forward / backward passes)
-                            sequentially.
-                            For DataParallel models, each batch is split among the
-                            available devices, so evaluations on each available
-                            device contain internal_batch_size / num_devices examples.
-                            If internal_batch_size is None, then all evaluations are
-                            processed in one batch.
                             Default: None
                 attribute_to_neuron_input (bool, optional): Indicates whether to
                             compute the attributions with respect to the neuron input
@@ -137,7 +83,7 @@ class NeuronIntegratedGradients(NeuronAttribution):
                             neuron's inputs, otherwise it will be computed with respect
                             to neuron's outputs.
                             Note that currently it is assumed that either the input
-                            or the output of internal neuron, depending on whether we
+                            or the output of internal neurons, depending on whether we
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
@@ -145,11 +91,10 @@ class NeuronIntegratedGradients(NeuronAttribution):
             Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
-                            Integrated gradients for particular neuron with
-                            respect to each input feature.
-                            Attributions will always be the same size as the provided
-                            inputs, with each value providing the attribution of the
-                            corresponding input index.
+                            Gradients of particular neuron with respect to each input
+                            feature. Attributions will always be the same size as the
+                            provided inputs, with each value providing the attribution
+                            of the corresponding input index.
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
@@ -161,27 +106,33 @@ class NeuronIntegratedGradients(NeuronAttribution):
                 >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
                 >>> # and the output of this layer has dimensions Nx12x32x32.
                 >>> net = ImageClassifier()
-                >>> neuron_ig = NeuronIntegratedGradients(net, net.conv1)
+                >>> neuron_ig = NeuronGradient(net, net.conv1)
                 >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
                 >>> # To compute neuron attribution, we need to provide the neuron
                 >>> # index for which attribution is desired. Since the layer output
                 >>> # is Nx12x32x32, we need a tuple in the form (0..11,0..31,0..31)
                 >>> # which indexes a particular neuron in the layer output.
                 >>> # For this example, we choose the index (4,1,2).
-                >>> # Computes neuron integrated gradients for neuron with
+                >>> # Computes neuron gradient for neuron with
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-        ig = IntegratedGradients(self.forward_func)
-        ig.gradient_func = construct_neuron_grad_fn(
-            self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
+        is_inputs_tuple = isinstance(inputs, tuple)
+        inputs = _format_input(inputs)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
         )
-        # Return only attributions and not delta
-        return ig.attribute(
+        gradient_mask = apply_gradient_requirements(inputs)
+
+        _, input_grads = _forward_layer_eval_with_neuron_grads(
+            self.forward_func,
             inputs,
-            baselines,
-            additional_forward_args=additional_forward_args,
-            n_steps=n_steps,
-            method=method,
-            internal_batch_size=internal_batch_size,
+            self.layer,
+            additional_forward_args,
+            neuron_index,
+            device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_neuron_input,
         )
+
+        undo_gradient_requirements(inputs, gradient_mask)
+        return _format_attributions(is_inputs_tuple, input_grads)

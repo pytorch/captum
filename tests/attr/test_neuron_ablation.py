@@ -3,7 +3,7 @@
 import unittest
 
 import torch
-from captum.attr._core.neuron_ablation import NeuronAblation
+from captum.attr._core.neuron.neuron_ablation import NeuronAblation
 
 from .helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,

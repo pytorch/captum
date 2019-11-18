@@ -12,12 +12,12 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.occlusion import Occlusion
 
-from captum.attr._core.internal_influence import InternalInfluence
-from captum.attr._core.layer_conductance import LayerConductance
-from captum.attr._core.layer_gradient_x_activation import LayerGradientXActivation
-from captum.attr._core.layer_ablation import LayerAblation
+from captum.attr._core.layer.internal_influence import InternalInfluence
+from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_ablation import LayerAblation
 
-from captum.attr._core.neuron_conductance import NeuronConductance
+from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 
 from .helpers.basic_models import BasicModel_MultiLayer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual

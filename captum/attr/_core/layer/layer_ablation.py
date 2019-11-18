@@ -2,11 +2,11 @@
 import torch
 from torch.nn.parallel.scatter_gather import scatter_kwargs
 
-from .._utils.attribution import LayerAttribution
-from .._utils.common import _format_input, _format_additional_forward_args, _run_forward
-from .._utils.gradient import _forward_layer_eval
+from ..._utils.attribution import LayerAttribution
+from ..._utils.common import _format_input, _format_additional_forward_args, _run_forward
+from ..._utils.gradient import _forward_layer_eval
 
-from .feature_ablation import FeatureAblation
+from ..feature_ablation import FeatureAblation
 
 
 class LayerAblation(LayerAttribution):

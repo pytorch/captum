@@ -3,7 +3,7 @@
 import unittest
 
 import torch
-from captum.attr._core.layer_ablation import LayerAblation
+from captum.attr._core.layer.layer_ablation import LayerAblation
 
 from .helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,

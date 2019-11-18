@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import torch
 
-from .._utils.attribution import NeuronAttribution
-from .._utils.common import _verify_select_column
-from .._utils.gradient import _forward_layer_eval
+from ..._utils.attribution import NeuronAttribution
+from ..._utils.common import _verify_select_column
+from ..._utils.gradient import _forward_layer_eval
 
-from .feature_ablation import FeatureAblation
+from ..feature_ablation import FeatureAblation
 
 
 class NeuronAblation(NeuronAttribution):
