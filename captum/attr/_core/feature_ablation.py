@@ -280,7 +280,7 @@ class FeatureAblation(PerturbationAttribution):
             else:
                 extra_args[key] = value
 
-        num_features_processed, num_features, input_mask = self._get_feature_range_and_mask(
+        min_feature, num_features, input_mask = self._get_feature_range_and_mask(
             inputs[i], input_mask, **extra_args
         )
         num_examples = inputs[0].shape[0]
@@ -301,6 +301,7 @@ class FeatureAblation(PerturbationAttribution):
         )
         target_repeated = _expand_target(target, ablations_per_eval)
 
+        num_features_processed = min_feature
         while num_features_processed < num_features:
             current_num_features = min(
                 ablations_per_eval, num_features - num_features_processed
