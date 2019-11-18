@@ -18,6 +18,7 @@ from .._utils.common import (
     _expand_additional_forward_args,
     _tensorize_baseline,
     _call_custom_attribution_func,
+    _compute_conv_delta_and_format_attrs,
     ExpansionTypes,
 )
 from .._utils.attribution import GradientAttribution
@@ -280,7 +281,8 @@ class DeepLift(GradientAttribution):
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
-        return self._compute_conv_delta_and_format_attrs(
+        return _compute_conv_delta_and_format_attrs(
+            self,
             return_convergence_delta,
             attributions,
             baselines,
@@ -289,29 +291,6 @@ class DeepLift(GradientAttribution):
             target,
             is_inputs_tuple,
         )
-
-    def _compute_conv_delta_and_format_attrs(
-        self,
-        return_convergence_delta,
-        attributions,
-        start_point,
-        end_point,
-        additional_forward_args,
-        target,
-        is_inputs_tuple,
-    ):
-        if return_convergence_delta:
-            # computes convergence error
-            delta = self.compute_convergence_delta(
-                attributions,
-                start_point,
-                end_point,
-                additional_forward_args=additional_forward_args,
-                target=target,
-            )
-            return _format_attributions(is_inputs_tuple, attributions), delta
-        else:
-            return _format_attributions(is_inputs_tuple, attributions)
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
