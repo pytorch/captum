@@ -235,7 +235,7 @@ class LayerGradientShap(LayerAttribution, GradientShap):
 
         """
         input_min_baseline_x_grad = LayerInputBaselineXGradient(
-            self.forward_func, self.layer, device_ids=self.layer
+            self.forward_func, self.layer, device_ids=self.device_ids
         )
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
