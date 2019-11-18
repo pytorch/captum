@@ -443,6 +443,7 @@ class Test(BaseGPUTest):
             net.linear1,
             inputs=inputs,
             baselines=baselines,
+            target=0,
             additional_forward_args=None,
             test_batches=False,
         )
@@ -507,6 +508,7 @@ class Test(BaseGPUTest):
                     )
                 else:
                     attributions_orig = attr_orig.attribute(**kwargs)
+            self.setUp()
             if batch_size:
                 attributions_dp = attr_dp.attribute(
                     internal_batch_size=batch_size, **kwargs

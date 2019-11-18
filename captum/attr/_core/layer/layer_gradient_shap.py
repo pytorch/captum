@@ -87,9 +87,10 @@ class LayerGradientShap(LayerAttribution, GradientShap):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which SHAP attribution
-                        values are computed. If `forward_func` takes a single
-                        tensor as input, a single input tensor should be provided.
+            inputs (tensor or tuple of tensors):  Input which are used to compute
+                        SHAP attribution values for a given `layer`. If `forward_func`
+                        takes a single tensor as input, a single input tensor should
+                        be provided.
                         If `forward_func` takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
