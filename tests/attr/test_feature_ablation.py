@@ -66,48 +66,6 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
-    def test_single_sample_ablation_with_mask_scalar(self):
-        net = BasicModel_MultiLayer()
-        inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
-        mask = torch.tensor([[0, 0, 1]])
-
-        # testing int, float, 0d and 1d tensor output
-        for func in [
-            lambda inp: torch.sum(net(inp)).item(),
-            lambda inp: torch.sum(net(inp)),
-            lambda inp: torch.sum(net(inp)).reshape(1),
-            lambda inp: int(torch.sum(net(inp)).item()),
-        ]:
-            self._ablation_test_assert(
-                func,
-                inp,
-                [[82.0, 82.0, 24.0]],
-                feature_mask=mask,
-                ablations_per_eval=(1,),
-                target=None,
-            )
-
-    def test_multi_sample_ablation_with_mask_scalar(self):
-        net = BasicModel_MultiLayer()
-        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
-        mask = torch.tensor([[0, 0, 1]])
-
-        # testing int, float, 0d and 1d tensor output
-        for func in [
-            lambda inp: torch.sum(net(inp)).item(),
-            lambda inp: torch.sum(net(inp)),
-            lambda inp: torch.sum(net(inp)).reshape(1),
-            lambda inp: int(torch.sum(net(inp)).item()),
-        ]:
-            self._ablation_test_assert(
-                func,
-                inp,
-                [[642.0, 642.0, 264.0]],
-                feature_mask=mask,
-                ablations_per_eval=(1,),
-                target=None,
-            )
-
     def test_multi_input_ablation_with_mask(self):
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
@@ -150,36 +108,6 @@ class Test(BaseTest):
             baselines=(2, 3.0, 4),
             ablations_per_eval=(1, 2, 3),
         )
-
-    def test_multi_input_scalar_ablation_with_mask(self):
-        net = BasicModel_MultiLayer_MultiInput()
-        inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
-        inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
-        inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
-        mask1 = torch.tensor([[1, 1, 1]])
-        mask2 = torch.tensor([[0, 1, 2]])
-        mask3 = torch.tensor([[0, 1, 2]])
-        expected = (
-            [[1784.0, 1784.0, 1784.0]],
-            [[160.0, 1200.0, 240.0]],
-            [[16.0, 880.0, 104.0]],
-        )
-        # testing int, float, 0d and 1d tensor output
-        for func in [
-            lambda *inp: torch.sum(net(*inp)).item(),
-            lambda *inp: torch.sum(net(*inp)),
-            lambda *inp: torch.sum(net(*inp)).reshape(1),
-            lambda *inp: int(torch.sum(net(*inp)).item()),
-        ]:
-            self._ablation_test_assert(
-                func,
-                (inp1, inp2, inp3),
-                expected,
-                additional_input=(1,),
-                feature_mask=(mask1, mask2, mask3),
-                ablations_per_eval=(1,),
-                target=None,
-            )
 
     def test_multi_input_ablation(self):
         net = BasicModel_MultiLayer_MultiInput()
@@ -246,6 +174,136 @@ class Test(BaseTest):
                 ],
             ),
             ablations_per_eval=(1, 3, 7, 14),
+        )
+
+    # Remaining tests are for cases where forward function returns a scalar
+    # per batch, as either a float, integer, 0d tensor or 1d tensor.
+    def test_error_ablations_per_eval_limit_batch_scalar(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        ablation = FeatureAblation(lambda inp: torch.sum(net(inp)).item())
+        with self.assertRaises(AssertionError):
+            _ = ablation.attribute(inp, ablations_per_eval=2,)
+
+    def test_single_ablation_batch_scalar_float(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_one_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp)).item()
+        )
+
+    def test_single_ablation_batch_scalar_tensor_0d(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_one_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp))
+        )
+
+    def test_single_ablation_batch_scalar_tensor_1d(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_one_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp)).reshape(1)
+        )
+
+    def test_single_ablation_batch_scalar_tensor_int(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_one_sample_batch_scalar_ablation_assert(
+            lambda inp: int(torch.sum(net(inp)).item())
+        )
+
+    def test_multi_sample_ablation_batch_scalar_float(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_multi_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp)).item()
+        )
+
+    def test_multi_sample_ablation_batch_scalar_tensor_0d(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_multi_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp))
+        )
+
+    def test_multi_sample_ablation_batch_scalar_tensor_1d(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_multi_sample_batch_scalar_ablation_assert(
+            lambda inp: torch.sum(net(inp)).reshape(1)
+        )
+
+    def test_multi_sample_ablation_batch_scalar_tensor_int(self):
+        net = BasicModel_MultiLayer()
+        self._single_input_multi_sample_batch_scalar_ablation_assert(
+            lambda inp: int(torch.sum(net(inp)).item())
+        )
+
+    def test_multi_inp_ablation_batch_scalar_float(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        self._multi_input_batch_scalar_ablation_assert(
+            lambda *inp: torch.sum(net(*inp)).item()
+        )
+
+    def test_multi_inp_ablation_batch_scalar_tensor_0d(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        self._multi_input_batch_scalar_ablation_assert(
+            lambda *inp: torch.sum(net(*inp))
+        )
+
+    def test_multi_inp_ablation_batch_scalar_tensor_1d(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        self._multi_input_batch_scalar_ablation_assert(
+            lambda *inp: torch.sum(net(*inp)).reshape(1)
+        )
+
+    def test_mutli_inp_ablation_batch_scalar_tensor_int(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        self._multi_input_batch_scalar_ablation_assert(
+            lambda *inp: int(torch.sum(net(*inp)).item())
+        )
+
+    def _single_input_one_sample_batch_scalar_ablation_assert(self, func):
+        inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1]])
+
+        self._ablation_test_assert(
+            func,
+            inp,
+            [[82.0, 82.0, 24.0]],
+            feature_mask=mask,
+            ablations_per_eval=(1,),
+            target=None,
+        )
+
+    def _single_input_multi_sample_batch_scalar_ablation_assert(self, func):
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1]])
+
+        self._ablation_test_assert(
+            func,
+            inp,
+            [[642.0, 642.0, 264.0]],
+            feature_mask=mask,
+            ablations_per_eval=(1,),
+            target=None,
+        )
+
+    def _multi_input_batch_scalar_ablation_assert(self, func):
+        inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
+        mask1 = torch.tensor([[1, 1, 1]])
+        mask2 = torch.tensor([[0, 1, 2]])
+        mask3 = torch.tensor([[0, 1, 2]])
+        expected = (
+            [[1784.0, 1784.0, 1784.0]],
+            [[160.0, 1200.0, 240.0]],
+            [[16.0, 880.0, 104.0]],
+        )
+
+        self._ablation_test_assert(
+            func,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+            ablations_per_eval=(1,),
+            target=None,
         )
 
     def _ablation_test_assert(

@@ -218,7 +218,7 @@ def _select_targets(output, target):
 
     num_examples = output.shape[0]
     dims = len(output.shape)
-    if isinstance(target, int) or isinstance(target, tuple):
+    if isinstance(target, (int, tuple)):
         return _verify_select_column(output, target)
     elif isinstance(target, torch.Tensor):
         if torch.numel(target) == 1 and isinstance(target.item(), int):

@@ -136,9 +136,10 @@ class FeatureAblation(PerturbationAttribution):
                             Note that features within each input tensor are ablated
                             independently (not across tensors).
                             If the forward function returns a single scalar per batch,
-                            then the first dimension of each mask should be 1, since
-                            attributions are returned batch-wise rather than per
-                            example.
+                            we enforce that the first dimension of each mask must be 1,
+                            since attributions are returned batch-wise rather than per
+                            example, so the attributions must correspond to the
+                            same features (indices) in each input example.
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature, which
                             is ablated independently.
@@ -160,7 +161,7 @@ class FeatureAblation(PerturbationAttribution):
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             The attributions with respect to each input feature.
-                            If the forward function (and target) returns
+                            If the forward function returns
                             a scalar value per example, attributions will be
                             the same size as the provided inputs, with each value
                             providing the attribution of the corresponding input index.
@@ -225,15 +226,11 @@ class FeatureAblation(PerturbationAttribution):
         initial_eval = _run_forward(
             self.forward_func, inputs, target, additional_forward_args
         )
-        if (
-            isinstance(initial_eval, int)
-            or isinstance(initial_eval, float)
-            or (
-                isinstance(initial_eval, torch.Tensor)
-                and (
-                    len(initial_eval.shape) == 0
-                    or (num_examples > 1 and initial_eval.numel() == 1)
-                )
+        if isinstance(initial_eval, (int, float)) or (
+            isinstance(initial_eval, torch.Tensor)
+            and (
+                len(initial_eval.shape) == 0
+                or (num_examples > 1 and initial_eval.numel() == 1)
             )
         ):
             single_output_mode = True
@@ -253,17 +250,17 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = initial_eval.reshape(1, num_examples)
 
         # Initialize attribution totals and counts
-        if single_output_mode:
-            total_attrib = [torch.zeros_like(input[0:1]) for input in inputs]
-        else:
-            total_attrib = [torch.zeros_like(input) for input in inputs]
+        total_attrib = [
+            torch.zeros_like(input[0:1] if single_output_mode else input)
+            for input in inputs
+        ]
 
         # Weights are used in cases where ablations may be overlapping.
         if self.use_weights:
-            if single_output_mode:
-                weights = [torch.zeros_like(input[0:1]) for input in inputs]
-            else:
-                weights = [torch.zeros_like(input) for input in inputs]
+            weights = [
+                torch.zeros_like(input[0:1] if single_output_mode else input)
+                for input in inputs
+            ]
 
         # Iterate through each feature tensor for ablation
         for i in range(len(inputs)):
