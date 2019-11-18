@@ -118,16 +118,15 @@ class LayerAblation(LayerAttribution):
                             Default: None
                 layer_mask (tensor, optional):
                             layer_mask defines a mask for the layer, grouping
-                            neurons which should be ablated together. layer_mask
-                            should contain the same number of tensors as inputs.
+                            neurons which should be ablated together.
                             layer_mask should be a single tensor with dimensions
                             matching the input / output of the target layer (or
                             broadcastable to match it), based
                             on whether attributing to the input or output of the target
                             layer. The tensor
                             should contain integers in the range 0 to num_groups
-                            - 1, and neurons in the same group should
-                            have the same value.
+                            - 1, and all neurons with the same value are
+                            considered to be in the same group.
                             If None, then a layer mask is constructed which assigns
                             each neuron within the layer as a separate group, which
                             is ablated independently.
@@ -178,11 +177,10 @@ class LayerAblation(LayerAttribution):
             >>> ablator = FeatureAblation(net, net.conv1)
             >>> # Computes ablation attribution, ablating each of the 108
             >>> # neurons independently.
-            >>> attr = ablator.attribute(input)
+            >>> attr = ablator.attribute(input, target=1)
 
             >>> # Alternatively, we may want to ablate neurons in groups, e.g.
-            >>> # grouping all the neurons in the same position across channels
-            >>> # and rows (dimensions 1 and 2).
+            >>> # grouping all the neurons in the same row.
             >>> # This can be done by creating a layer mask as follows, which
             >>> # defines the neuron groups, e.g.:
             >>> # +---+---+---+
@@ -199,7 +197,7 @@ class LayerAblation(LayerAttribution):
             >>> # layer mask has dimensions 1 x 3 x 3
             >>> layer_mask = torch.tensor([[[0,0,0],[1,1,1],
             >>>                             [2,2,2]]])
-            >>> attr = ablator.attribute(input, neuron_index=(4,1,2),
+            >>> attr = ablator.attribute(input, target=1,
             >>>                          layer_mask=layer_mask)
         """
 
@@ -228,6 +226,13 @@ class LayerAblation(LayerAttribution):
             with torch.no_grad():
 
                 def forward_hook(module, inp, out=None):
+                    if inp[0].device not in all_layer_inputs:
+                        raise AssertionError(
+                            "Layer input not placed on appropriate "
+                            "device. If using a DataParallel model, either provide the "
+                            "DataParallel model as forward_func or provide device ids"
+                            " to the constructor."
+                        )
                     return all_layer_inputs[inp[0].device]
 
                 if attribute_to_layer_input:

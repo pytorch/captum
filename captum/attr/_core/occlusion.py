@@ -169,7 +169,7 @@ class Occlusion(FeatureAblation):
             >>> ablator = Occlusion(net)
             >>> # Computes occlusion attribution, ablating each 1x3x3 patch,
             >>> # shifting in each direction by the default of 1.
-            >>> attr = ablator.attribute(input, target=1,occlusion_shapes=(1,3,3))
+            >>> attr = ablator.attribute(input, target=1, occlusion_shapes=(1,3,3))
         """
         formatted_inputs = _format_input(inputs)
 
@@ -223,12 +223,14 @@ class Occlusion(FeatureAblation):
     ):
         r"""
         Ablates given feature tensor with given input feature mask, feature range,
-        and baselines. feature_tensor shape is (num_features, num_examples, ...)
+        and baselines, and any additional arguments.
+        feature_tensor shape is (num_features, num_examples, ...)
         with remaining dimensions corresponding to remaining original tensor
         dimensions and num_features = end_feature - start_feature.
-        input_mask has same number of dimensions as original input tensor (one less
-        than feature_tensor), and can have first dimension either 1, applying same
-        feature mask to all examples, or num_examples. baseline is expected to
+
+        input_mask is None for occlusion, and the mask is constructed
+        using occlusion_tensors, strides, and shift counts, provided in
+        kwargs. baseline is expected to
         be broadcastable to match feature_tensor.
 
         This method returns the ablated feature tensor, which has the same

@@ -233,7 +233,7 @@ class FeatureAblation(PerturbationAttribution):
                 additional_forward_args,
                 target,
                 baselines,
-                feature_mask[i] if feature_mask is not None else None,
+                feature_mask,
                 ablations_per_eval,
                 **kwargs
             ):
@@ -280,6 +280,7 @@ class FeatureAblation(PerturbationAttribution):
             else:
                 extra_args[key] = value
 
+        input_mask = input_mask[i] if input_mask is not None else None
         min_feature, num_features, input_mask = self._get_feature_range_and_mask(
             inputs[i], input_mask, **extra_args
         )

@@ -16,11 +16,9 @@ class NeuronAblation(NeuronAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
+                          Attributions for a particular neuron in the input or output
+                          of this layer are computed using the argument neuron_index
+                          in the attribute method.
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
@@ -173,7 +171,7 @@ class NeuronAblation(NeuronAttribution):
             >>> # Computes neuron gradient for neuron with
             >>> # index (4,1,2).
             >>> # Computes ablation attribution, ablating each of the 16
-            >>> # scalar input independently.
+            >>> # scalar inputs independently.
             >>> attr = ablator.attribute(input, neuron_index=(4,1,2))
 
             >>> # Alternatively, we may want to ablate features in groups, e.g.

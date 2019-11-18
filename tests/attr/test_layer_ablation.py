@@ -138,7 +138,6 @@ class Test(BaseTest):
                 ablations_per_eval=batch_size,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            print(attributions)
             assertTensorAlmostEqual(self, attributions, expected_ablation)
 
 
