@@ -165,8 +165,6 @@ class Test(BaseTest):
                 ablations_per_eval=batch_size,
                 strides=strides,
             )
-            print("FINAL ANSWER")
-            print(attributions)
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):
                     assertTensorAlmostEqual(self, attributions[i], expected_ablation[i])

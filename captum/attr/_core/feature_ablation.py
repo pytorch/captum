@@ -144,6 +144,11 @@ class FeatureAblation(PerturbationAttribution):
                             (ablations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
+                **kwargs (Any, optional): Any additional arguments used by child
+                            classes of FeatureAblation (such as Occlusion) to construct
+                            ablations. These arguments are ignored when using
+                            FeatureAblation directly.
+                            Default: None
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -275,6 +280,7 @@ class FeatureAblation(PerturbationAttribution):
     ):
         extra_args = {}
         for key, value in kwargs.items():
+            # For any tuple argument in kwargs, we choose index i of the tuple.
             if isinstance(value, tuple):
                 extra_args[key] = value[i]
             else:

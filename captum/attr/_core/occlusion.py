@@ -243,7 +243,6 @@ class Occlusion(FeatureAblation):
             [
                 self._occlusion_mask(
                     feature_tensor,
-                    input_mask,
                     j,
                     kwargs["occlusion_tensors"],
                     kwargs["strides"],
@@ -259,7 +258,7 @@ class Occlusion(FeatureAblation):
         return ablated_tensor, current_mask
 
     def _occlusion_mask(
-        self, input, mask, feature_number, occlusion_tensor, strides, shift_counts
+        self, input, feature_number, occlusion_tensor, strides, shift_counts
     ):
         current_total = feature_number
         current_index = []
