@@ -159,7 +159,7 @@ print('Convergence Delta: ', delta)
 
     const igOutput = `${pre}python
 IG Attributions: tensor([[-0.5922, -1.5497, -1.0067],
-                          [ 0.0000, -0.2219, -5.1991]])
+    [ 0.0000, -0.2219, -5.1991]])
 Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
     `;
     //
