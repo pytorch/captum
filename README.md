@@ -177,7 +177,7 @@ print('Convergence Delta: ', delta)
 Output:
 ```
 IG Attributions: tensor([[-0.5922, -1.5497, -1.0067],
-    [ 0.0000, -0.2219, -5.1991]])
+        [ 0.0000, -0.2219, -5.1991]])
 Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
 ```
 The algorithm outputs an attribution score for each input element and a
@@ -219,7 +219,7 @@ print('Convergence Delta: ', delta)
 Output
 ```
 GradientShap Attributions: tensor([[-0.1542, -1.6229, -1.5835],
-    [-0.3916, -0.2836, -4.6851]])
+        [-0.3916, -0.2836, -4.6851]])
 Convergence Delta: tensor([ 0.0000, -0.0005, -0.0029, -0.0084, -0.0087, -0.0405,  0.0000, -0.0084])
 
 ```
@@ -245,7 +245,7 @@ print('Convergence Delta: ', delta)
 Output
 ```
 DeepLift Attributions: tensor([[-0.5922, -1.5497, -1.0067],
-    [ 0.0000, -0.2219, -5.1991])
+        [ 0.0000, -0.2219, -5.1991])
 Convergence Delta: tensor([0., 0.])
 ```
 `DeepLift` assigns similar attribution scores as `IntegratedGradients` to inputs,
@@ -272,11 +272,11 @@ print('Convergence Delta: ', delta)
 Output
 ```
 DeepLiftShap Attributions: tensor([[-5.9169e-01, -1.5491e+00, -1.0076e+00],
-    [-4.7101e-03, -2.2300e-01, -5.1926e+00]], grad_fn=<MeanBackward1>)
+        [-4.7101e-03, -2.2300e-01, -5.1926e+00]], grad_fn=<MeanBackward1>)
 Convergence Delta: tensor([-4.6120e-03, -1.6267e-03, -5.1045e-04, -1.4184e-03, -6.8886e-03,
-    -2.2224e-02,  0.0000e+00, -2.8790e-02, -4.1285e-03, -2.7295e-02,
-    -3.2349e-03, -1.6265e-03, -4.7684e-07, -1.4191e-03, -6.8889e-03,
-    -2.2224e-02,  0.0000e+00, -2.4792e-02, -4.1289e-03, -2.7296e-02])
+        -2.2224e-02,  0.0000e+00, -2.8790e-02, -4.1285e-03, -2.7295e-02,
+        -3.2349e-03, -1.6265e-03, -4.7684e-07, -1.4191e-03, -6.8889e-03,
+        -2.2224e-02,  0.0000e+00, -2.4792e-02, -4.1289e-03, -2.7296e-02])
 ```
 `DeepLiftShap` uses `DeepLift` to compute attribution score for each
 input-baseline pair and averages it for each input across all baselines.
@@ -307,9 +307,8 @@ print('Convergence Delta: ', delta)
 Output
 ```
 IG + SmoothGrad Attributions: tensor([[-0.4574, -1.5493, -1.0893],
-    [ 0.0000, -0.2647, -5.1619]])
-Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00,
-    -4.7684e-07,  0.0000e+00, -4.7684e-07])
+        [ 0.0000, -0.2647, -5.1619]])
+Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00, -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
 The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
@@ -338,7 +337,7 @@ print('Neuron Attributions: ', attributions)
 Output
 ```
 Neuron Attributions: tensor([[ 0.0000,  0.0000,  0.0000],
-    [ 1.3358,  0.0000, -1.6811]])
+        [ 1.3358,  0.0000, -1.6811]])
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
