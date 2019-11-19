@@ -355,7 +355,7 @@ print('Convergence Delta: ', delta)
 Outputs
 ```
 Layer Attributions: tensor([[ 0.0000,  0.0000, -3.0856],
-    [ 0.0000, -0.3488, -4.9638]], grad_fn=<SumBackward1>)
+        [ 0.0000, -0.3488, -4.9638]], grad_fn=<SumBackward1>)
 Convergence Delta: tensor([0.0630, 0.1084])
 ```
 
