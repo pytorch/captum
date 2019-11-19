@@ -308,7 +308,8 @@ Output
 ```
 IG + SmoothGrad Attributions: tensor([[-0.4574, -1.5493, -1.0893],
         [ 0.0000, -0.2647, -5.1619]])
-Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00, -4.7684e-07,  0.0000e+00, -4.7684e-07])
+Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00,
+        -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
 The number of elements in the `delta` tensor is equal to: `n_samples * input.shape[0]`
