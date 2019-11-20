@@ -51,7 +51,7 @@ class LayerGradCam(LayerAttribution):
             For providing more flexibility to the user, we choose to not perform the
             ReLU internally by default and return the sign information. To match the
             original GradCAM algorithm, it is necessary to pass the parameter
-            relu_attributions=True to perform ReLU on the returned
+            relu_attributions=True to apply ReLU on the final
             attributions or alternatively only visualize the positive attributions.
 
             Note: this procedure sums over the second dimension (# of channels),
@@ -127,7 +127,7 @@ class LayerGradCam(LayerAttribution):
                             Support for multiple tensors will be added later.
                             Default: False
                 relu_attributions (bool, optional): Indicates whether to
-                            perform a ReLU operation on the final attribution,
+                            apply a ReLU operation on the final attribution,
                             returning only non-negative attributions. Setting this
                             flag to True matches the original GradCAM algorithm,
                             otherwise by default, both positive and negative
