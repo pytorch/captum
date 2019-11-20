@@ -3,15 +3,15 @@
 import unittest
 
 import torch
-from captum.attr._core.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_conductance import LayerConductance
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.conductance_reference import ConductanceReference
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.conductance_reference import ConductanceReference
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):

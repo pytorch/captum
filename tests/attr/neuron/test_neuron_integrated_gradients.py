@@ -4,14 +4,16 @@ import unittest
 
 import torch
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.neuron_integrated_gradients import NeuronIntegratedGradients
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
 
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -97,7 +99,7 @@ class Test(BaseTest):
             attributions = grad.attribute(
                 test_input,
                 test_neuron,
-                n_steps=500,
+                n_steps=200,
                 method="gausslegendre",
                 additional_forward_args=additional_input,
                 internal_batch_size=internal_batch_size,
