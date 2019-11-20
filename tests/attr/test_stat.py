@@ -6,13 +6,10 @@ import random
 from captum.attr._utils.stat import (
     StatGraph,
     Mean,
-    MSE,
     Var,
     StdDev,
     SampleStdDev,
     SampleVar,
-    Min,
-    Max,
     _topo_sort,
 )
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
@@ -44,15 +41,15 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, summ["variance"], 0)
 
     def test_var_defin(self):
-        """ 
-        Variance is avg squared distance to mean. Thus it should be positive. This test 
-        is to ensure this is the case.
+        """
+        Variance is avg squared distance to mean. Thus it should be positive.
+        This test is to ensure this is the case.
 
-        To test it, we will we make a skewed distribution leaning to one end (either very 
-        large or small values).
+        To test it, we will we make a skewed distribution leaning to one end
+        (either very large or small values).
 
-        We will also compare to numpy and ensure it is approximately the same. This 
-        is assuming numpy is correct, for which it should be.
+        We will also compare to numpy and ensure it is approximately the same.
+        This is assuming numpy is correct, for which it should be.
         """
         SMALL_VAL = -10000
         BIG_VAL = 10000
@@ -113,15 +110,18 @@ class Test(BaseTest):
         min_num_nodes = 1
         # create N random DAGs
         for i in range(N):
-            """ 
-            Nodes are represented by an integer in [0, num_nodes). Each edge is a parent pointer, i.e. 
-            we're effectively "reversing" the edges and taking a topological sort on that graph
-            
-            In order to generate a random DAG, here I am simply assuming a valid topological order is
-            defined by their indices. Thus, a node at index i can point to any node in [0, i).
+            """
+            Nodes are represented by an integer in [0, num_nodes). Each edge is
+            a parent pointer, i.e.  we're effectively "reversing" the edges and
+            taking a topological sort on that graph
 
-            To check if the result is correct, we can simply loop through each node in 
-            the output and see if we've seen all it's dependencies (parents).
+            In order to generate a random DAG, here I am simply assuming a valid
+            topological order is defined by their indices. Thus, a node at index
+            i can point to any node in [0, i).
+
+            To check if the result is correct, we can simply loop through each
+            node in the output and see if we've seen all it's dependencies
+            (parents).
             """
             num_nodes = random.randint(min_num_nodes, max_num_nodes)
             nodes = np.random.permutation(num_nodes).tolist()
