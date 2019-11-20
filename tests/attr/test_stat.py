@@ -111,19 +111,21 @@ class Test(BaseTest):
         N = 100
         max_num_nodes = 100
         min_num_nodes = 1
-        # create N random graphs
+        # create N random DAGs
         for i in range(N):
-            # each node is represented by an integer i, 0 <= i < num_nodes
-            num_nodes = random.randint(min_num_nodes, max_num_nodes)
+            """ 
+            Nodes are represented by an integer in [0, num_nodes). Each edge is a parent pointer, i.e. 
+            we're effectively "reversing" the edges and taking a topological sort on that graph
+            
+            In order to generate a random DAG, here I am simply assuming a valid topological order is
+            defined by their indices. Thus, a node at index i can point to any node in [0, i).
 
-            # let's actually create the nodes of the graph
-            # i.e. the first node is represented as nodes[0]
-            #
-            # thus the ordering might not necessarily be the integers sorted
+            To check if the result is correct, we can simply loop through each node in 
+            the output and see if we've seen all it's dependencies (parents).
+            """
+            num_nodes = random.randint(min_num_nodes, max_num_nodes)
             nodes = np.random.permutation(num_nodes).tolist()
 
-            # let's construct our graph by
-            # randomly assigning back edges
             edges = [None] * num_nodes
             for i in range(num_nodes):
                 if i == 0:
