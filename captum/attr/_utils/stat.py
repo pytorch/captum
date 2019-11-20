@@ -3,15 +3,35 @@ import torch
 
 
 class Stat:
+    """
+    Base class for Stat objects. You must call this constructor. 
+    Sub-classes **must** have a default constructor.
+
+    Args:
+        deps (dict):
+            The dependencies your Stat needs in order to perform and update and/or get.
+            Maps from a string to a module, e.g. {'mean': Mean}.
+    """
     def __init__(self, deps=None):
         if deps is None:
             deps = {}
         self.deps = deps
 
     def get(self, deps):
+        """ 
+        deps is a mapping from string to the associated value of the stat
+        """
         raise NotImplementedError()
 
     def update(self, x, deps):
+        """ 
+        Args:
+            x (torch.Tensor): 
+                Some arbitrary tensor
+            deps (dict): 
+                A mapping from string to the associated value of the stat.
+                This corresponds to the deps supplied in __init__.
+        """
         raise NotImplementedError()
 
     @property
