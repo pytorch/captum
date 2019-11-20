@@ -304,7 +304,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             self._scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads, attr_inputs = compute_layer_gradients_and_eval(
+        grads, _ = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             input_baseline_scaled,
@@ -323,6 +323,14 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
+        attr_inputs = _forward_layer_eval(
+            self.forward_func,
+            inputs,
+            self.layer,
+            additional_forward_args=additional_forward_args,
+            device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
         attr_inputs = (attr_inputs,)
         attr_baselines = (attr_baselines,)
         grads = (grads,)
