@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import torch
+import torch.nn.functional as F
 
 from ..._utils.attribution import LayerAttribution
 from ..._utils.common import _format_input, _format_additional_forward_args
@@ -33,6 +34,7 @@ class LayerGradCam(LayerAttribution):
         target=None,
         additional_forward_args=None,
         attribute_to_layer_input=False,
+        relu_attributions=False,
     ):
         r"""
             Computes GradCAM attribution for chosen layer. GradCAM is designed for
@@ -47,8 +49,9 @@ class LayerGradCam(LayerAttribution):
             Note that in the original GradCAM algorithm described in the paper,
             ReLU is applied to the output, returning only non-negative attributions.
             For providing more flexibility to the user, we choose to not perform the
-            ReLU internally and return the sign information. To match the original
-            GradCAM algorithm, it is necessary to perform ReLU on the returned
+            ReLU internally by default and return the sign information. To match the
+            original GradCAM algorithm, it is necessary to pass the parameter
+            relu_attributions=True to perform ReLU on the returned
             attributions or alternatively only visualize the positive attributions.
 
             Note: this procedure sums over the second dimension (# of channels),
@@ -123,6 +126,13 @@ class LayerGradCam(LayerAttribution):
                             attribute to the input or output, are single tensors.
                             Support for multiple tensors will be added later.
                             Default: False
+                relu_attributions (bool, optional): Indicates whether to
+                            perform a ReLU operation on the final attribution,
+                            returning only non-negative attributions. Setting this
+                            flag to True matches the original GradCAM algorithm,
+                            otherwise by default, both positive and negative
+                            attributions are returned.
+                            Default: False
 
             Returns:
                 *tensor* of **attributions**:
@@ -174,6 +184,8 @@ class LayerGradCam(LayerAttribution):
             keepdim=True,
         )
 
-        non_neg_scaled_act = torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
-
-        return non_neg_scaled_act
+        scaled_act = torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
+        if relu_attributions:
+            return F.relu(scaled_act)
+        else:
+            return scaled_act

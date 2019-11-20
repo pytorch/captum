@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import warnings
-import torch.nn.functional as F
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
 from .._utils.common import _format_input, _format_attributions
@@ -171,13 +170,12 @@ class GuidedGradCam(GradientAttribution):
         """
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
-        grad_cam_attr = F.relu(
-            self.grad_cam.attribute(
-                inputs=inputs,
-                target=target,
-                additional_forward_args=additional_forward_args,
-                attribute_to_layer_input=attribute_to_layer_input,
-            )
+        grad_cam_attr = self.grad_cam.attribute(
+            inputs=inputs,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            attribute_to_layer_input=attribute_to_layer_input,
+            relu_attributions=True,
         )
         guided_backprop_attr = self.guided_backprop.attribute(
             inputs=inputs,
