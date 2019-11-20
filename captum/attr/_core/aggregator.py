@@ -18,6 +18,7 @@ class Aggregator:
     >>>
     >>>print(aggr.summary['mean'])
     """
+
     def __init__(self, stats=None):
         self._stat_graph = StatGraph()
         self.add_all(stats)
@@ -32,7 +33,7 @@ class Aggregator:
 
     def add(self, stat):
         """
-        Adds a stat module to this Aggregator. Please 
+        Adds a stat module to this Aggregator. Please
         note that this must be a module **not** an object, e.g.
 
         >>>aggr.add(Mean)
@@ -41,14 +42,14 @@ class Aggregator:
         return self
 
     def update(self, x):
-        """ 
+        """
         Calls .update on each Stat object within this object
         """
         self._stat_graph.traverse(x)
 
     @property
     def summary(self):
-        """ 
+        """
         Calls .get on each Stat object within this object
 
         Returns:
