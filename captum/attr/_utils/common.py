@@ -213,11 +213,12 @@ def _verify_select_column(output, target):
 
 
 def _select_targets(output, target):
-    num_examples = output.shape[0]
-    dims = len(output.shape)
     if target is None:
         return output
-    elif isinstance(target, int) or isinstance(target, tuple):
+
+    num_examples = output.shape[0]
+    dims = len(output.shape)
+    if isinstance(target, (int, tuple)):
         return _verify_select_column(output, target)
     elif isinstance(target, torch.Tensor):
         if torch.numel(target) == 1 and isinstance(target.item(), int):

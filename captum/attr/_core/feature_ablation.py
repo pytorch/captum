@@ -46,6 +46,12 @@ class FeatureAblation(PerturbationAttribution):
         equal to the change in target as a result of ablating the entire feature
         group.
 
+        The forward function can either return a scalar per example, or a single
+        scalar for the full batch. If a single scalar is returned for the batch,
+        `ablations_per_eval` must be 1, and the returned attributions will have
+        first dimension 1, corresponding to feature importance across all
+        examples in the batch.
+
         Args:
 
                 inputs (tensor or tuple of tensors):  Input for which ablation
@@ -129,6 +135,11 @@ class FeatureAblation(PerturbationAttribution):
                             have the same value.
                             Note that features within each input tensor are ablated
                             independently (not across tensors).
+                            If the forward function returns a single scalar per batch,
+                            we enforce that the first dimension of each mask must be 1,
+                            since attributions are returned batch-wise rather than per
+                            example, so the attributions must correspond to the
+                            same features (indices) in each input example.
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature, which
                             is ablated independently.
@@ -142,15 +153,21 @@ class FeatureAblation(PerturbationAttribution):
                             device contain at most
                             (ablations_per_eval * #examples) / num_devices
                             samples.
+                            If the forward function returns a single scalar per batch,
+                            ablations_per_eval must be set to 1.
                             Default: 1
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
                 - **attributions** (*tensor* or tuple of *tensors*):
                             The attributions with respect to each input feature.
-                            Attributions will always be
+                            If the forward function returns
+                            a scalar value per example, attributions will be
                             the same size as the provided inputs, with each value
                             providing the attribution of the corresponding input index.
+                            If the forward function returns a scalar per batch, then
+                            attribution tensor(s) will have first dimension 1 and
+                            the remaining dimensions will match the input.
                             If a single tensor is provided as inputs, a single tensor is
                             returned. If a tuple is provided for inputs, a tuple of
                             corresponding sized tensors is returned.
@@ -209,16 +226,41 @@ class FeatureAblation(PerturbationAttribution):
         initial_eval = _run_forward(
             self.forward_func, inputs, target, additional_forward_args
         )
-        assert (
-            initial_eval[0].numel() == 1
-        ), "Target should identify a single element in the model output."
-        initial_eval = initial_eval.reshape(1, num_examples)
+        if isinstance(initial_eval, (int, float)) or (
+            isinstance(initial_eval, torch.Tensor)
+            and (
+                len(initial_eval.shape) == 0
+                or (num_examples > 1 and initial_eval.numel() == 1)
+            )
+        ):
+            single_output_mode = True
+            assert (
+                ablations_per_eval == 1
+            ), "Cannot have ablations_per_eval > 1 when function returns scalar."
+            if feature_mask is not None:
+                for single_mask in feature_mask:
+                    assert (
+                        single_mask.shape[0] == 1
+                    ), "Cannot provide multiple masks when function returns a scalar."
+        else:
+            single_output_mode = False
+            assert (
+                isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
+            ), "Target should identify a single element in the model output."
+            initial_eval = initial_eval.reshape(1, num_examples)
 
         # Initialize attribution totals and counts
-        total_attrib = [torch.zeros_like(input) for input in inputs]
+        total_attrib = [
+            torch.zeros_like(input[0:1] if single_output_mode else input)
+            for input in inputs
+        ]
+
         # Weights are used in cases where ablations may be overlapping.
         if self.use_weights:
-            weights = [torch.zeros_like(input) for input in inputs]
+            weights = [
+                torch.zeros_like(input[0:1] if single_output_mode else input)
+                for input in inputs
+            ]
 
         # Iterate through each feature tensor for ablation
         for i in range(len(inputs)):
@@ -254,9 +296,12 @@ class FeatureAblation(PerturbationAttribution):
                 # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
                 # (contains 1 more dimension than inputs). This adds extra dimensions
                 # of 1 to make the tensor broadcastable with the inputs tensor.
-                eval_diff = (
-                    initial_eval - modified_eval.reshape(-1, num_examples)
-                ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
+                if single_output_mode:
+                    eval_diff = initial_eval - modified_eval
+                else:
+                    eval_diff = (
+                        initial_eval - modified_eval.reshape(-1, num_examples)
+                    ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
                 if self.use_weights:
                     weights[i] += current_mask.float().sum(dim=0)
                 total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
