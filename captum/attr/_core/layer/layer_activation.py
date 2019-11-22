@@ -15,7 +15,7 @@ class LayerActivation(LayerAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Optional[List[int]] = None,
-    ):
+    ) -> None:
         r"""
         Args:
 
@@ -43,7 +43,7 @@ class LayerActivation(LayerAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ):
+    ) -> Tensor:
         r"""
             Computes activation of selected layer for given input.
 
@@ -102,7 +102,7 @@ class LayerActivation(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            return _forward_layer_eval(
+            layer_eval = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -110,3 +110,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
+        return layer_eval

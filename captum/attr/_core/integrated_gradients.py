@@ -19,7 +19,7 @@ from .._utils.attribution import GradientAttribution
 
 
 class IntegratedGradients(GradientAttribution):
-    def __init__(self, forward_func: Callable):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -42,7 +42,9 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+    ]:
         r"""
             Approximates the integral of gradients along the path from a baseline input
             to the given input. If no baseline is provided, the default baseline
