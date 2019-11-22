@@ -79,6 +79,6 @@ class Aggregator:
         return out[0]
 
 def common_aggr():
-    from captum.aggr.stat import Mean, Var, StdDev, SampleStdDev, Min, Max
+    from captum.attr._utils.stat import Mean, Var, StdDev, SampleStdDev, Min, Max
 
     return Aggregator([Mean, Var, StdDev, SampleStdDev, Min, Max])
