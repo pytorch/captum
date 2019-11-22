@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union, Any
 
 import torch
 from torch import Tensor
@@ -28,16 +28,16 @@ class IntegratedGradients(GradientAttribution):
         """
         super().__init__(forward_func)
 
-    def attribute(
+    def attribute( #type: ignore
         self,
-        inputs: Union[Tensor],
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        target: Optional[Union[int, Tuple[int, ...], Tensor]] = None,
-        additional_forward_args=None,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]] = None,
+        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]] = None,
+        additional_forward_args: Any=None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
-        return_convergence_delta: Optional[bool] = False,
+        return_convergence_delta: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Approximates the integral of gradients along the path from a baseline input
