@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
+
+import unittest
 from typing import List, Tuple, Union, Any
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 import torch.nn as nn
-
-import unittest
 
 from captum.attr._core.layer.layer_activation import LayerActivation
 
