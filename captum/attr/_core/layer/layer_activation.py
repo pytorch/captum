@@ -10,7 +10,12 @@ from ..._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):
-    def __init__(self, forward_func: Callable, layer: Module, device_ids: Optional[List[int]]=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ):
         r"""
         Args:
 
@@ -33,8 +38,11 @@ class LayerActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute( #type: ignore
-        self, inputs: Union[Tensor, Tuple[Tensor, ...]], additional_forward_args: Any=None, attribute_to_layer_input: bool=False
+    def attribute(  # type: ignore
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
     ):
         r"""
             Computes activation of selected layer for given input.

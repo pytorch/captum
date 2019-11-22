@@ -28,12 +28,16 @@ class IntegratedGradients(GradientAttribution):
         """
         super().__init__(forward_func)
 
-    def attribute( #type: ignore
+    def attribute(  # type: ignore
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]] = None,
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]] = None,
-        additional_forward_args: Any=None,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,

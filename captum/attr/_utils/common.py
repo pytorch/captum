@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -91,7 +91,9 @@ def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
     )
 
 
-def _format_tensor_into_tuples(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
+def _format_tensor_into_tuples(
+    inputs: Union[Tensor, Tuple[Tensor, ...]]
+) -> Tuple[Tensor, ...]:
     if not isinstance(inputs, tuple):
         assert isinstance(
             inputs, torch.Tensor
@@ -112,7 +114,12 @@ def _format_additional_forward_args(additional_forward_args):
     return additional_forward_args
 
 
-def _format_baseline(baselines: Optional[Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]], inputs: Tuple[Tensor, ...]) -> Tuple[Union[Tensor, int, float], ...]:
+def _format_baseline(
+    baselines: Optional[
+        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+    ],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Union[Tensor, int, float], ...]:
     if baselines is None:
         return _zeros(inputs)
 
@@ -130,7 +137,12 @@ def _format_baseline(baselines: Optional[Union[Tensor, int, float, Tuple[Union[T
     return baselines
 
 
-def _format_input_baseline(inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: Optional[Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]]) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
+def _format_input_baseline(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    baselines: Optional[
+        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+    ],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     inputs = _format_input(inputs)
     baselines = _format_baseline(baselines, inputs)
     return inputs, baselines
