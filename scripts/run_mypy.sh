@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This runs mypy's static type checker on parts of Captum supporting type
 # hints.
