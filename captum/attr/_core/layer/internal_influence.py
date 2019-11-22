@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 from ..._utils.approximation_methods import approximation_parameters
-from ..._utils.attribution import LayerAttribution
+from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
 from ..._utils.common import (
     _reshape_and_sum,
@@ -14,7 +14,7 @@ from ..._utils.common import (
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
-class InternalInfluence(LayerAttribution):
+class InternalInfluence(LayerAttribution, GradientAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -36,7 +36,8 @@ class InternalInfluence(LayerAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,

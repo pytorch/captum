@@ -27,7 +27,7 @@ class LayerActivation(LayerAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
 
     def attribute(
         self, inputs, additional_forward_args=None, attribute_to_layer_input=False
