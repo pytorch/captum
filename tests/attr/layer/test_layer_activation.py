@@ -81,7 +81,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_activation: List[float],
+        expected_activation: List[bool],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
     ):

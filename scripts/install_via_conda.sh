@@ -37,7 +37,7 @@ else
 fi
 
 # install other deps
-conda install -y numpy sphinx pytest flake8 ipywidgets ipython
+conda install -y numpy sphinx pytest flake8 ipywidgets ipython mypy
 conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints
 
 # build insights and install captum
