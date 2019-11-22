@@ -20,10 +20,13 @@ class Attribution:
     to extend and override core `attribute` method.
     """
 
-    def attribute(self, inputs, **kwargs):
+    def attribute(self, inputs):
         r"""
         This method computes and returns the attribution values for each input tensor.
         Deriving classes are responsible for implementing its logic accordingly.
+
+        Specific attribution algorithms that extend this class take relevant
+        additional arguments.
 
         Args:
 
@@ -32,8 +35,6 @@ class Attribution:
                         a tuple of multiple tensors. If multiple input tensors
                         are provided, the batch sizes must be aligned accross all
                         tensors.
-            **kwargs (Any, optional): Arbitrary keyword arguments used by specific
-                        attribution algorithms that extend this class.
 
 
         Returns:

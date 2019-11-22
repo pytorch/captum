@@ -38,7 +38,7 @@ class LayerActivation(LayerAttribution):
         """
         super().__init__(forward_func, layer, device_ids)
 
-    def attribute(  # type: ignore
+    def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,

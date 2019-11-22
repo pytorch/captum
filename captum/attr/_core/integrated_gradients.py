@@ -28,7 +28,7 @@ class IntegratedGradients(GradientAttribution):
         """
         super().__init__(forward_func)
 
-    def attribute(  # type: ignore
+    def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Optional[
