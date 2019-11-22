@@ -12,7 +12,7 @@ class InputXGradient(GradientAttribution):
             forward_func (callable):  The forward function of the model or any
                           modification of it
         """
-        super().__init__(forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
