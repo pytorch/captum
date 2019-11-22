@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-from .._utils.attribution import NeuronAttribution
-from .._utils.gradient import construct_neuron_grad_fn
+from ..._utils.attribution import NeuronAttribution
+from ..._utils.gradient import construct_neuron_grad_fn
 
-from .deep_lift import DeepLift, DeepLiftShap
+from ..deep_lift import DeepLift, DeepLiftShap
 
 
 class NeuronDeepLift(NeuronAttribution):

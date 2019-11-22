@@ -5,8 +5,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from .._utils.attribution import LayerAttribution
-from .._utils.gradient import _forward_layer_eval
+from ..._utils.attribution import LayerAttribution
+from ..._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):

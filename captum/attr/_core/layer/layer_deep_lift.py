@@ -2,16 +2,16 @@
 import warnings
 import torch
 import torch.nn as nn
-from .._utils.attribution import LayerAttribution
-from .._core.deep_lift import DeepLift, DeepLiftShap
-from .._utils.gradient import (
+from ..._utils.attribution import LayerAttribution
+from ..._core.deep_lift import DeepLift, DeepLiftShap
+from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
     _forward_layer_eval,
     compute_layer_gradients_and_eval,
 )
 
-from .._utils.common import (
+from ..._utils.common import (
     _format_input,
     _format_baseline,
     _format_callable_baseline,
