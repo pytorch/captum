@@ -54,7 +54,7 @@ class Aggregator:
             self._is_inputs_tuple = isinstance(x, tuple)
         else:
             # we want input to be consistently a single input or a tuple
-            assert(not(self._is_inputs_tuple ^ isinstance(x, tuple)))
+            assert not (self._is_inputs_tuple ^ isinstance(x, tuple))
 
         if self._stat_graphs is None:
             self._stat_graphs = []
@@ -77,6 +77,7 @@ class Aggregator:
             return tuple(out)
 
         return out[0]
+
 
 def common_aggr():
     from captum.attr._utils.stat import Mean, Var, StdDev, SampleStdDev, Min, Max

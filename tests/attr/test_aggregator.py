@@ -16,7 +16,6 @@ class Test(BaseTest):
         self.assertIsNotNone(summ)
         self.assertTrue(isinstance(summ, dict))
 
-
     def test_multi_input(self):
         aggr = common_aggr()
         for _ in range(10):
