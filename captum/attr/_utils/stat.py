@@ -223,10 +223,17 @@ class StatGraph:
             self.stat = stat
             self.invisible = invisible
 
-    def __init__(self):
+    def __init__(self, stats=None):
         self.is_ready = False
         self.module_to_node = dict()
         self.nodes = []
+
+        if stats is not None:
+            self.add_all(stats)
+
+    def add_all(self, stats):
+        for stat in stats:
+            self.add(stat)
 
     def add(self, stat, invisible=False):
         if stat in self.module_to_node:

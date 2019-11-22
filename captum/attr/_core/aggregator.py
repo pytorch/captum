@@ -20,7 +20,10 @@ class Aggregator:
     """
 
     def __init__(self, stats=None):
-        self._stat_graph = StatGraph()
+        self._stat_list = []
+        self._stat_graphs = []
+        self._is_inputs_tuple = None
+
         self.add_all(stats)
 
     def add_all(self, stats):
@@ -38,14 +41,28 @@ class Aggregator:
 
         >>>aggr.add(Mean)
         """
-        self._stat_graph.add(stat)
+        self._stat_list.append(stat)
+        for graph in self._stat_graphs:
+            graph.add(stat)
         return self
 
     def update(self, x):
         """
         Calls .update on each Stat object within this object
         """
-        self._stat_graph.traverse(x)
+        if self._is_inputs_tuple is None:
+            self._is_inputs_tuple = isinstance(x, tuple)
+        else:
+            # we want input to be consistently a single input or a tuple
+            assert(not(self._is_inputs_tuple ^ isinstance(x, tuple)))
+
+        if self._stat_graphs is None:
+            self._stat_graphs = []
+
+        for i, inp in enumerate(x):
+            if i >= len(self._stat_graphs):
+                self._stat_graphs.append(StatGraph(stats=self._stat_list))
+            self._stat_graphs[i].traverse(inp)
 
     @property
     def summary(self):
@@ -55,8 +72,11 @@ class Aggregator:
         Returns:
             A dict, mapping from the Stat object's .name to the associated value of .get
         """
-        return self._stat_graph.summary
+        out = [graph.summary for graph in self._stat_graphs]
+        if self._is_inputs_tuple:
+            return tuple(out)
 
+        return out[0]
 
 def common_aggr():
     from captum.aggr.stat import Mean, Var, StdDev, SampleStdDev, Min, Max
