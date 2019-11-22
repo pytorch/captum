@@ -59,6 +59,9 @@ class Aggregator:
         if self._stat_graphs is None:
             self._stat_graphs = []
 
+        if not self._is_inputs_tuple:
+            x = (x,)
+
         for i, inp in enumerate(x):
             if i >= len(self._stat_graphs):
                 self._stat_graphs.append(StatGraph(stats=self._stat_list))
