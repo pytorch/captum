@@ -16,7 +16,7 @@ class Occlusion(FeatureAblation):
             forward_func (callable): The forward function of the model or
                         any modification of it
         """
-        FeatureAblation.__init__(forward_func)
+        FeatureAblation.__init__(self, forward_func)
         self.use_weights = True
 
     def attribute(

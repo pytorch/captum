@@ -35,8 +35,8 @@ class LayerAblation(LayerAttribution, PerturbationAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        LayerAttribution.__init__(forward_func, layer, device_ids)
-        PerturbationAttribution.__init__(forward_func)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        PerturbationAttribution.__init__(self, forward_func)
 
     def attribute(
         self,
