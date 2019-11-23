@@ -433,7 +433,7 @@ class Test(BaseGPUTest):
         net.eval()
         inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
         baselines = torch.randn(30, 3).cuda()
-        if isinstance(attr_method_class, NeuronAttribution):
+        if attr_method_class == NeuronGradientShap:
             self._data_parallel_test_assert(
                 attr_method_class,
                 net,
