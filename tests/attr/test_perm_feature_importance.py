@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-import unittest
-
 import torch
 import torch.nn as nn
-from captum.attr._core.perm_feature_importance import PermutationFeatureImportance, permute_feature
+from captum.attr._core.perm_feature_importance import (
+    PermutationFeatureImportance,
+    permute_feature,
+)
 
-from .helpers.basic_models import BasicModel, BasicModel2
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from .helpers.basic_models import BasicModel
+from .helpers.utils import BaseTest
 
 
 class MultiplyNet(nn.Module):
@@ -95,13 +96,16 @@ class Test(BaseTest):
 
         net = BasicModel()
 
-
         inp = torch.randn((batch_size,) + input_size)
+
         def forward_func(x):
             if x.size(0) > batch_size:
                 self.assertTrue(ablations_per_eval * batch_size == x.size(0))
 
-                inputs = [x[i * batch_size:(i+1) * batch_size] for i in range(ablations_per_eval)]
+                inputs = [
+                    x[i * batch_size : (i + 1) * batch_size]
+                    for i in range(ablations_per_eval)
+                ]
                 for i in range(ablations_per_eval):
                     for j in range(ablations_per_eval):
                         if i == j:
