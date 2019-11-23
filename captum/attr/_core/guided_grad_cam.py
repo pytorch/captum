@@ -24,7 +24,7 @@ class GuidedGradCam(GradientAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(model)
+        GradientAttribution.__init__(self, model)
         self.grad_cam = LayerGradCam(model, layer, device_ids)
         self.guided_backprop = GuidedBackprop(model)
 

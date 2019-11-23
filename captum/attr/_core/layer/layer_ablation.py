@@ -2,7 +2,7 @@
 import torch
 from torch.nn.parallel.scatter_gather import scatter_kwargs
 
-from ..._utils.attribution import LayerAttribution
+from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
     _format_input,
     _format_additional_forward_args,
@@ -13,7 +13,7 @@ from ..._utils.gradient import _forward_layer_eval
 from ..feature_ablation import FeatureAblation
 
 
-class LayerAblation(LayerAttribution):
+class LayerAblation(LayerAttribution, PerturbationAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -35,7 +35,8 @@ class LayerAblation(LayerAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        LayerAttribution.__init__(forward_func, layer, device_ids)
+        PerturbationAttribution.__init__(forward_func)
 
     def attribute(
         self,

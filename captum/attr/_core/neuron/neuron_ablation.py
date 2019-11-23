@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import torch
 
-from ..._utils.attribution import NeuronAttribution
+from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
 from ..._utils.common import _verify_select_column
 from ..._utils.gradient import _forward_layer_eval
 
 from ..feature_ablation import FeatureAblation
 
 
-class NeuronAblation(NeuronAttribution):
+class NeuronAblation(NeuronAttribution, PerturbationAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -28,7 +28,8 @@ class NeuronAblation(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        NeuronAttribution.__init__(forward_func, layer, device_ids)
+        PerturbationAttribution.__init__(forward_func)
 
     def attribute(
         self,

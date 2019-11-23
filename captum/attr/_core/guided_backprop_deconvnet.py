@@ -15,7 +15,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model)
+        GradientAttribution.__init__(self, model)
         self.model = model
         self.backward_hooks = []
         self.use_relu_grad_output = use_relu_grad_output
@@ -84,7 +84,9 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model, use_relu_grad_output=False)
+        ModifiedReluGradientAttribution.__init__(
+            self, model, use_relu_grad_output=False
+        )
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""
@@ -180,7 +182,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model, use_relu_grad_output=True)
+        ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
     def attribute(self, inputs, target=None, additional_forward_args=None):
         r""""

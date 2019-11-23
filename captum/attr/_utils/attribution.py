@@ -23,7 +23,6 @@ class Attribution:
     def __init__(self, forward_func):
         r"""
         Args:
-
             forward_func (callable or torch.nn.Module): This can either be an instance
                         of pytorch model or any modification of model's forward
                         function.
@@ -76,6 +75,59 @@ class Attribution:
 
         """
         return False
+
+    def compute_convergence_delta(self, attributions, *args):
+        r"""
+        The attribution algorithms which derive `Attribution` class and provide
+        convergence delta (aka approximation error) should implement this method.
+        Convergence delta can be computed based on certain properties of the
+        attribution alogrithms.
+
+        Args:
+
+                attributions (tensor or tuple of tensors): Attribution scores that
+                            are precomputed by an attribution algorithm.
+                            Attributions can be provided in form of a single tensor
+                            or a tuple of those. It is assumed that attribution
+                            tensor's dimension 0 corresponds to the number of
+                            examples, and if multiple input tensors are provided,
+                            the examples must be aligned appropriately.
+                *args (optional): Additonal arguments that are used by the
+                            sub-classes depending on the specific implementation
+                            of `compute_convergence_delta`.
+
+        Returns:
+
+                *tensor* of **deltas**:
+                - **deltas** (*tensor*):
+                    Depending on specific implementaion of
+                    sub-classes, convergence delta can be returned per
+                    sample in form of a tensor or it can be aggregated
+                    across multuple samples and returned in form of a
+                    single floating point tensor.
+        """
+        raise NotImplementedError(
+            "Deriving sub-class should implement" " compute_convergence_delta method"
+        )
+
+
+class GradientAttribution(Attribution):
+    r"""
+    All gradient based attribution algorithms extend this class. It requires a
+    forward function, which most commonly is the forward function of the model
+    that we want to interpret or the model itself.
+    """
+
+    def __init__(self, forward_func):
+        r"""
+        Args:
+
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        Attribution.__init__(self, forward_func)
+        self.gradient_func = compute_gradients
 
     def compute_convergence_delta(
         self,
@@ -212,25 +264,6 @@ class Attribution:
             return attr_sum - (end_point - start_point)
 
 
-class GradientAttribution(Attribution):
-    r"""
-    All gradient based attribution algorithms extend this class. It requires a
-    forward function, which most commonly is the forward function of the model
-    that we want to interpret or the model itself.
-    """
-
-    def __init__(self, forward_func):
-        r"""
-        Args:
-
-            forward_func (callable or torch.nn.Module): This can either be an instance
-                        of pytorch model or any modification of model's forward
-                        function.
-        """
-        super().__init__(forward_func)
-        self.gradient_func = compute_gradients
-
-
 class PerturbationAttribution(Attribution):
     r"""
     All perturbation based attribution algorithms extend this class. It requires a
@@ -246,7 +279,7 @@ class PerturbationAttribution(Attribution):
                         of pytorch model or any modification of model's forward
                         function.
         """
-        super().__init__(forward_func)
+        Attribution.__init__(self, forward_func)
 
 
 class InternalAttribution(Attribution):
@@ -268,10 +301,9 @@ class InternalAttribution(Attribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func)
-        self.forward_func = forward_func
+        Attribution.__init__(self, forward_func)
         self.layer = layer
         self.device_ids = device_ids
 
@@ -297,9 +329,9 @@ class LayerAttribution(InternalAttribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     def interpolate(layer_attribution, interpolate_dims, interpolate_mode="nearest"):
         r"""
@@ -357,9 +389,9 @@ class NeuronAttribution(InternalAttribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     def attribute(self, inputs, neuron_index, **kwargs):
         r"""
