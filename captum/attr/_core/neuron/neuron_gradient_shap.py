@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from ..gradient_shap import GradientShap
-from ..._utils.attribution import NeuronAttribution
+from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
 
 
-class NeuronGradientShap(NeuronAttribution):
+class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -26,7 +26,8 @@ class NeuronGradientShap(NeuronAttribution):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        NeuronAttribution.__init__(self, forward_func, layer, device_ids)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,

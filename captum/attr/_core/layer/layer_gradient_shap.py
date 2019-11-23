@@ -38,8 +38,8 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super(LayerAttribution, self).__init__(forward_func, layer, device_ids)
-        super(GradientShap, self).__init__(forward_func)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        GradientShap.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -283,8 +283,8 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        super(LayerAttribution, self).__init__(forward_func, layer, device_ids)
-        super(InputBaselineXGradient, self).__init__(forward_func)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        InputBaselineXGradient.__init__(self, forward_func)
 
     def attribute(
         self,
