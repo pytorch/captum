@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import torch
 
-from captum.attr._core.aggregator import Aggregator, common_aggr
-from .helpers.utils import BaseTest, assertTensorAlmostEqual
+from captum.attr._core.aggregator import common_aggr
+from .helpers.utils import BaseTest
 
 
 class Test(BaseTest):
