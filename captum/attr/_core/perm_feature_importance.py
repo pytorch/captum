@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import torch
 
 from .feature_ablation import FeatureAblation
@@ -6,8 +7,12 @@ from .feature_ablation import FeatureAblation
 def permute_feature(x, feature_mask):
     n = x.size(0)
     perm = torch.randperm(n)
+    no_perm = torch.arange(n)
+    while (perm == no_perm).all():
+        perm = torch.randperm(n)
+
     out = x.clone()
-    feature_mask = feature_mask[-1]
+    feature_mask = feature_mask.squeeze(0)
     for i, j in enumerate(perm):
         out[i][feature_mask] = x[j][feature_mask]
 
@@ -22,15 +27,18 @@ class PermutationFeatureImportance(FeatureAblation):
     def attribute(
         self,
         inputs=None,
+        target=None,
         additional_forward_args=None,
         feature_mask=None,
         ablations_per_eval=1,
     ):
         attribs = super().attribute(
             inputs,
-            additional_forward_args=additional_forward_args,
-            ablations_per_eval=ablations_per_eval,
             baselines=None,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            feature_mask=feature_mask,
+            ablations_per_eval=ablations_per_eval,
         )
 
         if isinstance(attribs, tuple):
@@ -49,6 +57,7 @@ class PermutationFeatureImportance(FeatureAblation):
         for x, feature_mask in zip(feature_tensor, current_mask):
             # TODO: support multiple permutations
             output.append(self.perm_fn(x, feature_mask))
+
         output = torch.stack(output)
 
         return output, current_mask
