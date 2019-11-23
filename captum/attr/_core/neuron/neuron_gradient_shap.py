@@ -12,15 +12,14 @@ class NeuronGradientShap(NeuronAttribution):
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
+            layer (torch.nn.Module): Layer for which neuron attributions are computed.
+                          The output size of the attribute method matches the
+                          dimensions of the inputs or ouputs of the neuron with
+                          index `neuron_index` in this layer, depending on whether
+                          we attribute to the inputs or outputs of the neuron.
                           Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
+                          of the neurons in this layer, depending on which one is
+                          used for attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -53,9 +52,10 @@ class NeuronGradientShap(NeuronAttribution):
         gradients by randomly sampling from the distribution of baselines/references.
         It adds white noise to each input sample `n_samples` times, selects a
         random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of outputs
-        with respect to those selected random points. The final SHAP values represent
-        the expected values of gradients * (inputs - baselines).
+        path between the baseline and the input, and computes the gradient of the
+        neuron with index `neuron_index` with respect to those selected random
+        points. The final SHAP values represent the expected values of
+        `gradients * (inputs - baselines)`.
 
         GradientShap makes an assumption that the input features are independent
         and that the explanation model is linear, meaning that the explanations

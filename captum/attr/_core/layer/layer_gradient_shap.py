@@ -66,9 +66,10 @@ class LayerGradientShap(LayerAttribution, GradientShap):
         gradients by randomly sampling from the distribution of baselines/references.
         It adds white noise to each input sample `n_samples` times, selects a
         random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of outputs
-        with respect to those selected random points. The final SHAP values represent
-        the expected values of gradients * (inputs - baselines).
+        path between the baseline and the input, and computes the gradient of
+        outputs with respect to selected random points in chosen `layer`.
+        The final SHAP values represent the expected values of
+        `gradients * (layer_attr_inputs - layer_attr_baselines)`.
 
         GradientShap makes an assumption that the input features are independent
         and that the explanation model is linear, meaning that the explanations
@@ -177,7 +178,7 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                         tensor must correspond to the batch size. It will be
                         repeated for each `n_steps` for each randomly generated
                         input sample.
-                        Note that the gradients are not computed with respect
+                        Note that the attributions are not computed with respect
                         to these arguments.
                         Default: None
             return_convergence_delta (bool, optional): Indicates whether to return
@@ -198,10 +199,10 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                         Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*tensor*):
                         Attribution score computed based on GradientSHAP with
-                        respect to each input feature. Attributions will always be
-                        the same size as the provided layer's inputs or outputs,
+                        respect to layer's input or output. Attributions will always
+                        be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
                         of the layer. Since currently it is assumed that the inputs
                         and outputs of the layer must be single tensor, returned
@@ -350,5 +351,4 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             inputs,
             additional_forward_args,
             target,
-            True,
         )

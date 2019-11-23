@@ -397,53 +397,48 @@ class Test(BaseGPUTest):
             test_batches=False,
         )
 
-    def test_basic_gradient_shap(self):
+    def test_basic_gradient_shap_helper(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        net.eval()
+        self._basic_gradient_shap_helper(net, GradientShap, None)
 
-        inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
-        baselines = torch.randn(30, 3).cuda()
-        self._data_parallel_test_assert(
-            GradientShap,
-            net,
-            None,
-            inputs=inputs,
-            target=0,
-            baselines=baselines,
-            additional_forward_args=None,
-            test_batches=False,
-        )
+    def test_basic_gradient_shap_helper_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, GradientShap, None, True)
 
     def test_basic_neuron_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        net.eval()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, False)
 
-        inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
-        baselines = torch.randn(30, 3).cuda()
-        self._data_parallel_test_assert(
-            NeuronGradientShap,
-            net,
-            net.linear2,
-            inputs=inputs,
-            neuron_index=0,
-            baselines=baselines,
-            additional_forward_args=None,
-            test_batches=False,
-        )
+    def test_basic_neuron_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, True)
 
     def test_basic_layer_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        net.eval()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1,
+        )
 
+    def test_basic_layer_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1, True,
+        )
+
+    def _basic_gradient_shap_helper(
+        self, net, attr_method_class, layer, alt_device_ids=False
+    ):
+        net.eval()
         inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
         baselines = torch.randn(30, 3).cuda()
         self._data_parallel_test_assert(
-            LayerGradientShap,
+            attr_method_class,
             net,
-            net.linear1,
+            layer,
+            alt_device_ids=alt_device_ids,
             inputs=inputs,
-            baselines=baselines,
             target=0,
+            baselines=baselines,
             additional_forward_args=None,
             test_batches=False,
         )

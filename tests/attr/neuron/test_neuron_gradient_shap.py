@@ -21,12 +21,12 @@ class Test(BaseTest):
         inputs = torch.tensor([[1.0, 20.0, 10.0]])
         baselines = torch.randn(2, 3)
 
-        self._assert_attributions(model, model.linear1, (inputs,), (baselines,), 0)
+        self._assert_attributions(model, model.linear1, inputs, baselines, 0)
 
     def test_classification(self):
         def custom_baseline_fn(inputs):
-            num_in = inputs[0].shape[1]
-            return (torch.arange(0.0, num_in * 5.0).reshape(5, num_in),)
+            num_in = inputs.shape[1]
+            return torch.arange(0.0, num_in * 5.0).reshape(5, num_in)
 
         num_in = 40
         n_samples = 100
@@ -38,9 +38,7 @@ class Test(BaseTest):
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
         baselines = custom_baseline_fn
 
-        self._assert_attributions(
-            model, model.relu1, (inputs,), baselines, 1, n_samples
-        )
+        self._assert_attributions(model, model.relu1, inputs, baselines, 1, n_samples)
 
     def _assert_attributions(
         self, model, layer, inputs, baselines, neuron_ind, n_samples=5
@@ -54,7 +52,10 @@ class Test(BaseTest):
         if callable(baselines):
             baselines = baselines(inputs)
 
-        baselines = torch.mean(baselines[0], axis=0, keepdim=True)
-        attrs_ig = nig.attribute(inputs, neuron_ind, baselines=baselines)
-
-        assertTensorAlmostEqual(self, attrs_gs[0], attrs_ig[0], 0.5)
+        attrs_ig = []
+        for baseline in baselines:
+            attrs_ig.append(
+                nig.attribute(inputs, neuron_ind, baselines=baseline.unsqueeze(0))
+            )
+        attrs_ig = torch.stack(attrs_ig, axis=0).mean(axis=0)
+        assertTensorAlmostEqual(self, attrs_gs, attrs_ig, 0.5)

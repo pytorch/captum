@@ -13,6 +13,7 @@ from .._utils.common import (
     _format_input,
     _format_attributions,
     _format_additional_forward_args,
+    _format_tensor_into_tuples,
     _expand_additional_forward_args,
     _expand_target,
     ExpansionTypes,
@@ -282,6 +283,7 @@ class NoiseTunnel(Attribution):
 
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
+        attributions = _format_tensor_into_tuples(attributions)
 
         expected_attributions = []
         expected_attributions_sq = []

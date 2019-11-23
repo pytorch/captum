@@ -172,7 +172,7 @@ def _compute_conv_delta_and_format_attrs(
     end_point,
     additional_forward_args,
     target,
-    is_inputs_tuple,
+    is_inputs_tuple=False,
 ):
     if return_convergence_delta:
         # computes convergence error

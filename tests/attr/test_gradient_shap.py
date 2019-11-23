@@ -212,7 +212,10 @@ def _assert_attribution_delta(
     if not is_layer:
         for input, attribution in zip(inputs, attributions):
             test.assertEqual(attribution.shape, input.shape)
-    bsz = inputs[0].shape[0]
+    if isinstance(inputs, tuple):
+        bsz = inputs[0].shape[0]
+    else:
+        bsz = inputs.shape[0]
     test.assertEqual([bsz * n_samples], list(delta.shape))
 
     delta = torch.mean(delta.reshape(bsz, -1), dim=1)
