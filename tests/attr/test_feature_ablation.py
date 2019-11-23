@@ -183,7 +183,7 @@ class Test(BaseTest):
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         ablation = FeatureAblation(lambda inp: torch.sum(net(inp)).item())
         with self.assertRaises(AssertionError):
-            _ = ablation.attribute(inp, ablations_per_eval=2,)
+            _ = ablation.attribute(inp, ablations_per_eval=2)
 
     def test_single_ablation_batch_scalar_float(self):
         net = BasicModel_MultiLayer()
