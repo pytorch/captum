@@ -438,6 +438,7 @@ class Test(BaseGPUTest):
                 layer,
                 alt_device_ids=alt_device_ids,
                 inputs=inputs,
+                neuron_index=0,
                 baselines=baselines,
                 additional_forward_args=None,
                 test_batches=False,
