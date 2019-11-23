@@ -4,8 +4,6 @@ import unittest
 
 import torch
 
-from captum.attr._utils.attribution import NeuronAttribution
-
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.gradient_shap import GradientShap
 
