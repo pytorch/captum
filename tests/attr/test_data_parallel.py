@@ -4,6 +4,8 @@ import unittest
 
 import torch
 
+from captum.attr._utils.attribution import NeuronAttribution
+
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.gradient_shap import GradientShap
 
@@ -431,17 +433,29 @@ class Test(BaseGPUTest):
         net.eval()
         inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
         baselines = torch.randn(30, 3).cuda()
-        self._data_parallel_test_assert(
-            attr_method_class,
-            net,
-            layer,
-            alt_device_ids=alt_device_ids,
-            inputs=inputs,
-            target=0,
-            baselines=baselines,
-            additional_forward_args=None,
-            test_batches=False,
-        )
+        if isinstance(attr_method_class, NeuronAttribution):
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
+        else:
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                target=0,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
 
     def test_simple_feature_ablation(self):
         net = BasicModel_ConvNet().cuda()
