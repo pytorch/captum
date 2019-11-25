@@ -26,7 +26,9 @@ class Test(BaseTest):
         def check_features_are_permuted(inp, perm_inp, mask):
             unpermuted_features = mask.bitwise_not()
             self.assertTrue((inp[:, mask] != perm_inp[:, mask]).any())
-            self.assertTrue((inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all())
+            self.assertTrue(
+                (inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all()
+            )
 
         sizes_to_test = [(10,), (4, 5), (3, 4, 5), (6, 7, 8, 9)]
         for bs in [2, 10]:
