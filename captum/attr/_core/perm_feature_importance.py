@@ -26,11 +26,12 @@ class PermutationFeatureImportance(FeatureAblation):
 
     def attribute(
         self,
-        inputs=None,
+        inputs,
         target=None,
         additional_forward_args=None,
         feature_mask=None,
         ablations_per_eval=1,
+        abs_attributions=False
     ):
         attribs = super().attribute(
             inputs,
@@ -41,10 +42,12 @@ class PermutationFeatureImportance(FeatureAblation):
             ablations_per_eval=ablations_per_eval,
         )
 
-        if isinstance(attribs, tuple):
-            return tuple([torch.abs(a) for a in attribs])
+        f = torch.abs if abs_attributions else lambda x: x
 
-        return torch.abs(attribs)
+        if isinstance(attribs, tuple):
+            return tuple([f(a) for a in attribs])
+
+        return f(attribs)
 
     def _construct_ablated_input(
         self, feature_tensor, input_mask, baseline, start_feature, end_feature
