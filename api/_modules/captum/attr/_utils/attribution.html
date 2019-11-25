@@ -47,6 +47,15 @@
 <span class="sd">    to extend and override core `attribute` method.</span>
 <span class="sd">    """</span>
 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            forward_func (callable or torch.nn.Module): This can either be an instance</span>
+<span class="sd">                        of pytorch model or any modification of model's forward</span>
+<span class="sd">                        function.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+
 <div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the attribution values for each input tensor.</span>
@@ -144,8 +153,7 @@
 <span class="sd">                        of pytorch model or any modification of model's forward</span>
 <span class="sd">                        function.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">compute_gradients</span>
 
 <div class="viewcode-block" id="GradientAttribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.GradientAttribution.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
@@ -298,11 +306,10 @@
 <span class="sd">                        of pytorch model or any modification of model's forward</span>
 <span class="sd">                        function.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
+        <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Shared base class for LayerAttrubution and NeuronAttribution,</span>
 <span class="sd">    attribution types that require a model and a particular layer.</span>
@@ -321,9 +328,9 @@
 <span class="sd">                        applies a DataParallel model, which allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                        then it is not neccesary to provide this argument.</span>
+<span class="sd">                        then it is not necessary to provide this argument.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span>
 
@@ -349,9 +356,9 @@
 <span class="sd">                        applies a DataParallel model, which allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                        then it is not neccesary to provide this argument.</span>
+<span class="sd">                        then it is not necessary to provide this argument.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
+        <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.LayerAttribution.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">interpolate_mode</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -409,9 +416,9 @@
 <span class="sd">                        applies a DataParallel model, which allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
 <span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                        then it is not neccesary to provide this argument.</span>
+<span class="sd">                        then it is not necessary to provide this argument.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
+        <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>

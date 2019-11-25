@@ -31,7 +31,10 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_format_callable_baseline</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">_format_callable_baseline</span><span class="p">,</span>
+    <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="k">import</span> <span class="n">NoiseTunnel</span>
 
@@ -44,7 +47,7 @@
 <span class="sd">            forward_func (function): The forward function of the model or</span>
 <span class="sd">                       any modification of it</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GradientShap.attribute"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.GradientShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -60,7 +63,8 @@
 <span class="sd">        Implements gradient SHAP based on the implementation from SHAP's primary</span>
 <span class="sd">        author. For reference, please, view:</span>
 
-<span class="sd">        https://github.com/slundberg/shap/#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
+<span class="sd">        https://github.com/slundberg/shap\</span>
+<span class="sd">        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
 
 <span class="sd">        A Unified Approach to Interpreting Model Predictions</span>
 <span class="sd">        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions</span>
@@ -90,10 +94,10 @@
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which integrated</span>
-<span class="sd">                        gradients are computed. If forward_func takes a single</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which SHAP attribution</span>
+<span class="sd">                        values are computed. If `forward_func` takes a single</span>
 <span class="sd">                        tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        If `forward_func` takes multiple tensors as input, a tuple</span>
 <span class="sd">                        of the input tensors should be provided. It is assumed</span>
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
@@ -225,6 +229,7 @@
 
 <span class="sd">        """</span>
         <span class="n">input_min_baseline_x_grad</span> <span class="o">=</span> <span class="n">InputBaselineXGradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">input_min_baseline_x_grad</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span>
 
         <span class="n">nt</span> <span class="o">=</span> <span class="n">NoiseTunnel</span><span class="p">(</span><span class="n">input_min_baseline_x_grad</span><span class="p">)</span>
 
@@ -258,7 +263,7 @@
 <span class="sd">            forward_func (function): The forward function of the model or</span>
 <span class="sd">                       any modification of it</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InputBaselineXGradient.attribute"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -268,20 +273,6 @@
         <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="k">def</span> <span class="nf">scale_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">):</span>
-            <span class="c1"># batch size</span>
-            <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">inp_shape_wo_bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">inp_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inp_shape_wo_bsz</span><span class="p">))</span>
-
-            <span class="c1"># expand and reshape the indices</span>
-            <span class="n">rand_coefficient</span> <span class="o">=</span> <span class="n">rand_coefficient</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">inp_shape</span><span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
-
-            <span class="n">input_baseline_scaled</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">rand_coefficient</span> <span class="o">*</span> <span class="nb">input</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rand_coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">baseline</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">input_baseline_scaled</span>
-
         <span class="c1"># Keeps track whether original input is a tuple or not before</span>
         <span class="c1"># converting it into a tuple.</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
@@ -293,7 +284,7 @@
         <span class="p">)</span>
 
         <span class="n">input_baseline_scaled</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">scale_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">)</span>
             <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">grads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span>
@@ -308,20 +299,33 @@
             <span class="k">for</span> <span class="n">input_baseline_diff</span><span class="p">,</span> <span class="n">grad</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_baseline_diffs</span><span class="p">,</span> <span class="n">grads</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
-                <span class="n">attributions</span><span class="p">,</span>
-                <span class="n">baselines</span><span class="p">,</span>
-                <span class="n">inputs</span><span class="p">,</span>
-                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">return_convergence_delta</span><span class="p">,</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">,</span>
+            <span class="n">is_inputs_tuple</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="InputBaselineXGradient.has_convergence_delta"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">True</span></div></div>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_scale_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">):</span>
+        <span class="c1"># batch size</span>
+        <span class="n">bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">inp_shape_wo_bsz</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">inp_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">inp_shape_wo_bsz</span><span class="p">))</span>
+
+        <span class="c1"># expand and reshape the indices</span>
+        <span class="n">rand_coefficient</span> <span class="o">=</span> <span class="n">rand_coefficient</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">inp_shape</span><span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+
+        <span class="n">input_baseline_scaled</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">rand_coefficient</span> <span class="o">*</span> <span class="nb">input</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rand_coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">baseline</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">input_baseline_scaled</span></div>
 </pre></div>
 </div>
 </div>

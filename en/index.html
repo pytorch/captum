@@ -57,10 +57,11 @@ baseline = torch.zeros(<span class="hljs-number">2</span>, <span class="hljs-num
 </code></pre>
 </span></div></li><li><h4>Select algorithm to instantiate and apply (Integrated Gradients in this example):</h4><div><span><pre><code class="hljs css language-python">ig = IntegratedGradients(model)
 attributions, delta = ig.attribute(input, baseline, target=<span class="hljs-number">0</span>, return_convergence_delta=<span class="hljs-literal">True</span>)
-print(<span class="hljs-string">'IG Attributions: '</span>, attributions, <span class="hljs-string">' Convergence Delta: '</span>, delta)
+print(<span class="hljs-string">'IG Attributions:'</span>, attributions)
+print(<span class="hljs-string">'Convergence Delta:'</span>, delta)
 </code></pre>
-</span></div></li><li><h4>View Output:</h4><div><span><pre><code class="hljs css language-python">IG Attributions:  tensor([[<span class="hljs-number">-0.5922</span>, <span class="hljs-number">-1.5497</span>, <span class="hljs-number">-1.0067</span>],
-                          [ <span class="hljs-number">0.0000</span>, <span class="hljs-number">-0.2219</span>, <span class="hljs-number">-5.1991</span>]])
+</span></div></li><li><h4>View Output:</h4><div><span><pre><code class="hljs css language-python">IG Attributions: tensor([[<span class="hljs-number">-0.5922</span>, <span class="hljs-number">-1.5497</span>, <span class="hljs-number">-1.0067</span>],
+                         [ <span class="hljs-number">0.0000</span>, <span class="hljs-number">-0.2219</span>, <span class="hljs-number">-5.1991</span>]])
 Convergence Delta: tensor([<span class="hljs-number">2.3842e-07</span>, <span class="hljs-number">-4.7684e-07</span>])
 </code></pre>
 </span></div></li></ol></div></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>

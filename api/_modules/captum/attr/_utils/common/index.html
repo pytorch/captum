@@ -191,6 +191,30 @@
     <span class="k">return</span> <span class="n">attributions</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">attributions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
+<span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+    <span class="n">attr_algo</span><span class="p">,</span>
+    <span class="n">return_convergence_delta</span><span class="p">,</span>
+    <span class="n">attributions</span><span class="p">,</span>
+    <span class="n">start_point</span><span class="p">,</span>
+    <span class="n">end_point</span><span class="p">,</span>
+    <span class="n">additional_forward_args</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">,</span>
+    <span class="n">is_inputs_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
+        <span class="c1"># computes convergence error</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">attr_algo</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
+            <span class="n">attributions</span><span class="p">,</span>
+            <span class="n">start_point</span><span class="p">,</span>
+            <span class="n">end_point</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Takes a tuple of tensors as input and returns a tuple that has the same</span>
@@ -240,11 +264,12 @@
 
 
 <span class="k">def</span> <span class="nf">_select_targets</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-    <span class="n">num_examples</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">output</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+
+    <span class="n">num_examples</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
         <span class="k">return</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="nb">int</span><span class="p">):</span>

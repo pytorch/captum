@@ -445,9 +445,16 @@ to be removed after interpretation is finished.</p></li>
 <span id="attribution"></span><h2>Attribution<a class="headerlink" href="#module-captum.attr._utils.attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="captum.attr._utils.attribution.Attribution">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">Attribution</code><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.attribution.</code><code class="sig-name descname">Attribution</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>All attribution algorithms extend this class. It enforces its child classes
 to extend and override core <cite>attribute</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em><em> or </em><a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+ee77ccb ))"><em>torch.nn.Module</em></a>) – This can either be an instance
+of pytorch model or any modification of model’s forward
+function.</p>
+</dd>
+</dl>
 <dl class="method">
 <dt id="captum.attr._utils.attribution.Attribution.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.attribution.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
@@ -568,7 +575,7 @@ Output size of attribute matches that of layer output.</p></li>
 applies a DataParallel model, which allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
-then it is not neccesary to provide this argument.</p></li>
+then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
@@ -639,7 +646,7 @@ Output size of attribute matches that of layer output.</p></li>
 applies a DataParallel model, which allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
-then it is not neccesary to provide this argument.</p></li>
+then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>

@@ -45,6 +45,7 @@
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_tensorize_baseline</span><span class="p">,</span>
     <span class="n">_call_custom_attribution_func</span><span class="p">,</span>
+    <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
     <span class="n">ExpansionTypes</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
@@ -69,7 +70,7 @@
 
 <span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="sd">"""Although input model is of type `nn.DataParallel` it will run</span>
@@ -307,7 +308,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_hooks</span><span class="p">()</span>
 
         <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
             <span class="n">return_convergence_delta</span><span class="p">,</span>
             <span class="n">attributions</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
@@ -316,29 +318,6 @@
             <span class="n">target</span><span class="p">,</span>
             <span class="n">is_inputs_tuple</span><span class="p">,</span>
         <span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">return_convergence_delta</span><span class="p">,</span>
-        <span class="n">attributions</span><span class="p">,</span>
-        <span class="n">start_point</span><span class="p">,</span>
-        <span class="n">end_point</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="p">,</span>
-        <span class="n">target</span><span class="p">,</span>
-        <span class="n">is_inputs_tuple</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-            <span class="c1"># computes convergence error</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
-                <span class="n">attributions</span><span class="p">,</span>
-                <span class="n">start_point</span><span class="p">,</span>
-                <span class="n">end_point</span><span class="p">,</span>
-                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
-                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_is_non_linear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -451,7 +430,7 @@
 
 <span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">        """</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">DeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DeepLiftShap.attribute"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
