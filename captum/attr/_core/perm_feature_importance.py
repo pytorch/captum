@@ -14,7 +14,7 @@ def permute_feature(x, feature_mask):
     out = x.clone()
     feature_mask = feature_mask.squeeze(0)
     for i, j in enumerate(perm):
-        out[i][feature_mask] = x[j][feature_mask]
+        out[i, feature_mask] = x[j, feature_mask]
 
     return out
 

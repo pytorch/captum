@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import random
+
 import torch
 import torch.nn as nn
 from captum.attr._core.perm_feature_importance import (
@@ -21,22 +23,42 @@ class MultiplyNet(nn.Module):
 
 class Test(BaseTest):
     def test_perm_fn(self):
-        for bs in [2, 10, 100]:
-            inp = torch.randn(bs, 50)
+        def check_features_are_permuted(inp, perm_inp, mask):
+            unpermuted_features = mask.bitwise_not()
+            self.assertTrue((inp[:, mask] != perm_inp[:, mask]).any())
+            self.assertTrue((inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all())
 
-            for i in range(inp.size(1)):
-                fm = torch.zeros_like(inp[0])
-                fm[i] = 1
-                fm = fm.bool()
+        sizes_to_test = [(10,), (4, 5), (3, 4, 5), (6, 7, 8, 9)]
+        for bs in [2, 10]:
+            for si in sizes_to_test:
+                inp = torch.randn((bs,) + si)
+                flat_mask = torch.zeros_like(inp[0]).flatten().bool()
 
-                perm_inp = permute_feature(inp, fm)
+                # test random set of single features
+                num_features = inp.numel() // bs
+                num_features_to_test = min(num_features, random.randint(2, 30))
+                for _ in range(num_features_to_test):
+                    feature_idx = random.randint(0, num_features - 1)
+                    flat_mask[feature_idx] = 1
 
-                self.assertTrue((perm_inp[:, i] != inp[:, i]).any())
-                for j in range(inp.size(1)):
-                    if i == j:
-                        continue
+                    # ensure we only set one feature to be masked
+                    self.assertTrue(torch.sum(flat_mask) == 1)
 
-                    self.assertTrue((perm_inp[:, j] == inp[:, j]).all())
+                    # permute the feature
+                    mask = flat_mask.view_as(inp[0])
+                    perm_inp = permute_feature(inp, mask)
+                    check_features_are_permuted(inp, perm_inp, mask)
+
+                    flat_mask[feature_idx] = 0
+
+                # test random set of features
+                for _ in range(random.randint(10, 20)):
+                    mask = torch.zeros_like(inp[0])
+                    while mask.sum() == 0:
+                        mask = torch.randint_like(inp[0], 0, 2).bool()
+
+                    perm_inp = permute_feature(inp, mask)
+                    check_features_are_permuted(inp, perm_inp, mask)
 
     def test_single_input(self):
         batch_size = 30
