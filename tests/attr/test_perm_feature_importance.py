@@ -23,13 +23,13 @@ class Test(BaseTest):
             )
 
         sizes_to_test = [(10,), (4, 5), (3, 4, 5), (6, 7, 8, 9)]
-        for bs in [2, 10]:
-            for si in sizes_to_test:
-                inp = torch.randn((bs,) + si)
+        for batch_size in [2, 10]:
+            for inp_size in sizes_to_test:
+                inp = torch.randn((batch_size,) + inp_size)
                 flat_mask = torch.zeros_like(inp[0]).flatten().bool()
 
                 # test random set of single features
-                num_features = inp.numel() // bs
+                num_features = inp.numel() // batch_size
                 num_features_to_test = min(num_features, random.randint(2, 30))
                 for _ in range(num_features_to_test):
                     feature_idx = random.randint(0, num_features - 1)
