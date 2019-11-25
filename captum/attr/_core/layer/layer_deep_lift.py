@@ -43,8 +43,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             )
             model = model.module
 
-        super(LayerAttribution, self).__init__(model, layer)
-        super(DeepLift, self).__init__(model)
+        LayerAttribution.__init__(self, model, layer)
+        DeepLift.__init__(self, model)
 
     def attribute(
         self,
@@ -308,8 +308,8 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           Currently, it is assumed that both inputs and ouputs of
                           the layer can only be a single tensor.
         """
-        super(DeepLiftShap, self).__init__(model)
-        super(LayerDeepLift, self).__init__(model, layer)
+        LayerDeepLift.__init__(self, model, layer)
+        DeepLiftShap.__init__(self, model)
 
     def attribute(
         self,

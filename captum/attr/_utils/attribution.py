@@ -20,6 +20,15 @@ class Attribution:
     to extend and override core `attribute` method.
     """
 
+    def __init__(self, forward_func):
+        r"""
+        Args:
+            forward_func (callable or torch.nn.Module): This can either be an instance
+                        of pytorch model or any modification of model's forward
+                        function.
+        """
+        self.forward_func = forward_func
+
     def attribute(self, inputs, **kwargs):
         r"""
         This method computes and returns the attribution values for each input tensor.
@@ -117,8 +126,7 @@ class GradientAttribution(Attribution):
                         of pytorch model or any modification of model's forward
                         function.
         """
-        super().__init__()
-        self.forward_func = forward_func
+        Attribution.__init__(self, forward_func)
         self.gradient_func = compute_gradients
 
     def compute_convergence_delta(
@@ -271,11 +279,10 @@ class PerturbationAttribution(Attribution):
                         of pytorch model or any modification of model's forward
                         function.
         """
-        super().__init__()
-        self.forward_func = forward_func
+        Attribution.__init__(self, forward_func)
 
 
-class InternalAttribution(GradientAttribution):
+class InternalAttribution(Attribution):
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
@@ -294,9 +301,9 @@ class InternalAttribution(GradientAttribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func)
+        Attribution.__init__(self, forward_func)
         self.layer = layer
         self.device_ids = device_ids
 
@@ -322,9 +329,9 @@ class LayerAttribution(InternalAttribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     def interpolate(layer_attribution, interpolate_dims, interpolate_mode="nearest"):
         r"""
@@ -382,9 +389,9 @@ class NeuronAttribution(InternalAttribution):
                         applies a DataParallel model, which allows reconstruction of
                         intermediate outputs from batched results across devices.
                         If forward_func is given as the DataParallel model itself,
-                        then it is not neccesary to provide this argument.
+                        then it is not necessary to provide this argument.
         """
-        super().__init__(forward_func, layer, device_ids)
+        InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
     def attribute(self, inputs, neuron_index, **kwargs):
         r"""

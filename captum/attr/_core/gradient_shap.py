@@ -17,7 +17,7 @@ class GradientShap(GradientAttribution):
             forward_func (function): The forward function of the model or
                        any modification of it
         """
-        super().__init__(forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -231,7 +231,7 @@ class InputBaselineXGradient(GradientAttribution):
             forward_func (function): The forward function of the model or
                        any modification of it
         """
-        super().__init__(forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,

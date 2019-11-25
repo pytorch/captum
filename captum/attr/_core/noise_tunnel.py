@@ -38,7 +38,7 @@ class NoiseTunnel(Attribution):
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
 
-        super().__init__()
+        Attribution.__init__(self, self.attribution_method.forward_func)
 
     def attribute(
         self,

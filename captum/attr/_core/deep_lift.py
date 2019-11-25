@@ -42,7 +42,7 @@ class DeepLift(GradientAttribution):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model)
+        GradientAttribution.__init__(self, model)
         if isinstance(model, nn.DataParallel):
             warnings.warn(
                 """Although input model is of type `nn.DataParallel` it will run
@@ -424,7 +424,7 @@ class DeepLiftShap(DeepLift):
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        super().__init__(model)
+        DeepLift.__init__(self, model)
 
     def attribute(
         self,
