@@ -4,6 +4,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class MultiplyModel2Input(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y):
+        return x[:, 0] * x[:, 1] + y[:, 0] * y[:, 1]
+
+
 class BasicModel(nn.Module):
     def __init__(self):
         super().__init__()

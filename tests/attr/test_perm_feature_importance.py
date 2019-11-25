@@ -9,16 +9,8 @@ from captum.attr._core.perm_feature_importance import (
     permute_feature,
 )
 
-from .helpers.basic_models import BasicModel
+from .helpers.basic_models import BasicModel, MultiplyModel2Input
 from .helpers.utils import BaseTest
-
-
-class MultiplyNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x, y):
-        return x[:, 0] * x[:, 1] + y[:, 0] * y[:, 1]
 
 
 class Test(BaseTest):
@@ -84,7 +76,7 @@ class Test(BaseTest):
     def test_multi_input(self):
         batch_size = 5
         input_size = (2,)
-        net = MultiplyNet()
+        net = MultiplyModel2Input()
 
         labels = torch.randn(batch_size)
 
