@@ -171,12 +171,13 @@ scores to each input feature with respect to the first target output.
 ```python
 ig = IntegratedGradients(model)
 attributions, delta = ig.attribute(input, baseline, target=0, return_convergence_delta=True)
-print('IG Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('IG Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Output:
 ```
-IG Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
-                          [ 0.0000, -0.2219, -5.1991]])
+IG Attributions: tensor([[-0.5922, -1.5497, -1.0067],
+                         [ 0.0000, -0.2219, -5.1991]])
 Convergence Delta: tensor([2.3842e-07, -4.7684e-07])
 ```
 The algorithm outputs an attribution score for each input element and a
@@ -212,12 +213,13 @@ gs = GradientShap(model)
 baseline_dist = torch.randn(10, 3) * 0.001
 attributions, delta = gs.attribute(input, stdevs=0.09, n_samples=4, baselines=baseline_dist,
                                    target=0, return_convergence_delta=True)
-print('GradientShap Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('GradientShap Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Output
 ```
-GradientShap Attributions:  tensor([[-0.1542, -1.6229, -1.5835],
-                                    [-0.3916, -0.2836, -4.6851]])
+GradientShap Attributions: tensor([[-0.1542, -1.6229, -1.5835],
+                                   [-0.3916, -0.2836, -4.6851]])
 Convergence Delta: tensor([ 0.0000, -0.0005, -0.0029, -0.0084, -0.0087, -0.0405,  0.0000, -0.0084])
 
 ```
@@ -237,12 +239,13 @@ For more details on alternative implementations, please see the [DeepLift paper]
 ```python
 dl = DeepLift(model)
 attributions, delta = dl.attribute(input, baseline, target=0, return_convergence_delta=True)
-print('DeepLift Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('DeepLift Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Output
 ```
-DeepLift Attributions:  tensor([[-0.5922, -1.5497, -1.0067],
-                                [ 0.0000, -0.2219, -5.1991])
+DeepLift Attributions: tensor([[-0.5922, -1.5497, -1.0067],
+                               [ 0.0000, -0.2219, -5.1991])
 Convergence Delta: tensor([0., 0.])
 ```
 `DeepLift` assigns similar attribution scores as `IntegratedGradients` to inputs,
@@ -263,16 +266,17 @@ as for `GradientShap`.
 ```python
 dl = DeepLiftShap(model)
 attributions, delta = dl.attribute(input, baseline_dist, target=0, return_convergence_delta=True)
-print('DeepLiftSHAP Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('DeepLiftSHAP Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Output
 ```
 DeepLiftShap Attributions: tensor([[-5.9169e-01, -1.5491e+00, -1.0076e+00],
-        [-4.7101e-03, -2.2300e-01, -5.1926e+00]], grad_fn=<MeanBackward1>)
-Convergence Delta:  tensor([-4.6120e-03, -1.6267e-03, -5.1045e-04, -1.4184e-03, -6.8886e-03,
-        -2.2224e-02,  0.0000e+00, -2.8790e-02, -4.1285e-03, -2.7295e-02,
-        -3.2349e-03, -1.6265e-03, -4.7684e-07, -1.4191e-03, -6.8889e-03,
-        -2.2224e-02,  0.0000e+00, -2.4792e-02, -4.1289e-03, -2.7296e-02])
+                                   [-4.7101e-03, -2.2300e-01, -5.1926e+00]], grad_fn=<MeanBackward1>)
+Convergence Delta: tensor([-4.6120e-03, -1.6267e-03, -5.1045e-04, -1.4184e-03, -6.8886e-03,
+                           -2.2224e-02,  0.0000e+00, -2.8790e-02, -4.1285e-03, -2.7295e-02,
+                           -3.2349e-03, -1.6265e-03, -4.7684e-07, -1.4191e-03, -6.8889e-03,
+                           -2.2224e-02,  0.0000e+00, -2.4792e-02, -4.1289e-03, -2.7296e-02])
 ```
 `DeepLiftShap` uses `DeepLift` to compute attribution score for each
 input-baseline pair and averages it for each input across all baselines.
@@ -297,13 +301,14 @@ ig = IntegratedGradients(model)
 nt = NoiseTunnel(ig)
 attributions, delta = nt.attribute(input, nt_type='smoothgrad', stdevs=0.02, n_samples=4,
       baselines=baseline, target=0, return_convergence_delta=True)
-print('IG + SmoothGrad Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('IG + SmoothGrad Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Output
 ```
-IG + SmoothGrad Attributions:  tensor([[-0.4574, -1.5493, -1.0893],
-                                       [ 0.0000, -0.2647, -5.1619]])
-Convergence Delta:  tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00,
+IG + SmoothGrad Attributions: tensor([[-0.4574, -1.5493, -1.0893],
+                                      [ 0.0000, -0.2647, -5.1619]])
+Convergence Delta: tensor([ 0.0000e+00,  2.3842e-07,  0.0000e+00, -2.3842e-07,  0.0000e+00,
         -4.7684e-07,  0.0000e+00, -4.7684e-07])
 
 ```
@@ -328,12 +333,12 @@ In this case, we choose to analyze the first neuron in the linear layer.
 ```python
 nc = NeuronConductance(model, model.lin1)
 attributions = nc.attribute(input, neuron_index=1, target=0)
-print('Neuron Attributions: ', attributions)
+print('Neuron Attributions:', attributions)
 ```
 Output
 ```
-Neuron Attributions:  tensor([[ 0.0000,  0.0000,  0.0000],
-                              [ 1.3358,  0.0000, -1.6811]])
+Neuron Attributions: tensor([[ 0.0000,  0.0000,  0.0000],
+                             [ 1.3358,  0.0000, -1.6811]])
 ```
 
 Layer conductance shows the importance of neurons for a layer and given input.
@@ -345,13 +350,14 @@ but shows the importance of each neuron in selected layer.
 ```python
 lc = LayerConductance(model, model.lin1)
 attributions, delta = lc.attribute(input, baselines=baseline, target=0, return_convergence_delta=True)
-print('Layer Attributions: ', attributions, ' Convergence Delta: ', delta)
+print('Layer Attributions:', attributions)
+print('Convergence Delta:', delta)
 ```
 Outputs
 ```
 Layer Attributions: tensor([[ 0.0000,  0.0000, -3.0856],
                             [ 0.0000, -0.3488, -4.9638]], grad_fn=<SumBackward1>)
-Convergence Delta:  tensor([0.0630, 0.1084])
+Convergence Delta: tensor([0.0630, 0.1084])
 ```
 
 Similar to other attribution algorithms that return convergence delta, `LayerConductance`
