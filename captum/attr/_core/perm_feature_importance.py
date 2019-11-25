@@ -6,6 +6,8 @@ from .feature_ablation import FeatureAblation
 
 def permute_feature(x, feature_mask):
     n = x.size(0)
+    assert n > 1
+
     perm = torch.randperm(n)
     no_perm = torch.arange(n)
     while (perm == no_perm).all():
