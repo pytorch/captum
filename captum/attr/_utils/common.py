@@ -164,6 +164,30 @@ def _format_attributions(is_inputs_tuple, attributions):
     return attributions if is_inputs_tuple else attributions[0]
 
 
+def _compute_conv_delta_and_format_attrs(
+    attr_algo,
+    return_convergence_delta,
+    attributions,
+    start_point,
+    end_point,
+    additional_forward_args,
+    target,
+    is_inputs_tuple=False,
+):
+    if return_convergence_delta:
+        # computes convergence error
+        delta = attr_algo.compute_convergence_delta(
+            attributions,
+            start_point,
+            end_point,
+            additional_forward_args=additional_forward_args,
+            target=target,
+        )
+        return _format_attributions(is_inputs_tuple, attributions), delta
+    else:
+        return _format_attributions(is_inputs_tuple, attributions)
+
+
 def _zeros(inputs):
     r"""
     Takes a tuple of tensors as input and returns a tuple that has the same

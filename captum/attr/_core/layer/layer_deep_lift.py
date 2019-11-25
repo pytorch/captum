@@ -18,6 +18,7 @@ from ..._utils.common import (
     _validate_input,
     _tensorize_baseline,
     _call_custom_attribution_func,
+    _compute_conv_delta_and_format_attrs,
 )
 
 
@@ -192,7 +193,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*tensor*):
                 Attribution score computed based on DeepLift's rescale rule with
                 respect to layer's inputs or outputs. Attributions will always be the
                 same size as the provided layer's inputs or outputs, depending on
@@ -244,9 +245,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        # Fixme later: we need to do this because `_forward_layer_eval`
-        # always returns a tensor
-        attr_baselines = (attr_baselines,)
 
         # remove forward hook set for baselines
         for forward_handles_ref in self.forward_handles_refs:
@@ -261,8 +259,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        # Fixme later: we need to do this because
-        # `compute_layer_gradients_and_eval` always returns a tensor
+        # Fixme later: we need to do this because `compute_layer_gradients_and_eval`
+        # and `_forward_layer_eval` always returns a tensor
+        attr_baselines = (attr_baselines,)
         attr_inputs = (attr_inputs,)
         gradients = (gradients,)
 
@@ -283,7 +282,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         undo_gradient_requirements(inputs, gradient_mask)
 
-        return self._compute_conv_delta_and_format_attrs(
+        return _compute_conv_delta_and_format_attrs(
+            self,
             return_convergence_delta,
             attributions,
             baselines,
@@ -449,7 +449,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            - **attributions** (*tensor*):
                         Attribution score computed based on DeepLift's rescale rule
                         with respect to layer's inputs or outputs. Attributions
                         will always be the same size as the provided layer's inputs

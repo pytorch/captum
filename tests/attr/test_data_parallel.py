@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.gradient_shap import GradientShap
 
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -12,6 +13,7 @@ from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
@@ -23,6 +25,7 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -394,6 +397,65 @@ class Test(BaseGPUTest):
             test_batches=False,
         )
 
+    def test_basic_gradient_shap_helper(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, GradientShap, None)
+
+    def test_basic_gradient_shap_helper_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, GradientShap, None, True)
+
+    def test_basic_neuron_gradient_shap(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, False)
+
+    def test_basic_neuron_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, True)
+
+    def test_basic_layer_gradient_shap(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1,
+        )
+
+    def test_basic_layer_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1, True,
+        )
+
+    def _basic_gradient_shap_helper(
+        self, net, attr_method_class, layer, alt_device_ids=False
+    ):
+        net.eval()
+        inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
+        baselines = torch.randn(30, 3).cuda()
+        if attr_method_class == NeuronGradientShap:
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                neuron_index=0,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
+        else:
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                target=0,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
+
     def test_simple_feature_ablation(self):
         net = BasicModel_ConvNet().cuda()
         inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
@@ -454,6 +516,7 @@ class Test(BaseGPUTest):
                     )
                 else:
                     attributions_orig = attr_orig.attribute(**kwargs)
+            self.setUp()
             if batch_size:
                 attributions_dp = attr_dp.attribute(
                     internal_batch_size=batch_size, **kwargs

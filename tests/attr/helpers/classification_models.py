@@ -32,7 +32,7 @@ class SoftmaxModel(nn.Module):
         https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
-    def __init__(self, num_in, num_hidden, num_out):
+    def __init__(self, num_in, num_hidden, num_out, inplace=False):
         super().__init__()
         self.num_in = num_in
         self.num_hidden = num_hidden
@@ -40,8 +40,8 @@ class SoftmaxModel(nn.Module):
         self.lin1 = nn.Linear(num_in, num_hidden)
         self.lin2 = nn.Linear(num_hidden, num_hidden)
         self.lin3 = nn.Linear(num_hidden, num_out)
-        self.relu1 = nn.ReLU()
-        self.relu2 = nn.ReLU()
+        self.relu1 = nn.ReLU(inplace=inplace)
+        self.relu2 = nn.ReLU(inplace=inplace)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, input):

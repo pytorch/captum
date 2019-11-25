@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
+
 import torch
 
 import numpy as np
 
-from .._utils.attribution import GradientAttribution
-from .._utils.common import (
+from ..._utils.attribution import LayerAttribution
+from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_eval
+
+from ..gradient_shap import GradientShap, InputBaselineXGradient
+from ..._utils.common import (
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
 
-from .noise_tunnel import NoiseTunnel
+from ..noise_tunnel import NoiseTunnel
 
 
-class GradientShap(GradientAttribution):
-    def __init__(self, forward_func):
+class LayerGradientShap(LayerAttribution, GradientShap):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model or
-                       any modification of it
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
+            layer (torch.nn.Module): Layer for which attributions are computed.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution can only be a single tensor.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                          applies a DataParallel model. This allows reconstruction of
+                          intermediate outputs from batched results across devices.
+                          If forward_func is given as the DataParallel model itself,
+                          then it is not necessary to provide this argument.
         """
-        GradientAttribution.__init__(self, forward_func)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        GradientShap.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -31,10 +50,11 @@ class GradientShap(GradientAttribution):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
+        attribute_to_layer_input=False,
     ):
         r"""
-        Implements gradient SHAP based on the implementation from SHAP's primary
-        author. For reference, please, view:
+        Implements gradient SHAP for layer based on the implementation from SHAP's
+        primary author. For reference, please, view:
 
         https://github.com/slundberg/shap\
         #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
@@ -46,9 +66,10 @@ class GradientShap(GradientAttribution):
         gradients by randomly sampling from the distribution of baselines/references.
         It adds white noise to each input sample `n_samples` times, selects a
         random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of outputs
-        with respect to those selected random points. The final SHAP values represent
-        the expected values of gradients * (inputs - baselines).
+        path between the baseline and the input, and computes the gradient of
+        outputs with respect to selected random points in chosen `layer`.
+        The final SHAP values represent the expected values of
+        `gradients * (layer_attr_inputs - layer_attr_baselines)`.
 
         GradientShap makes an assumption that the input features are independent
         and that the explanation model is linear, meaning that the explanations
@@ -67,9 +88,10 @@ class GradientShap(GradientAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which SHAP attribution
-                        values are computed. If `forward_func` takes a single
-                        tensor as input, a single input tensor should be provided.
+            inputs (tensor or tuple of tensors):  Input which are used to compute
+                        SHAP attribution values for a given `layer`. If `forward_func`
+                        takes a single tensor as input, a single input tensor should
+                        be provided.
                         If `forward_func` takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
@@ -99,7 +121,7 @@ class GradientShap(GradientAttribution):
                                 for corresponding input tensor.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
+                            argument and either returns a single tensor, scalar
                             or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
@@ -156,7 +178,7 @@ class GradientShap(GradientAttribution):
                         tensor must correspond to the batch size. It will be
                         repeated for each `n_steps` for each randomly generated
                         input sample.
-                        Note that the gradients are not computed with respect
+                        Note that the attributions are not computed with respect
                         to these arguments.
                         Default: None
             return_convergence_delta (bool, optional): Indicates whether to return
@@ -164,21 +186,32 @@ class GradientShap(GradientAttribution):
                         is set to True convergence delta will be returned in
                         a tuple following attributions.
                         Default: False
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attribution with respect to the layer input
+                        or output. If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to
+                        layer input, otherwise it will be computed with respect
+                        to layer output.
+                        Note that currently it is assumed that either the input
+                        or the output of internal layer, depending on whether we
+                        attribute to the input or output, is a single tensor.
+                        Support for multiple tensors will be added later.
+                        Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor* or tuple of *tensors*):
-                        Attribution score computed based on GradientSHAP with respect
-                        to each input feature. Attributions will always be
-                        the same size as the provided inputs, with each value
-                        providing the attribution of the corresponding input index.
-                        If a single tensor is provided as inputs, a single tensor is
-                        returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+            - **attributions** (*tensor*):
+                        Attribution score computed based on GradientSHAP with
+                        respect to layer's input or output. Attributions will always
+                        be the same size as the provided layer's inputs or outputs,
+                        depending on whether we attribute to the inputs or outputs
+                        of the layer. Since currently it is assumed that the inputs
+                        and outputs of the layer must be single tensor, returned
+                        attributions have the shape of that tensor.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
                         must be very close to the total sum of the attributions
-                        based on GradientSHAP.
+                        based on layer gradient SHAP.
                         Delta is calculated for each example in the input after adding
                         `n_samples` times gaussian noise to each of them. Therefore,
                         the dimensionality of the deltas tensor is equal to the
@@ -191,18 +224,20 @@ class GradientShap(GradientAttribution):
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
                 >>> # and returns an Nx10 tensor of class probabilities.
                 >>> net = ImageClassifier()
-                >>> gradient_shap = GradientShap(net)
+                >>> layer_grad_shap = LayerGradientShap(net, net.linear1)
                 >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
                 >>> # choosing baselines randomly
                 >>> baselines = torch.randn(20, 3, 32, 32)
-                >>> # Computes gradient shap for the input
-                >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = gradient_shap.attribute(input, baselines,
-                                                                 target=5)
+                >>> # Computes gradient SHAP of output layer when target is equal
+                >>> # to 0 with respect to the layer linear1.
+                >>> # Attribution size matches to the size of the linear1 layer
+                >>> attribution = layer_grad_shap.attribute(input, baselines,
+                                                            target=5)
 
         """
-        input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
-        input_min_baseline_x_grad.gradient_func = self.gradient_func
+        input_min_baseline_x_grad = LayerInputBaselineXGradient(
+            self.forward_func, self.layer, device_ids=self.device_ids
+        )
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
 
@@ -220,23 +255,36 @@ class GradientShap(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
             return_convergence_delta=return_convergence_delta,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
 
         return attributions
 
-    def has_convergence_delta(self):
-        return True
 
-
-class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func):
+class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
+    def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
 
-            forward_func (function): The forward function of the model or
-                       any modification of it
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
+            layer (torch.nn.Module): Layer for which attributions are computed.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer.
+                          Currently, it is assumed that the inputs or the outputs
+                          of the layer, depending on which one is used for
+                          attribution can only be a single tensor.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                          applies a DataParallel model. This allows reconstruction of
+                          intermediate outputs from batched results across devices.
+                          If forward_func is given as the DataParallel model itself,
+                          then it is not necessary to provide this argument.
         """
-        GradientAttribution.__init__(self, forward_func)
+        LayerAttribution.__init__(self, forward_func, layer, device_ids)
+        InputBaselineXGradient.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -245,11 +293,8 @@ class InputBaselineXGradient(GradientAttribution):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
+        attribute_to_layer_input=False,
     ):
-        # Keeps track whether original input is a tuple or not before
-        # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
-
         rand_coefficient = torch.tensor(
             np.random.uniform(0.0, 1.0, inputs[0].shape[0]),
             device=inputs[0].device,
@@ -260,18 +305,44 @@ class InputBaselineXGradient(GradientAttribution):
             self._scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads = self.gradient_func(
-            self.forward_func, input_baseline_scaled, target, additional_forward_args
+        grads, _ = compute_layer_gradients_and_eval(
+            self.forward_func,
+            self.layer,
+            input_baseline_scaled,
+            target,
+            additional_forward_args,
+            device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
 
+        attr_baselines = _forward_layer_eval(
+            self.forward_func,
+            baselines,
+            self.layer,
+            additional_forward_args=additional_forward_args,
+            device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
+
+        attr_inputs = _forward_layer_eval(
+            self.forward_func,
+            inputs,
+            self.layer,
+            additional_forward_args=additional_forward_args,
+            device_ids=self.device_ids,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
+        attr_inputs = (attr_inputs,)
+        attr_baselines = (attr_baselines,)
+        grads = (grads,)
+
         input_baseline_diffs = tuple(
-            input - baseline for input, baseline in zip(inputs, baselines)
+            input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
         )
         attributions = tuple(
             input_baseline_diff * grad
             for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
         )
-
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
@@ -280,22 +351,4 @@ class InputBaselineXGradient(GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            is_inputs_tuple,
         )
-
-    def has_convergence_delta(self):
-        return True
-
-    def _scale_input(self, input, baseline, rand_coefficient):
-        # batch size
-        bsz = input.shape[0]
-        inp_shape_wo_bsz = input.shape[1:]
-        inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
-
-        # expand and reshape the indices
-        rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
-
-        input_baseline_scaled = (
-            rand_coefficient * input + (1 - rand_coefficient) * baseline
-        )
-        return input_baseline_scaled
