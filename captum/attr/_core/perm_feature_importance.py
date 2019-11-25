@@ -31,7 +31,7 @@ class PermutationFeatureImportance(FeatureAblation):
         additional_forward_args=None,
         feature_mask=None,
         ablations_per_eval=1,
-        abs_attributions=False
+        abs_attributions=False,
     ):
         attribs = super().attribute(
             inputs,
@@ -56,11 +56,10 @@ class PermutationFeatureImportance(FeatureAblation):
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).bool()
 
-        output = []
-        for x, feature_mask in zip(feature_tensor, current_mask):
-            # TODO: support multiple permutations
-            output.append(self.perm_fn(x, feature_mask))
-
-        output = torch.stack(output)
-
+        output = torch.stack(
+            [
+                self.perm_fn(x, feature_mask)
+                for x, feature_mask in zip(feature_tensor, current_mask)
+            ]
+        )
         return output, current_mask
