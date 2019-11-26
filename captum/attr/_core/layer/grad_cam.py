@@ -130,7 +130,7 @@ class LayerGradCam(LayerAttribution):
                             apply a ReLU operation on the final attribution,
                             returning only non-negative attributions. Setting this
                             flag to True matches the original GradCAM algorithm,
-                            otherwise by default, both positive and negative
+                            otherwise, by default, both positive and negative
                             attributions are returned.
                             Default: False
 
@@ -187,5 +187,4 @@ class LayerGradCam(LayerAttribution):
         scaled_act = torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
         if relu_attributions:
             return F.relu(scaled_act)
-        else:
-            return scaled_act
+        return scaled_act
