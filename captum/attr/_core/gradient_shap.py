@@ -40,7 +40,8 @@ class GradientShap(GradientAttribution):
         #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
 
         A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
+        http://papers.nips.cc/paper\
+        7062-a-unified-approach-to-interpreting-model-predictions
 
         GradientShap approximates SHAP values by computing the expectations of
         gradients by randomly sampling from the distribution of baselines/references.
