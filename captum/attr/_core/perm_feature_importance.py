@@ -60,8 +60,8 @@ class PermutationFeatureImportance(FeatureAblation):
 
         output = torch.stack(
             [
-                self.perm_fn(x, feature_mask)
-                for x, feature_mask in zip(feature_tensor, current_mask)
+                self.perm_fn(x, input_mask == j)
+                for x, j in zip(feature_tensor, range(start_feature, end_feature))
             ]
         )
         return output, current_mask
