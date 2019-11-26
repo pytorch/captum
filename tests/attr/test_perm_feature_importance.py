@@ -147,7 +147,9 @@ class Test(BaseTest):
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
         for masks in masks_to_test:
             target = random.randint(0, 2)
-            attribs = feature_importance.attribute((inp1, inp2), feature_mask=masks, target=target)
+            attribs = feature_importance.attribute(
+                (inp1, inp2), feature_mask=masks, target=target
+            )
             self.assertTrue(isinstance(attribs, tuple))
 
             target_mask = torch.zeros_like(inp1[0]).byte()
@@ -167,7 +169,7 @@ class Test(BaseTest):
                     # if the mask doesn't contain feature - skip
                     if feature_mask.sum() == 0:
                         continue
-                    
+
                     feature_mask = feature_mask.expand_as(inp[0])
 
                     # if this feature does contribute to the output
@@ -180,6 +182,6 @@ class Test(BaseTest):
                         assertTensorAlmostEqual(self, sub_attrib[0, feature_mask], val)
                         assertTensorAlmostEqual(self, sub_attrib[1, feature_mask], -val)
                     else:
-                        # if the feature doesn't contribute to the output 
+                        # if the feature doesn't contribute to the output
                         # -- then this means it should have attrib of 0
                         assertTensorAlmostEqual(self, sub_attrib[:, feature_mask], 0)

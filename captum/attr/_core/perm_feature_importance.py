@@ -6,7 +6,7 @@ from .feature_ablation import FeatureAblation
 
 def permute_feature(x, feature_mask):
     n = x.size(0)
-    assert n > 1
+    assert n > 1, "cannot permute features with batch_size = 1"
 
     perm = torch.randperm(n)
     no_perm = torch.arange(n)
@@ -14,7 +14,6 @@ def permute_feature(x, feature_mask):
         perm = torch.randperm(n)
 
     out = x.clone()
-    feature_mask = feature_mask.squeeze(0)
     for i, j in enumerate(perm):
         out[i, feature_mask] = x[j, feature_mask]
 
@@ -59,9 +58,6 @@ class PermutationFeatureImportance(FeatureAblation):
         ).bool()
 
         output = torch.stack(
-            [
-                self.perm_fn(x, input_mask == j)
-                for x, j in zip(feature_tensor, range(start_feature, end_feature))
-            ]
+            [self.perm_fn(x, mask) for x, mask in zip(feature_tensor, current_mask)]
         )
         return output, current_mask
