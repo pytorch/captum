@@ -3,13 +3,11 @@
 import random
 
 import torch
-import torch.nn as nn
 from captum.attr._core.perm_feature_importance import (
     PermutationFeatureImportance,
     permute_feature,
 )
 
-from .helpers.basic_models import BasicModel, BasicModel_MultiLayer, MultiplyModel2Input
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -55,33 +53,36 @@ class Test(BaseTest):
                     check_features_are_permuted(inp, perm_inp, mask)
 
     def test_single_input(self):
-        batch_size = 30
+        batch_size = 2
         input_size = (3,)
-        net = BasicModel()
 
         def forward_func(x):
-            return torch.sum(net(x))
+            x = torch.sum(x)
+            return torch.sum(x)
 
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
 
-        inp = torch.randn((batch_size,) + input_size)
+        inp = torch.randn((batch_size,) + input_size) * 10
 
         inp[:, 0] = 5
-        attribs = feature_importance.attribute(inp)
-        self.assertTrue(attribs.squeeze(0).size() == input_size)
-        self.assertTrue((attribs[:, 0] == 0).all())
-        self.assertTrue((attribs[:, 1] != 0).all())
-        self.assertTrue((attribs[:, 2] != 0).all())
+        for x in range(10):
+            attribs = feature_importance.attribute(inp)
+
+            self.assertTrue(attribs.squeeze(0).size() == input_size)
+            self.assertTrue((attribs[:, 0] == 0).all())
+            self.assertTrue((attribs[:, 1] != 0).all())
+            self.assertTrue((attribs[:, 2] != 0).all())
 
     def test_multi_input(self):
         batch_size = 5
         input_size = (2,)
-        net = MultiplyModel2Input()
 
         labels = torch.randn(batch_size)
 
         def forward_func(*x):
-            y = net(*x)
+            y = 0
+            for xx in x:
+                y += xx[:, 0] * xx[:, 1]
             return torch.sum((y - labels) ** 2)
 
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
@@ -142,7 +143,7 @@ class Test(BaseTest):
         masks_to_test = [
             (torch.tensor(0), torch.tensor(1)),
             (torch.tensor(0), torch.tensor([0, 0, 1])),
-            (torch.tensor([0, 0, 1]), torch.tensor([1, 1, 2])),
+            (torch.tensor([0, 0, 1]), torch.tensor([0, 0, 1])),
         ]
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
         for masks in masks_to_test:
@@ -151,9 +152,6 @@ class Test(BaseTest):
                 (inp1, inp2), feature_mask=masks, target=target
             )
             self.assertTrue(isinstance(attribs, tuple))
-
-            target_mask = torch.zeros_like(inp1[0]).byte()
-            target_mask[target] = 1
 
             features_in_mask = set()
             for mask in masks:

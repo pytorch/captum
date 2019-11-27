@@ -58,6 +58,6 @@ class PermutationFeatureImportance(FeatureAblation):
         ).bool()
 
         output = torch.stack(
-            [self.perm_fn(x, mask) for x, mask in zip(feature_tensor, current_mask)]
+            [self.perm_fn(x, mask.squeeze(0)) for x, mask in zip(feature_tensor, current_mask)]
         )
         return output, current_mask
