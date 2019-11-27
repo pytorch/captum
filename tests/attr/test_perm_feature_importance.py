@@ -175,7 +175,8 @@ class Test(BaseTest):
                         # two conditions should hold:
                         # 1) all values in attribs[feature_mask] are the same
                         # 2) since the batch_size = 2, this value should be
-                        #    equal to (inp[0, target] - inp[1, target], inp[1, target] - inp[0, target])
+                        #    equal to (inp[0, target] - inp[1, target],
+                        #              inp[1, target] - inp[0, target])
                         val = inp[0, target] - inp[1, target]
                         assertTensorAlmostEqual(self, sub_attrib[0, feature_mask], val)
                         assertTensorAlmostEqual(self, sub_attrib[1, feature_mask], -val)
