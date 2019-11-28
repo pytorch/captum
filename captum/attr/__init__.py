@@ -15,10 +15,12 @@ from ._core.layer.layer_activation import LayerActivation  # noqa
 from ._core.layer.internal_influence import InternalInfluence  # noqa
 from ._core.layer.grad_cam import LayerGradCam  # noqa
 from ._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap  # noqa
+from ._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
 from ._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from ._core.neuron.neuron_gradient import NeuronGradient  # noqa
 from ._core.neuron.neuron_integrated_gradients import NeuronIntegratedGradients  # noqa
 from ._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap  # noqa
+from ._core.neuron.neuron_gradient_shap import NeuronGradientShap  # noqa
 from ._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,

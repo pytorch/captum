@@ -41,7 +41,7 @@ class Test(BaseTest):
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
-        self._assert_attribution_delta(inputs, attributions, n_samples, delta)
+        _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
@@ -108,7 +108,7 @@ class Test(BaseTest):
             stdevs=0.009,
             return_convergence_delta=True,
         )
-        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
+        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         attributions, delta = gradient_shap.attribute(
             inputs,
@@ -118,7 +118,7 @@ class Test(BaseTest):
             stdevs=0.00001,
             return_convergence_delta=True,
         )
-        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
+        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         with self.assertRaises(AssertionError):
             attributions, delta = gradient_shap.attribute(
@@ -150,7 +150,7 @@ class Test(BaseTest):
             stdevs=0.009,
             return_convergence_delta=True,
         )
-        self._assert_attribution_delta((inputs,), (attributions,), n_samples, delta)
+        _assert_attribution_delta(self, (inputs,), (attributions,), n_samples, delta)
 
         # try to call `compute_convergence_delta` externally
         with self.assertRaises(AssertionError):
@@ -165,7 +165,7 @@ class Test(BaseTest):
         external_delta = gradient_shap.compute_convergence_delta(
             attributions, chosen_baselines, inputs, target=target_extendes
         )
-        self._assert_delta(external_delta)
+        _assert_delta(self, external_delta)
 
         # Compare with integrated gradients
         ig = IntegratedGradients(model)
@@ -192,28 +192,11 @@ class Test(BaseTest):
             n_samples=n_samples,
             return_convergence_delta=True,
         )
-        self._assert_attribution_delta(inputs, attributions, n_samples, delta)
+        _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
 
         ig = IntegratedGradients(model)
         attributions_ig = ig.attribute(inputs, baselines=baselines)
         self._assert_shap_ig_comparision(attributions, attributions_ig)
-
-    def _assert_delta(self, delta):
-        delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
-        self.assertTrue(
-            delta_condition,
-            "Sum of SHAP values {} does"
-            " not match the difference of endpoints.".format(delta),
-        )
-
-    def _assert_attribution_delta(self, inputs, attributions, n_samples, delta):
-        for input, attribution in zip(inputs, attributions):
-            self.assertEqual(attribution.shape, input.shape)
-        bsz = inputs[0].shape[0]
-        self.assertEqual([bsz * n_samples], list(delta.shape))
-
-        delta = torch.mean(delta.reshape(bsz, -1), dim=1)
-        self._assert_delta(delta)
 
     def _assert_shap_ig_comparision(self, attributions1, attributions2):
         for attribution1, attribution2 in zip(attributions1, attributions2):
@@ -221,3 +204,28 @@ class Test(BaseTest):
                 attribution1.detach().numpy(), attribution2.detach().numpy()
             ):
                 assertArraysAlmostEqual(attr_row1, attr_row2, delta=0.005)
+
+
+def _assert_attribution_delta(
+    test, inputs, attributions, n_samples, delta, is_layer=False
+):
+    if not is_layer:
+        for input, attribution in zip(inputs, attributions):
+            test.assertEqual(attribution.shape, input.shape)
+    if isinstance(inputs, tuple):
+        bsz = inputs[0].shape[0]
+    else:
+        bsz = inputs.shape[0]
+    test.assertEqual([bsz * n_samples], list(delta.shape))
+
+    delta = torch.mean(delta.reshape(bsz, -1), dim=1)
+    _assert_delta(test, delta)
+
+
+def _assert_delta(test, delta):
+    delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
+    test.assertTrue(
+        delta_condition,
+        "Sum of SHAP values {} does"
+        " not match the difference of endpoints.".format(delta),
+    )
