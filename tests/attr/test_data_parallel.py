@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.deep_lift import DeepLift
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.occlusion import Occlusion
 
@@ -519,16 +520,40 @@ class Test(BaseGPUTest):
             neuron_index=(3,),
         )
 
+    def test_multi_input_deeplift(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.9, 2.0, 1.9]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [1.2, 3.0, 2.3]], requires_grad=True
+        ).cuda()
+
+        self._data_parallel_test_assert(
+            DeepLift,
+            net,
+            None,
+            inputs=(inp1, inp2),
+            alt_device_ids=True,
+            additional_forward_args=None,
+            test_batches=False,
+        )
+
     def test_multi_input_layer_deeplift(self):
         net = ReLULinearDeepLiftModel().cuda()
-        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
-        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.0, 2.0, 3.0]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [4.5, 6.3, 2.3]], requires_grad=True
+        ).cuda()
 
         self._data_parallel_test_assert(
             LayerDeepLift,
             net,
             net.l3,
             inputs=(inp1, inp2),
+            alt_device_ids=True,
             additional_forward_args=None,
             test_batches=False,
         )
@@ -550,6 +575,7 @@ class Test(BaseGPUTest):
             net,
             net.l3,
             inputs=(inp1, inp2),
+            alt_device_ids=True,
             baselines=(base1, base2),
             additional_forward_args=None,
             test_batches=False,
@@ -776,7 +802,7 @@ class Test(BaseGPUTest):
             attr_orig = algorithm(model, target_layer)
             if alt_device_ids:
                 attr_dp = algorithm(
-                    dp_model.forward, target_layer, device_ids=self._alt_device_list()
+                    dp_model, target_layer, device_ids=self._alt_device_list()
                 )
             else:
                 attr_dp = algorithm(dp_model, target_layer)

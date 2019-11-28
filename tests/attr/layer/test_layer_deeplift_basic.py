@@ -47,6 +47,21 @@ class TestDeepLift(BaseTest):
         )
         assert_delta(self, delta)
 
+    def test_relu_layer_deeplift_add_args(self):
+        model = ReLULinearDeepLiftModel()
+        inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
+
+        layer_dl = LayerDeepLift(model, model.relu)
+        attributions, delta = layer_dl.attribute(
+            inputs,
+            baselines,
+            additional_forward_args=3.0,
+            attribute_to_layer_input=True,
+            return_convergence_delta=True,
+        )
+        assertTensorAlmostEqual(self, attributions, [[0.0, 45.0]])
+        assert_delta(self, delta)
+
     def test_linear_layer_deeplift(self):
         model = ReLULinearDeepLiftModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()

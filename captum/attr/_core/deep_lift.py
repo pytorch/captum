@@ -12,6 +12,7 @@ from .._utils.common import (
     _format_callable_baseline,
     _format_attributions,
     _format_tensor_into_tuples,
+    _format_additional_forward_args,
     _run_forward,
     _validate_input,
     _expand_target,
@@ -63,16 +64,8 @@ class DeepLift(GradientAttribution):
             model (nn.Module):  The reference to PyTorch model instance.
         """
         GradientAttribution.__init__(self, model)
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            self.model = model.module
-        else:
-            self.model = model
+        self.model = model
         self.forward_handles = []
-        self.forward_handles_refs = []
         self.backward_handles = []
 
     def attribute(
@@ -264,31 +257,33 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-        self.model.apply(self._register_hooks_ref)
 
         baselines = _tensorize_baseline(inputs, baselines)
-
-        _run_forward(
-            self.model,
-            baselines,
-            target=target,
-            additional_forward_args=additional_forward_args,
-        )
-        # remove forward hook set for baselines
-        for forward_handles_ref in self.forward_handles_refs:
-            forward_handles_ref.remove()
+        main_model_pre_hook = self._pre_hook_main_model()
+        main_model_hook = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
-        gradients = self.gradient_func(
-            self.model,
-            inputs,
-            target_ind=target,
-            additional_forward_args=additional_forward_args,
+
+        input_base_target = _expand_target(target, 2, ExpansionTypes.repeat)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        input_base_additional_args = _expand_additional_forward_args(
+            additional_forward_args, 2, ExpansionTypes.repeat
+        )
+        wrapped_forward_func = self._construct_forward_func(
+            self.model, (inputs, baselines), target, input_base_additional_args
         )
 
+        gradients = self.gradient_func(
+            wrapped_forward_func,
+            inputs,
+            target_ind=input_base_target,
+            additional_forward_args=input_base_additional_args,
+        )
         if custom_attribution_func is None:
             attributions = tuple(
-                (input - baseline) * gradient
+                (input - baseline) * gradient[: len(input)]
                 for input, baseline, gradient in zip(inputs, baselines, gradients)
             )
         else:
@@ -297,6 +292,8 @@ class DeepLift(GradientAttribution):
             )
 
         # remove hooks from all activations
+        main_model_pre_hook.remove()
+        main_model_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -310,6 +307,16 @@ class DeepLift(GradientAttribution):
             target,
             is_inputs_tuple,
         )
+
+    def _construct_forward_func(
+        self, forward_func, inputs, target=None, additional_forward_args=None
+    ):
+        def forward_fn():
+            return _run_forward(forward_func, inputs, target, additional_forward_args)
+
+        if hasattr(forward_func, "device_ids"):
+            forward_fn.device_ids = forward_func.device_ids
+        return forward_fn
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
@@ -410,12 +417,10 @@ class DeepLift(GradientAttribution):
         )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, delta_in, delta_out, list(grad_input), grad_output, eps=eps
+                module, module.input, module.output, grad_input, grad_output, eps=eps
             )
         )
         # remove all the properies that we set for the inputs and output
-        del module.input_ref
-        del module.output_ref
         del module.input
         del module.output
 
@@ -465,6 +470,36 @@ class DeepLift(GradientAttribution):
             forward_handle.remove()
         for backward_handle in self.backward_handles:
             backward_handle.remove()
+
+    def _pre_hook_main_model(self):
+        def pre_hook(module, baseline_inputs_add_args):
+            inputs = baseline_inputs_add_args[0]
+            baselines = baseline_inputs_add_args[1]
+            additional_args = None
+            if len(baseline_inputs_add_args) > 2:
+                additional_args = baseline_inputs_add_args[2:]
+
+            baseline_input_tsr = tuple(
+                torch.cat([input, baseline])
+                for input, baseline in zip(inputs, baselines)
+            )
+            if additional_args is not None:
+                return (*baseline_input_tsr, *additional_args)
+            return baseline_input_tsr
+
+        if isinstance(self.model, nn.DataParallel):
+            return self.model.module.register_forward_pre_hook(pre_hook)
+        else:
+            return self.model.register_forward_pre_hook(pre_hook)
+
+    def _hook_main_model(self):
+        def forward_hook(module, inputs, outputs):
+            return outputs.chunk(2)[0]
+
+        if isinstance(self.model, nn.DataParallel):
+            return self.model.module.register_forward_hook(forward_hook)
+        else:
+            return self.model.register_forward_hook(forward_hook)
 
     def has_convergence_delta(self):
         return True
@@ -729,40 +764,52 @@ class DeepLiftShap(DeepLift):
         return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
 
-def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
     https://github.com/pytorch/pytorch/issues/12331
     """
+    delta_in, delta_out = _compute_diffs(inputs, outputs)
+
+    new_grad_inp = list(grad_input)
+
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
-    grad_input[0] = torch.where(
-        abs(delta_in[0]) < eps,
-        grad_input[0],
-        grad_output[0] * delta_out[0] / delta_in[0],
+    new_grad_inp[0] = torch.where(
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
 
     # If the module is invalid, save the newly computed gradients
     # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
-        module.saved_grad = grad_input[0]
-    return grad_input
+        module.saved_grad = new_grad_inp[0]
+    return new_grad_inp
 
+def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+    delta_in, delta_out = _compute_diffs(inputs, outputs)
 
-def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+    new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in[0]) < eps,
-        grad_input[0],
-        grad_output[0] * delta_out[0] / delta_in[0],
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
     # normalizing
     n = np.prod(grad_input[0].shape)
-    grad_input[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
-    return grad_input
+
+    # updating only the first half
+    new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
+    return new_grad_inp
 
 
-def maxpool1d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool1d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+    input, input_ref = inputs.chunk(2)
+    output, output_ref = outputs.chunk(2)
+
+    delta_in = input - input_ref
+    delta_in = torch.cat(2 * [delta_in])
+    delta_out_xmax = torch.max(output, output_ref)
+    delta_out = torch.cat([delta_out_xmax - output_ref, output - delta_out_xmax])
+
     return maxpool(
         module,
         F.max_pool1d,
@@ -811,26 +858,33 @@ def maxpool(
     grad_output,
     eps=1e-10,
 ):
-    # The forward function of maxpool takes only tensors not
-    # a tuple hence accessing the first
-    # element in the tuple of inputs, grad_input and grad_output
-    _, indices = pool_func(
-        module.input[0],
-        module.kernel_size,
-        module.stride,
-        module.padding,
-        module.dilation,
-        module.ceil_mode,
-        True,
-    )
-    unpool_grad_out_delta = unpool_func(
-        grad_output[0] * delta_out[0],
-        indices,
-        module.kernel_size,
-        module.stride,
-        module.padding,
-        list(module.input[0].shape),
-    )
+    with torch.no_grad():
+        # The forward function of maxpool takes only tensors not
+        # a tuple hence accessing the first
+        # element in the tuple of inputs, grad_input and grad_output
+        _, indices = pool_func(
+            module.input,
+            module.kernel_size,
+            module.stride,
+            module.padding,
+            module.dilation,
+            module.ceil_mode,
+            True,
+        )
+        unpool_grad_out_delta, unpool_grad_out_ref_delta = torch.chunk(
+            unpool_func(
+                grad_output[0] * delta_out,
+                indices,
+                module.kernel_size,
+                module.stride,
+                module.padding,
+                list(module.input.shape),
+            ),
+            2,
+        )
+
+    unpool_grad_out_delta = unpool_grad_out_delta + unpool_grad_out_ref_delta
+    unpool_grad_out_delta = torch.cat(2 * [unpool_grad_out_delta])
 
     # If the module is invalid, we need to recompute the grad_input
     if module.is_invalid:
@@ -842,21 +896,29 @@ def maxpool(
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input[0].shape),
+                list(module.input.shape),
             ),
         )
 
-    new_grad_input = torch.where(
-        abs(delta_in[0]) < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
+    new_grad_inp = torch.where(
+        abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in
     )
-
     # If the module is invalid, save the newly computed gradients
     # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
-        module.saved_grad = new_grad_input
+        module.saved_grad = new_grad_inp
         return original_grad_input
     else:
-        return (new_grad_input,)
+        return (new_grad_inp,)
+
+
+def _compute_diffs(inputs, outputs):
+    input, input_ref = inputs.chunk(2)
+    output, output_ref = outputs.chunk(2)
+    delta_in = input - input_ref
+    delta_out = output - output_ref
+
+    return torch.cat(2 * [delta_in]), torch.cat(2 * [delta_out])
 
 
 SUPPORTED_NON_LINEAR = {

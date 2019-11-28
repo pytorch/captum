@@ -15,15 +15,19 @@ from ..._utils.common import (
     _format_input,
     _format_baseline,
     _format_callable_baseline,
+    _format_additional_forward_args,
     _validate_input,
     _tensorize_baseline,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
+    _expand_target,
+    _expand_additional_forward_args,
+    ExpansionTypes,
 )
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
-    def __init__(self, model, layer):
+    def __init__(self, model, layer, device_ids=None):
         r"""
         Args:
 
@@ -34,15 +38,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
         """
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            model = model.module
-
-        LayerAttribution.__init__(self, model, layer)
+        LayerAttribution.__init__(self, model, layer, device_ids)
         DeepLift.__init__(self, model)
+        self.model = model
 
     def attribute(
         self,
@@ -231,32 +229,33 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         _validate_input(inputs, baselines)
 
-        # set hooks for baselines
-        self.model.apply(self._register_hooks_ref)
-
         baselines = _tensorize_baseline(inputs, baselines)
 
-        attr_baselines, _ = _forward_layer_eval(
-            self.model,
-            baselines,
-            self.layer,
-            additional_forward_args=additional_forward_args,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
-
-        # remove forward hook set for baselines
-        for forward_handles_ref in self.forward_handles_refs:
-            forward_handles_ref.remove()
+        main_model_pre_hook = self._pre_hook_main_model()
+        main_model_hook = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
 
-        gradients, attr_inputs, is_layer_tuple = compute_layer_gradients_and_eval(
-            self.model,
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        input_base_additional_args = _expand_additional_forward_args(
+            additional_forward_args, 2, ExpansionTypes.repeat
+        )
+
+        wrapped_forward_func = self._construct_forward_func(
+            self.model, (inputs, baselines), target, input_base_additional_args,
+        )
+
+        (
+            (gradients, _),
+            (attr_inputs, attr_baselines), is_layer_tuple
+        ) = compute_layer_gradients_and_eval(
+            wrapped_forward_func,
             self.layer,
             inputs,
-            target,
-            additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            output_fn=lambda out: out.chunk(2),
         )
 
         if custom_attribution_func is None:
@@ -270,12 +269,12 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             attributions = _call_custom_attribution_func(
                 custom_attribution_func, gradients, attr_inputs, attr_baselines
             )
-
         # remove hooks from all activations
+        main_model_pre_hook.remove()
+        main_model_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
-
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
@@ -289,7 +288,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
-    def __init__(self, model, layer):
+    def __init__(self, model, layer, device_ids=None):
         r"""
         Args:
 
@@ -300,7 +299,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
         """
-        LayerDeepLift.__init__(self, model, layer)
+        LayerDeepLift.__init__(self, model, layer, device_ids)
         DeepLiftShap.__init__(self, model)
 
     def attribute(

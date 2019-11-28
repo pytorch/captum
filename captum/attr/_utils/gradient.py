@@ -139,6 +139,7 @@ def _forward_layer_distributed_eval(
     additional_forward_args=None,
     attribute_to_layer_input=False,
     forward_hook_with_return=False,
+    output_fn=None,
 ):
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
@@ -177,7 +178,7 @@ def _forward_layer_distributed_eval(
                 return eval_tsrs_to_return
             else:
                 saved_layer[eval_tsrs[0].device] = tuple(
-                    eval_tsr.clone() for eval_tsr in eval_tsrs
+                    eval_tsr.clone() if output_fn is None else output_fn(eval_tsr.clone())
                 )
 
     if attribute_to_layer_input:
@@ -303,6 +304,7 @@ def compute_layer_gradients_and_eval(
     gradient_neuron_index=None,
     device_ids=None,
     attribute_to_layer_input=False,
+    output_fn=None,
 ):
     r"""
         Computes gradients of the output with respect to a given layer as well
@@ -372,7 +374,11 @@ def compute_layer_gradients_and_eval(
         # key_list is a list of devices in appropriate ordering for concatenation.
         # If only one key exists (standard model), key list simply has one element.
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
-        all_outputs = _reduce_list([saved_layer[device_id] for device_id in key_list])
+
+        all_outputs = _reduce_list([saved_layer[device_id]
+            if output_fn is None
+            else output_fn(saved_layer[device_id])
+            for device_id in key_list])
         num_tensors = len(saved_layer[next(iter(saved_layer))])
         grad_inputs = tuple(
             layer_tensor
@@ -384,7 +390,11 @@ def compute_layer_gradients_and_eval(
             saved_grads[i : i + num_tensors]
             for i in range(0, len(saved_grads), num_tensors)
         )
+        if output_fn is not None:
+            saved_grads = tuple(output_fn(saved_grad) for saved_grad in saved_grads)
+
         all_grads = _reduce_list(saved_grads)
+
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(
                 inputs, saved_layer, key_list, gradient_neuron_index
@@ -395,7 +405,11 @@ def compute_layer_gradients_and_eval(
 
 
 def construct_neuron_grad_fn(
-    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
+    layer,
+    neuron_index,
+    device_ids=None,
+    attribute_to_neuron_input=False,
+    output_fn=None,
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
@@ -406,6 +420,7 @@ def construct_neuron_grad_fn(
             neuron_index,
             device_ids=device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
+            output_fn=output_fn,
         )
         return grads
 
