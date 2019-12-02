@@ -50,7 +50,9 @@ pip install captum
 
 **Manual / Dev install**
 
-Alternatively, you can do a manual install. For a basic install, run:
+If you'd like to try our bleeding edge features (and don't mind potentially
+running into the occasional bug here or there), you can install the latest
+master directly from GitHub. For a basic install, run:
 ```bash
 git clone https://github.com/pytorch/captum.git
 cd captum
