@@ -31,11 +31,11 @@
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="k">import</span> <span class="n">Embedding</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 
-<div class="viewcode-block" id="InterpretableEmbeddingBase"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase">[docs]</a><span class="k">class</span> <span class="nc">InterpretableEmbeddingBase</span><span class="p">(</span><span class="n">Embedding</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpretableEmbeddingBase"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase">[docs]</a><span class="k">class</span> <span class="nc">InterpretableEmbeddingBase</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Since some embedding vectors, e.g. word are created and assigned in</span>
 <span class="sd">        the embedding layers of Pytorch models we need a way to access</span>
@@ -47,12 +47,15 @@
 <span class="sd">        precomputed embedding vectors to the layers below.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">embedding</span><span class="o">.</span><span class="n">num_embeddings</span><span class="p">,</span> <span class="n">embedding</span><span class="o">.</span><span class="n">embedding_dim</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">):</span>
+        <span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_embeddings</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"num_embeddings"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_dim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"embedding_dim"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span> <span class="o">=</span> <span class="n">embedding</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">full_name</span> <span class="o">=</span> <span class="n">full_name</span>
 
-<div class="viewcode-block" id="InterpretableEmbeddingBase.forward"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpretableEmbeddingBase.forward"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">*</span><span class="n">other_inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">         The forward function of a wrapper embedding layer that takes and returns</span>
 <span class="sd">         embedding layer. It allows embeddings to be created outside of the model</span>
@@ -60,8 +63,15 @@
 
 <span class="sd">         Args:</span>
 
-<span class="sd">            inputs (tensor): Input embedding tensor containing the embedding vectors</span>
-<span class="sd">                    of each word or token in the sequence.</span>
+<span class="sd">            input (tensor): Embedding tensor generated using the `self.embedding`</span>
+<span class="sd">                    layer using `other_inputs` and `kwargs` of necessary.</span>
+<span class="sd">            *other_inputs (Any, optional): A sequence of additional inputs that the</span>
+<span class="sd">                    forward function takes. Since forward functions can take any</span>
+<span class="sd">                    type and number of arguments, this will ensure that we can</span>
+<span class="sd">                    execute the forward pass using interpretable embedding layer</span>
+<span class="sd">            **kwargs (Any, optional): Similar to `other_inputs` we want to make sure</span>
+<span class="sd">                    that our forward pass supports arbitrary number and type of</span>
+<span class="sd">                    key-value arguments</span>
 
 <span class="sd">         Returns:</span>
 
@@ -72,22 +82,25 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">input</span></div>
 
-<div class="viewcode-block" id="InterpretableEmbeddingBase.indices_to_embeddings"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">[docs]</a>    <span class="k">def</span> <span class="nf">indices_to_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<div class="viewcode-block" id="InterpretableEmbeddingBase.indices_to_embeddings"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.InterpretableEmbeddingBase.indices_to_embeddings">[docs]</a>    <span class="k">def</span> <span class="nf">indices_to_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Maps indices to corresponding embedding vectors. E.g. word embeddings</span>
 
 <span class="sd">        Args:</span>
 
-<span class="sd">            input (tensor): A tensor of input indices. A typical example of an</span>
-<span class="sd">                   input index is word or token index.</span>
-
+<span class="sd">            *input (Any, Optional): This can be a tensor(s) of input indices or any</span>
+<span class="sd">                    other variable necessary to comput the embeddings. A typical</span>
+<span class="sd">                    example of input indices are word or token indices.</span>
+<span class="sd">            **kwargs (Any, optional): Similar to `input` this can be any sequence</span>
+<span class="sd">                    of key-value arguments necessary to compute final embedding</span>
+<span class="sd">                    tensor.</span>
 <span class="sd">        Returns:</span>
 
 <span class="sd">            tensor:</span>
 <span class="sd">            A tensor of word embeddings corresponding to the</span>
 <span class="sd">            indices specified in the input</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="o">*</span><span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="TokenReferenceBase"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.TokenReferenceBase">[docs]</a><span class="k">class</span> <span class="nc">TokenReferenceBase</span><span class="p">:</span>
@@ -98,7 +111,7 @@
 <span class="sd">    `TokenReferenceBase` class.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_token_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_token_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_token_idx</span> <span class="o">=</span> <span class="n">reference_token_idx</span>
 
 <div class="viewcode-block" id="TokenReferenceBase.generate_reference"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._models.base.TokenReferenceBase.generate_reference">[docs]</a>    <span class="k">def</span> <span class="nf">generate_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>

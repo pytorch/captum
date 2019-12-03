@@ -6,8 +6,8 @@
 # This notebook loads pretrained CNN model for sentiment analysis on IMDB dataset. It makes predictions on test samples and interprets those predictions using integrated gradients method.
 # 
 # The model was trained using an open source sentiment analysis tutorials described in: https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/4%20-%20Convolutional%20Sentiment%20Analysis.ipynb
-#   
-#   **Note:** Before running this tutorial, please install the spacy package, and its NLP modules for English language.
+# 
+# **Note:** Before running this tutorial, please install the spacy package, and its NLP modules for English language.
 
 # In[1]:
 
@@ -72,7 +72,7 @@ class CNN(nn.Module):
         #text = [batch size, sent len]
         
         embedded = self.embedding(text)
-                
+
         #embedded = [batch size, sent len, emb dim]
         
         embedded = embedded.unsqueeze(1)
@@ -101,6 +101,7 @@ class CNN(nn.Module):
 
 model = torch.load('models/imdb-model-cnn.pt')
 model.eval()
+model = model.to(device)
 
 
 # Forward function that supports sigmoid
@@ -203,7 +204,6 @@ ig = IntegratedGradients(model)
 vis_data_records_ig = []
 
 def interpret_sentence(model, sentence, min_len = 7, label = 0):
-    model.eval()
     text = [tok.text for tok in nlp.tokenizer(sentence)]
     if len(text) < min_len:
         text += ['pad'] * (min_len - len(text))
@@ -212,7 +212,7 @@ def interpret_sentence(model, sentence, min_len = 7, label = 0):
     
     model.zero_grad()
 
-    input_indices = torch.LongTensor(indexed)
+    input_indices = torch.tensor(indexed, device=device)
     input_indices = input_indices.unsqueeze(0)
     
     # input_indices dim: [sequence_length]
@@ -239,7 +239,7 @@ def interpret_sentence(model, sentence, min_len = 7, label = 0):
 def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, delta, vis_data_records):
     attributions = attributions.sum(dim=2).squeeze(0)
     attributions = attributions / torch.norm(attributions)
-    attributions = attributions.detach().numpy()
+    attributions = attributions.cpu().detach().numpy()
 
     # storing couple samples in an array for visualization purposes
     vis_data_records.append(visualization.VisualizationDataRecord(
@@ -249,7 +249,7 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
                             Label.vocab.itos[label],
                             Label.vocab.itos[1],
                             attributions.sum(),       
-                            text[:len(attributions)],
+                            text,
                             delta))
 
 

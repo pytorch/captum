@@ -30,17 +30,17 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_format_callable_baseline</span><span class="p">,</span>
     <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="k">import</span> <span class="n">NoiseTunnel</span>
+<span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="kn">import</span> <span class="n">NoiseTunnel</span>
 
 
 <div class="viewcode-block" id="GradientShap"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.GradientShap">[docs]</a><span class="k">class</span> <span class="nc">GradientShap</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -67,7 +67,8 @@
 <span class="sd">        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
 
 <span class="sd">        A Unified Approach to Interpreting Model Predictions</span>
-<span class="sd">        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions</span>
+<span class="sd">        http://papers.nips.cc/paper\</span>
+<span class="sd">        7062-a-unified-approach-to-interpreting-model-predictions</span>
 
 <span class="sd">        GradientShap approximates SHAP values by computing the expectations of</span>
 <span class="sd">        gradients by randomly sampling from the distribution of baselines/references.</span>
@@ -256,7 +257,7 @@
 
 
 <div class="viewcode-block" id="InputBaselineXGradient"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient">[docs]</a><span class="k">class</span> <span class="nc">InputBaselineXGradient</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 

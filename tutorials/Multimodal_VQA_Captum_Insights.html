@@ -141,8 +141,8 @@
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="k">import</span> <span class="n">LinearSegmentedColormap</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torchvision</span>
@@ -155,14 +155,14 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">"please provide a valid path to pytorch-resnet"</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">model</span> <span class="k">import</span> <span class="n">Net</span><span class="p">,</span> <span class="n">apply_attention</span><span class="p">,</span> <span class="n">tile_2d_over_nd</span>  <span class="c1"># from pytorch-vqa</span>
-    <span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">get_transform</span>  <span class="c1"># from pytorch-vqa</span>
+    <span class="kn">from</span> <span class="nn">model</span> <span class="kn">import</span> <span class="n">Net</span><span class="p">,</span> <span class="n">apply_attention</span><span class="p">,</span> <span class="n">tile_2d_over_nd</span>  <span class="c1"># from pytorch-vqa</span>
+    <span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">get_transform</span>  <span class="c1"># from pytorch-vqa</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"please provide a valid path to pytorch-vqa"</span><span class="p">)</span>
     
-<span class="kn">from</span> <span class="nn">captum.insights</span> <span class="k">import</span> <span class="n">AttributionVisualizer</span><span class="p">,</span> <span class="n">Batch</span>
-<span class="kn">from</span> <span class="nn">captum.insights.features</span> <span class="k">import</span> <span class="n">ImageFeature</span><span class="p">,</span> <span class="n">TextFeature</span>
-<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="k">import</span> <span class="n">TokenReferenceBase</span><span class="p">,</span> <span class="n">configure_interpretable_embedding_layer</span><span class="p">,</span> <span class="n">remove_interpretable_embedding_layer</span>
+<span class="kn">from</span> <span class="nn">captum.insights</span> <span class="kn">import</span> <span class="n">AttributionVisualizer</span><span class="p">,</span> <span class="n">Batch</span>
+<span class="kn">from</span> <span class="nn">captum.insights.features</span> <span class="kn">import</span> <span class="n">ImageFeature</span><span class="p">,</span> <span class="n">TextFeature</span>
+<span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">TokenReferenceBase</span><span class="p">,</span> <span class="n">configure_interpretable_embedding_layer</span><span class="p">,</span> <span class="n">remove_interpretable_embedding_layer</span>
 </pre></div>
 </div>
 </div>
@@ -245,7 +245,7 @@
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">ResNetLayer4</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span> <span class="o">=</span> <span class="n">resnet</span><span class="o">.</span><span class="n">resnet152</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
@@ -262,7 +262,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
 
 <span class="k">class</span> <span class="nc">VQA_Resnet_Model</span><span class="p">(</span><span class="n">Net</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding_tokens</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding_tokens</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">embedding_tokens</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resnet_layer4</span> <span class="o">=</span> <span class="n">ResNetLayer4</span><span class="p">()</span>
 
@@ -633,7 +633,7 @@ Our input text will need to be transformed into embeddings, as it is a sequence 
 <div class="inner_cell">
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># show a screenshot if using notebook non-interactively</span>
-<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="k">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="n">Image</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">'img/captum_insights_vqa.png'</span><span class="p">)</span>
 </pre></div>
 </div>

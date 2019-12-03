@@ -29,13 +29,13 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="k">import</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_format_input</span>
-<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="k">import</span> <span class="n">GradientAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="k">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_format_input</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="kn">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
 
 
 <div class="viewcode-block" id="Saliency"><a class="viewcode-back" href="../../../../saliency.html#captum.attr._core.saliency.Saliency">[docs]</a><span class="k">class</span> <span class="nc">Saliency</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
