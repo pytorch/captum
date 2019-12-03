@@ -5,10 +5,10 @@ import torch
 import warnings
 
 from functools import reduce
-from torch.nn import Embedding
+from torch.nn import Module
 
 
-class InterpretableEmbeddingBase(Embedding):
+class InterpretableEmbeddingBase(Module):
     r"""
         Since some embedding vectors, e.g. word are created and assigned in
         the embedding layers of Pytorch models we need a way to access
@@ -21,11 +21,14 @@ class InterpretableEmbeddingBase(Embedding):
     """
 
     def __init__(self, embedding, full_name):
-        super().__init__(embedding.num_embeddings, embedding.embedding_dim)
+        Module.__init__(self)
+        self.num_embeddings = getattr(embedding, "num_embeddings", None)
+        self.embedding_dim = getattr(embedding, "embedding_dim", None)
+
         self.embedding = embedding
         self.full_name = full_name
 
-    def forward(self, input):
+    def forward(self, input, *other_inputs, **kwargs):
         r"""
          The forward function of a wrapper embedding layer that takes and returns
          embedding layer. It allows embeddings to be created outside of the model
@@ -33,8 +36,15 @@ class InterpretableEmbeddingBase(Embedding):
 
          Args:
 
-            inputs (tensor): Input embedding tensor containing the embedding vectors
-                    of each word or token in the sequence.
+            input (tensor): Embedding tensor generated using the `self.embedding`
+                    layer using `other_inputs` and `kwargs` of necessary.
+            *other_inputs (Any, optional): A sequence of additional inputs that the
+                    forward function takes. Since forward functions can take any
+                    type and number of arguments, this will ensure that we can
+                    execute the forward pass using interpretable embedding layer
+            **kwargs (Any, optional): Similar to `other_inputs` we want to make sure
+                    that our forward pass supports arbitrary number and type of
+                    key-value arguments
 
          Returns:
 
@@ -45,22 +55,25 @@ class InterpretableEmbeddingBase(Embedding):
         """
         return input
 
-    def indices_to_embeddings(self, input):
+    def indices_to_embeddings(self, *input, **kwargs):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
 
         Args:
 
-            input (tensor): A tensor of input indices. A typical example of an
-                   input index is word or token index.
-
+            *input (Any, Optional): This can be a tensor(s) of input indices or any
+                    other variable necessary to comput the embeddings. A typical
+                    example of input indices are word or token indices.
+            **kwargs (Any, optional): Similar to `input` this can be any sequence
+                    of key-value arguments necessary to compute final embedding
+                    tensor.
         Returns:
 
             tensor:
             A tensor of word embeddings corresponding to the
             indices specified in the input
         """
-        return self.embedding(input)
+        return self.embedding(*input, **kwargs)
 
 
 class TokenReferenceBase:

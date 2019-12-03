@@ -163,12 +163,20 @@ class TextModule(nn.Module):
     nested embedding layers
     """
 
-    def __init__(self, num_embeddings, embedding_dim):
+    def __init__(self, num_embeddings, embedding_dim, second_embedding=False):
         super().__init__()
         self.inner_embedding = nn.Embedding(num_embeddings, embedding_dim)
+        self.second_embedding = second_embedding
+        if self.second_embedding:
+            self.inner_embedding2 = nn.Embedding(num_embeddings, embedding_dim)
 
-    def forward(self, input):
-        return self.inner_embedding(input)
+    def forward(self, input, another_input=None):
+        embedding = self.inner_embedding(input)
+        if self.second_embedding:
+            another_embedding = self.inner_embedding2(
+                input if another_input is None else another_input
+            )
+        return embedding if another_input is None else embedding + another_embedding
 
 
 class BasicEmbeddingModel(nn.Module):
@@ -188,20 +196,27 @@ class BasicEmbeddingModel(nn.Module):
     """
 
     def __init__(
-        self, num_embeddings=30, embedding_dim=100, hidden_dim=256, output_dim=1
+        self,
+        num_embeddings=30,
+        embedding_dim=100,
+        hidden_dim=256,
+        output_dim=1,
+        nested_second_embedding=False,
     ):
         super().__init__()
         self.embedding1 = nn.Embedding(num_embeddings, embedding_dim)
-        self.embedding2 = TextModule(num_embeddings, embedding_dim)
+        self.embedding2 = TextModule(
+            num_embeddings, embedding_dim, nested_second_embedding
+        )
         self.linear1 = nn.Linear(embedding_dim, hidden_dim)
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, input):
+    def forward(self, input, another_input=None):
         embedding1 = self.embedding1(input)
-        embedding2 = self.embedding2(input)
+        embedding2 = self.embedding2(input, another_input)
         embeddings = embedding1 + embedding2
-        return self.linear2(self.relu(self.linear1(embeddings))).squeeze(1)
+        return self.linear2(self.relu(self.linear1(embeddings))).squeeze()
 
 
 class BasicModel_MultiLayer(nn.Module):
