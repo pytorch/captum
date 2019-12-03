@@ -4,7 +4,7 @@ import torch
 from .feature_ablation import FeatureAblation
 
 
-def permute_feature(x, feature_mask):
+def _permute_feature(x, feature_mask):
     n = x.size(0)
     assert n > 1, "cannot permute features with batch_size = 1"
 
@@ -21,7 +21,7 @@ def permute_feature(x, feature_mask):
 
 
 class PermutationFeatureImportance(FeatureAblation):
-    def __init__(self, forward_func=None, perm_fn=permute_feature):
+    def __init__(self, forward_func=None, perm_fn=_permute_feature):
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_fn = perm_fn
 

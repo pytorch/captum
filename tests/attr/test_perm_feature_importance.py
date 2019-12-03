@@ -5,7 +5,7 @@ import random
 import torch
 from captum.attr._core.perm_feature_importance import (
     PermutationFeatureImportance,
-    permute_feature,
+    _permute_feature,
 )
 
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
@@ -38,7 +38,7 @@ class Test(BaseTest):
 
                     # permute the feature
                     mask = flat_mask.view_as(inp[0])
-                    perm_inp = permute_feature(inp, mask)
+                    perm_inp = _permute_feature(inp, mask)
                     check_features_are_permuted(inp, perm_inp, mask)
 
                     flat_mask[feature_idx] = 0
@@ -49,7 +49,7 @@ class Test(BaseTest):
                     while mask.sum() == 0:
                         mask = torch.randint_like(inp[0], 0, 2).bool()
 
-                    perm_inp = permute_feature(inp, mask)
+                    perm_inp = _permute_feature(inp, mask)
                     check_features_are_permuted(inp, perm_inp, mask)
 
     def test_single_input(self):
