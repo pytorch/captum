@@ -128,6 +128,117 @@ def _forward_layer_eval(
     )
 
 
+def _forward_layer_distributed_eval(
+    forward_fn,
+    inputs,
+    layer,
+    target_ind=None,
+    additional_forward_args=None,
+    attribute_to_layer_input=False,
+    forward_hook_with_return=False,
+):
+    r"""
+    A helper function that allows to set a hook on model's `layer`, run the forward
+    pass and returns intermediate layer results, stored in a dictionary,
+    and optionally also the output of the forward function. The keys in the
+    dictionary are the device ids and the values are corresponding intermediate layer
+    results, either the inputs or the outputs of the layer depending on whether we set
+    `attribute_to_layer_input` to True or False.
+    This is especially useful when we execute forward pass in a distributed setting,
+    using `DataParallel`s for example.
+    """
+    saved_layer = {}
+    lock = threading.Lock()
+    # Set a forward hook on specified module and run forward pass to
+    # get layer output tensor(s).
+    # For DataParallel models, each partition adds entry to dictionary
+    # with key as device and value as corresponding Tensor.
+
+    def forward_hook(module, inp, out=None):
+        eval_tsr = inp if attribute_to_layer_input else out
+        # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
+        if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
+            eval_tsr = eval_tsr[0]
+
+        assert isinstance(
+            eval_tsr, torch.Tensor
+        ), "Layers with multiple inputs or output tensors are not supported yet."
+        with lock:
+            nonlocal saved_layer
+            # TODO we need to think what will be the best way of storing eval
+            # tensors per device for each input per example. This implementation
+            # doesn't support a tuple of inputs
+
+            # Note that cloning behaviour of `eval_tsr` is different
+            # when `forward_hook_with_return` is set to True. This is because
+            # otherwise `backward()` on the last output layer won't execute.
+            if forward_hook_with_return:
+                saved_layer[eval_tsr.device] = eval_tsr
+                return eval_tsr.clone()
+            else:
+                saved_layer[eval_tsr.device] = eval_tsr.clone()
+
+    if attribute_to_layer_input:
+        hook = layer.register_forward_pre_hook(forward_hook)
+    else:
+        hook = layer.register_forward_hook(forward_hook)
+    output = _run_forward(
+        forward_fn,
+        inputs,
+        target=target_ind,
+        additional_forward_args=additional_forward_args,
+    )
+    hook.remove()
+
+    if len(saved_layer) == 0:
+        raise AssertionError("Forward hook did not obtain any outputs for given layer")
+
+    if forward_hook_with_return:
+        return saved_layer, output
+    return saved_layer
+
+
+def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
+    r"""
+    A helper function to concatenate intermediate layer results stored on
+    different devices in `saved_layer`. `saved_layer` is a dictionary that
+    contains `device_id` as a key and intermediate layer results (either
+    the input or the output of the layer) stored on the device corresponding to
+    the key.
+    `key_list` is a list of devices in appropriate ordering for concatenation
+    and if not provided, keys are sorted based on device ids.
+
+    If only one key exists (standard model), key list simply has one element.
+    """
+    if key_list is None:
+        key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
+    return torch.cat([saved_layer[device_id] for device_id in key_list])
+
+
+def _extract_device_ids(forward_fn, saved_layer, device_ids):
+    r"""
+    A helper function to extract device_ids from `forward_function` in case it is
+    provided as part of a `DataParallel` model or if is accessible from
+    `forward_fn`.
+    In case input device_ids is not None, this function returns that value.
+    """
+    # Multiple devices / keys implies a DataParallel model, so we look for
+    # device IDs if given or available from forward function
+    # (DataParallel model object).
+    if len(saved_layer) > 1 and device_ids is None:
+        if hasattr(forward_fn, "device_ids") and forward_fn.device_ids is not None:
+            device_ids = forward_fn.device_ids
+        else:
+            raise AssertionError(
+                "Layer tensors are saved on multiple devices, however unable to access"
+                " device ID list from the `forward_fn`. Device ID list must be"
+                " accessible from `forward_fn`. For example, they can be retrieved"
+                " if `forward_fn` is a model of type `DataParallel`. It is used"
+                " for identifying device batch ordering."
+            )
+    return device_ids
+
+
 def _forward_layer_eval_with_neuron_grads(
     forward_fn,
     inputs,
@@ -153,54 +264,14 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    saved_layer = {}
-    lock = threading.Lock()
-
-    # Set a forward hook on specified module and run forward pass to
-    # get layer output tensor(s).
-    # For DataParallel models, each partition adds entry to dictionary
-    # with key as device and value as corresponding Tensor.
-    def forward_hook(module, inp, out=None):
-        eval_tsr = inp if attribute_to_layer_input else out
-
-        # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
-        if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
-            eval_tsr = eval_tsr[0]
-
-        assert isinstance(
-            eval_tsr, torch.Tensor
-        ), "Layers with multiple inputs or output tensors are not supported yet."
-        with lock:
-            nonlocal saved_layer
-            # TODO we need to think what will be the best way of storing eval
-            # tensors per device for each input per example. This implementation
-            # doesn't support a tuple of inputs
-            saved_layer[eval_tsr.device] = eval_tsr.clone()
-
-    if attribute_to_layer_input:
-        hook = layer.register_forward_pre_hook(forward_hook)
-    else:
-        hook = layer.register_forward_hook(forward_hook)
-    _run_forward(forward_fn, inputs, additional_forward_args=additional_forward_args)
-    hook.remove()
-    if len(saved_layer) == 0:
-        raise AssertionError("Forward hook did not obtain any outputs for given layer")
-
-    # Multiple devices / keys implies a DataParallel model, so we look for
-    # device IDs if given or available from forward function
-    # (DataParallel model object).
-    if len(saved_layer) > 1 and device_ids is None:
-        if (
-            isinstance(forward_fn, torch.nn.DataParallel)
-            and forward_fn.device_ids is not None
-        ):
-            device_ids = forward_fn.device_ids
-        else:
-            raise AssertionError(
-                "DataParallel Model Detected, device ID list or DataParallel model"
-                " must be provided for identifying device batch ordering."
-            )
-
+    saved_layer = _forward_layer_distributed_eval(
+        forward_fn,
+        inputs,
+        layer,
+        additional_forward_args=additional_forward_args,
+        attribute_to_layer_input=attribute_to_layer_input,
+    )
+    device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
     # Identifies correct device ordering based on device ids.
     # key_list is a list of devices in appropriate ordering for concatenation.
     # If only one key exists (standard model), key list simply has one element.
@@ -210,11 +281,11 @@ def _forward_layer_eval_with_neuron_grads(
             inputs, saved_layer, key_list, gradient_neuron_index
         )
         return (
-            torch.cat([saved_layer[device_id] for device_id in key_list]),
+            _gather_distributed_tensors(saved_layer, key_list=key_list),
             inp_grads,
         )
     else:
-        return torch.cat([saved_layer[device_id] for device_id in key_list])
+        return _gather_distributed_tensors(saved_layer, key_list=key_list)
 
 
 def compute_layer_gradients_and_eval(
@@ -273,61 +344,22 @@ def compute_layer_gradients_and_eval(
                 Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
-        saved_layer = {}
-        lock = threading.Lock()
+        saved_layer, output = _forward_layer_distributed_eval(
+            forward_fn,
+            inputs,
+            layer,
+            target_ind=target_ind,
+            additional_forward_args=additional_forward_args,
+            attribute_to_layer_input=attribute_to_layer_input,
+            forward_hook_with_return=True,
+        )
 
-        # Set a forward hook on specified module and run forward pass to
-        # get layer output tensor(s).
-        # For DataParallel models, each partition adds entry to dictionary
-        # with key as device and value as corresponding Tensor.
-        def forward_hook(module, inp, out=None):
-            eval_tsr = inp if attribute_to_layer_input else out
-
-            # if `inp` or `out` is a tuple of one tensor, assign that
-            # tensor to `eval_tsr`
-            if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
-                eval_tsr = eval_tsr[0]
-
-            with lock:
-                assert isinstance(eval_tsr, torch.Tensor), (
-                    "Layers with multiple input or output tensors are not"
-                    "yet supported."
-                )
-                nonlocal saved_layer
-                saved_layer[eval_tsr.device] = eval_tsr
-                return eval_tsr.clone()
-
-        if attribute_to_layer_input:
-            hook = layer.register_forward_pre_hook(forward_hook)
-        else:
-            hook = layer.register_forward_hook(forward_hook)
-        output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."
         )
-        # Remove unnecessary forward hook.
-        hook.remove()
 
-        if len(saved_layer) == 0:
-            raise AssertionError(
-                "Forward hook did not obtain any outputs for given layer"
-            )
-
-        # Multiple devices / keys implies a DataParallel model, so we look for
-        # device IDs if given or available from forward function
-        # (DataParallel model object).
-        if len(saved_layer) > 1 and device_ids is None:
-            if (
-                isinstance(forward_fn, torch.nn.DataParallel)
-                and forward_fn.device_ids is not None
-            ):
-                device_ids = forward_fn.device_ids
-            else:
-                raise AssertionError(
-                    "DataParallel Model Detected, device ID list or DataParallel model"
-                    " must be provided for identifying device batch ordering."
-                )
+        device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
 
         # Identifies correct device ordering based on device ids.
         # key_list is a list of devices in appropriate ordering for concatenation.
