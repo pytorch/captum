@@ -142,7 +142,7 @@ def _forward_layer_distributed_eval(
     pass and returns intermediate layer results, stored in a dictionary,
     and optionally also the output of the forward function. The keys in the
     dictionary are the device ids and the values are corresponding intermediate layer
-    results, either the inputs or the outputs of the layer, depending on, whether we set
+    results, either the inputs or the outputs of the layer depending on whether we set
     `attribute_to_layer_input` to True or False.
     This is especially useful when we execute forward pass in a distributed setting,
     using `DataParallel`s for example.
@@ -168,6 +168,10 @@ def _forward_layer_distributed_eval(
             # TODO we need to think what will be the best way of storing eval
             # tensors per device for each input per example. This implementation
             # doesn't support a tuple of inputs
+
+            # Note that cloning behaviour of `eval_tsr` is different
+            # when `forward_hook_with_return` is set to True. This is because
+            # otherwise `backward()` on the last output layer won't execute.
             if forward_hook_with_return:
                 saved_layer[eval_tsr.device] = eval_tsr
                 return eval_tsr.clone()
@@ -194,15 +198,15 @@ def _forward_layer_distributed_eval(
     return saved_layer
 
 
-def _gather_distributed_tnsrs(saved_layer, device_ids=None, key_list=None):
+def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
     r"""
     A helper function to concatenate intermediate layer results stored on
     different devices in `saved_layer`. `saved_layer` is a dictionary that
-    that contains `device_id` as a key and intermediate layer results (either
+    contains `device_id` as a key and intermediate layer results (either
     the input or the output of the layer) stored on the device corresponding to
     the key.
     `key_list` is a list of devices in appropriate ordering for concatenation
-    and in case it is not provided, it is identified based on device ids.
+    and if not provided, keys are sorted based on device ids.
 
     If only one key exists (standard model), key list simply has one element.
     """
@@ -228,7 +232,7 @@ def _extract_device_ids(forward_fn, saved_layer, device_ids):
             raise AssertionError(
                 "Layer tensors are saved on multiple devices, however unable to access"
                 " device ID list from the `forward_fn`. Device ID list must be"
-                " accessible from `forward_fn`. For example, we can be retrieved"
+                " accessible from `forward_fn`. For example, they can be retrieved"
                 " if `forward_fn` is a model of type `DataParallel`. It is used"
                 " for identifying device batch ordering."
             )
@@ -277,11 +281,11 @@ def _forward_layer_eval_with_neuron_grads(
             inputs, saved_layer, key_list, gradient_neuron_index
         )
         return (
-            _gather_distributed_tnsrs(saved_layer, key_list=key_list),
+            _gather_distributed_tensors(saved_layer, key_list=key_list),
             inp_grads,
         )
     else:
-        return _gather_distributed_tnsrs(saved_layer, key_list=key_list)
+        return _gather_distributed_tensors(saved_layer, key_list=key_list)
 
 
 def compute_layer_gradients_and_eval(
@@ -355,20 +359,7 @@ def compute_layer_gradients_and_eval(
             " take gradient with respect to multiple outputs."
         )
 
-        # Multiple devices / keys implies a DataParallel model, so we look for
-        # device IDs if given or available from forward function
-        # (DataParallel model object).
-        if len(saved_layer) > 1 and device_ids is None:
-            if (
-                isinstance(forward_fn, torch.nn.DataParallel)
-                and forward_fn.device_ids is not None
-            ):
-                device_ids = forward_fn.device_ids
-            else:
-                raise AssertionError(
-                    "DataParallel Model Detected, device ID list or DataParallel model"
-                    " must be provided for identifying device batch ordering."
-                )
+        device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
 
         # Identifies correct device ordering based on device ids.
         # key_list is a list of devices in appropriate ordering for concatenation.
