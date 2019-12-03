@@ -22,12 +22,8 @@ class InterpretableEmbeddingBase(Module):
 
     def __init__(self, embedding, full_name):
         Module.__init__(self)
-        self.num_embeddings = (
-            embedding.num_embeddings if hasattr(embedding, "num_embeddings") else None
-        )
-        self.embedding_dim = (
-            embedding.embedding_dim if hasattr(embedding, "embedding_dim") else None
-        )
+        self.num_embeddings = getattr(embedding, 'num_embeddings', None)
+        self.embedding_dim = getattr(embedding, 'embedding_dim', None)
 
         self.embedding = embedding
         self.full_name = full_name
