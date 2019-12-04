@@ -49,10 +49,12 @@ class Test(BaseTest):
 
         inp = torch.randn((batch_size,) + inp_size)
 
-        # to be broadcastable dimensions have
-        # match from end to beginning, by:
-        # 1. Equalling 1
-        # 2. Equally the dimension
+        # To be broadcastable dimensions have
+        # match from end to beginning, by equalling 1 or the dim.
+        #
+        # If a dimension is missing then it must be the
+        # last dim provided (from right to left). The missing
+        # dimensions are implied to be = 1
         #
         # Here I write them explicitly for clarity
         mask_sizes = [
