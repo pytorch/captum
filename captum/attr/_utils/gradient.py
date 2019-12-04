@@ -156,6 +156,7 @@ def _forward_layer_distributed_eval(
 
     def forward_hook(module, inp, out=None):
         eval_tsr = inp if attribute_to_layer_input else out
+        is_tuple = True if isinstance(eval_tsr, tuple) else False
         # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
         if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
             eval_tsr = eval_tsr[0]
@@ -174,7 +175,8 @@ def _forward_layer_distributed_eval(
             # otherwise `backward()` on the last output layer won't execute.
             if forward_hook_with_return:
                 saved_layer[eval_tsr.device] = eval_tsr
-                return eval_tsr.clone()
+                eval_tsr_to_return = eval_tsr.clone()
+                return (eval_tsr_to_return,) if is_tuple else eval_tsr_to_return
             else:
                 saved_layer[eval_tsr.device] = eval_tsr.clone()
 
