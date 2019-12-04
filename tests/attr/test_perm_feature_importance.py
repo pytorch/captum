@@ -19,7 +19,9 @@ class Test(BaseTest):
 
         self.assertTrue(inp.dtype == perm_inp.dtype)
         self.assertTrue(inp.shape == perm_inp.shape)
-        self.assertTrue((inp[:, permuted_features] != perm_inp[:, permuted_features]).any())
+        self.assertTrue(
+            (inp[:, permuted_features] != perm_inp[:, permuted_features]).any()
+        )
         self.assertTrue(
             (inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all()
         )
@@ -60,9 +62,8 @@ class Test(BaseTest):
             (3, 20, 1),
             (1, 1, 30),
             (1, 20, 1),
-
             # missing
-            (1,), # empty set (all features)
+            (1,),  # empty set (all features)
             (30,),
             (20, 30),
             (3, 20, 30),
@@ -155,23 +156,20 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
 
     def test_broadcastable_masks(self):
-        # integration test to ensure that 
+        # integration test to ensure that
         # permutation function works with custom masks
         def forward_func(x):
             return x.view(x.shape[0], -1).sum(dim=-1)
 
         batch_size = 2
-        inp = torch.randn((batch_size,) + (3,4,4))
+        inp = torch.randn((batch_size,) + (3, 4, 4))
 
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
 
         masks = [
             torch.tensor([0]),
             torch.tensor([[0, 1, 2, 3]]),
-            torch.tensor([[[0, 1, 2, 3], 
-                           [3, 3, 4, 5],
-                           [6, 6, 4, 6],
-                           [7, 8, 9, 10] ]])
+            torch.tensor([[[0, 1, 2, 3], [3, 3, 4, 5], [6, 6, 4, 6], [7, 8, 9, 10]]]),
         ]
 
         for mask in masks:
