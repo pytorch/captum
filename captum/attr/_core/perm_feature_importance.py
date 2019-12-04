@@ -13,13 +13,7 @@ def _permute_feature(x, feature_mask):
     while (perm == no_perm).all():
         perm = torch.randperm(n)
 
-    # print("x.shape=", x.shape)
-    # print("mask.shape=", feature_mask.shape)
-    try:
-        return (x[perm] * feature_mask) + (x * feature_mask.bitwise_not())
-    except:
-        print("x.shape=", x.shape)
-        print("mask.shape=", feature_mask.shape)
+    return (x[perm] * feature_mask) + (x * feature_mask.bitwise_not())
 
 
 class PermutationFeatureImportance(FeatureAblation):
