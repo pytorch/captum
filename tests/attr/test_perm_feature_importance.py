@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import random
-
 import torch
 from captum.attr._core.perm_feature_importance import (
     PermutationFeatureImportance,
@@ -9,13 +7,12 @@ from captum.attr._core.perm_feature_importance import (
 )
 
 from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 
 
 class Test(BaseTest):
     def _check_features_are_permuted(self, inp, perm_inp, mask):
         permuted_features = mask.expand_as(inp[0])
-        unpermuted_features = mask.expand_as(inp[0]).bitwise_not()
+        unpermuted_features = permuted_features.bitwise_not()
 
         self.assertTrue(inp.dtype == perm_inp.dtype)
         self.assertTrue(inp.shape == perm_inp.shape)
@@ -180,7 +177,6 @@ class Test(BaseTest):
             self.assertTrue(attribs is not None)
             self.assertTrue(attribs.shape == inp.shape)
 
-            y = forward_func(inp)
             fm = mask.expand_as(inp[0])
 
             features = set([x for x in mask.flatten()])

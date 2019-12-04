@@ -29,9 +29,10 @@ class PermutationFeatureImportance(FeatureAblation):
         feature_mask=None,
         ablations_per_eval=1,
     ):
-        assert (
-            feature_mask is None or feature_mask.shape[0] == 1
-        ), "feature_mask.shape[0] != 1: pass in one mask in order to permute the same features for each input"
+        assert feature_mask is None or feature_mask.shape[0] == 1, (
+            "feature_mask.shape[0] != 1: pass in one mask in "
+            "order to permute the same features for each input"
+        )
         return FeatureAblation.attribute(
             self,
             inputs,
@@ -45,9 +46,10 @@ class PermutationFeatureImportance(FeatureAblation):
     def _construct_ablated_input(
         self, feature_tensor, input_mask, baseline, start_feature, end_feature
     ):
-        assert (
-            input_mask.shape[0] == 1
-        ), "input_mask.shape[0] != 1: pass in one mask in order to permute the same features for each input"
+        assert input_mask.shape[0] == 1, (
+            "input_mask.shape[0] != 1: pass in one mask in order to permute"
+            "the same features for each input"
+        )
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).bool()
