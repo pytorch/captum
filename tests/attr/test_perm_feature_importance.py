@@ -12,45 +12,64 @@ from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
-    def test_perm_fn(self):
-        def check_features_are_permuted(inp, perm_inp, mask):
-            unpermuted_features = mask.bitwise_not()
-            self.assertTrue((inp[:, mask] != perm_inp[:, mask]).any())
-            self.assertTrue(
-                (inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all()
-            )
+    def _check_features_are_permuted(self, inp, perm_inp, mask):
+        permuted_features = mask.expand_as(inp[0])
+        unpermuted_features = mask.expand_as(inp[0]).bitwise_not()
 
-        sizes_to_test = [(10,), (4, 5), (3, 4, 5), (6, 7, 8, 9)]
-        for batch_size in [2, 10]:
-            for inp_size in sizes_to_test:
-                inp = torch.randn((batch_size,) + inp_size)
-                flat_mask = torch.zeros_like(inp[0]).flatten().bool()
+        self.assertTrue((inp[:, permuted_features] != perm_inp[:, permuted_features]).any())
+        self.assertTrue(
+            (inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all()
+        )
 
-                # test random set of single features
-                num_features = inp.numel() // batch_size
-                num_features_to_test = min(num_features, random.randint(2, 30))
-                for _ in range(num_features_to_test):
-                    feature_idx = random.randint(0, num_features - 1)
-                    flat_mask[feature_idx] = 1
+    def _check_perm_fn_with_mask(self, inp, mask):
+        perm_inp = _permute_feature(inp, mask)
+        self._check_features_are_permuted(inp, perm_inp, mask)
 
-                    # ensure we only set one feature to be masked
-                    self.assertTrue(torch.sum(flat_mask) == 1)
+    def test_perm_fn_single_feature(self):
+        batch_size = 2
+        sizes_to_test = [(10,), (4, 5), (3, 4, 5)]
+        for inp_size in sizes_to_test:
+            inp = torch.randn((batch_size,) + inp_size)
+            flat_mask = torch.zeros_like(inp[0]).flatten().bool()
 
-                    # permute the feature
-                    mask = flat_mask.view_as(inp[0])
-                    perm_inp = _permute_feature(inp, mask)
-                    check_features_are_permuted(inp, perm_inp, mask)
+            num_features = inp.numel() // batch_size
+            for i in range(num_features):
+                flat_mask[i] = 1
+                self._check_perm_fn_with_mask(inp, flat_mask.view_as(inp[0]))
+                flat_mask[i] = 0
 
-                    flat_mask[feature_idx] = 0
+    def test_perm_fn_broadcastable_masks(self):
+        batch_size = 5
+        inp_size = (3, 20, 30)
 
-                # test random set of features
-                for _ in range(random.randint(10, 20)):
-                    mask = torch.zeros_like(inp[0])
-                    while mask.sum() == 0:
-                        mask = torch.randint_like(inp[0], 0, 2).bool()
+        inp = torch.randn((batch_size,) + inp_size)
 
-                    perm_inp = _permute_feature(inp, mask)
-                    check_features_are_permuted(inp, perm_inp, mask)
+        # to be broadcastable dimensions have
+        # match from end to beginning, by:
+        # 1. Equalling 1
+        # 2. Equally the dimension
+        #
+        # Here I write them explicitly for clarity
+        mask_sizes = [
+            # dims = 1
+            (1, 20, 30),
+            (3, 1, 30),
+            (3, 20, 1),
+            (1, 1, 30),
+            (1, 20, 1),
+
+            # missing
+            (1,), # empty set (all features)
+            (30,),
+            (20, 30),
+            (3, 20, 30),
+        ]
+
+        for mask_size in mask_sizes:
+            mask = torch.randint(0, 2, mask_size).bool()
+            self.assertTrue(mask.shape == mask_size)
+
+            self._check_perm_fn_with_mask(inp, mask)
 
     def test_single_input(self):
         batch_size = 2
@@ -133,54 +152,54 @@ class Test(BaseTest):
         actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
         assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
 
-    def test_broadcastable_masks(self):
-        def forward_func(x, y):
-            return x + y
+    # TODO
+    #def test_feature_single(self):
+    #    def forward_func(x, y):
+    #        return x + y
 
-        batch_size = 2
-        inp1 = torch.randn((batch_size,) + (3,))
-        inp2 = torch.randn((batch_size,) + (3,))
-        masks_to_test = [
-            (torch.tensor(0), torch.tensor(1)),
-            (torch.tensor(0), torch.tensor([0, 0, 1])),
-            (torch.tensor([0, 0, 1]), torch.tensor([0, 0, 1])),
-        ]
-        feature_importance = PermutationFeatureImportance(forward_func=forward_func)
-        for masks in masks_to_test:
-            target = random.randint(0, 2)
-            attribs = feature_importance.attribute(
-                (inp1, inp2), feature_mask=masks, target=target
-            )
-            self.assertTrue(isinstance(attribs, tuple))
+    #    batch_size = 2
+    #    inp1 = torch.randn((batch_size,) + (3,))
+    #    inp2 = torch.randn((batch_size,) + (3,))
 
-            features_in_mask = set()
-            for mask in masks:
-                fvs = mask
-                if mask.numel() == 1:
-                    fvs = [mask]
-                for fv in fvs:
-                    features_in_mask.add(fv)
+    #    feature_importance = PermutationFeatureImportance(forward_func=forward_func)
 
-            for feature in features_in_mask:
-                for inp, sub_mask, sub_attrib in zip((inp1, inp2), masks, attribs):
-                    feature_mask = sub_mask == feature
-                    # if the mask doesn't contain feature - skip
-                    if feature_mask.sum() == 0:
-                        continue
+    #    target = 1
+    #    mask = (torch.tensor(0), torch.tensor(1))
+    #    attribs = feature_importance.attribute(
+    #        (inp1, inp2), feature_mask=mask, target=target
+    #    )
+    #    self.assertTrue(isinstance(attribs, tuple))
 
-                    feature_mask = feature_mask.expand_as(inp[0])
+    #    features_in_mask = []
+    #    for sub_mask in mask:
+    #        if sub_mask.numel() == 1:
+    #            sub_mask = [sub_mask]
 
-                    # if this feature does contribute to the output
-                    if feature_mask[target]:
-                        # two conditions should hold:
-                        # 1) all values in attribs[feature_mask] are the same
-                        # 2) since the batch_size = 2, this value should be
-                        #    equal to (inp[0, target] - inp[1, target],
-                        #              inp[1, target] - inp[0, target])
-                        val = inp[0, target] - inp[1, target]
-                        assertTensorAlmostEqual(self, sub_attrib[0, feature_mask], val)
-                        assertTensorAlmostEqual(self, sub_attrib[1, feature_mask], -val)
-                    else:
-                        # if the feature doesn't contribute to the output
-                        # -- then this means it should have attrib of 0
-                        assertTensorAlmostEqual(self, sub_attrib[:, feature_mask], 0)
+    #        for feature in sub_mask:
+    #            features_in_mask.append(feature)
+
+    #    for feature in features_in_mask:
+    #        for inp, sub_mask, sub_attrib in zip((inp1, inp2), mask, attribs):
+    #            feature_mask = sub_mask == feature
+    #            # if the mask doesn't contain feature - skip
+    #            if feature_mask.sum() == 0:
+    #                continue
+
+    #            # TODO: refactor inp[0] to output space size
+    #            feature_mask = feature_mask.expand_as(inp[0])
+
+    #            # if this feature does contribute to the output
+    #            if feature_mask[target]:
+    #                # two conditions should hold:
+    #                # 1) all values in attribs[feature_mask] are the same
+    #                # 2) since the batch_size = 2, this value should be
+    #                #    equal to (inp[0, target] - inp[1, target],
+    #                #              inp[1, target] - inp[0, target])
+    #                val = inp[0, target] - inp[1, target]
+    #                assertTensorAlmostEqual(self, sub_attrib[0, feature_mask], val)
+    #                assertTensorAlmostEqual(self, sub_attrib[1, feature_mask], -val)
+    #            else:
+    #                # if the feature doesn't contribute to the output
+    #                # -- then this means it should have attrib of 0
+    #                assertTensorAlmostEqual(self, sub_attrib[:, feature_mask], 0)
+        
