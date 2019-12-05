@@ -9,15 +9,12 @@
 # As a reference VQA model we use the following open source implementation:
 # https://github.com/Cyanogenoid/pytorch-vqa
 #   
-#   **Note:** Before running this tutorial, please install the torchvision, PIL, and matplotlib packages.
+#   **Note:** Before running this tutorial, please install the `torchvision`, `PIL`, and `matplotlib` packages.
 
-# Note: Before running this tutorial, please, make sure that you have installed `matplotlib`, `PIL` and `torchvision` packages.
-
-# In[4]:
+# In[1]:
 
 
 import os, sys
-import numpy as np
 
 # Clone PyTorch VQA project from: https://github.com/Cyanogenoid/pytorch-vqa and add to your filepath
 # Replace <PROJECT-DIR> placeholder with your project directory path
@@ -29,10 +26,12 @@ sys.path.append(os.path.realpath('<PROJECT-DIR>/pytorch-vqa'))
 sys.path.append(os.path.realpath('<PROJECT-DIR>/pytorch-resnet'))
 
 
-# In[5]:
+# In[2]:
 
 
-import matplotlib.pyplot as plt
+import threading
+import numpy as np
+
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -52,7 +51,7 @@ from captum.attr import InterpretableEmbeddingBase, TokenReferenceBase
 from captum.attr import visualization, configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
 
 
-# In[6]:
+# In[3]:
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,7 +62,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # VQA model can be downloaded from: 
 # https://github.com/Cyanogenoid/pytorch-vqa/releases/download/v1.0/2017-08-04_00.55.19.pth
 
-# In[7]:
+# In[4]:
 
 
 saved_state = torch.load('models/2017-08-04_00.55.19.pth', map_location=device)
@@ -91,7 +90,7 @@ for w, idx in answer_to_index.items():
 # In[ ]:
 
 
-vqa_net = torch.nn.DataParallel(Net(num_tokens), device_ids=[0,1])
+vqa_net = torch.nn.DataParallel(Net(num_tokens))
 vqa_net.load_state_dict(saved_state['weights'])
 vqa_net.to(device)
 vqa_net.eval()
@@ -102,7 +101,7 @@ vqa_net.eval()
 # 
 # 
 
-# In[9]:
+# In[6]:
 
 
 def encode_question(question):
@@ -119,7 +118,7 @@ def encode_question(question):
 
 # Original saved model does not have image network's (resnet's) layers attached to it. We attach it in the below cell using forward-hook. The rest of the model is identical to the original definition of the model: https://github.com/Cyanogenoid/pytorch-vqa/blob/master/model.py#L48
 
-# In[10]:
+# In[7]:
 
 
 class ResNetLayer4(torch.nn.Module):
@@ -128,16 +127,24 @@ class ResNetLayer4(torch.nn.Module):
         self.r_model = resnet.resnet152(pretrained=True)
         self.r_model.eval()
         self.r_model.to(device)
-        self.buffer = None
 
+        self.buffer = {}
+        lock = threading.Lock()
+
+        # Since we only use the output of the 4th layer from the resnet model and do not
+        # need to do forward pass all the way to the final layer we can terminate forward
+        # execution in the forward hook of that layer after obtaining the output of it.
+        # For that reason, we can define a custom Exception class that will be used for
+        # raising early termination error.
         def save_output(module, input, output):
-            self.buffer = output
+            with lock:
+                self.buffer[output.device] = output
 
         self.r_model.layer4.register_forward_hook(save_output)
 
     def forward(self, x):
-        self.r_model(x)
-        return self.buffer
+        self.r_model(x)          
+        return self.buffer[x.device]
 
 class VQA_Resnet_Model(Net):
     def __init__(self, embedding_tokens):
@@ -160,12 +167,12 @@ class VQA_Resnet_Model(Net):
 
 # Updating weights from the saved model and removing the old model from the memory.
 
-# In[11]:
+# In[8]:
 
 
 vqa_resnet = VQA_Resnet_Model(vqa_net.module.text.embedding.num_embeddings)
 # `device_ids` contains a list of GPU ids which are used for paralelization supported by `DataParallel`
-vqa_resnet = torch.nn.DataParallel(vqa_resnet, device_ids=[0,1])
+vqa_resnet = torch.nn.DataParallel(vqa_resnet)
 
 # saved vqa model's parameters
 partial_dict = vqa_net.state_dict()
@@ -211,14 +218,14 @@ interpretable_embedding = configure_interpretable_embedding_layer(vqa_resnet, 'm
 
 # Creating reference aka baseline / background for questions. This is specifically necessary for baseline-based model interpretability algorithms. In this case for integrated gradients. More details can be found in the original paper: https://arxiv.org/pdf/1703.01365.pdf
 
-# In[14]:
+# In[11]:
 
 
 PAD_IND = token_to_index['pad']
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 
 
-# In[15]:
+# In[12]:
 
 
 # this is necessary for the backpropagation of RNNs models in eval mode
@@ -227,7 +234,7 @@ torch.backends.cudnn.enabled=False
 
 # Creating an instance of integrated gradients. It will be used to intepret model's predictions.
 
-# In[16]:
+# In[13]:
 
 
 ig = IntegratedGradients(vqa_resnet)
@@ -235,7 +242,7 @@ ig = IntegratedGradients(vqa_resnet)
 
 # Defining default cmap that will be used for image visualizations 
 
-# In[17]:
+# In[14]:
 
 
 default_cmap = LinearSegmentedColormap.from_list('custom blue', 
@@ -246,7 +253,7 @@ default_cmap = LinearSegmentedColormap.from_list('custom blue',
 
 # Defining a few test images for model intepretation purposes
 
-# In[18]:
+# In[15]:
 
 
 images = ['./img/vqa/siamese.jpg',
@@ -254,7 +261,7 @@ images = ['./img/vqa/siamese.jpg',
           './img/vqa/zebra.jpg']
 
 
-# In[19]:
+# In[16]:
 
 
 def vqa_resnet_interpret(image_filename, questions, targets):
@@ -265,13 +272,12 @@ def vqa_resnet_interpret(image_filename, questions, targets):
     image_features = image_to_features(img).requires_grad_().to(device)
     for question, target in zip(questions, targets):
         q, q_len = encode_question(question)
-
         q_input_embedding = interpretable_embedding.indices_to_embeddings(q).unsqueeze(0)
 
         # Making prediction. The output of prediction will be visualized later
         ans = vqa_resnet(image_features, q_input_embedding, q_len.unsqueeze(0))
         pred, answer_idx = F.softmax(ans, dim=1).data.cpu().max(dim=1)
-        
+
         # generate reference for each sample
         q_reference_indices = token_reference.generate_reference(q_len.item(), 
                                                                  device=device).unsqueeze(0)
@@ -308,7 +314,7 @@ def vqa_resnet_interpret(image_filename, questions, targets):
         print('Total Contribution: ', attributions[0].sum().item() + attributions[1].sum().item())
 
 
-# In[20]:
+# In[ ]:
 
 
 # the index of image in the test set. Please, change it if you want to play with different test images/samples.
@@ -320,7 +326,7 @@ vqa_resnet_interpret(images[image_idx], [
 ], ['elephant', 'gray', 'zoo'])
 
 
-# In[21]:
+# In[18]:
 
 
 import IPython
@@ -328,7 +334,7 @@ import IPython
 IPython.display.Image(filename='img/vqa/elephant_attribution.jpg')
 
 
-# In[22]:
+# In[ ]:
 
 
 image_idx = 0 # cat
@@ -343,14 +349,14 @@ vqa_resnet_interpret(images[image_idx], [
 ], ['cat', 'blue', 'cat', 'white and brown', '2', 'at the wall'])
 
 
-# In[23]:
+# In[20]:
 
 
 # Above cell generates an output similar to this:
 IPython.display.Image(filename='img/vqa/siamese_attribution.jpg')
 
 
-# In[24]:
+# In[21]:
 
 
 image_idx = 2 # zebra
@@ -363,7 +369,7 @@ vqa_resnet_interpret(images[image_idx], [
 ], ['zebra', 'black and white', '2', 'zoo'])
 
 
-# In[25]:
+# In[22]:
 
 
 # Above cell generates an output similar to this:
@@ -372,7 +378,7 @@ IPython.display.Image(filename='img/vqa/zebra_attribution.jpg')
 
 # As mentioned above, after we are done with interpretation, we have to remove Interpretable Embedding Layer and set the original embeddings layer back to the model.
 
-# In[26]:
+# In[23]:
 
 
 remove_interpretable_embedding_layer(vqa_resnet, interpretable_embedding)
