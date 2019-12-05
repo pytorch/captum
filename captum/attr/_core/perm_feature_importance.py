@@ -13,8 +13,9 @@ def _permute_feature(x, feature_mask):
     while (perm == no_perm).all():
         perm = torch.randperm(n)
 
-    return (x[perm] * feature_mask.to(dtype=x.dtype)) +\
-           (x * feature_mask.bitwise_not().to(dtype=x.dtype))
+    return (x[perm] * feature_mask.to(dtype=x.dtype)) + (
+        x * feature_mask.bitwise_not().to(dtype=x.dtype)
+    )
 
 
 class PermutationFeatureImportance(FeatureAblation):
