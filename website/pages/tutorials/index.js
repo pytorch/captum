@@ -77,6 +77,12 @@ class TutorialHome extends React.Component {
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
                 of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
+                <h4>[master only] Interpreting question answering with BERT:</h4>
+                This tutorial demonstrates how to use Captum to interpret a BERT model for question answering.
+                We use a pre-trained model from Hugging Face fine-tuned on the SQUAD dataset and show how to use hooks to
+                examine and better understand embeddings, sub-embeddings, BERT, and attention layers.
+                Find the tutorial <a href="Bert_SQUAD_Interpret">here</a>.
+
                 <h4>Getting Started with Captum Insights:</h4>
                 This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision
                 CNN model is loaded and then used on the CIFAR dataset.  Captum Insights is then loaded to visualize the interpretation of specific examples.
