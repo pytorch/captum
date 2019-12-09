@@ -17,7 +17,11 @@
     },
     {
       "id": "Multimodal_VQA_Interpret",
-      "title": "Intepreting multimodal models"
+      "title": "Interpreting multimodal models"
+    },
+    {
+      "id": "Bert_SQUAD_Interpret",
+      "title": "[master only] Interpreting question answering with BERT"
     },
     {
       "id": "CIFAR_TorchVision_Captum_Insights",
