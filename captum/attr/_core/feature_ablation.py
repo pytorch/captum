@@ -33,6 +33,7 @@ class FeatureAblation(PerturbationAttribution):
         additional_forward_args=None,
         feature_mask=None,
         ablations_per_eval=1,
+        **kwargs
     ):
         r""""
         A perturbation based approach to computing attribution, involving
@@ -156,6 +157,11 @@ class FeatureAblation(PerturbationAttribution):
                             If the forward function returns a single scalar per batch,
                             ablations_per_eval must be set to 1.
                             Default: 1
+                **kwargs (Any, optional): Any additional arguments used by child
+                            classes of FeatureAblation (such as Occlusion) to construct
+                            ablations. These arguments are ignored when using
+                            FeatureAblation directly.
+                            Default: None
 
         Returns:
                 *tensor* or tuple of *tensors* of **attributions**:
@@ -264,16 +270,6 @@ class FeatureAblation(PerturbationAttribution):
 
         # Iterate through each feature tensor for ablation
         for i in range(len(inputs)):
-            # Obtain feature mask for selected input tensor, matches size of
-            # 1 input example, (1 x inputs[i].shape[1:])
-            input_mask = (
-                torch.reshape(
-                    torch.arange(torch.numel(inputs[i][0]), device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-                if feature_mask is None
-                else feature_mask[i]
-            )
             for (
                 current_inputs,
                 current_add_args,
@@ -285,8 +281,9 @@ class FeatureAblation(PerturbationAttribution):
                 additional_forward_args,
                 target,
                 baselines,
-                input_mask,
+                feature_mask,
                 ablations_per_eval,
+                **kwargs
             ):
                 # modified_eval dimensions: 1D tensor with length
                 # equal to #num_examples * #features in batch
@@ -325,8 +322,20 @@ class FeatureAblation(PerturbationAttribution):
         baselines,
         input_mask,
         ablations_per_eval,
+        **kwargs
     ):
-        num_features = torch.max(input_mask).item() + 1
+        extra_args = {}
+        for key, value in kwargs.items():
+            # For any tuple argument in kwargs, we choose index i of the tuple.
+            if isinstance(value, tuple):
+                extra_args[key] = value[i]
+            else:
+                extra_args[key] = value
+
+        input_mask = input_mask[i] if input_mask is not None else None
+        min_feature, num_features, input_mask = self._get_feature_range_and_mask(
+            inputs[i], input_mask, **extra_args
+        )
         num_examples = inputs[0].shape[0]
         ablations_per_eval = min(ablations_per_eval, num_features)
         baseline = baselines[i] if isinstance(baselines, tuple) else baselines
@@ -345,26 +354,26 @@ class FeatureAblation(PerturbationAttribution):
         )
         target_repeated = _expand_target(target, ablations_per_eval)
 
-        num_features_processed = torch.min(input_mask).item()
+        num_features_processed = min_feature
         while num_features_processed < num_features:
-            current_num_features = min(
+            current_num_ablated_features = min(
                 ablations_per_eval, num_features - num_features_processed
             )
 
             # Store appropriate inputs and additional args based on batch size.
-            if current_num_features != ablations_per_eval:
+            if current_num_ablated_features != ablations_per_eval:
                 current_features = [
-                    feature_repeated[0 : current_num_features * num_examples]
+                    feature_repeated[0 : current_num_ablated_features * num_examples]
                     for feature_repeated in all_features_repeated
                 ]
                 current_additional_args = (
                     _expand_additional_forward_args(
-                        additional_args, current_num_features
+                        additional_args, current_num_ablated_features
                     )
                     if additional_args is not None
                     else None
                 )
-                current_target = _expand_target(target, current_num_features)
+                current_target = _expand_target(target, current_num_ablated_features)
             else:
                 current_features = all_features_repeated
                 current_additional_args = additional_args_repeated
@@ -373,21 +382,23 @@ class FeatureAblation(PerturbationAttribution):
             # Store existing tensor before modifying
             original_tensor = current_features[i]
             # Construct ablated batch for features in range num_features_processed
-            # to num_features_processed + current_num_features and return mask with
-            # same size as ablated batch. ablated_features has dimension
-            # (current_num_features, num_examples, + inputs[i].shape[1:])
+            # to num_features_processed + current_num_ablated_features and return
+            # mask with same size as ablated batch. ablated_features has dimension
+            # (current_num_ablated_features, num_examples, + inputs[i].shape[1:])
             ablated_features, current_mask = self._construct_ablated_input(
                 current_features[i].reshape(
-                    (current_num_features, num_examples) + current_features[i].shape[1:]
+                    (current_num_ablated_features, num_examples)
+                    + current_features[i].shape[1:]
                 ),
                 input_mask,
                 baseline,
                 num_features_processed,
-                num_features_processed + current_num_features,
+                num_features_processed + current_num_ablated_features,
+                **extra_args
             )
 
             # current_features[i] has dimension
-            # (current_num_features * num_examples, inputs[i].shape[1:]),
+            # (current_num_ablated_features * num_examples, inputs[i].shape[1:]),
             # which can be provided to the model as input.
             current_features[i] = ablated_features.reshape(
                 (-1,) + ablated_features.shape[2:]
@@ -397,31 +408,45 @@ class FeatureAblation(PerturbationAttribution):
             ), current_additional_args, current_target, current_mask
             # Replace existing tensor at index i.
             current_features[i] = original_tensor
-            num_features_processed += current_num_features
+            num_features_processed += current_num_ablated_features
 
     def _construct_ablated_input(
-        self, feature_tensor, input_mask, baseline, start_feature, end_feature
+        self, expanded_input, input_mask, baseline, start_feature, end_feature, **kwargs
     ):
         r"""
-        Ablates given feature tensor with given input feature mask, feature range,
-        and baselines. feature_tensor shape is (`num_features`, `num_examples`, ...)
+        Ablates given expanded_input tensor with given feature mask, feature range,
+        and baselines. expanded_input shape is (`num_features`, `num_examples`, ...)
         with remaining dimensions corresponding to remaining original tensor
         dimensions and `num_features` = `end_feature` - `start_feature`.
         input_mask has same number of dimensions as original input tensor (one less
-        than `feature_tensor`), and can have first dimension either 1, applying same
+        than `expanded_input`), and can have first dimension either 1, applying same
         feature mask to all examples, or `num_examples`. baseline is expected to
-        be broadcastable to match `feature_tensor`.
+        be broadcastable to match `expanded_input`.
 
-        This method returns the ablated feature tensor, which has the same
-        dimensionality as `feature_tensor` as well as the corresponding mask with
-        either the same dimensionality as `feature_tensor` or second dimension
+        This method returns the ablated input tensor, which has the same
+        dimensionality as `expanded_input` as well as the corresponding mask with
+        either the same dimensionality as `expanded_input` or second dimension
         being 1. This mask contains 1s in locations which have been ablated (and
         thus counted towards ablations for that feature) and 0s otherwise.
         """
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
-        ablated_tensor = (feature_tensor * (1 - current_mask).float()) + (
+        ablated_tensor = (expanded_input * (1 - current_mask).float()) + (
             baseline * current_mask.float()
         )
         return ablated_tensor, current_mask
+
+    def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
+        if input_mask is None:
+            # Obtain feature mask for selected input tensor, matches size of
+            # 1 input example, (1 x inputs[i].shape[1:])
+            input_mask = torch.reshape(
+                torch.arange(torch.numel(input[0]), device=input.device),
+                input[0:1].shape,
+            ).long()
+        return (
+            torch.min(input_mask).item(),
+            torch.max(input_mask).item() + 1,
+            input_mask,
+        )

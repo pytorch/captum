@@ -164,6 +164,52 @@ def _format_attributions(is_inputs_tuple, attributions):
     return attributions if is_inputs_tuple else attributions[0]
 
 
+def _format_and_verify_strides(strides, inputs):
+    # Formats strides, which are necessary for occlusion
+    # Assumes inputs are already formatted (in tuple)
+    if strides is None:
+        strides = tuple(1 for input in inputs)
+    if len(inputs) == 1 and not (isinstance(strides, tuple) and len(strides) == 1):
+        strides = (strides,)
+    assert isinstance(strides, tuple) and len(strides) == len(
+        inputs
+    ), "Strides must be provided for each input tensor."
+    for i in range(len(inputs)):
+        assert isinstance(strides[i], int) or (
+            isinstance(strides[i], tuple)
+            and len(strides[i]) == len(inputs[i].shape) - 1
+        ), (
+            "Stride for input index {} is {}, which is invalid for input with "
+            "shape {}. It must be either an int or a tuple with length equal to "
+            "len(input_shape) - 1."
+        ).format(
+            i, strides[i], inputs[i].shape
+        )
+
+    return strides
+
+
+def _format_and_verify_sliding_window_shapes(sliding_window_shapes, inputs):
+    # Formats shapes of sliding windows, which is necessary for occlusion
+    # Assumes inputs is already formatted (in tuple)
+    if not isinstance(sliding_window_shapes[0], tuple):
+        sliding_window_shapes = (sliding_window_shapes,)
+    assert len(sliding_window_shapes) == len(
+        inputs
+    ), "Must provide sliding window dimensions for each input tensor."
+    for i in range(len(inputs)):
+        assert (
+            isinstance(sliding_window_shapes[i], tuple)
+            and len(sliding_window_shapes[i]) == len(inputs[i].shape) - 1
+        ), (
+            "Occlusion shape for input index {} is {} but should be a tuple with "
+            "{} dimensions."
+        ).format(
+            i, sliding_window_shapes[i], len(inputs[i].shape) - 1
+        )
+    return sliding_window_shapes
+
+
 def _compute_conv_delta_and_format_attrs(
     attr_algo,
     return_convergence_delta,

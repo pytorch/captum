@@ -6,6 +6,7 @@ import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.occlusion import Occlusion
 
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -466,6 +467,35 @@ class Test(BaseGPUTest):
                 None,
                 inputs=inp,
                 target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_simple_occlusion(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).float().cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=inp,
+                sliding_window_shapes=(1, 4, 2),
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_occlusion(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                sliding_window_shapes=((2,), (1,)),
+                test_batches=False,
                 ablations_per_eval=ablations_per_eval,
             )
 
