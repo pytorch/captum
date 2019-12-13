@@ -13,7 +13,11 @@ from .helpers.utils import (
     assertTensorAlmostEqual,
     BaseTest,
 )
-from .helpers.basic_models import ReLUDeepLiftModel, TanhDeepLiftModel
+from .helpers.basic_models import (
+    ReLUDeepLiftModel,
+    TanhDeepLiftModel,
+    BasicModelWithReusableModules,
+)
 from .helpers.basic_models import ReLULinearDeepLiftModel, Conv1dDeepLiftModel
 
 
@@ -58,7 +62,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
     def test_relu_linear_deeplift(self):
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearDeepLiftModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
@@ -68,8 +72,36 @@ class Test(BaseTest):
         # expected = [[[0.0, 0.0]], [[6.0, 2.0]]]
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
+    def test_relu_linear_deeplift_compare_inplace(self):
+        model1 = ReLULinearDeepLiftModel(inplace=True)
+        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
+        inputs = (x1, x2)
+        attributions1 = DeepLift(model1).attribute(inputs)
+
+        model2 = ReLULinearDeepLiftModel()
+        attributions2 = DeepLift(model2).attribute(inputs)
+        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
+        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
+
+    def test_relu_linear_deepliftshap_compare_inplace(self):
+        model1 = ReLULinearDeepLiftModel(inplace=True)
+        x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
+        inputs = (x1, x2)
+        b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        b2 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        baselines = (b1, b2)
+
+        attributions1 = DeepLiftShap(model1).attribute(inputs, baselines)
+
+        model2 = ReLULinearDeepLiftModel()
+        attributions2 = DeepLiftShap(model2).attribute(inputs, baselines)
+        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
+        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
+
     def test_relu_linear_deeplift_batch(self):
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearDeepLiftModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
 
@@ -118,7 +150,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
     def test_relu_deepliftshap_baselines_as_func(self):
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearDeepLiftModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
 
@@ -162,7 +194,7 @@ class Test(BaseTest):
         def custom_attr_func(multipliers, inputs, baselines):
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearDeepLiftModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
         b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
@@ -189,6 +221,13 @@ class Test(BaseTest):
             target=(0, 0),
         )
         self.assertEqual(attr.shape, rand_seq_data.shape)
+
+    def test_reusable_modules(self):
+        model = BasicModelWithReusableModules()
+        input = torch.rand(1, 3)
+        dl = DeepLift(model)
+        with self.assertRaises(RuntimeError):
+            dl.attribute(input, target=0)
 
     def _deeplift_assert(
         self, model, attr_method, inputs, baselines, custom_attr_func=None

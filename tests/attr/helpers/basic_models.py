@@ -113,6 +113,17 @@ class ReLUDeepLiftModel(nn.Module):
         return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
 
 
+class BasicModelWithReusableModules(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lin1 = nn.Linear(3, 2)
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(2, 2)
+
+    def forward(self, inputs):
+        return self.relu(self.lin2(self.relu(self.lin1(inputs))))
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
         Same as the ReLUDeepLiftModel, but with activations
@@ -134,13 +145,13 @@ class ReLULinearDeepLiftModel(nn.Module):
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self):
+    def __init__(self, inplace=False):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
         self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))
         self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=inplace)
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
