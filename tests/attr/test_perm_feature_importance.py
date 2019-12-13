@@ -95,37 +95,46 @@ class Test(BaseTest):
             self.assertTrue((attribs[:, 2] != 0).all())
 
     def test_multi_input(self):
-        batch_size = 5
-        input_size = (2,)
+        batch_size = 20
+        inp1_size = (5, 2)
+        inp2_size = (5, 3)
 
         labels = torch.randn(batch_size)
 
         def forward_func(*x):
             y = 0
             for xx in x:
-                y += xx[:, 0] * xx[:, 1]
-            return torch.sum((y - labels) ** 2)
+                y += xx[:, :, 0] * xx[:, :, 1]
+            y = y.sum(dim=-1)
+
+            return torch.mean((y - labels) ** 2)
 
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
 
         inp = (
-            torch.randn((batch_size,) + input_size),
-            torch.randn((batch_size,) + input_size),
+            torch.randn((batch_size,) + inp1_size),
+            torch.randn((batch_size,) + inp2_size),
         )
-        inp[1][:, 1] = 4
-        attribs = feature_importance.attribute(inp)
+
+        feature_mask = (
+            torch.arange(inp[0][0].numel()).view_as(inp[0][0]).unsqueeze(0),
+            torch.arange(inp[1][0].numel()).view_as(inp[1][0]).unsqueeze(0),
+        )
+
+        inp[1][:, :, 1] = 4
+        attribs = feature_importance.attribute(inp, feature_mask=feature_mask)
 
         self.assertTrue(isinstance(attribs, tuple))
         self.assertTrue(len(attribs) == 2)
-        self.assertTrue(attribs[0].squeeze(0).size() == input_size)
-        self.assertTrue(attribs[1].squeeze(0).size() == input_size)
 
-        for i in range(2):
-            self.assertTrue((attribs[0][:, i] != 0).all())
-            if i != 1:
-                self.assertTrue((attribs[1][:, i] != 0).all())
+        self.assertTrue(attribs[0].squeeze(0).size() == inp1_size)
+        self.assertTrue(attribs[1].squeeze(0).size() == inp2_size)
 
-        self.assertTrue((attribs[1][:, 1] == 0).all())
+        self.assertTrue((attribs[1][:, :, 1] == 0).all())
+        self.assertTrue((attribs[1][:, :, 2] == 0).all())
+
+        self.assertTrue((attribs[0] != 0).all())
+        self.assertTrue((attribs[1][:, :, 0] != 0).all())
 
     def test_mulitple_ablations_per_eval(self):
         ablations_per_eval = 4

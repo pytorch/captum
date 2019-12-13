@@ -31,10 +31,6 @@ class PermutationFeatureImportance(FeatureAblation):
         feature_mask=None,
         ablations_per_eval=1,
     ):
-        assert feature_mask is None or feature_mask.shape[0] == 1, (
-            "feature_mask.shape[0] != 1: pass in one mask in "
-            "order to permute the same features for each input"
-        )
         return FeatureAblation.attribute(
             self,
             inputs,
