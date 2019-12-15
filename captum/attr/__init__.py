@@ -9,6 +9,7 @@ from ._core.gradient_shap import GradientShap  # noqa
 from ._core.guided_backprop_deconvnet import GuidedBackprop, Deconvolution  # noqa
 from ._core.guided_grad_cam import GuidedGradCam  # noqa
 from ._core.feature_ablation import FeatureAblation  # noqa
+from ._core.occlusion import Occlusion  # noqa
 from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
 from ._core.layer.layer_activation import LayerActivation  # noqa
