@@ -115,7 +115,7 @@ visualizer = AttributionVisualizer(
 # In[ ]:
 
 
-visualizer.render(debug=False)
+visualizer.render()
 
 
 # In[4]:

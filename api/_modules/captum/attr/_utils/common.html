@@ -191,6 +191,52 @@
     <span class="k">return</span> <span class="n">attributions</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">attributions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
+<span class="k">def</span> <span class="nf">_format_and_verify_strides</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="c1"># Formats strides, which are necessary for occlusion</span>
+    <span class="c1"># Assumes inputs are already formatted (in tuple)</span>
+    <span class="k">if</span> <span class="n">strides</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="n">strides</span><span class="p">,)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="n">inputs</span>
+    <span class="p">),</span> <span class="s2">"Strides must be provided for each input tensor."</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="p">(</span>
+            <span class="s2">"Stride for input index </span><span class="si">{}</span><span class="s2"> is </span><span class="si">{}</span><span class="s2">, which is invalid for input with "</span>
+            <span class="s2">"shape </span><span class="si">{}</span><span class="s2">. It must be either an int or a tuple with length equal to "</span>
+            <span class="s2">"len(input_shape) - 1."</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">strides</span>
+
+
+<span class="k">def</span> <span class="nf">_format_and_verify_sliding_window_shapes</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="c1"># Formats shapes of sliding windows, which is necessary for occlusion</span>
+    <span class="c1"># Assumes inputs is already formatted (in tuple)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">sliding_window_shapes</span> <span class="o">=</span> <span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">,)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="n">inputs</span>
+    <span class="p">),</span> <span class="s2">"Must provide sliding window dimensions for each input tensor."</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="p">(</span>
+            <span class="s2">"Occlusion shape for input index </span><span class="si">{}</span><span class="s2"> is </span><span class="si">{}</span><span class="s2"> but should be a tuple with "</span>
+            <span class="s2">"</span><span class="si">{}</span><span class="s2"> dimensions."</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sliding_window_shapes</span>
+
+
 <span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
     <span class="n">attr_algo</span><span class="p">,</span>
     <span class="n">return_convergence_delta</span><span class="p">,</span>
