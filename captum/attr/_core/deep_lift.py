@@ -27,11 +27,11 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs, outputs):
+def _check_valid_module(inputs_grad_fns, outputs):
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        return first_next[0] == inputs[first_next[1]].grad_fn
+        return first_next[0] == inputs_grad_fns[first_next[1]]
     except IndexError:
         return False
 
@@ -325,7 +325,8 @@ class DeepLift(GradientAttribution):
         # the hook is set by default but it will be used only for
         # failure cases and will be removed otherwise
         handle = inputs[0].register_hook(tensor_backward_hook)
-        module.pre_hook = handle
+        module.input_hook = handle
+        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
 
     def _forward_hook(self, module, inputs, outputs):
         r"""
@@ -335,15 +336,16 @@ class DeepLift(GradientAttribution):
         outputs = _format_tensor_into_tuples(outputs)
         module.output = tuple(output.clone().detach() for output in outputs)
 
-        if not _check_valid_module(inputs, outputs[0]):
+        if not _check_valid_module(module.input_grad_fns, outputs[0]):
             module.is_invalid = True
             module.saved_grad = None
-            self.forward_handles.append(module.pre_hook)
+            self.forward_handles.append(module.input_hook)
         else:
             module.is_invalid = False
             # removing the hook if there is no failure case
-            module.pre_hook.remove()
-        del module.pre_hook
+            module.input_hook.remove()
+        del module.input_hook
+        del module.input_grad_fns
 
     def _forward_hook_ref(self, module, inputs, outputs):
         r"""
