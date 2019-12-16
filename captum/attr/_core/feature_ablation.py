@@ -256,15 +256,16 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = initial_eval.reshape(1, num_examples)
 
         # Initialize attribution totals and counts
+        attrib_type = initial_eval.dtype if isinstance(initial_eval, torch.Tensor) else type(initial_eval)
         total_attrib = [
-            torch.zeros_like(input[0:1] if single_output_mode else input)
+            torch.zeros_like(input[0:1] if single_output_mode else input, dtype=attrib_type)
             for input in inputs
         ]
 
         # Weights are used in cases where ablations may be overlapping.
         if self.use_weights:
             weights = [
-                torch.zeros_like(input[0:1] if single_output_mode else input)
+                torch.zeros_like(input[0:1] if single_output_mode else input).float()
                 for input in inputs
             ]
 
@@ -301,7 +302,7 @@ class FeatureAblation(PerturbationAttribution):
                     ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
                 if self.use_weights:
                     weights[i] += current_mask.float().sum(dim=0)
-                total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
+                total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(dim=0)
 
         # Divide total attributions by counts and return formatted attributions
         if self.use_weights:
