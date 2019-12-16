@@ -9,7 +9,7 @@ from .._utils.common import _format_attributions, _format_input
 from .._utils.attribution import Attribution, GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
-import math
+from .lrp_rules import PropagationRule, BasicRule
 
 class LRP(GradientAttribution):
     def __init__(self, model, rules):
@@ -23,25 +23,33 @@ class LRP(GradientAttribution):
         """
         self.layers = self._get_layers(model)
         self.layer_count = len(self.layers)
-        self.rules = rules
         for rule in rules:
-            assert isinstance(rule, PropagationRule), "Please select propagation rules inherited from class PropagationRule"
+            if not isinstance(rule, PropagationRule):
+                raise TypeError("Please select propagation rules inherited from class PropagationRule")
+        self.rules = rules
         super(LRP, self).__init__(model)
 
 
     def attribute(self, inputs, relevance, **kwargs):
         activations = self._get_activations(inputs)
-        for layer, rule in zip(self.layers, self.rules):
-            relevance = rule.propagate(relevance, layer, activations)
-
+        for layer, rule, activation in zip(self.layers, self.rules, activations[1:]):
+            # Convert Max-Pooling to Average Pooling layer
+            if isinstance(layer, torch.nn.MaxPool2d):
+                layer = torch.nn.AvgPool2d(2)
+            # Propagate relevance for Conv2D and Pooling
+            if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d):
+                relevance = rule.propagate(relevance, layer, activation)
+            else:
+                pass
         return relevance
+
 
     def _get_layers(self, forward_func):
         '''
-        Get list of all feature and classifier layers of the forward function or model.
+        Get list of children modules of the forward function or model.
         '''
-        children = list(forward_func.children())
-        return children
+        layers = list(forward_func.children())
+        return layers
 
 
     def _get_activations(self, inputs):
@@ -58,7 +66,7 @@ class LRP(GradientAttribution):
 
 
 class LRP_0(LRP):
-    """[summary]
+    """LRP class, which uses the base rule for every layer.
 
     Arguments:
         LRP {[type]} -- [description]
@@ -67,52 +75,3 @@ class LRP_0(LRP):
         rules = repeat(BasicRule(), 1000)
         super(LRP_0, self).__init__(forward_func, rules)
 
-
-class PropagationRule(object):
-    '''
-    Abstract class to be basis for all propagation rule classes
-    '''
-    def propagate(self, relevance, layer, activations):
-        raise NotImplementedError
-
-
-class EpsilonRhoRule(PropagationRule):
-
-    def propagate(self, relevance, layer, activations):
-        '''
-        Implementation of epsilon-rho-rule according to Montavon et al. in Explainable AI book
-        Abstract class that serves as basis for other rules.
-        Valid for conv and dense layers with ReLU units.
-        '''
-        activations = (activations.data).requires_grad_(True)
-        layer = self._apply_rho(layer)
-        z = self._epsilon() + layer.forward(activations)
-        s = (relevance/z).data
-        (z*s.data).sum().backward()
-        c = activations.grad
-        propagated_relevance = (activations*c).data
-
-        return propagated_relevance
-
-    def _epsilon(self):
-        raise NotImplementedError
-
-    def _rho(self, input):
-        raise NotImplementedError
-
-    def _apply_rho(self, layer):
-        if layer.weight is not None:
-            new_weights = self._rho(layer.weight.data)
-            layer.weight.data = new_weights
-        if layer.bias is not None:
-            new_bias = self._rho(layer.bias.data)
-            layer.bias.data = new_bias
-        return layer
-
-
-class BasicRule(EpsilonRhoRule):
-    def _epsilon(self):
-        return 0
-
-    def _rho(self, input):
-        return input
