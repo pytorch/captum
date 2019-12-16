@@ -28,10 +28,29 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
 def _check_valid_module(inputs_grad_fns, outputs):
+    def is_output_cloned(output_fn, input_grad_fn):
+        """
+        Checks if the output has been cloned. This happens especially in case of
+        layer deeplift.
+        """
+        return (
+            output_fn[0].next_functions is not None
+            and output_fn[0].next_functions[0][0] == input_grad_fn
+        )
+
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        return first_next[0] == inputs_grad_fns[first_next[1]]
+        # input_grad_fn = inputs[first_next[1]].grad_fn
+        # if `inputs` in the input to the network then the grad_fn is None and
+        # for that input backward_hook isn't computed. That's the reason why we
+        # need to check on `inputs_grad_fns[first_next[1]]` being None.
+        input_grad_fn = inputs_grad_fns[first_next[1]]
+        return (
+            input_grad_fn is None
+            or first_next[0] == input_grad_fn
+            or is_output_cloned(first_next, input_grad_fn)
+        )
     except IndexError:
         return False
 
@@ -308,6 +327,7 @@ class DeepLift(GradientAttribution):
         """
         inputs = _format_tensor_into_tuples(inputs)
         module.input = tuple(input.clone().detach() for input in inputs)
+        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
 
         def tensor_backward_hook(grad):
             if module.saved_grad is None:
@@ -326,7 +346,6 @@ class DeepLift(GradientAttribution):
         # failure cases and will be removed otherwise
         handle = inputs[0].register_hook(tensor_backward_hook)
         module.input_hook = handle
-        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
 
     def _forward_hook(self, module, inputs, outputs):
         r"""
@@ -335,8 +354,14 @@ class DeepLift(GradientAttribution):
         """
         outputs = _format_tensor_into_tuples(outputs)
         module.output = tuple(output.clone().detach() for output in outputs)
-
         if not _check_valid_module(module.input_grad_fns, outputs[0]):
+            warnings.warn(
+                """An invalid module {} is detected. Saved gradients will
+                be used as the gradients of the module's input tensor.
+                See MaxPool1d as an example.""".format(
+                    module
+                )
+            )
             module.is_invalid = True
             module.saved_grad = None
             self.forward_handles.append(module.input_hook)
