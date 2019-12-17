@@ -278,8 +278,8 @@ class Occlusion(FeatureAblation):
             ],
             dim=0,
         ).long()
-        ablated_tensor = (expanded_input * (1 - input_mask).float()) + (
-            baseline * input_mask.float()
+        ablated_tensor = (expanded_input * (1 - input_mask).to(expanded_input.dtype)) + (
+            baseline * input_mask.to(expanded_input.dtype)
         )
         return ablated_tensor, input_mask
 

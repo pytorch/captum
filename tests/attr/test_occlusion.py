@@ -96,6 +96,30 @@ class Test(BaseTest):
             sliding_window_shapes=((1,)),
         )
 
+    def test_simple_multi_input_int_to_int(self):
+        net = BasicModel3()
+        inp1 = torch.tensor([[-10], [3]])
+        inp2 = torch.tensor([[-5], [1]])
+        self._occlusion_test_assert(
+            net,
+            (inp1, inp2),
+            ([0.0, 1.0], [0.0, -1.0]),
+            sliding_window_shapes=((1,), (1,)),
+        )
+
+    def test_simple_multi_input_int_to_float(self):
+        net = BasicModel3()
+        def wrapper_func(*inp):
+            return net(*inp).float()
+        inp1 = torch.tensor([[-10], [3]])
+        inp2 = torch.tensor([[-5], [1]])
+        self._occlusion_test_assert(
+            wrapper_func,
+            (inp1, inp2),
+            ([0.0, 1.0], [0.0, -1.0]),
+            sliding_window_shapes=((1,), (1,)),
+        )
+
     def test_simple_multi_input(self):
         net = BasicModel3()
         inp1 = torch.tensor([[-10.0], [3.0]])

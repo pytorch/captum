@@ -256,15 +256,9 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = initial_eval.reshape(1, num_examples)
 
         # Initialize attribution totals and counts
-        attrib_type = (
-            initial_eval.dtype
-            if isinstance(initial_eval, torch.Tensor)
-            else type(initial_eval)
-        )
+        attrib_type = initial_eval.dtype if isinstance(initial_eval, torch.Tensor) else type(initial_eval)
         total_attrib = [
-            torch.zeros_like(
-                input[0:1] if single_output_mode else input, dtype=attrib_type
-            )
+            torch.zeros_like(input[0:1] if single_output_mode else input, dtype=attrib_type)
             for input in inputs
         ]
 
@@ -313,7 +307,7 @@ class FeatureAblation(PerturbationAttribution):
         # Divide total attributions by counts and return formatted attributions
         if self.use_weights:
             attrib = tuple(
-                single_attrib / weight
+                single_attrib.float() / weight
                 for single_attrib, weight in zip(total_attrib, weights)
             )
         else:
@@ -439,9 +433,9 @@ class FeatureAblation(PerturbationAttribution):
         current_mask = torch.stack(
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
-        ablated_tensor = (
-            expanded_input * (1 - current_mask).to(expanded_input.dtype)
-        ) + (baseline * current_mask.to(expanded_input.dtype))
+        ablated_tensor = (expanded_input * (1 - current_mask).to(expanded_input.dtype)) + (
+            baseline * current_mask.to(expanded_input.dtype)
+        )
         return ablated_tensor, current_mask
 
     def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
