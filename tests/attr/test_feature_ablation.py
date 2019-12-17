@@ -24,13 +24,9 @@ class Test(BaseTest):
 
     def test_simple_ablation_int_to_int(self):
         net = BasicModel()
-
-        def wrapper_func(inp):
-            return net(inp).float()
-
         inp = torch.tensor([[-3, 1, 2]])
         self._ablation_test_assert(
-            wrapper_func, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
+            net, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_int_to_float(self):
