@@ -86,7 +86,7 @@ class Test(BaseTest):
         inp = torch.randn((batch_size,) + input_size) * 10
 
         inp[:, 0] = 5
-        for x in range(10):
+        for _ in range(10):
             attribs = feature_importance.attribute(inp)
 
             self.assertTrue(attribs.squeeze(0).size() == input_size)
@@ -188,7 +188,7 @@ class Test(BaseTest):
 
             fm = mask.expand_as(inp[0])
 
-            features = set([x for x in mask.flatten()])
+            features = set(mask.flatten())
             for feature in features:
                 m = (fm == feature).bool()
                 attribs_for_feature = attribs[:, m]
