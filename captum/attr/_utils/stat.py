@@ -5,11 +5,11 @@ import torch
 class Stat:
     """
     The Stat class represents a statistic that can be updated and retrieved
-    at any point in time. 
+    at any point in time.
 
     The basic functionality this class provides is:
     1. A update/get method to actually compute the statistic
-    2. A statistic store/cache to retrieve dependent information 
+    2. A statistic store/cache to retrieve dependent information
        (e.g. other stat values that are required for computation)
     3. The name of the statistic that is used for the user to refer to
     """
@@ -44,7 +44,7 @@ class Stat:
         return not self.__eq__(other)
 
     """
-    The name of the statistic. i.e. it is the key in a .summary 
+    The name of the statistic. i.e. it is the key in a .summary
 
     See Summarizer or SummarizerSingleTensor
     """
@@ -215,8 +215,9 @@ class SummarizerSingleTensor:
         def __init__(self, stats):
             # We want to want to store two things:
             # 1. A mapping from a Stat to Stat object (self._stat_to_stat):
-            #    This is to retrieve an existing Stat object for dependency resolution, e.g.
-            #    Mean needs the Count stat - we want to retrieve it in O(1)
+            #    This is to retrieve an existing Stat object for dependency
+            #    resolution, e.g.  Mean needs the Count stat - we want to
+            #    retrieve it in O(1)
             #
             # 2. All of the necessary stats, in the correct order,
             #    to perform an update for each Stat (self.stats) trivially
@@ -246,7 +247,8 @@ class SummarizerSingleTensor:
                 stats.add(stat_to_add)
                 stats_by_module[stat_to_add.__class__].append(stat_to_add)
 
-            # For the other modules (deps[1:n-1]), if i exists => we want to ensure i...n-1 exists
+            # For the other modules (deps[1:n-1]): if i exists =>
+            # we want to ensure i...n-1 exists
             for i, dep in enumerate(dep_order[1:]):
                 if dep in stats_by_module:
                     stats.update([mod() for mod in dep_order[i + 1 :]])
@@ -269,7 +271,7 @@ class SummarizerSingleTensor:
                 stat.init()
 
         def get(self, stat):
-            if not stat in self.stat_to_stat:
+            if stat not in self.stat_to_stat:
                 return None
 
             return self.stat_to_stat[stat]
