@@ -241,7 +241,7 @@ def _zeros(inputs):
     shape as the `inputs`
 
     """
-    return tuple(0.0 for input in inputs)
+    return tuple(0 for input in inputs)
 
 
 def _tensorize_baseline(inputs, baselines):
