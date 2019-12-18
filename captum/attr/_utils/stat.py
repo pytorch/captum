@@ -19,8 +19,11 @@ class Stat:
 
         self._other_stats = None
 
+    def init(self):
+        pass
+
     def _get_stat(self, stat):
-        return self._other_stats.get(stat).get()
+        return self._other_stats.get(stat)
 
     def update(self, x):
         raise NotImplementedError()
@@ -73,8 +76,11 @@ class Mean(Stat):
     def get(self):
         return self.rolling_mean
 
+    def init(self):
+        self.n = self._get_stat(Count())
+
     def update(self, x):
-        n = self._get_stat(Count())
+        n = self.n.get()
 
         if self.rolling_mean is None:
             self.rolling_mean = x
@@ -88,13 +94,16 @@ class MSE(Stat):
         self.prev_mean = None
         self.mse = None
 
+    def init(self):
+        self.mean = self._get_stat(Mean())
+
     def get(self):
         if self.mse is None and self.prev_mean is not None:
             return torch.zeros_like(self.prev_mean)
         return self.mse
 
     def update(self, x):
-        mean = self._get_stat(Mean())
+        mean = self.mean.get()
 
         if mean is not None and self.prev_mean is not None:
             rhs = (x - self.prev_mean) * (x - mean)
@@ -119,12 +128,16 @@ class Var(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
+    def init(self):
+        self.mse = self._get_stat(MSE())
+        self.n = self._get_stat(Count())
+
     def update(self, x):
         pass
 
     def get(self):
-        mse = self._get_stat(MSE())
-        n = self._get_stat(Count())
+        mse = self.mse.get()
+        n = self.n.get()
 
         if mse is None:
             return None
@@ -148,11 +161,14 @@ class StdDev(Stat):
         super().__init__(name=name, order=order)
         self.order = order
 
+    def init(self):
+        self.var = self._get_stat(Var(order=self.order))
+
     def update(self, x):
         pass
 
     def get(self):
-        var = self._get_stat(Var(order=self.order))
+        var = self.var.get()
         return var ** 0.5 if var is not None else None
 
 class GeneralAccumFn(Stat):
@@ -235,11 +251,13 @@ class SummarizerSingleTensor:
             stats = list(stats)
             stats.sort(key=lambda x: sort_order[x.__class__], reverse=True)
 
-            for stat in stats:
-                stat._other_stats = self
-
             self.stats = stats
             self.stat_to_stat = {stat: stat for stat in self.stats}
+
+            for stat in stats:
+                stat._other_stats = self
+                stat.init()
+
 
         def get(self, stat):
             if not stat in self.stat_to_stat:
