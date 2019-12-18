@@ -155,30 +155,25 @@ def _forward_layer_distributed_eval(
     # with key as device and value as corresponding Tensor.
 
     def forward_hook(module, inp, out=None):
-        eval_tsr = inp if attribute_to_layer_input else out
-        is_tuple = True if isinstance(eval_tsr, tuple) else False
-        # if `inp` or `out` is a tuple of one tensor, assign that tensor to `eval_tsr`
-        if isinstance(eval_tsr, tuple) and len(eval_tsr) == 1:
-            eval_tsr = eval_tsr[0]
-
-        assert isinstance(
-            eval_tsr, torch.Tensor
-        ), "Layers with multiple inputs or output tensors are not supported yet."
+        eval_tsrs = inp if attribute_to_layer_input else out
+        eval_device = eval_tsrs[0].device is isinstance(eval_tsrs, tuple) else eval_tsrs.device
+        #assert isinstance(
+        #    eval_tsr, torch.Tensor
+        #), "Layers with multiple inputs or output tensors are not supported yet."
         with lock:
             nonlocal saved_layer
-            # TODO we need to think what will be the best way of storing eval
-            # tensors per device for each input per example. This implementation
-            # doesn't support a tuple of inputs
-
             # Note that cloning behaviour of `eval_tsr` is different
             # when `forward_hook_with_return` is set to True. This is because
             # otherwise `backward()` on the last output layer won't execute.
             if forward_hook_with_return:
-                saved_layer[eval_tsr.device] = eval_tsr
-                eval_tsr_to_return = eval_tsr.clone()
-                return (eval_tsr_to_return,) if is_tuple else eval_tsr_to_return
+                saved_layer[eval_device] = eval_tsrs
+                if isinstance(eval_tsrs, tuple):
+                    eval_tsrs_to_return = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
+                else:
+                    eval_tsrs_to_return = eval_tsr.clone()
+                return eval_tsr_to_return
             else:
-                saved_layer[eval_tsr.device] = eval_tsr.clone()
+                saved_layer[eval_tsr.device] = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs) if isinstance(eval_tsrs, tuple) else eval_tsr.clone()
 
     if attribute_to_layer_input:
         hook = layer.register_forward_pre_hook(forward_hook)
@@ -214,7 +209,7 @@ def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
     """
     if key_list is None:
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
-    return torch.cat([saved_layer[device_id] for device_id in key_list])
+    return _reduce_list([saved_layer[device_id] for device_id in key_list])
 
 
 def _extract_device_ids(forward_fn, saved_layer, device_ids):
