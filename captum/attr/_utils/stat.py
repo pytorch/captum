@@ -258,7 +258,6 @@ class SummarizerSingleTensor:
                 stat._other_stats = self
                 stat.init()
 
-
         def get(self, stat):
             if not stat in self.stat_to_stat:
                 return None

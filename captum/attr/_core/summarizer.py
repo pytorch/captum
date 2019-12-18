@@ -24,6 +24,10 @@ class Summarizer:
         self._is_inputs_tuple = None
         self._stats = stats
 
+    def _copy_stats(self):
+        import copy
+        return copy.deepcopy(self._stats)
+
     def update(self, x):
         """
         Calls .update on each Stat object within this object
@@ -40,8 +44,8 @@ class Summarizer:
             x = (x,)
 
         for i, inp in enumerate(x):
-            if i >= len(self._summarizers):
-                self._summarizers.append(SummarizerSingleTensor(stats=self._stat_list))
+            while i >= len(self._summarizers):
+                self._summarizers.append(SummarizerSingleTensor(stats=self._copy_stats()))
             self._summarizers[i].update(inp)
 
     @property
@@ -55,9 +59,8 @@ class Summarizer:
         if len(self._summarizers) == 0:
             return {}
 
-        summaries = [summ.summary for summ in self._summarizers]
-        summary = {k: torch.stack([summ[k] for summ in summaries]) for k in summaries[0]}
-        return summary
+        temp = [summ.summary for summ in self._summarizers]
+        return temp if self._is_inputs_tuple else temp[0]
 
 
 """
@@ -65,5 +68,5 @@ Returns a summarizer with common summary statistics, specifically with:
     Mean, Sample Variance, Sample Std Dev, Min, Max
 """
 def CommonSummarizer():
-    from captum.attr._utils.stat import Mean, Var, StdDev, SampleStdDev, Min, Max
+    from captum.attr._utils.stat import Mean, Var, StdDev, Min, Max
     return Summarizer([Mean(), Var(order=1), StdDev(order=1), Min(), Max()])
