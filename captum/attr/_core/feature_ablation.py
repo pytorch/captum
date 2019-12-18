@@ -440,8 +440,8 @@ class FeatureAblation(PerturbationAttribution):
             [input_mask == j for j in range(start_feature, end_feature)], dim=0
         ).long()
         ablated_tensor = (
-            expanded_input * (1 - current_mask).to(expanded_input.dtype)
-        ) + (baseline * current_mask.to(expanded_input.dtype))
+            expanded_input * (1 - current_mask).to(expanded_input.dtype, copy=True)
+        ) + (baseline * current_mask.to(expanded_input.dtype, copy=True))
         return ablated_tensor, current_mask
 
     def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
