@@ -4,97 +4,98 @@ import torch
 
 class Stat:
     """
-    Base class for Stat objects. You must call this constructor.
-    Sub-classes **must** have a default constructor.
+    The Stat class represents a statistic that can be updated and retrieved
+    at any point in time. 
 
-    Args:
-        deps (dict):
-            The dependencies your Stat needs in order to perform and update and/or get.
-            Maps from a string to a module, e.g. {'mean': Mean}.
+    The basic functionality this class provides is:
+    1. A update/get method to actually compute the statistic
+    2. A statistic store/cache to retrieve dependent information 
+       (e.g. other stat values that are required for computation)
+    3. The name of the statistic that is used for the user to refer to
     """
+    def __init__(self, name=None, **kwargs):
+        self.params = kwargs
+        self._name = name
 
-    def __init__(self, deps=None):
-        if deps is None:
-            deps = {}
-        self.deps = deps
+        self._other_stats = None
 
-    def get(self, deps):
-        """
-        deps is a mapping from string to the associated value of the stat
-        """
+    def _get_stat(self, stat):
+        return self._other_stats.get(stat).get()
+
+    def update(self, x):
         raise NotImplementedError()
 
-    def update(self, x, deps):
-        """
-        Args:
-            x (torch.Tensor):
-                Some arbitrary tensor
-            deps (dict):
-                A mapping from string to the associated value of the stat.
-                This corresponds to the deps supplied in __init__.
-        """
+    def get(self):
         raise NotImplementedError()
 
+    def __hash__(self):
+        return hash((self.__class__, frozenset(self.params.items())))
+
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and \
+               frozenset(self.params.items()) == frozenset(other.params.items())
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    """
+    The name of the statistic. i.e. it is the key in a .summary 
+
+    See Summarizer or SummarizerSingleTensor
+    """
     @property
     def name(self):
-        return "stat"
+        default_name = self.__class__.__name__.lower()
+        if len(self.params) > 0:
+            default_name += f'({self.params})'
 
+        return default_name if self._name is None else self._name
 
 class Count(Stat):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name=None):
+        super().__init__(name=name)
         self.n = None
 
-    def get(self, deps):
+    def get(self):
         return self.n
 
-    def update(self, x, deps):
-        # TODO: figure out how
-        #       to handle sparse input(s)
+    def update(self, x):
         if self.n is None:
             self.n = 0
         self.n += 1
 
-    @property
-    def name(self):
-        return "count"
-
-
 class Mean(Stat):
-    def __init__(self):
-        super().__init__({"n": Count})
+    def __init__(self, name=None):
+        super().__init__(name=name)
         self.rolling_mean = None
+        self.n = None
 
-    def get(self, deps):
-        n = deps["n"]
-        if n is None:
-            return None
+    def get(self):
         return self.rolling_mean
 
-    def update(self, x, deps):
-        n = deps["n"]
+    def update(self, x):
+        n = self._get_stat(Count())
+
         if self.rolling_mean is None:
             self.rolling_mean = x
         else:
             delta = x - self.rolling_mean
             self.rolling_mean += delta / n
 
-    @property
-    def name(self):
-        return "mean"
-
-
 class MSE(Stat):
-    def __init__(self):
-        super().__init__({"mean": Mean})
+    def __init__(self, name=None):
+        super().__init__(name=name)
         self.prev_mean = None
         self.mse = None
 
-    def get(self, deps):
+    def get(self):
+        if self.mse is None and self.prev_mean is not None:
+            return torch.zeros_like(self.prev_mean)
         return self.mse
 
-    def update(self, x, deps):
-        mean = deps["mean"]
+    def update(self, x):
+        mean = self._get_stat(Mean())
+
         if mean is not None and self.prev_mean is not None:
             rhs = (x - self.prev_mean) * (x - mean)
             if self.mse is None:
@@ -105,91 +106,65 @@ class MSE(Stat):
         # do not not clone
         self.prev_mean = mean.clone()
 
-    @property
-    def name(self):
-        return "mse"
-
-
 class Var(Stat):
-    def __init__(self):
-        super().__init__({"mse": MSE, "count": Count})
+    def __init__(self, name=None, order=0):
+        if name is None:
+            if order == 0:
+                name = 'variance'
+            elif order == 1:
+                name = 'sample_variance'
+            else:
+                name = f'variance({order})'
 
-    def get(self, deps):
-        mse = deps["mse"]
-        n = deps["count"]
-        return mse / n if mse is not None else None
+        super().__init__(name=name, order=order)
+        self.order = order
 
-    def update(self, x, deps):
+    def update(self, x):
         pass
 
-    @property
-    def name(self):
-        return "variance"
+    def get(self):
+        mse = self._get_stat(MSE())
+        n = self._get_stat(Count())
+
+        if mse is None:
+            return None
+
+        if n <= self.order:
+            return torch.zeros_like(mse)
+
+        return mse / (n - self.order)
 
 
 class StdDev(Stat):
-    def __init__(self):
-        super().__init__({"var": Var})
+    def __init__(self, name=None, order=0):
+        if name is None:
+            if order == 0:
+                name = 'std_dev'
+            elif order == 1:
+                name = 'sample_std_dev'
+            else:
+                name = f'std_dev{order})'
 
-    def get(self, deps):
-        var = deps["var"]
+        super().__init__(name=name, order=order)
+        self.order = order
+
+    def update(self, x):
+        pass
+
+    def get(self):
+        var = self._get_stat(Var(order=self.order))
         return var ** 0.5 if var is not None else None
-
-    def update(self, x, deps):
-        pass
-
-    @property
-    def name(self):
-        return "std_dev"
-
-
-class SampleVar(Stat):
-    def __init__(self):
-        super().__init__({"mse": MSE, "count": Count})
-
-    def get(self, deps):
-        mse = deps["mse"]
-        n = deps["count"]
-        if n - 1 <= 0 or mse is None:
-            return None
-
-        return mse / (n - 1)
-
-    def update(self, x, deps):
-        pass
-
-    @property
-    def name(self):
-        return "sample_variance"
-
-
-class SampleStdDev(Stat):
-    def __init__(self):
-        super().__init__({"var": SampleVar})
-
-    def get(self, deps):
-        # TODO: be DRY
-        var = deps["var"]
-        return var ** 0.5 if var is not None else None
-
-    def update(self, x, deps):
-        pass
-
-    @property
-    def name(self):
-        return "sample_std_dev"
-
 
 class GeneralAccumFn(Stat):
-    def __init__(self, fn):
-        super().__init__()
+    def __init__(self, fn, name=None):
+        super().__init__(name=name)
         self.result = None
         self.fn = fn
 
-    def get(self, deps):
+    def get(self):
         return self.result
 
-    def update(self, x, deps):
+    def update(self, x):
         if self.result is None:
             self.result = x
         else:
@@ -197,141 +172,91 @@ class GeneralAccumFn(Stat):
 
 
 class Min(GeneralAccumFn):
-    def __init__(self, min_fn=torch.min):
-        super().__init__(fn=min_fn)
-
-    @property
-    def name(self):
-        return "min"
+    def __init__(self, name=None, min_fn=torch.min):
+        super().__init__(name=name, fn=min_fn)
 
 
 class Max(GeneralAccumFn):
-    def __init__(self, max_fn=torch.max):
-        super().__init__(fn=max_fn)
+    def __init__(self, name=None, max_fn=torch.max):
+        super().__init__(name=name, fn=max_fn)
 
-    @property
-    def name(self):
-        return "max"
+class SummarizerSingleTensor:
+    """
+    A simple class that summarizes a single tensor. The basic functionality
+    of this class is two operations .update and .summary
+    """
 
+    class StatHolder:
+        def __init__(self, stats):
+            # We want to want to store two things:
+            # 1. A mapping from a Stat to Stat object (self._stat_to_stat):
+            #    This is to retrieve an existing Stat object for dependency resolution, e.g.
+            #    Mean needs the Count stat - we want to retrieve it in O(1)
+            # 
+            # 2. All of the necessary stats, in the correct order, 
+            #    to perform an update for each Stat (self.stats) trivially
 
-class StatGraph:
-    class Node:
-        stat = None
-        invisible = False
+            # As a reference, the dependency graph for our stats is as follows:
+            # StdDev(x) -> Var(x) -> MSE -> Mean -> Count, for all valid x
+            #
+            # Step 1: 
+            #    Ensure we have all the necessary stats 
+            #    i.e. ensure we have the dependencies
+            # Step 2: 
+            #    Figure out the order to update them
+            dep_order = [StdDev, Var, MSE, Mean, Count]
 
-        def __init__(self, stat, invisible):
-            self.stat = stat
-            self.invisible = invisible
+            stats = set(stats) # remove dupe stats
+
+            from collections import defaultdict
+            stats_by_module = defaultdict(list)
+            for stat in stats:
+                stats_by_module[stat.__class__].append(stat)
+
+            # StdDev is an odd case since it is parameterized, thus
+            # for each StdDev(order) we must ensure there is an associated Var(order)
+            for std_dev in stats_by_module[StdDev]:
+                stat_to_add = Var(order=std_dev.order)
+                stats.add(stat_to_add)
+                stats_by_module[stat_to_add.__class__].append(stat_to_add)
+
+            # For the other modules (deps[1:n-1]), if i exists => we want to ensure i...n-1 exists
+            for i, dep in enumerate(dep_order[1:]):
+                if dep in stats_by_module:
+                    stats.update([mod() for mod in dep_order[i+1:]])
+                    break
+
+            # Step 2: get the correct order
+            # NOTE: we are sorting via a given topological order
+            sort_order = { mod: i for i, mod in enumerate(dep_order) }
+            sort_order[Min] = -1
+            sort_order[Max] = -1
+
+            stats = list(stats)
+            stats.sort(key=lambda x: sort_order[x.__class__], reverse=True)
+
+            for stat in stats:
+                stat._other_stats = self
+
+            self.stats = stats
+            self.stat_to_stat = {stat: stat for stat in self.stats}
+
+        def get(self, stat):
+            if not stat in self.stat_to_stat:
+                return None
+
+            return self.stat_to_stat[stat]
 
     def __init__(self, stats=None):
-        self.is_ready = False
-        self.module_to_node = dict()
-        self.nodes = []
+        self._all_stats = SummarizerSingleTensor.StatHolder(stats)
 
-        if stats is not None:
-            self.add_all(stats)
+        # this is what we actually want to output
+        self._summary_stats = stats 
 
-    def add_all(self, stats):
-        for stat in stats:
-            self.add(stat)
-
-    def add(self, stat, invisible=False):
-        if stat in self.module_to_node:
-            self.module_to_node[stat].invisible = False
-            return self
-
-        self.is_ready = False
-        node = StatGraph.Node(stat=stat(), invisible=invisible)
-        self.nodes.append(node)
-        self.module_to_node[stat] = node
-        return self
-
-    def iter_all(self, visible=True):
-        for node in self.nodes:
-            if visible and node.invisible:
-                continue
-
-            yield node.stat
-
-    def contains(self, stat_module):
-        return stat_module in self.module_to_node
-
-    def _resolve_deps(self):
-        unsat = False
-        for stat in self.iter_all(visible=False):
-            for name, dep in stat.deps.items():
-                if not self.contains(dep):
-                    self.add(dep, invisible=True)
-                    unsat = True
-
-        if unsat:
-            self._resolve_deps()
-        else:
-
-            def get_parents(node):
-                for _, dep in node.stat.deps.items():
-                    yield self.module_to_node[dep]
-
-            self.nodes = list(_topo_sort(self.nodes, get_parents))
-            self.is_ready = True
-
-    def traverse(self, x=None):
-        if not self.is_ready:
-            self._resolve_deps()
-
-        summ = {}
-        for stat in self.iter_all(visible=False):
-            deps = {}
-
-            for name, module in stat.deps.items():
-                assert module in summ
-                deps[name] = summ[module]
-
-            if x is not None:
-                stat.update(x, deps)
-
-            summ[stat.__class__] = stat.get(deps)
-
-        return summ
+    def update(self, x=None):
+        for stat in self._all_stats.stats:
+            stat.update(x)
 
     @property
     def summary(self):
-        summ = self.traverse()
-
-        return {
-            self.module_to_node[k].stat.name: v
-            for k, v in summ.items()
-            if not self.module_to_node[k].invisible
-        }
-
-
-def _dfs(node, parent_map, visited, marked):
-    marked.add(node)
-    for parent in parent_map(node):
-        if parent in visited:
-            continue
-        if parent in marked:
-            return None
-
-        for x in _dfs(parent, parent_map, visited, marked):
-            yield x
-
-    visited.add(node)
-    yield node
-
-
-def _topo_sort(nodes, parent_map=None):
-    visited = set()
-    order = []
-    for node in nodes:
-        if node in visited:
-            continue
-
-        marked = set()
-        for node in _dfs(node, parent_map, visited, marked):
-            if node is None:
-                return None
-
-            order.append(node)
-
-    return order
+        return {stat.name: stat.get() for stat in self._summary_stats}

@@ -4,13 +4,11 @@ import torch
 import random
 
 from captum.attr._utils.stat import (
-    StatGraph,
+    SummarizerSingleTensor,
     Mean,
+    MSE,
     Var,
     StdDev,
-    SampleStdDev,
-    SampleVar,
-    _topo_sort,
 )
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
@@ -25,18 +23,18 @@ def get_values(n=100, lo=None, hi=None, integers=False):
 
 class Test(BaseTest):
     def test_div0(self):
-        stat_graph = StatGraph().add(Var).add(Mean)
-        summ = stat_graph.summary
+        summarizer = SummarizerSingleTensor([Var(), Mean()])
+        summ = summarizer.summary
         self.assertIsNone(summ["mean"])
         self.assertIsNone(summ["variance"])
 
-        stat_graph.traverse(torch.tensor(10))
-        summ = stat_graph.summary
+        summarizer.update(torch.tensor(10))
+        summ = summarizer.summary
         assertTensorAlmostEqual(self, summ["mean"], 10)
-        self.assertIsNone(summ["variance"])
+        assertTensorAlmostEqual(self, summ["variance"], 0)
 
-        stat_graph.traverse(torch.tensor(10))
-        summ = stat_graph.summary
+        summarizer.update(torch.tensor(10))
+        summ = summarizer.summary
         assertTensorAlmostEqual(self, summ["mean"], 10)
         assertTensorAlmostEqual(self, summ["variance"], 0)
 
@@ -56,20 +54,20 @@ class Test(BaseTest):
         AMOUNT_OF_SMALLS = [100, 10]
         AMOUNT_OF_BIGS = [10, 100]
         for sm, big in zip(AMOUNT_OF_SMALLS, AMOUNT_OF_BIGS):
-            graph = StatGraph().add(Var)
+            summ = SummarizerSingleTensor([Var()])
             values = []
             for i in range(sm):
                 values.append(SMALL_VAL)
-                graph.traverse(torch.tensor(SMALL_VAL, dtype=torch.float64))
+                summ.update(torch.tensor(SMALL_VAL, dtype=torch.float64))
 
             for i in range(big):
                 values.append(BIG_VAL)
-                graph.traverse(torch.tensor(BIG_VAL, dtype=torch.float64))
+                summ.update(torch.tensor(BIG_VAL, dtype=torch.float64))
 
             actual_var = np.var(values)
             actual_var = torch.from_numpy(np.array(actual_var))
 
-            var = graph.summary["variance"]
+            var = summ.summary["variance"]
 
             assertTensorAlmostEqual(self, var, actual_var)
             self.assertTrue((var > 0).all())
@@ -78,7 +76,7 @@ class Test(BaseTest):
         N = 1000
         BIG_VAL = 100000
         values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
-        stats_to_test = [Mean, Var, SampleVar, StdDev, SampleStdDev]
+        stats_to_test = [Mean(), Var(), Var(order=1), StdDev(), StdDev(order=1)]
         stat_names = [
             "mean",
             "variance",
@@ -95,63 +93,11 @@ class Test(BaseTest):
         ]
 
         for stat, name, gt in zip(stats_to_test, stat_names, gt_fns):
-            graph = StatGraph().add(stat)
+            summ = SummarizerSingleTensor([stat])
             for x in values:
-                graph.traverse(torch.tensor(x, dtype=torch.float64))
+                summ.update(torch.tensor(x, dtype=torch.float64))
 
             actual = torch.from_numpy(np.array(gt(values)))
-            stat_val = graph.summary[name]
+            stat_val = summ.summary[name]
 
             assertTensorAlmostEqual(self, stat_val, actual)
-
-    def test_topo_sort_random(self):
-        N = 100
-        max_num_nodes = 100
-        min_num_nodes = 1
-        # create N random DAGs
-        for i in range(N):
-            """
-            Nodes are represented by an integer in [0, num_nodes). Each edge is
-            a parent pointer, i.e.  we're effectively "reversing" the edges and
-            taking a topological sort on that graph
-
-            In order to generate a random DAG, here I am simply assuming a valid
-            topological order is defined by their indices. Thus, a node at index
-            i can point to any node in [0, i).
-
-            To check if the result is correct, we can simply loop through each
-            node in the output and see if we've seen all it's dependencies
-            (parents).
-            """
-            num_nodes = random.randint(min_num_nodes, max_num_nodes)
-            nodes = np.random.permutation(num_nodes).tolist()
-
-            edges = [None] * num_nodes
-            for i in range(num_nodes):
-                if i == 0:
-                    edges[nodes[i]] = set()
-                    continue
-
-                num_edges = random.randint(0, num_nodes - i - 1)
-                e = set()
-                for j in range(num_edges):
-                    to_node_idx = random.randint(0, i - 1)
-                    e.add(nodes[to_node_idx])
-
-                edges[nodes[i]] = e
-
-            def parent_map(node):
-                return edges[node]
-
-            # topo sort should work independent of ordering given to algo
-            random_node_order = np.random.permutation(num_nodes)
-            order = _topo_sort(random_node_order, parent_map)
-            self.assertIsNotNone(order)
-
-            seen = set()
-            for idx in order:
-                node = idx
-                for parent in edges[node]:
-                    self.assertTrue(parent in seen)
-
-                seen.add(node)
