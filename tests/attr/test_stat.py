@@ -3,13 +3,7 @@ import numpy as np
 import torch
 import random
 
-from captum.attr._utils.stat import (
-    SummarizerSingleTensor,
-    Mean,
-    MSE,
-    Var,
-    StdDev,
-)
+from captum.attr._utils.stat import SummarizerSingleTensor, Mean, MSE, Var, StdDev
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 

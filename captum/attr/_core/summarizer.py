@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import torch
 
+
 class Summarizer:
     """
     This class simply wraps over a given a set of SummarizerSingleTenor's in order
@@ -26,6 +27,7 @@ class Summarizer:
 
     def _copy_stats(self):
         import copy
+
         return copy.deepcopy(self._stats)
 
     def update(self, x):
@@ -45,7 +47,9 @@ class Summarizer:
 
         for i, inp in enumerate(x):
             while i >= len(self._summarizers):
-                self._summarizers.append(SummarizerSingleTensor(stats=self._copy_stats()))
+                self._summarizers.append(
+                    SummarizerSingleTensor(stats=self._copy_stats())
+                )
             self._summarizers[i].update(inp)
 
     @property
@@ -67,6 +71,9 @@ class Summarizer:
 Returns a summarizer with common summary statistics, specifically with:
     Mean, Sample Variance, Sample Std Dev, Min, Max
 """
+
+
 def CommonSummarizer():
     from captum.attr._utils.stat import Mean, Var, StdDev, Min, Max
+
     return Summarizer([Mean(), Var(order=1), StdDev(order=1), Min(), Max()])

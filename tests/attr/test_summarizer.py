@@ -6,7 +6,7 @@ from .helpers.utils import BaseTest
 
 
 class Test(BaseTest):
-    #def test_single_input(self):
+    # def test_single_input(self):
     #    size = (2, 3)
     #    summarizer = CommonSummarizer()
     #    for _ in range(10):
