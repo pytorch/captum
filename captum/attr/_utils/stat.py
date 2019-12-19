@@ -205,6 +205,11 @@ class Max(GeneralAccumFn):
         super().__init__(name=name, fn=max_fn)
 
 
+class Sum(GeneralAccumFn):
+    def __init__(self, name=None):
+        super().__init__(name=name, fn=torch.add)
+
+
 class SummarizerSingleTensor:
     """
     A simple class that summarizes a single tensor. The basic functionality
@@ -259,6 +264,7 @@ class SummarizerSingleTensor:
             sort_order = {mod: i for i, mod in enumerate(dep_order)}
             sort_order[Min] = -1
             sort_order[Max] = -1
+            sort_order[Sum] = -1
 
             stats = list(stats)
             stats.sort(key=lambda x: sort_order[x.__class__], reverse=True)
