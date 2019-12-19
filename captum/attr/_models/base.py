@@ -36,8 +36,6 @@ class InterpretableEmbeddingBase(Module):
 
          Args:
 
-            input (tensor): Embedding tensor generated using the `self.embedding`
-                    layer using `other_inputs` and `kwargs` of necessary.
             *inputs (Any, optional): A sequence of inputs arguments that the
                     forward function takes. Since forward functions can take any
                     type and number of arguments, this will ensure that we can
@@ -61,7 +59,7 @@ class InterpretableEmbeddingBase(Module):
         """
         assert len(inputs) > 0 or len(kwargs) > 0, (
             "No input arguments are provided to `InterpretableEmbeddingBase`."
-            "Input embedding tensor has to be provided as first argument to forward"
+            "Input embedding tensor has to be provided as first argument to forward "
             "function either through inputs argument or kwargs."
         )
         return inputs[0] if len(inputs) > 0 else list(kwargs.values())[0]
