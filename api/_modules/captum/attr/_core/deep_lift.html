@@ -54,11 +54,30 @@
 
 <span class="c1"># Check if module backward hook can safely be used for the module that produced</span>
 <span class="c1"># this inputs / outputs mapping</span>
-<span class="k">def</span> <span class="nf">_check_valid_module</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_check_valid_module</span><span class="p">(</span><span class="n">inputs_grad_fns</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">is_output_cloned</span><span class="p">(</span><span class="n">output_fn</span><span class="p">,</span> <span class="n">input_grad_fn</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        Checks if the output has been cloned. This happens especially in case of</span>
+<span class="sd">        layer deeplift.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">output_fn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_functions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">output_fn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_functions</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_grad_fn</span>
+        <span class="p">)</span>
+
     <span class="n">curr_fn</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">grad_fn</span>
     <span class="n">first_next</span> <span class="o">=</span> <span class="n">curr_fn</span><span class="o">.</span><span class="n">next_functions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">first_next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">[</span><span class="n">first_next</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">grad_fn</span>
+        <span class="c1"># input_grad_fn = inputs[first_next[1]].grad_fn</span>
+        <span class="c1"># if `inputs` in the input to the network then the grad_fn is None and</span>
+        <span class="c1"># for that input backward_hook isn't computed. That's the reason why we</span>
+        <span class="c1"># need to check on `inputs_grad_fns[first_next[1]]` being None.</span>
+        <span class="n">input_grad_fn</span> <span class="o">=</span> <span class="n">inputs_grad_fns</span><span class="p">[</span><span class="n">first_next</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">input_grad_fn</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">first_next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_grad_fn</span>
+            <span class="ow">or</span> <span class="n">is_output_cloned</span><span class="p">(</span><span class="n">first_next</span><span class="p">,</span> <span class="n">input_grad_fn</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -322,44 +341,70 @@
     <span class="k">def</span> <span class="nf">_is_non_linear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 
-    <span class="c1"># we need forward hook to access and detach the inputs and outputs of a neuron</span>
-    <span class="k">def</span> <span class="nf">_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
-        <span class="n">input_attr_name</span> <span class="o">=</span> <span class="s2">"input"</span>
-        <span class="n">output_attr_name</span> <span class="o">=</span> <span class="s2">"output"</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_detach_tensors</span><span class="p">(</span><span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_valid_module</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
-            <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">def</span> <span class="nf">_forward_pre_hook_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input_ref</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
 
-            <span class="k">def</span> <span class="nf">tensor_backward_hook</span><span class="p">(</span><span class="n">grad</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sd">"""Module {} was detected as not supporting correctly module</span>
+    <span class="k">def</span> <span class="nf">_forward_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        For the modules that perform in-place operations such as ReLUs, we cannot</span>
+<span class="sd">        use inputs from forward hooks. This is because in that case inputs</span>
+<span class="sd">        and outputs are the same. We need access the inputs in pre-hooks and</span>
+<span class="sd">        set necessary hooks on inputs there.</span>
+<span class="sd">        """</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">grad_fn</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">tensor_backward_hook</span><span class="p">(</span><span class="n">grad</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sd">"""Module {} was detected as not supporting correctly module</span>
 <span class="sd">                        backward hook. You should modify your hook to ignore the given</span>
 <span class="sd">                        grad_inputs (recompute them by hand if needed) and save the</span>
 <span class="sd">                        newly computed grad_inputs in module.saved_grad. See MaxPool1d</span>
 <span class="sd">                        as an example."""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">module</span>
-                        <span class="p">)</span>
+                        <span class="n">module</span>
                     <span class="p">)</span>
-                <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span>
 
-            <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">register_hook</span><span class="p">(</span><span class="n">tensor_backward_hook</span><span class="p">)</span>
+        <span class="c1"># the hook is set by default but it will be used only for</span>
+        <span class="c1"># failure cases and will be removed otherwise</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">register_hook</span><span class="p">(</span><span class="n">tensor_backward_hook</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span> <span class="o">=</span> <span class="n">handle</span>
+
+    <span class="k">def</span> <span class="nf">_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        we need forward hook to access and detach the inputs and</span>
+<span class="sd">        outputs of a neuron</span>
+<span class="sd">        """</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_valid_module</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span><span class="p">,</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sd">"""An invalid module {} is detected. Saved gradients will</span>
+<span class="sd">                be used as the gradients of the module's input tensor.</span>
+<span class="sd">                See MaxPool1d as an example."""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">module</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input_hook</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># removing the hook if there is no failure case</span>
+            <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input_hook</span>
+        <span class="k">del</span> <span class="n">module</span><span class="o">.</span><span class="n">input_grad_fns</span>
 
     <span class="k">def</span> <span class="nf">_forward_hook_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
-        <span class="n">input_attr_name</span> <span class="o">=</span> <span class="s2">"input_ref"</span>
-        <span class="n">output_attr_name</span> <span class="o">=</span> <span class="s2">"output_ref"</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_detach_tensors</span><span class="p">(</span><span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_detach_tensors</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">input_attr_name</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span>
-    <span class="p">):</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Forward hook is used to access the output of the module</span>
+<span class="sd">        """</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">input_attr_name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">output_attr_name</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">))</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">output_ref</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -369,6 +414,21 @@
 <span class="sd">         `grad_output` * delta_out / delta_in.</span>
 
 <span class="sd">         """</span>
+        <span class="c1"># before accessing the attributes from the module we want</span>
+        <span class="c1"># to ensure that the properties exist, if not, then it is</span>
+        <span class="c1"># likely that the module is being reused.</span>
+        <span class="n">attr_criteria</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satisfies_attribute_criteria</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">attr_criteria</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sd">"""A Module {} was detected that does not contain some of</span>
+<span class="sd">                    the input/output attributes that are required for DeepLift</span>
+<span class="sd">                    computations. This can occur, for example, if</span>
+<span class="sd">                    your module is being used more than once in the network.</span>
+<span class="sd">                    Please, ensure that module is being used only once in the</span>
+<span class="sd">                    network."""</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">module</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="n">delta_in</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">inp</span> <span class="o">-</span> <span class="n">inp_ref</span> <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">inp_ref</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input_ref</span><span class="p">)</span>
         <span class="p">)</span>
@@ -388,6 +448,14 @@
 
         <span class="k">return</span> <span class="n">multipliers</span>
 
+    <span class="k">def</span> <span class="nf">satisfies_attribute_criteria</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"input_ref"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"output_ref"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"input"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"output"</span><span class="p">)</span>
+        <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_can_register_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="c1"># TODO find a better way of checking if a module is a container or not</span>
         <span class="n">module_fullname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
@@ -402,15 +470,21 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_register_hook</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="n">forward_handle_ref</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook_ref</span><span class="p">)</span>
+        <span class="n">forward_pre_handle_ref</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_forward_pre_hook_ref</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle_ref</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_pre_handle_ref</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_register_hook</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="c1"># adds forward hook to leaf nodes that are non-linear</span>
         <span class="n">forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_hook</span><span class="p">)</span>
+        <span class="n">pre_forward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward_pre_hook</span><span class="p">)</span>
         <span class="n">backward_handle</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">register_backward_hook</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backward_hook</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">forward_handle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre_forward_handle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -618,7 +692,6 @@
         <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expand_inputs_baselines_targets</span><span class="p">(</span>
             <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
         <span class="p">)</span>
-
         <span class="n">attributions</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
             <span class="n">exp_inp</span><span class="p">,</span>
             <span class="n">exp_base</span><span class="p">,</span>
@@ -696,6 +769,11 @@
         <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">grad_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">delta_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">delta_in</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
     <span class="p">)</span>
+
+    <span class="c1"># If the module is invalid, save the newly computed gradients</span>
+    <span class="c1"># The original_grad_input will be overridden later in the Tensor hook</span>
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">grad_input</span></div>
 
 

@@ -150,7 +150,7 @@ np.random.seed(0)
 gradient_shap = GradientShap(model)
 
 # Defining baseline distribution of images
-rand_img_dist = torch.cat([input * 0, input * 255])
+rand_img_dist = torch.cat([input * 0, input * 1])
 
 attributions_gs = gradient_shap.attribute(input,
                                           n_samples=50,
