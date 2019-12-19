@@ -40,7 +40,7 @@ class InterpretableEmbeddingBase(Module):
                     forward function takes. Since forward functions can take any
                     type and number of arguments, this will ensure that we can
                     execute the forward pass using interpretable embedding layer.
-                    Note that if inputs are specified it is assumed that the first
+                    Note that if inputs are specified, it is assumed that the first
                     argument is the embedding tensor generated using the
                     `self.embedding` layer using all imput arguments provided in
                     `inputs` and `kwargs`.
