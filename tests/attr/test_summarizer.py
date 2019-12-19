@@ -6,19 +6,19 @@ from .helpers.utils import BaseTest
 
 
 class Test(BaseTest):
-    # def test_single_input(self):
-    #    size = (2, 3)
-    #    summarizer = CommonSummarizer()
-    #    for _ in range(10):
-    #        attrs = torch.randn(size)
-    #        summarizer.update(attrs)
+    def test_single_input(self):
+        size = (2, 3)
+        summarizer = CommonSummarizer()
+        for _ in range(10):
+            attrs = torch.randn(size)
+            summarizer.update(attrs)
 
-    #    summ = summarizer.summary
-    #    self.assertIsNotNone(summ)
-    #    self.assertTrue(isinstance(summ, dict))
+        summ = summarizer.summary
+        self.assertIsNotNone(summ)
+        self.assertTrue(isinstance(summ, dict))
 
-    #    for k in summ:
-    #        self.assertTrue(summ[k].size() == size)
+        for k in summ:
+            self.assertTrue(summ[k].size() == size)
 
     def test_multi_input(self):
         size1 = (10, 5, 5)
