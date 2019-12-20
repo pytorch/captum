@@ -4,7 +4,7 @@ import torch
 import random
 
 from captum.attr import Mean, Var, StdDev, Min, Max, Sum, MSE, Summarizer
-from .helpers.utils import BaseTest, assertTensorAlmostEqual
+from .helpers.utils import BaseTest, assertTensorAlmostEqual, assertArraysAlmostEqual
 
 
 def get_values(n=100, lo=None, hi=None, integers=False):
@@ -64,6 +64,24 @@ class Test(BaseTest):
 
             assertTensorAlmostEqual(self, var, actual_var)
             self.assertTrue((var > 0).all())
+
+    def test_multi_dim(self):
+        x1 = torch.tensor([1.0, 2.0, 3.0, 4.0])
+        x2 = torch.tensor([2.0, 1.0, 2.0, 4.0])
+        x3 = torch.tensor([3.0, 3.0, 1.0, 4.0])
+
+        summarizer = Summarizer([Mean(), Var()])
+        summarizer.update(x1)
+        assertArraysAlmostEqual(summarizer.summary['mean'], x1)
+        assertArraysAlmostEqual(summarizer.summary['variance'], torch.zeros_like(x1))
+
+        summarizer.update(x2)
+        assertArraysAlmostEqual(summarizer.summary['mean'], torch.tensor([1.5, 1.5, 2.5, 4]))
+        assertArraysAlmostEqual(summarizer.summary['variance'], torch.tensor([.25, .25, .25, 0]))
+
+        summarizer.update(x3)
+        assertArraysAlmostEqual(summarizer.summary['mean'], torch.tensor([2, 2, 2, 4]))
+        assertArraysAlmostEqual(summarizer.summary['variance'], torch.tensor([2.0/3.0, 2.0/3.0, 2.0/3.0, 0]))
 
     def test_stats_random_data(self):
         N = 1000
