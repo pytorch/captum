@@ -40,6 +40,7 @@ class Summarizer:
             assert not (self._is_inputs_tuple ^ isinstance(x, tuple))
 
         from .common import _format_tensor_into_tuples
+
         x = _format_tensor_into_tuples(x)
 
         for i, inp in enumerate(x):

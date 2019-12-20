@@ -72,22 +72,39 @@ class Test(BaseTest):
 
         summarizer = Summarizer([Mean(), Var()])
         summarizer.update(x1)
-        assertArraysAlmostEqual(summarizer.summary['mean'], x1)
-        assertArraysAlmostEqual(summarizer.summary['variance'], torch.zeros_like(x1))
+        assertArraysAlmostEqual(summarizer.summary["mean"], x1)
+        assertArraysAlmostEqual(summarizer.summary["variance"], torch.zeros_like(x1))
 
         summarizer.update(x2)
-        assertArraysAlmostEqual(summarizer.summary['mean'], torch.tensor([1.5, 1.5, 2.5, 4]))
-        assertArraysAlmostEqual(summarizer.summary['variance'], torch.tensor([.25, .25, .25, 0]))
+        assertArraysAlmostEqual(
+            summarizer.summary["mean"], torch.tensor([1.5, 1.5, 2.5, 4])
+        )
+        assertArraysAlmostEqual(
+            summarizer.summary["variance"], torch.tensor([0.25, 0.25, 0.25, 0])
+        )
 
         summarizer.update(x3)
-        assertArraysAlmostEqual(summarizer.summary['mean'], torch.tensor([2, 2, 2, 4]))
-        assertArraysAlmostEqual(summarizer.summary['variance'], torch.tensor([2.0/3.0, 2.0/3.0, 2.0/3.0, 0]))
+        assertArraysAlmostEqual(summarizer.summary["mean"], torch.tensor([2, 2, 2, 4]))
+        assertArraysAlmostEqual(
+            summarizer.summary["variance"],
+            torch.tensor([2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0, 0]),
+        )
 
     def test_stats_random_data(self):
         N = 1000
         BIG_VAL = 100000
         values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
-        stats_to_test = [Mean(), Var(), Var(order=1), StdDev(), StdDev(order=1), Min(), Max(), Sum(), MSE()]
+        stats_to_test = [
+            Mean(),
+            Var(),
+            Var(order=1),
+            StdDev(),
+            StdDev(order=1),
+            Min(),
+            Max(),
+            Sum(),
+            MSE(),
+        ]
         stat_names = [
             "mean",
             "variance",
@@ -108,7 +125,7 @@ class Test(BaseTest):
             np.min,
             np.max,
             np.sum,
-            lambda x: np.sum((x - np.mean(x))**2),
+            lambda x: np.sum((x - np.mean(x)) ** 2),
         ]
 
         for stat, name, gt in zip(stats_to_test, stat_names, gt_fns):
