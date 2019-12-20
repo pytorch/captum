@@ -44,6 +44,14 @@ class Summarizer:
 
         for i, inp in enumerate(x):
             while i >= len(self._summarizers):
+                # _summarizers[i] is a new SummarizerSingleTesnor, which
+                # aims to summarize input i (i.e. x[i])
+                #
+                # Thus, we must copy our stats, as otherwise
+                # in the best case the statistics for each input will be mangled
+                # and in the worst case we will run into an error due to different
+                # dimensionality in the input tensors tensors (i.e.
+                # x[i].shape != x[j].shape for some pair i, j)
                 stats = self._copy_stats()
                 summary_stats = [stats[i] for i in self._summary_stat_indicies]
                 self._summarizers.append(
