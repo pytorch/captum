@@ -13,7 +13,7 @@
     },
     {
       "id": "Resnet_TorchVision_Interpret",
-      "title": "Interpreting vision with Resnet"
+      "title": "Interpreting vision with ResNet"
     },
     {
       "id": "Resnet_TorchVision_Ablation",
