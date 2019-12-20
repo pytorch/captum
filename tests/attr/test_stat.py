@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import random
 
-from captum.attr import Mean, Var, StdDev, Summarizer
+from captum.attr import Mean, Var, StdDev, Min, Max, Sum, MSE, Summarizer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -69,13 +69,17 @@ class Test(BaseTest):
         N = 1000
         BIG_VAL = 100000
         values = list(get_values(lo=-BIG_VAL, hi=BIG_VAL, n=N))
-        stats_to_test = [Mean(), Var(), Var(order=1), StdDev(), StdDev(order=1)]
+        stats_to_test = [Mean(), Var(), Var(order=1), StdDev(), StdDev(order=1), Min(), Max(), Sum(), MSE()]
         stat_names = [
             "mean",
             "variance",
             "sample_variance",
             "std_dev",
             "sample_std_dev",
+            "min",
+            "max",
+            "sum",
+            "mse",
         ]
         gt_fns = [
             np.mean,
@@ -83,6 +87,10 @@ class Test(BaseTest):
             lambda x: np.var(x, ddof=1),
             np.std,
             lambda x: np.std(x, ddof=1),
+            np.min,
+            np.max,
+            np.sum,
+            lambda x: np.sum((x - np.mean(x))**2),
         ]
 
         for stat, name, gt in zip(stats_to_test, stat_names, gt_fns):
@@ -93,4 +101,5 @@ class Test(BaseTest):
             actual = torch.from_numpy(np.array(gt(values)))
             stat_val = summ.summary[name]
 
-            assertTensorAlmostEqual(self, stat_val, actual)
+            # rounding errors is a serious issue (moreso for MSE)
+            assertTensorAlmostEqual(self, stat_val, actual, delta=0.005)
