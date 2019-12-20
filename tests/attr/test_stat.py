@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import random
 
-from captum.attr._utils.stat import SummarizerSingleTensor, Mean, Var, StdDev
+from captum.attr import Mean, Var, StdDev, Summarizer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -17,10 +17,9 @@ def get_values(n=100, lo=None, hi=None, integers=False):
 
 class Test(BaseTest):
     def test_div0(self):
-        summarizer = SummarizerSingleTensor([Var(), Mean()])
+        summarizer = Summarizer([Var(), Mean()])
         summ = summarizer.summary
-        self.assertIsNone(summ["mean"])
-        self.assertIsNone(summ["variance"])
+        self.assertIsNone(summ)
 
         summarizer.update(torch.tensor(10))
         summ = summarizer.summary
@@ -48,7 +47,7 @@ class Test(BaseTest):
         AMOUNT_OF_SMALLS = [100, 10]
         AMOUNT_OF_BIGS = [10, 100]
         for sm, big in zip(AMOUNT_OF_SMALLS, AMOUNT_OF_BIGS):
-            summ = SummarizerSingleTensor([Var()])
+            summ = Summarizer([Var()])
             values = []
             for i in range(sm):
                 values.append(SMALL_VAL)
@@ -87,7 +86,7 @@ class Test(BaseTest):
         ]
 
         for stat, name, gt in zip(stats_to_test, stat_names, gt_fns):
-            summ = SummarizerSingleTensor([stat])
+            summ = Summarizer([stat])
             for x in values:
                 summ.update(torch.tensor(x, dtype=torch.float64))
 

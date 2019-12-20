@@ -22,7 +22,7 @@ class Summarizer:
     def __init__(self, stats=None):
         self._summarizers = []
         self._is_inputs_tuple = None
-        self._stats = stats
+        self._stats, self._summary_stat_indicies = _reorder_stats(stats)
 
     def _copy_stats(self):
         import copy
@@ -33,8 +33,6 @@ class Summarizer:
         """
         Calls .update on each Stat object within this object
         """
-        from captum.attr._utils.stat import SummarizerSingleTensor
-
         if self._is_inputs_tuple is None:
             self._is_inputs_tuple = isinstance(x, tuple)
         else:
@@ -46,8 +44,10 @@ class Summarizer:
 
         for i, inp in enumerate(x):
             while i >= len(self._summarizers):
+                stats = self._copy_stats()
+                summary_stats = [stats[i] for i in self._summary_stat_indicies]
                 self._summarizers.append(
-                    SummarizerSingleTensor(stats=self._copy_stats())
+                    SummarizerSingleTensor(stats=stats, summary_stats=summary_stats)
                 )
             self._summarizers[i].update(inp)
 
@@ -60,19 +60,126 @@ class Summarizer:
             A dict, mapping from the Stat object's .name to the associated value of .get
         """
         if len(self._summarizers) == 0:
-            return {}
+            return None
 
         temp = [summ.summary for summ in self._summarizers]
         return temp if self._is_inputs_tuple else temp[0]
 
 
-"""
-Returns a summarizer with common summary statistics, specifically with:
-    Mean, Sample Variance, Sample Std Dev, Min, Max
-"""
+def _reorder_stats(stats):
+    from captum.attr._utils.stat import Count, Mean, MSE, Var, StdDev, Min, Max, Sum
+
+    # We want to want to store two things:
+    # 1. A mapping from a Stat to Stat object (self._stat_to_stat):
+    #    This is to retrieve an existing Stat object for dependency
+    #    resolution, e.g.  Mean needs the Count stat - we want to
+    #    retrieve it in O(1)
+    #
+    # 2. All of the necessary stats, in the correct order,
+    #    to perform an update for each Stat (self.stats) trivially
+
+    # As a reference, the dependency graph for our stats is as follows:
+    # StdDev(x) -> Var(x) -> MSE -> Mean -> Count, for all valid x
+    #
+    # Step 1:
+    #    Ensure we have all the necessary stats
+    #    i.e. ensure we have the dependencies
+    # Step 2:
+    #    Figure out the order to update them
+    dep_order = [StdDev, Var, MSE, Mean, Count]
+
+    # remove dupe stats
+    stats = set(stats)
+    summary_stats = set(stats)
+
+    from collections import defaultdict
+
+    stats_by_module = defaultdict(list)
+    for stat in stats:
+        stats_by_module[stat.__class__].append(stat)
+
+    # StdDev is an odd case since it is parameterized, thus
+    # for each StdDev(order) we must ensure there is an associated Var(order)
+    for std_dev in stats_by_module[StdDev]:
+        stat_to_add = Var(order=std_dev.order)
+        stats.add(stat_to_add)
+        stats_by_module[stat_to_add.__class__].append(stat_to_add)
+
+    # For the other modules (deps[1:n-1]): if i exists =>
+    # we want to ensure i...n-1 exists
+    for i, dep in enumerate(dep_order[1:]):
+        if dep in stats_by_module:
+            stats.update([mod() for mod in dep_order[i + 1 :]])
+            break
+
+    # Step 2: get the correct order
+    # NOTE: we are sorting via a given topological order
+    sort_order = {mod: i for i, mod in enumerate(dep_order)}
+    sort_order[Min] = -1
+    sort_order[Max] = -1
+    sort_order[Sum] = -1
+
+    stats = list(stats)
+    stats.sort(key=lambda x: sort_order[x.__class__], reverse=True)
+
+    # get the summary stat indices
+    summary_stat_indexs = []
+    for i, stat in enumerate(stats):
+        if stat in summary_stats:
+            summary_stat_indexs.append(i)
+    return stats, summary_stat_indexs
 
 
 def CommonSummarizer():
+    r"""
+    Returns a summarizer with common summary statistics, specifically with:
+        Mean, Sample Variance, Sample Std Dev, Min, Max
+    """
     from captum.attr._utils.stat import Mean, Var, StdDev, Min, Max
 
     return Summarizer([Mean(), Var(order=1), StdDev(order=1), Min(), Max()])
+
+
+class SummarizerSingleTensor:
+    r"""
+    A simple class that summarizes a single tensor. The basic functionality
+    of this class is two operations .update and .summary
+    """
+
+    class StatHolder:
+        def __init__(self, stats):
+            self.stats = stats
+            self.stat_to_stat = {stat: stat for stat in self.stats}
+
+            for stat in stats:
+                stat._other_stats = self
+                stat.init()
+
+        def get(self, stat):
+            if stat not in self.stat_to_stat:
+                return None
+
+            return self.stat_to_stat[stat]
+
+    r"""
+        Summarizes statistics for a single tensor
+
+        Args:
+            
+            summary_stats (list of Stat): A list of Stat objects you 
+                want to show in the .summary property.
+            stats (list of Stat): A list of all the Stat objects that 
+                need to be updated.
+    """
+
+    def __init__(self, summary_stats=None, stats=None):
+        self._all_stats = SummarizerSingleTensor.StatHolder(stats)
+        self._summary_stats = summary_stats
+
+    def update(self, x=None):
+        for stat in self._all_stats.stats:
+            stat.update(x)
+
+    @property
+    def summary(self):
+        return {stat.name: stat.get() for stat in self._summary_stats}

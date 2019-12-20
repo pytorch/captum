@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 
-from captum.attr._core.summarizer import CommonSummarizer
+from captum.attr import CommonSummarizer
 from .helpers.utils import BaseTest
 
 
