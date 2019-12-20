@@ -13,7 +13,11 @@
     },
     {
       "id": "Resnet_TorchVision_Interpret",
-      "title": "Interpreting vision with Resnet"
+      "title": "Interpreting vision with ResNet"
+    },
+    {
+      "id": "Resnet_TorchVision_Ablation",
+      "title": "Feature ablation on images with ResNet"
     },
     {
       "id": "Multimodal_VQA_Interpret",
