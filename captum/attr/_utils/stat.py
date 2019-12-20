@@ -43,14 +43,13 @@ class Stat:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    """
-    The name of the statistic. i.e. it is the key in a .summary
-
-    See Summarizer or SummarizerSingleTensor
-    """
-
     @property
     def name(self):
+        """
+        The name of the statistic. i.e. it is the key in a .summary
+
+        See Summarizer or SummarizerSingleTensor
+        """
         default_name = self.__class__.__name__.lower()
         if len(self.params) > 0:
             default_name += f"({self.params})"
