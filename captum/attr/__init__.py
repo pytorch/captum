@@ -10,6 +10,7 @@ from ._core.guided_backprop_deconvnet import GuidedBackprop, Deconvolution  # no
 from ._core.guided_grad_cam import GuidedGradCam  # noqa
 from ._core.feature_ablation import FeatureAblation  # noqa
 from ._core.occlusion import Occlusion  # noqa
+from ._core.summarizer import Summarizer, CommonSummarizer  # noqa
 from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
 from ._core.layer.layer_activation import LayerActivation  # noqa
@@ -39,6 +40,8 @@ from ._utils.attribution import GradientAttribution  # noqa
 from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils import visualization  # noqa
+from ._utils.stat import Mean, StdDev, MSE, Var, Min, Max, Sum, Count
+
 
 __all__ = [
     "Attribution",
@@ -73,4 +76,14 @@ __all__ = [
     "visualization",
     "configure_interpretable_embedding_layer",
     "remove_interpretable_embedding_layer",
+    "Summarizer",
+    "CommonSummarizer",
+    "Mean",
+    "StdDev",
+    "MSE",
+    "Var",
+    "Min",
+    "Max",
+    "Sum",
+    "Count",
 ]
