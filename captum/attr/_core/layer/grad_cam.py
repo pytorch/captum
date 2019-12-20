@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 from ..._utils.attribution import LayerAttribution, GradientAttribution
-from ..._utils.common import _format_input, _format_additional_forward_args
+from ..._utils.common import _format_input, _format_additional_forward_args, _format_layer_attributions
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -18,8 +18,6 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                           Output size of attribute matches this layer's output
                           dimensions, except for dimension 2, which will be 1,
                           since GradCAM sums over channels.
-                          Currently, only layers with a single tensor output are
-                          supported.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -136,12 +134,16 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                             Default: False
 
             Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Attributions based on GradCAM method.
                             Attributions will be the same size as the
                             output of the given layer, except for dimension 2,
                             which will be 1 due to summing over channels.
+                            If the layer input / output is a single tensor, then
+                            just a tensor is returned; if the layer input / output
+                            has multiple tensors, then a corresponding tuple
+                            of tensors is returned.
 
             Examples::
 
@@ -170,7 +172,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         )
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -179,13 +181,13 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        summed_grads = torch.mean(
-            layer_gradients,
-            dim=tuple(x for x in range(2, len(layer_gradients.shape))),
+        summed_grads = tuple(torch.mean(
+            layer_grad,
+            dim=tuple(x for x in range(2, len(layer_grad.shape))),
             keepdim=True,
-        )
+        ) for layer_grad in layer_gradients)
 
-        scaled_act = torch.sum(summed_grads * layer_eval, dim=1, keepdim=True)
+        scaled_acts = tuple(torch.sum(summed_grad * layer_eval, dim=1, keepdim=True) for summed_grad, layer_eval in zip(summed_grads, layer_evals))
         if relu_attributions:
-            return F.relu(scaled_act)
-        return scaled_act
+            scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
+        return _format_layer_attributions(scaled_acts)

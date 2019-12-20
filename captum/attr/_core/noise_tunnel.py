@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from enum import Enum
 
-from .._utils.attribution import Attribution
+from .._utils.attribution import Attribution, LayerAttribution
 from .._utils.common import (
     _validate_noise_tunnel_type,
     _validate_input,
@@ -284,6 +284,10 @@ class NoiseTunnel(Attribution):
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
         attributions = _format_tensor_into_tuples(attributions)
+        if isinstance(self.attribution_method, LayerAttribution):
+            # For layer attribution, we want to wrap the attributions in a tuple
+            # only when there is > 1 layer attribution tensor.
+            is_inputs_tuple = (len(attributions) != 1)
 
         expected_attributions = []
         expected_attributions_sq = []

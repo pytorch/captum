@@ -97,7 +97,8 @@ def _neuron_gradients(inputs, saved_layer, key_list, gradient_neuron_index):
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
-            current_out_tensor = saved_layer[key]
+            assert len(saved_layer[key]) == 1, "Cannot compute neuron gradients for layer with multiple tensors."
+            current_out_tensor = saved_layer[key][0]
             gradient_tensors.append(
                 torch.autograd.grad(
                     torch.unbind(
@@ -156,7 +157,9 @@ def _forward_layer_distributed_eval(
 
     def forward_hook(module, inp, out=None):
         eval_tsrs = inp if attribute_to_layer_input else out
-        eval_device = eval_tsrs[0].device is isinstance(eval_tsrs, tuple) else eval_tsrs.device
+        is_eval_tuple = isinstance(eval_tsrs, tuple)
+        if not is_eval_tuple:
+            eval_tsrs = (eval_tsrs,)
         #assert isinstance(
         #    eval_tsr, torch.Tensor
         #), "Layers with multiple inputs or output tensors are not supported yet."
@@ -166,14 +169,13 @@ def _forward_layer_distributed_eval(
             # when `forward_hook_with_return` is set to True. This is because
             # otherwise `backward()` on the last output layer won't execute.
             if forward_hook_with_return:
-                saved_layer[eval_device] = eval_tsrs
-                if isinstance(eval_tsrs, tuple):
-                    eval_tsrs_to_return = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
-                else:
-                    eval_tsrs_to_return = eval_tsr.clone()
-                return eval_tsr_to_return
+                saved_layer[eval_tsrs[0].device] = eval_tsrs
+                eval_tsrs_to_return = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
+                if not is_eval_tuple:
+                    eval_tsrs_to_return = eval_tsrs_to_return[0]
+                return eval_tsrs_to_return
             else:
-                saved_layer[eval_tsr.device] = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs) if isinstance(eval_tsrs, tuple) else eval_tsr.clone()
+                saved_layer[eval_tsrs[0].device] = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
 
     if attribute_to_layer_input:
         hook = layer.register_forward_pre_hook(forward_hook)
@@ -363,9 +365,11 @@ def compute_layer_gradients_and_eval(
         # If only one key exists (standard model), key list simply has one element.
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
         all_outputs = _reduce_list([saved_layer[device_id] for device_id in key_list])
-        grad_inputs = tuple(saved_layer[device_id] for device_id in key_list)
+        num_tensors = len(saved_layer[next(iter(saved_layer))])
+        grad_inputs = tuple(layer_tensor for device_id in key_list for layer_tensor in saved_layer[device_id])
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
-        all_grads = torch.cat(saved_grads)
+        saved_grads = tuple(saved_grads[i:i + num_tensors] for i in range(0, len(saved_grads), num_tensors))
+        all_grads = _reduce_list(saved_grads)
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(
                 inputs, saved_layer, key_list, gradient_neuron_index

@@ -163,6 +163,12 @@ def _format_attributions(is_inputs_tuple, attributions):
     )
     return attributions if is_inputs_tuple else attributions[0]
 
+def _format_layer_attributions(layer_attributions):
+    r"""
+    If layer_attributions contains only one tensor, then return only the tensor
+    (without wrapping in a tuple), otherwise return the tuple.
+    """
+    return _format_attributions(len(layer_attributions) != 1, layer_attributions)
 
 def _format_and_verify_strides(strides, inputs):
     # Formats strides, which are necessary for occlusion

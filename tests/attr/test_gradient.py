@@ -71,9 +71,9 @@ class Test(BaseTest):
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear0, input, target_ind=0
         )
-        assertArraysAlmostEqual(grads.squeeze(0).tolist(), [4.0, 4.0, 4.0], delta=0.01)
+        assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [4.0, 4.0, 4.0], delta=0.01)
         assertArraysAlmostEqual(
-            eval.squeeze(0).tolist(), [5.0, -11.0, 23.0], delta=0.01
+            eval[0].squeeze(0).tolist(), [5.0, -11.0, 23.0], delta=0.01
         )
 
     def test_layer_gradient_linear1(self):
@@ -83,10 +83,10 @@ class Test(BaseTest):
             model, model.linear1, input, target_ind=1
         )
         assertArraysAlmostEqual(
-            grads.squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
+            grads[0].squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
         )
         assertArraysAlmostEqual(
-            eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
+            eval[0].squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
         )
 
     def test_layer_gradient_linear1_inplace(self):
@@ -96,10 +96,10 @@ class Test(BaseTest):
             model, model.linear1, input, target_ind=1
         )
         assertArraysAlmostEqual(
-            grads.squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
+            grads[0].squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
         )
         assertArraysAlmostEqual(
-            eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
+            eval[0].squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
         )
 
     def test_layer_gradient_relu_input_inplace(self):
@@ -109,10 +109,10 @@ class Test(BaseTest):
             model, model.relu, input, target_ind=1, attribute_to_layer_input=True
         )
         assertArraysAlmostEqual(
-            grads.squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
+            grads[0].squeeze(0).tolist(), [0.0, 1.0, 1.0, 1.0], delta=0.01
         )
         assertArraysAlmostEqual(
-            eval.squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
+            eval[0].squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
         )
 
     def test_layer_gradient_output(self):
@@ -121,5 +121,5 @@ class Test(BaseTest):
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear2, input, target_ind=1
         )
-        assertArraysAlmostEqual(grads.squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
-        assertArraysAlmostEqual(eval.squeeze(0).tolist(), [26.0, 28.0], delta=0.01)
+        assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
+        assertArraysAlmostEqual(eval[0].squeeze(0).tolist(), [26.0, 28.0], delta=0.01)

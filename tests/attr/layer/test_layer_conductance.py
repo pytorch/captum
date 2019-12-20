@@ -11,7 +11,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.conductance_reference import ConductanceReference
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertArraysAlmostEqual, assertAttributionsAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -19,6 +19,11 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
+
+    def test_simple_input_multi_conductance(self):
+        net = BasicModel_MultiLayer(multiinput_module=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._conductance_test_assert(net, net.relu, inp, ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]]))
 
     def test_simple_input_with_scalar_baseline_conductance(self):
         net = BasicModel_MultiLayer()
@@ -142,12 +147,12 @@ class Test(BaseTest):
                 " not match the difference of endpoints.".format(delta),
             )
 
-            for i in range(len(expected_conductance)):
-                assertArraysAlmostEqual(
-                    attributions[i : i + 1].squeeze(0).tolist(),
-                    expected_conductance[i],
-                    delta=0.1,
-                )
+            assertAttributionsAlmostEqual(
+                self,
+                attributions,
+                expected_conductance,
+                delta=0.1,
+            )
 
     def _conductance_reference_test_assert(
         self, model, target_layer, test_input, test_baseline=None

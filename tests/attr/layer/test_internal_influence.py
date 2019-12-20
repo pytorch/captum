@@ -9,7 +9,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertAttributionsAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -17,6 +17,12 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._internal_influence_test_assert(net, net.linear0, inp, [[3.9, 3.9, 3.9]])
+
+    def test_simple_input_multi_internal_inf(self):
+        net = BasicModel_MultiLayer(multiinput_module=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        self._internal_influence_test_assert(net, net.relu, inp, ([[0.9, 1.0, 1.0, 1.0]], [[0.9, 1.0, 1.0, 1.0]]), attribute_to_layer_input=True
+    )
 
     def test_simple_linear_internal_inf(self):
         net = BasicModel_MultiLayer()
@@ -151,12 +157,13 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            for i in range(len(expected_activation)):
-                assertArraysAlmostEqual(
-                    attributions[i : i + 1].squeeze(0).tolist(),
-                    expected_activation[i],
-                    delta=0.01,
-                )
+            assertAttributionsAlmostEqual(
+                self,
+                attributions,
+                expected_activation,
+                delta=0.03,
+                mode="max",
+            )
 
 
 if __name__ == "__main__":

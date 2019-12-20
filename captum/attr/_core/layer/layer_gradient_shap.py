@@ -10,6 +10,7 @@ from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_
 from ..gradient_shap import GradientShap, InputBaselineXGradient
 from ..._utils.common import (
     _format_callable_baseline,
+    _format_layer_attributions,
     _compute_conv_delta_and_format_attrs,
 )
 
@@ -29,9 +30,6 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -200,14 +198,16 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                         Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor*):
+            - **attributions** (*tensor* or tuple of *tensors*):
                         Attribution score computed based on GradientSHAP with
                         respect to layer's input or output. Attributions will always
                         be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
-                        of the layer. Since currently it is assumed that the inputs
-                        and outputs of the layer must be single tensor, returned
-                        attributions have the shape of that tensor.
+                        of the layer.
+                        If the layer input / output is a single tensor, then
+                        just a tensor is returned; if the layer input / output
+                        has multiple tensors, then a corresponding tuple
+                        of tensors is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
@@ -275,9 +275,6 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -333,10 +330,6 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        attr_inputs = (attr_inputs,)
-        attr_baselines = (attr_baselines,)
-        grads = (grads,)
-
         input_baseline_diffs = tuple(
             input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
         )
@@ -352,4 +345,5 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             inputs,
             additional_forward_args,
             target,
+            len(attributions) != 1
         )
