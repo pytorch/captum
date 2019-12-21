@@ -254,6 +254,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             self.model,
             self.layer,
             inputs,
+            target,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
         )
@@ -283,7 +284,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            False,  # currently both the input and output of layer can only be a tensor
+            len(attributions) > 1,  # Tuple of attributions if > 1 attribution tensor
         )
 
 
@@ -516,10 +517,14 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         )
         if return_convergence_delta:
             attributions, delta = attributions
-
-        attributions = DeepLiftShap._compute_mean_across_baselines(
-            self, inp_bsz, base_bsz, attributions
-        )
+        if isinstance(attributions, tuple):
+            attributions = tuple(DeepLiftShap._compute_mean_across_baselines(
+                self, inp_bsz, base_bsz, attrib
+            ) for attrib in attributions)
+        else:
+            attributions = DeepLiftShap._compute_mean_across_baselines(
+                self, inp_bsz, base_bsz, attributions
+            )
         if return_convergence_delta:
             return attributions, delta
         else:

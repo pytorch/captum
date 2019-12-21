@@ -352,7 +352,6 @@ def compute_layer_gradients_and_eval(
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
         )
-
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."

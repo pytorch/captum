@@ -220,8 +220,13 @@ class BasicEmbeddingModel(nn.Module):
 
 
 class MultiRelu(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.relu1 = nn.ReLU()
+        self.relu2 = nn.ReLU()
+
     def forward(self, arg1, arg2):
-        return (F.relu(arg1), F.relu(arg2))
+        return (self.relu1(arg1), self.relu2(arg2))
 
 class BasicModel_MultiLayer(nn.Module):
     def __init__(self, inplace=False, multiinput_module=False):
