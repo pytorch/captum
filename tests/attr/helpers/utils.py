@@ -22,7 +22,7 @@ def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
 def assertTensorAlmostEqual(test, tensor, expected, delta=0.0001):
     tensor = tensor.squeeze()
     if not isinstance(expected, torch.Tensor):
-        expected = torch.tensor(expected)
+        expected = torch.tensor(expected, dtype=tensor.dtype)
     test.assertAlmostEqual(
         torch.sum(torch.abs(tensor - expected)).item(), 0.0, delta=delta
     )
