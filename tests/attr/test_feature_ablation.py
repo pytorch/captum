@@ -6,6 +6,7 @@ import torch
 from captum.attr._core.feature_ablation import FeatureAblation
 
 from .helpers.basic_models import (
+    BasicModel,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -19,6 +20,24 @@ class Test(BaseTest):
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._ablation_test_assert(
             net, inp, [80.0, 200.0, 120.0], ablations_per_eval=(1, 2, 3)
+        )
+
+    def test_simple_ablation_int_to_int(self):
+        net = BasicModel()
+        inp = torch.tensor([[-3, 1, 2]])
+        self._ablation_test_assert(
+            net, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
+        )
+
+    def test_simple_ablation_int_to_float(self):
+        net = BasicModel()
+
+        def wrapper_func(inp):
+            return net(inp).float()
+
+        inp = torch.tensor([[-3, 1, 2]])
+        self._ablation_test_assert(
+            wrapper_func, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_with_mask(self):

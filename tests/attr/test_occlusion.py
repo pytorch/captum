@@ -21,12 +21,12 @@ class Test(BaseTest):
         occ = Occlusion(net)
         # Check error when too few sliding window dimensions
         with self.assertRaises(AssertionError):
-            _ = occ.attribute(inp, sliding_window_shapes=((1, 2),), target=0,)
+            _ = occ.attribute(inp, sliding_window_shapes=((1, 2),), target=0)
 
         # Check error when too many sliding window dimensions
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
-                (inp, inp), sliding_window_shapes=((1, 1, 2), (1, 1, 1, 2)), target=0,
+                (inp, inp), sliding_window_shapes=((1, 1, 2), (1, 1, 1, 2)), target=0
             )
 
         # Check error when too many sliding window tuples
@@ -44,7 +44,7 @@ class Test(BaseTest):
         # Check error when too few stride dimensions
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
-                inp, sliding_window_shapes=(1, 2, 2), strides=(1, 2), target=0,
+                inp, sliding_window_shapes=(1, 2, 2), strides=(1, 2), target=0
             )
 
         # Check error when too many stride dimensions
@@ -71,7 +71,7 @@ class Test(BaseTest):
         occ = Occlusion(net)
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
-                inp, sliding_window_shapes=((1, 1, 2),), strides=2, target=0,
+                inp, sliding_window_shapes=((1, 1, 2),), strides=2, target=0
             )
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
@@ -82,7 +82,7 @@ class Test(BaseTest):
             )
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
-                inp, sliding_window_shapes=((2, 1, 2),), strides=2, target=0,
+                inp, sliding_window_shapes=((2, 1, 2),), strides=2, target=0
             )
 
     def test_simple_input(self):
@@ -94,6 +94,32 @@ class Test(BaseTest):
             [80.0, 200.0, 120.0],
             ablations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,)),
+        )
+
+    def test_simple_multi_input_int_to_int(self):
+        net = BasicModel3()
+        inp1 = torch.tensor([[-10], [3]])
+        inp2 = torch.tensor([[-5], [1]])
+        self._occlusion_test_assert(
+            net,
+            (inp1, inp2),
+            ([0.0, 1.0], [0.0, -1.0]),
+            sliding_window_shapes=((1,), (1,)),
+        )
+
+    def test_simple_multi_input_int_to_float(self):
+        net = BasicModel3()
+
+        def wrapper_func(*inp):
+            return net(*inp).float()
+
+        inp1 = torch.tensor([[-10], [3]])
+        inp2 = torch.tensor([[-5], [1]])
+        self._occlusion_test_assert(
+            wrapper_func,
+            (inp1, inp2),
+            ([0.0, 1.0], [0.0, -1.0]),
+            sliding_window_shapes=((1,), (1,)),
         )
 
     def test_simple_multi_input(self):

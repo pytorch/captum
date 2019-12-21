@@ -16,7 +16,7 @@ from ..layer.test_layer_deeplift_basic import (
 
 class Test(BaseTest):
     def test_relu_neuron_deeplift(self):
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearDeepLiftModel(inplace=True)
 
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
@@ -24,13 +24,24 @@ class Test(BaseTest):
         inputs = (x1, x2)
 
         neuron_dl = NeuronDeepLift(model, model.relu)
-        attributions = neuron_dl.attribute(inputs, 0, attribute_to_neuron_input=True)
-        assertTensorAlmostEqual(self, attributions[0], [[-30.0, 1.0, -0.0]])
-        assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
-
         attributions = neuron_dl.attribute(inputs, 0, attribute_to_neuron_input=False)
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 0.0, 0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
+
+    def test_deeplift_compare_with_and_without_inplace(self):
+        model1 = ReLULinearDeepLiftModel(inplace=True)
+        model2 = ReLULinearDeepLiftModel()
+        x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
+        x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
+        inputs = (x1, x2)
+        neuron_dl1 = NeuronDeepLift(model1, model1.relu)
+        attributions1 = neuron_dl1.attribute(inputs, 0, attribute_to_neuron_input=False)
+
+        neuron_dl2 = NeuronDeepLift(model2, model2.relu)
+        attributions2 = neuron_dl2.attribute(inputs, 0, attribute_to_neuron_input=False)
+
+        assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
+        assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
 
     def test_linear_neuron_deeplift(self):
         model = ReLULinearDeepLiftModel()
@@ -65,11 +76,6 @@ class Test(BaseTest):
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLiftShap(model, model.relu)
-        attributions = neuron_dl.attribute(
-            inputs, 0, baselines, attribute_to_neuron_input=True
-        )
-        assertTensorAlmostEqual(self, attributions[0], [[-30.0, 1.0, -0.0]])
-        assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
 
         attributions = neuron_dl.attribute(
             inputs, 0, baselines, attribute_to_neuron_input=False
