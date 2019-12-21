@@ -208,7 +208,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                assert len(layer_eval) == 0, (
+                assert len(layer_eval) == 1, (
                     "Layers with multiple inputs /"
                     " outputs are not supported for neuron ablation."
                 )
