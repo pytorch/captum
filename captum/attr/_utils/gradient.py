@@ -162,9 +162,6 @@ def _forward_layer_distributed_eval(
         is_eval_tuple = isinstance(eval_tsrs, tuple)
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
-        # assert isinstance(
-        #    eval_tsr, torch.Tensor
-        # ), "Layers with multiple inputs or output tensors are not supported yet."
         with lock:
             nonlocal saved_layer
             # Note that cloning behaviour of `eval_tsr` is different
