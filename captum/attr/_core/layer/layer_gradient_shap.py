@@ -10,7 +10,6 @@ from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_
 from ..gradient_shap import GradientShap, InputBaselineXGradient
 from ..._utils.common import (
     _format_callable_baseline,
-    _format_layer_attributions,
     _compute_conv_delta_and_format_attrs,
 )
 
@@ -345,5 +344,5 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) != 1,
+            len(attributions) > 1,
         )

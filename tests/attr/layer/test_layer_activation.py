@@ -11,7 +11,6 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import (
-    assertArraysAlmostEqual,
     BaseTest,
     assertAttributionsAlmostEqual,
     assertTensorAlmostEqual,
