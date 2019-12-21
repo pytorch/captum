@@ -52,6 +52,20 @@ class Test(BaseGPUTest):
             InternalInfluence, net, net.relu, inputs=inp, target=0
         )
 
+    def test_multi_output_internal_inf(self):
+        net = BasicModel_MultiLayer(multiinput_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            InternalInfluence, net, net.relu, inputs=inp, target=0
+        )
+
     def test_multi_input_internal_inf(self):
         net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
@@ -82,6 +96,20 @@ class Test(BaseGPUTest):
         ).cuda()
         self._data_parallel_test_assert(LayerActivation, net, net.relu, inputs=inp)
 
+    def test_multi_output_layer_activation(self):
+        net = BasicModel_MultiLayer(multiinput_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerActivation, net, net.relu, alt_device_ids=True, inputs=inp
+        )
+
     def test_multi_input_layer_activation(self):
         net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
@@ -110,6 +138,20 @@ class Test(BaseGPUTest):
         ).cuda()
         self._data_parallel_test_assert(
             LayerConductance, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_output_layer_conductance(self):
+        net = BasicModel_MultiLayer(multiinput_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerConductance, net, net.relu, alt_device_ids=True, inputs=inp, target=1
         )
 
     def test_multi_input_layer_conductance(self):
@@ -149,6 +191,25 @@ class Test(BaseGPUTest):
         ).cuda()
         self._data_parallel_test_assert(
             LayerGradientXActivation, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_output_layer_gradient_x_activation(self):
+        net = BasicModel_MultiLayer(multiinput_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerGradientXActivation,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
         )
 
     def test_multi_input_layer_gradient_x_activation(self):

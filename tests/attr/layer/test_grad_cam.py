@@ -83,7 +83,6 @@ class Test(BaseTest):
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
         )
-        print(attributions)
         assertAttributionsAlmostEqual(
             self, attributions, expected_activation, delta=0.01
         )

@@ -287,7 +287,7 @@ class NoiseTunnel(Attribution):
         if isinstance(self.attribution_method, LayerAttribution):
             # For layer attribution, we want to wrap the attributions in a tuple
             # only when there is > 1 layer attribution tensor.
-            is_inputs_tuple = len(attributions) != 1
+            is_inputs_tuple = len(attributions) > 1
 
         expected_attributions = []
         expected_attributions_sq = []

@@ -169,7 +169,7 @@ def _format_layer_attributions(layer_attributions):
     If layer_attributions contains only one tensor, then return only the tensor
     (without wrapping in a tuple), otherwise return the tuple.
     """
-    return _format_attributions(len(layer_attributions) != 1, layer_attributions)
+    return _format_attributions(len(layer_attributions) > 1, layer_attributions)
 
 
 def _format_and_verify_strides(strides, inputs):

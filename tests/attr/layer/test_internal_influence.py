@@ -163,7 +163,7 @@ class Test(BaseTest):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
             assertAttributionsAlmostEqual(
-                self, attributions, expected_activation, delta=0.03, mode="max",
+                self, attributions, expected_activation, delta=0.01, mode="max",
             )
 
 

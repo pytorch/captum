@@ -299,8 +299,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that both inputs and ouputs of
-                          the layer can only be a single tensor.
         """
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
