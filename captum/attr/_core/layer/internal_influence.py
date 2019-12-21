@@ -237,12 +237,17 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         )
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
-        scaled_grads = tuple(layer_grad.contiguous().view(n_steps, -1) * torch.tensor(
-            step_sizes
-        ).view(n_steps, 1).to(layer_grad.device) for layer_grad in layer_gradients)
+        scaled_grads = tuple(
+            layer_grad.contiguous().view(n_steps, -1)
+            * torch.tensor(step_sizes).view(n_steps, 1).to(layer_grad.device)
+            for layer_grad in layer_gradients
+        )
 
         # aggregates across all steps for each tensor in the input tuple
-        attrs = tuple(_reshape_and_sum(
-            scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
-        ) for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients))
+        attrs = tuple(
+            _reshape_and_sum(
+                scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
+            )
+            for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
+        )
         return _format_layer_attributions(attrs)

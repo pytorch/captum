@@ -97,7 +97,9 @@ def _neuron_gradients(inputs, saved_layer, key_list, gradient_neuron_index):
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
-            assert len(saved_layer[key]) == 1, "Cannot compute neuron gradients for layer with multiple tensors."
+            assert (
+                len(saved_layer[key]) == 1
+            ), "Cannot compute neuron gradients for layer with multiple tensors."
             current_out_tensor = saved_layer[key][0]
             gradient_tensors.append(
                 torch.autograd.grad(
@@ -160,9 +162,9 @@ def _forward_layer_distributed_eval(
         is_eval_tuple = isinstance(eval_tsrs, tuple)
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
-        #assert isinstance(
+        # assert isinstance(
         #    eval_tsr, torch.Tensor
-        #), "Layers with multiple inputs or output tensors are not supported yet."
+        # ), "Layers with multiple inputs or output tensors are not supported yet."
         with lock:
             nonlocal saved_layer
             # Note that cloning behaviour of `eval_tsr` is different
@@ -175,7 +177,9 @@ def _forward_layer_distributed_eval(
                     eval_tsrs_to_return = eval_tsrs_to_return[0]
                 return eval_tsrs_to_return
             else:
-                saved_layer[eval_tsrs[0].device] = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
+                saved_layer[eval_tsrs[0].device] = tuple(
+                    eval_tsr.clone() for eval_tsr in eval_tsrs
+                )
 
     if attribute_to_layer_input:
         hook = layer.register_forward_pre_hook(forward_hook)
@@ -365,9 +369,16 @@ def compute_layer_gradients_and_eval(
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
         all_outputs = _reduce_list([saved_layer[device_id] for device_id in key_list])
         num_tensors = len(saved_layer[next(iter(saved_layer))])
-        grad_inputs = tuple(layer_tensor for device_id in key_list for layer_tensor in saved_layer[device_id])
+        grad_inputs = tuple(
+            layer_tensor
+            for device_id in key_list
+            for layer_tensor in saved_layer[device_id]
+        )
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
-        saved_grads = tuple(saved_grads[i:i + num_tensors] for i in range(0, len(saved_grads), num_tensors))
+        saved_grads = tuple(
+            saved_grads[i : i + num_tensors]
+            for i in range(0, len(saved_grads), num_tensors)
+        )
         all_grads = _reduce_list(saved_grads)
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(

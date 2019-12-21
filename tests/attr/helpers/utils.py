@@ -34,6 +34,7 @@ def assertTensorAlmostEqual(test, tensor, expected, delta=0.0001, mode="sum"):
     else:
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
+
 def assertAttributionsAlmostEqual(test, tensor, expected, delta=0.0001, mode="sum"):
     if isinstance(expected, tuple):
         for i in range(len(expected)):

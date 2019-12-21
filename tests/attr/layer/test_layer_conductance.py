@@ -11,7 +11,11 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.conductance_reference import ConductanceReference
-from ..helpers.utils import assertArraysAlmostEqual, assertAttributionsAlmostEqual, BaseTest
+from ..helpers.utils import (
+    assertArraysAlmostEqual,
+    assertAttributionsAlmostEqual,
+    BaseTest,
+)
 
 
 class Test(BaseTest):
@@ -23,7 +27,12 @@ class Test(BaseTest):
     def test_simple_input_multi_conductance(self):
         net = BasicModel_MultiLayer(multiinput_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        self._conductance_test_assert(net, net.relu, inp, ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]]))
+        self._conductance_test_assert(
+            net,
+            net.relu,
+            inp,
+            ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]]),
+        )
 
     def test_simple_input_with_scalar_baseline_conductance(self):
         net = BasicModel_MultiLayer()
@@ -148,10 +157,7 @@ class Test(BaseTest):
             )
 
             assertAttributionsAlmostEqual(
-                self,
-                attributions,
-                expected_conductance,
-                delta=0.1,
+                self, attributions, expected_conductance, delta=0.1,
             )
 
     def _conductance_reference_test_assert(

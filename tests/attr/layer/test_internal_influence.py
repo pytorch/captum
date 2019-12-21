@@ -21,8 +21,13 @@ class Test(BaseTest):
     def test_simple_input_multi_internal_inf(self):
         net = BasicModel_MultiLayer(multiinput_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        self._internal_influence_test_assert(net, net.relu, inp, ([[0.9, 1.0, 1.0, 1.0]], [[0.9, 1.0, 1.0, 1.0]]), attribute_to_layer_input=True
-    )
+        self._internal_influence_test_assert(
+            net,
+            net.relu,
+            inp,
+            ([[0.9, 1.0, 1.0, 1.0]], [[0.9, 1.0, 1.0, 1.0]]),
+            attribute_to_layer_input=True,
+        )
 
     def test_simple_linear_internal_inf(self):
         net = BasicModel_MultiLayer()
@@ -158,11 +163,7 @@ class Test(BaseTest):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
             assertAttributionsAlmostEqual(
-                self,
-                attributions,
-                expected_activation,
-                delta=0.03,
-                mode="max",
+                self, attributions, expected_activation, delta=0.03, mode="max",
             )
 
 

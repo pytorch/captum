@@ -345,5 +345,5 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) != 1
+            len(attributions) != 1,
         )

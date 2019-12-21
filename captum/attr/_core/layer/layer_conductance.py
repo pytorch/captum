@@ -263,17 +263,25 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         # Compute differences between consecutive evaluations of layer_eval.
         # This approximates the total input gradient of each step multiplied
         # by the step size.
-        grad_diffs = tuple(layer_eval[num_examples:] - layer_eval[:-num_examples] for layer_eval in layer_evals)
+        grad_diffs = tuple(
+            layer_eval[num_examples:] - layer_eval[:-num_examples]
+            for layer_eval in layer_evals
+        )
 
         # Element-wise multiply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum
         # across stepped inputs.
-        attributions = tuple(_reshape_and_sum(
-            grad_diff * layer_gradient[:-num_examples],
-            n_steps,
-            num_examples,
-            layer_eval.shape[1:],
-        ) for layer_gradient, layer_eval, grad_diff in zip(layer_gradients, layer_evals, grad_diffs))
+        attributions = tuple(
+            _reshape_and_sum(
+                grad_diff * layer_gradient[:-num_examples],
+                n_steps,
+                num_examples,
+                layer_eval.shape[1:],
+            )
+            for layer_gradient, layer_eval, grad_diff in zip(
+                layer_gradients, layer_evals, grad_diffs
+            )
+        )
 
         if return_convergence_delta:
             start_point, end_point = baselines, inputs

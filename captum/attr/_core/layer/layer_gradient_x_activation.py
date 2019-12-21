@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 from ..._utils.attribution import LayerAttribution, GradientAttribution
-from ..._utils.common import _format_input, _format_additional_forward_args, _format_layer_attributions
+from ..._utils.common import (
+    _format_input,
+    _format_additional_forward_args,
+    _format_layer_attributions,
+)
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -136,4 +140,9 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        return _format_layer_attributions(tuple(layer_gradient * layer_eval for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)))
+        return _format_layer_attributions(
+            tuple(
+                layer_gradient * layer_eval
+                for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
+            )
+        )

@@ -84,7 +84,9 @@ class Test(BaseTest):
             relu_attributions=relu_attributions,
         )
         print(attributions)
-        assertAttributionsAlmostEqual(self, attributions, expected_activation, delta=0.01)
+        assertAttributionsAlmostEqual(
+            self, attributions, expected_activation, delta=0.01
+        )
 
 
 if __name__ == "__main__":

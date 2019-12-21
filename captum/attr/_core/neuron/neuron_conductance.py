@@ -260,7 +260,9 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         )
 
         # Layer gradients and eval
-        assert len(layer_gradients) == 1 and len(layer_eval) == 1, "Layer can only have 1 output tensor for neuron attribution!"
+        assert (
+            len(layer_gradients) == 1 and len(layer_eval) == 1
+        ), "Layer can only have 1 output tensor for neuron attribution!"
         layer_gradients = layer_gradients[0]
         layer_eval = layer_eval[0]
 

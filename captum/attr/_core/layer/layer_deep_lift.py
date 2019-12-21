@@ -518,9 +518,12 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         if return_convergence_delta:
             attributions, delta = attributions
         if isinstance(attributions, tuple):
-            attributions = tuple(DeepLiftShap._compute_mean_across_baselines(
-                self, inp_bsz, base_bsz, attrib
-            ) for attrib in attributions)
+            attributions = tuple(
+                DeepLiftShap._compute_mean_across_baselines(
+                    self, inp_bsz, base_bsz, attrib
+                )
+                for attrib in attributions
+            )
         else:
             attributions = DeepLiftShap._compute_mean_across_baselines(
                 self, inp_bsz, base_bsz, attributions

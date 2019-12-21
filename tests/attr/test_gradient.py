@@ -71,7 +71,9 @@ class Test(BaseTest):
         grads, eval = compute_layer_gradients_and_eval(
             model, model.linear0, input, target_ind=0
         )
-        assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [4.0, 4.0, 4.0], delta=0.01)
+        assertArraysAlmostEqual(
+            grads[0].squeeze(0).tolist(), [4.0, 4.0, 4.0], delta=0.01
+        )
         assertArraysAlmostEqual(
             eval[0].squeeze(0).tolist(), [5.0, -11.0, 23.0], delta=0.01
         )

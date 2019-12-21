@@ -10,7 +10,12 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest, assertAttributionsAlmostEqual, assertTensorAlmostEqual
+from ..helpers.utils import (
+    assertArraysAlmostEqual,
+    BaseTest,
+    assertAttributionsAlmostEqual,
+    assertTensorAlmostEqual,
+)
 
 
 class Test(BaseTest):
@@ -51,12 +56,20 @@ class Test(BaseTest):
     def test_simple_multi_output_activation(self):
         net = BasicModel_MultiLayer(multiinput_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
-        self._layer_activation_test_assert(net, net.relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0]))
+        self._layer_activation_test_assert(
+            net, net.relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+        )
 
     def test_simple_multi_input_activation(self):
         net = BasicModel_MultiLayer(multiinput_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
-        self._layer_activation_test_assert(net, net.relu, inp, ([-4.0, 7.0, 7.0, 7.0], [-4.0, 7.0, 7.0, 7.0]), attribute_to_layer_input=True)
+        self._layer_activation_test_assert(
+            net,
+            net.relu,
+            inp,
+            ([-4.0, 7.0, 7.0, 7.0], [-4.0, 7.0, 7.0, 7.0]),
+            attribute_to_layer_input=True,
+        )
 
     def test_simple_multi_input_linear2_activation(self):
         net = BasicModel_MultiLayer_MultiInput()

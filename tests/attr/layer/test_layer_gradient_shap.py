@@ -32,8 +32,16 @@ class Test(BaseTest):
         model.eval()
 
         inputs = torch.tensor([[0.0, 100.0, 0.0]])
-        expected = ([90.0, 100.0, 100.0, 100.0],[90.0, 100.0, 100.0, 100.0])
-        self._assert_attributions(model, model.relu, inputs, torch.zeros_like(inputs), 0, expected, n_samples=5)
+        expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
+        self._assert_attributions(
+            model,
+            model.relu,
+            inputs,
+            torch.zeros_like(inputs),
+            0,
+            expected,
+            n_samples=5,
+        )
 
     def test_basic_multilayer_with_add_args(self):
         model = BasicModel_MultiLayer(inplace=True)
@@ -127,10 +135,7 @@ class Test(BaseTest):
             attribute_to_layer_input=attribute_to_layer_input,
         )
         assertAttributionsAlmostEqual(
-            self,
-            attrs,
-            expected,
-            delta=0.005,
+            self, attrs, expected, delta=0.005,
         )
         if expected_delta is None:
             _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)

@@ -228,6 +228,7 @@ class MultiRelu(nn.Module):
     def forward(self, arg1, arg2):
         return (self.relu1(arg1), self.relu2(arg2))
 
+
 class BasicModel_MultiLayer(nn.Module):
     def __init__(self, inplace=False, multiinput_module=False):
         super().__init__()

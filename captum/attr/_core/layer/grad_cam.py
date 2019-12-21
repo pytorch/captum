@@ -3,7 +3,11 @@ import torch
 import torch.nn.functional as F
 
 from ..._utils.attribution import LayerAttribution, GradientAttribution
-from ..._utils.common import _format_input, _format_additional_forward_args, _format_layer_attributions
+from ..._utils.common import (
+    _format_input,
+    _format_additional_forward_args,
+    _format_layer_attributions,
+)
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
@@ -181,13 +185,19 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        summed_grads = tuple(torch.mean(
-            layer_grad,
-            dim=tuple(x for x in range(2, len(layer_grad.shape))),
-            keepdim=True,
-        ) for layer_grad in layer_gradients)
+        summed_grads = tuple(
+            torch.mean(
+                layer_grad,
+                dim=tuple(x for x in range(2, len(layer_grad.shape))),
+                keepdim=True,
+            )
+            for layer_grad in layer_gradients
+        )
 
-        scaled_acts = tuple(torch.sum(summed_grad * layer_eval, dim=1, keepdim=True) for summed_grad, layer_eval in zip(summed_grads, layer_evals))
+        scaled_acts = tuple(
+            torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
+            for summed_grad, layer_eval in zip(summed_grads, layer_evals)
+        )
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
         return _format_layer_attributions(scaled_acts)
