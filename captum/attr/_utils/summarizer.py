@@ -174,10 +174,9 @@ class SummarizerSingleTensor:
         Summarizes statistics for a single tensor
 
         Args:
-            
-            summary_stats (list of Stat): A list of Stat objects you 
+            summary_stats (list of Stat): A list of Stat objects you
                 want to show in the .summary property.
-            stats (list of Stat): A list of all the Stat objects that 
+            stats (list of Stat): A list of all the Stat objects that
                 need to be updated.
     """
 
