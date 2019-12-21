@@ -27,11 +27,30 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs, outputs):
+def _check_valid_module(inputs_grad_fns, outputs):
+    def is_output_cloned(output_fn, input_grad_fn):
+        """
+        Checks if the output has been cloned. This happens especially in case of
+        layer deeplift.
+        """
+        return (
+            output_fn[0].next_functions is not None
+            and output_fn[0].next_functions[0][0] == input_grad_fn
+        )
+
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        return first_next[0] == inputs[first_next[1]].grad_fn
+        # input_grad_fn = inputs[first_next[1]].grad_fn
+        # if `inputs` in the input to the network then the grad_fn is None and
+        # for that input backward_hook isn't computed. That's the reason why we
+        # need to check on `inputs_grad_fns[first_next[1]]` being None.
+        input_grad_fn = inputs_grad_fns[first_next[1]]
+        return (
+            input_grad_fn is None
+            or first_next[0] == input_grad_fn
+            or is_output_cloned(first_next, input_grad_fn)
+        )
     except IndexError:
         return False
 
@@ -295,44 +314,70 @@ class DeepLift(GradientAttribution):
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
-    # we need forward hook to access and detach the inputs and outputs of a neuron
-    def _forward_hook(self, module, inputs, outputs):
-        input_attr_name = "input"
-        output_attr_name = "output"
-        self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
-        if not _check_valid_module(inputs, outputs):
-            module.is_invalid = True
-            module.saved_grad = None
+    def _forward_pre_hook_ref(self, module, inputs):
+        inputs = _format_tensor_into_tuples(inputs)
+        module.input_ref = tuple(input.clone().detach() for input in inputs)
 
-            def tensor_backward_hook(grad):
-                if module.saved_grad is None:
-                    raise RuntimeError(
-                        """Module {} was detected as not supporting correctly module
+    def _forward_pre_hook(self, module, inputs):
+        """
+        For the modules that perform in-place operations such as ReLUs, we cannot
+        use inputs from forward hooks. This is because in that case inputs
+        and outputs are the same. We need access the inputs in pre-hooks and
+        set necessary hooks on inputs there.
+        """
+        inputs = _format_tensor_into_tuples(inputs)
+        module.input = tuple(input.clone().detach() for input in inputs)
+        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
+
+        def tensor_backward_hook(grad):
+            if module.saved_grad is None:
+                raise RuntimeError(
+                    """Module {} was detected as not supporting correctly module
                         backward hook. You should modify your hook to ignore the given
                         grad_inputs (recompute them by hand if needed) and save the
                         newly computed grad_inputs in module.saved_grad. See MaxPool1d
                         as an example.""".format(
-                            module
-                        )
+                        module
                     )
-                return module.saved_grad
+                )
+            return module.saved_grad
 
-            inputs[0].register_hook(tensor_backward_hook)
+        # the hook is set by default but it will be used only for
+        # failure cases and will be removed otherwise
+        handle = inputs[0].register_hook(tensor_backward_hook)
+        module.input_hook = handle
+
+    def _forward_hook(self, module, inputs, outputs):
+        r"""
+        we need forward hook to access and detach the inputs and
+        outputs of a neuron
+        """
+        outputs = _format_tensor_into_tuples(outputs)
+        module.output = tuple(output.clone().detach() for output in outputs)
+        if not _check_valid_module(module.input_grad_fns, outputs[0]):
+            warnings.warn(
+                """An invalid module {} is detected. Saved gradients will
+                be used as the gradients of the module's input tensor.
+                See MaxPool1d as an example.""".format(
+                    module
+                )
+            )
+            module.is_invalid = True
+            module.saved_grad = None
+            self.forward_handles.append(module.input_hook)
         else:
             module.is_invalid = False
+            # removing the hook if there is no failure case
+            module.input_hook.remove()
+        del module.input_hook
+        del module.input_grad_fns
 
     def _forward_hook_ref(self, module, inputs, outputs):
-        input_attr_name = "input_ref"
-        output_attr_name = "output_ref"
-        self._detach_tensors(input_attr_name, output_attr_name, module, inputs, outputs)
-
-    def _detach_tensors(
-        self, input_attr_name, output_attr_name, module, inputs, outputs
-    ):
-        inputs = _format_tensor_into_tuples(inputs)
+        r"""
+        Forward hook is used to access the output of the module
+        """
         outputs = _format_tensor_into_tuples(outputs)
-        setattr(module, input_attr_name, tuple(input.detach() for input in inputs))
-        setattr(module, output_attr_name, tuple(output.detach() for output in outputs))
+        module.output_ref = tuple(output.clone().detach() for output in outputs)
 
     def _backward_hook(self, module, grad_input, grad_output, eps=1e-10):
         r"""
@@ -342,6 +387,21 @@ class DeepLift(GradientAttribution):
          `grad_output` * delta_out / delta_in.
 
          """
+        # before accessing the attributes from the module we want
+        # to ensure that the properties exist, if not, then it is
+        # likely that the module is being reused.
+        attr_criteria = self.satisfies_attribute_criteria(module)
+        if not attr_criteria:
+            raise RuntimeError(
+                """A Module {} was detected that does not contain some of
+                    the input/output attributes that are required for DeepLift
+                    computations. This can occur, for example, if
+                    your module is being used more than once in the network.
+                    Please, ensure that module is being used only once in the
+                    network.""".format(
+                    module
+                )
+            )
         delta_in = tuple(
             inp - inp_ref for inp, inp_ref in zip(module.input, module.input_ref)
         )
@@ -361,6 +421,14 @@ class DeepLift(GradientAttribution):
 
         return multipliers
 
+    def satisfies_attribute_criteria(self, module):
+        return (
+            hasattr(module, "input_ref")
+            and hasattr(module, "output_ref")
+            and hasattr(module, "input")
+            and hasattr(module, "output")
+        )
+
     def _can_register_hook(self, module):
         # TODO find a better way of checking if a module is a container or not
         module_fullname = str(type(module))
@@ -375,15 +443,21 @@ class DeepLift(GradientAttribution):
         if not self._can_register_hook(module):
             return
         forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
+        forward_pre_handle_ref = module.register_forward_pre_hook(
+            self._forward_pre_hook_ref
+        )
         self.forward_handles_refs.append(forward_handle_ref)
+        self.forward_handles_refs.append(forward_pre_handle_ref)
 
     def _register_hooks(self, module):
         if not self._can_register_hook(module):
             return
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
+        pre_forward_handle = module.register_forward_pre_hook(self._forward_pre_hook)
         backward_handle = module.register_backward_hook(self._backward_hook)
         self.forward_handles.append(forward_handle)
+        self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
 
     def _remove_hooks(self):
@@ -591,7 +665,6 @@ class DeepLiftShap(DeepLift):
         ) = self._expand_inputs_baselines_targets(
             baselines, inputs, target, additional_forward_args
         )
-
         attributions = super().attribute(
             exp_inp,
             exp_base,
@@ -669,6 +742,11 @@ def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
         grad_input[0],
         grad_output[0] * delta_out[0] / delta_in[0],
     )
+
+    # If the module is invalid, save the newly computed gradients
+    # The original_grad_input will be overridden later in the Tensor hook
+    if module.is_invalid:
+        module.saved_grad = grad_input[0]
     return grad_input
 
 
