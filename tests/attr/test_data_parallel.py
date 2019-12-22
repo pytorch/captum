@@ -168,7 +168,6 @@ class Test(BaseGPUTest):
             inputs=(inp1, inp2),
             additional_forward_args=(inp3, 5),
             target=1,
-            test_batches=True,
         )
 
     def test_multi_dim_layer_integrated_gradients(self):
