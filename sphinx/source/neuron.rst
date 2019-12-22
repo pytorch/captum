@@ -49,8 +49,8 @@ Neuron Deconvolution
 .. autoclass:: captum.attr.NeuronDeconvolution
     :members:
 
-Neuron Ablation
+Neuron Feature Ablation
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: captum.attr.NeuronAblation
+.. autoclass:: captum.attr.NeuronFeatureAblation
     :members:

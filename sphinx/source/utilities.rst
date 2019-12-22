@@ -4,27 +4,23 @@ Utilities
 Visualization
 ^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr.visualization
-    :members:
+.. autofunction:: captum.attr.visualization.visualize_image_attr
+
+.. autofunction:: captum.attr.visualization.visualize_image_attr_multiple
 
 
-Interpretable Embedding Base
+Interpretable Embeddings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._models.base
-
-.. autoclass:: InterpretableEmbeddingBase
+.. autoclass:: captum.attr.InterpretableEmbeddingBase
     :members:
+
+.. autofunction:: captum.attr.configure_interpretable_embedding_layer
+.. autofunction:: captum.attr.remove_interpretable_embedding_layer
+
 
 Token Reference Base
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._models.base
-
-.. autoclass:: TokenReferenceBase
+.. autoclass:: captum.attr.TokenReferenceBase
     :members:
-
-.. autofunction:: _get_deep_layer_name
-.. autofunction:: _set_deep_layer_value
-.. autofunction:: configure_interpretable_embedding_layer
-.. autofunction:: remove_interpretable_embedding_layer

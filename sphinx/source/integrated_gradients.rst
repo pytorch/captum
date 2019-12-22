@@ -1,4 +1,4 @@
-IntegratedGradients
+Integrated Gradients
 ====================
 
 .. autoclass:: captum.attr.IntegratedGradients

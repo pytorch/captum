@@ -38,6 +38,7 @@ from ._models.base import (
 from ._utils import visualization  # noqa
 from ._utils.attribution import Attribution  # noqa
 from ._utils.attribution import GradientAttribution  # noqa
+from ._utils.attribution import PerturbationAttribution  # noqa
 from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils import visualization  # noqa
@@ -45,6 +46,7 @@ from ._utils import visualization  # noqa
 __all__ = [
     "Attribution",
     "GradientAttribution",
+    "PerturbationAttribution",
     "NeuronAttribution",
     "LayerAttribution",
     "IntegratedGradients",

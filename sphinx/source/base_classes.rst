@@ -24,3 +24,9 @@ Gradient Attribution
 
 .. autoclass:: captum.attr.GradientAttribution
     :members:
+
+Perturbation Attribution
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.PerturbationAttribution
+    :members:

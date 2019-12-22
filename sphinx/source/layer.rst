@@ -43,3 +43,9 @@ Layer DeepLiftShap
 
 .. autoclass:: captum.attr.LayerDeepLiftShap
     :members:
+
+Layer GradientShap
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerGradientShap
+    :members:
