@@ -1,16 +1,10 @@
 Utilities
 ==========
 
-visualization
+Visualization
 ^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._utils.visualization
-
-.. autofunction:: visualize_image_attr
-
-.. autofunction:: visualize_image_attr_multiple
-
-.. autoclass:: VisualizationDataRecord
+.. automodule:: captum.attr.visualization
     :members:
 
 
@@ -34,35 +28,3 @@ Token Reference Base
 .. autofunction:: _set_deep_layer_value
 .. autofunction:: configure_interpretable_embedding_layer
 .. autofunction:: remove_interpretable_embedding_layer
-
-Attribution
-^^^^^^^^^^^^
-
-.. automodule:: captum.attr._utils.attribution
-
-.. autoclass:: Attribution
-    :members:
-
-LayerAttribution
-^^^^^^^^^^^^^^^^^
-
-.. automodule:: captum.attr._utils.attribution
-
-.. autoclass:: LayerAttribution
-    :members:
-
-Neuron Attribution
-^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: captum.attr._utils.attribution
-
-.. autoclass:: NeuronAttribution
-    :members:
-
-Gradient Attribution
-^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: captum.attr._utils.attribution
-
-.. autoclass:: GradientAttribution
-    :members:
