@@ -20,15 +20,16 @@ from ..helpers.basic_models import BasicEmbeddingModel, TextModule
 
 class Test(unittest.TestCase):
     def test_interpretable_embedding_base(self):
-        input = torch.tensor([2, 5, 0, 1])
+        input1 = torch.tensor([2, 5, 0, 1])
+        input2 = torch.tensor([3, 0, 0, 2])
         model = BasicEmbeddingModel()
-        output = model(input)
+        output = model(input1, input2)
         interpretable_embedding1 = configure_interpretable_embedding_layer(
             model, "embedding1"
         )
         self.assertEqual(model.embedding1, interpretable_embedding1)
         self._assert_embeddings_equal(
-            input,
+            input1,
             output,
             interpretable_embedding1,
             model.embedding1.embedding_dim,
@@ -39,7 +40,7 @@ class Test(unittest.TestCase):
         )
         self.assertEqual(model.embedding2.inner_embedding, interpretable_embedding2)
         self._assert_embeddings_equal(
-            input,
+            input2,
             output,
             interpretable_embedding2,
             model.embedding2.inner_embedding.embedding_dim,
@@ -62,55 +63,53 @@ class Test(unittest.TestCase):
         self.assertTrue(model.embedding1.__class__ is Embedding)
 
     def test_custom_module(self):
-        input = torch.tensor([[3, 2, 0], [1, 2, 4]])
+        input1 = torch.tensor([[3, 2, 0], [1, 2, 4]])
+        input2 = torch.tensor([[0, 1, 0], [1, 2, 3]])
         model = BasicEmbeddingModel()
-        output = model(input)
-        expected = model.embedding2(input)
+        output = model(input1, input2)
+        expected = model.embedding2(input=input2)
         # in this case we make interpretable the custom embedding layer - TextModule
         interpretable_embedding = configure_interpretable_embedding_layer(
             model, "embedding2"
         )
-        actual = interpretable_embedding.indices_to_embeddings(input)
+        actual = interpretable_embedding.indices_to_embeddings(input=input2)
+        output_interpretable_models = model(input1, actual)
+        assertArraysAlmostEqual(output, output_interpretable_models)
 
         # using assertArraysAlmostEqual instead of assertTensorAlmostEqual because
         # it is important and necessary that each element in comparing tensors
-        # match exactly, even if we take `max` instead of `sum` in the
-        # assertTensorAlmostEqual it will not guarantee that all elements will
-        # match exactly in the comparing tensors.
-        # We should keep this in mind during refactoring or using
-        # any of those functions.
+        # match exactly.
         assertArraysAlmostEqual(expected, actual, 0.0)
         self.assertTrue(model.embedding2.__class__ is InterpretableEmbeddingBase)
         remove_interpretable_embedding_layer(model, interpretable_embedding)
         self.assertTrue(model.embedding2.__class__ is TextModule)
-        self._assert_embeddings_equal(input, output, interpretable_embedding)
+        self._assert_embeddings_equal(input2, output, interpretable_embedding)
 
     def test_nested_multi_embeddings(self):
-        input = torch.tensor([[3, 2, 0], [1, 2, 4]])
+        input1 = torch.tensor([[3, 2, 0], [1, 2, 4]])
         input2 = torch.tensor([[0, 1, 0], [2, 6, 8]])
+        input3 = torch.tensor([[4, 1, 0], [2, 2, 8]])
         model = BasicEmbeddingModel(nested_second_embedding=True)
-        output = model(input, input2)
-        expected = model.embedding2(input, input2)
+        output = model(input1, input2, input3)
+        expected = model.embedding2(input=input2, another_input=input3)
         # in this case we make interpretable the custom embedding layer - TextModule
-        interpretable_embedding = configure_interpretable_embedding_layer(
+        interpretable_embedding2 = configure_interpretable_embedding_layer(
             model, "embedding2"
         )
-        actual = interpretable_embedding.indices_to_embeddings(
-            input, another_input=input2
+        actual = interpretable_embedding2.indices_to_embeddings(
+            input=input2, another_input=input3
         )
+        output_interpretable_models = model(input1, actual)
+        assertArraysAlmostEqual(output, output_interpretable_models)
 
         # using assertArraysAlmostEqual instead of assertTensorAlmostEqual because
         # it is important and necessary that each element in comparing tensors
-        # match exactly, even if we take `max` instead of `sum` in the
-        # assertTensorAlmostEqual it will not guarantee that all elements will
-        # match exactly in the comparing tensors.
-        # We should keep this in mind during refactoring or using
-        # any of those functions.
+        # match exactly.
         assertArraysAlmostEqual(expected, actual, 0.0)
         self.assertTrue(model.embedding2.__class__ is InterpretableEmbeddingBase)
-        remove_interpretable_embedding_layer(model, interpretable_embedding)
+        remove_interpretable_embedding_layer(model, interpretable_embedding2)
         self.assertTrue(model.embedding2.__class__ is TextModule)
-        self._assert_embeddings_equal(input, output, interpretable_embedding)
+        self._assert_embeddings_equal(input2, output, interpretable_embedding2)
 
     def _assert_embeddings_equal(
         self,

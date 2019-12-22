@@ -113,6 +113,17 @@ class ReLUDeepLiftModel(nn.Module):
         return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
 
 
+class BasicModelWithReusableModules(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lin1 = nn.Linear(3, 2)
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(2, 2)
+
+    def forward(self, inputs):
+        return self.relu(self.lin2(self.relu(self.lin1(inputs))))
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
         Same as the ReLUDeepLiftModel, but with activations
@@ -134,13 +145,13 @@ class ReLULinearDeepLiftModel(nn.Module):
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self):
+    def __init__(self, inplace=False):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
         self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))
         self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=inplace)
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
@@ -170,7 +181,8 @@ class TextModule(nn.Module):
         if self.second_embedding:
             self.inner_embedding2 = nn.Embedding(num_embeddings, embedding_dim)
 
-    def forward(self, input, another_input=None):
+    def forward(self, input=None, another_input=None):
+        assert input is not None, "The inputs to embedding module must be specified"
         embedding = self.inner_embedding(input)
         if self.second_embedding:
             another_embedding = self.inner_embedding2(
@@ -212,9 +224,9 @@ class BasicEmbeddingModel(nn.Module):
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, input, another_input=None):
-        embedding1 = self.embedding1(input)
-        embedding2 = self.embedding2(input, another_input)
+    def forward(self, input1, input2, input3=None):
+        embedding1 = self.embedding1(input1)
+        embedding2 = self.embedding2(input2, input3)
         embeddings = embedding1 + embedding2
         return self.linear2(self.relu(self.linear1(embeddings))).squeeze()
 

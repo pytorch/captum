@@ -237,11 +237,9 @@ def _compute_conv_delta_and_format_attrs(
 def _zeros(inputs):
     r"""
     Takes a tuple of tensors as input and returns a tuple that has the same
-    size as the `inputs` which contains zero tensors of the same
-    shape as the `inputs`
-
+    length as `inputs` with each element as the integer 0.
     """
-    return tuple(0.0 for input in inputs)
+    return tuple(0 for input in inputs)
 
 
 def _tensorize_baseline(inputs, baselines):

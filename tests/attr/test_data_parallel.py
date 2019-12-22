@@ -27,6 +27,7 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
 )
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
+from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -455,6 +456,43 @@ class Test(BaseGPUTest):
                 baselines=baselines,
                 additional_forward_args=None,
                 test_batches=False,
+            )
+
+    def test_multi_input_neuron_ablation(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                NeuronFeatureAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+                alt_device_ids=True,
+            )
+
+    def test_multi_input_neuron_ablation_with_baseline(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+
+        base1 = torch.tensor([[1.0, 0.0, 1.0]], requires_grad=True).cuda()
+        base2 = torch.tensor([[0.0, 1.0, 0.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                NeuronFeatureAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                baselines=(base1, base2),
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
             )
 
     def test_simple_feature_ablation(self):
