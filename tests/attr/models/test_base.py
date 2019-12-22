@@ -128,4 +128,4 @@ class Test(unittest.TestCase):
         self.assertEqual(emb_shape[0], input.shape[0])
         if interpretable_embedding.embedding_dim is not None:
             self.assertEqual(emb_shape[1], interpretable_embedding.embedding_dim)
-        self.assertEqual(input.shape, output.shape)
+        self.assertEqual(input.shape[0], output.shape[0])

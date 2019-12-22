@@ -220,15 +220,17 @@ class BasicEmbeddingModel(nn.Module):
         self.embedding2 = TextModule(
             num_embeddings, embedding_dim, nested_second_embedding
         )
-        self.linear1 = nn.Linear(embedding_dim, hidden_dim)
+        self.linear1 = nn.Linear(embedding_dim, hidden_dim, bias=False)
+        self.linear1.weight = nn.Parameter(torch.ones(hidden_dim, embedding_dim))
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden_dim, output_dim)
+        self.linear2.weight = nn.Parameter(torch.ones(output_dim, hidden_dim))
 
     def forward(self, input1, input2, input3=None):
         embedding1 = self.embedding1(input1)
         embedding2 = self.embedding2(input2, input3)
         embeddings = embedding1 + embedding2
-        return self.linear2(self.relu(self.linear1(embeddings))).squeeze()
+        return self.linear2(self.relu(self.linear1(embeddings))).sum(1)
 
 
 class BasicModel_MultiLayer(nn.Module):

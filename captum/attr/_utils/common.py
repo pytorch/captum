@@ -90,6 +90,8 @@ def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
 
 
 def _format_tensor_into_tuples(inputs):
+    if inputs is None:
+        return None
     if not isinstance(inputs, tuple):
         assert isinstance(
             inputs, torch.Tensor
@@ -344,6 +346,9 @@ def _expand_additional_forward_args(
                 "Currently only `repeat` and `repeat_interleave`"
                 " expansion_types are supported"
             )
+
+    if additional_forward_args is None:
+        return None
 
     return tuple(
         _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)

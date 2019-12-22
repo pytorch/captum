@@ -15,6 +15,7 @@ from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
@@ -136,6 +137,50 @@ class Test(BaseGPUTest):
         inp = 100 * torch.randn(4, 1, 10, 10).cuda()
         self._data_parallel_test_assert(
             LayerConductance, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
+        )
+
+    def test_simple_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer().cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_input_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.model.relu,
+            alt_device_ids=True,
+            inputs=(inp1, inp2),
+            additional_forward_args=(inp3, 5),
+            target=1,
+            test_batches=True,
+        )
+
+    def test_multi_dim_layer_integrated_gradients(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.conv2,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
         )
 
     def test_simple_layer_gradient_x_activation(self):

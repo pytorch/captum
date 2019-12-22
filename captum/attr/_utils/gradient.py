@@ -62,7 +62,7 @@ def undo_gradient_requirements(inputs, grad_required):
 
 
 def compute_gradients(
-    forward_fn, inputs, target_ind=None, additional_forward_args=None
+    forward_fn, inputs, target_ind=None, additional_forward_args=None, outputs=None
 ):
     r"""
         Computes gradients of the output with respect to inputs for an
@@ -81,15 +81,18 @@ def compute_gradients(
                         additional arguments are required
     """
     with torch.autograd.set_grad_enabled(True):
-        # runs forward pass
-        output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert output[0].numel() == 1, (
-            "Target not provided when necessary, cannot"
-            " take gradient with respect to multiple outputs."
-        )
+        if outputs is None:
+            # runs forward pass
+            outputs = _run_forward(
+                forward_fn, inputs, target_ind, additional_forward_args
+            )
+            assert outputs[0].numel() == 1, (
+                "Target not provided when necessary, cannot"
+                " take gradient with respect to multiple outputs."
+            )
         # torch.unbind(forward_out) is a list of scalar tensor tuples and
         # contains batch_size * #steps elements
-        grads = torch.autograd.grad(torch.unbind(output), inputs)
+        grads = torch.autograd.grad(torch.unbind(outputs), inputs)
     return grads
 
 
@@ -355,7 +358,6 @@ def compute_layer_gradients_and_eval(
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
         )
-
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."
