@@ -62,8 +62,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             torch.cat([baseline] * n_steps, dim=0) for baseline in baselines
         )
         expanded_target = _expand_target(target, n_steps)
-
-        # currently, number of steps is applied only to additional forward arguments
+        # currently, the number of steps is applied only to additional forward arguments
         # that are nd-tensors. It is assumed that the first dimension is
         # the number of batches.
         # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
@@ -191,7 +190,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         baselines_layer = (baselines_layer,)
 
         # computes attribution for each tensor in input tuple
-        # attributions has the same dimensionality as inputs
+        # attributions has the same dimensionality as output of the input layer
         attributions = tuple(
             total_grad * (input[:num_examples] - baseline[:num_examples])
             for total_grad, input, baseline in zip(
