@@ -22,7 +22,7 @@ class Summarizer:
     def __init__(self, stats=None):
         self._summarizers = []
         self._is_inputs_tuple = None
-        self._stats, self._summary_stat_indicies = _reorder_stats(stats)
+        self._stats, self._summary_stats_indicies = _reorder_stats(stats)
 
     def _copy_stats(self):
         import copy
@@ -44,7 +44,7 @@ class Summarizer:
         x = _format_tensor_into_tuples(x)
 
         for i, inp in enumerate(x):
-            while i >= len(self._summarizers):
+            if i >= len(self._summarizers):
                 # _summarizers[i] is a new SummarizerSingleTesnor, which
                 # aims to summarize input i (i.e. x[i])
                 #
@@ -54,9 +54,10 @@ class Summarizer:
                 # dimensionality in the input tensors tensors (i.e.
                 # x[i].shape != x[j].shape for some pair i, j)
                 stats = self._copy_stats()
-                summary_stats = [stats[i] for i in self._summary_stat_indicies]
                 self._summarizers.append(
-                    SummarizerSingleTensor(stats=stats, summary_stats=summary_stats)
+                    SummarizerSingleTensor(
+                        stats=stats, summary_stats_indices=self._summary_stats_indicies
+                    )
                 )
             self._summarizers[i].update(inp)
 
@@ -151,27 +152,8 @@ def CommonSummarizer():
 
 class SummarizerSingleTensor:
     r"""
-    A simple class that summarizes a single tensor. The basic functionality
-    of this class is two operations .update and .summary
-    """
-
-    class StatHolder:
-        def __init__(self, stats):
-            self.stats = stats
-            self.stat_to_stat = {stat: stat for stat in self.stats}
-
-            for stat in stats:
-                stat._other_stats = self
-                stat.init()
-
-        def get(self, stat):
-            if stat not in self.stat_to_stat:
-                return None
-
-            return self.stat_to_stat[stat]
-
-    r"""
-        Summarizes statistics for a single tensor
+        A simple class that summarizes a single tensor. The basic functionality
+        of this class is two operations .update and .summary
 
         Args:
             summary_stats (list of Stat): A list of Stat objects you
@@ -180,13 +162,24 @@ class SummarizerSingleTensor:
                 need to be updated.
     """
 
-    def __init__(self, summary_stats=None, stats=None):
-        self._all_stats = SummarizerSingleTensor.StatHolder(stats)
-        self._summary_stats = summary_stats
+    def __init__(self, stats=None, summary_stats_indices=None):
+        self._stats = stats
+        self._stat_to_stat = {stat: stat for stat in self._stats}
+        self._summary_stats = [stats[i] for i in summary_stats_indices]
+
+        for stat in stats:
+            stat._other_stats = self
+            stat.init()
 
     def update(self, x=None):
-        for stat in self._all_stats.stats:
+        for stat in self._stats:
             stat.update(x)
+
+    def get(self, stat):
+        if stat not in self._stat_to_stat:
+            return None
+
+        return self._stat_to_stat[stat]
 
     @property
     def summary(self):
