@@ -25,7 +25,7 @@ class Test(BaseTest):
         size2 = (3, 5)
 
         summarizer = CommonSummarizer()
-        for i in range(10):
+        for _ in range(10):
             a1 = torch.randn(size1)
             a2 = torch.randn(size2)
             summarizer.update((a1, a2))

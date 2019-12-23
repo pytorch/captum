@@ -3,7 +3,7 @@
 
 class Summarizer:
     """
-    This class simply wraps over a given a set of SummarizerSingleTenor's in order
+    This class simply wraps over a given a set of SummarizerSingleTensor's in order
     to summarise multiple input tensors.
 
     Basic usage:

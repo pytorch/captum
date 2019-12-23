@@ -49,11 +49,11 @@ class Test(BaseTest):
         for sm, big in zip(AMOUNT_OF_SMALLS, AMOUNT_OF_BIGS):
             summ = Summarizer([Var()])
             values = []
-            for i in range(sm):
+            for _ in range(sm):
                 values.append(SMALL_VAL)
                 summ.update(torch.tensor(SMALL_VAL, dtype=torch.float64))
 
-            for i in range(big):
+            for _ in range(big):
                 values.append(BIG_VAL)
                 summ.update(torch.tensor(BIG_VAL, dtype=torch.float64))
 
