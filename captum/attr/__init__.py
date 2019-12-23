@@ -39,7 +39,7 @@ from ._utils.attribution import GradientAttribution  # noqa
 from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils import visualization  # noqa
-from ._utils.summarizer import Summarizer, CommonSummarizer  # noqa
+from ._utils.summarizer import Summarizer, CommonSummarizer
 from ._utils.stat import Mean, StdDev, MSE, Var, Min, Max, Sum, Count
 
 
