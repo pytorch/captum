@@ -7,7 +7,7 @@ from ..._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
-    _format_layer_attributions,
+    _format_attributions,
     _expand_additional_forward_args,
     _validate_input,
     _expand_target,
@@ -187,10 +187,11 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                             whether we attribute to the inputs or outputs
                             of the layer which is decided by the input flag
                             `attribute_to_layer_input`.
-                            If the layer input / output is a single tensor, then
-                            just a tensor is returned; if the layer input / output
-                            has multiple tensors, then a corresponding tuple
-                            of tensors is returned.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                             The difference between the total
                             approximated and true conductance.
@@ -248,7 +249,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals = _batched_operator(
+        layer_gradients, layer_evals, is_layer_tuple = _batched_operator(
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
@@ -292,5 +293,5 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
-            return _format_layer_attributions(attributions), delta
-        return _format_layer_attributions(attributions)
+            return _format_attributions(is_layer_tuple, attributions), delta
+        return _format_attributions(is_layer_tuple, attributions)

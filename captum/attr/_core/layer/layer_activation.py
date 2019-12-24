@@ -2,7 +2,7 @@
 import torch
 
 from ..._utils.attribution import LayerAttribution
-from ..._utils.common import _format_layer_attributions
+from ..._utils.common import _format_attributions
 from ..._utils.gradient import _forward_layer_eval
 
 
@@ -73,10 +73,11 @@ class LayerActivation(LayerAttribution):
                             Activation of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                            If the layer input / output is a single tensor, then
-                            just a tensor is returned; if the layer input / output
-                            has multiple tensors, then a corresponding tuple
-                            of tensors is returned.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
 
 
 
@@ -94,7 +95,7 @@ class LayerActivation(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            layer_eval = _forward_layer_eval(
+            layer_eval, is_layer_tuple = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -102,4 +103,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            return _format_layer_attributions(layer_eval)
+            return _format_attributions(is_layer_tuple, layer_eval)

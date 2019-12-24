@@ -236,7 +236,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         baselines = _tensorize_baseline(inputs, baselines)
 
-        attr_baselines = _forward_layer_eval(
+        attr_baselines, _ = _forward_layer_eval(
             self.model,
             baselines,
             self.layer,
@@ -250,7 +250,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         self.model.apply(self._register_hooks)
 
-        gradients, attr_inputs = compute_layer_gradients_and_eval(
+        gradients, attr_inputs, is_layer_tuple = compute_layer_gradients_and_eval(
             self.model,
             self.layer,
             inputs,
@@ -284,7 +284,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) > 1,  # Tuple of attributions if > 1 attribution tensor
+            is_layer_tuple,
         )
 
 
@@ -447,10 +447,11 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         will always be the same size as the provided layer's inputs
                         or outputs, depending on whether we attribute to the inputs
                         or outputs of the layer.
-                        If the layer input / output is a single tensor, then
-                        just a tensor is returned; if the layer input / output
-                        has multiple tensors, then a corresponding tuple
-                        of tensors is returned.
+                        Attributions are returned in a tuple based on whether
+                        the layer inputs / outputs are contained in a tuple
+                        from a forward hook. For standard modules, inputs of
+                        a single tensor are usually wrapped in a tuple, while
+                        outputs of a single tensor are not.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)

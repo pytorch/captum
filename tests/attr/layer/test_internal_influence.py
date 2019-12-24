@@ -40,7 +40,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._internal_influence_test_assert(
-            net, net.relu, inp, [[0.9, 1.0, 1.0, 1.0]], attribute_to_layer_input=True
+            net, net.relu, inp, ([[0.9, 1.0, 1.0, 1.0]],), attribute_to_layer_input=True
         )
 
     def test_simple_linear_internal_inf_inplace(self):

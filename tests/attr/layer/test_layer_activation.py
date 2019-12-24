@@ -34,7 +34,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[2.0, -5.0, 4.0]])
         self._layer_activation_test_assert(
-            net, net.relu, inp, [-9.0, 2.0, 2.0, 2.0], attribute_to_layer_input=True
+            net, net.relu, inp, ([-9.0, 2.0, 2.0, 2.0],), attribute_to_layer_input=True
         )
 
     def test_simple_linear_activation_inplace(self):

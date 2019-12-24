@@ -203,10 +203,11 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                         be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
                         of the layer.
-                        If the layer input / output is a single tensor, then
-                        just a tensor is returned; if the layer input / output
-                        has multiple tensors, then a corresponding tuple
-                        of tensors is returned.
+                        Attributions are returned in a tuple based on whether
+                        the layer inputs / outputs are contained in a tuple
+                        from a forward hook. For standard modules, inputs of
+                        a single tensor are usually wrapped in a tuple, while
+                        outputs of a single tensor are not.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
@@ -302,7 +303,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             self._scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads, _ = compute_layer_gradients_and_eval(
+        grads, _, is_layer_tuple = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             input_baseline_scaled,
@@ -312,7 +313,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_baselines = _forward_layer_eval(
+        attr_baselines, _ = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -321,7 +322,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_inputs = _forward_layer_eval(
+        attr_inputs, _ = _forward_layer_eval(
             self.forward_func,
             inputs,
             self.layer,
@@ -344,5 +345,5 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) > 1,
+            is_layer_tuple,
         )

@@ -27,7 +27,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
     def test_relu_layer_deeplift_multiple_output(self):
@@ -58,7 +58,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
     def test_relu_deeplift_with_custom_attr_func(self):
@@ -86,7 +86,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
         attributions, delta = layer_dl.attribute(
@@ -111,7 +111,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
     def test_relu_layer_deepliftshap_multiple_output(self):
@@ -147,7 +147,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 15.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
         attributions, delta = layer_dl_shap.attribute(
             inputs,

@@ -125,7 +125,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         )
         gradient_mask = apply_gradient_requirements(inputs)
 
-        _, input_grads = _forward_layer_eval_with_neuron_grads(
+        _, input_grads, _ = _forward_layer_eval_with_neuron_grads(
             self.forward_func,
             inputs,
             self.layer,

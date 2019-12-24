@@ -151,6 +151,7 @@ def _forward_layer_distributed_eval(
     using `DataParallel`s for example.
     """
     saved_layer = {}
+    is_eval_tuple = None
     lock = threading.Lock()
     # Set a forward hook on specified module and run forward pass to
     # get layer output tensor(s).
@@ -158,8 +159,13 @@ def _forward_layer_distributed_eval(
     # with key as device and value as corresponding Tensor.
 
     def forward_hook(module, inp, out=None):
+        nonlocal is_eval_tuple
         eval_tsrs = inp if attribute_to_layer_input else out
         is_eval_tuple = isinstance(eval_tsrs, tuple)
+        print(module)
+        print("Is input:", attribute_to_layer_input)
+        print("Is tuple:", is_eval_tuple)
+        print(eval_tsrs)
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
         with lock:
@@ -194,8 +200,8 @@ def _forward_layer_distributed_eval(
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
     if forward_hook_with_return:
-        return saved_layer, output
-    return saved_layer
+        return saved_layer, output, is_eval_tuple
+    return saved_layer, is_eval_tuple
 
 
 def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
@@ -264,7 +270,7 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    saved_layer = _forward_layer_distributed_eval(
+    saved_layer, is_layer_tuple = _forward_layer_distributed_eval(
         forward_fn,
         inputs,
         layer,
@@ -283,9 +289,13 @@ def _forward_layer_eval_with_neuron_grads(
         return (
             _gather_distributed_tensors(saved_layer, key_list=key_list),
             inp_grads,
+            is_layer_tuple,
         )
     else:
-        return _gather_distributed_tensors(saved_layer, key_list=key_list)
+        return (
+            _gather_distributed_tensors(saved_layer, key_list=key_list),
+            is_layer_tuple,
+        )
 
 
 def compute_layer_gradients_and_eval(
@@ -344,7 +354,7 @@ def compute_layer_gradients_and_eval(
                 Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
-        saved_layer, output = _forward_layer_distributed_eval(
+        saved_layer, output, is_layer_tuple = _forward_layer_distributed_eval(
             forward_fn,
             inputs,
             layer,
@@ -381,16 +391,16 @@ def compute_layer_gradients_and_eval(
             inp_grads = _neuron_gradients(
                 inputs, saved_layer, key_list, gradient_neuron_index
             )
-            return all_grads, all_outputs, inp_grads
+            return all_grads, all_outputs, inp_grads, is_layer_tuple
         else:
-            return all_grads, all_outputs
+            return all_grads, all_outputs, is_layer_tuple
 
 
 def construct_neuron_grad_fn(
     layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
-        _, grads = _forward_layer_eval_with_neuron_grads(
+        _, grads, _ = _forward_layer_eval_with_neuron_grads(
             forward_fn,
             inputs,
             layer,

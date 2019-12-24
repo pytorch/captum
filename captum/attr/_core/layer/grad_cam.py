@@ -6,7 +6,7 @@ from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.common import (
     _format_input,
     _format_additional_forward_args,
-    _format_layer_attributions,
+    _format_attributions,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
@@ -144,11 +144,11 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                             Attributions will be the same size as the
                             output of the given layer, except for dimension 2,
                             which will be 1 due to summing over channels.
-                            If the layer input / output is a single tensor, then
-                            just a tensor is returned; if the layer input / output
-                            has multiple tensors, then a corresponding tuple
-                            of tensors is returned.
-
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
             Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -176,7 +176,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         )
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -200,4 +200,4 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         )
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
-        return _format_layer_attributions(scaled_acts)
+        return _format_attributions(is_layer_tuple, scaled_acts)

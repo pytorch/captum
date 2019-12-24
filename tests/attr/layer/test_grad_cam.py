@@ -37,7 +37,7 @@ class Test(BaseTest):
         # Adding negative value to test final relu is not applied by default
         inp[0, 0, 1, 1] = -4.0
         self._grad_cam_test_assert(
-            net, net.conv1, inp, 0.5625 * inp, attribute_to_layer_input=True
+            net, net.conv1, inp, (0.5625 * inp,), attribute_to_layer_input=True
         )
 
     def test_simple_input_conv_fc_with_final_relu(self):
@@ -52,7 +52,7 @@ class Test(BaseTest):
             net,
             net.conv1,
             inp,
-            exp,
+            (exp,),
             attribute_to_layer_input=True,
             relu_attributions=True,
         )

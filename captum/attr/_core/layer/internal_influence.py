@@ -8,7 +8,7 @@ from ..._utils.common import (
     _format_input_baseline,
     _validate_input,
     _format_additional_forward_args,
-    _format_layer_attributions,
+    _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
 )
@@ -175,10 +175,11 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                             as the output or input of the given layer depending on
                             whether `attribute_to_layer_input` is set to `False` or
                             `True`respectively.
-                            If the layer input / output is a single tensor, then
-                            just a tensor is returned; if the layer input / output
-                            has multiple tensors, then a corresponding tuple
-                            of tensors is returned.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
 
             Examples::
 
@@ -224,7 +225,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         expanded_target = _expand_target(target, n_steps)
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _ = _batched_operator(
+        layer_gradients, _, is_layer_tuple = _batched_operator(
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
@@ -250,4 +251,4 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )
-        return _format_layer_attributions(attrs)
+        return _format_attributions(is_layer_tuple, attrs)

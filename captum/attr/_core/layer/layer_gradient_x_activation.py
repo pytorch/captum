@@ -3,7 +3,7 @@ from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.common import (
     _format_input,
     _format_additional_forward_args,
-    _format_layer_attributions,
+    _format_attributions,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
 
@@ -94,10 +94,6 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                             then the attributions will be computed with respect to
                             layer input, otherwise it will be computed with respect
                             to layer output.
-                            Note that currently it is assumed that either the input
-                            or the output of internal layer, depending on whether we
-                            attribute to the input or output, is a single tensor.
-                            Support for multiple tensors will be added later.
                             Default: False
 
             Returns:
@@ -107,10 +103,11 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                             neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
-                            If the layer input / output is a single tensor, then
-                            just a tensor is returned; if the layer input / output
-                            has multiple tensors, then a corresponding tuple
-                            of tensors is returned.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
 
             Examples::
 
@@ -131,7 +128,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         )
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -140,9 +137,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        return _format_layer_attributions(
+        return _format_attributions(
+            is_layer_tuple,
             tuple(
                 layer_gradient * layer_eval
                 for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
-            )
+            ),
         )
