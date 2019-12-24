@@ -70,7 +70,6 @@ __all__ = [
     "LayerDeepLiftShap",
     "LayerGradientShap",
     "LayerIntegratedGradients",
-    "LayerGradientShap",
     "NeuronConductance",
     "NeuronFeatureAblation",
     "NeuronGradient",
