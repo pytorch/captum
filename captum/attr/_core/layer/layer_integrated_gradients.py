@@ -75,7 +75,10 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             if self.device_ids is None:
                 scattered_inputs = inputs
             else:
-                scattered_inputs = scatter(inputs, target_gpus=self.device_ids)
+                scattered_inputs = (
+                    scatter_inp[0]
+                    for scatter_inp in scatter(inputs, target_gpus=self.device_ids)
+                )
 
             scattered_inputs_dict = {
                 scattered_input[0].device: scattered_input
@@ -85,12 +88,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             with torch.autograd.set_grad_enabled(True):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
-                    result = scattered_inputs_dict[hook_inputs[0].device]
-                    return (
-                        result[0]
-                        if isinstance(result, tuple) and hook_outputs is not None
-                        else result
-                    )
+                    return scattered_inputs_dict[hook_inputs[0].device]
 
                 if attribute_to_layer_input:
                     hook = self.layer.register_forward_pre_hook(layer_forward_hook)

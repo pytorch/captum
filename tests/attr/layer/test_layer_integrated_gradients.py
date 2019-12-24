@@ -49,6 +49,13 @@ class Test(BaseTest):
         self._assert_compare_with_layer_conductance(model, input)
 
     def test_compare_with_layer_conductance_attr_to_inputs(self):
+        # Note that Layer Conductance and Layer Integrated Gradients (IG) aren't
+        # exactly the same. Layer IG computes partial derivative of the output
+        # with respect to the layer and sums along the straight line. While Layer
+        # Conductance also computes the same partial derivatives it doesn't use
+        # the straight line but a path defined by F(i) - F(i - 1).
+        # However, in some cases when that path becomes close to a straight line,
+        # Layer IG and Layer Conductance become numerically very close.
         model = BasicModel_MultiLayer()
         input = torch.tensor([[50.0, 50.0, 50.0]], requires_grad=True)
         self._assert_compare_with_layer_conductance(model, input, True)
