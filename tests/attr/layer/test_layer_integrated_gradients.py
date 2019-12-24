@@ -43,20 +43,36 @@ class Test(BaseTest):
             input1, baseline1, additional_args=(input2, input3)
         )
 
-    def test_compare_with_layer_conductance(self):
+    def test_compare_with_layer_conductance_attr_to_outputs(self):
         model = BasicModel_MultiLayer()
-        lc = LayerConductance(model, model.linear0)
-        # when we use input=torch.tensor()[[50.0, 50.0, 50.0]]),
-        # F(x) - F(x - 1) is equal to 1
-        # therefore layer conductance is nearly the same as layer integrated gradients
-        # for large number of steps.
         input = torch.tensor([[50.0, 50.0, 50.0]], requires_grad=True)
+        self._assert_compare_with_layer_conductance(model, input)
+
+    def test_compare_with_layer_conductance_attr_to_inputs(self):
+        model = BasicModel_MultiLayer()
+        input = torch.tensor([[50.0, 50.0, 50.0]], requires_grad=True)
+        self._assert_compare_with_layer_conductance(model, input, True)
+
+    def _assert_compare_with_layer_conductance(
+        self, model, input, attribute_to_layer_input=False
+    ):
+        lc = LayerConductance(model, model.linear2)
+        # For large number of steps layer conductance and layer integrated gradients
+        # become very close
         attribution, delta = lc.attribute(
-            input, target=0, n_steps=1500, return_convergence_delta=True,
+            input,
+            target=0,
+            n_steps=1500,
+            return_convergence_delta=True,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
-        lig = LayerIntegratedGradients(model, model.linear0)
+        lig = LayerIntegratedGradients(model, model.linear2)
         attributions2, delta2 = lig.attribute(
-            input, target=0, n_steps=1500, return_convergence_delta=True,
+            input,
+            target=0,
+            n_steps=1500,
+            return_convergence_delta=True,
+            attribute_to_layer_input=attribute_to_layer_input,
         )
         assertArraysAlmostEqual(attribution, attributions2, 0.01)
         assertArraysAlmostEqual(delta, delta2, 0.05)
