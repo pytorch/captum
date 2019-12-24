@@ -49,7 +49,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         target=None,
         additional_forward_args=None,
         n_steps=50,
-        method="riemann_trapezoid",
+        method="gausslegendre",
         internal_batch_size=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
