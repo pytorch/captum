@@ -162,10 +162,6 @@ def _forward_layer_distributed_eval(
         nonlocal is_eval_tuple
         eval_tsrs = inp if attribute_to_layer_input else out
         is_eval_tuple = isinstance(eval_tsrs, tuple)
-        print(module)
-        print("Is input:", attribute_to_layer_input)
-        print("Is tuple:", is_eval_tuple)
-        print(eval_tsrs)
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
         with lock:
