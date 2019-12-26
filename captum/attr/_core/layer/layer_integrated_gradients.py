@@ -22,7 +22,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     r"""
     Integrated Gradients is an axiomatic model interpretability algorithms that
     assigns an importance score to each input feature by approximating the
-    integral of gradients of model output with respect to the inputs
+    integral of gradients of the model output with respect to the inputs
     along the path (straight line) from given baselines / references to inputs.
 
     In this case since we apply integrated gradients to the layer, the input
@@ -75,14 +75,14 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
         attribute_to_layer_input=False,
     ):
     r"""
-        This method attributes the output of the model with given target index
-        (in case it is provided, otherwise it assumes that output is a
-        scalar) to layer inputs or outputs of the model, depending on whether
+        This method attributes the output of the model with given target index,
+        in case it is provided, otherwise it assumes that output is a
+        scalar, to layer inputs or outputs of the model, depending on whether
         `attribute_to_layer_input` is set to True or False, using the approach
         described above.
 
-        In addition to that is also returns (if `return_convergence_delta` is
-        set to True) integral approximation delta based on the completeness
+        In addition to that is also returns, if `return_convergence_delta` is
+        set to True, integral approximation delta based on the completeness
         property of integrated gradients.
 
         Args:
