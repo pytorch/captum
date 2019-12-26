@@ -74,7 +74,7 @@ class Test(BaseTest):
             inputs,
             baselines,
             0,
-            expected,
+            (expected,),
             expected_delta=delta,
             attribute_to_layer_input=True,
         )

@@ -283,11 +283,11 @@ class NoiseTunnel(Attribution):
 
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
-        attributions = _format_tensor_into_tuples(attributions)
         if isinstance(self.attribution_method, LayerAttribution):
             # For layer attribution, we want to wrap the attributions in a tuple
-            # only when there is > 1 layer attribution tensor.
-            is_inputs_tuple = len(attributions) > 1
+            # only when the returned attributions are in a tuple.
+            is_inputs_tuple = isinstance(attributions, tuple)
+        attributions = _format_tensor_into_tuples(attributions)
 
         expected_attributions = []
         expected_attributions_sq = []
