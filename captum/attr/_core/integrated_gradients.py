@@ -16,6 +16,21 @@ from .._utils.attribution import GradientAttribution
 
 
 class IntegratedGradients(GradientAttribution):
+    r"""
+    Integrated Gradients is an axiomatic model interpretability algorithms that
+    assigns an importance score to each input feature by approximating the
+    integral of gradients of model output with respect to the inputs
+    along the path (straight line) from given baselines / references to inputs.
+
+    Both baseline and reference can be provided as input arguments to attribute
+    method. To approximate the integral we can choose to use either a variant of
+    Riemann sum or Gauss-Legendre quadrature rule.
+
+    More details regarding the integrated gradient method can be found in the
+    original paper:
+    https://arxiv.org/abs/1703.01365
+
+    """
     def __init__(self, forward_func):
         r"""
         Args:
@@ -37,12 +52,13 @@ class IntegratedGradients(GradientAttribution):
         return_convergence_delta=False,
     ):
         r"""
-            Approximates the integral of gradients along the path from a baseline input
-            to the given input. If no baseline is provided, the default baseline
-            is the zero tensor.
-            More details regarding the integrated gradient method can be found in the
-            original paper here:
-            https://arxiv.org/abs/1703.01365
+            This method attributes the output of the model with given target index
+            (in case it is provided, otherwise it assumes that output is a
+            scalar) to the inputs of the model using the approach described above.
+
+            In addition to that is also returns (if `return_convergence_delta` is
+            set to True) integral approximation delta based on the completeness
+            property of integrated gradients.
 
             Args:
 
@@ -68,12 +84,12 @@ class IntegratedGradients(GradientAttribution):
 
                             - a tuple of tensors or scalars, the baseline corresponding
                                 to each tensor in the inputs' tuple can be:
-                                - either a tensor with matching dimensions to
-                                    corresponding tensor in the inputs' tuple
-                                    or the first dimension is one and the remaining
-                                    dimensions match with the corresponding
-                                    input tensor.
-                                - or a scalar, corresponding to a tensor in the
+                            - either a tensor with matching dimensions to
+                                corresponding tensor in the inputs' tuple
+                                or the first dimension is one and the remaining
+                                dimensions match with the corresponding
+                                input tensor.
+                            - or a scalar, corresponding to a tensor in the
                                     inputs' tuple. This scalar value is broadcasted
                                     for corresponding input tensor.
 
@@ -147,13 +163,12 @@ class IntegratedGradients(GradientAttribution):
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
                 - **attributions** (*tensor* or tuple of *tensors*):
-                        Integrated gradients with respect to each input feature.
-                        attributions will always be the same size as the provided
-                        inputs, with each value providing the attribution of the
-                        corresponding input index.
-                        If a single tensor is provided as inputs, a single tensor is
-                        returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+                        Integrated gradients with respect to layer inputs or outputs.
+                        Attributions will always be the same size as
+                        the input or output of the given layer, depending on
+                        whether we attribute to the inputs or outputs
+                        of the layer which is decided by the input flag
+                        `attribute_to_layer_input`.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
