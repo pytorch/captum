@@ -82,14 +82,14 @@ def compute_gradients(
     """
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
-        output = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
-        assert output[0].numel() == 1, (
+        outputs = _run_forward(forward_fn, inputs, target_ind, additional_forward_args)
+        assert outputs[0].numel() == 1, (
             "Target not provided when necessary, cannot"
             " take gradient with respect to multiple outputs."
         )
         # torch.unbind(forward_out) is a list of scalar tensor tuples and
         # contains batch_size * #steps elements
-        grads = torch.autograd.grad(torch.unbind(output), inputs)
+        grads = torch.autograd.grad(torch.unbind(outputs), inputs)
     return grads
 
 
