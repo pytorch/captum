@@ -225,6 +225,20 @@ class Test(BaseGPUTest):
             target=1,
         )
 
+    def test_multi_output_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer(multiinput_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients, net, net.relu, alt_device_ids=True, inputs=inp, target=1
+        )
+
     def test_simple_layer_gradient_x_activation(self):
         net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
