@@ -7,7 +7,7 @@ Attribution
 .. autoclass:: captum.attr.Attribution
     :members:
 
-LayerAttribution
+Layer Attribution
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: captum.attr.LayerAttribution
