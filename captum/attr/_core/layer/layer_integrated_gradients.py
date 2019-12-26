@@ -29,7 +29,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     features are layer inputs or outputs depending on whether we attribute to
     the former or to the latter one.
 
-    Both baseline and reference can be provided as input arguments to attribute
+    Both baselines and references can be provided as input arguments to attribute
     method. To approximate the integral we can choose to use either a variant of
     Riemann sum or Gauss-Legendre quadrature rule.
 
@@ -38,6 +38,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     https://arxiv.org/abs/1703.01365
 
     """
+
     def __init__(self, forward_func, layer, device_ids=None):
         r"""
         Args:
@@ -74,7 +75,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
         return_convergence_delta=False,
         attribute_to_layer_input=False,
     ):
-    r"""
+        r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
         scalar) to layer inputs or outputs of the model, depending on whether
@@ -227,7 +228,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                 >>> # Computes layer integrated gradients for class 3.
                 >>> # attribution size matches layer output, Nx12x32x32
                 >>> attribution = lig.attribute(input, target=3)
-    """
+        """
         inps, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inps, baselines, n_steps, method)
 
