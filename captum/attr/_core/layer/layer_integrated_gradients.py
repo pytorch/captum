@@ -75,9 +75,9 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
         attribute_to_layer_input=False,
     ):
     r"""
-        This method attributes the output of the model with given target index,
-        in case it is provided, otherwise it assumes that output is a
-        scalar, to layer inputs or outputs of the model, depending on whether
+        This method attributes the output of the model with given target index
+        (in case it is provided, otherwise it assumes that output is a
+        scalar) to layer inputs or outputs of the model, depending on whether
         `attribute_to_layer_input` is set to True or False, using the approach
         described above.
 
