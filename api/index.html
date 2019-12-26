@@ -31,34 +31,56 @@
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="integrated_gradients.html">Integrated Gradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_x_gradient.html">Input X Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_backprop.html">Guided Backprop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_grad_cam.html">Guided GradCAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="occlusion.html">Occlusion</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-conductance">Layer Conductance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-activation">Layer Activation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#internal-influence">Internal Influence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-gradient-x-activation">Layer Gradient X Activation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#gradcam">GradCAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-deeplift">Layer DeepLift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-deepliftshap">Layer DeepLiftShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer.html#layer-gradientshap">Layer GradientShap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-gradient">Neuron Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-integrated-gradients">Neuron Integrated Gradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-conductance">Neuron Conductance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-deeplift">Neuron DeepLift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-deepliftshap">Neuron DeepLiftShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-gradientshap">Neuron GradientShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-guided-backprop">Neuron Guided Backprop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-deconvolution">Neuron Deconvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuron-feature-ablation">Neuron Feature Ablation</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._utils.visualization">visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._models.base">Interpretable Embedding Base</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._models.base">Token Reference Base</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._utils.attribution">Attribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._utils.attribution">LayerAttribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._utils.attribution">Neuron Attribution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utilities.html#module-captum.attr._utils.attribution">Gradient Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#interpretable-embeddings">Interpretable Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities.html#token-reference-base">Token Reference Base</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="neuron.html#neurongradient">NeuronGradient</a></li>
-<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuronintegratedgradients">NeuronIntegratedGradients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="neuron.html#neuronconductance">NeuronConductance</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="layer.html#layerconductance">LayerConductance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer.html#layeractivation">LayerActivation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer.html#internalinfluence">InternalInfluence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="layer.html#layergradientxactivation">LayerGradientXActivation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="base_classes.html#attribution">Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base_classes.html#layer-attribution">Layer Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base_classes.html#neuron-attribution">Neuron Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base_classes.html#gradient-attribution">Gradient Attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="base_classes.html#perturbation-attribution">Perturbation Attribution</a></li>
 </ul>
 </li>
 </ul>
@@ -81,22 +103,18 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
 <li><a href="#">Documentation overview</a><ul>
-<li>Next: <a href="saliency.html" title="next chapter">Saliency</a></li>
+<li>Next: <a href="attribution.html" title="next chapter">Attribution</a></li>
 </ul></li>
 </ul>
 </div>

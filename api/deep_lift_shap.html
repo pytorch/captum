@@ -24,19 +24,19 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="module-captum.attr._core.deep_lift">
-<span id="deepliftshap"></span><h1>DeepLiftShap<a class="headerlink" href="#module-captum.attr._core.deep_lift" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="deepliftshap">
+<h1>DeepLiftShap<a class="headerlink" href="#deepliftshap" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="captum.attr._core.deep_lift.DeepLiftShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.deep_lift.</code><code class="sig-name descname">DeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.DeepLiftShap">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">DeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLiftShap" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="captum.attr._core.deep_lift.DeepLiftShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.DeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.DeepLiftShap.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends DeepLift algorithm and approximates SHAP values using Deeplift.
 For each input sample it computes DeepLift attribution with respect to
 each baseline and averages resulting attributions.
@@ -225,13 +225,6 @@ it is not guaranteed and depends on the specifics of the
 </div>
 </dd></dl>
 </dd></dl>
-<dl class="function">
-<dt id="captum.attr._core.deep_lift.nonlinear">
-<code class="sig-prename descclassname">captum.attr._core.deep_lift.</code><code class="sig-name descname">nonlinear</code><span class="sig-paren">(</span><em class="sig-param">module</em>, <em class="sig-param">delta_in</em>, <em class="sig-param">delta_out</em>, <em class="sig-param">grad_input</em>, <em class="sig-param">grad_output</em>, <em class="sig-param">eps=1e-10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#nonlinear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.deep_lift.nonlinear" title="Permalink to this definition">¶</a></dt>
-<dd><p>grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
-grad_output: (dLoss / dlayer_out)
-<a class="reference external" href="https://github.com/pytorch/pytorch/issues/12331">https://github.com/pytorch/pytorch/issues/12331</a></p>
-</dd></dl>
 </div>
 </div>
 </div>
@@ -242,23 +235,34 @@ grad_output: (dLoss / dlayer_out)
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="attribution.html">Attribution</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="integrated_gradients.html">Integrated Gradients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="saliency.html">Saliency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DeepLiftShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_x_gradient.html">Input X Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_backprop.html">Guided Backprop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_grad_cam.html">Guided GradCAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="occlusion.html">Occlusion</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
 <li><a href="index.html">Documentation overview</a><ul>
+<li><a href="attribution.html">Attribution</a><ul>
 <li>Previous: <a href="deep_lift.html" title="previous chapter">DeepLift</a></li>
 <li>Next: <a href="gradient_shap.html" title="next chapter">GradientShap</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </div>

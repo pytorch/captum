@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.occlusion</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_input</span><span class="p">,</span>
+    <span class="n">_format_and_verify_strides</span><span class="p">,</span>
+    <span class="n">_format_and_verify_sliding_window_shapes</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
+
+
+<div class="viewcode-block" id="Occlusion"><a class="viewcode-back" href="../../../../occlusion.html#captum.attr.Occlusion">[docs]</a><span class="k">class</span> <span class="nc">Occlusion</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            forward_func (callable): The forward function of the model or</span>
+<span class="sd">                        any modification of it</span>
+<span class="sd">        """</span>
+        <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Occlusion.attribute"><a class="viewcode-back" href="../../../../occlusion.html#captum.attr.Occlusion.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">sliding_window_shapes</span><span class="p">,</span>
+        <span class="n">strides</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ablations_per_eval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">""""</span>
+<span class="sd">        A perturbation based approach to computing attribution, involving</span>
+<span class="sd">        replacing each contiguous rectangular region with a given baseline /</span>
+<span class="sd">        reference, and computing the difference in output. For features located</span>
+<span class="sd">        in multiple regions (hyperrectangles), the corresponding output differences</span>
+<span class="sd">        are averaged to compute the attribution for that feature.</span>
+
+<span class="sd">        The first patch is applied with the corner aligned with all indices 0,</span>
+<span class="sd">        and strides are applied until the entire dimension range is covered. Note</span>
+<span class="sd">        that this may cause the final patch applied in a direction to be cut-off</span>
+<span class="sd">        and thus smaller than the target occlusion shape.</span>
+
+<span class="sd">        More details regarding the occlusion (or grey-box / sliding window)</span>
+<span class="sd">        method can be found in the original paper and in the DeepExplain</span>
+<span class="sd">        implementation.</span>
+<span class="sd">        https://arxiv.org/abs/1311.2901</span>
+<span class="sd">        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\</span>
+<span class="sd">        /tensorflow/methods.py#L401</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which occlusion</span>
+<span class="sd">                            attributions are computed. If forward_func takes a single</span>
+<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                            of the input tensors should be provided. It is assumed</span>
+<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                            to the number of examples (aka batch size), and if</span>
+<span class="sd">                            multiple input tensors are provided, the examples must</span>
+<span class="sd">                            be aligned appropriately.</span>
+<span class="sd">                sliding_window_shapes (tuple or tuple of tuples): Shape of patch</span>
+<span class="sd">                            (hyperrectangle) to occlude each input. For a single</span>
+<span class="sd">                            input tensor, this must be a tuple of length equal to the</span>
+<span class="sd">                            number of dimensions of the input tensor - 1, defining</span>
+<span class="sd">                            the dimensions of the patch. If the input tensor is 1-d,</span>
+<span class="sd">                            this should be an empty tuple. For multiple input tensors,</span>
+<span class="sd">                            this must be a tuple containing one tuple for each input</span>
+<span class="sd">                            tensor defining the dimensions of the patch for that</span>
+<span class="sd">                            input tensor, as described for the single tensor case.</span>
+<span class="sd">                strides (int or tuple or tuple of ints or tuple of tuples, optional):</span>
+<span class="sd">                            This defines the step by which the occlusion hyperrectangle</span>
+<span class="sd">                            should be shifted by in each direction for each iteration.</span>
+<span class="sd">                            For a single tensor input, this can be either a single</span>
+<span class="sd">                            integer, which is used as the step size in each direction,</span>
+<span class="sd">                            or a tuple of integers matching the number of dimensions</span>
+<span class="sd">                            in the occlusion shape, defining the step size in the</span>
+<span class="sd">                            corresponding dimension. For multiple tensor inputs, this</span>
+<span class="sd">                            can be either a tuple of integers, one for each input</span>
+<span class="sd">                            tensor (used for all dimensions of the corresponding</span>
+<span class="sd">                            tensor), or a tuple of tuples, providing the stride per</span>
+<span class="sd">                            dimension for each tensor.</span>
+<span class="sd">                            To ensure that all inputs are covered by at least one</span>
+<span class="sd">                            sliding window, the stride for any dimension must be</span>
+<span class="sd">                            &lt;= the corresponding sliding window dimension if the</span>
+<span class="sd">                            sliding window dimension is less than the input</span>
+<span class="sd">                            dimension.</span>
+<span class="sd">                            If None is provided, a stride of 1 is used for each</span>
+<span class="sd">                            dimension of each input tensor.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                            Baselines define reference value which replaces each</span>
+<span class="sd">                            feature when occluded.</span>
+<span class="sd">                            Baselines can be provided as:</span>
+<span class="sd">                            - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                                exactly the same dimensions as inputs or</span>
+<span class="sd">                                broadcastable to match the dimensions of inputs</span>
+<span class="sd">                            - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                                be broadcasted for each input value in input tensor.</span>
+<span class="sd">                            - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                                to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                                - either a tensor with</span>
+<span class="sd">                                    exactly the same dimensions as inputs or</span>
+<span class="sd">                                    broadcastable to match the dimensions of inputs</span>
+<span class="sd">                                - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                    inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                    for corresponding input tensor.</span>
+<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                            use zero scalar corresponding to each input tensor.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                            which difference is computed (for classification cases,</span>
+<span class="sd">                            this is usually the target class).</span>
+<span class="sd">                            If the network returns a scalar value per example,</span>
+<span class="sd">                            no target index is necessary.</span>
+<span class="sd">                            For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                            - a single integer or a tensor containing a single</span>
+<span class="sd">                                integer, which is applied to all input examples</span>
+
+<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                                the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                                is applied as the target for the corresponding example.</span>
+
+<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                                elements. This target index is applied to all examples.</span>
+
+<span class="sd">                            - A list of tuples with length equal to the number of</span>
+<span class="sd">                                examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                                #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                                target for the corresponding example.</span>
+
+<span class="sd">                            Default: None</span>
+<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                            requires additional arguments other than the inputs for</span>
+<span class="sd">                            which attributions should not be computed, this argument</span>
+<span class="sd">                            can be provided. It must be either a single additional</span>
+<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                            tuple containing multiple additional arguments including</span>
+<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                            are provided to forward_func in order following the</span>
+<span class="sd">                            arguments in inputs.</span>
+<span class="sd">                            For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                            correspond to the number of examples. For all other types,</span>
+<span class="sd">                            the given argument is used for all forward evaluations.</span>
+<span class="sd">                            Note that attributions are not computed with respect</span>
+<span class="sd">                            to these arguments.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                ablations_per_eval (int, optional): Allows multiple occlusions</span>
+<span class="sd">                            to be included in one batch (one call to forward_fn).</span>
+<span class="sd">                            By default, ablations_per_eval is 1, so each occlusion</span>
+<span class="sd">                            is processed individually.</span>
+<span class="sd">                            Each forward pass will contain a maximum of</span>
+<span class="sd">                            ablations_per_eval * #examples samples.</span>
+<span class="sd">                            For DataParallel models, each batch is split among the</span>
+<span class="sd">                            available devices, so evaluations on each available</span>
+<span class="sd">                            device contain at most</span>
+<span class="sd">                            (ablations_per_eval * #examples) / num_devices</span>
+<span class="sd">                            samples.</span>
+<span class="sd">                            Default: 1</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                            The attributions with respect to each input feature.</span>
+<span class="sd">                            Attributions will always be</span>
+<span class="sd">                            the same size as the provided inputs, with each value</span>
+<span class="sd">                            providing the attribution of the corresponding input index.</span>
+<span class="sd">                            If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                            returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                            corresponding sized tensors is returned.</span>
+
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 2 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 4, 4)</span>
+<span class="sd">            &gt;&gt;&gt; # Defining Occlusion interpreter</span>
+<span class="sd">            &gt;&gt;&gt; ablator = Occlusion(net)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes occlusion attribution, ablating each 3x3 patch,</span>
+<span class="sd">            &gt;&gt;&gt; # shifting in each direction by the default of 1.</span>
+<span class="sd">            &gt;&gt;&gt; attr = ablator.attribute(input, target=1, sliding_window_shapes=(3,3))</span>
+<span class="sd">        """</span>
+        <span class="n">formatted_inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="c1"># Formatting strides</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="n">_format_and_verify_strides</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">)</span>
+
+        <span class="c1"># Formatting sliding window shapes</span>
+        <span class="n">sliding_window_shapes</span> <span class="o">=</span> <span class="n">_format_and_verify_sliding_window_shapes</span><span class="p">(</span>
+            <span class="n">sliding_window_shapes</span><span class="p">,</span> <span class="n">formatted_inputs</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Construct tensors from sliding window shapes</span>
+        <span class="n">sliding_window_tensors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">window_shape</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">formatted_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">window_shape</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Construct counts, defining number of steps to make of occlusion block in</span>
+        <span class="c1"># each dimension.</span>
+        <span class="n">shift_counts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">formatted_inputs</span><span class="p">):</span>
+            <span class="n">current_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="c1"># Verify sliding window doesn't exceed input dimensions.</span>
+            <span class="k">assert</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">current_shape</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
+                <span class="s2">"Sliding window dimensions </span><span class="si">{}</span><span class="s2"> cannot exceed input dimensions"</span> <span class="s2">"</span><span class="si">{}</span><span class="s2">."</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+            <span class="c1"># Stride cannot be larger than sliding window for any dimension where</span>
+            <span class="c1"># the sliding window doesn't cover the entire input.</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">current_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
+                <span class="s2">"Stride dimension </span><span class="si">{}</span><span class="s2"> cannot be larger than sliding window "</span>
+                <span class="s2">"shape dimension </span><span class="si">{}</span><span class="s2">."</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sliding_window_shapes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">shift_counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">current_shape</span><span class="p">,</span> <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Use ablation attribute method</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">ablations_per_eval</span><span class="o">=</span><span class="n">ablations_per_eval</span><span class="p">,</span>
+            <span class="n">sliding_window_tensors</span><span class="o">=</span><span class="n">sliding_window_tensors</span><span class="p">,</span>
+            <span class="n">shift_counts</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shift_counts</span><span class="p">),</span>
+            <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">expanded_input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Ablates given expanded_input tensor with given feature mask, feature range,</span>
+<span class="sd">        and baselines, and any additional arguments.</span>
+<span class="sd">        expanded_input shape is (num_features, num_examples, ...)</span>
+<span class="sd">        with remaining dimensions corresponding to remaining original tensor</span>
+<span class="sd">        dimensions and num_features = end_feature - start_feature.</span>
+
+<span class="sd">        input_mask is None for occlusion, and the mask is constructed</span>
+<span class="sd">        using sliding_window_tensors, strides, and shift counts, which are provided in</span>
+<span class="sd">        kwargs. baseline is expected to</span>
+<span class="sd">        be broadcastable to match expanded_input.</span>
+
+<span class="sd">        This method returns the ablated input tensor, which has the same</span>
+<span class="sd">        dimensionality as expanded_input as well as the corresponding mask with</span>
+<span class="sd">        either the same dimensionality as expanded_input or second dimension</span>
+<span class="sd">        being 1. This mask contains 1s in locations which have been ablated (and</span>
+<span class="sd">        thus counted towards ablations for that feature) and 0s otherwise.</span>
+<span class="sd">        """</span>
+        <span class="n">input_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_occlusion_mask</span><span class="p">(</span>
+                    <span class="n">expanded_input</span><span class="p">,</span>
+                    <span class="n">j</span><span class="p">,</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"sliding_window_tensors"</span><span class="p">],</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"strides"</span><span class="p">],</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">ablated_tensor</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">expanded_input</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">input_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">input_mask</span>
+
+    <span class="k">def</span> <span class="nf">_occlusion_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">expanded_input</span><span class="p">,</span>
+        <span class="n">ablated_feature_num</span><span class="p">,</span>
+        <span class="n">sliding_window_tsr</span><span class="p">,</span>
+        <span class="n">strides</span><span class="p">,</span>
+        <span class="n">shift_counts</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">"""</span>
+<span class="sd">        This constructs the current occlusion mask, which is the appropriate</span>
+<span class="sd">        shift of the sliding window tensor based on the ablated feature number.</span>
+<span class="sd">        The feature number ranges between 0 and the product of the shift counts</span>
+<span class="sd">        (# of times the sliding window should be shifted in each dimension).</span>
+
+<span class="sd">        First, the ablated feature number is converted to the number of steps in</span>
+<span class="sd">        each dimension from the origin, based on shift counts. This procedure</span>
+<span class="sd">        is similar to a base conversion, with the position values equal to shift</span>
+<span class="sd">        counts. The feature number is first taken modulo shift_counts[0] to</span>
+<span class="sd">        get the number of shifts in the first dimension (each shift</span>
+<span class="sd">        by shift_count[0]), and then divided by shift_count[0].</span>
+<span class="sd">        The procedure is then continued for each element of shift_count. This</span>
+<span class="sd">        computes the total shift in each direction for the sliding window.</span>
+
+<span class="sd">        We then need to compute the padding required after the window in each</span>
+<span class="sd">        dimension, which is equal to the total input dimension minus the sliding</span>
+<span class="sd">        window dimension minus the (left) shift amount. We construct the</span>
+<span class="sd">        array pad_values which contains the left and right pad values for each</span>
+<span class="sd">        dimension, in reverse order of dimensions, starting from the last one.</span>
+
+<span class="sd">        Once these padding values are computed, we pad the sliding window tensor</span>
+<span class="sd">        of 1s with 0s appropriately, which is the corresponding mask,</span>
+<span class="sd">        and the result will match the input shape.</span>
+<span class="sd">        """</span>
+        <span class="n">remaining_total</span> <span class="o">=</span> <span class="n">ablated_feature_num</span>
+        <span class="n">current_index</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">shift_count</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shift_counts</span><span class="p">):</span>
+            <span class="n">stride</span> <span class="o">=</span> <span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">strides</span>
+            <span class="n">current_index</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">remaining_total</span> <span class="o">%</span> <span class="n">shift_count</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span><span class="p">)</span>
+            <span class="n">remaining_total</span> <span class="o">=</span> <span class="n">remaining_total</span> <span class="o">//</span> <span class="n">shift_count</span>
+
+        <span class="n">remaining_padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span>
+            <span class="n">expanded_input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current_index</span><span class="p">,</span> <span class="n">sliding_window_tsr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">pad_values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">remaining_padding</span><span class="p">,</span> <span class="n">current_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span>
+        <span class="p">]</span>
+        <span class="n">pad_values</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">padded_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">sliding_window_tsr</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pad_values</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">padded_tensor</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">padded_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">feature_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_max</span><span class="p">,</span> <span class="kc">None</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

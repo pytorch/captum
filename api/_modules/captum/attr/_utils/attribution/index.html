@@ -41,7 +41,7 @@
 <span class="kn">from</span> <span class="nn">.gradient</span> <span class="kn">import</span> <span class="n">compute_gradients</span>
 
 
-<div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
+<div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All attribution algorithms extend this class. It enforces its child classes</span>
 <span class="sd">    to extend and override core `attribute` method.</span>
@@ -56,7 +56,7 @@
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
-<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the attribution values for each input tensor.</span>
 <span class="sd">        Deriving classes are responsible for implementing its logic accordingly.</span>
@@ -86,7 +86,7 @@
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Deriving class should implement attribute method"</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Attribution.has_convergence_delta"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.Attribution.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Attribution.has_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method informs the user whether the attribution algorithm provides</span>
 <span class="sd">        a convergence delta (aka an approximation error) or not. Convergence</span>
@@ -103,7 +103,7 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Attribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.Attribution.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<div class="viewcode-block" id="Attribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        The attribution algorithms which derive `Attribution` class and provide</span>
 <span class="sd">        convergence delta (aka approximation error) should implement this method.</span>
@@ -138,7 +138,7 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="GradientAttribution"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.GradientAttribution">[docs]</a><span class="k">class</span> <span class="nc">GradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+<div class="viewcode-block" id="GradientAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution">[docs]</a><span class="k">class</span> <span class="nc">GradientAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All gradient based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
@@ -156,7 +156,7 @@
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">compute_gradients</span>
 
-<div class="viewcode-block" id="GradientAttribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.GradientAttribution.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
+<div class="viewcode-block" id="GradientAttribution.compute_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.GradientAttribution.compute_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">compute_convergence_delta</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">attributions</span><span class="p">,</span>
         <span class="n">start_point</span><span class="p">,</span>
@@ -291,7 +291,7 @@
             <span class="k">return</span> <span class="n">attr_sum</span> <span class="o">-</span> <span class="p">(</span><span class="n">end_point</span> <span class="o">-</span> <span class="n">start_point</span><span class="p">)</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+<div class="viewcode-block" id="PerturbationAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.PerturbationAttribution">[docs]</a><span class="k">class</span> <span class="nc">PerturbationAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All perturbation based attribution algorithms extend this class. It requires a</span>
 <span class="sd">    forward function, which most commonly is the forward function of the model</span>
@@ -306,7 +306,7 @@
 <span class="sd">                        of pytorch model or any modification of model's forward</span>
 <span class="sd">                        function.</span>
 <span class="sd">        """</span>
-        <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span></div>
 
 
 <span class="k">class</span> <span class="nc">InternalAttribution</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
@@ -335,7 +335,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span>
 
 
-<div class="viewcode-block" id="LayerAttribution"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.LayerAttribution">[docs]</a><span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution">[docs]</a><span class="k">class</span> <span class="nc">LayerAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Layer attribution provides attribution values for the given layer, quanitfying</span>
 <span class="sd">    the importance of each neuron within the given layer's output. The output</span>
@@ -360,7 +360,7 @@
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.LayerAttribution.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">interpolate_mode</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">interpolate_mode</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Interpolates given 3D, 4D or 5D layer attribution to given dimensions.</span>
 <span class="sd">        This is often utilized to upsample the attribution of a convolutional layer</span>
@@ -392,7 +392,7 @@
         <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronAttribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution">[docs]</a><span class="k">class</span> <span class="nc">NeuronAttribution</span><span class="p">(</span><span class="n">InternalAttribution</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Neuron attribution provides input attribution for a given neuron, quanitfying</span>
 <span class="sd">        the importance of each input feature in the activation of a particular neuron.</span>
@@ -420,7 +420,7 @@
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../utilities.html#captum.attr._utils.attribution.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the neuron attribution values for each</span>
 <span class="sd">        input tensor. Deriving classes are responsible for implementing</span>
@@ -454,16 +454,12 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

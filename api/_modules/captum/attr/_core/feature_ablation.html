@@ -1,0 +1,555 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.feature_ablation</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_format_input</span><span class="p">,</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
+
+
+<div class="viewcode-block" id="FeatureAblation"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            forward_func (callable): The forward function of the model or</span>
+<span class="sd">                        any modification of it</span>
+<span class="sd">        """</span>
+        <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="FeatureAblation.attribute"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ablations_per_eval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">""""</span>
+<span class="sd">        A perturbation based approach to computing attribution, involving</span>
+<span class="sd">        replacing each input feature with a given baseline / reference, and</span>
+<span class="sd">        computing the difference in output. By default, each scalar value within</span>
+<span class="sd">        each input tensor is taken as a feature and replaced independently. Passing</span>
+<span class="sd">        a feature mask, allows grouping features to be ablated together. This can</span>
+<span class="sd">        be used in cases such as images, where an entire segment or region</span>
+<span class="sd">        can be ablated, measuring the importance of the segment (feature group).</span>
+<span class="sd">        Each input scalar in the group will be given the same attribution value</span>
+<span class="sd">        equal to the change in target as a result of ablating the entire feature</span>
+<span class="sd">        group.</span>
+
+<span class="sd">        The forward function can either return a scalar per example, or a single</span>
+<span class="sd">        scalar for the full batch. If a single scalar is returned for the batch,</span>
+<span class="sd">        `ablations_per_eval` must be 1, and the returned attributions will have</span>
+<span class="sd">        first dimension 1, corresponding to feature importance across all</span>
+<span class="sd">        examples in the batch.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which ablation</span>
+<span class="sd">                            attributions are computed. If forward_func takes a single</span>
+<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                            of the input tensors should be provided. It is assumed</span>
+<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                            to the number of examples (aka batch size), and if</span>
+<span class="sd">                            multiple input tensors are provided, the examples must</span>
+<span class="sd">                            be aligned appropriately.</span>
+<span class="sd">                baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                            Baselines define reference value which replaces each</span>
+<span class="sd">                            feature when ablated.</span>
+<span class="sd">                            Baselines can be provided as:</span>
+<span class="sd">                            - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                                exactly the same dimensions as inputs or</span>
+<span class="sd">                                broadcastable to match the dimensions of inputs</span>
+<span class="sd">                            - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                                be broadcasted for each input value in input tensor.</span>
+<span class="sd">                            - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                                to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                                - either a tensor with</span>
+<span class="sd">                                    exactly the same dimensions as inputs or</span>
+<span class="sd">                                    broadcastable to match the dimensions of inputs</span>
+<span class="sd">                                - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                    inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                    for corresponding input tensor.</span>
+<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                            use zero scalar corresponding to each input tensor.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                            which difference is computed (for classification cases,</span>
+<span class="sd">                            this is usually the target class).</span>
+<span class="sd">                            If the network returns a scalar value per example,</span>
+<span class="sd">                            no target index is necessary.</span>
+<span class="sd">                            For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                            - a single integer or a tensor containing a single</span>
+<span class="sd">                                integer, which is applied to all input examples</span>
+
+<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                                the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                                is applied as the target for the corresponding example.</span>
+
+<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                                elements. This target index is applied to all examples.</span>
+
+<span class="sd">                            - A list of tuples with length equal to the number of</span>
+<span class="sd">                                examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                                #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                                target for the corresponding example.</span>
+
+<span class="sd">                            Default: None</span>
+<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                            requires additional arguments other than the inputs for</span>
+<span class="sd">                            which attributions should not be computed, this argument</span>
+<span class="sd">                            can be provided. It must be either a single additional</span>
+<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                            tuple containing multiple additional arguments including</span>
+<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                            are provided to forward_func in order following the</span>
+<span class="sd">                            arguments in inputs.</span>
+<span class="sd">                            For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                            correspond to the number of examples. For all other types,</span>
+<span class="sd">                            the given argument is used for all forward evaluations.</span>
+<span class="sd">                            Note that attributions are not computed with respect</span>
+<span class="sd">                            to these arguments.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                            feature_mask defines a mask for the input, grouping</span>
+<span class="sd">                            features which should be ablated together. feature_mask</span>
+<span class="sd">                            should contain the same number of tensors as inputs.</span>
+<span class="sd">                            Each tensor should</span>
+<span class="sd">                            be the same size as the corresponding input or</span>
+<span class="sd">                            broadcastable to match the input tensor. Each tensor</span>
+<span class="sd">                            should contain integers in the range 0 to num_features</span>
+<span class="sd">                            - 1, and indices corresponding to the same feature should</span>
+<span class="sd">                            have the same value.</span>
+<span class="sd">                            Note that features within each input tensor are ablated</span>
+<span class="sd">                            independently (not across tensors).</span>
+<span class="sd">                            If the forward function returns a single scalar per batch,</span>
+<span class="sd">                            we enforce that the first dimension of each mask must be 1,</span>
+<span class="sd">                            since attributions are returned batch-wise rather than per</span>
+<span class="sd">                            example, so the attributions must correspond to the</span>
+<span class="sd">                            same features (indices) in each input example.</span>
+<span class="sd">                            If None, then a feature mask is constructed which assigns</span>
+<span class="sd">                            each scalar within a tensor as a separate feature, which</span>
+<span class="sd">                            is ablated independently.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                ablations_per_eval (int, optional): Allows ablation of multiple features</span>
+<span class="sd">                            to be processed simultaneously in one call to forward_fn.</span>
+<span class="sd">                            Each forward pass will contain a maximum of</span>
+<span class="sd">                            ablations_per_eval * #examples samples.</span>
+<span class="sd">                            For DataParallel models, each batch is split among the</span>
+<span class="sd">                            available devices, so evaluations on each available</span>
+<span class="sd">                            device contain at most</span>
+<span class="sd">                            (ablations_per_eval * #examples) / num_devices</span>
+<span class="sd">                            samples.</span>
+<span class="sd">                            If the forward function returns a single scalar per batch,</span>
+<span class="sd">                            ablations_per_eval must be set to 1.</span>
+<span class="sd">                            Default: 1</span>
+<span class="sd">                **kwargs (Any, optional): Any additional arguments used by child</span>
+<span class="sd">                            classes of FeatureAblation (such as Occlusion) to construct</span>
+<span class="sd">                            ablations. These arguments are ignored when using</span>
+<span class="sd">                            FeatureAblation directly.</span>
+<span class="sd">                            Default: None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                            The attributions with respect to each input feature.</span>
+<span class="sd">                            If the forward function returns</span>
+<span class="sd">                            a scalar value per example, attributions will be</span>
+<span class="sd">                            the same size as the provided inputs, with each value</span>
+<span class="sd">                            providing the attribution of the corresponding input index.</span>
+<span class="sd">                            If the forward function returns a scalar per batch, then</span>
+<span class="sd">                            attribution tensor(s) will have first dimension 1 and</span>
+<span class="sd">                            the remaining dimensions will match the input.</span>
+<span class="sd">                            If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                            returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                            corresponding sized tensors is returned.</span>
+
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 2 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 4, 4)</span>
+<span class="sd">            &gt;&gt;&gt; # Defining FeatureAblation interpreter</span>
+<span class="sd">            &gt;&gt;&gt; ablator = FeatureAblation(net)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes ablation attribution, ablating each of the 16</span>
+<span class="sd">            &gt;&gt;&gt; # scalar input independently.</span>
+<span class="sd">            &gt;&gt;&gt; attr = ablator.attribute(input, target=1)</span>
+
+<span class="sd">            &gt;&gt;&gt; # Alternatively, we may want to ablate features in groups, e.g.</span>
+<span class="sd">            &gt;&gt;&gt; # grouping each 2x2 square of the inputs and ablating them together.</span>
+<span class="sd">            &gt;&gt;&gt; # This can be done by creating a feature mask as follows, which</span>
+<span class="sd">            &gt;&gt;&gt; # defines the feature groups, e.g.:</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # With this mask, all inputs with the same value are ablated</span>
+<span class="sd">            &gt;&gt;&gt; # simultaneously, and the attribution for each input in the same</span>
+<span class="sd">            &gt;&gt;&gt; # group (0, 1, 2, and 3) per example are the same.</span>
+<span class="sd">            &gt;&gt;&gt; # The attributions can be calculated as follows:</span>
+<span class="sd">            &gt;&gt;&gt; # feature mask has dimensions 1 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],</span>
+<span class="sd">            &gt;&gt;&gt;                             [2,2,3,3],[2,2,3,3]]])</span>
+<span class="sd">            &gt;&gt;&gt; attr = ablator.attribute(input, target=1, feature_mask=feature_mask)</span>
+<span class="sd">        """</span>
+        <span class="c1"># Keeps track whether original input is a tuple or not before</span>
+        <span class="c1"># converting it into a tuple.</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+            <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+        <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span> <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">ablations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ablations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"Ablations per evaluation must be at least 1."</span>
+
+        <span class="c1"># Computes initial evaluation with all features, which is compared</span>
+        <span class="c1"># to each ablated result.</span>
+        <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">num_examples</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">single_output_mode</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">ablations_per_eval</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="p">),</span> <span class="s2">"Cannot have ablations_per_eval &gt; 1 when function returns scalar."</span>
+            <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="n">single_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+                    <span class="p">),</span> <span class="s2">"Cannot provide multiple masks when function returns a scalar."</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">single_output_mode</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">initial_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="p">),</span> <span class="s2">"Target should identify a single element in the model output."</span>
+            <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span>
+
+        <span class="c1"># Initialize attribution totals and counts</span>
+        <span class="n">attrib_type</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">initial_eval</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+            <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">total_attrib</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
+                <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">single_output_mode</span> <span class="k">else</span> <span class="nb">input</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">attrib_type</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Weights are used in cases where ablations may be overlapping.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">single_output_mode</span> <span class="k">else</span> <span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+                <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
+            <span class="p">]</span>
+
+        <span class="c1"># Iterate through each feature tensor for ablation</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="p">(</span>
+                <span class="n">current_inputs</span><span class="p">,</span>
+                <span class="n">current_add_args</span><span class="p">,</span>
+                <span class="n">current_target</span><span class="p">,</span>
+                <span class="n">current_mask</span><span class="p">,</span>
+            <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ablation_generator</span><span class="p">(</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">target</span><span class="p">,</span>
+                <span class="n">baselines</span><span class="p">,</span>
+                <span class="n">feature_mask</span><span class="p">,</span>
+                <span class="n">ablations_per_eval</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">):</span>
+                <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
+                <span class="c1"># equal to #num_examples * #features in batch</span>
+                <span class="n">modified_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">current_inputs</span><span class="p">,</span> <span class="n">current_target</span><span class="p">,</span> <span class="n">current_add_args</span>
+                <span class="p">)</span>
+                <span class="c1"># eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)</span>
+                <span class="c1"># (contains 1 more dimension than inputs). This adds extra dimensions</span>
+                <span class="c1"># of 1 to make the tensor broadcastable with the inputs tensor.</span>
+                <span class="k">if</span> <span class="n">single_output_mode</span><span class="p">:</span>
+                    <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
+                    <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">total_attrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">eval_diff</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attrib_type</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Divide total attributions by counts and return formatted attributions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
+            <span class="n">attrib</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">single_attrib</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="n">weight</span>
+                <span class="k">for</span> <span class="n">single_attrib</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attrib</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_ablation_generator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">additional_args</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">,</span>
+        <span class="n">input_mask</span><span class="p">,</span>
+        <span class="n">ablations_per_eval</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="n">extra_args</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># For any tuple argument in kwargs, we choose index i of the tuple.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">extra_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">extra_args</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">input_mask</span> <span class="o">=</span> <span class="n">input_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">min_feature</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">input_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_range_and_mask</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_args</span>
+        <span class="p">)</span>
+        <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ablations_per_eval</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ablations_per_eval</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="n">baselines</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Repeat features and additional args for batch size.</span>
+        <span class="n">all_features_repeated</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> <span class="n">ablations_per_eval</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">additional_args_repeated</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_expand_additional_forward_args</span><span class="p">(</span><span class="n">additional_args</span><span class="p">,</span> <span class="n">ablations_per_eval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">additional_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">target_repeated</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ablations_per_eval</span><span class="p">)</span>
+
+        <span class="n">num_features_processed</span> <span class="o">=</span> <span class="n">min_feature</span>
+        <span class="k">while</span> <span class="n">num_features_processed</span> <span class="o">&lt;</span> <span class="n">num_features</span><span class="p">:</span>
+            <span class="n">current_num_ablated_features</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="n">ablations_per_eval</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">-</span> <span class="n">num_features_processed</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Store appropriate inputs and additional args based on batch size.</span>
+            <span class="k">if</span> <span class="n">current_num_ablated_features</span> <span class="o">!=</span> <span class="n">ablations_per_eval</span><span class="p">:</span>
+                <span class="n">current_features</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">feature_repeated</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">current_num_ablated_features</span> <span class="o">*</span> <span class="n">num_examples</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">feature_repeated</span> <span class="ow">in</span> <span class="n">all_features_repeated</span>
+                <span class="p">]</span>
+                <span class="n">current_additional_args</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                        <span class="n">additional_args</span><span class="p">,</span> <span class="n">current_num_ablated_features</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">additional_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">)</span>
+                <span class="n">current_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">current_num_ablated_features</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_features</span> <span class="o">=</span> <span class="n">all_features_repeated</span>
+                <span class="n">current_additional_args</span> <span class="o">=</span> <span class="n">additional_args_repeated</span>
+                <span class="n">current_target</span> <span class="o">=</span> <span class="n">target_repeated</span>
+
+            <span class="c1"># Store existing tensor before modifying</span>
+            <span class="n">original_tensor</span> <span class="o">=</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="c1"># Construct ablated batch for features in range num_features_processed</span>
+            <span class="c1"># to num_features_processed + current_num_ablated_features and return</span>
+            <span class="c1"># mask with same size as ablated batch. ablated_features has dimension</span>
+            <span class="c1"># (current_num_ablated_features, num_examples, + inputs[i].shape[1:])</span>
+            <span class="n">ablated_features</span><span class="p">,</span> <span class="n">current_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_ablated_input</span><span class="p">(</span>
+                <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">current_num_ablated_features</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="p">),</span>
+                <span class="n">input_mask</span><span class="p">,</span>
+                <span class="n">baseline</span><span class="p">,</span>
+                <span class="n">num_features_processed</span><span class="p">,</span>
+                <span class="n">num_features_processed</span> <span class="o">+</span> <span class="n">current_num_ablated_features</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">extra_args</span>
+            <span class="p">)</span>
+
+            <span class="c1"># current_features[i] has dimension</span>
+            <span class="c1"># (current_num_ablated_features * num_examples, inputs[i].shape[1:]),</span>
+            <span class="c1"># which can be provided to the model as input.</span>
+            <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">ablated_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="p">)</span>
+            <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">current_features</span>
+            <span class="p">),</span> <span class="n">current_additional_args</span><span class="p">,</span> <span class="n">current_target</span><span class="p">,</span> <span class="n">current_mask</span>
+            <span class="c1"># Replace existing tensor at index i.</span>
+            <span class="n">current_features</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_tensor</span>
+            <span class="n">num_features_processed</span> <span class="o">+=</span> <span class="n">current_num_ablated_features</span>
+
+    <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">expanded_input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Ablates given expanded_input tensor with given feature mask, feature range,</span>
+<span class="sd">        and baselines. expanded_input shape is (`num_features`, `num_examples`, ...)</span>
+<span class="sd">        with remaining dimensions corresponding to remaining original tensor</span>
+<span class="sd">        dimensions and `num_features` = `end_feature` - `start_feature`.</span>
+<span class="sd">        input_mask has same number of dimensions as original input tensor (one less</span>
+<span class="sd">        than `expanded_input`), and can have first dimension either 1, applying same</span>
+<span class="sd">        feature mask to all examples, or `num_examples`. baseline is expected to</span>
+<span class="sd">        be broadcastable to match `expanded_input`.</span>
+
+<span class="sd">        This method returns the ablated input tensor, which has the same</span>
+<span class="sd">        dimensionality as `expanded_input` as well as the corresponding mask with</span>
+<span class="sd">        either the same dimensionality as `expanded_input` or second dimension</span>
+<span class="sd">        being 1. This mask contains 1s in locations which have been ablated (and</span>
+<span class="sd">        thus counted towards ablations for that feature) and 0s otherwise.</span>
+<span class="sd">        """</span>
+        <span class="n">current_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">ablated_tensor</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">expanded_input</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">current_mask</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">current_mask</span>
+
+    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">input_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Obtain feature mask for selected input tensor, matches size of</span>
+            <span class="c1"># 1 input example, (1 x inputs[i].shape[1:])</span>
+            <span class="n">input_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">device</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">input_mask</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

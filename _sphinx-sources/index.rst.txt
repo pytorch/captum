@@ -11,17 +11,12 @@ Captum API Reference
    :maxdepth: 2
    :caption: API Reference
 
-   saliency
-   deep_lift
-   deep_lift_shap
-   gradient_shap
-   input_x_gradient
-   integrated_gradients
+   attribution
    noise_tunnel
-   utilities
-   neuron
    layer
-
+   neuron
+   utilities
+   base_classes
 
 
 Indices and Tables

@@ -24,11 +24,11 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="module-captum.attr._core.saliency">
-<span id="saliency"></span><h1>Saliency<a class="headerlink" href="#module-captum.attr._core.saliency" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="saliency">
+<h1>Saliency<a class="headerlink" href="#saliency" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="captum.attr._core.saliency.Saliency">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.saliency.</code><code class="sig-name descname">Saliency</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.saliency.Saliency" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.Saliency">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Saliency</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Saliency" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
@@ -36,8 +36,8 @@ any modification of it</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="captum.attr._core.saliency.Saliency.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">abs=True</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.saliency.Saliency.attribute" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.Saliency.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">abs=True</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Saliency.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
 A baseline approach for computing input attribution. It returns
 the gradients with respect to inputs. If <cite>abs</cite> is set to True, which is
@@ -156,23 +156,34 @@ corresponding sized tensors is returned.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="attribution.html">Attribution</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="integrated_gradients.html">Integrated Gradients</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Saliency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_x_gradient.html">Input X Gradient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_backprop.html">Guided Backprop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guided_grad_cam.html">Guided GradCAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="occlusion.html">Occlusion</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
 <li><a href="index.html">Documentation overview</a><ul>
-<li>Previous: <a href="index.html" title="previous chapter">Captum API Reference</a></li>
+<li><a href="attribution.html">Attribution</a><ul>
+<li>Previous: <a href="integrated_gradients.html" title="previous chapter">Integrated Gradients</a></li>
 <li>Next: <a href="deep_lift.html" title="next chapter">DeepLift</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </div>

@@ -39,7 +39,7 @@
 <span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="kn">import</span> <span class="n">NoiseTunnel</span>
 
 
-<div class="viewcode-block" id="GradientShap"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.GradientShap">[docs]</a><span class="k">class</span> <span class="nc">GradientShap</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="GradientShap"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap">[docs]</a><span class="k">class</span> <span class="nc">GradientShap</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -49,7 +49,7 @@
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GradientShap.attribute"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.GradientShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="GradientShap.attribute"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">,</span>
@@ -252,11 +252,11 @@
 
         <span class="k">return</span> <span class="n">attributions</span></div>
 
-<div class="viewcode-block" id="GradientShap.has_convergence_delta"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.GradientShap.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GradientShap.has_convergence_delta"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
 
 
-<div class="viewcode-block" id="InputBaselineXGradient"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient">[docs]</a><span class="k">class</span> <span class="nc">InputBaselineXGradient</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">InputBaselineXGradient</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -266,7 +266,7 @@
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
-<div class="viewcode-block" id="InputBaselineXGradient.attribute"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -309,10 +309,10 @@
             <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
             <span class="n">is_inputs_tuple</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
 
-<div class="viewcode-block" id="InputBaselineXGradient.has_convergence_delta"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr._core.gradient_shap.InputBaselineXGradient.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_scale_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">):</span>
         <span class="c1"># batch size</span>
@@ -326,7 +326,7 @@
         <span class="n">input_baseline_scaled</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">rand_coefficient</span> <span class="o">*</span> <span class="nb">input</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rand_coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">baseline</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">input_baseline_scaled</span></div>
+        <span class="k">return</span> <span class="n">input_baseline_scaled</span>
 </pre></div>
 </div>
 </div>
@@ -337,16 +337,12 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

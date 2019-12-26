@@ -117,6 +117,8 @@
 
 
 <span class="k">def</span> <span class="nf">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
@@ -264,11 +266,9 @@
 <span class="k">def</span> <span class="nf">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Takes a tuple of tensors as input and returns a tuple that has the same</span>
-<span class="sd">    size as the `inputs` which contains zero tensors of the same</span>
-<span class="sd">    shape as the `inputs`</span>
-
+<span class="sd">    length as `inputs` with each element as the integer 0.</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="mf">0.0</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">):</span>
@@ -373,6 +373,9 @@
                 <span class="s2">"Currently only `repeat` and `repeat_interleave`"</span>
                 <span class="s2">" expansion_types are supported"</span>
             <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
         <span class="n">_expand_tensor_forward_arg</span><span class="p">(</span><span class="n">additional_forward_arg</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">expansion_type</span><span class="p">)</span>
@@ -491,116 +494,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
                 <span class="k">break</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">]</span></div>
-
-
-<span class="k">class</span> <span class="nc">Stat</span><span class="p">:</span>
-    <span class="sd">"""Keep track of statistics for a quantity that is measured live</span>
-
-<span class="sd">    Implementation of an online statistics tracker, Stat:</span>
-<span class="sd">        For a memory efficient way of keeping track of statistics on a large set of</span>
-<span class="sd">        numbers. Adding numbers to the object will update the values stored in the</span>
-<span class="sd">        object to reflect the statistics of all numbers that the object has seen</span>
-<span class="sd">        so far.</span>
-
-<span class="sd">    Example usage:</span>
-<span class="sd">        s = Stat()</span>
-<span class="sd">        s([5,7]) OR s.update([5,7])</span>
-<span class="sd">        stats.get_mean() -&gt; 6</span>
-<span class="sd">        stats.get_std() -&gt; 1</span>
-
-<span class="sd">    """</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_std_size_check</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="s2">"Std/Variance is not defined for </span><span class="si">{}</span><span class="s2"> datapoints</span><span class="se">\</span>
-<span class="s2">                "</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">"""Update the stats given a new number</span>
-
-<span class="sd">        Adds x to the running statistics being kept track of, and updates internal</span>
-<span class="sd">        values that relfect that change.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            x: a numeric value, or a list of numeric values</span>
-<span class="sd">        """</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">delta</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">+=</span> <span class="n">delta</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
-            <span class="n">delta2</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">+=</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">delta2</span>
-
-    <span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""Retrieves a dictionary of statistics for the values seen.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            a fully populated dictionary for the statistics that have been</span>
-<span class="sd">            maintained. This output is easy to pipe into a table with a loop over</span>
-<span class="sd">            key value pairs.</span>
-<span class="sd">        """</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_std_size_check</span><span class="p">()</span>
-
-        <span class="n">sampleVariance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">Variance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
-
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"mean"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span>
-            <span class="s2">"sample_variance"</span><span class="p">:</span> <span class="n">sampleVariance</span><span class="p">,</span>
-            <span class="s2">"variance"</span><span class="p">:</span> <span class="n">Variance</span><span class="p">,</span>
-            <span class="s2">"std"</span><span class="p">:</span> <span class="n">Variance</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
-            <span class="s2">"min"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
-            <span class="s2">"max"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
-            <span class="s2">"count"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">,</span>
-        <span class="p">}</span>
-
-    <span class="k">def</span> <span class="nf">get_std</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the std of the statistics kept"""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_std_size_check</span><span class="p">()</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
-
-    <span class="k">def</span> <span class="nf">get_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the variance of the statistics kept"""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_std_size_check</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
-
-    <span class="k">def</span> <span class="nf">get_sample_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the sample variance of the statistics kept"""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_std_size_check</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_squared_error</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">get_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the mean of the statistics kept"""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span>
-
-    <span class="k">def</span> <span class="nf">get_max</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the max of the statistics kept"""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span>
-
-    <span class="k">def</span> <span class="nf">get_min</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the min of the statistics kept"""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span>
-
-    <span class="k">def</span> <span class="nf">get_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""get the count of the statistics kept"""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 </pre></div>
 </div>
 </div>
@@ -611,16 +504,12 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

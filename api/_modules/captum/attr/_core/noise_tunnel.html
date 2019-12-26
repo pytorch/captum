@@ -56,7 +56,7 @@
 <span class="n">SUPPORTED_NOISE_TUNNEL_TYPES</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="NoiseTunnel"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel">[docs]</a><span class="k">class</span> <span class="nc">NoiseTunnel</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
+<div class="viewcode-block" id="NoiseTunnel"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr.NoiseTunnel">[docs]</a><span class="k">class</span> <span class="nc">NoiseTunnel</span><span class="p">(</span><span class="n">Attribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribution_method</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        attribution_method (Attribution): An instance of any attribution algorithm</span>
@@ -68,7 +68,7 @@
 
         <span class="n">Attribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NoiseTunnel.attribute"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="NoiseTunnel.attribute"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr.NoiseTunnel.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">nt_type</span><span class="o">=</span><span class="s2">"smoothgrad"</span><span class="p">,</span>
@@ -359,7 +359,7 @@
             <span class="k">else</span> <span class="n">attributions</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="NoiseTunnel.has_convergence_delta"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr._core.noise_tunnel.NoiseTunnel.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="NoiseTunnel.has_convergence_delta"><a class="viewcode-back" href="../../../../noise_tunnel.html#captum.attr.NoiseTunnel.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span></div></div>
 </pre></div>
 </div>
@@ -371,16 +371,12 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

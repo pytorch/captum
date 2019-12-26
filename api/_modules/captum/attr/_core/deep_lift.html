@@ -82,7 +82,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="DeepLift"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift">[docs]</a><span class="k">class</span> <span class="nc">DeepLift</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="DeepLift"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift">[docs]</a><span class="k">class</span> <span class="nc">DeepLift</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -102,7 +102,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles_refs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span> <span class="o">=</span> <span class="p">[]</span>
 
-<div class="viewcode-block" id="DeepLift.attribute"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="DeepLift.attribute"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -493,11 +493,11 @@
         <span class="k">for</span> <span class="n">backward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span>
             <span class="n">backward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
-<div class="viewcode-block" id="DeepLift.has_convergence_delta"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr._core.deep_lift.DeepLift.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DeepLift.has_convergence_delta"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
 
 
-<div class="viewcode-block" id="DeepLiftShap"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
+<div class="viewcode-block" id="DeepLiftShap"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr.DeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -506,7 +506,7 @@
 <span class="sd">        """</span>
         <span class="n">DeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DeepLiftShap.attribute"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.DeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="DeepLiftShap.attribute"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr.DeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -756,7 +756,7 @@
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attr_shape</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="nonlinear"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr._core.deep_lift.nonlinear">[docs]</a><span class="k">def</span> <span class="nf">nonlinear</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">nonlinear</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)</span>
 <span class="sd">    grad_output: (dLoss / dlayer_out)</span>
@@ -774,7 +774,7 @@
     <span class="c1"># The original_grad_input will be overridden later in the Tensor hook</span>
     <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_invalid</span><span class="p">:</span>
         <span class="n">module</span><span class="o">.</span><span class="n">saved_grad</span> <span class="o">=</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">grad_input</span></div>
+    <span class="k">return</span> <span class="n">grad_input</span>
 
 
 <span class="k">def</span> <span class="nf">softmax</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">delta_in</span><span class="p">,</span> <span class="n">delta_out</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">,</span> <span class="n">grad_output</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
@@ -908,16 +908,12 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

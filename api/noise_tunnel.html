@@ -24,19 +24,19 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="module-captum.attr._core.noise_tunnel">
-<span id="noisetunnel"></span><h1>NoiseTunnel<a class="headerlink" href="#module-captum.attr._core.noise_tunnel" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="noisetunnel">
+<h1>NoiseTunnel<a class="headerlink" href="#noisetunnel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="captum.attr._core.noise_tunnel.NoiseTunnel">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._core.noise_tunnel.</code><code class="sig-name descname">NoiseTunnel</code><span class="sig-paren">(</span><em class="sig-param">attribution_method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.noise_tunnel.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.NoiseTunnel">
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NoiseTunnel</code><span class="sig-paren">(</span><em class="sig-param">attribution_method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>attribution_method (Attribution): An instance of any attribution algorithm</dt><dd><p>of type <cite>Attribution</cite>. E.g. Integrated Gradients,
 Conductance or Saliency.</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="captum.attr._core.noise_tunnel.NoiseTunnel.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">nt_type='smoothgrad'</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=1.0</em>, <em class="sig-param">draw_baseline_from_distrib=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.noise_tunnel.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.NoiseTunnel.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">nt_type='smoothgrad'</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=1.0</em>, <em class="sig-param">draw_baseline_from_distrib=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds gaussian noise to each input in the batch <cite>n_samples</cite> times
 and applies the given attribution algorithm to each of the samples.
 The attributions of the samples are combined based on the given noise
@@ -147,8 +147,8 @@ across all <cite>n_sample</cite> perturbed tensors for that input.</p>
 </div>
 </dd></dl>
 <dl class="method">
-<dt id="captum.attr._core.noise_tunnel.NoiseTunnel.has_convergence_delta">
-<code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.noise_tunnel.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<dt id="captum.attr.NoiseTunnel.has_convergence_delta">
+<code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides
 a convergence delta (aka an approximation error) or not. Convergence
 delta may serve as a proxy of correctness of attribution algorithm’s
@@ -176,23 +176,19 @@ provides a convergence delta (aka approximation error) or not.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="saliency.html">Saliency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift.html">DeepLift</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deep_lift_shap.html">DeepLiftShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gradient_shap.html">GradientShap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_x_gradient.html">InputXGradient</a></li>
-<li class="toctree-l1"><a class="reference internal" href="integrated_gradients.html">IntegratedGradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neuron.html">neuron</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer.html">layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
 <li><a href="index.html">Documentation overview</a><ul>
-<li>Previous: <a href="integrated_gradients.html" title="previous chapter">IntegratedGradients</a></li>
-<li>Next: <a href="utilities.html" title="next chapter">Utilities</a></li>
+<li>Previous: <a href="occlusion.html" title="previous chapter">Occlusion</a></li>
+<li>Next: <a href="layer.html" title="next chapter">Layer Attribution</a></li>
 </ul></li>
 </ul>
 </div>
