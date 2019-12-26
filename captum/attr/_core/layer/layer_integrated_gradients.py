@@ -29,8 +29,8 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     features are layer inputs or outputs depending on whether we attribute to
     the former or to the latter one.
 
-    Both baselines and references can be provided as input arguments to attribute
-    method. To approximate the integral we can choose to use either a variant of
+    Baselines can be provided as input arguments to attribute method.
+    To approximate the integral we can choose to use either a variant of
     Riemann sum or Gauss-Legendre quadrature rule.
 
     More details regarding the integrated gradient method can be found in the

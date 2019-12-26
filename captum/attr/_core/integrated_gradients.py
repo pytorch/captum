@@ -22,8 +22,8 @@ class IntegratedGradients(GradientAttribution):
     integral of gradients of the model output with respect to the inputs
     along the path (straight line) from given baselines / references to inputs.
 
-    Both baselines and references can be provided as input arguments to attribute
-    method. To approximate the integral we can choose to use either a variant of
+    Baselines can be provided as input arguments to attribute method.
+    To approximate the integral we can choose to use either a variant of
     Riemann sum or Gauss-Legendre quadrature rule.
 
     More details regarding the integrated gradient method can be found in the
