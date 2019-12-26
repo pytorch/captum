@@ -126,17 +126,10 @@ class Test(BaseTest):
         assertArraysAlmostEqual(delta, delta_with_ig)
 
     def _assert_compare_with_expected(
-        self,
-        model,
-        target_layer,
-        test_input,
-        expected_ig,
-        additional_input=None,
+        self, model, target_layer, test_input, expected_ig, additional_input=None,
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
-        assertAttributionsAlmostEqual(
-            self, attributions, expected_ig, delta=0.01
-        )
+        assertAttributionsAlmostEqual(self, attributions, expected_ig, delta=0.01)

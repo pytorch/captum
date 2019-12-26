@@ -236,7 +236,12 @@ class Test(BaseGPUTest):
             ]
         ).cuda()
         self._data_parallel_test_assert(
-            LayerIntegratedGradients, net, net.relu, alt_device_ids=True, inputs=inp, target=1
+            LayerIntegratedGradients,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
         )
 
     def test_simple_layer_gradient_x_activation(self):
