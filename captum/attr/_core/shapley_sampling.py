@@ -235,7 +235,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 current_num_features += num_features
             total_features = current_num_features
         else:
-            total_features = max(torch.max(single_mask) for single_mask in feature_mask).item()
+            total_features = max(torch.max(single_mask).item() for single_mask in feature_mask)
 
         assert (
             isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
@@ -315,7 +315,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         for i in range(len(feature_permutation)):
             current_tensors = tuple(current + input*(mask == feature_permutation[i]) for input, current, mask in zip(inputs, current_tensors, input_masks))
-            current_tensor_list.append(current_tensor)
+            current_tensors_list.append(current_tensors)
             current_mask_list.append(tuple(mask == feature_permutation[i] for mask in input_masks))
             if len(current_tensor_list) == ablations_per_eval:
                 combined_inputs = tuple(torch.cat(aligned_tensors, dim=0) for aligned_tensors in zip(*current_tensors_list))
@@ -326,7 +326,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         # Create batch with remaining evaluations, may not be a complete batch
         # (= ablations_per_eval)
-        if len(current_tensor_list) != 0:
+        if len(current_tensors_list) != 0:
             additional_args_repeated = (
                 _expand_additional_forward_args(additional_args, len(current_tensor_list))
                 if additional_args is not None
