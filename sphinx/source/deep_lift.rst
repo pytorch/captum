@@ -1,10 +1,5 @@
 DeepLift
 =========
 
-.. automodule:: captum.attr._core.deep_lift
-
-.. autoclass:: DeepLift
+.. autoclass:: captum.attr.DeepLift
     :members:
-
-.. autofunction:: attribute
-.. autofunction:: _backward_hook
