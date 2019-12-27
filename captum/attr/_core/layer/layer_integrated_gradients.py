@@ -272,10 +272,13 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             }
 
             with torch.autograd.set_grad_enabled(True):
+
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
-                    if (hook_inputs is None or len(hook_inputs) == 0) and \
-                        (hook_outputs is None or len(hook_outputs) == 0) and \
-                        len(list((module.parameters()))) == 0:
+                    if (
+                        (hook_inputs is None or len(hook_inputs) == 0)
+                        and (hook_outputs is None or len(hook_outputs) == 0)
+                        and len(list((module.parameters()))) == 0
+                    ):
                         raise RuntimeError(
                             """Unable to extract device information for the module
                             {}. Both inputs and outputs to the forward hook and
@@ -286,7 +289,8 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                             variables to its forward function.
                             """.format(
                                 module, module
-                            ))
+                            )
+                        )
                     device = extract_device(module, hook_inputs, hook_outputs)
                     return scattered_inputs_dict[device]
 
