@@ -33,7 +33,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     To approximate the integral we can choose to use either a variant of
     Riemann sum or Gauss-Legendre quadrature rule.
 
-    More details regarding the integrated gradient method can be found in the
+    More details regarding the integrated gradients method can be found in the
     original paper:
     https://arxiv.org/abs/1703.01365
 
