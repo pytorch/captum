@@ -17,9 +17,9 @@ from .._utils.attribution import GradientAttribution
 
 class IntegratedGradients(GradientAttribution):
     r"""
-    Integrated Gradients is an axiomatic model interpretability algorithms that
+    Integrated Gradients is an axiomatic model interpretability algorithm that
     assigns an importance score to each input feature by approximating the
-    integral of gradients of the model output with respect to the inputs
+    integral of gradients of the model's output with respect to the inputs
     along the path (straight line) from given baselines / references to inputs.
 
     Baselines can be provided as input arguments to attribute method.
@@ -57,7 +57,7 @@ class IntegratedGradients(GradientAttribution):
         (in case it is provided, otherwise it assumes that output is a
         scalar) to the inputs of the model using the approach described above.
 
-        In addition to that is also returns, if `return_convergence_delta` is
+        In addition to that it also returns, if `return_convergence_delta` is
         set to True, integral approximation delta based on the completeness
         property of integrated gradients.
 

@@ -20,14 +20,14 @@ from captum.attr._utils.gradient import _run_forward
 
 class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
     r"""
-    Integrated Gradients is an axiomatic model interpretability algorithms that
-    assigns an importance score to each input feature by approximating the
-    integral of gradients of the model output with respect to the inputs
-    along the path (straight line) from given baselines / references to inputs.
+    Layer Integrated Gradients is a variant of Integrated Gradients that assigns
+    an importance score to layer inputs or outputs, depending on whether we
+    attribute to the former or to the latter one.
 
-    In this case since we apply integrated gradients to the layer, the input
-    features are layer inputs or outputs depending on whether we attribute to
-    the former or to the latter one.
+    Integrated Gradients is an axiomatic model interpretability algorithm that
+    attributes / assigns an importance score to each input feature by approximating
+    the integral of gradients of the model's output with respect to the inputs
+    along the path (straight line) from given baselines / references to inputs.
 
     Baselines can be provided as input arguments to attribute method.
     To approximate the integral we can choose to use either a variant of
@@ -50,9 +50,6 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                           the inputs or outputs of the layer, corresponding to
                           the attribution of each neuron in the input or output
                           of this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -82,7 +79,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
         `attribute_to_layer_input` is set to True or False, using the approach
         described above.
 
-        In addition to that is also returns, if `return_convergence_delta` is
+        In addition to that it also returns, if `return_convergence_delta` is
         set to True, integral approximation delta based on the completeness
         property of integrated gradients.
 
