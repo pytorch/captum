@@ -19,6 +19,7 @@ class Attribution:
     All attribution algorithms extend this class. It enforces its child classes
     to extend and override core `attribute` method.
     """
+
     def __init__(self, forward_func):
         r"""
         Args:
