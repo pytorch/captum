@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from ..._utils.attribution import NeuronAttribution
+from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
 
 from ..deep_lift import DeepLift, DeepLiftShap
 
 
-class NeuronDeepLift(NeuronAttribution):
+class NeuronDeepLift(NeuronAttribution, GradientAttribution):
     def __init__(self, model, layer):
         r"""
         Args:
@@ -19,7 +19,8 @@ class NeuronDeepLift(NeuronAttribution):
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
         """
-        super(NeuronAttribution, self).__init__(model, layer)
+        NeuronAttribution.__init__(self, model, layer)
+        GradientAttribution.__init__(self, model)
 
     def attribute(
         self,
@@ -183,7 +184,7 @@ class NeuronDeepLift(NeuronAttribution):
         )
 
 
-class NeuronDeepLiftShap(NeuronAttribution):
+class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     def __init__(self, model, layer):
         r"""
         Args:
@@ -196,7 +197,8 @@ class NeuronDeepLiftShap(NeuronAttribution):
                           Currently, only layers with a single tensor input and output
                           are supported.
         """
-        super(NeuronAttribution, self).__init__(model, layer)
+        NeuronAttribution.__init__(self, model, layer)
+        GradientAttribution.__init__(self, model)
 
     def attribute(
         self,

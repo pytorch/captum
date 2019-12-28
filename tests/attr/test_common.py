@@ -7,7 +7,7 @@ from captum.attr._utils.common import (
     _validate_noise_tunnel_type,
     _select_targets,
 )
-from captum.attr._utils.common import Stat, MaxList
+from captum.attr._utils.common import MaxList
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
 
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
@@ -68,34 +68,6 @@ class Test(BaseTest):
         # Verify error is raised if too many dimensions are provided.
         with self.assertRaises(AssertionError):
             _select_targets(output_tensor, (1, 2, 3))
-
-    def test_stat_tracking(self):
-        data = [1, 2, 3, 4, 5]
-        s = Stat()
-        s.update(data)
-
-        self.assertEqual(s.get_mean(), 3.0)
-        self.assertEqual(s.get_std(), 2.0 ** 0.5)
-        self.assertEqual(s.get_variance(), 2.0)
-        self.assertEqual(s.get_sample_variance(), 10.0 / 4)
-        self.assertEqual(s.get_min(), 1.0)
-        self.assertEqual(s.get_max(), 5.0)
-        self.assertEqual(s.get_count(), 5)
-        self.assertEqual(
-            s.get_stats(),
-            {
-                "mean": 3.0,
-                "sample_variance": 10.0 / 4,
-                "variance": 2.0,
-                "std": 2.0 ** 0.5,
-                "min": 1.0,
-                "max": 5.0,
-                "count": 5,
-            },
-        )
-        s.update([0.34, 0.95])
-        self.assertAlmostEqual(s.get_mean(), 2.3271428571429)
-        self.assertEqual(s.get_count(), 7)
 
     def test_max_list(self):
         ml = MaxList(3)

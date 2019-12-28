@@ -1,9 +1,5 @@
 Saliency
 ===============
 
-.. automodule:: captum.attr._core.saliency
-
-.. autoclass:: Saliency
+.. autoclass:: captum.attr.Saliency
     :members:
-
-.. autofunction:: attribute

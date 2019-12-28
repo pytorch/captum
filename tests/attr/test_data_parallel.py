@@ -5,6 +5,8 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.occlusion import Occlusion
 
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -12,6 +14,8 @@ from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
@@ -23,6 +27,8 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
+from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -131,6 +137,50 @@ class Test(BaseGPUTest):
         inp = 100 * torch.randn(4, 1, 10, 10).cuda()
         self._data_parallel_test_assert(
             LayerConductance, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
+        )
+
+    def test_simple_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer().cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_input_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.model.relu,
+            alt_device_ids=True,
+            inputs=(inp1, inp2),
+            additional_forward_args=(inp3, 5),
+            target=1,
+            test_batches=True,
+        )
+
+    def test_multi_dim_layer_integrated_gradients(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.conv2,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
         )
 
     def test_simple_layer_gradient_x_activation(self):
@@ -394,6 +444,102 @@ class Test(BaseGPUTest):
             test_batches=False,
         )
 
+    def test_basic_gradient_shap_helper(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, GradientShap, None)
+
+    def test_basic_gradient_shap_helper_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, GradientShap, None, True)
+
+    def test_basic_neuron_gradient_shap(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, False)
+
+    def test_basic_neuron_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(net, NeuronGradientShap, net.linear2, True)
+
+    def test_basic_layer_gradient_shap(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1,
+        )
+
+    def test_basic_layer_gradient_shap_with_alt_devices(self):
+        net = BasicModel_MultiLayer(inplace=True).cuda()
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1, True,
+        )
+
+    def _basic_gradient_shap_helper(
+        self, net, attr_method_class, layer, alt_device_ids=False
+    ):
+        net.eval()
+        inputs = torch.tensor([[1.0, -20.0, 10.0], [11.0, 10.0, -11.0]]).cuda()
+        baselines = torch.randn(30, 3).cuda()
+        if attr_method_class == NeuronGradientShap:
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                neuron_index=0,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
+        else:
+            self._data_parallel_test_assert(
+                attr_method_class,
+                net,
+                layer,
+                alt_device_ids=alt_device_ids,
+                inputs=inputs,
+                target=0,
+                baselines=baselines,
+                additional_forward_args=None,
+                test_batches=False,
+            )
+
+    def test_multi_input_neuron_ablation(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                NeuronFeatureAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+                alt_device_ids=True,
+            )
+
+    def test_multi_input_neuron_ablation_with_baseline(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+
+        base1 = torch.tensor([[1.0, 0.0, 1.0]], requires_grad=True).cuda()
+        base2 = torch.tensor([[0.0, 1.0, 0.0]], requires_grad=True).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                NeuronFeatureAblation,
+                net,
+                net.l3,
+                inputs=(inp1, inp2),
+                neuron_index=0,
+                baselines=(base1, base2),
+                additional_forward_args=None,
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+            )
+
     def test_simple_feature_ablation(self):
         net = BasicModel_ConvNet().cuda()
         inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
@@ -404,6 +550,35 @@ class Test(BaseGPUTest):
                 None,
                 inputs=inp,
                 target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_simple_occlusion(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).float().cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=inp,
+                sliding_window_shapes=(1, 4, 2),
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_occlusion(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                Occlusion,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                sliding_window_shapes=((2,), (1,)),
+                test_batches=False,
                 ablations_per_eval=ablations_per_eval,
             )
 
@@ -454,6 +629,7 @@ class Test(BaseGPUTest):
                     )
                 else:
                     attributions_orig = attr_orig.attribute(**kwargs)
+            self.setUp()
             if batch_size:
                 attributions_dp = attr_dp.attribute(
                     internal_batch_size=batch_size, **kwargs

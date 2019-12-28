@@ -1,12 +1,8 @@
 GradientShap
 ============
 
-.. automodule:: captum.attr._core.gradient_shap
-
-.. autoclass:: GradientShap
+.. autoclass:: captum.attr.GradientShap
     :members:
 
-.. autofunction:: attribute
-
-.. autoclass:: InputBaselineXGradient
+.. autoclass:: captum.attr.InputBaselineXGradient
     :members:

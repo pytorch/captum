@@ -92,8 +92,10 @@ def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
 
 
 def _format_tensor_into_tuples(
-    inputs: Union[Tensor, Tuple[Tensor, ...]]
-) -> Tuple[Tensor, ...]:
+    inputs: Optional[Union[Tensor, Tuple[Tensor, ...]]]
+) -> Optional[Tuple[Tensor, ...]]:
+    if inputs is None:
+        return None
     if not isinstance(inputs, tuple):
         assert isinstance(
             inputs, torch.Tensor
@@ -178,14 +180,82 @@ def _format_attributions(is_inputs_tuple, attributions):
     return attributions if is_inputs_tuple else attributions[0]
 
 
+def _format_and_verify_strides(strides, inputs):
+    # Formats strides, which are necessary for occlusion
+    # Assumes inputs are already formatted (in tuple)
+    if strides is None:
+        strides = tuple(1 for input in inputs)
+    if len(inputs) == 1 and not (isinstance(strides, tuple) and len(strides) == 1):
+        strides = (strides,)
+    assert isinstance(strides, tuple) and len(strides) == len(
+        inputs
+    ), "Strides must be provided for each input tensor."
+    for i in range(len(inputs)):
+        assert isinstance(strides[i], int) or (
+            isinstance(strides[i], tuple)
+            and len(strides[i]) == len(inputs[i].shape) - 1
+        ), (
+            "Stride for input index {} is {}, which is invalid for input with "
+            "shape {}. It must be either an int or a tuple with length equal to "
+            "len(input_shape) - 1."
+        ).format(
+            i, strides[i], inputs[i].shape
+        )
+
+    return strides
+
+
+def _format_and_verify_sliding_window_shapes(sliding_window_shapes, inputs):
+    # Formats shapes of sliding windows, which is necessary for occlusion
+    # Assumes inputs is already formatted (in tuple)
+    if not isinstance(sliding_window_shapes[0], tuple):
+        sliding_window_shapes = (sliding_window_shapes,)
+    assert len(sliding_window_shapes) == len(
+        inputs
+    ), "Must provide sliding window dimensions for each input tensor."
+    for i in range(len(inputs)):
+        assert (
+            isinstance(sliding_window_shapes[i], tuple)
+            and len(sliding_window_shapes[i]) == len(inputs[i].shape) - 1
+        ), (
+            "Occlusion shape for input index {} is {} but should be a tuple with "
+            "{} dimensions."
+        ).format(
+            i, sliding_window_shapes[i], len(inputs[i].shape) - 1
+        )
+    return sliding_window_shapes
+
+
+def _compute_conv_delta_and_format_attrs(
+    attr_algo,
+    return_convergence_delta,
+    attributions,
+    start_point,
+    end_point,
+    additional_forward_args,
+    target,
+    is_inputs_tuple=False,
+):
+    if return_convergence_delta:
+        # computes convergence error
+        delta = attr_algo.compute_convergence_delta(
+            attributions,
+            start_point,
+            end_point,
+            additional_forward_args=additional_forward_args,
+            target=target,
+        )
+        return _format_attributions(is_inputs_tuple, attributions), delta
+    else:
+        return _format_attributions(is_inputs_tuple, attributions)
+
+
 def _zeros(inputs):
     r"""
     Takes a tuple of tensors as input and returns a tuple that has the same
-    size as the `inputs` which contains zero tensors of the same
-    shape as the `inputs`
-
+    length as `inputs` with each element as the integer 0.
     """
-    return tuple(0.0 for input in inputs)
+    return tuple(0 for input in inputs)
 
 
 def _tensorize_baseline(inputs, baselines):
@@ -290,6 +360,9 @@ def _expand_additional_forward_args(
                 "Currently only `repeat` and `repeat_interleave`"
                 " expansion_types are supported"
             )
+
+    if additional_forward_args is None:
+        return None
 
     return tuple(
         _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
@@ -408,113 +481,3 @@ class MaxList:
                 self.list.insert(i, (value, item))
                 break
         self.list = self.list[: self.size]
-
-
-class Stat:
-    """Keep track of statistics for a quantity that is measured live
-
-    Implementation of an online statistics tracker, Stat:
-        For a memory efficient way of keeping track of statistics on a large set of
-        numbers. Adding numbers to the object will update the values stored in the
-        object to reflect the statistics of all numbers that the object has seen
-        so far.
-
-    Example usage:
-        s = Stat()
-        s([5,7]) OR s.update([5,7])
-        stats.get_mean() -> 6
-        stats.get_std() -> 1
-
-    """
-
-    def __init__(self):
-        self.count = 0
-        self.mean = 0
-        self.mean_squared_error = 0
-        self.min = float("inf")
-        self.max = float("-inf")
-
-    def _std_size_check(self):
-        if self.count < 2:
-            raise Exception(
-                "Std/Variance is not defined for {} datapoints\
-                ".format(
-                    self.count
-                )
-            )
-
-    def update(self, x):
-        """Update the stats given a new number
-
-        Adds x to the running statistics being kept track of, and updates internal
-        values that relfect that change.
-
-        Args:
-            x: a numeric value, or a list of numeric values
-        """
-        if isinstance(x, list):
-            for value in x:
-                self.update(value)
-        else:
-            x = float(x)
-            self.min = min(self.min, x)
-            self.max = max(self.max, x)
-            self.count += 1
-            delta = x - self.mean
-            self.mean += delta / self.count
-            delta2 = x - self.mean
-            self.mean_squared_error += delta * delta2
-
-    def get_stats(self):
-        """Retrieves a dictionary of statistics for the values seen.
-
-        Returns:
-            a fully populated dictionary for the statistics that have been
-            maintained. This output is easy to pipe into a table with a loop over
-            key value pairs.
-        """
-        self._std_size_check()
-
-        sampleVariance = self.mean_squared_error / (self.count - 1)
-        Variance = self.mean_squared_error / self.count
-
-        return {
-            "mean": self.mean,
-            "sample_variance": sampleVariance,
-            "variance": Variance,
-            "std": Variance ** 0.5,
-            "min": self.min,
-            "max": self.max,
-            "count": self.count,
-        }
-
-    def get_std(self):
-        """get the std of the statistics kept"""
-        self._std_size_check()
-        return (self.mean_squared_error / self.count) ** 0.5
-
-    def get_variance(self):
-        """get the variance of the statistics kept"""
-        self._std_size_check()
-        return self.mean_squared_error / self.count
-
-    def get_sample_variance(self):
-        """get the sample variance of the statistics kept"""
-        self._std_size_check()
-        return self.mean_squared_error / (self.count - 1)
-
-    def get_mean(self):
-        """get the mean of the statistics kept"""
-        return self.mean
-
-    def get_max(self):
-        """get the max of the statistics kept"""
-        return self.max
-
-    def get_min(self):
-        """get the min of the statistics kept"""
-        return self.min
-
-    def get_count(self):
-        """get the count of the statistics kept"""
-        return self.count

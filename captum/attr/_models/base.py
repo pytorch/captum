@@ -5,10 +5,10 @@ import torch
 import warnings
 
 from functools import reduce
-from torch.nn import Embedding
+from torch.nn import Module
 
 
-class InterpretableEmbeddingBase(Embedding):
+class InterpretableEmbeddingBase(Module):
     r"""
         Since some embedding vectors, e.g. word are created and assigned in
         the embedding layers of Pytorch models we need a way to access
@@ -21,11 +21,14 @@ class InterpretableEmbeddingBase(Embedding):
     """
 
     def __init__(self, embedding, full_name):
-        super().__init__(embedding.num_embeddings, embedding.embedding_dim)
+        Module.__init__(self)
+        self.num_embeddings = getattr(embedding, "num_embeddings", None)
+        self.embedding_dim = getattr(embedding, "embedding_dim", None)
+
         self.embedding = embedding
         self.full_name = full_name
 
-    def forward(self, input):
+    def forward(self, *inputs, **kwargs):
         r"""
          The forward function of a wrapper embedding layer that takes and returns
          embedding layer. It allows embeddings to be created outside of the model
@@ -33,34 +36,60 @@ class InterpretableEmbeddingBase(Embedding):
 
          Args:
 
-            inputs (tensor): Input embedding tensor containing the embedding vectors
-                    of each word or token in the sequence.
+            *inputs (Any, optional): A sequence of inputs arguments that the
+                    forward function takes. Since forward functions can take any
+                    type and number of arguments, this will ensure that we can
+                    execute the forward pass using interpretable embedding layer.
+                    Note that if inputs are specified, it is assumed that the first
+                    argument is the embedding tensor generated using the
+                    `self.embedding` layer using all input arguments provided in
+                    `inputs` and `kwargs`.
+            **kwargs (Any, optional): Similar to `inputs` we want to make sure
+                    that our forward pass supports arbitrary number and type of
+                    key-value arguments. If `inputs` is not provided, `kwargs` must
+                    be provided and the first argument corresponds to the embedding
+                    tensor generated using the `self.embedding`. Note that we make
+                    here an assumption here that `kwargs` is an ordered dict which
+                    is new in python 3.6 and is not guaranteed that it will
+                    consistently remain that way in the newer versions. In case
+                    current implementation doesn't work for special use cases,
+                    it is encouraged to override `InterpretableEmbeddingBase` and
+                    address those specifics in descendant classes.
 
          Returns:
 
-            tensor:
-            Returns output tensor which is the same as input tensor.
-            It passes embedding tensors to lower layers without any
-            modifications.
+            embedding_tensor (Tensor):
+                    Returns a tensor which is the same as first argument passed
+                    to the forward function.
+                    It passes pre-computed embedding tensors to lower layers
+                    without any modifications.
         """
-        return input
+        assert len(inputs) > 0 or len(kwargs) > 0, (
+            "No input arguments are provided to `InterpretableEmbeddingBase`."
+            "Input embedding tensor has to be provided as first argument to forward "
+            "function either through inputs argument or kwargs."
+        )
+        return inputs[0] if len(inputs) > 0 else list(kwargs.values())[0]
 
-    def indices_to_embeddings(self, input):
+    def indices_to_embeddings(self, *input, **kwargs):
         r"""
         Maps indices to corresponding embedding vectors. E.g. word embeddings
 
         Args:
 
-            input (tensor): A tensor of input indices. A typical example of an
-                   input index is word or token index.
-
+            *input (Any, Optional): This can be a tensor(s) of input indices or any
+                    other variable necessary to comput the embeddings. A typical
+                    example of input indices are word or token indices.
+            **kwargs (Any, optional): Similar to `input` this can be any sequence
+                    of key-value arguments necessary to compute final embedding
+                    tensor.
         Returns:
 
             tensor:
             A tensor of word embeddings corresponding to the
             indices specified in the input
         """
-        return self.embedding(input)
+        return self.embedding(*input, **kwargs)
 
 
 class TokenReferenceBase:
@@ -158,14 +187,14 @@ def configure_interpretable_embedding_layer(model, embedding_layer_name="embeddi
         embedding_layer_name
     )
     warnings.warn(
-        """In order to make embedding layers more interpretable they will
-        be replaced with an interpretable embedding layer which wraps the
-        original embedding layer and takes word embedding vectors as inputs of
-        the forward function. This allows to generate baselines for word
-        embeddings and compute attributions for each embedding dimension.
-        The original embedding layer must be set
-        back by calling `remove_interpretable_embedding_layer` function
-        after model interpretation is finished."""
+        "In order to make embedding layers more interpretable they will "
+        "be replaced with an interpretable embedding layer which wraps the "
+        "original embedding layer and takes word embedding vectors as inputs of "
+        "the forward function. This allows us to generate baselines for word "
+        "embeddings and compute attributions for each embedding dimension. "
+        "The original embedding layer must be set "
+        "back by calling `remove_interpretable_embedding_layer` function "
+        "after model interpretation is finished. "
     )
     interpretable_emb = InterpretableEmbeddingBase(
         embedding_layer, embedding_layer_name

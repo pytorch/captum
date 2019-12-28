@@ -113,6 +113,17 @@ class ReLUDeepLiftModel(nn.Module):
         return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
 
 
+class BasicModelWithReusableModules(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lin1 = nn.Linear(3, 2)
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(2, 2)
+
+    def forward(self, inputs):
+        return self.relu(self.lin2(self.relu(self.lin1(inputs))))
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
         Same as the ReLUDeepLiftModel, but with activations
@@ -134,13 +145,13 @@ class ReLULinearDeepLiftModel(nn.Module):
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self):
+    def __init__(self, inplace=False):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
         self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))
         self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=inplace)
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
@@ -163,12 +174,21 @@ class TextModule(nn.Module):
     nested embedding layers
     """
 
-    def __init__(self, num_embeddings, embedding_dim):
+    def __init__(self, num_embeddings, embedding_dim, second_embedding=False):
         super().__init__()
         self.inner_embedding = nn.Embedding(num_embeddings, embedding_dim)
+        self.second_embedding = second_embedding
+        if self.second_embedding:
+            self.inner_embedding2 = nn.Embedding(num_embeddings, embedding_dim)
 
-    def forward(self, input):
-        return self.inner_embedding(input)
+    def forward(self, input=None, another_input=None):
+        assert input is not None, "The inputs to embedding module must be specified"
+        embedding = self.inner_embedding(input)
+        if self.second_embedding:
+            another_embedding = self.inner_embedding2(
+                input if another_input is None else another_input
+            )
+        return embedding if another_input is None else embedding + another_embedding
 
 
 class BasicEmbeddingModel(nn.Module):
@@ -188,20 +208,29 @@ class BasicEmbeddingModel(nn.Module):
     """
 
     def __init__(
-        self, num_embeddings=30, embedding_dim=100, hidden_dim=256, output_dim=1
+        self,
+        num_embeddings=30,
+        embedding_dim=100,
+        hidden_dim=256,
+        output_dim=1,
+        nested_second_embedding=False,
     ):
         super().__init__()
         self.embedding1 = nn.Embedding(num_embeddings, embedding_dim)
-        self.embedding2 = TextModule(num_embeddings, embedding_dim)
-        self.linear1 = nn.Linear(embedding_dim, hidden_dim)
+        self.embedding2 = TextModule(
+            num_embeddings, embedding_dim, nested_second_embedding
+        )
+        self.linear1 = nn.Linear(embedding_dim, hidden_dim, bias=False)
+        self.linear1.weight = nn.Parameter(torch.ones(hidden_dim, embedding_dim))
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(hidden_dim, output_dim)
+        self.linear2.weight = nn.Parameter(torch.ones(output_dim, hidden_dim))
 
-    def forward(self, input):
-        embedding1 = self.embedding1(input)
-        embedding2 = self.embedding2(input)
+    def forward(self, input1, input2, input3=None):
+        embedding1 = self.embedding1(input1)
+        embedding2 = self.embedding2(input2, input3)
         embeddings = embedding1 + embedding2
-        return self.linear2(self.relu(self.linear1(embeddings))).squeeze(1)
+        return self.linear2(self.relu(self.linear1(embeddings))).sum(1)
 
 
 class BasicModel_MultiLayer(nn.Module):

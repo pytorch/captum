@@ -4,7 +4,10 @@ import torch
 import numpy as np
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_attributions, _format_callable_baseline
+from .._utils.common import (
+    _format_callable_baseline,
+    _compute_conv_delta_and_format_attrs,
+)
 
 from .noise_tunnel import NoiseTunnel
 
@@ -17,7 +20,7 @@ class GradientShap(GradientAttribution):
             forward_func (function): The forward function of the model or
                        any modification of it
         """
-        super().__init__(forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -33,10 +36,12 @@ class GradientShap(GradientAttribution):
         Implements gradient SHAP based on the implementation from SHAP's primary
         author. For reference, please, view:
 
-        https://github.com/slundberg/shap/#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
+        https://github.com/slundberg/shap\
+        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
 
         A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions
+        http://papers.nips.cc/paper\
+        7062-a-unified-approach-to-interpreting-model-predictions
 
         GradientShap approximates SHAP values by computing the expectations of
         gradients by randomly sampling from the distribution of baselines/references.
@@ -63,10 +68,10 @@ class GradientShap(GradientAttribution):
 
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which integrated
-                        gradients are computed. If forward_func takes a single
+            inputs (tensor or tuple of tensors):  Input for which SHAP attribution
+                        values are computed. If `forward_func` takes a single
                         tensor as input, a single input tensor should be provided.
-                        If forward_func takes multiple tensors as input, a tuple
+                        If `forward_func` takes multiple tensors as input, a tuple
                         of the input tensors should be provided. It is assumed
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
@@ -198,6 +203,7 @@ class GradientShap(GradientAttribution):
 
         """
         input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
+        input_min_baseline_x_grad.gradient_func = self.gradient_func
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
 
@@ -231,7 +237,7 @@ class InputBaselineXGradient(GradientAttribution):
             forward_func (function): The forward function of the model or
                        any modification of it
         """
-        super().__init__(forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     def attribute(
         self,
@@ -241,20 +247,6 @@ class InputBaselineXGradient(GradientAttribution):
         additional_forward_args=None,
         return_convergence_delta=False,
     ):
-        def scale_input(input, baseline, rand_coefficient):
-            # batch size
-            bsz = input.shape[0]
-            inp_shape_wo_bsz = input.shape[1:]
-            inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
-
-            # expand and reshape the indices
-            rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
-
-            input_baseline_scaled = (
-                rand_coefficient * input + (1 - rand_coefficient) * baseline
-            )
-            return input_baseline_scaled
-
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
@@ -266,7 +258,7 @@ class InputBaselineXGradient(GradientAttribution):
         )
 
         input_baseline_scaled = tuple(
-            scale_input(input, baseline, rand_coefficient)
+            self._scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
         grads = self.gradient_func(
@@ -281,17 +273,30 @@ class InputBaselineXGradient(GradientAttribution):
             for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
         )
 
-        if return_convergence_delta:
-            delta = self.compute_convergence_delta(
-                attributions,
-                baselines,
-                inputs,
-                additional_forward_args=additional_forward_args,
-                target=target,
-            )
-            return _format_attributions(is_inputs_tuple, attributions), delta
-        else:
-            return _format_attributions(is_inputs_tuple, attributions)
+        return _compute_conv_delta_and_format_attrs(
+            self,
+            return_convergence_delta,
+            attributions,
+            baselines,
+            inputs,
+            additional_forward_args,
+            target,
+            is_inputs_tuple,
+        )
 
     def has_convergence_delta(self):
         return True
+
+    def _scale_input(self, input, baseline, rand_coefficient):
+        # batch size
+        bsz = input.shape[0]
+        inp_shape_wo_bsz = input.shape[1:]
+        inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
+
+        # expand and reshape the indices
+        rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+
+        input_baseline_scaled = (
+            rand_coefficient * input + (1 - rand_coefficient) * baseline
+        )
+        return input_baseline_scaled
