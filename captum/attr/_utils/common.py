@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, overload
 
 import torch
 from torch import Tensor
@@ -89,6 +89,18 @@ def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
         "Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "
         "Given {}".format(nt_type)
     )
+
+
+@overload
+def _format_tensor_into_tuples(inputs: None) -> None:
+    ...
+
+
+@overload
+def _format_tensor_into_tuples(
+    inputs: Union[Tensor, Tuple[Tensor, ...]]
+) -> Tuple[Tensor, ...]:
+    ...
 
 
 def _format_tensor_into_tuples(
