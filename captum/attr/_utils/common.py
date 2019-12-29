@@ -435,6 +435,33 @@ def _call_custom_attribution_func(
         return custom_attribution_func(multipliers, inputs, baselines)
 
 
+def _extract_device(module, hook_inputs, hook_outputs):
+    params = list(module.parameters())
+    if (
+        (hook_inputs is None or len(hook_inputs) == 0)
+        and (hook_outputs is None or len(hook_outputs) == 0)
+        and len(params) == 0
+    ):
+        raise RuntimeError(
+            """Unable to extract device information for the module
+            {}. Both inputs and outputs to the forward hook and
+            `module.parameters()` are empty.
+            The reason that the inputs to the forward hook are empty
+            could be due to the fact that the arguments to that
+            module {} are all named and are passed as named
+            variables to its forward function.
+            """.format(
+                module, module
+            )
+        )
+    if hook_inputs is not None and len(hook_inputs) > 0:
+        return hook_inputs[0].device
+    if hook_outputs is not None and len(hook_outputs) > 0:
+        return hook_outputs[0].device
+
+    return params[0].device
+
+
 class MaxList:
     """Keep track of N maximal items
 

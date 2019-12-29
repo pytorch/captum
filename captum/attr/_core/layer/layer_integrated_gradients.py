@@ -9,6 +9,7 @@ from captum.attr._utils.common import (
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
+    _extract_device,
 )
 
 from captum.attr._utils.gradient import _forward_layer_eval
@@ -274,24 +275,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             with torch.autograd.set_grad_enabled(True):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
-                    if (
-                        (hook_inputs is None or len(hook_inputs) == 0)
-                        and (hook_outputs is None or len(hook_outputs) == 0)
-                        and len(list((module.parameters()))) == 0
-                    ):
-                        raise RuntimeError(
-                            """Unable to extract device information for the module
-                            {}. Both inputs and outputs to the forward hook and
-                            `module.parameters()` are empty.
-                            The reason that the inputs to the forward hook are empty
-                            could be due to the fact that the arguments to that
-                            module {} are all named and are passed as named
-                            variables to its forward function.
-                            """.format(
-                                module, module
-                            )
-                        )
-                    device = extract_device(module, hook_inputs, hook_outputs)
+                    device = _extract_device(module, hook_inputs, hook_outputs)
                     return scattered_inputs_dict[device]
 
                 if attribute_to_layer_input:
@@ -311,13 +295,6 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                 # contains batch_size * #steps elements
                 grads = torch.autograd.grad(torch.unbind(output), inputs)
             return grads
-
-        def extract_device(module, hook_inputs, hook_outputs):
-            if hook_inputs is not None and len(hook_inputs) > 0:
-                return hook_inputs[0].device
-            if hook_outputs is not None and len(hook_outputs) > 0:
-                return hook_outputs[0].device
-            return next(module.parameters()).device
 
         self.gradient_func = gradient_func
         all_inputs = (
