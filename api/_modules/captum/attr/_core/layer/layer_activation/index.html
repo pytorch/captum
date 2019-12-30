@@ -26,14 +26,23 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer.layer_activation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
 
 
 <div class="viewcode-block" id="LayerActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">device_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -57,8 +66,11 @@
         <span class="n">LayerAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LayerActivation.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">):</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">            Computes activation of selected layer for given input.</span>
 
@@ -117,14 +129,15 @@
 <span class="sd">                &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
 <span class="sd">        """</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+            <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="p">,</span>
                 <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
                 <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
-            <span class="p">)</span></div></div>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">layer_eval</span></div></div>
 </pre></div>
 </div>
 </div>

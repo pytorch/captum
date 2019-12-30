@@ -29,7 +29,17 @@
 <dl class="class">
 <dt id="captum.attr.IntegratedGradients">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">IntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Integrated Gradients is an axiomatic model interpretability algorithm that
+assigns an importance score to each input feature by approximating the
+integral of gradients of the model’s output with respect to the inputs
+along the path (straight line) from given baselines / references to inputs.</p>
+<p>Baselines can be provided as input arguments to attribute method.
+To approximate the integral we can choose to use either a variant of
+Riemann sum or Gauss-Legendre quadrature rule.</p>
+<p>More details regarding the integrated gradients method can be found in the
+original paper:
+<a class="reference external" href="https://arxiv.org/abs/1703.01365">https://arxiv.org/abs/1703.01365</a></p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p>
@@ -38,12 +48,12 @@ modification of it</p>
 <dl class="method">
 <dt id="captum.attr.IntegratedGradients.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Approximates the integral of gradients along the path from a baseline input
-to the given input. If no baseline is provided, the default baseline
-is the zero tensor.
-More details regarding the integrated gradient method can be found in the
-original paper here:
-<a class="reference external" href="https://arxiv.org/abs/1703.01365">https://arxiv.org/abs/1703.01365</a></p>
+<dd><p>This method attributes the output of the model with given target index
+(in case it is provided, otherwise it assumes that output is a
+scalar) to the inputs of the model using the approach described above.</p>
+<p>In addition to that it also returns, if <cite>return_convergence_delta</cite> is
+set to True, integral approximation delta based on the completeness
+property of integrated gradients.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -164,11 +174,14 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
-<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to return
-convergence delta or not. If <cite>return_convergence_delta</cite>
-is set to True convergence delta will be returned in
+<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to return
+convergence delta or not. If <cite>return_convergence_delta</cite></p>
+<blockquote>
+<div><p>is set to True convergence delta will be returned in
 a tuple following attributions.
-Default: False</p></li>
+Default: False</p>
+</div></blockquote>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -56,10 +56,13 @@
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
-<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the attribution values for each input tensor.</span>
 <span class="sd">        Deriving classes are responsible for implementing its logic accordingly.</span>
+
+<span class="sd">        Specific attribution algorithms that extend this class take relevant</span>
+<span class="sd">        additional arguments.</span>
 
 <span class="sd">        Args:</span>
 
@@ -68,8 +71,6 @@
 <span class="sd">                        a tuple of multiple tensors. If multiple input tensors</span>
 <span class="sd">                        are provided, the batch sizes must be aligned accross all</span>
 <span class="sd">                        tensors.</span>
-<span class="sd">            **kwargs (Any, optional): Arbitrary keyword arguments used by specific</span>
-<span class="sd">                        attribution algorithms that extend this class.</span>
 
 
 <span class="sd">        Returns:</span>

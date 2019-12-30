@@ -42,20 +42,18 @@ function.</p>
 </dl>
 <dl class="method">
 <dt id="captum.attr.Attribution.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes and returns the attribution values for each input tensor.
 Deriving classes are responsible for implementing its logic accordingly.</p>
+<p>Specific attribution algorithms that extend this class take relevant
+additional arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which attribution
+<dd class="field-odd"><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which attribution
 is computed. It can be provided as a single tensor or
 a tuple of multiple tensors. If multiple input tensors
 are provided, the batch sizes must be aligned accross all
-tensors.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Arbitrary keyword arguments used by specific
-attribution algorithms that extend this class.</p></li>
-</ul>
+tensors.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
