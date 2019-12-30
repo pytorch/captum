@@ -16,6 +16,7 @@ from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 
@@ -434,6 +435,17 @@ class Test(BaseTest):
             target_layer=net.relu,
             additional_forward_args=(None, True),
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+        )
+
+    def test_simple_target_layer_ablation_tensor(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            LayerFeatureAblation,
+            net,
+            inputs=inp,
+            target_layer=net.relu,
+            targets=torch.tensor([0, 1, 1, 0]),
         )
 
     def test_simple_target_neuron_conductance(self):
