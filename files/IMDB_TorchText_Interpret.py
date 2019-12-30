@@ -22,10 +22,7 @@ import torch.nn.functional as F
 
 from torchtext.vocab import Vocab
 
-from captum.attr import IntegratedGradients
-from captum.attr import InterpretableEmbeddingBase, TokenReferenceBase
-from captum.attr import visualization
-from captum.attr import configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
+from captum.attr import LayerIntegratedGradients, TokenReferenceBase, visualization
 
 nlp = spacy.load('en')
 
@@ -156,17 +153,17 @@ Label.build_vocab(train)
 print('Vocabulary Size: ', len(TEXT.vocab))
 
 
+# In order to apply Integrated Gradients and many other interpretability algorithms on sentences, we need to create a reference (aka baseline) for the sentences and its constituent parts, tokens.
+# 
+# Captum provides a helper class called `TokenReferenceBase` which allows us to generate a reference for each input text using the number of tokens in the text and a reference token index.
+# 
+# To use `TokenReferenceBase` we need to provide a `reference_token_idx`. Since padding is one of the most commonly used references for tokens, padding index is passed as reference token index.
+
 # In[10]:
 
 
 PAD_IND = TEXT.vocab.stoi['pad']
 
-
-# In order to apply Integrated Gradients and many other interpretability algorithms on sentences, we need to create a reference (aka baseline) for the sentences and its constituent parts, tokens.
-# 
-# Captum provides a helper class called `TokenReferenceBase` which allows us to generate a reference for each input text using the number of tokens in the text and a reference token index. 
-# 
-# To use `TokenReferenceBase` we need to provide a `reference_token_idx`. Since padding is one of the most commonly used references for tokens, padding index is passed as reference token index.
 
 # In[11]:
 
@@ -174,30 +171,22 @@ PAD_IND = TEXT.vocab.stoi['pad']
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 
 
-# In order to explain text features, we introduce interpretable embedding layers which will allow us to access word embeddings and generate meaningful attributions for each embedding dimension.
+# Let's create an instance of `LayerIntegratedGradients` using forward function of our model and the embedding layer.
+# This instance of layer integrated gradients will be used to interpret movie rating review.
 # 
-# `configure_interpretable_embedding_layer` function separates embedding layer from the model and precomputes word embeddings in advance. The embedding layer of our model is then being replaced by an Interpretable Embedding Layer which wraps original embedding layer and takes word embedding vectors as inputs of the forward function. This allows us to generate baselines for word embeddings and compute attributions for each embedding dimension.
+# Layer Integrated Gradients will allow us to assign an attribution score to each word/token embedding tensor in the movie review text. We will ultimately sum the attribution scores across all embedding dimensions for each word/token in order to attain a word/token level attribution score.
 # 
-# Note: After finishing interpretation it is important to call `remove_interpretable_embedding_layer` which removes the Interpretable Embedding Layer that we added for interpretation purposes and sets the original embedding layer back in the model.
+# Note that we can also use `IntegratedGradients` class instead, however in that case we need to precompute the embeddings and wrap Embedding layer with `InterpretableEmbeddingBase` module. This is necessary because we cannot perform input scaling and subtraction on the level of word/token indices and need access to the embedding layer.
 
-# In[ ]:
-
-
-interpretable_embedding = configure_interpretable_embedding_layer(model, 'embedding')
+# In[12]:
 
 
-# Creates an instance of IntegratedGradients using forward function of our model.
-# This instance of integrated gradients will be used to interpret movie rating review.
+lig = LayerIntegratedGradients(model, model.embedding)
+
+
+# In the cell below, we define a generic function that generates attributions for each movie rating and stores them in a list using `VisualizationDataRecord` class. This will ultimately be used for visualization purposes.
 
 # In[13]:
-
-
-ig = IntegratedGradients(model)
-
-
-# In the cell below, we define a generic function that generates attributions for each movie rating and adds it to a list of `VisualizationDataRecord`s and prepares them for visualization.
-
-# In[14]:
 
 
 # accumalate couple samples in this array for visualization purposes
@@ -209,7 +198,6 @@ def interpret_sentence(model, sentence, min_len = 7, label = 0):
         text += ['pad'] * (min_len - len(text))
     indexed = [TEXT.vocab.stoi[t] for t in text]
 
-    
     model.zero_grad()
 
     input_indices = torch.tensor(indexed, device=device)
@@ -218,19 +206,15 @@ def interpret_sentence(model, sentence, min_len = 7, label = 0):
     # input_indices dim: [sequence_length]
     seq_length = min_len
 
-    # pre-computing word embeddings
-    input_embedding = interpretable_embedding.indices_to_embeddings(input_indices)
-
     # predict
-    pred = forward_with_sigmoid(input_embedding).item()
+    pred = forward_with_sigmoid(input_indices).item()
     pred_ind = round(pred)
 
-    # generate reference for each sample
+    # generate reference indices for each sample
     reference_indices = token_reference.generate_reference(seq_length, device=device).unsqueeze(0)
-    reference_embedding = interpretable_embedding.indices_to_embeddings(reference_indices)
 
-    # compute attributions and approximation delta using integrated gradients
-    attributions_ig, delta = ig.attribute(input_embedding, reference_embedding, n_steps=500, return_convergence_delta=True)
+    # compute attributions and approximation delta using layer integrated gradients
+    attributions_ig, delta = lig.attribute(input_indices, reference_indices,                                            n_steps=500, return_convergence_delta=True)
 
     print('pred: ', Label.vocab.itos[pred_ind], '(', '%.2f'%pred, ')', ', delta: ', abs(delta))
 
@@ -255,7 +239,7 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
 
 # Below cells call `interpret_sentence` to interpret a couple handcrafted review phrases.
 
-# In[15]:
+# In[14]:
 
 
 interpret_sentence(model, 'It was a fantastic performance !', label=1)
@@ -268,7 +252,7 @@ interpret_sentence(model, 'It is a disgusting movie!', label=0)
 
 # Below is an example of how we can visualize attributions for the text tokens. Feel free to visualize it differently if you choose to have a different visualization method.
 
-# In[16]:
+# In[15]:
 
 
 print('Visualize attributions based on Integrated Gradients')
@@ -277,17 +261,9 @@ visualization.visualize_text(vis_data_records_ig)
 
 # Above cell generates an output similar to this:
 
-# In[17]:
+# In[16]:
 
 
 from IPython.display import Image
 Image(filename='img/sentiment_analysis.png')
-
-
-# As mentioned above, after we are done with interpretation, we have to remove Interpretable Embedding Layer and set the original embeddings layer back to the model.
-
-# In[18]:
-
-
-remove_interpretable_embedding_layer(model, interpretable_embedding)
 

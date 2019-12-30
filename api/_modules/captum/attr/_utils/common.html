@@ -462,6 +462,33 @@
         <span class="k">return</span> <span class="n">custom_attribution_func</span><span class="p">(</span><span class="n">multipliers</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_extract_device</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="p">):</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">hook_inputs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">hook_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="n">hook_outputs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">hook_outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sd">"""Unable to extract device information for the module</span>
+<span class="sd">            {}. Both inputs and outputs to the forward hook and</span>
+<span class="sd">            `module.parameters()` are empty.</span>
+<span class="sd">            The reason that the inputs to the forward hook are empty</span>
+<span class="sd">            could be due to the fact that the arguments to that</span>
+<span class="sd">            module {} are all named and are passed as named</span>
+<span class="sd">            variables to its forward function.</span>
+<span class="sd">            """</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">module</span><span class="p">,</span> <span class="n">module</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">hook_inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">hook_inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hook_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+    <span class="k">if</span> <span class="n">hook_outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">hook_outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hook_outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="k">return</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
+
 <div class="viewcode-block" id="MaxList"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common.MaxList">[docs]</a><span class="k">class</span> <span class="nc">MaxList</span><span class="p">:</span>
     <span class="sd">"""Keep track of N maximal items</span>
 

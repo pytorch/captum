@@ -7,7 +7,7 @@
 # 
 # We show how to use interpretation hooks to examine and better understand embeddings, sub-embeddings, bert, and attention layers. 
 # 
-# Note: Before running this tutorial, please install `seaborn`, `pandas` and `matplotlib` python packages.
+# Note: Before running this tutorial, please install `seaborn`, `pandas` and `matplotlib`, `transformers`(from hugging face) python packages.
 
 # In[1]:
 
@@ -26,7 +26,7 @@ import torch.nn as nn
 from transformers import BertTokenizer, BertForQuestionAnswering, BertConfig
 
 from captum.attr import visualization as viz
-from captum.attr import IntegratedGradients, LayerConductance
+from captum.attr import IntegratedGradients, LayerConductance, LayerIntegratedGradients
 from captum.attr import configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
 
 
@@ -44,7 +44,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 # replace <PATH-TO-SAVED-MODEL> with the real path of the saved model
-
 model_path = '<PATH-TO-SAVED-MODEL>'
 
 # load model
@@ -81,44 +80,34 @@ def squad_pos_forward_func(inputs, token_type_ids=None, position_ids=None, atten
     return pred.max(1).values
 
 
-# Let's interpret parent `BertEmbeddings` layer. For that reason we separate embedding layer and precompute the embeddings. `configure_interpretable_embedding_layer` function helps us to do that. It returns `InterpretableEmbeddingBase` layer that wraps `BertEmbeddings` and can be used to access the embedding vectors. Note that we need to remove `InterpretableEmbeddingBase` wrapper from our model using `remove_interpretable_embedding_layer` function after we finish interpretation.
+# Let's compute attributions with respect to the `BertEmbeddings` layer.
 # 
-# Note that there is a way to interpret BertEmbeddings without configuring interpretable embedding layers that we will make available soon, However it is important to note that configuring interpretable embedding layers gives us more flexibility.
+# To do so, we need to define baselines / references, numericalize both the baselines and the inputs. We will define helper functions to achieve that.
+# 
+# The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines/references.
 
-# In[ ]:
+# In[6]:
 
 
-interpretable_embedding = configure_interpretable_embedding_layer(model, 'bert.embeddings')
+ref_token_id = tokenizer.pad_token_id # A token used for generating token reference
+sep_token_id = tokenizer.sep_token_id # A token used as a separator between question and text and it is also added to the end of the text.
+cls_token_id = tokenizer.cls_token_id # A token used for prepending to the concatenated question-text word sequence
 
 
-# Defining and numericalizing / encoding special tokens
+# Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids. We also provide separate helper functions that allow to construct the sub-embeddings and corresponding baselines / references for all sub-embeddings of `BertEmbeddings` layer.
 
 # In[7]:
 
 
-ref = "[PAD]" # A token used for generating token reference
-sep = "[SEP]" # A token used as a separator between question and text and it is also added to the end of the text.
-cls = "[CLS]" # This token is prepended to the concatenated question-text word sequence
-
-ref_token_id = tokenizer.encode(ref)
-sep_token_id = tokenizer.encode(sep)
-cls_token_id = tokenizer.encode(cls)
-
-
-# Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids. We also provide separate helper functions that allow to construct the sub-embeddings and corresponding references for all sub-embeddings of `BertEmbeddings` layer.
-
-# In[8]:
-
-
 def construct_input_ref_pair(question, text, ref_token_id, sep_token_id, cls_token_id):
-    question_ids = tokenizer.encode(question)
-    text_ids = tokenizer.encode(text)
+    question_ids = tokenizer.encode(question, add_special_tokens=False)
+    text_ids = tokenizer.encode(text, add_special_tokens=False)
 
     # construct input token ids
-    input_ids = cls_token_id + question_ids + sep_token_id + text_ids + sep_token_id
+    input_ids = [cls_token_id] + question_ids + [sep_token_id] + text_ids + [sep_token_id]
 
     # construct reference token ids 
-    ref_input_ids = cls_token_id + ref_token_id * len(question_ids) + sep_token_id +         ref_token_id * len(text_ids) + sep_token_id
+    ref_input_ids = [cls_token_id] + [ref_token_id] * len(question_ids) + [sep_token_id] +         [ref_token_id] * len(text_ids) + [sep_token_id]
 
     return torch.tensor([input_ids], device=device), torch.tensor([ref_input_ids], device=device), len(question_ids)
 
@@ -164,17 +153,15 @@ def construct_whole_bert_embeddings(input_ids, ref_input_ids,                   
 
 # Let's define the `question - text` pair that we'd like to use as an input for our Bert model and interpret what the model was forcusing on when predicting an answer to the question from given input text 
 
-# In[9]:
+# In[8]:
 
 
 question, text = "What is important to us?", "It is important to us to include, empower and support humans of all kinds."
 
-ground_truth = 'to include, empower and support humans of all kinds'
 
+# Let's numericalize the question, the input text and generate corresponding baselines / references for all three sub-embeddings (word, token type and position embeddings) types using our helper functions defined above.
 
-# Let's numericalize the question, the input text and generate corresponding references for all three sub-embedding (word, token type and position embeddings) types using our helper functions defined above.
-
-# In[10]:
+# In[9]:
 
 
 input_ids, ref_input_ids, sep_id = construct_input_ref_pair(question, text, ref_token_id, sep_token_id, cls_token_id)
@@ -182,57 +169,55 @@ token_type_ids, ref_token_type_ids = construct_input_ref_token_type_pair(input_i
 position_ids, ref_position_ids = construct_input_ref_pos_id_pair(input_ids)
 attention_mask = construct_attention_mask(input_ids)
 
-
-# In[11]:
-
-
 indices = input_ids[0].detach().tolist()
 all_tokens = tokenizer.convert_ids_to_tokens(indices)
 
-ground_truth_tokens = tokenizer.encode(ground_truth)
+
+# Also, let's define the ground truth for prediction's start and end positions.
+
+# In[10]:
+
+
+ground_truth = 'to include, empower and support humans of all kinds'
+
+ground_truth_tokens = tokenizer.encode(ground_truth, add_special_tokens=False)
 ground_truth_end_ind = indices.index(ground_truth_tokens[-1])
 ground_truth_start_ind = ground_truth_end_ind - len(ground_truth_tokens) + 1
 
 
-# Now let's compute the embedding vectors for `BertEmbedding` and make predictions using pre-computed embeddings both for the input and the reference
+# Now let's make predictions using input, token type, position id and a default attention mask.
 
-# In[12]:
+# In[11]:
 
 
-input_embeddings, ref_input_embeddings = construct_whole_bert_embeddings(input_ids, ref_input_ids,                                          token_type_ids=token_type_ids, ref_token_type_ids=ref_token_type_ids,                                          position_ids=position_ids, ref_position_ids=ref_position_ids)
-
-start_scores, end_scores = predict(input_embeddings,                                    token_type_ids=token_type_ids,                                    position_ids=position_ids,                                    attention_mask=attention_mask)
+start_scores, end_scores = predict(input_ids,                                    token_type_ids=token_type_ids,                                    position_ids=position_ids,                                    attention_mask=attention_mask)
 
 
 print('Question: ', question)
 print('Predicted Answer: ', ' '.join(all_tokens[torch.argmax(start_scores) : torch.argmax(end_scores)+1]))
 
 
-# In[13]:
+# There are two different ways of computing the attributions for `BertEmbeddings` layer. One option is to use `LayerIntegratedGradients` and compute the attributions with respect to that layer. The second option is to pre-compute the embeddings and wrap the actual embeddings with `InterpretableEmbeddingBase`. The pre-computation of embeddings for the second option is necessary because integrated gradients scales the inputs and that won't be meaningful on the level of word / token indices.
+# 
+# Since using `LayerIntegratedGradients` is simpler, let's use it here.
+
+# In[12]:
 
 
-ig = IntegratedGradients(squad_pos_forward_func)
+lig = LayerIntegratedGradients(squad_pos_forward_func, model.bert.embeddings)
 
-attributions_start, delta_start = ig.attribute(inputs=input_embeddings,
-                                  baselines=ref_input_embeddings,
-                                  additional_forward_args=(token_type_ids, position_ids,attention_mask, 0),
-                                  return_convergence_delta=True, n_steps=200)
-attributions_end, delta_end = ig.attribute(inputs=input_embeddings, baselines=ref_input_embeddings,
+attributions_start, delta_start = lig.attribute(inputs=input_ids,
+                                  baselines=ref_input_ids,
+                                  additional_forward_args=(token_type_ids, position_ids, attention_mask, 0),
+                                  return_convergence_delta=True)
+attributions_end, delta_end = lig.attribute(inputs=input_ids, baselines=ref_input_ids,
                                 additional_forward_args=(token_type_ids, position_ids, attention_mask, 1),
-                                return_convergence_delta=True, n_steps=200)
-
-
-# Let's remove interpretation hook from embeddings after we finished interpretation
-
-# In[14]:
-
-
-remove_interpretable_embedding_layer(model, interpretable_embedding)
+                                return_convergence_delta=True)
 
 
 # A helper function to summarize attributions for each word token in the sequence.
 
-# In[15]:
+# In[13]:
 
 
 def summarize_attributions(attributions):
@@ -241,14 +226,14 @@ def summarize_attributions(attributions):
     return attributions
 
 
-# In[16]:
+# In[14]:
 
 
 attributions_start_sum = summarize_attributions(attributions_start)
 attributions_end_sum = summarize_attributions(attributions_end)
 
 
-# In[17]:
+# In[15]:
 
 
 # storing couple samples in an array for visualization purposes
@@ -279,7 +264,7 @@ print('\033[1m', 'Visualizations For End Position', '\033[0m')
 viz.visualize_text([end_position_vis])
 
 
-# In[1]:
+# In[16]:
 
 
 from IPython.display import Image
@@ -294,9 +279,16 @@ Image(filename='img/bert/visuals_of_start_end_predictions.png')
 
 # Now let's look into the sub-embeddings of `BerEmbeddings` and try to understand the contributions and roles of each of them for both start and end predicted positions.
 # 
-# To do so we'd need to place interpretation hooks in each three of them.
+# To do so, we'd need to place interpretation hooks in each three of them.
+# 
+# Note that we could perform attribution by using `LayerIntegratedGradients` as well but in that case we have to call attribute three times for each sub-layer since currently `LayerIntegratedGradients` takes only a layer at a time. In the future we plan to support multi-layer attribution and will be able to perform attribution by only calling attribute once. 
+# 
+# `configure_interpretable_embedding_layer` function will help us to place interpretation hooks on each sub-layer. It returns `InterpretableEmbeddingBase` layer for each sub-embedding and can be used to access the embedding vectors. 
+# 
+# Note that we need to remove InterpretableEmbeddingBase wrapper from our model using remove_interpretable_embedding_layer function after we finish interpretation.
+# 
 
-# In[18]:
+# In[ ]:
 
 
 interpretable_embedding1 = configure_interpretable_embedding_layer(model, 'bert.embeddings.word_embeddings')
@@ -307,16 +299,18 @@ interpretable_embedding3 = configure_interpretable_embedding_layer(model, 'bert.
 # `BertEmbeddings` has three sub-embeddings, namely, `word_embeddings`, `token_type_embeddings` and `position_embeddings` and this time we would like to attribute to each of them independently.
 # `construct_bert_sub_embedding` helper function helps us to construct input embeddings and corresponding references in a separation.
 
-# In[19]:
+# In[18]:
 
 
 (input_embed, ref_input_embed), (token_type_ids_embed, ref_token_type_ids_embed), (position_ids_embed, ref_position_ids_embed) = construct_bert_sub_embedding(input_ids, ref_input_ids,                                          token_type_ids=token_type_ids, ref_token_type_ids=ref_token_type_ids,                                          position_ids=position_ids, ref_position_ids=ref_position_ids)
 
 
-# Now let's compute the attributions with respect to all those embeddings both for the start and end positions and summarize them for each word token.
+# Now let's create an instance of `IntegratedGradients` and compute the attributions with respect to all those embeddings both for the start and end positions and summarize them for each word token.
 
-# In[20]:
+# In[19]:
 
+
+ig = IntegratedGradients(squad_pos_forward_func)
 
 attributions_start = ig.attribute(inputs=(input_embed, token_type_ids_embed, position_ids_embed),
                                   baselines=(ref_input_embed, ref_token_type_ids_embed, ref_position_ids_embed),
@@ -337,7 +331,7 @@ attributions_end_position = summarize_attributions(attributions_end[2])
 
 # An auxilary function that will help us to compute topk attributions and corresponding indices
 
-# In[21]:
+# In[20]:
 
 
 def get_topk_attributed_tokens(attrs, k=5):
@@ -348,7 +342,7 @@ def get_topk_attributed_tokens(attrs, k=5):
 
 # Removing interpretation hooks from all layers after finishing attribution.
 
-# In[22]:
+# In[21]:
 
 
 remove_interpretable_embedding_layer(model, interpretable_embedding1)
@@ -358,7 +352,7 @@ remove_interpretable_embedding_layer(model, interpretable_embedding3)
 
 # Computing topk attributions for all sub-embeddings and placing them in pandas dataframes for better visualization.
 
-# In[23]:
+# In[22]:
 
 
 top_words_start, top_words_val_start, top_word_ind_start = get_topk_attributed_tokens(attributions_start_word)
@@ -372,11 +366,13 @@ top_pos_end, top_pos_val_end, pos_ind_end = get_topk_attributed_tokens(attributi
 
 df_start = pd.DataFrame({'Word(Index), Attribution': ["{} ({}), {}".format(word, pos, round(val.item(),2)) for word, pos, val in zip(top_words_start, top_word_ind_start, top_words_val_start)],
                    'Token Type(Index), Attribution': ["{} ({}), {}".format(ttype, pos, round(val.item(),2)) for ttype, pos, val in zip(top_token_type_start, top_token_type_ind_start, top_words_val_start)],
-                   'Position(Index), Attribution': ["{} ({}), {}".format(position, pos, round(val.item(),2)) for position, pos, val in zip(top_pos_start, pos_ind_start, top_pos_val_start)]}).style.set_caption("Top 5 attributed embeddings for start position")
+                   'Position(Index), Attribution': ["{} ({}), {}".format(position, pos, round(val.item(),2)) for position, pos, val in zip(top_pos_start, pos_ind_start, top_pos_val_start)]})
+df_start.style.apply(['cell_ids: False'])
 
 df_end = pd.DataFrame({'Word(Index), Attribution': ["{} ({}), {}".format(word, pos, round(val.item(),2)) for word, pos, val in zip(top_words_end, top_words_ind_end, top_words_val_end)],
                    'Token Type(Index), Attribution': ["{} ({}), {}".format(ttype, pos, round(val.item(),2)) for ttype, pos, val in zip(top_token_type_end, top_token_type_ind_end, top_words_val_end)],
-                   'Position(Index), Attribution': ["{} ({}), {}".format(position, pos, round(val.item(),2)) for position, pos, val in zip(top_pos_end, pos_ind_end, top_pos_val_end)]}).style.set_caption("Top 5 attributed embeddings for end position")
+                   'Position(Index), Attribution': ["{} ({}), {}".format(position, pos, round(val.item(),2)) for position, pos, val in zip(top_pos_end, pos_ind_end, top_pos_val_end)]})
+df_end.style.apply(['cell_ids: False'])
 
 ['{}({})'.format(token, str(i)) for i, token in enumerate(all_tokens)]
 
@@ -390,7 +386,9 @@ df_end = pd.DataFrame({'Word(Index), Attribution': ["{} ({}), {}".format(word, p
 # Position embedding also has high attribution for correctly predicted start token `to`, including some other tokens in the answer such as `humans` and `##power`.
 # 
 
-# In[24]:
+# #### Top 5 attributed embeddings for start position
+
+# In[23]:
 
 
 df_start
@@ -403,7 +401,9 @@ df_start
 # The token `kinds`, which is the correct predicted token appears to have high attribution score both according word and position embeddings.
 # 
 
-# In[25]:
+# #### Top 5 attributed embeddings for end position
+
+# In[24]:
 
 
 df_end
@@ -417,7 +417,7 @@ df_end
 # 
 # Let's configure `InterpretableEmbeddingsBase` again, in this case in order to interpret the layers of our model.
 
-# In[26]:
+# In[ ]:
 
 
 interpretable_embedding = configure_interpretable_embedding_layer(model, 'bert.embeddings')
@@ -428,7 +428,7 @@ interpretable_embedding = configure_interpretable_embedding_layer(model, 'bert.e
 # 
 # Note: Since below code is iterating over all layers it can take over 10 seconds. Please be patient!
 
-# In[27]:
+# In[26]:
 
 
 layer_attrs_start = []
@@ -438,6 +438,8 @@ layer_attrs_end = []
 token_to_explain = 23 # the index od the token
 layer_attrs_start_dist = []
 layer_attrs_end_dist = []
+
+input_embeddings, ref_input_embeddings = construct_whole_bert_embeddings(input_ids, ref_input_ids,                                          token_type_ids=token_type_ids, ref_token_type_ids=ref_token_type_ids,                                          position_ids=position_ids, ref_position_ids=ref_position_ids)
 
 for i in range(model.config.num_hidden_layers):
     lc = LayerConductance(squad_pos_forward_func, model.bert.encoder.layer[i])
@@ -459,7 +461,7 @@ for i in range(model.config.num_hidden_layers):
 # And lastly, our correctly predicted token `to` for the start position gains increasingly positive attribution starting from layer seven.
 # 
 
-# In[28]:
+# In[27]:
 
 
 fig, ax = plt.subplots(figsize=(15,5))
@@ -474,7 +476,7 @@ plt.show()
 # Now let's examine the heat map of the attributions for the end position prediction. In the case of end position prediction we again observe high attribution scores for the token `what` in the last 11 layers.
 # The token `it` seems to be harming the prediction the most. It's even more noticeable for the end position prediction than for the start. The correctly predicted end token `kinds` has positive attribution across all layers and it is especially prominent in the last two layers.
 
-# In[29]:
+# In[28]:
 
 
 fig, ax = plt.subplots(figsize=(15,5))
@@ -494,7 +496,7 @@ plt.show()
 # 
 # 
 
-# In[30]:
+# In[29]:
 
 
 fig, ax = plt.subplots(figsize=(20,10))
@@ -506,7 +508,7 @@ plt.show()
 
 # Now let's plot same distribution but for the prediction of the end position. Here attribution has larger positive values across all layers and the interquartile range doesn't change much when moving deeper into the layers.
 
-# In[31]:
+# In[30]:
 
 
 fig, ax = plt.subplots(figsize=(20,10))
@@ -518,7 +520,7 @@ plt.show()
 
 # Now, let's remove interpretation hooks, since we finished interpretation at this point
 
-# In[32]:
+# In[31]:
 
 
 remove_interpretable_embedding_layer(model, interpretable_embedding)
