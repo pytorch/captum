@@ -281,6 +281,7 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         self.fc1.weight = nn.Parameter(
             torch.cat([torch.ones(4, 5), -1 * torch.ones(4, 3)], dim=1)
         )
+        self.fc1.bias = nn.Parameter(torch.zeros(4))
         self.relu2 = nn.ReLU(inplace=inplace)
 
     def forward(self, x, x2=None):

@@ -16,6 +16,7 @@ from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXAc
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
@@ -220,6 +221,39 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             LayerGradCam, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
+
+    def test_multi_input_layer_ablation(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                LayerFeatureAblation,
+                net,
+                net.model.relu,
+                alt_device_ids=False,
+                inputs=(inp1, inp2),
+                additional_forward_args=(inp3, 5),
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_dim_layer_ablation(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                LayerFeatureAblation,
+                net,
+                net.conv2,
+                alt_device_ids=True,
+                inputs=inp,
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
 
     def test_simple_neuron_conductance(self):
         net = BasicModel_MultiLayer().cuda()
