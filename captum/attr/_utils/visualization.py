@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from typing import Iterable
 
 from enum import Enum
 import numpy as np
@@ -494,7 +495,7 @@ def format_word_importances(words, importances):
     return "".join(tags)
 
 
-def visualize_text(datarecords: VisualizationDataRecord):
+def visualize_text(datarecords: Iterable[VisualizationDataRecord]):
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."

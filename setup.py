@@ -67,7 +67,7 @@ TEST_REQUIRES = ["pytest", "pytest-cov"]
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
-    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints"]
+    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints", "mypy"]
 )
 
 # get version string from module

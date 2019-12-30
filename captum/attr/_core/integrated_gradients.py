@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
+
 import torch
+from torch import Tensor
 
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.batching import _batched_operator
@@ -32,7 +35,7 @@ class IntegratedGradients(GradientAttribution):
 
     """
 
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -43,15 +46,21 @@ class IntegratedGradients(GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+    ]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
@@ -273,5 +282,5 @@ class IntegratedGradients(GradientAttribution):
             return _format_attributions(is_inputs_tuple, attributions), delta
         return _format_attributions(is_inputs_tuple, attributions)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
