@@ -42,9 +42,9 @@ def _check_valid_module(inputs_grad_fn, outputs):
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        # if `inputs` are the input features to the network then the grad_fn is
-        # None and  for that input backward_hook isn't computed. That's the
-        # reason why we need to check on `inputs_grad_fn` being None.
+        # if `inputs` in the input to the network then the grad_fn is None and
+        # for that input backward_hook isn't computed. That's the reason why we
+        # need to check on `inputs_grad_fns[first_next[1]]` being None.
         return (
             inputs_grad_fn is None
             or first_next[0] == inputs_grad_fn
@@ -269,10 +269,10 @@ class DeepLift(GradientAttribution):
         input_base_additional_args = _expand_additional_forward_args(
             additional_forward_args, 2, ExpansionTypes.repeat
         )
+
         wrapped_forward_func = self._construct_forward_func(
             self.model, (inputs, baselines), target, input_base_additional_args
         )
-
         gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
             attributions = tuple(
@@ -766,46 +766,38 @@ def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool1d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
-    input, input_ref = inputs.chunk(2)
-    output, output_ref = outputs.chunk(2)
-
-    delta_in = input - input_ref
-    delta_in = torch.cat(2 * [delta_in])
-    delta_out_xmax = torch.max(output, output_ref)
-    delta_out = torch.cat([delta_out_xmax - output_ref, output - delta_out_xmax])
-
     return maxpool(
         module,
         F.max_pool1d,
         F.max_unpool1d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
     )
 
 
-def maxpool2d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool2d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return maxpool(
         module,
         F.max_pool2d,
         F.max_unpool2d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
     )
 
 
-def maxpool3d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return maxpool(
         module,
         F.max_pool3d,
         F.max_unpool3d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
@@ -813,19 +805,21 @@ def maxpool3d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool(
-    module,
-    pool_func,
-    unpool_func,
-    delta_in,
-    delta_out,
-    grad_input,
-    grad_output,
-    eps=1e-10,
+    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10,
 ):
     with torch.no_grad():
-        # The forward function of maxpool takes only tensors not
-        # a tuple hence accessing the first
-        # element in the tuple of inputs, grad_input and grad_output
+        input, input_ref = inputs.chunk(2)
+        output, output_ref = outputs.chunk(2)
+
+        delta_in = input - input_ref
+        delta_in = torch.cat(2 * [delta_in])
+        # Extracts cross maximum between the outputs of maxpool for the
+        # actual inputs and its corresponding references. In case the delta outputs
+        # for the references are larger the method relies on the references and
+        # corresponding gradients to compute the multiplies and contributions.
+        delta_out_xmax = torch.max(output, output_ref)
+        delta_out = torch.cat([delta_out_xmax - output_ref, output - delta_out_xmax])
+
         _, indices = pool_func(
             module.input,
             module.kernel_size,
