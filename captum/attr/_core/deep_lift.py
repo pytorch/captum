@@ -28,7 +28,7 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fns, outputs):
+def _check_valid_module(inputs_grad_fn, outputs):
     def is_output_cloned(output_fn, input_grad_fn):
         """
         Checks if the output has been cloned. This happens especially in case of
@@ -42,15 +42,13 @@ def _check_valid_module(inputs_grad_fns, outputs):
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        # input_grad_fn = inputs[first_next[1]].grad_fn
-        # if `inputs` in the input to the network then the grad_fn is None and
-        # for that input backward_hook isn't computed. That's the reason why we
-        # need to check on `inputs_grad_fns[first_next[1]]` being None.
-        input_grad_fn = inputs_grad_fns[first_next[1]]
+        # if `inputs` are the input features to the network then the grad_fn is
+        # None and  for that input backward_hook isn't computed. That's the
+        # reason why we need to check on `inputs_grad_fn` being None.
         return (
-            input_grad_fn is None
-            or first_next[0] == input_grad_fn
-            or is_output_cloned(first_next, input_grad_fn)
+            inputs_grad_fn is None
+            or first_next[0] == inputs_grad_fn
+            or is_output_cloned(first_next, inputs_grad_fn)
         )
     except IndexError:
         return False
@@ -264,7 +262,7 @@ class DeepLift(GradientAttribution):
 
         self.model.apply(self._register_hooks)
 
-        input_base_target = _expand_target(target, 2, ExpansionTypes.repeat)
+        # input_base_target = _expand_target(target, 2, ExpansionTypes.repeat)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
@@ -275,15 +273,10 @@ class DeepLift(GradientAttribution):
             self.model, (inputs, baselines), target, input_base_additional_args
         )
 
-        gradients = self.gradient_func(
-            wrapped_forward_func,
-            inputs,
-            target_ind=input_base_target,
-            additional_forward_args=input_base_additional_args,
-        )
+        gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
             attributions = tuple(
-                (input - baseline) * gradient[: len(input)]
+                (input - baseline) * gradient  # [: len(input)]
                 for input, baseline, gradient in zip(inputs, baselines, gradients)
             )
         else:
@@ -333,8 +326,8 @@ class DeepLift(GradientAttribution):
         set necessary hooks on inputs there.
         """
         inputs = _format_tensor_into_tuples(inputs)
-        module.input = tuple(input.clone().detach() for input in inputs)
-        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
+        module.input = inputs[0].clone().detach()
+        module.input_grad_fns = inputs[0].grad_fn
 
         def tensor_backward_hook(grad):
             if module.saved_grad is None:
@@ -360,7 +353,7 @@ class DeepLift(GradientAttribution):
         outputs of a neuron
         """
         outputs = _format_tensor_into_tuples(outputs)
-        module.output = tuple(output.clone().detach() for output in outputs)
+        module.output = outputs[0].clone().detach()
         if not _check_valid_module(module.input_grad_fns, outputs[0]):
             warnings.warn(
                 """An invalid module {} is detected. Saved gradients will
@@ -379,13 +372,6 @@ class DeepLift(GradientAttribution):
         del module.input_hook
         del module.input_grad_fns
 
-    def _forward_hook_ref(self, module, inputs, outputs):
-        r"""
-        Forward hook is used to access the output of the module
-        """
-        outputs = _format_tensor_into_tuples(outputs)
-        module.output_ref = tuple(output.clone().detach() for output in outputs)
-
     def _backward_hook(self, module, grad_input, grad_output, eps=1e-10):
         r"""
          `grad_input` is the gradient of the neuron with respect to its input
@@ -400,21 +386,13 @@ class DeepLift(GradientAttribution):
         attr_criteria = self.satisfies_attribute_criteria(module)
         if not attr_criteria:
             raise RuntimeError(
-                """A Module {} was detected that does not contain some of
-                    the input/output attributes that are required for DeepLift
-                    computations. This can occur, for example, if
-                    your module is being used more than once in the network.
-                    Please, ensure that module is being used only once in the
-                    network.""".format(
-                    module
-                )
+                "A Module {} was detected that does not contain some of "
+                "the input/output attributes that are required for DeepLift "
+                "computations. This can occur, for example, if "
+                "your module is being used more than once in the network."
+                "Please, ensure that module is being used only once in the "
+                "network.".format(module)
             )
-        delta_in = tuple(
-            inp - inp_ref for inp, inp_ref in zip(module.input, module.input_ref)
-        )
-        delta_out = tuple(
-            out - out_ref for out, out_ref in zip(module.output, module.output_ref)
-        )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
                 module, module.input, module.output, grad_input, grad_output, eps=eps
@@ -427,12 +405,7 @@ class DeepLift(GradientAttribution):
         return multipliers
 
     def satisfies_attribute_criteria(self, module):
-        return (
-            hasattr(module, "input_ref")
-            and hasattr(module, "output_ref")
-            and hasattr(module, "input")
-            and hasattr(module, "output")
-        )
+        return hasattr(module, "input") and hasattr(module, "output")
 
     def _can_register_hook(self, module):
         # TODO find a better way of checking if a module is a container or not
@@ -443,16 +416,6 @@ class DeepLift(GradientAttribution):
             or has_already_hooks
             or not self._is_non_linear(module)
         )
-
-    def _register_hooks_ref(self, module):
-        if not self._can_register_hook(module):
-            return
-        forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
-        forward_pre_handle_ref = module.register_forward_pre_hook(
-            self._forward_pre_hook_ref
-        )
-        self.forward_handles_refs.append(forward_handle_ref)
-        self.forward_handles_refs.append(forward_pre_handle_ref)
 
     def _register_hooks(self, module):
         if not self._can_register_hook(module):
@@ -786,6 +749,7 @@ def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
         module.saved_grad = new_grad_inp[0]
     return new_grad_inp
 
+
 def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
@@ -914,6 +878,9 @@ def maxpool(
 
 def _compute_diffs(inputs, outputs):
     input, input_ref = inputs.chunk(2)
+    # if the model is a single non-linear mododule and we apply rescale rule on it
+    # we might not be able to perform chunk-ing because the output of the module is
+    # being replaced by model output.
     output, output_ref = outputs.chunk(2)
     delta_in = input - input_ref
     delta_out = output - output_ref

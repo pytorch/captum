@@ -344,7 +344,8 @@ def _select_targets(output, target):
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:
-        return forward_func()
+        output = forward_func()
+        return output if target is None else _select_targets(output, target)
 
     # make everything a tuple so that it is easy to unpack without
     # using if-statements

@@ -5,7 +5,6 @@ from ..._core.deep_lift import DeepLift, DeepLiftShap
 from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    _forward_layer_eval,
     compute_layer_gradients_and_eval,
 )
 
@@ -18,14 +17,13 @@ from ..._utils.common import (
     _tensorize_baseline,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _expand_target,
     _expand_additional_forward_args,
     ExpansionTypes,
 )
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(self, model, layer):
         r"""
         Args:
 
@@ -36,7 +34,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
         """
-        LayerAttribution.__init__(self, model, layer, device_ids)
+        LayerAttribution.__init__(self, model, layer)
         DeepLift.__init__(self, model)
         self.model = model
 
@@ -286,7 +284,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(self, model, layer):
         r"""
         Args:
 
@@ -297,7 +295,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
         """
-        LayerDeepLift.__init__(self, model, layer, device_ids)
+        LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
 
     def attribute(

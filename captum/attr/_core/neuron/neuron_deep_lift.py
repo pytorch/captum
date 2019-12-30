@@ -6,7 +6,7 @@ from ..deep_lift import DeepLift, DeepLiftShap
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(self, model, layer):
         r"""
         Args:
 
@@ -18,13 +18,8 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
                           attribution, can only be a single tensor.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
         """
-        NeuronAttribution.__init__(self, model, layer, device_ids)
+        NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
 
     def attribute(
@@ -191,7 +186,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
 
 class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(self, model, layer):
         r"""
         Args:
 
@@ -202,14 +197,8 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                           in the attribute method.
                           Currently, only layers with a single tensor input and output
                           are supported.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
-
         """
-        NeuronAttribution.__init__(self, model, layer, device_ids)
+        NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
 
     def attribute(
@@ -353,7 +342,6 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
-            device_ids=self.device_ids,
             attribute_to_neuron_input=attribute_to_neuron_input,
             output_fn=lambda out: out.chunk(2)[0],
         )
