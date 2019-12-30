@@ -262,7 +262,6 @@ class DeepLift(GradientAttribution):
 
         self.model.apply(self._register_hooks)
 
-        # input_base_target = _expand_target(target, 2, ExpansionTypes.repeat)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
@@ -276,7 +275,7 @@ class DeepLift(GradientAttribution):
         gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
             attributions = tuple(
-                (input - baseline) * gradient  # [: len(input)]
+                (input - baseline) * gradient
                 for input, baseline, gradient in zip(inputs, baselines, gradients)
             )
         else:
@@ -872,9 +871,9 @@ def maxpool(
 
 def _compute_diffs(inputs, outputs):
     input, input_ref = inputs.chunk(2)
-    # if the model is a single non-linear mododule and we apply rescale rule on it
+    # if the model is a single non-linear module and we apply Rescale rule on it
     # we might not be able to perform chunk-ing because the output of the module is
-    # being replaced by model output.
+    # usually being replaced by model output.
     output, output_ref = outputs.chunk(2)
     delta_in = input - input_ref
     delta_out = output - output_ref
