@@ -9,6 +9,7 @@ from captum.attr._utils.common import (
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
+    _extract_device,
 )
 
 from captum.attr._utils.gradient import _forward_layer_eval
@@ -274,7 +275,8 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             with torch.autograd.set_grad_enabled(True):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
-                    return scattered_inputs_dict[hook_inputs[0].device]
+                    device = _extract_device(module, hook_inputs, hook_outputs)
+                    return scattered_inputs_dict[device]
 
                 if attribute_to_layer_input:
                     hook = self.layer.register_forward_pre_hook(layer_forward_hook)
