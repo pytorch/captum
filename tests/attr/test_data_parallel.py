@@ -534,7 +534,6 @@ class Test(BaseGPUTest):
             net,
             None,
             inputs=(inp1, inp2),
-            alt_device_ids=True,
             additional_forward_args=None,
             test_batches=False,
         )
@@ -553,7 +552,6 @@ class Test(BaseGPUTest):
             net,
             net.l3,
             inputs=(inp1, inp2),
-            alt_device_ids=True,
             additional_forward_args=None,
             test_batches=False,
         )
@@ -575,7 +573,6 @@ class Test(BaseGPUTest):
             net,
             net.l3,
             inputs=(inp1, inp2),
-            alt_device_ids=True,
             baselines=(base1, base2),
             additional_forward_args=None,
             test_batches=False,
@@ -802,7 +799,7 @@ class Test(BaseGPUTest):
             attr_orig = algorithm(model, target_layer)
             if alt_device_ids:
                 attr_dp = algorithm(
-                    dp_model, target_layer, device_ids=self._alt_device_list()
+                    dp_model.forward, target_layer, device_ids=self._alt_device_list()
                 )
             else:
                 attr_dp = algorithm(dp_model, target_layer)
