@@ -38,6 +38,13 @@ commands:
           name: "Lint with black"
           command: black --check --diff .
 
+  mypy_check:
+    description: "Static type checking with mypy"
+    steps:
+      - run:
+          name: "Mypy checks"
+          command: ./scripts/run_mypy.sh
+
   unit_tests:
     description: "Run unit tests"
     steps:
@@ -125,6 +132,7 @@ jobs:
           args: "-n -f"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 
@@ -137,6 +145,7 @@ jobs:
           args: "-f"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 
@@ -149,6 +158,7 @@ jobs:
           args: "-n"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 

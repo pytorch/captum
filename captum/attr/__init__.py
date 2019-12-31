@@ -38,6 +38,7 @@ from ._models.base import (
 )  # noqa
 from ._utils.attribution import Attribution  # noqa
 from ._utils.attribution import GradientAttribution  # noqa
+from ._utils.attribution import PerturbationAttribution  # noqa
 from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils import visualization  # noqa
@@ -48,6 +49,7 @@ from ._utils.stat import Mean, StdDev, MSE, Var, Min, Max, Sum, Count
 __all__ = [
     "Attribution",
     "GradientAttribution",
+    "PerturbationAttribution",
     "NeuronAttribution",
     "LayerAttribution",
     "IntegratedGradients",

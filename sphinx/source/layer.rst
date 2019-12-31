@@ -1,35 +1,51 @@
-layer
+Layer Attribution
 ======
 
-LayerConductance
+Layer Conductance
 ^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.layer_conductance
-
-.. autoclass:: LayerConductance
+.. autoclass:: captum.attr.LayerConductance
     :members:
 
 
-LayerActivation
+Layer Activation
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.layer_activation
-
-.. autoclass:: LayerActivation
+.. autoclass:: captum.attr.LayerActivation
     :members:
 
-InternalInfluence
+Internal Influence
 ^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.internal_influence
-
-.. autoclass:: InternalInfluence
+.. autoclass:: captum.attr.InternalInfluence
     :members:
 
-LayerGradientXActivation
+Layer Gradient X Activation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.layer_gradient_x_activation
+.. autoclass:: captum.attr.LayerGradientXActivation
+    :members:
 
-.. autoclass:: LayerGradientXActivation
+GradCAM
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerGradCam
+    :members:
+
+Layer DeepLift
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerDeepLift
+    :members:
+
+Layer DeepLiftShap
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerDeepLiftShap
+    :members:
+
+Layer GradientShap
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerGradientShap
     :members:
