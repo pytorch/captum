@@ -9,7 +9,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertAttributionsAlmostEqual, BaseTest
+from ..helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -19,7 +19,7 @@ class Test(BaseTest):
         self._internal_influence_test_assert(net, net.linear0, inp, [[3.9, 3.9, 3.9]])
 
     def test_simple_input_multi_internal_inf(self):
-        net = BasicModel_MultiLayer(multiinput_module=True)
+        net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._internal_influence_test_assert(
             net,
@@ -162,7 +162,7 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            assertAttributionsAlmostEqual(
+            assertTensorTuplesAlmostEqual(
                 self, attributions, expected_activation, delta=0.01, mode="max",
             )
 

@@ -3,7 +3,7 @@ import torch
 
 from ..helpers.utils import BaseTest
 
-from ..helpers.utils import assertAttributionsAlmostEqual
+from ..helpers.utils import assertTensorTuplesAlmostEqual
 from ..helpers.classification_models import SoftmaxModel
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -28,7 +28,7 @@ class Test(BaseTest):
         self._assert_attributions(model, model.linear2, inputs, baselines, 0, expected)
 
     def test_basic_multi_tensor_output(self):
-        model = BasicModel_MultiLayer(multiinput_module=True)
+        model = BasicModel_MultiLayer(multi_input_module=True)
         model.eval()
 
         inputs = torch.tensor([[0.0, 100.0, 0.0]])
@@ -134,7 +134,7 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertAttributionsAlmostEqual(
+        assertTensorTuplesAlmostEqual(
             self, attrs, expected, delta=0.005,
         )
         if expected_delta is None:

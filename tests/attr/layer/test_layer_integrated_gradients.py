@@ -2,7 +2,7 @@
 
 import torch
 
-from ..helpers.utils import assertArraysAlmostEqual, assertAttributionsAlmostEqual
+from ..helpers.utils import assertArraysAlmostEqual, assertTensorTuplesAlmostEqual
 
 from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
@@ -61,7 +61,7 @@ class Test(BaseTest):
         self._assert_compare_with_layer_conductance(model, input, True)
 
     def test_multiple_tensors_compare_with_expected(self):
-        net = BasicModel_MultiLayer(multiinput_module=True)
+        net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._assert_compare_with_expected(
             net,
@@ -132,4 +132,4 @@ class Test(BaseTest):
         attributions = layer_ig.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
-        assertAttributionsAlmostEqual(self, attributions, expected_ig, delta=0.01)
+        assertTensorTuplesAlmostEqual(self, attributions, expected_ig, delta=0.01)

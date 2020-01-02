@@ -16,7 +16,7 @@ from ..helpers.basic_models import (
 )
 from ..helpers.utils import (
     BaseTest,
-    assertAttributionsAlmostEqual,
+    assertTensorTuplesAlmostEqual,
     assertTensorAlmostEqual,
 )
 
@@ -57,14 +57,14 @@ class Test(BaseTest):
         self._layer_activation_test_assert(net, net.linear2, inp, [392.0, 394.0])
 
     def test_simple_multi_output_activation(self) -> None:
-        net = BasicModel_MultiLayer(multiinput_module=True)
+        net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._layer_activation_test_assert(
             net, net.relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
         )
 
     def test_simple_multi_input_activation(self) -> None:
-        net = BasicModel_MultiLayer(multiinput_module=True)
+        net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._layer_activation_test_assert(
             net,
@@ -113,7 +113,7 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertAttributionsAlmostEqual(
+        assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
         )
 

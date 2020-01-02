@@ -7,7 +7,7 @@ import torch
 from ..helpers.utils import (
     BaseTest,
     assertTensorAlmostEqual,
-    assertAttributionsAlmostEqual,
+    assertTensorTuplesAlmostEqual,
     assert_delta,
 )
 from ..helpers.basic_models import ReLULinearDeepLiftModel, BasicModel_MultiLayer
@@ -31,7 +31,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_layer_deeplift_multiple_output(self):
-        model = BasicModel_MultiLayer(multiinput_module=True)
+        model = BasicModel_MultiLayer(multi_input_module=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         layer_dl = LayerDeepLift(model, model.relu)
@@ -42,7 +42,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=False,
             return_convergence_delta=True,
         )
-        assertAttributionsAlmostEqual(
+        assertTensorTuplesAlmostEqual(
             self, attributions, ([[0.0, -1.0, -1.0, -1.0]], [[0.0, -1.0, -1.0, -1.0]])
         )
         assert_delta(self, delta)
@@ -115,7 +115,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_layer_deepliftshap_multiple_output(self):
-        model = BasicModel_MultiLayer(multiinput_module=True)
+        model = BasicModel_MultiLayer(multi_input_module=True)
         (
             inputs,
             baselines,
@@ -129,7 +129,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=False,
             return_convergence_delta=True,
         )
-        assertAttributionsAlmostEqual(
+        assertTensorTuplesAlmostEqual(
             self, attributions, ([[0.0, -1.0, -1.0, -1.0]], [[0.0, -1.0, -1.0, -1.0]])
         )
         assert_delta(self, delta)

@@ -13,7 +13,7 @@ from ..helpers.basic_models import (
 from ..helpers.conductance_reference import ConductanceReference
 from ..helpers.utils import (
     assertArraysAlmostEqual,
-    assertAttributionsAlmostEqual,
+    assertTensorTuplesAlmostEqual,
     BaseTest,
 )
 
@@ -25,7 +25,7 @@ class Test(BaseTest):
         self._conductance_test_assert(net, net.linear0, inp, [[0.0, 390.0, 0.0]])
 
     def test_simple_input_multi_conductance(self):
-        net = BasicModel_MultiLayer(multiinput_module=True)
+        net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_test_assert(
             net,
@@ -156,7 +156,7 @@ class Test(BaseTest):
                 " not match the difference of endpoints.".format(delta),
             )
 
-            assertAttributionsAlmostEqual(
+            assertTensorTuplesAlmostEqual(
                 self, attributions, expected_conductance, delta=0.1,
             )
 

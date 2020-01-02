@@ -6,6 +6,7 @@ from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
     _format_input,
     _format_additional_forward_args,
+    _format_attributions,
     _run_forward,
     _extract_device,
 )
@@ -208,8 +209,9 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         """
 
         def layer_forward_func(*args):
-            layer_input = args[0]
-            original_inputs = args[1:]
+            layer_length = args[-1]
+            layer_input = args[:layer_length]
+            original_inputs = args[layer_length:-1]
 
             device_ids = self.device_ids
             if device_ids is None:
@@ -218,10 +220,10 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             all_layer_inputs = {}
             if device_ids is not None:
                 scattered_layer_input = scatter(layer_input, target_gpus=device_ids)
-                for tensor in scattered_layer_input:
-                    all_layer_inputs[tensor.device] = tensor
+                for device_tensors in scattered_layer_input:
+                    all_layer_inputs[device_tensors[0].device] = device_tensors
             else:
-                all_layer_inputs[layer_input.device] = layer_input
+                all_layer_inputs[layer_input[0].device] = layer_input
 
             def forward_hook(module, inp, out=None):
                 device = _extract_device(module, inp, out)
@@ -232,6 +234,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         "DataParallel model as forward_func or provide device ids"
                         " to the constructor."
                     )
+                if not is_layer_tuple:
+                    return all_layer_inputs[device][0]
                 return all_layer_inputs[device]
 
             if attribute_to_layer_input:
@@ -247,7 +251,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
             )
-            layer_eval = _forward_layer_eval(
+            layer_eval, is_layer_tuple = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -255,18 +259,20 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
+            layer_eval_len = (len(layer_eval),) if is_layer_tuple else (1,)
             all_inputs = (
-                (inputs + additional_forward_args)
+                (inputs + additional_forward_args + layer_eval_len)
                 if additional_forward_args is not None
-                else inputs
+                else inputs + layer_eval_len
             )
 
             ablator = FeatureAblation(layer_forward_func)
 
-            return ablator.attribute(
+            layer_attribs = ablator.attribute(
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,
                 ablations_per_eval=ablations_per_eval,
             )
+            return _format_attributions(is_layer_tuple, layer_attribs)

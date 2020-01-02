@@ -273,7 +273,6 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
                     device = _extract_device(module, hook_inputs, hook_outputs)
-                    layer_val = scattered_inputs_dict[hook_inputs[0].device]
                     if is_layer_tuple:
                         return scattered_inputs_dict[device]
                     return scattered_inputs_dict[device][0]

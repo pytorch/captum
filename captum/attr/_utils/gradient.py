@@ -350,6 +350,8 @@ def compute_layer_gradients_and_eval(
                 Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
+        # saved_layer is a dictionary mapping device to a tuple of
+        # layer evaluations on that device.
         saved_layer, output, is_layer_tuple = _forward_layer_distributed_eval(
             forward_fn,
             inputs,

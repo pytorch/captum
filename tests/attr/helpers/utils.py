@@ -19,28 +19,31 @@ def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
         )
 
 
-def assertTensorAlmostEqual(test, tensor, expected, delta=0.0001, mode="sum"):
-    tensor = tensor.squeeze()
+def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
+    assert isinstance(actual, torch.Tensor), (
+        "Actual parameter given for " "comparison must be a tensor."
+    )
+    actual = actual.squeeze()
     if not isinstance(expected, torch.Tensor):
-        expected = torch.tensor(expected, dtype=tensor.dtype)
+        expected = torch.tensor(expected, dtype=actual.dtype)
     if mode == "sum":
         test.assertAlmostEqual(
-            torch.sum(torch.abs(tensor - expected)).item(), 0.0, delta=delta
+            torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
     elif mode == "max":
         test.assertAlmostEqual(
-            torch.max(torch.abs(tensor - expected)).item(), 0.0, delta=delta
+            torch.max(torch.abs(actual - expected)).item(), 0.0, delta=delta
         )
     else:
         raise ValueError("Mode for assertion comparison must be one of `max` or `sum`.")
 
 
-def assertAttributionsAlmostEqual(test, tensor, expected, delta=0.0001, mode="sum"):
+def assertTensorTuplesAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     if isinstance(expected, tuple):
         for i in range(len(expected)):
-            assertTensorAlmostEqual(test, tensor[i], expected[i], delta, mode)
+            assertTensorAlmostEqual(test, actual[i], expected[i], delta, mode)
     else:
-        assertTensorAlmostEqual(test, tensor, expected, delta, mode)
+        assertTensorAlmostEqual(test, actual, expected, delta, mode)
 
 
 def assertAttributionComparision(test, attributions1, attributions2):
