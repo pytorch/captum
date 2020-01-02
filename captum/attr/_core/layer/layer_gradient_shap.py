@@ -9,6 +9,7 @@ from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_
 
 from ..gradient_shap import GradientShap, InputBaselineXGradient
 from ..._utils.common import (
+    _format_input_baseline,
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
@@ -293,6 +294,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
         return_convergence_delta=False,
         attribute_to_layer_input=False,
     ):
+        inputs, baselines = _format_input_baseline(inputs, baselines)
         rand_coefficient = torch.tensor(
             np.random.uniform(0.0, 1.0, inputs[0].shape[0]),
             device=inputs[0].device,
