@@ -265,7 +265,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             ablator = FeatureAblation(layer_forward_func)
 
-            layer_attribs =  ablator.attribute(
+            layer_attribs = ablator.attribute(
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
