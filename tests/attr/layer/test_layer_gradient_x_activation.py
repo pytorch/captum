@@ -9,7 +9,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -23,6 +23,13 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_assert(
             net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
+        )
+
+    def test_simple_multi_gradient_activation(self):
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[3.0, 4.0, 0.0]])
+        self._layer_activation_test_assert(
+            net, net.relu, inp, ([0.0, 8.0, 8.0, 8.0], [0.0, 8.0, 8.0, 8.0])
         )
 
     def test_simple_relu_gradient_activation(self):
@@ -65,8 +72,8 @@ class Test(BaseTest):
         attributions = layer_act.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_activation, delta=0.01
+        assertTensorTuplesAlmostEqual(
+            self, attributions, expected_activation, delta=0.01
         )
 
 

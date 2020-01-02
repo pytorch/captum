@@ -6,7 +6,7 @@ import torch
 from captum.attr._core.layer.grad_cam import LayerGradCam
 
 from ..helpers.basic_models import BasicModel_MultiLayer, BasicModel_ConvNet_One_Conv
-from ..helpers.utils import assertTensorAlmostEqual, BaseTest
+from ..helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
@@ -14,6 +14,11 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._grad_cam_test_assert(net, net.linear0, inp, [400.0])
+
+    def test_simple_multi_input_non_conv(self):
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]], requires_grad=True)
+        self._grad_cam_test_assert(net, net.relu, inp, ([21.0], [21.0]))
 
     def test_simple_input_conv(self):
         net = BasicModel_ConvNet_One_Conv()
@@ -32,7 +37,7 @@ class Test(BaseTest):
         # Adding negative value to test final relu is not applied by default
         inp[0, 0, 1, 1] = -4.0
         self._grad_cam_test_assert(
-            net, net.conv1, inp, 0.5625 * inp, attribute_to_layer_input=True
+            net, net.conv1, inp, (0.5625 * inp,), attribute_to_layer_input=True
         )
 
     def test_simple_input_conv_fc_with_final_relu(self):
@@ -47,7 +52,7 @@ class Test(BaseTest):
             net,
             net.conv1,
             inp,
-            exp,
+            (exp,),
             attribute_to_layer_input=True,
             relu_attributions=True,
         )
@@ -78,7 +83,9 @@ class Test(BaseTest):
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
         )
-        assertTensorAlmostEqual(self, attributions, expected_activation, delta=0.01)
+        assertTensorTuplesAlmostEqual(
+            self, attributions, expected_activation, delta=0.01
+        )
 
 
 if __name__ == "__main__":

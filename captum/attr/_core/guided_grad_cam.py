@@ -177,6 +177,12 @@ class GuidedGradCam(GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=True,
         )
+        if isinstance(grad_cam_attr, tuple):
+            assert len(grad_cam_attr) == 1, (
+                "GuidedGradCAM attributions for layer with multiple inputs / "
+                "outputs is not supported."
+            )
+            grad_cam_attr = grad_cam_attr[0]
         guided_backprop_attr = self.guided_backprop.attribute(
             inputs=inputs,
             target=target,

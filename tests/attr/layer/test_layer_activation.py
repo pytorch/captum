@@ -14,7 +14,11 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest, assertTensorAlmostEqual
+from ..helpers.utils import (
+    BaseTest,
+    assertTensorTuplesAlmostEqual,
+    assertTensorAlmostEqual,
+)
 
 
 class Test(BaseTest):
@@ -34,7 +38,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[2.0, -5.0, 4.0]])
         self._layer_activation_test_assert(
-            net, net.relu, inp, [-9.0, 2.0, 2.0, 2.0], attribute_to_layer_input=True
+            net, net.relu, inp, ([-9.0, 2.0, 2.0, 2.0],), attribute_to_layer_input=True
         )
 
     def test_simple_linear_activation_inplace(self) -> None:
@@ -51,6 +55,24 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._layer_activation_test_assert(net, net.linear2, inp, [392.0, 394.0])
+
+    def test_simple_multi_output_activation(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+        self._layer_activation_test_assert(
+            net, net.relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+        )
+
+    def test_simple_multi_input_activation(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+        self._layer_activation_test_assert(
+            net,
+            net.relu,
+            inp,
+            ([-4.0, 7.0, 7.0, 7.0], [-4.0, 7.0, 7.0, 7.0]),
+            attribute_to_layer_input=True,
+        )
 
     def test_simple_multi_input_linear2_activation(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
@@ -81,7 +103,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_activation: List[float],
+        expected_activation: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
         attribute_to_layer_input: bool = False,
     ):
@@ -91,8 +113,8 @@ class Test(BaseTest):
             additional_forward_args=additional_input,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertArraysAlmostEqual(
-            attributions.squeeze(0).tolist(), expected_activation, delta=0.01
+        assertTensorTuplesAlmostEqual(
+            self, attributions, expected_activation, delta=0.01
         )
 
 

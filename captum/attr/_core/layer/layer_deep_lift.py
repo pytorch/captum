@@ -33,9 +33,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
         """
         if isinstance(model, nn.DataParallel):
             warnings.warn(
@@ -193,14 +190,15 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor*):
+            - **attributions** (*tensor* or tuple of *tensors*):
                 Attribution score computed based on DeepLift's rescale rule with
                 respect to layer's inputs or outputs. Attributions will always be the
                 same size as the provided layer's inputs or outputs, depending on
                 whether we attribute to the inputs or outputs of the layer.
-                Since currently it is assumed that the inputs and outputs of the
-                layer must be single tensor, returned attributions have the shape
-                of that tensor.
+                If the layer input / output is a single tensor, then
+                just a tensor is returned; if the layer input / output
+                has multiple tensors, then a corresponding tuple
+                of tensors is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that the total sum of
                 forward_func(inputs) - forward_func(baselines) must equal the
@@ -238,7 +236,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         baselines = _tensorize_baseline(inputs, baselines)
 
-        attr_baselines = _forward_layer_eval(
+        attr_baselines, _ = _forward_layer_eval(
             self.model,
             baselines,
             self.layer,
@@ -252,18 +250,14 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         self.model.apply(self._register_hooks)
 
-        gradients, attr_inputs = compute_layer_gradients_and_eval(
+        gradients, attr_inputs, is_layer_tuple = compute_layer_gradients_and_eval(
             self.model,
             self.layer,
             inputs,
+            target,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        # Fixme later: we need to do this because `compute_layer_gradients_and_eval`
-        # and `_forward_layer_eval` always returns a tensor
-        attr_baselines = (attr_baselines,)
-        attr_inputs = (attr_inputs,)
-        gradients = (gradients,)
 
         if custom_attribution_func is None:
             attributions = tuple(
@@ -290,7 +284,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            False,  # currently both the input and output of layer can only be a tensor
+            is_layer_tuple,
         )
 
 
@@ -305,8 +299,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that both inputs and ouputs of
-                          the layer can only be a single tensor.
         """
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
@@ -449,14 +441,17 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor*):
+            - **attributions** (*tensor* or tuple of *tensors*):
                         Attribution score computed based on DeepLift's rescale rule
                         with respect to layer's inputs or outputs. Attributions
                         will always be the same size as the provided layer's inputs
                         or outputs, depending on whether we attribute to the inputs
-                        or outputs of the layer. Since currently it is assumed that
-                        the inputs and outputs of the layer must be single tensor,
-                        returned attributions have the shape of that tensor.
+                        or outputs of the layer.
+                        Attributions are returned in a tuple based on whether
+                        the layer inputs / outputs are contained in a tuple
+                        from a forward hook. For standard modules, inputs of
+                        a single tensor are usually wrapped in a tuple, while
+                        outputs of a single tensor are not.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
@@ -521,10 +516,17 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         )
         if return_convergence_delta:
             attributions, delta = attributions
-
-        attributions = DeepLiftShap._compute_mean_across_baselines(
-            self, inp_bsz, base_bsz, attributions
-        )
+        if isinstance(attributions, tuple):
+            attributions = tuple(
+                DeepLiftShap._compute_mean_across_baselines(
+                    self, inp_bsz, base_bsz, attrib
+                )
+                for attrib in attributions
+            )
+        else:
+            attributions = DeepLiftShap._compute_mean_across_baselines(
+                self, inp_bsz, base_bsz, attributions
+            )
         if return_convergence_delta:
             return attributions, delta
         else:

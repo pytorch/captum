@@ -237,7 +237,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
 
         if self.device_ids is None:
             self.device_ids = getattr(self.forward_func, "device_ids", None)
-        inputs_layer = _forward_layer_eval(
+        inputs_layer, is_layer_tuple = _forward_layer_eval(
             self.forward_func,
             inps,
             self.layer,
@@ -246,7 +246,7 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        baselines_layer = _forward_layer_eval(
+        baselines_layer, _ = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -260,12 +260,9 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             forward_fn, inputs, target_ind=None, additional_forward_args=None
         ):
             if self.device_ids is None:
-                scattered_inputs = inputs
+                scattered_inputs = (inputs,)
             else:
-                scattered_inputs = (
-                    scatter_inp[0]
-                    for scatter_inp in scatter(inputs, target_gpus=self.device_ids)
-                )
+                scattered_inputs = scatter(inputs, target_gpus=self.device_ids)
 
             scattered_inputs_dict = {
                 scattered_input[0].device: scattered_input
@@ -276,7 +273,9 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
                     device = _extract_device(module, hook_inputs, hook_outputs)
-                    return scattered_inputs_dict[device]
+                    if is_layer_tuple:
+                        return scattered_inputs_dict[device]
+                    return scattered_inputs_dict[device][0]
 
                 if attribute_to_layer_input:
                     hook = self.layer.register_forward_pre_hook(layer_forward_hook)
@@ -314,10 +313,6 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
             return_convergence_delta=False,
         )
 
-        # TODO this needs to be formated properly -
-        # it assumes that layer returns a tensor
-        attributions = (attributions,)
-
         if return_convergence_delta:
             start_point, end_point = baselines, inps
             # computes approximation error based on the completeness axiom
@@ -328,9 +323,8 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            # TODO this needs to be checked of tensor properly: len(attributions) > 1
-            return _format_attributions(len(attributions) > 1, attributions), delta
-        return _format_attributions(len(attributions) > 1, attributions)
+            return _format_attributions(is_layer_tuple, attributions), delta
+        return _format_attributions(is_layer_tuple, attributions)
 
     def has_convergence_delta(self):
         return True

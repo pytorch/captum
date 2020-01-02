@@ -275,7 +275,9 @@ class NoiseTunnel(Attribution):
         expand_and_update_additional_forward_args()
         expand_and_update_target()
         # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
-        attributions = self.attribution_method.attribute(inputs_with_noise, **kwargs)
+        attributions = self.attribution_method.attribute(
+            inputs_with_noise if is_inputs_tuple else inputs_with_noise[0], **kwargs
+        )
 
         return_convergence_delta = (
             "return_convergence_delta" in kwargs and kwargs["return_convergence_delta"]
@@ -283,6 +285,8 @@ class NoiseTunnel(Attribution):
 
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
+
+        is_attrib_tuple = isinstance(attributions, tuple)
         attributions = _format_tensor_into_tuples(attributions)
 
         expected_attributions = []
@@ -297,7 +301,7 @@ class NoiseTunnel(Attribution):
         if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad:
             return self._apply_checks_and_return_attributions(
                 tuple(expected_attributions),
-                is_inputs_tuple,
+                is_attrib_tuple,
                 return_convergence_delta,
                 delta,
             )
@@ -305,7 +309,7 @@ class NoiseTunnel(Attribution):
         if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad_sq:
             return self._apply_checks_and_return_attributions(
                 tuple(expected_attributions_sq),
-                is_inputs_tuple,
+                is_attrib_tuple,
                 return_convergence_delta,
                 delta,
             )
@@ -318,13 +322,13 @@ class NoiseTunnel(Attribution):
         )
 
         return self._apply_checks_and_return_attributions(
-            vargrad, is_inputs_tuple, return_convergence_delta, delta
+            vargrad, is_attrib_tuple, return_convergence_delta, delta
         )
 
     def _apply_checks_and_return_attributions(
-        self, attributions, is_inputs_tuple, return_convergence_delta, delta
+        self, attributions, is_attrib_tuple, return_convergence_delta, delta
     ):
-        attributions = _format_attributions(is_inputs_tuple, attributions)
+        attributions = _format_attributions(is_attrib_tuple, attributions)
 
         return (
             (attributions, delta)

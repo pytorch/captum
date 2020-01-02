@@ -5,6 +5,7 @@ import numpy as np
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import (
+    _format_input_baseline,
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
@@ -250,6 +251,7 @@ class InputBaselineXGradient(GradientAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
+        inputs, baselines = _format_input_baseline(inputs, baselines)
 
         rand_coefficient = torch.tensor(
             np.random.uniform(0.0, 1.0, inputs[0].shape[0]),

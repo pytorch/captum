@@ -233,17 +233,34 @@ class BasicEmbeddingModel(nn.Module):
         return self.linear2(self.relu(self.linear1(embeddings))).sum(1)
 
 
-class BasicModel_MultiLayer(nn.Module):
+class MultiRelu(nn.Module):
     def __init__(self, inplace=False):
         super().__init__()
+        self.relu1 = nn.ReLU(inplace=inplace)
+        self.relu2 = nn.ReLU(inplace=inplace)
+
+    def forward(self, arg1, arg2):
+        return (self.relu1(arg1), self.relu2(arg2))
+
+
+class BasicModel_MultiLayer(nn.Module):
+    def __init__(self, inplace=False, multi_input_module=False):
+        super().__init__()
         # Linear 0 is simply identity transform
+        self.multi_input_module = multi_input_module
         self.linear0 = nn.Linear(3, 3)
         self.linear0.weight = nn.Parameter(torch.eye(3))
         self.linear0.bias = nn.Parameter(torch.zeros(3))
         self.linear1 = nn.Linear(3, 4)
         self.linear1.weight = nn.Parameter(torch.ones(4, 3))
         self.linear1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
-        self.relu = nn.ReLU(inplace=inplace)
+        if multi_input_module:
+            self.linear1_alt = nn.Linear(3, 4)
+            self.linear1_alt.weight = nn.Parameter(torch.ones(4, 3))
+            self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+            self.relu = MultiRelu(inplace=inplace)
+        else:
+            self.relu = nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
@@ -252,7 +269,11 @@ class BasicModel_MultiLayer(nn.Module):
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
-        relu_out = self.relu(lin1_out)
+        if self.multi_input_module:
+            relu_out1, relu_out2 = self.relu(lin1_out, self.linear1_alt(input))
+            relu_out = relu_out1 + relu_out2
+        else:
+            relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
         if multidim_output:
             stack_mid = torch.stack((lin2_out, 2 * lin2_out), dim=2)

@@ -6,6 +6,7 @@ from torch import Tensor
 from torch.nn import Module
 
 from ..._utils.attribution import LayerAttribution
+from ..._utils.common import _format_attributions
 from ..._utils.gradient import _forward_layer_eval
 
 
@@ -27,9 +28,6 @@ class LayerActivation(LayerAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -82,11 +80,18 @@ class LayerActivation(LayerAttribution):
                             Default: False
 
             Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Activation of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
+
+
 
             Examples::
 
@@ -102,7 +107,7 @@ class LayerActivation(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            layer_eval = _forward_layer_eval(
+            layer_eval, is_layer_tuple = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -110,4 +115,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return layer_eval
+        return _format_attributions(is_layer_tuple, layer_eval)

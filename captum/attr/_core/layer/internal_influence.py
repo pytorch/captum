@@ -8,6 +8,7 @@ from ..._utils.common import (
     _format_input_baseline,
     _validate_input,
     _format_additional_forward_args,
+    _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
 )
@@ -27,9 +28,6 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -170,13 +168,18 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                             Default: False
 
             Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Internal influence of each neuron in given
                             layer output. Attributions will always be the same size
                             as the output or input of the given layer depending on
                             whether `attribute_to_layer_input` is set to `False` or
                             `True`respectively.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
 
             Examples::
 
@@ -222,7 +225,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         expanded_target = _expand_target(target, n_steps)
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _ = _batched_operator(
+        layer_gradients, _, is_layer_tuple = _batched_operator(
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
@@ -235,11 +238,17 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         )
         # flattening grads so that we can multiply it with step-size
         # calling contiguous to avoid `memory whole` problems
-        scaled_grads = layer_gradients.contiguous().view(n_steps, -1) * torch.tensor(
-            step_sizes
-        ).view(n_steps, 1).to(layer_gradients.device)
+        scaled_grads = tuple(
+            layer_grad.contiguous().view(n_steps, -1)
+            * torch.tensor(step_sizes).view(n_steps, 1).to(layer_grad.device)
+            for layer_grad in layer_gradients
+        )
 
         # aggregates across all steps for each tensor in the input tuple
-        return _reshape_and_sum(
-            scaled_grads, n_steps, inputs[0].shape[0], layer_gradients.shape[1:]
+        attrs = tuple(
+            _reshape_and_sum(
+                scaled_grad, n_steps, inputs[0].shape[0], layer_grad.shape[1:]
+            )
+            for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )
+        return _format_attributions(is_layer_tuple, attrs)
