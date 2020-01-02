@@ -28,9 +28,6 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -122,7 +119,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                layer_mask (tensor, optional):
+                layer_mask (tensor or tuple of tensors, optional):
                             layer_mask defines a mask for the layer, grouping
                             elements of the layer input / output which should be
                             ablated together.
@@ -162,8 +159,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             Default: 1
 
             Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Attribution of each neuron in given layer input or
                             output. Attributions will always be the same size as
                             the input or output of the given layer, depending on
@@ -268,7 +265,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             ablator = FeatureAblation(layer_forward_func)
 
-            layer_attribs = ablator.attribute(
+            layer_attribs =  ablator.attribute(
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
