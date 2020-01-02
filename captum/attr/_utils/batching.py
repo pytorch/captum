@@ -29,7 +29,8 @@ def _reduce_list(val_list, red_func=torch.cat):
     If each element is a tuple, applies reduction
     function to corresponding elements of each tuple in the list, and returns
     tuple of reduction function outputs with length matching the length of tuple
-    val_list[0].
+    val_list[0]. It is assumed that all tuples in the list have the same length
+    and red_func can be applied to all elements in each corresponding position.
     """
     if isinstance(val_list[0], torch.Tensor):
         return red_func(val_list)
