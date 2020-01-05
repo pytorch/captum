@@ -187,6 +187,8 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
+        undo_gradient_requirements(inputs, gradient_mask)
+
         summed_grads = tuple(
             torch.mean(
                 layer_grad,
@@ -200,7 +202,6 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
             for summed_grad, layer_eval in zip(summed_grads, layer_evals)
         )
-        undo_gradient_requirements(inputs, gradient_mask)
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
         return _format_attributions(is_layer_tuple, scaled_acts)
