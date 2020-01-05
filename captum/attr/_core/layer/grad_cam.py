@@ -9,6 +9,7 @@ from ..._utils.common import (
     _format_attributions,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class LayerGradCam(LayerAttribution, GradientAttribution):
@@ -174,6 +175,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
+        gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
@@ -198,6 +200,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             torch.sum(summed_grad * layer_eval, dim=1, keepdim=True)
             for summed_grad, layer_eval in zip(summed_grads, layer_evals)
         )
+        undo_gradient_requirements(inputs, gradient_mask)
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
         return _format_attributions(is_layer_tuple, scaled_acts)
