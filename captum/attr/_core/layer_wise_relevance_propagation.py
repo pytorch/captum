@@ -21,7 +21,8 @@ class LRP(GradientAttribution):
                         of forward_func
         """
         self.model = model
-        self.layers = self._get_layers(model)
+        self.layers = []
+        self._get_layers(model)
         self._layer_count = len(self.layers)
         for rule in rules:
             if not isinstance(rule, PropagationRule):
@@ -34,14 +35,13 @@ class LRP(GradientAttribution):
         '''
         target: index of target class for which relevance is computed
         '''
+        relevances = list()
         is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = _format_input(inputs)
+        #inputs = _format_input(inputs)
         #TODO: general, handle flatten layer in models.
-        activations = self._get_activations(inputs)
-        #TODO: apply mask to relevance to show only relevant class.
-        relevance_tensor = activations[-1]
-        relevance = _run_forward(self.model, inputs, target=target)
-        for layer, rule, activation in zip(reversed(self.layers), reversed(self.rules), reversed(activations[:-1])):
+        self._get_activations(inputs)
+        relevance = self._mask_relevance(self.relevance, target)
+        for layer, rule, activation in zip(reversed(self.layers), reversed(self.rules), reversed(self.activations)):#[:-1]
             # Convert Max-Pooling to Average Pooling layer
             if isinstance(layer, torch.nn.MaxPool2d):
                 layer = torch.nn.AvgPool2d(2)
@@ -53,12 +53,13 @@ class LRP(GradientAttribution):
             newlayer.bias = nn.Parameter(layer.bias)
             layer = newlayer """
             # Propagate relevance for Conv2D and Pooling
-            if isinstance(layer, torch.nn.Linear) or isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d):
+            if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d) or isinstance(layer, torch.nn.AdaptiveAvgPool2d) or isinstance(layer, torch.nn.Linear):
                 relevance = rule.propagate(relevance, layer, activation)
             else:
                 pass
-        
-        return _format_attributions(is_inputs_tuple, relevance)
+            print('relevance: ' + str(torch.sum(relevance)))
+            relevances.append(relevance)
+        return _format_attributions(is_inputs_tuple, (relevances, ))
 
 
 
@@ -66,45 +67,41 @@ class LRP(GradientAttribution):
         '''
         Get list of children modules of the forward function or model.
         '''
-        all_layers = []
-        return self._remove_sequential(model, all_layers)
-
-
-    def _remove_sequential(self, model, all_layers):
-
         for layer in model.children():
             if isinstance(layer, nn.Sequential):
-                self._remove_sequential(layer, all_layers)
+                self._get_layers(layer)
             if list(layer.children()) == []:
-                all_layers.append(layer)
-        return all_layers
+                self.layers.append(layer)
 
 
     def _get_activations(self, inputs):
-        '''
-        Calculate activations for inputs for every layer of forward_func.
-        '''
-        #TODO: use _forward_layer_eval
-        activations = [inputs] + [None] * (self._layer_count)
-        for index, layer in enumerate(self.layers):
-            if isinstance(layer, nn.Linear):# and isinstance(layers[index-1], nn.poo
-                activations[index + 1] = layer.forward(activations[index].view(-1, layer.in_features))
-            else:
-                activations[index + 1] = layer.forward(activations[index])
-        return activations
-
-
-    def _get_activations_hook(self, inputs):
         self.activations = list()
-        self.z_values = list()
+
+        hooks = list()
         for layer in self.layers:
-            layer.register_forward_hook(self._forward_hook)
-        out = self.model(inputs)
+            #if isinstance(layer, torch.nn.Linear) or isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d):
+            registered_hook = layer.register_forward_hook(self._forward_hook)
+            hooks.append(registered_hook)
+        self.relevance = self.model(inputs)
+        for registered_hook in hooks:
+            registered_hook.remove()
 
 
     def _forward_hook(self, module, input, output):
-        self.activations.append(input)
-        self.z_values.append(output)
+        self.activations.append(*input)
+
+
+    def _mask_relevance(self, output, target=None):
+        '''
+        If target is class of classification task, the output layer is masked with zeros except the class output.
+        '''
+        if target is None:
+            return output
+        elif isinstance(target, int):
+            masked_output = torch.zeros(output.size())
+            masked_output[slice(None), target] = output[slice(None), target]
+            return masked_output
+
 
 class LRP_0(LRP):
     """LRP class, which uses the base rule for every layer.
