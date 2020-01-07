@@ -38,29 +38,20 @@ class LRP(GradientAttribution):
         relevances = list()
         is_inputs_tuple = isinstance(inputs, tuple)
         #inputs = _format_input(inputs)
-        #TODO: general, handle flatten layer in models.
         self._get_activations(inputs)
         relevance = self._mask_relevance(self.relevance, target)
         for layer, rule, activation in zip(reversed(self.layers), reversed(self.rules), reversed(self.activations)):#[:-1]
             # Convert Max-Pooling to Average Pooling layer
             if isinstance(layer, torch.nn.MaxPool2d):
                 layer = torch.nn.AvgPool2d(2)
-            # linear to conv layer
-            """ if isinstance(layer, torch.nn.Linear):
-                m,n = layer.weight.shape[1],layer.weight.shape[0]
-                newlayer = nn.Conv2d(m,n,1)
-                newlayer.weight = nn.Parameter(layer.weight.reshape(n,m,1,1))
-            newlayer.bias = nn.Parameter(layer.bias)
-            layer = newlayer """
             # Propagate relevance for Conv2D and Pooling
             if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d) or isinstance(layer, torch.nn.AdaptiveAvgPool2d) or isinstance(layer, torch.nn.Linear):
                 relevance = rule.propagate(relevance, layer, activation)
             else:
                 pass
             print('relevance: ' + str(torch.sum(relevance)))
-            relevances.append(relevance)
+            relevances.insert(0, relevance)
         return _format_attributions(is_inputs_tuple, (relevances, ))
-
 
 
     def _get_layers(self, model):
@@ -79,7 +70,6 @@ class LRP(GradientAttribution):
 
         hooks = list()
         for layer in self.layers:
-            #if isinstance(layer, torch.nn.Linear) or isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.AvgPool2d):
             registered_hook = layer.register_forward_hook(self._forward_hook)
             hooks.append(registered_hook)
         self.relevance = self.model(inputs)
