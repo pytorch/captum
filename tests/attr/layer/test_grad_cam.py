@@ -28,8 +28,8 @@ class Test(BaseTest):
     def test_simple_input_conv_no_grad(self):
         net = BasicModel_ConvNet_One_Conv()
 
-        # this way we deactivate require_grad. Some models expictly do that
-        # before interpreting the model.
+        # this way we deactivate require_grad. Some models explicitly
+        # do that before interpreting the model.
         for param in net.parameters():
             param.requires_grad = False
 

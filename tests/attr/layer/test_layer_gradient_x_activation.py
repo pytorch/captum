@@ -28,8 +28,9 @@ class Test(BaseTest):
     def test_simple_linear_gradient_activation_no_grad(self):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        # this way we deactivate require_grad. Some models expictly do that
-        # before interpreting the model.
+
+        # this way we deactivate require_grad. Some models explicitly
+        # do that before interpreting the model.
         for param in net.parameters():
             param.requires_grad = False
 
