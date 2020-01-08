@@ -25,6 +25,17 @@ class Test(BaseTest):
         inp = torch.arange(16).view(1, 1, 4, 4).float()
         self._grad_cam_test_assert(net, net.conv1, inp, [[11.25, 13.5], [20.25, 22.5]])
 
+    def test_simple_input_conv_no_grad(self):
+        net = BasicModel_ConvNet_One_Conv()
+
+        # this way we deactivate require_grad. Some models explicitly
+        # do that before interpreting the model.
+        for param in net.parameters():
+            param.requires_grad = False
+
+        inp = torch.arange(16).view(1, 1, 4, 4).float()
+        self._grad_cam_test_assert(net, net.conv1, inp, [[11.25, 13.5], [20.25, 22.5]])
+
     def test_simple_input_conv_relu(self):
         net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).float()
