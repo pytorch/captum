@@ -22,15 +22,17 @@ class LRP(Attribution):
 
             model (callable): The forward function of the model or
                         any modification of it
-            rules (iterator of PropagationRules): List of Rules for each layer
-                        of forward_func
+            rules (iterator of PropagationRules or None): List of Rules for each layer
+                        of forward_func. For layers where the relevances are not propagated
+                        (i.e. ReLU) the rule can be None.
         """
         self.model = model
         self.layers = []
         self._get_layers(model)
         self._layer_count = len(self.layers)
+
         for rule in rules:
-            if not isinstance(rule, PropagationRule):
+            if not isinstance(rule, PropagationRule) and rule is not None:
                 raise TypeError(
                     "Please select propagation rules inherited from class PropagationRule"
                 )
@@ -43,8 +45,10 @@ class LRP(Attribution):
         target=None,
         return_convergence_delta=False,
         additional_forward_args=None,
+        return_for_all_layers=False
     ):
-        r"""[summary]
+        """
+        Only works for ReLU activation layers
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -98,6 +102,10 @@ class LRP(Attribution):
                         a tuple following attributions.
                         Default: False
 
+                return_for_all_layers (bool, optional): Indicates whether to return
+                        relevance values for all layers. If False, only the relevance
+                        values for the input layer are returned.
+
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
             - **attributions** (*tensor* or tuple of *tensors*):
@@ -113,11 +121,23 @@ class LRP(Attribution):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
+        Examples::
+
+                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+                >>> # and returns an Nx10 tensor of class probabilities. It has one
+                >>> # Conv2D and a ReLU layer.
+                >>> from lrp_rules import Alpha1_Beta0_Rule
+                >>> net = ImageClassifier()
+                >>> rules = [Alpha1_Beta0_Rule(), None]
+                >>> lrp = LRP(net, rules)
+                >>> input = torch.randn(3, 3, 32, 32)
+                >>> # Attribution size matches input size: 3x3x32x32
+                >>> attribution = lrp.attribute(input, target=5)
 
         """
-        relevances = list()
+        relevances = tuple()
         is_inputs_tuple = isinstance(inputs, tuple)
-        # inputs = _format_input(inputs)
+        inputs = _format_input(inputs)
         output = self._get_activations(inputs, None, additional_forward_args)
         relevance = self._mask_relevance(output, target)
         for layer, rule, activation in zip(
@@ -125,26 +145,32 @@ class LRP(Attribution):
         ):
             # Convert Max-Pooling to Average Pooling layer
             if isinstance(layer, torch.nn.MaxPool2d):
-                layer = torch.nn.AvgPool2d(2)
-            # Propagate relevance for Conv2D and Pooling
-            if (
-                isinstance(layer, torch.nn.Conv2d)
-                or isinstance(layer, torch.nn.AvgPool2d)
-                or isinstance(layer, torch.nn.AdaptiveAvgPool2d)
-                or isinstance(layer, torch.nn.Linear)
+                layer = torch.nn.AvgPool2d(layer.kernel_size)
+            # Propagate relevance for Conv2D, Linear and Pooling
+            if isinstance(
+                layer,
+                (
+                    torch.nn.Conv2d,
+                    torch.nn.AvgPool2d,
+                    torch.nn.AdaptiveAvgPool2d,
+                    torch.nn.Linear,
+                ),
             ):
                 relevance = rule.propagate(relevance, layer, activation)
             else:
                 pass
-            relevances.insert(0, relevance)
+            relevances = (relevance,) + relevances
+
+        if not return_for_all_layers:
+            relevances = (relevances[0],)
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
                 relevances[0], inputs, additional_forward_args, target
             )
-            return _format_attributions(is_inputs_tuple, (relevances,)), delta
+            return _format_attributions(is_inputs_tuple, relevances), delta
         else:
-            return _format_attributions(is_inputs_tuple, (relevances,))
+            return _format_attributions(is_inputs_tuple, relevances)
 
     def has_convergence_delta(self):
         return True
@@ -153,11 +179,11 @@ class LRP(Attribution):
         self, attributions, inputs, additional_forward_args=None, target=None
     ):
         """
-        Here, we use the completeness property of LRP: The relevance is conserved 
-        during the propagation through the models' layers. Therefore, the difference 
-        between the sum of attribution (relevance) values and model output is taken as 
-        the convergence delta. It should be zero for functional attribution. However, 
-        when rules with an epsilon value are used for stability reasons, relevance is 
+        Here, we use the completeness property of LRP: The relevance is conserved
+        during the propagation through the models' layers. Therefore, the difference
+        between the sum of attribution (relevance) values and model output is taken as
+        the convergence delta. It should be zero for functional attribution. However,
+        when rules with an epsilon value are used for stability reasons, relevance is
         absorbed during propagation and the convergence delta is non-zero.
 
         Args:
@@ -226,11 +252,16 @@ class LRP(Attribution):
     def _get_layers(self, model):
         """
         Get list of children modules of the forward function or model.
+        Checks wether Sigmoid or Tanh activations are used and raises error if that is the case.
         """
         for layer in model.children():
             if isinstance(layer, nn.Sequential):
                 self._get_layers(layer)
             if list(layer.children()) == []:
+                if isinstance(layer, (nn.Sigmoid, nn.Tanh)):
+                    raise TypeError(
+                        "Invalid activation used. Implementation is only valid for ReLU activations."
+                    )
                 self.layers.append(layer)
 
     def _get_activations(self, inputs, target=None, additional_forward_args=None):
@@ -273,3 +304,4 @@ class LRP_0(LRP):
     def __init__(self, forward_func):
         rules = repeat(BasicRule(), 1000)
         super(LRP_0, self).__init__(forward_func, rules)
+
