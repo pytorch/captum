@@ -27,17 +27,24 @@ class EpsilonRhoRule(PropagationRule):
     General propagation rule which is basis for many special cases.
     Implementation of epsilon-rho-rule according to Montavon et al.
     in Explainable AI book
+
+    Args:
+        rho (callable): Function by which the layer weights and bias is manipulated
+            during propagation.
+            Example:
+                def _rho_function(tensor_input):
+                    tensor_positive = torch.clamp(tensor_input, min=0)
+                    tensor_output = tensor_input + (0.25 * tensor_positive)
+                    return tensor_output
+        epsilon (callable): Function to manipulate z-values during propagation
+            example: lambda z: z + 1e-9
     """
 
     def __init__(
         self, rho=lambda p: p, epsilon=lambda z: z + PropagationRule.STABILITY_FACTOR
     ):
         """
-        Example rho function:
-            def _rho_function(tensor_input):
-                tensor_positive = torch.clamp(tensor_input, min=0)
-                tensor_output = tensor_input + (0.25 * tensor_positive)
-                return tensor_output
+        
         """
         self.epsilon = epsilon
         self.rho = rho
@@ -87,19 +94,26 @@ class EpsilonRule(EpsilonRhoRule):
     to avoid numerical instabilities and remove noise.
 
     Use for middle layers.
+
+    Args:
+        epsilon (callable): Function to manipulate z-values during propagation
+            example: lambda z: z + 1e-9
     """
 
-    def __init__(self, epsilon=lambda z: z + PropagationRule.STABILITY_FACTOR):
+    def __init__(self, epsilon):
         super(EpsilonRule, self).__init__(epsilon=epsilon)
 
 
 class GammaRule(EpsilonRhoRule):
     """
     Gamma rule for relevance propagation, gives more importance to
-    positive relevance. The gamma parameter determines by how much
-    the positive relevance is increased.
+    positive relevance.
 
     Use for lower layers.
+
+    Args:
+        gamma (int): The gamma parameter determines by how much
+        the positive relevance is increased.
     """
 
     def __init__(self, gamma=0.25):
@@ -130,22 +144,24 @@ class Alpha1_Beta0_Rule(EpsilonRhoRule):
 
 class zB_Rule(PropagationRule):
     """
-    For pixel layers
-    If image is normalized, the mean and std need to be given
+    Propagation rule for pixel layers (first layer).
+    If image is normalized, the mean and std need to be given.
+
+    Args:
+        minimum_value (int): Minimum value of feature space (typically 0 for pixels)
+        maximum_value (int): Maximum value of feature space (typically 1 or 255 for pixels)
+        mean (tensor): Tensor containing the mean values for all channels if images were normalized.
+        std (tensor): Tensor containing the standard deviation values for all channels if images were normalized.
     """
 
-    def __init__(self, minimum_value, maximum_value, mean=None, std=None):
+    def __init__(self, minimum_value=0, maximum_value=1, mean=None, std=None):
         self.minimum_value = minimum_value
         self.maximum_value = maximum_value
         self.mean = mean
         self.std = std
 
     def propagate(self, relevance, layer, activations):
-        """
-        Implementation of epsilon-rho-rule according to Montavon et al. in Explainable AI book
-        Class that serves as basis for other rules.
-        Valid for conv and dense layers with ReLU units.
-        """
+
         activations = (activations.data).requires_grad_(True)
 
         if self.mean is not None and self.std is not None:
