@@ -6,8 +6,6 @@ import torch
 import torch.nn as nn
 
 # TODO: Implement w^2 rule
-# class w2_Rule(PropagationRule):
-# TODO: Documentation
 
 
 class PropagationRule(object):
@@ -43,9 +41,6 @@ class EpsilonRhoRule(PropagationRule):
     def __init__(
         self, rho=lambda p: p, epsilon=lambda z: z + PropagationRule.STABILITY_FACTOR
     ):
-        """
-        
-        """
         self.epsilon = epsilon
         self.rho = rho
 
@@ -207,3 +202,4 @@ class zB_Rule(PropagationRule):
             new_bias = filter_weights(layer.bias.data)
             layer.bias.data = new_bias
         return layer
+
