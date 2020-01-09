@@ -59,7 +59,7 @@ class TestDeepLift(BaseTest):
             attribute_to_layer_input=True,
             return_convergence_delta=True,
         )
-        assertTensorAlmostEqual(self, attributions, [[0.0, 45.0]])
+        assertTensorAlmostEqual(self, attributions[0], [[0.0, 45.0]])
         assert_delta(self, delta)
 
     def test_linear_layer_deeplift(self):

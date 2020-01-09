@@ -243,16 +243,22 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             self.model, (inputs, baselines), target, input_base_additional_args,
         )
 
-        (
-            (gradients, _),
-            (attr_inputs, attr_baselines), is_layer_tuple
-        ) = compute_layer_gradients_and_eval(
+        def chunk_output_fn(out):
+            if not isinstance(out, tuple):
+                return out.chunk(2)
+            return tuple(out_sub.chunk(2) for out_sub in out)
+
+        (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
             wrapped_forward_func,
             self.layer,
             inputs,
             attribute_to_layer_input=attribute_to_layer_input,
-            output_fn=lambda out: out.chunk(2),
+            output_fn=lambda out: chunk_output_fn(out),
         )
+
+        attr_inputs = tuple(map(lambda attr: attr[0], attrs))
+        attr_baselines = tuple(map(lambda attr: attr[1], attrs))
+        gradients = tuple(map(lambda grad: grad[0], gradients))
 
         if custom_attribution_func is None:
             attributions = tuple(
