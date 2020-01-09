@@ -386,8 +386,6 @@ def compute_layer_gradients_and_eval(
         # If only one key exists (standard model), key list simply has one element.
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
 
-        for device_id in key_list:
-            print("saved_layer[device_id]: ", saved_layer[device_id], is_layer_tuple)
         all_outputs = _reduce_list(
             [
                 saved_layer[device_id]
@@ -411,7 +409,6 @@ def compute_layer_gradients_and_eval(
             saved_grads = tuple(output_fn(saved_grad) for saved_grad in saved_grads)
 
         all_grads = _reduce_list(saved_grads)
-        print("all_outputs: ", all_outputs)
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(
                 inputs, saved_layer, key_list, gradient_neuron_index
