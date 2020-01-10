@@ -45,10 +45,12 @@ class LRP(Attribution):
         target=None,
         return_convergence_delta=False,
         additional_forward_args=None,
-        return_for_all_layers=False
+        return_for_all_layers=False,
+        verbose=False
     ):
         """
-        Only works for ReLU activation layers
+        So far, only works for ReLU activation layers, linear and conv2D layers.
+        Error is raised if other activation functions are used.
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -106,6 +108,9 @@ class LRP(Attribution):
                         relevance values for all layers. If False, only the relevance
                         values for the input layer are returned.
 
+                verbose (bool, optional): Indicates whether information on skipped layers
+                        during propagation is printed.
+
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
             - **attributions** (*tensor* or tuple of *tensors*):
@@ -157,7 +162,11 @@ class LRP(Attribution):
                 ),
             ):
                 relevance = rule.propagate(relevance, layer, activation)
+                if verbose:
+                    print(f"\nRelevance propagated over {layer} with manipulation.")
             else:
+                if verbose:
+                    print(f"\nRelevance passed over {layer} without manipulation.")
                 pass
             relevances = (relevance,) + relevances
 
@@ -295,10 +304,8 @@ class LRP(Attribution):
 
 
 class LRP_0(LRP):
-    """LRP class, which uses the base rule for every layer.
-
-    Arguments:
-        LRP {[type]} -- [description]
+    """
+    LRP class, which uses the base rule for every layer.
     """
 
     def __init__(self, forward_func):
