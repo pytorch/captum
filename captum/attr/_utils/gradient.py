@@ -119,7 +119,6 @@ def _forward_layer_eval(
     additional_forward_args=None,
     device_ids=None,
     attribute_to_layer_input=False,
-    output_fn=None,
 ):
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
@@ -129,7 +128,6 @@ def _forward_layer_eval(
         gradient_neuron_index=None,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
-        output_fn=None,
     )
 
 
@@ -141,7 +139,6 @@ def _forward_layer_distributed_eval(
     additional_forward_args=None,
     attribute_to_layer_input=False,
     forward_hook_with_return=False,
-    output_fn=None,
 ):
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
@@ -181,8 +178,6 @@ def _forward_layer_distributed_eval(
             else:
                 saved_layer[eval_tsrs[0].device] = tuple(
                     eval_tsr.clone()
-                    if output_fn is None
-                    else output_fn(eval_tsr.clone())
                     for eval_tsr in eval_tsrs
                 )
 
@@ -255,7 +250,6 @@ def _forward_layer_eval_with_neuron_grads(
     gradient_neuron_index=None,
     device_ids=None,
     attribute_to_layer_input=False,
-    output_fn=None,
 ):
     """
     This method computes forward evaluation for a particular layer using a
@@ -279,7 +273,6 @@ def _forward_layer_eval_with_neuron_grads(
         layer,
         additional_forward_args=additional_forward_args,
         attribute_to_layer_input=attribute_to_layer_input,
-        output_fn=output_fn,
     )
     device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
     # Identifies correct device ordering based on device ids.
@@ -372,7 +365,6 @@ def compute_layer_gradients_and_eval(
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
-            output_fn=output_fn,
         )
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
@@ -423,7 +415,6 @@ def construct_neuron_grad_fn(
     neuron_index,
     device_ids=None,
     attribute_to_neuron_input=False,
-    output_fn=None,
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
@@ -434,7 +425,6 @@ def construct_neuron_grad_fn(
             neuron_index,
             device_ids=device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
-            output_fn=output_fn,
         )
         return grads
 

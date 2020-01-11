@@ -174,7 +174,6 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             self.layer,
             neuron_index,
             attribute_to_neuron_input=attribute_to_neuron_input,
-            output_fn=lambda out: out.chunk(2)[0],
         )
 
         return dl.attribute(
@@ -343,7 +342,6 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             self.layer,
             neuron_index,
             attribute_to_neuron_input=attribute_to_neuron_input,
-            output_fn=lambda out: out.chunk(2)[0],
         )
 
         return dl.attribute(

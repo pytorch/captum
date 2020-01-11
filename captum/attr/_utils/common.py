@@ -324,7 +324,8 @@ def _select_targets(output, target):
             return torch.gather(output, 1, target.reshape(len(output), 1))
         else:
             raise AssertionError(
-                "Tensor target dimension %r is not valid. %r" % (target.shape, output)
+                "Tensor target dimension %r is not valid. %r"
+                % (target.shape, output.shape)
             )
     elif isinstance(target, list):
         assert len(target) == num_examples, "Target list length does not match output!"

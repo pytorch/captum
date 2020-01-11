@@ -258,7 +258,6 @@ class DeepLift(GradientAttribution):
 
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_pre_hook = self._pre_hook_main_model()
-        main_model_hook = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
 
@@ -268,9 +267,12 @@ class DeepLift(GradientAttribution):
         input_base_additional_args = _expand_additional_forward_args(
             additional_forward_args, 2, ExpansionTypes.repeat
         )
+        expanded_target = _expand_target(
+            target, 2, expansion_type=ExpansionTypes.repeat
+        )
 
         wrapped_forward_func = self._construct_forward_func(
-            self.model, (inputs, baselines), target, input_base_additional_args
+            self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
         gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
@@ -282,10 +284,8 @@ class DeepLift(GradientAttribution):
             attributions = _call_custom_attribution_func(
                 custom_attribution_func, gradients, inputs, baselines
             )
-
         # remove hooks from all activations
         main_model_pre_hook.remove()
-        main_model_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -453,16 +453,6 @@ class DeepLift(GradientAttribution):
             return self.model.module.register_forward_pre_hook(pre_hook)
         else:
             return self.model.register_forward_pre_hook(pre_hook)
-
-    def _hook_main_model(self):
-        def forward_hook(module, inputs, outputs):
-            return outputs.chunk(2)[0]
-
-        if isinstance(self.model, nn.DataParallel):
-            return self.model.module.register_forward_hook(forward_hook)
-        else:
-            return self.model.register_forward_hook(forward_hook)
-
     def has_convergence_delta(self):
         return True
 
@@ -828,9 +818,10 @@ def maxpool(
             module.ceil_mode,
             True,
         )
+        grad_output_updated = grad_output[0]
         unpool_grad_out_delta, unpool_grad_out_ref_delta = torch.chunk(
             unpool_func(
-                grad_output[0] * delta_out,
+                grad_output_updated * delta_out,
                 indices,
                 module.kernel_size,
                 module.stride,
@@ -848,7 +839,7 @@ def maxpool(
         original_grad_input = grad_input
         grad_input = (
             unpool_func(
-                grad_output[0],
+                grad_output_updated,
                 indices,
                 module.kernel_size,
                 module.stride,

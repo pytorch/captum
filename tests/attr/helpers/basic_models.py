@@ -113,6 +113,21 @@ class ReLUDeepLiftModel(nn.Module):
         return 2 * self.relu1(x1) + x3 * self.relu2(x2 - 1.5)
 
 
+class LinearMaxPoolLinearModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # kernel size -> 4
+        self.lin1 = nn.Linear(4, 4, bias=False)
+        self.lin1.weight = nn.Parameter(torch.eye(4, 4))
+        self.pool1 = nn.MaxPool1d(4)
+        self.lin2 = nn.Linear(1, 1, bias=False)
+        self.lin2.weight = nn.Parameter(torch.ones(1, 1))
+
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        return self.lin2(self.pool1(self.lin1(x))[:, 0, :])
+
+
 class BasicModelWithReusableModules(nn.Module):
     def __init__(self):
         super().__init__()

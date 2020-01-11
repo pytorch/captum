@@ -17,6 +17,7 @@ from .helpers.basic_models import (
     ReLUDeepLiftModel,
     TanhDeepLiftModel,
     BasicModelWithReusableModules,
+    LinearMaxPoolLinearModel,
 )
 from .helpers.basic_models import ReLULinearDeepLiftModel, Conv1dDeepLiftModel
 
@@ -34,6 +35,24 @@ class Test(BaseTest):
 
         model = ReLUDeepLiftModel()
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
+
+    def test_relu_deeplift_exact_match(self):
+        x1 = torch.tensor([1.0], requires_grad=True)
+        x2 = torch.tensor([2.0], requires_grad=True)
+
+        b1 = torch.tensor([0.0], requires_grad=True)
+        b2 = torch.tensor([0.0], requires_grad=True)
+
+        inputs = (x1, x2)
+        baselines = (b1, b2)
+        model = ReLUDeepLiftModel()
+        dl = DeepLift(model)
+        attributions, delta = dl.attribute(
+            inputs, baselines, return_convergence_delta=True
+        )
+        self.assertEqual(attributions[0][0], 2.0)
+        self.assertEqual(attributions[1][0], 1.0)
+        self.assertEqual(delta[0], 0.0)
 
     def test_tanh_deeplift(self):
         x1 = torch.tensor([-1.0], requires_grad=True)
@@ -228,6 +247,20 @@ class Test(BaseTest):
         dl = DeepLift(model)
         with self.assertRaises(RuntimeError):
             dl.attribute(input, target=0)
+
+    def test_lin_maxpool_lin_classification(self):
+        inputs = torch.ones(2, 4)
+        baselines = torch.tensor([[1, 2, 3, 9], [4, 8, 6, 7]]).float()
+
+        model = LinearMaxPoolLinearModel()
+        dl = DeepLift(model)
+        attrs, delta = dl.attribute(
+            inputs, baselines, target=0, return_convergence_delta=True
+        )
+        expected = [[0.0, 0.0, 0.0, -8.0], [0.0, -7.0, 0.0, 0.0]]
+        expected_delta = [0.0, 0.0]
+        assertArraysAlmostEqual(attrs.detach().numpy(), expected)
+        assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
 
     def _deeplift_assert(
         self, model, attr_method, inputs, baselines, custom_attr_func=None
