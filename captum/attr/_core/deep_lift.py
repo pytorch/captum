@@ -453,6 +453,7 @@ class DeepLift(GradientAttribution):
             return self.model.module.register_forward_pre_hook(pre_hook)
         else:
             return self.model.register_forward_pre_hook(pre_hook)
+
     def has_convergence_delta(self):
         return True
 

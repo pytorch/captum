@@ -177,8 +177,7 @@ def _forward_layer_distributed_eval(
                 return eval_tsrs_to_return
             else:
                 saved_layer[eval_tsrs[0].device] = tuple(
-                    eval_tsr.clone()
-                    for eval_tsr in eval_tsrs
+                    eval_tsr.clone() for eval_tsr in eval_tsrs
                 )
 
     if attribute_to_layer_input:
@@ -411,10 +410,7 @@ def compute_layer_gradients_and_eval(
 
 
 def construct_neuron_grad_fn(
-    layer,
-    neuron_index,
-    device_ids=None,
-    attribute_to_neuron_input=False,
+    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False,
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
