@@ -20,11 +20,11 @@ from ..._utils.gradient import (
 
 class LayerGradCam(LayerAttribution, GradientAttribution):
     def __init__(
-            self,
-            forward_func: Callable,
-            layer: Module,
-            device_ids: Optional[List[int]] = None,
-        ) -> None:
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args
 
@@ -52,7 +52,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor,...]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Computes GradCAM attribution for chosen layer. GradCAM is designed for
             convolutional neural networks, and is usually applied to the last
