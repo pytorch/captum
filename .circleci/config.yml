@@ -106,7 +106,6 @@ commands:
             pyenv versions
             pyenv global 3.7.0
             sudo python -m pip install --upgrade pip
-            sudo python -m pip install --upgrade setuptools
             sudo python -m pip install pytest
 
   install_cuda:
