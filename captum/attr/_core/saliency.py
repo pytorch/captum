@@ -66,7 +66,7 @@ class Saliency(GradientAttribution):
                             to True, otherwise returns the (signed) gradients if
                             False.
                             Defalut: True
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional

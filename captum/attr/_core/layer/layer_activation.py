@@ -55,7 +55,7 @@ class LayerActivation(LayerAttribution):
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
