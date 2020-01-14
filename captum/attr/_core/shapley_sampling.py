@@ -10,6 +10,7 @@ from .._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
 
@@ -32,7 +33,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         target=None,
         additional_forward_args=None,
         feature_mask=None,
-        num_samples=1,
+        num_samples=10,
         ablations_per_eval=1,
     ):
         r""""
@@ -209,86 +210,92 @@ class ShapleyValueSampling(PerturbationAttribution):
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
         """
-        # Keeps track whether original input is a tuple or not before
-        # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
-        inputs, baselines = _format_input_baseline(inputs, baselines)
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-        baselines = _tensorize_baseline(inputs, baselines)
-        initial_eval = _run_forward(
-            self.forward_func, baselines, target, additional_forward_args
-        )
+        with torch.no_grad():
+            # Keeps track whether original input is a tuple or not before
+            # converting it into a tuple.
+            is_inputs_tuple = isinstance(inputs, tuple)
+            inputs, baselines = _format_input_baseline(inputs, baselines)
+            additional_forward_args = _format_additional_forward_args(
+                additional_forward_args
+            )
+            baselines = _tensorize_baseline(inputs, baselines)
+            initial_eval = _run_forward(
+                self.forward_func, baselines, target, additional_forward_args
+            )
+            single_output_mode = False
 
-        num_examples = inputs[0].shape[0]
-        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
-        if feature_mask is None:
-            feature_mask = []
-            current_num_features = 0
-            for i in range(len(inputs)):
-                num_features = torch.numel(inputs[i][0])
-                feature_mask.append(current_num_features + torch.reshape(
-                    torch.arange(num_features, device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                ))
-                current_num_features += num_features
-            total_features = current_num_features
-        else:
-            total_features = max(torch.max(single_mask).item() for single_mask in feature_mask)
+            num_examples = inputs[0].shape[0]
+            feature_mask = _format_input(feature_mask) if feature_mask is not None else None
+            if feature_mask is None:
+                feature_mask = []
+                current_num_features = 0
+                for i in range(len(inputs)):
+                    num_features = torch.numel(inputs[i][0])
+                    feature_mask.append(current_num_features + torch.reshape(
+                        torch.arange(num_features, device=inputs[i].device),
+                        inputs[i][0:1].shape,
+                    ))
+                    current_num_features += num_features
+                total_features = current_num_features
+                feature_mask = tuple(feature_mask)
+            else:
+                total_features = max(torch.max(single_mask).item() for single_mask in feature_mask)
 
-        assert (
-            isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
-        ), "Ablations per evaluation must be at least 1."
+            assert (
+                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+            ), "Ablations per evaluation must be at least 1."
 
-        # Initialize attribution totals and counts
-        total_attrib = [
-            torch.zeros_like(input[0:1] if single_output_mode else input)
-            for input in inputs
-        ]
+            # Initialize attribution totals and counts
+            total_attrib = [
+                torch.zeros_like(input[0:1] if single_output_mode else input)
+                for input in inputs
+            ]
 
-        # Iterate for number of samples, generate a permutation of the features
-        # and evlaute the incremntal increase for each feature.
-        for i in range(num_samples):
-            feature_permutation = torch.randperm(total_features)
-            prev_results = initial_eval
-            for (
-                current_inputs,
-                current_add_args,
-                current_target,
-                current_mask,
-            ) in self._ablation_generator(
-                inputs,
-                additional_forward_args,
-                target,
-                baselines,
-                input_mask,
-                feature_permutation,
-                ablations_per_eval,
-            ):
-                # modified_eval dimensions: 1D tensor with length
-                # equal to #num_examples * #features in batch
-                modified_eval = _run_forward(
-                    self.forward_func, current_inputs, current_target, current_add_args
-                )
-                all_eval = torch.cat((prev_results, modified_eval), dim=0)
-                # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
-                # (contains 1 more dimension than inputs). This adds extra dimensions
-                # of 1 to make the tensor broadcastable with the inputs tensor.
-                if single_output_mode:
-                    eval_diff = initial_eval - modified_eval
-                else:
-                    eval_diff = (
-                        initial_eval - modified_eval.reshape(-1, num_examples)
-                    ).reshape((-1, num_examples) + (len(inputs[i].shape) - 1) * (1,))
-                if self.use_weights:
-                    weights[i] += current_mask.float().sum(dim=0)
-                total_attrib[i] += (eval_diff * current_mask.float()).sum(dim=0)
+            # Iterate for number of samples, generate a permutation of the features
+            # and evlaute the incremntal increase for each feature.
+            for i in range(num_samples):
+                feature_permutation = torch.randperm(total_features)
+                prev_results = initial_eval
+                for (
+                    current_inputs,
+                    current_add_args,
+                    current_target,
+                    current_masks,
+                ) in self._ablation_generator(
+                    inputs,
+                    additional_forward_args,
+                    target,
+                    baselines,
+                    feature_mask,
+                    feature_permutation,
+                    ablations_per_eval,
+                ):
+                    print(current_inputs)
+                    # modified_eval dimensions: 1D tensor with length
+                    # equal to #num_examples * #features in batch
+                    modified_eval = _run_forward(
+                        self.forward_func, current_inputs, current_target, current_add_args
+                    )
+                    # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
+                    # (contains 1 more dimension than inputs). This adds extra dimensions
+                    # of 1 to make the tensor broadcastable with the inputs tensor.
+                    if single_output_mode:
+                        eval_diff = modified_eval - prev_results
+                        prev_results = modified_eval
+                    else:
+                        all_eval = torch.cat((prev_results, modified_eval), dim=0)
+                        eval_diff = all_eval[num_examples:] - all_eval[:-num_examples]
+                        prev_results = all_eval[-num_examples:]
+                    for j in range(len(total_attrib)):
+                        current_eval_diff = eval_diff
+                        if not single_output_mode:
+                            current_eval_diff = current_eval_diff.reshape((-1, num_examples) + (len(inputs[j].shape) - 1) * (1,))
+                        total_attrib[j] += (eval_diff * current_masks[j].float()).sum(dim=0)
 
-        # Divide total attributions by number of random permutations and return
-        # formatted attributions.
-        attrib = tuple(tensor_attrib_total / num_samples for tensor_attrib_total in total_attrib)
-        return _format_attributions(is_inputs_tuple, attrib)
+            # Divide total attributions by number of random permutations and return
+            # formatted attributions.
+            attrib = tuple(tensor_attrib_total / num_samples for tensor_attrib_total in total_attrib)
+            return _format_attributions(is_inputs_tuple, attrib)
 
     def _ablation_generator(
         self,
@@ -314,10 +321,10 @@ class ShapleyValueSampling(PerturbationAttribution):
         target_repeated = _expand_target(target, ablations_per_eval)
 
         for i in range(len(feature_permutation)):
-            current_tensors = tuple(current + input*(mask == feature_permutation[i]) for input, current, mask in zip(inputs, current_tensors, input_masks))
+            current_tensors = tuple(current + input*(mask == feature_permutation[i]).to(input.dtype) for input, current, mask in zip(inputs, current_tensors, input_masks))
             current_tensors_list.append(current_tensors)
             current_mask_list.append(tuple(mask == feature_permutation[i] for mask in input_masks))
-            if len(current_tensor_list) == ablations_per_eval:
+            if len(current_tensors_list) == ablations_per_eval:
                 combined_inputs = tuple(torch.cat(aligned_tensors, dim=0) for aligned_tensors in zip(*current_tensors_list))
                 combined_masks = tuple(torch.cat(aligned_masks, dim=0) for aligned_masks in zip(*current_mask_list))
                 yield combined_inputs, additional_args_repeated, target_repeated, combined_masks
