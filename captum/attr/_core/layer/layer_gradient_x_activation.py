@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
-from ..._utils.attribution import LayerAttribution, GradientAttribution
+from typing import Any, Callable, List, Optional, Tuple, Union
+
+from torch import Tensor
+from torch.nn import Module
+
+from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
-    _format_input,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input,
 )
 from ..._utils.gradient import (
-    compute_layer_gradients_and_eval,
     apply_gradient_requirements,
+    compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -36,11 +46,13 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        target=None,
-        additional_forward_args=None,
-        attribute_to_layer_input=False,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Computes element-wise product of gradient and activation for selected
             layer on given inputs.
