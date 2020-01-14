@@ -162,7 +162,7 @@
 <span class="sd">                                target for the corresponding example.</span>
 
 <span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -273,7 +273,7 @@
 
         <span class="c1"># Conductance Gradients - Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
             <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
             <span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">input_additional_args</span><span class="p">,</span>
@@ -285,6 +285,13 @@
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_neuron_input</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="c1"># Layer gradients and eval</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">layer_gradients</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_eval</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"Layer can only have 1 output tensor for neuron attribution!"</span>
+        <span class="n">layer_gradients</span> <span class="o">=</span> <span class="n">layer_gradients</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">layer_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># Multiplies by appropriate gradient of output with respect to hidden neurons</span>
         <span class="c1"># mid_grads is a 1D Tensor of length num_steps*internal_batch_size,</span>
@@ -356,7 +363,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

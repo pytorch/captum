@@ -33,6 +33,7 @@
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
 
 
@@ -54,9 +55,6 @@
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
 <span class="sd">                          this layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution, can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -84,7 +82,7 @@
 <span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                            to the number of examples, and if multiple input tensors</span>
 <span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -109,11 +107,18 @@
 <span class="sd">                            Default: False</span>
 
 <span class="sd">            Returns:</span>
-<span class="sd">                *tensor* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor*):</span>
+<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                            Activation of each neuron in given layer output.</span>
 <span class="sd">                            Attributions will always be the same size as the</span>
 <span class="sd">                            output of the given layer.</span>
+<span class="sd">                            Attributions are returned in a tuple based on whether</span>
+<span class="sd">                            the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                            from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                            a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                            outputs of a single tensor are not.</span>
+
+
 
 <span class="sd">            Examples::</span>
 
@@ -129,7 +134,7 @@
 <span class="sd">                &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
 <span class="sd">        """</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+            <span class="n">layer_eval</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
@@ -137,7 +142,7 @@
                 <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
                 <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">layer_eval</span></div></div>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>
@@ -177,7 +182,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

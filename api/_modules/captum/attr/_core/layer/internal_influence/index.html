@@ -35,6 +35,7 @@
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
 <span class="p">)</span>
@@ -54,9 +55,6 @@
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
 <span class="sd">                          this layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -151,7 +149,7 @@
 <span class="sd">                                target for the corresponding example.</span>
 
 <span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -197,13 +195,18 @@
 <span class="sd">                            Default: False</span>
 
 <span class="sd">            Returns:</span>
-<span class="sd">                *tensor* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor*):</span>
+<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                            Internal influence of each neuron in given</span>
 <span class="sd">                            layer output. Attributions will always be the same size</span>
 <span class="sd">                            as the output or input of the given layer depending on</span>
 <span class="sd">                            whether `attribute_to_layer_input` is set to `False` or</span>
 <span class="sd">                            `True`respectively.</span>
+<span class="sd">                            Attributions are returned in a tuple based on whether</span>
+<span class="sd">                            the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                            from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                            a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                            outputs of a single tensor are not.</span>
 
 <span class="sd">            Examples::</span>
 
@@ -249,7 +252,7 @@
         <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">)</span>
 
         <span class="c1"># Returns gradient of output with respect to hidden layer.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
             <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
             <span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">input_additional_args</span><span class="p">,</span>
@@ -262,14 +265,20 @@
         <span class="p">)</span>
         <span class="c1"># flattening grads so that we can multiply it with step-size</span>
         <span class="c1"># calling contiguous to avoid `memory whole` problems</span>
-        <span class="n">scaled_grads</span> <span class="o">=</span> <span class="n">layer_gradients</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
-            <span class="n">step_sizes</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">layer_gradients</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">scaled_grads</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">layer_grad</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">step_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n_steps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">layer_grad</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">layer_grad</span> <span class="ow">in</span> <span class="n">layer_gradients</span>
+        <span class="p">)</span>
 
         <span class="c1"># aggregates across all steps for each tensor in the input tuple</span>
-        <span class="k">return</span> <span class="n">_reshape_and_sum</span><span class="p">(</span>
-            <span class="n">scaled_grads</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">layer_gradients</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="p">)</span></div></div>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">_reshape_and_sum</span><span class="p">(</span>
+                <span class="n">scaled_grad</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">layer_grad</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">scaled_grad</span><span class="p">,</span> <span class="n">layer_grad</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">scaled_grads</span><span class="p">,</span> <span class="n">layer_gradients</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>
@@ -309,7 +318,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

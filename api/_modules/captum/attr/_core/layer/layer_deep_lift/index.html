@@ -60,9 +60,6 @@
 <span class="sd">                          corresponds to the size and dimensionality of the layer's</span>
 <span class="sd">                          input or output depending on whether we attribute to the</span>
 <span class="sd">                          inputs or outputs of the layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution, can only be a single tensor.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">):</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -176,7 +173,7 @@
 <span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
 <span class="sd">                            target for the corresponding example.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -220,14 +217,15 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor*):</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                Attribution score computed based on DeepLift's rescale rule with</span>
 <span class="sd">                respect to layer's inputs or outputs. Attributions will always be the</span>
 <span class="sd">                same size as the provided layer's inputs or outputs, depending on</span>
 <span class="sd">                whether we attribute to the inputs or outputs of the layer.</span>
-<span class="sd">                Since currently it is assumed that the inputs and outputs of the</span>
-<span class="sd">                layer must be single tensor, returned attributions have the shape</span>
-<span class="sd">                of that tensor.</span>
+<span class="sd">                If the layer input / output is a single tensor, then</span>
+<span class="sd">                just a tensor is returned; if the layer input / output</span>
+<span class="sd">                has multiple tensors, then a corresponding tuple</span>
+<span class="sd">                of tensors is returned.</span>
 <span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                This is computed using the property that the total sum of</span>
 <span class="sd">                forward_func(inputs) - forward_func(baselines) must equal the</span>
@@ -265,7 +263,7 @@
 
         <span class="n">baselines</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
 
-        <span class="n">attr_baselines</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+        <span class="n">attr_baselines</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
@@ -279,18 +277,14 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
 
-        <span class="n">gradients</span><span class="p">,</span> <span class="n">attr_inputs</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+        <span class="n">gradients</span><span class="p">,</span> <span class="n">attr_inputs</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># Fixme later: we need to do this because `compute_layer_gradients_and_eval`</span>
-        <span class="c1"># and `_forward_layer_eval` always returns a tensor</span>
-        <span class="n">attr_baselines</span> <span class="o">=</span> <span class="p">(</span><span class="n">attr_baselines</span><span class="p">,)</span>
-        <span class="n">attr_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">attr_inputs</span><span class="p">,)</span>
-        <span class="n">gradients</span> <span class="o">=</span> <span class="p">(</span><span class="n">gradients</span><span class="p">,)</span>
 
         <span class="k">if</span> <span class="n">custom_attribution_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -317,7 +311,7 @@
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
-            <span class="kc">False</span><span class="p">,</span>  <span class="c1"># currently both the input and output of layer can only be a tensor</span>
+            <span class="n">is_layer_tuple</span><span class="p">,</span>
         <span class="p">)</span></div></div>
 
 
@@ -332,8 +326,6 @@
 <span class="sd">                          corresponds to the size and dimensionality of the layer's</span>
 <span class="sd">                          input or output depending on whether we attribute to the</span>
 <span class="sd">                          inputs or outputs of the layer.</span>
-<span class="sd">                          Currently, it is assumed that both inputs and ouputs of</span>
-<span class="sd">                          the layer can only be a single tensor.</span>
 <span class="sd">        """</span>
         <span class="n">LayerDeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="n">DeepLiftShap</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
@@ -432,7 +424,7 @@
 <span class="sd">                            target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It must be either a single additional</span>
@@ -476,14 +468,17 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor*):</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                        Attribution score computed based on DeepLift's rescale rule</span>
 <span class="sd">                        with respect to layer's inputs or outputs. Attributions</span>
 <span class="sd">                        will always be the same size as the provided layer's inputs</span>
 <span class="sd">                        or outputs, depending on whether we attribute to the inputs</span>
-<span class="sd">                        or outputs of the layer. Since currently it is assumed that</span>
-<span class="sd">                        the inputs and outputs of the layer must be single tensor,</span>
-<span class="sd">                        returned attributions have the shape of that tensor.</span>
+<span class="sd">                        or outputs of the layer.</span>
+<span class="sd">                        Attributions are returned in a tuple based on whether</span>
+<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                        outputs of a single tensor are not.</span>
 <span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        This is computed using the property that the</span>
 <span class="sd">                        total sum of forward_func(inputs) - forward_func(baselines)</span>
@@ -548,10 +543,17 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
-
-        <span class="n">attributions</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attributions</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attrib</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">attributions</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attributions</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span>
         <span class="k">else</span><span class="p">:</span>
@@ -595,7 +597,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

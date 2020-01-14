@@ -36,6 +36,7 @@
 
 <span class="kn">from</span> <span class="nn">..gradient_shap</span> <span class="kn">import</span> <span class="n">GradientShap</span><span class="p">,</span> <span class="n">InputBaselineXGradient</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_format_callable_baseline</span><span class="p">,</span>
     <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
 <span class="p">)</span>
@@ -56,9 +57,6 @@
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
 <span class="sd">                          this layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -197,7 +195,7 @@
 <span class="sd">                            target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
-<span class="sd">            additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                        requires additional arguments other than the inputs for</span>
 <span class="sd">                        which attributions should not be computed, this argument</span>
 <span class="sd">                        can be provided. It can contain a tuple of ND tensors or</span>
@@ -227,14 +225,17 @@
 <span class="sd">                        Default: False</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">            - **attributions** (*tensor*):</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                        Attribution score computed based on GradientSHAP with</span>
 <span class="sd">                        respect to layer's input or output. Attributions will always</span>
 <span class="sd">                        be the same size as the provided layer's inputs or outputs,</span>
 <span class="sd">                        depending on whether we attribute to the inputs or outputs</span>
-<span class="sd">                        of the layer. Since currently it is assumed that the inputs</span>
-<span class="sd">                        and outputs of the layer must be single tensor, returned</span>
-<span class="sd">                        attributions have the shape of that tensor.</span>
+<span class="sd">                        of the layer.</span>
+<span class="sd">                        Attributions are returned in a tuple based on whether</span>
+<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                        outputs of a single tensor are not.</span>
 <span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        This is computed using the property that the total</span>
 <span class="sd">                        sum of forward_func(inputs) - forward_func(baselines)</span>
@@ -302,9 +303,6 @@
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
 <span class="sd">                          this layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -323,6 +321,7 @@
         <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">rand_coefficient</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
             <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
@@ -333,7 +332,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_scale_input</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">rand_coefficient</span><span class="p">)</span>
             <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+        <span class="n">grads</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">input_baseline_scaled</span><span class="p">,</span>
@@ -343,7 +342,7 @@
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">attr_baselines</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+        <span class="n">attr_baselines</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
@@ -352,7 +351,7 @@
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">attr_inputs</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+        <span class="n">attr_inputs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
@@ -360,10 +359,6 @@
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">attr_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">attr_inputs</span><span class="p">,)</span>
-        <span class="n">attr_baselines</span> <span class="o">=</span> <span class="p">(</span><span class="n">attr_baselines</span><span class="p">,)</span>
-        <span class="n">grads</span> <span class="o">=</span> <span class="p">(</span><span class="n">grads</span><span class="p">,)</span>
-
         <span class="n">input_baseline_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span> <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">attr_inputs</span><span class="p">,</span> <span class="n">attr_baselines</span><span class="p">)</span>
         <span class="p">)</span>
@@ -379,6 +374,7 @@
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
+            <span class="n">is_layer_tuple</span><span class="p">,</span>
         <span class="p">)</span>
 </pre></div>
 </div>
@@ -419,7 +415,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

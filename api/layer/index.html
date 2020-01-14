@@ -41,10 +41,7 @@ Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution, can only be a single tensor.</p></li>
+this layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -153,7 +150,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -207,12 +204,17 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Conductance of each neuron in given layer input or
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Conductance of each neuron in given layer input or
 output. Attributions will always be the same size as
 the input or output of the given layer, depending on
 whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
-<cite>attribute_to_layer_input</cite>.</p>
+<cite>attribute_to_layer_input</cite>.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -285,10 +287,7 @@ Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution, can only be a single tensor.</p></li>
+this layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -312,7 +311,7 @@ of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples, and if multiple input tensors
 are provided, the examples must be aligned appropriately.</p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -340,9 +339,14 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Activation of each neuron in given layer output.
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Activation of each neuron in given layer output.
 Attributions will always be the same size as the
-output of the given layer.</p>
+output of the given layer.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -350,7 +354,7 @@ output of the given layer.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -384,10 +388,7 @@ Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution can only be a single tensor.</p></li>
+this layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -495,7 +496,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -544,11 +545,16 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Internal influence of each neuron in given
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Internal influence of each neuron in given
 layer output. Attributions will always be the same size
 as the output or input of the given layer depending on
 whether <cite>attribute_to_layer_input</cite> is set to <cite>False</cite> or
-<a href="#id1"><span class="problematic" id="id2">`</span></a>True`respectively.</p>
+<a href="#id1"><span class="problematic" id="id2">`</span></a>True`respectively.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -556,7 +562,7 @@ whether <cite>attribute_to_layer_input</cite> is set to <cite>False</cite> or
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -590,10 +596,7 @@ Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution, can only be a single tensor.</p></li>
+this layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -654,7 +657,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -672,20 +675,21 @@ or output. If <cite>attribute_to_layer_input</cite> is set to True
 then the attributions will be computed with respect to
 layer input, otherwise it will be computed with respect
 to layer output.
-Note that currently it is assumed that either the input
-or the output of internal layer, depending on whether we
-attribute to the input or output, is a single tensor.
-Support for multiple tensors will be added later.
 Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Product of gradient and activation for each
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Product of gradient and activation for each
 neuron in given layer output.
 Attributions will always be the same size as the
-output of the given layer.</p>
+output of the given layer.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -693,7 +697,7 @@ output of the given layer.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -724,9 +728,7 @@ output of the given layer.</p>
 </dd>
 <dt>layer (torch.nn.Module): Layer for which attributions are computed.</dt><dd><p>Output size of attribute matches this layer’s output
 dimensions, except for dimension 2, which will be 1,
-since GradCAM sums over channels.
-Currently, only layers with a single tensor output are
-supported.</p>
+since GradCAM sums over channels.</p>
 </dd>
 <dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -810,7 +812,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -845,10 +847,15 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Attributions based on GradCAM method.
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attributions based on GradCAM method.
 Attributions will be the same size as the
 output of the given layer, except for dimension 2,
-which will be 1 due to summing over channels.</p>
+which will be 1 due to summing over channels.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -856,7 +863,7 @@ which will be 1 due to summing over channels.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -896,10 +903,7 @@ which will be 1 due to summing over channels.</p>
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
 input or output depending on whether we attribute to the
-inputs or outputs of the layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution, can only be a single tensor.</p></li>
+inputs or outputs of the layer.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1019,7 +1023,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1070,13 +1074,14 @@ Default: None</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule with
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule with
 respect to layer’s inputs or outputs. Attributions will always be the
 same size as the provided layer’s inputs or outputs, depending on
 whether we attribute to the inputs or outputs of the layer.
-Since currently it is assumed that the inputs and outputs of the
-layer must be single tensor, returned attributions have the shape
-of that tensor.</p>
+If the layer input / output is a single tensor, then
+just a tensor is returned; if the layer input / output
+has multiple tensors, then a corresponding tuple
+of tensors is returned.</p>
 </dd>
 </dl>
 </li>
@@ -1131,9 +1136,7 @@ it is not guaranteed and depends on the specifics of the
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
 input or output depending on whether we attribute to the
-inputs or outputs of the layer.
-Currently, it is assumed that both inputs and ouputs of
-the layer can only be a single tensor.</p></li>
+inputs or outputs of the layer.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1242,7 +1245,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It must be either a single additional
@@ -1293,13 +1296,16 @@ Default: None</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on DeepLift’s rescale rule
 with respect to layer’s inputs or outputs. Attributions
 will always be the same size as the provided layer’s inputs
 or outputs, depending on whether we attribute to the inputs
-or outputs of the layer. Since currently it is assumed that
-the inputs and outputs of the layer must be single tensor,
-returned attributions have the shape of that tensor.</p>
+or outputs of the layer.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -1360,10 +1366,7 @@ Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.
-Currently, it is assumed that the inputs or the outputs
-of the layer, depending on which one is used for
-attribution can only be a single tensor.</p></li>
+this layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -1509,7 +1512,7 @@ target for the corresponding example.</p>
 </ul>
 <p>Default: None</p>
 </p></li>
-<li><p><strong>additional_forward_args</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – If the forward function
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
 can be provided. It can contain a tuple of ND tensors or
@@ -1542,13 +1545,16 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em>):</dt><dd><p>Attribution score computed based on GradientSHAP with
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Attribution score computed based on GradientSHAP with
 respect to layer’s input or output. Attributions will always
 be the same size as the provided layer’s inputs or outputs,
 depending on whether we attribute to the inputs or outputs
-of the layer. Since currently it is assumed that the inputs
-and outputs of the layer must be single tensor, returned
-attributions have the shape of that tensor.</p>
+of the layer.
+Attributions are returned in a tuple based on whether
+the layer inputs / outputs are contained in a tuple
+from a forward hook. For standard modules, inputs of
+a single tensor are usually wrapped in a tuple, while
+outputs of a single tensor are not.</p>
 </dd>
 </dl>
 </li>
@@ -1640,7 +1646,7 @@ noisy samples generated for it.</p>
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

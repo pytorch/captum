@@ -302,7 +302,9 @@
         <span class="n">expand_and_update_additional_forward_args</span><span class="p">()</span>
         <span class="n">expand_and_update_target</span><span class="p">()</span>
         <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
-        <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inputs_with_noise</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="n">inputs_with_noise</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">inputs_with_noise</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
 
         <span class="n">return_convergence_delta</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">"return_convergence_delta"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"return_convergence_delta"</span><span class="p">]</span>
@@ -310,6 +312,8 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
+
+        <span class="n">is_attrib_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
         <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
 
         <span class="n">expected_attributions</span> <span class="o">=</span> <span class="p">[]</span>
@@ -324,7 +328,7 @@
         <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
                 <span class="nb">tuple</span><span class="p">(</span><span class="n">expected_attributions</span><span class="p">),</span>
-                <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                <span class="n">is_attrib_tuple</span><span class="p">,</span>
                 <span class="n">return_convergence_delta</span><span class="p">,</span>
                 <span class="n">delta</span><span class="p">,</span>
             <span class="p">)</span>
@@ -332,7 +336,7 @@
         <span class="k">if</span> <span class="n">NoiseTunnelType</span><span class="p">[</span><span class="n">nt_type</span><span class="p">]</span> <span class="o">==</span> <span class="n">NoiseTunnelType</span><span class="o">.</span><span class="n">smoothgrad_sq</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
                 <span class="nb">tuple</span><span class="p">(</span><span class="n">expected_attributions_sq</span><span class="p">),</span>
-                <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                <span class="n">is_attrib_tuple</span><span class="p">,</span>
                 <span class="n">return_convergence_delta</span><span class="p">,</span>
                 <span class="n">delta</span><span class="p">,</span>
             <span class="p">)</span>
@@ -345,13 +349,13 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
-            <span class="n">vargrad</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
+            <span class="n">vargrad</span><span class="p">,</span> <span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_apply_checks_and_return_attributions</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">return_convergence_delta</span><span class="p">,</span> <span class="n">delta</span>
     <span class="p">):</span>
-        <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
@@ -400,7 +404,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {

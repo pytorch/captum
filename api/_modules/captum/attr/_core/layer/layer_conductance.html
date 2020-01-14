@@ -34,6 +34,7 @@
     <span class="n">_reshape_and_sum</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
     <span class="n">_expand_target</span><span class="p">,</span>
@@ -54,9 +55,6 @@
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
 <span class="sd">                          this layer.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution, can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -157,7 +155,7 @@
 <span class="sd">                                target for the corresponding example.</span>
 
 <span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (tuple, optional): If the forward function</span>
+<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
 <span class="sd">                            requires additional arguments other than the inputs for</span>
 <span class="sd">                            which attributions should not be computed, this argument</span>
 <span class="sd">                            can be provided. It must be either a single additional</span>
@@ -209,13 +207,18 @@
 
 <span class="sd">            Returns:</span>
 <span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">                - **attributions** (*tensor*):</span>
+<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
 <span class="sd">                            Conductance of each neuron in given layer input or</span>
 <span class="sd">                            output. Attributions will always be the same size as</span>
 <span class="sd">                            the input or output of the given layer, depending on</span>
 <span class="sd">                            whether we attribute to the inputs or outputs</span>
 <span class="sd">                            of the layer which is decided by the input flag</span>
 <span class="sd">                            `attribute_to_layer_input`.</span>
+<span class="sd">                            Attributions are returned in a tuple based on whether</span>
+<span class="sd">                            the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                            from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                            a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                            outputs of a single tensor are not.</span>
 <span class="sd">                - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                            The difference between the total</span>
 <span class="sd">                            approximated and true conductance.</span>
@@ -273,7 +276,7 @@
 
         <span class="c1"># Conductance Gradients - Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
             <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
             <span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">input_additional_args</span><span class="p">,</span>
@@ -288,28 +291,37 @@
         <span class="c1"># Compute differences between consecutive evaluations of layer_eval.</span>
         <span class="c1"># This approximates the total input gradient of each step multiplied</span>
         <span class="c1"># by the step size.</span>
-        <span class="n">grad_diffs</span> <span class="o">=</span> <span class="n">layer_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">layer_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+        <span class="n">grad_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">layer_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">layer_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="n">layer_evals</span>
+        <span class="p">)</span>
 
         <span class="c1"># Element-wise multiply gradient of output with respect to hidden layer</span>
         <span class="c1"># and summed gradients with respect to input (chain rule) and sum</span>
         <span class="c1"># across stepped inputs.</span>
-        <span class="n">attributions</span> <span class="o">=</span> <span class="n">_reshape_and_sum</span><span class="p">(</span>
-            <span class="n">grad_diffs</span> <span class="o">*</span> <span class="n">layer_gradients</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">],</span>
-            <span class="n">n_steps</span><span class="p">,</span>
-            <span class="n">num_examples</span><span class="p">,</span>
-            <span class="n">layer_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">_reshape_and_sum</span><span class="p">(</span>
+                <span class="n">grad_diff</span> <span class="o">*</span> <span class="n">layer_gradient</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">],</span>
+                <span class="n">n_steps</span><span class="p">,</span>
+                <span class="n">num_examples</span><span class="p">,</span>
+                <span class="n">layer_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">layer_gradient</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">grad_diff</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,</span> <span class="n">grad_diffs</span>
+            <span class="p">)</span>
         <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span>
             <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">attributions</span><span class="p">,),</span>
+                <span class="n">attributions</span><span class="p">,</span>
                 <span class="n">start_point</span><span class="p">,</span>
                 <span class="n">end_point</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span>
-        <span class="k">return</span> <span class="n">attributions</span></div></div>
+            <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>
@@ -349,7 +361,7 @@
 </div>
 </div>
 <div class="clearer"></div>
-</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2019 Facebook Inc.</section><script>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
