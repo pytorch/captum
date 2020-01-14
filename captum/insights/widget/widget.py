@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import ipywidgets as widgets
 from captum.insights import AttributionVisualizer
 from captum.insights.server import namedtuple_to_dict
@@ -16,17 +17,16 @@ class CaptumInsights(widgets.DOMWidget):
     _model_module_version = Unicode("^0.1.0").tag(sync=True)
 
     visualizer = Instance(klass=AttributionVisualizer)
-    classes = List(trait=Unicode).tag(sync=True)
 
+    insights_config = Dict().tag(sync=True)
     label_details = Dict().tag(sync=True)
     attribution = Dict().tag(sync=True)
-
     config = Dict().tag(sync=True)
     output = List().tag(sync=True)
 
     def __init__(self, **kwargs):
         super(CaptumInsights, self).__init__(**kwargs)
-        self.classes = self.visualizer.classes
+        self.insights_config = self.visualizer.get_insights_config()
 
     @observe("config")
     def _fetch_data(self, change):

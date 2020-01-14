@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
+from enum import Enum
+from inspect import signature
 from typing import Optional, Tuple, Union, overload
 
 import torch
 from torch import Tensor
-
-from enum import Enum
-from inspect import signature
 
 from .approximation_methods import SUPPORTED_METHODS
 
@@ -526,3 +525,11 @@ class MaxList:
                 self.list.insert(i, (value, item))
                 break
         self.list = self.list[: self.size]
+
+
+class classproperty(object):
+    def __init__(self, f):
+        self.f = f
+
+    def __get__(self, obj, owner):
+        return self.f(owner)
