@@ -351,7 +351,8 @@
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
-                <span class="s2">"Tensor target dimension </span><span class="si">%r</span><span class="s2"> is not valid."</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">,)</span>
+                <span class="s2">"Tensor target dimension </span><span class="si">%r</span><span class="s2"> is not valid. </span><span class="si">%r</span><span class="s2">"</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_examples</span><span class="p">,</span> <span class="s2">"Target list length does not match output!"</span>
@@ -369,6 +370,11 @@
 
 
 <div class="viewcode-block" id="_run_forward"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._run_forward">[docs]</a><span class="k">def</span> <span class="nf">_run_forward</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">forward_func_args</span> <span class="o">=</span> <span class="n">signature</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forward_func_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">forward_func</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">output</span> <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_select_targets</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
     <span class="c1"># make everything a tuple so that it is easy to unpack without</span>
     <span class="c1"># using if-statements</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
