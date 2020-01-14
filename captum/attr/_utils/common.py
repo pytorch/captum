@@ -324,7 +324,8 @@ def _select_targets(output, target):
             return torch.gather(output, 1, target.reshape(len(output), 1))
         else:
             raise AssertionError(
-                "Tensor target dimension %r is not valid." % (target.shape,)
+                "Tensor target dimension %r is not valid. %r"
+                % (target.shape, output.shape)
             )
     elif isinstance(target, list):
         assert len(target) == num_examples, "Target list length does not match output!"
@@ -342,6 +343,11 @@ def _select_targets(output, target):
 
 
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
+    forward_func_args = signature(forward_func).parameters
+    if len(forward_func_args) == 0:
+        output = forward_func()
+        return output if target is None else _select_targets(output, target)
+
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
     inputs = _format_input(inputs)

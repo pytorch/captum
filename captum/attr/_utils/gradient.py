@@ -76,9 +76,9 @@ def compute_gradients(
                         will be passed to forward_fn.
             target_ind: Index of the target class for which gradients
                         must be computed (classification only).
-            args:       Additional input arguments that forward function requires.
-                        It takes an empty tuple (no additional arguments) if no
-                        additional arguments are required
+            additional_forward_args: Additional input arguments that forward
+                        function requires. It takes an empty tuple (no additional
+                        arguments) if no additional arguments are required
     """
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
@@ -303,6 +303,7 @@ def compute_layer_gradients_and_eval(
     gradient_neuron_index=None,
     device_ids=None,
     attribute_to_layer_input=False,
+    output_fn=None,
 ):
     r"""
         Computes gradients of the output with respect to a given layer as well
@@ -337,6 +338,9 @@ def compute_layer_gradients_and_eval(
                         will be passed to forward_fn.
             target_ind: Index of the target class for which gradients
                         must be computed (classification only).
+            output_fn:  An optional function that is applied to the layer inputs or
+                        outputs depending whether the `attribute_to_layer_input` is
+                        set to `True` or `False`
             args:       Additional input arguments that forward function requires.
                         It takes an empty tuple (no additional arguments) if no
                         additional arguments are required
@@ -372,7 +376,15 @@ def compute_layer_gradients_and_eval(
         # key_list is a list of devices in appropriate ordering for concatenation.
         # If only one key exists (standard model), key list simply has one element.
         key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
-        all_outputs = _reduce_list([saved_layer[device_id] for device_id in key_list])
+
+        all_outputs = _reduce_list(
+            [
+                saved_layer[device_id]
+                if output_fn is None
+                else output_fn(saved_layer[device_id])
+                for device_id in key_list
+            ]
+        )
         num_tensors = len(saved_layer[next(iter(saved_layer))])
         grad_inputs = tuple(
             layer_tensor
@@ -384,6 +396,9 @@ def compute_layer_gradients_and_eval(
             saved_grads[i : i + num_tensors]
             for i in range(0, len(saved_grads), num_tensors)
         )
+        if output_fn is not None:
+            saved_grads = tuple(output_fn(saved_grad) for saved_grad in saved_grads)
+
         all_grads = _reduce_list(saved_grads)
         if gradient_neuron_index is not None:
             inp_grads = _neuron_gradients(
@@ -395,7 +410,7 @@ def compute_layer_gradients_and_eval(
 
 
 def construct_neuron_grad_fn(
-    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
+    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False,
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(

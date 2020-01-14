@@ -109,8 +109,23 @@ class ReLUDeepLiftModel(nn.Module):
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
 
-    def forward(self, x1, x2):
-        return 2 * self.relu1(x1) + 2 * self.relu2(x2 - 1.5)
+    def forward(self, x1, x2, x3=2):
+        return 2 * self.relu1(x1) + x3 * self.relu2(x2 - 1.5)
+
+
+class LinearMaxPoolLinearModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # kernel size -> 4
+        self.lin1 = nn.Linear(4, 4, bias=False)
+        self.lin1.weight = nn.Parameter(torch.eye(4, 4))
+        self.pool1 = nn.MaxPool1d(4)
+        self.lin2 = nn.Linear(1, 1, bias=False)
+        self.lin2.weight = nn.Parameter(torch.ones(1, 1))
+
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        return self.lin2(self.pool1(self.lin1(x))[:, 0, :])
 
 
 class BasicModelWithReusableModules(nn.Module):
@@ -155,8 +170,8 @@ class ReLULinearDeepLiftModel(nn.Module):
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
-    def forward(self, x1, x2):
-        return self.l3(self.relu(torch.cat([self.l1(x1), self.l2(x2)], axis=1)))
+    def forward(self, x1, x2, x3=1):
+        return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], axis=1)))
 
 
 class Conv1dDeepLiftModel(nn.Module):

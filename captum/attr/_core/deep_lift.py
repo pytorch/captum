@@ -12,6 +12,7 @@ from .._utils.common import (
     _format_callable_baseline,
     _format_attributions,
     _format_tensor_into_tuples,
+    _format_additional_forward_args,
     _run_forward,
     _validate_input,
     _expand_target,
@@ -27,7 +28,7 @@ from .._utils.gradient import apply_gradient_requirements, undo_gradient_require
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fns, outputs):
+def _check_valid_module(inputs_grad_fn, outputs):
     def is_output_cloned(output_fn, input_grad_fn):
         """
         Checks if the output has been cloned. This happens especially in case of
@@ -41,15 +42,13 @@ def _check_valid_module(inputs_grad_fns, outputs):
     curr_fn = outputs.grad_fn
     first_next = curr_fn.next_functions[0]
     try:
-        # input_grad_fn = inputs[first_next[1]].grad_fn
         # if `inputs` in the input to the network then the grad_fn is None and
         # for that input backward_hook isn't computed. That's the reason why we
         # need to check on `inputs_grad_fns[first_next[1]]` being None.
-        input_grad_fn = inputs_grad_fns[first_next[1]]
         return (
-            input_grad_fn is None
-            or first_next[0] == input_grad_fn
-            or is_output_cloned(first_next, input_grad_fn)
+            inputs_grad_fn is None
+            or first_next[0] == inputs_grad_fn
+            or is_output_cloned(first_next, inputs_grad_fn)
         )
     except IndexError:
         return False
@@ -63,16 +62,8 @@ class DeepLift(GradientAttribution):
             model (nn.Module):  The reference to PyTorch model instance.
         """
         GradientAttribution.__init__(self, model)
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            self.model = model.module
-        else:
-            self.model = model
+        self.model = model
         self.forward_handles = []
-        self.forward_handles_refs = []
         self.backward_handles = []
 
     def attribute(
@@ -264,28 +255,26 @@ class DeepLift(GradientAttribution):
                activations. The hooks and attributes will be removed
             after the attribution is finished"""
         )
-        self.model.apply(self._register_hooks_ref)
 
         baselines = _tensorize_baseline(inputs, baselines)
-
-        _run_forward(
-            self.model,
-            baselines,
-            target=target,
-            additional_forward_args=additional_forward_args,
-        )
-        # remove forward hook set for baselines
-        for forward_handles_ref in self.forward_handles_refs:
-            forward_handles_ref.remove()
+        main_model_pre_hook = self._pre_hook_main_model()
 
         self.model.apply(self._register_hooks)
-        gradients = self.gradient_func(
-            self.model,
-            inputs,
-            target_ind=target,
-            additional_forward_args=additional_forward_args,
+
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        input_base_additional_args = _expand_additional_forward_args(
+            additional_forward_args, 2, ExpansionTypes.repeat
+        )
+        expanded_target = _expand_target(
+            target, 2, expansion_type=ExpansionTypes.repeat
         )
 
+        wrapped_forward_func = self._construct_forward_func(
+            self.model, (inputs, baselines), expanded_target, input_base_additional_args
+        )
+        gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
@@ -295,8 +284,8 @@ class DeepLift(GradientAttribution):
             attributions = _call_custom_attribution_func(
                 custom_attribution_func, gradients, inputs, baselines
             )
-
         # remove hooks from all activations
+        main_model_pre_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -310,6 +299,16 @@ class DeepLift(GradientAttribution):
             target,
             is_inputs_tuple,
         )
+
+    def _construct_forward_func(
+        self, forward_func, inputs, target=None, additional_forward_args=None
+    ):
+        def forward_fn():
+            return _run_forward(forward_func, inputs, target, additional_forward_args)
+
+        if hasattr(forward_func, "device_ids"):
+            forward_fn.device_ids = forward_func.device_ids
+        return forward_fn
 
     def _is_non_linear(self, module):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
@@ -326,8 +325,8 @@ class DeepLift(GradientAttribution):
         set necessary hooks on inputs there.
         """
         inputs = _format_tensor_into_tuples(inputs)
-        module.input = tuple(input.clone().detach() for input in inputs)
-        module.input_grad_fns = tuple(input.grad_fn for input in inputs)
+        module.input = inputs[0].clone().detach()
+        module.input_grad_fns = inputs[0].grad_fn
 
         def tensor_backward_hook(grad):
             if module.saved_grad is None:
@@ -353,7 +352,7 @@ class DeepLift(GradientAttribution):
         outputs of a neuron
         """
         outputs = _format_tensor_into_tuples(outputs)
-        module.output = tuple(output.clone().detach() for output in outputs)
+        module.output = outputs[0].clone().detach()
         if not _check_valid_module(module.input_grad_fns, outputs[0]):
             warnings.warn(
                 """An invalid module {} is detected. Saved gradients will
@@ -372,13 +371,6 @@ class DeepLift(GradientAttribution):
         del module.input_hook
         del module.input_grad_fns
 
-    def _forward_hook_ref(self, module, inputs, outputs):
-        r"""
-        Forward hook is used to access the output of the module
-        """
-        outputs = _format_tensor_into_tuples(outputs)
-        module.output_ref = tuple(output.clone().detach() for output in outputs)
-
     def _backward_hook(self, module, grad_input, grad_output, eps=1e-10):
         r"""
          `grad_input` is the gradient of the neuron with respect to its input
@@ -393,41 +385,26 @@ class DeepLift(GradientAttribution):
         attr_criteria = self.satisfies_attribute_criteria(module)
         if not attr_criteria:
             raise RuntimeError(
-                """A Module {} was detected that does not contain some of
-                    the input/output attributes that are required for DeepLift
-                    computations. This can occur, for example, if
-                    your module is being used more than once in the network.
-                    Please, ensure that module is being used only once in the
-                    network.""".format(
-                    module
-                )
+                "A Module {} was detected that does not contain some of "
+                "the input/output attributes that are required for DeepLift "
+                "computations. This can occur, for example, if "
+                "your module is being used more than once in the network."
+                "Please, ensure that module is being used only once in the "
+                "network.".format(module)
             )
-        delta_in = tuple(
-            inp - inp_ref for inp, inp_ref in zip(module.input, module.input_ref)
-        )
-        delta_out = tuple(
-            out - out_ref for out, out_ref in zip(module.output, module.output_ref)
-        )
         multipliers = tuple(
             SUPPORTED_NON_LINEAR[type(module)](
-                module, delta_in, delta_out, list(grad_input), grad_output, eps=eps
+                module, module.input, module.output, grad_input, grad_output, eps=eps
             )
         )
         # remove all the properies that we set for the inputs and output
-        del module.input_ref
-        del module.output_ref
         del module.input
         del module.output
 
         return multipliers
 
     def satisfies_attribute_criteria(self, module):
-        return (
-            hasattr(module, "input_ref")
-            and hasattr(module, "output_ref")
-            and hasattr(module, "input")
-            and hasattr(module, "output")
-        )
+        return hasattr(module, "input") and hasattr(module, "output")
 
     def _can_register_hook(self, module):
         # TODO find a better way of checking if a module is a container or not
@@ -438,16 +415,6 @@ class DeepLift(GradientAttribution):
             or has_already_hooks
             or not self._is_non_linear(module)
         )
-
-    def _register_hooks_ref(self, module):
-        if not self._can_register_hook(module):
-            return
-        forward_handle_ref = module.register_forward_hook(self._forward_hook_ref)
-        forward_pre_handle_ref = module.register_forward_pre_hook(
-            self._forward_pre_hook_ref
-        )
-        self.forward_handles_refs.append(forward_handle_ref)
-        self.forward_handles_refs.append(forward_pre_handle_ref)
 
     def _register_hooks(self, module):
         if not self._can_register_hook(module):
@@ -465,6 +432,27 @@ class DeepLift(GradientAttribution):
             forward_handle.remove()
         for backward_handle in self.backward_handles:
             backward_handle.remove()
+
+    def _pre_hook_main_model(self):
+        def pre_hook(module, baseline_inputs_add_args):
+            inputs = baseline_inputs_add_args[0]
+            baselines = baseline_inputs_add_args[1]
+            additional_args = None
+            if len(baseline_inputs_add_args) > 2:
+                additional_args = baseline_inputs_add_args[2:]
+
+            baseline_input_tsr = tuple(
+                torch.cat([input, baseline])
+                for input, baseline in zip(inputs, baselines)
+            )
+            if additional_args is not None:
+                return (*baseline_input_tsr, *additional_args)
+            return baseline_input_tsr
+
+        if isinstance(self.model, nn.DataParallel):
+            return self.model.module.register_forward_pre_hook(pre_hook)
+        else:
+            return self.model.register_forward_pre_hook(pre_hook)
 
     def has_convergence_delta(self):
         return True
@@ -729,72 +717,77 @@ class DeepLiftShap(DeepLift):
         return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
 
-def nonlinear(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
     https://github.com/pytorch/pytorch/issues/12331
     """
+    delta_in, delta_out = _compute_diffs(inputs, outputs)
+
+    new_grad_inp = list(grad_input)
+
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
-    grad_input[0] = torch.where(
-        abs(delta_in[0]) < eps,
-        grad_input[0],
-        grad_output[0] * delta_out[0] / delta_in[0],
+    new_grad_inp[0] = torch.where(
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
 
     # If the module is invalid, save the newly computed gradients
     # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
-        module.saved_grad = grad_input[0]
-    return grad_input
+        module.saved_grad = new_grad_inp[0]
+    return new_grad_inp
 
 
-def softmax(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+    delta_in, delta_out = _compute_diffs(inputs, outputs)
+
+    new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in[0]) < eps,
-        grad_input[0],
-        grad_output[0] * delta_out[0] / delta_in[0],
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
     # normalizing
     n = np.prod(grad_input[0].shape)
-    grad_input[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
-    return grad_input
+
+    # updating only the first half
+    new_grad_inp[0] = grad_input_unnorm - grad_input_unnorm.sum() * 1 / n
+    return new_grad_inp
 
 
-def maxpool1d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool1d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return maxpool(
         module,
         F.max_pool1d,
         F.max_unpool1d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
     )
 
 
-def maxpool2d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool2d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return maxpool(
         module,
         F.max_pool2d,
         F.max_unpool2d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
     )
 
 
-def maxpool3d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
+def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return maxpool(
         module,
         F.max_pool3d,
         F.max_unpool3d,
-        delta_in,
-        delta_out,
+        inputs,
+        outputs,
         grad_input,
         grad_output,
         eps=eps,
@@ -802,61 +795,82 @@ def maxpool3d(module, delta_in, delta_out, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool(
-    module,
-    pool_func,
-    unpool_func,
-    delta_in,
-    delta_out,
-    grad_input,
-    grad_output,
-    eps=1e-10,
+    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10,
 ):
-    # The forward function of maxpool takes only tensors not
-    # a tuple hence accessing the first
-    # element in the tuple of inputs, grad_input and grad_output
-    _, indices = pool_func(
-        module.input[0],
-        module.kernel_size,
-        module.stride,
-        module.padding,
-        module.dilation,
-        module.ceil_mode,
-        True,
-    )
-    unpool_grad_out_delta = unpool_func(
-        grad_output[0] * delta_out[0],
-        indices,
-        module.kernel_size,
-        module.stride,
-        module.padding,
-        list(module.input[0].shape),
-    )
+    with torch.no_grad():
+        input, input_ref = inputs.chunk(2)
+        output, output_ref = outputs.chunk(2)
+
+        delta_in = input - input_ref
+        delta_in = torch.cat(2 * [delta_in])
+        # Extracts cross maximum between the outputs of maxpool for the
+        # actual inputs and its corresponding references. In case the delta outputs
+        # for the references are larger the method relies on the references and
+        # corresponding gradients to compute the multiplies and contributions.
+        delta_out_xmax = torch.max(output, output_ref)
+        delta_out = torch.cat([delta_out_xmax - output_ref, output - delta_out_xmax])
+
+        _, indices = pool_func(
+            module.input,
+            module.kernel_size,
+            module.stride,
+            module.padding,
+            module.dilation,
+            module.ceil_mode,
+            True,
+        )
+        grad_output_updated = grad_output[0]
+        unpool_grad_out_delta, unpool_grad_out_ref_delta = torch.chunk(
+            unpool_func(
+                grad_output_updated * delta_out,
+                indices,
+                module.kernel_size,
+                module.stride,
+                module.padding,
+                list(module.input.shape),
+            ),
+            2,
+        )
+
+    unpool_grad_out_delta = unpool_grad_out_delta + unpool_grad_out_ref_delta
+    unpool_grad_out_delta = torch.cat(2 * [unpool_grad_out_delta])
 
     # If the module is invalid, we need to recompute the grad_input
     if module.is_invalid:
         original_grad_input = grad_input
         grad_input = (
             unpool_func(
-                grad_output[0],
+                grad_output_updated,
                 indices,
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input[0].shape),
+                list(module.input.shape),
             ),
         )
 
-    new_grad_input = torch.where(
-        abs(delta_in[0]) < eps, grad_input[0], unpool_grad_out_delta / delta_in[0]
+    new_grad_inp = torch.where(
+        abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in
     )
-
     # If the module is invalid, save the newly computed gradients
     # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
-        module.saved_grad = new_grad_input
+        module.saved_grad = new_grad_inp
         return original_grad_input
     else:
-        return (new_grad_input,)
+        return (new_grad_inp,)
+
+
+def _compute_diffs(inputs, outputs):
+    input, input_ref = inputs.chunk(2)
+    # if the model is a single non-linear module and we apply Rescale rule on it
+    # we might not be able to perform chunk-ing because the output of the module is
+    # usually being replaced by model output.
+    output, output_ref = outputs.chunk(2)
+    delta_in = input - input_ref
+    delta_out = output - output_ref
+
+    return torch.cat(2 * [delta_in]), torch.cat(2 * [delta_out])
 
 
 SUPPORTED_NON_LINEAR = {

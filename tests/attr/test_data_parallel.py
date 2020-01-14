@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.deep_lift import DeepLift
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.occlusion import Occlusion
 
@@ -519,10 +520,32 @@ class Test(BaseGPUTest):
             neuron_index=(3,),
         )
 
+    def test_multi_input_deeplift(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.9, 2.0, 1.9]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [1.2, 3.0, 2.3]], requires_grad=True
+        ).cuda()
+
+        self._data_parallel_test_assert(
+            DeepLift,
+            net,
+            None,
+            inputs=(inp1, inp2),
+            additional_forward_args=None,
+            test_batches=False,
+        )
+
     def test_multi_input_layer_deeplift(self):
         net = ReLULinearDeepLiftModel().cuda()
-        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
-        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.0, 2.0, 3.0]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [4.5, 6.3, 2.3]], requires_grad=True
+        ).cuda()
 
         self._data_parallel_test_assert(
             LayerDeepLift,

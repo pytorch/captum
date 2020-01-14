@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-import warnings
 import torch
-import torch.nn as nn
 from ..._utils.attribution import LayerAttribution
 from ..._core.deep_lift import DeepLift, DeepLiftShap
 from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    _forward_layer_eval,
     compute_layer_gradients_and_eval,
 )
 
@@ -15,10 +12,14 @@ from ..._utils.common import (
     _format_input,
     _format_baseline,
     _format_callable_baseline,
+    _format_additional_forward_args,
     _validate_input,
     _tensorize_baseline,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
+    _expand_additional_forward_args,
+    _expand_target,
+    ExpansionTypes,
 )
 
 
@@ -34,15 +35,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
         """
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            model = model.module
-
         LayerAttribution.__init__(self, model, layer)
         DeepLift.__init__(self, model)
+        self.model = model
 
     def attribute(
         self,
@@ -231,33 +226,44 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         _validate_input(inputs, baselines)
 
-        # set hooks for baselines
-        self.model.apply(self._register_hooks_ref)
-
         baselines = _tensorize_baseline(inputs, baselines)
 
-        attr_baselines, _ = _forward_layer_eval(
-            self.model,
-            baselines,
-            self.layer,
-            additional_forward_args=additional_forward_args,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
-
-        # remove forward hook set for baselines
-        for forward_handles_ref in self.forward_handles_refs:
-            forward_handles_ref.remove()
+        main_model_pre_hook = self._pre_hook_main_model()
 
         self.model.apply(self._register_hooks)
 
-        gradients, attr_inputs, is_layer_tuple = compute_layer_gradients_and_eval(
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        input_base_additional_args = _expand_additional_forward_args(
+            additional_forward_args, 2, ExpansionTypes.repeat
+        )
+        expanded_target = _expand_target(
+            target, 2, expansion_type=ExpansionTypes.repeat
+        )
+        wrapped_forward_func = self._construct_forward_func(
             self.model,
+            (inputs, baselines),
+            expanded_target,
+            input_base_additional_args,
+        )
+
+        def chunk_output_fn(out):
+            if not isinstance(out, tuple):
+                return out.chunk(2)
+            return tuple(out_sub.chunk(2) for out_sub in out)
+
+        (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
+            wrapped_forward_func,
             self.layer,
             inputs,
-            target,
-            additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            output_fn=lambda out: chunk_output_fn(out),
         )
+
+        attr_inputs = tuple(map(lambda attr: attr[0], attrs))
+        attr_baselines = tuple(map(lambda attr: attr[1], attrs))
+        gradients = tuple(map(lambda grad: grad[0], gradients))
 
         if custom_attribution_func is None:
             attributions = tuple(
@@ -270,12 +276,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             attributions = _call_custom_attribution_func(
                 custom_attribution_func, gradients, attr_inputs, attr_baselines
             )
-
         # remove hooks from all activations
+        main_model_pre_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
-
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
