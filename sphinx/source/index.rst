@@ -18,6 +18,12 @@ Captum API Reference
    utilities
    base_classes
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Insights API Reference
+
+   insights
+
 
 Indices and Tables
 ==================
