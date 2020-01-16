@@ -167,3 +167,22 @@ Noise Tunnel is a method that can be used on top of any of the attribution metho
 To learn more about Noise Tunnel methods, visit the following resources:
 - [SmoothGrad Original paper](https://arxiv.org/abs/1706.03825)
 - [VarGrad Original paper](https://arxiv.org/abs/1810.03307)
+
+
+## White Noise Analysis
+In this method, a large array of white noise stimuli is fed to a classifier and the ones that are categorized into a
+particular class are averaged. It gives an estimate of the templates a classifier uses for classification, and is based on two popular and related methods in psychophysics and neurophysiology namely classification images and spike triggered analysis.
+
+Several use cases of this approach are:
+* Adversarial attack and defence
+* Filter visualization
+* Microstimulation and network interpretation
+
+To learn more about this method, please visit the following resources:
+- [Original paper](https://arxiv.org/pdf/1912.12106.pdf)
+- [GitHub repp](https://github.com/aliborji/WhiteNoiseAnalysis.git)
+
+
+
+
+
