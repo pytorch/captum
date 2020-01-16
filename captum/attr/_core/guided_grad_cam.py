@@ -199,7 +199,7 @@ class GuidedGradCam(GradientAttribution):
                         interpolate_mode=interpolate_mode,
                     )
                 )
-            except (RuntimeError, NotImplementedError):
+            except RuntimeError:
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for "
                     "some input tensors, returning None for corresponding attributions."
