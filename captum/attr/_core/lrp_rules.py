@@ -203,3 +203,26 @@ class zB_Rule(PropagationRule):
             layer.bias.data = new_bias
         return layer
 
+
+def suggested_rules(model):
+    """
+    Return a list of rules for a given model.
+
+    Args:
+        model (str): Name of the used model (vgg16)
+    """
+    if model == "vgg16":
+        layer0 = [zB_Rule(0, 1, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+        layers1_16 = [GammaRule(gamma=0.25) for i in range(16)]
+        layers17_30 = [
+            EpsilonRule(
+                epsilon=lambda z: z + 1e-9 + 0.25 * ((z ** 2).mean() ** 0.5).data
+            )
+            for i in range(14)
+        ]
+        layers31_38 = [EpsilonRule(epsilon=lambda z: z + 1e-9) for i in range(8)]
+        rules = layer0 + layers1_16 + layers17_30 + layers31_38
+    else:
+        raise NotImplementedError("No suggested rules for given model")
+
+    return rules
