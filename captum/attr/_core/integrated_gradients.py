@@ -45,6 +45,10 @@ class IntegratedGradients(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    # The following overloaded method signatures correspond to the case where
+    # return_convergence_delta is not provided, then only attributions are returned.
+    # When a single Tensor is provided, a single Tensor is returned, and when
+    # a tuple of tensors is provided, a tuple is returned.
     @typing.overload
     def attribute(
         self,

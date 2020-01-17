@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import typing
 from typing import Callable, List, Optional, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
@@ -37,12 +38,60 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tensor,
+        neuron_index: Union[int, Tuple[int, ...]],
+        baselines: Optional[
+            Union[
+                Tensor,
+                int,
+                float,
+                Callable[..., Tensor],
+                Tuple[Union[Tensor, int, float], ...],
+            ]
+        ] = None,
+        n_samples: int = 5,
+        stdevs: float = 0.0,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> Tensor:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        neuron_index: Union[int, Tuple[int, ...]],
+        baselines: Optional[
+            Union[
+                Tensor,
+                int,
+                float,
+                Callable[..., Tensor],
+                Tuple[Union[Tensor, int, float], ...],
+            ]
+        ] = None,
+        n_samples: int = 5,
+        stdevs: float = 0.0,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> Tuple[Tensor, ...]:
+        ...
+
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        neuron_index: Union[int, Tuple],
+        neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[
-            Union[Tensor, int, float, Callable, Tuple[Union[Tensor, int, float], ...]]
+            Union[
+                Tensor,
+                int,
+                float,
+                Callable[..., Tensor],
+                Tuple[Union[Tensor, int, float], ...],
+            ]
         ] = None,
         n_samples: int = 5,
         stdevs: float = 0.0,

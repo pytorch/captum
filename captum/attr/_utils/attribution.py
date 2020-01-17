@@ -120,7 +120,7 @@ class GradientAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
-    def __init__(self, forward_func: Callable):
+    def __init__(self, forward_func):
         r"""
         Args:
 
