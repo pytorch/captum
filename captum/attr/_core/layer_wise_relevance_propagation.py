@@ -4,6 +4,8 @@ from itertools import repeat
 
 import torch
 import torch.nn as nn
+import torch.onnx
+import torch.onnx.utils
 
 from .._utils.common import _format_attributions, _format_input, _run_forward
 from .._utils.attribution import Attribution, GradientAttribution
@@ -27,9 +29,8 @@ class LRP(Attribution):
                         (i.e. ReLU) the rule can be None.
         """
         self.model = model
-        self.layers = []
-        self._get_layers(model)
-        self._layer_count = len(self.layers)
+        self.layerset = []
+        self._get_layerset(model)
 
         for rule in rules:
             if not isinstance(rule, PropagationRule) and rule is not None:
@@ -46,11 +47,23 @@ class LRP(Attribution):
         return_convergence_delta=False,
         additional_forward_args=None,
         return_for_all_layers=False,
-        verbose=False
+        verbose=False,
     ):
         """
-        So far, only works for ReLU activation layers, linear and conv2D layers.
-        Error is raised if other activation functions are used.
+            Layer-wise relevance propagation is based on a backward propagation mechanism applied sequentially
+            to all layers of the model. Here, the model output score represents the initial relevance which is
+            decomposed into values for each neuron of the underlying layers. The decomposition is defined
+            by rules that are chosen for each layer, involving its weights and activations. Details on the model
+            can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
+            and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
+
+            Attention: The implementation is only tested for ReLU activation layers, linear and conv2D layers. An error
+            is raised if other activation functions (sigmoid, tanh) are used.
+            Skip connections as in Resnets are not supported.
+
+            #TODO: To generalize to a broader range of models the detection of layers and their connections
+            need to be improved. One way may be to get the graph of the model and evaluate all graph nodes
+            to use them for backward propagation in a way similar to the description in [https://arxiv.org/abs/1904.04734]
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -161,9 +174,10 @@ class LRP(Attribution):
                     torch.nn.Linear,
                 ),
             ):
-                relevance = rule.propagate(relevance, layer, activation)
                 if verbose:
                     print(f"\nRelevance propagated over {layer} with manipulation.")
+                relevance = rule.propagate(relevance, layer, activation)
+
             else:
                 if verbose:
                     print(f"\nRelevance passed over {layer} without manipulation.")
@@ -258,29 +272,43 @@ class LRP(Attribution):
         relevance = _run_forward(self.model, inputs, target, additional_forward_args)
         return torch.sum(relevance) - torch.sum(attributions)
 
-    def _get_layers(self, model):
+    def _get_layerset(self, model):
         """
         Get list of children modules of the forward function or model.
         Checks wether Sigmoid or Tanh activations are used and raises error if that is the case.
         """
         for layer in model.children():
-            if isinstance(layer, nn.Sequential):
-                self._get_layers(layer)
             if list(layer.children()) == []:
                 if isinstance(layer, (nn.Sigmoid, nn.Tanh)):
                     raise TypeError(
                         "Invalid activation used. Implementation is only valid for ReLU activations."
                     )
-                self.layers.append(layer)
+                self.layerset.append(layer)
+            else:
+                self._get_layerset(layer)
+
+    def _get_graph(self, input):
+
+        trace, out = torch.jit.get_trace_graph(self.model, args=(input,))
+        trace_graph = torch.onnx.utils._optimize_graph(
+            trace.graph(), torch.onnx.OperatorExportTypes.ONNX
+        )
+        # trace_graph = trace.graph()
+        nodes = list()
+        for node in trace_graph.nodes():
+            op = node.kind()
+            scope = node.scopeName()
+            outputs = list(node.outputs())
+            nodes.append((scope, op, outputs))
 
     def _get_activations(self, inputs, target=None, additional_forward_args=None):
         self.activations = list()
+        self.layers = list()
 
         hooks = list()
-        for layer in self.layers:
+        for layer in self.layerset:
             registered_hook = layer.register_forward_hook(self._forward_hook)
             hooks.append(registered_hook)
-        # self.relevance = self.model(inputs)
         relevance = _run_forward(self.model, inputs, target, additional_forward_args)
 
         for registered_hook in hooks:
@@ -290,6 +318,7 @@ class LRP(Attribution):
 
     def _forward_hook(self, module, input, output):
         self.activations.append(*input)
+        self.layers.append(module)
 
     def _mask_relevance(self, output, target=None):
         """
@@ -311,4 +340,3 @@ class LRP_0(LRP):
     def __init__(self, forward_func):
         rules = repeat(BasicRule(), 1000)
         super(LRP_0, self).__init__(forward_func, rules)
-
