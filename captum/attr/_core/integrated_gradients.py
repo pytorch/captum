@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import typing
 from typing import Callable, List, Optional, Tuple, Union, Any
 
 import torch
@@ -43,6 +44,40 @@ class IntegratedGradients(GradientAttribution):
                           modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tensor,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+    ) -> Tensor:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+    ) -> Tuple[Tensor, ...]:
+        ...
 
     def attribute(
         self,
