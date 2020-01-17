@@ -50,7 +50,7 @@ fi
 
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
-  sudo pip install torch_nightly -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+  sudo pip install torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
 fi
 
 # install deployment bits if asked for
