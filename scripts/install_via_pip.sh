@@ -40,7 +40,7 @@ export TERM=xterm
 sudo pip install --upgrade pip
 
 # install captum with dev deps
-sudo pip install -e .[dev]
+sudo pip install --upgrade -e .[dev]
 sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
