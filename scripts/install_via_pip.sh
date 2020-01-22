@@ -40,7 +40,7 @@ export TERM=xterm
 sudo pip install --upgrade pip
 
 # install captum with dev deps
-sudo pip install -vvv -e .[dev]
+sudo pip install -e .[dev]
 sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
@@ -51,6 +51,8 @@ fi
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   sudo pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+else
+  sudo pip install --upgrade torch
 fi
 
 # install deployment bits if asked for
