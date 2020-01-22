@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from .._utils.typing import TensorOrTuple
+from ..._utils.typing import TensorOrTuple
 
 from ..integrated_gradients import IntegratedGradients
 
