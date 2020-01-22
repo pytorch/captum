@@ -47,9 +47,9 @@ class IntegratedGradients(GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
 
     # The following overloaded method signatures correspond to the case where
-    # return_convergence_delta is not provided, then only attributions are returned.
-    # When a single Tensor is provided, a single Tensor is returned, and when
-    # a tuple of tensors is provided, a tuple is returned.
+    # return_convergence_delta is not provided, then only attributions are returned,
+    # and when return_convergence_delta is provided, the return type is either
+    # just the attributions or a tuple with both attributions and deltas.
     @typing.overload
     def attribute(
         self,
@@ -95,7 +95,7 @@ class IntegratedGradients(GradientAttribution):
         method="gausslegendre",
         internal_batch_size=None,
         return_convergence_delta=False,
-    ) -> Union[TensorOrTuple, Tuple[TensorOrTuple, Tensor]]:
+    ):
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
