@@ -63,7 +63,7 @@ class Test(BaseTest):
             baselines = baselines(inputs)
 
         attrs_ig = []
-        for baseline in baselines.__iter__():
+        for baseline in baselines:
             attrs_ig.append(
                 nig.attribute(inputs, neuron_ind, baselines=baseline.unsqueeze(0))
             )

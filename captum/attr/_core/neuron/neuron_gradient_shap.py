@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import typing
 from typing import Callable, List, Optional, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
@@ -7,6 +6,7 @@ from torch.nn import Module
 from ..gradient_shap import GradientShap
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
+from .._utils.typing import TensorOrTuple
 
 
 class NeuronGradientShap(NeuronAttribution, GradientAttribution):
@@ -38,10 +38,9 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
-    @typing.overload
     def attribute(
         self,
-        inputs: Tensor,
+        inputs: TensorOrTuple,
         neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[
             Union[
@@ -56,48 +55,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         stdevs: float = 0.0,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> Tensor:
-        ...
-
-    @typing.overload
-    def attribute(
-        self,
-        inputs: Tuple[Tensor, ...],
-        neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[
-                Tensor,
-                int,
-                float,
-                Callable[..., Tensor],
-                Tuple[Union[Tensor, int, float], ...],
-            ]
-        ] = None,
-        n_samples: int = 5,
-        stdevs: float = 0.0,
-        additional_forward_args: Any = None,
-        attribute_to_neuron_input: bool = False,
-    ) -> Tuple[Tensor, ...]:
-        ...
-
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[
-                Tensor,
-                int,
-                float,
-                Callable[..., Tensor],
-                Tuple[Union[Tensor, int, float], ...],
-            ]
-        ] = None,
-        n_samples: int = 5,
-        stdevs: float = 0.0,
-        additional_forward_args: Any = None,
-        attribute_to_neuron_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> TensorOrTuple:
         r"""
         Implements gradient SHAP for a neuron in a hidden layer based on the
         implementation from SHAP's primary author. For reference, please, view:
