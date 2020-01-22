@@ -17,6 +17,7 @@ from .._utils.common import (
     _expand_target,
 )
 from .._utils.attribution import GradientAttribution
+from .._utils.typing import TensorOrTuple
 
 
 class IntegratedGradients(GradientAttribution):
@@ -52,7 +53,7 @@ class IntegratedGradients(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: Tensor,
+        inputs: TensorOrTuple,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -63,29 +64,13 @@ class IntegratedGradients(GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
-    ) -> Tensor:
+    ) -> TensorOrTuple:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: Tuple[Tensor, ...],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-    ) -> Tuple[Tensor, ...]:
-        ...
-
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        inputs: TensorOrTuple,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -97,9 +82,20 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
-    ]:
+    ) -> Union[TensorOrTuple, Tuple[TensorOrTuple, Tensor]]:
+        ...
+
+    def attribute(
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        n_steps=50,
+        method="gausslegendre",
+        internal_batch_size=None,
+        return_convergence_delta=False,
+    ) -> Union[TensorOrTuple, Tuple[TensorOrTuple, Tensor]]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a

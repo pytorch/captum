@@ -5,5 +5,5 @@ set -e
 # hints.
 
 # TODO: Fix type issues with insights and add mypy checks here.
-mypy -p captum.attr --ignore-missing-imports
-mypy -p tests --ignore-missing-imports
+mypy -p captum.attr --ignore-missing-imports --allow-redefinition
+mypy -p tests --ignore-missing-imports --allow-redefinition

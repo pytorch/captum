@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-import typing
 from typing import Callable, List, Optional, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
+from .._utils.typing import TensorOrTuple
 
 from ..integrated_gradients import IntegratedGradients
 
@@ -40,10 +40,9 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
-    @typing.overload
     def attribute(
         self,
-        inputs: Tensor,
+        inputs: TensorOrTuple,
         neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         additional_forward_args: Any = None,
@@ -51,34 +50,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         attribute_to_neuron_input: bool = False,
-    ) -> Tensor:
-        ...
-
-    @typing.overload
-    def attribute(
-        self,
-        inputs: Tuple[Tensor, ...],
-        neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-        attribute_to_neuron_input: bool = False,
-    ) -> Tuple[Tensor, ...]:
-        ...
-
-    def attribute(
-        self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-        attribute_to_neuron_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> TensorOrTuple:
         r"""
             Approximates the integral of gradients for a particular neuron
             along the path from a baseline input to the given input.
