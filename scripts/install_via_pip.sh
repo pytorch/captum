@@ -12,7 +12,7 @@ while getopts 'ndfv:' flag; do
     d) DEPLOY=true ;;
     f) FRAMEWORKS=true ;;
     v) CHOSEN_TORCH_VERSION=${OPTARG};;
-    *) echo "usage: $0 [-n] [-d] [-f] [-v]" >&2
+    *) echo "usage: $0 [-n] [-d] [-f] [-v version]" >&2
        exit 1 ;;
     esac
   done

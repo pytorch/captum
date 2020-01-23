@@ -132,6 +132,7 @@ jobs:
           args: "-n -f"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 
@@ -144,6 +145,7 @@ jobs:
           args: "-f"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 
@@ -174,6 +176,7 @@ jobs:
           args: "-n"
       - lint_flake8
       - lint_black
+      - mypy_check
       - unit_tests
       - sphinx
 
