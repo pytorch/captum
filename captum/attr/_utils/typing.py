@@ -3,4 +3,4 @@
 from typing import Tuple, TypeVar
 from torch import Tensor
 
-TensorOrTuple = TypeVar("TensorOrTuple", Tensor, Tuple[Tensor, ...])
+TensorOrTupleOfTensors = TypeVar("TensorOrTupleOfTensors", Tensor, Tuple[Tensor, ...])

@@ -6,7 +6,7 @@ from torch.nn import Module
 from ..gradient_shap import GradientShap
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTuple
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class NeuronGradientShap(NeuronAttribution, GradientAttribution):
@@ -40,7 +40,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTuple,
+        inputs: TensorOrTupleOfTensors,
         neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[
             Union[
@@ -55,7 +55,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         stdevs: float = 0.0,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTuple:
+    ) -> TensorOrTupleOfTensors:
         r"""
         Implements gradient SHAP for a neuron in a hidden layer based on the
         implementation from SHAP's primary author. For reference, please, view:

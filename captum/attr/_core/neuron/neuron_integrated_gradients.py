@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTuple
+from ..._utils.typing import TensorOrTupleOfTensors
 
 from ..integrated_gradients import IntegratedGradients
 
@@ -42,7 +42,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTuple,
+        inputs: TensorOrTupleOfTensors,
         neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         additional_forward_args: Any = None,
@@ -50,7 +50,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTuple:
+    ) -> TensorOrTupleOfTensors:
         r"""
             Approximates the integral of gradients for a particular neuron
             along the path from a baseline input to the given input.

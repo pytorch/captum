@@ -17,7 +17,7 @@ from .._utils.common import (
     _expand_target,
 )
 from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTuple
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class IntegratedGradients(GradientAttribution):
@@ -53,7 +53,7 @@ class IntegratedGradients(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTuple,
+        inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -64,13 +64,13 @@ class IntegratedGradients(GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
-    ) -> TensorOrTuple:
+    ) -> TensorOrTupleOfTensors:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTuple,
+        inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -82,7 +82,7 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTuple, Tuple[TensorOrTuple, Tensor]]:
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         ...
 
     def attribute(
