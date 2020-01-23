@@ -61,9 +61,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         attribute_to_layer_input: bool = False,
-    ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
-    ]:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Computes internal influence by approximating the integral of gradients
             for a particular layer along the path from a baseline input to the
