@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
 import torch
+from torch import Tensor
 
 from torch.nn.parallel.scatter_gather import scatter
 
@@ -40,7 +42,12 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
     """
 
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: torch.nn.Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
             forward_func (callable):  The forward function of the model or any
@@ -64,16 +71,22 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        return_convergence_delta: Optional[bool] = False,
+        attribute_to_layer_input: Optional[bool] = False,
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+    ]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
@@ -326,5 +339,5 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             return _format_attributions(is_layer_tuple, attributions), delta
         return _format_attributions(is_layer_tuple, attributions)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
