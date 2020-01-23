@@ -58,7 +58,7 @@ else
     sudo pip install --upgrade torch
   else
     sudo pip install torch==$CHOSEN_TORCH_VERSION
-  end
+  fi
 fi
 
 # install deployment bits if asked for
