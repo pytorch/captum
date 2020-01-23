@@ -23,7 +23,7 @@ from ..helpers.utils import (
 
 class Test(BaseTest):
     def test_simple_input_activation(self) -> None:
-        print("PYTORCH VERSION", torch.__version__)
+        self.assertEqual(0, torch.__version__)
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 100.0, 0.0])
