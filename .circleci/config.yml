@@ -225,6 +225,10 @@ workflows:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
           filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_2:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_3:
+          filters: *exclude_ghpages_fbconfig
       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig
 
