@@ -50,6 +50,12 @@ class IntegratedGradients(GradientAttribution):
     # return_convergence_delta is not provided, then only attributions are returned,
     # and when return_convergence_delta is provided, the return type is either
     # just the attributions or a tuple with both attributions and deltas.
+    # Note that this doesn't explicitly type the case where return_convergence_delta
+    # is passed with the value False, the return type when return_convergence_delta is
+    # given is Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]].
+    # Supporting separate return types for True and False requires using the Literal
+    # type functionality, which is only available in Python 3.8. We plan to support
+    # this in the future.
     @typing.overload
     def attribute(
         self,
