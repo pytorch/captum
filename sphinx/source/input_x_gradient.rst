@@ -1,9 +1,5 @@
-InputXGradient
+Input X Gradient
 ===============
 
-.. automodule:: captum.attr._core.input_x_gradient
-
-.. autoclass:: InputXGradient
+.. autoclass:: captum.attr.InputXGradient
     :members:
-
-.. autofunction:: attribute

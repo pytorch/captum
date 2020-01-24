@@ -100,7 +100,7 @@ class GuidedGradCam(GradientAttribution):
                                 target for the corresponding example.
 
                             Default: None
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -177,6 +177,12 @@ class GuidedGradCam(GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=True,
         )
+        if isinstance(grad_cam_attr, tuple):
+            assert len(grad_cam_attr) == 1, (
+                "GuidedGradCAM attributions for layer with multiple inputs / "
+                "outputs is not supported."
+            )
+            grad_cam_attr = grad_cam_attr[0]
         guided_backprop_attr = self.guided_backprop.attribute(
             inputs=inputs,
             target=target,
@@ -193,7 +199,7 @@ class GuidedGradCam(GradientAttribution):
                         interpolate_mode=interpolate_mode,
                     )
                 )
-            except (RuntimeError, NotImplementedError):
+            except RuntimeError:
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for "
                     "some input tensors, returning None for corresponding attributions."

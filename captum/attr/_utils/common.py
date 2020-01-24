@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from typing import Optional, Tuple, Union, overload
 
 import torch
+from torch import Tensor
 
 from enum import Enum
 from inspect import signature
@@ -89,7 +91,23 @@ def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
     )
 
 
-def _format_tensor_into_tuples(inputs):
+@overload
+def _format_tensor_into_tuples(inputs: None) -> None:
+    ...
+
+
+@overload
+def _format_tensor_into_tuples(
+    inputs: Union[Tensor, Tuple[Tensor, ...]]
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+def _format_tensor_into_tuples(
+    inputs: Optional[Union[Tensor, Tuple[Tensor, ...]]]
+) -> Optional[Tuple[Tensor, ...]]:
+    if inputs is None:
+        return None
     if not isinstance(inputs, tuple):
         assert isinstance(
             inputs, torch.Tensor
@@ -98,7 +116,7 @@ def _format_tensor_into_tuples(inputs):
     return inputs
 
 
-def _format_input(inputs):
+def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ...]:
     return _format_tensor_into_tuples(inputs)
 
 
@@ -110,7 +128,12 @@ def _format_additional_forward_args(additional_forward_args):
     return additional_forward_args
 
 
-def _format_baseline(baselines, inputs):
+def _format_baseline(
+    baselines: Optional[
+        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+    ],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Union[Tensor, int, float], ...]:
     if baselines is None:
         return _zeros(inputs)
 
@@ -128,7 +151,12 @@ def _format_baseline(baselines, inputs):
     return baselines
 
 
-def _format_input_baseline(inputs, baselines):
+def _format_input_baseline(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    baselines: Optional[
+        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+    ],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     inputs = _format_input(inputs)
     baselines = _format_baseline(baselines, inputs)
     return inputs, baselines
@@ -296,7 +324,8 @@ def _select_targets(output, target):
             return torch.gather(output, 1, target.reshape(len(output), 1))
         else:
             raise AssertionError(
-                "Tensor target dimension %r is not valid." % (target.shape,)
+                "Tensor target dimension %r is not valid. %r"
+                % (target.shape, output.shape)
             )
     elif isinstance(target, list):
         assert len(target) == num_examples, "Target list length does not match output!"
@@ -314,6 +343,11 @@ def _select_targets(output, target):
 
 
 def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
+    forward_func_args = signature(forward_func).parameters
+    if len(forward_func_args) == 0:
+        output = forward_func()
+        return output if target is None else _select_targets(output, target)
+
     # make everything a tuple so that it is easy to unpack without
     # using if-statements
     inputs = _format_input(inputs)
@@ -344,6 +378,9 @@ def _expand_additional_forward_args(
                 "Currently only `repeat` and `repeat_interleave`"
                 " expansion_types are supported"
             )
+
+    if additional_forward_args is None:
+        return None
 
     return tuple(
         _expand_tensor_forward_arg(additional_forward_arg, n_steps, expansion_type)
@@ -404,6 +441,33 @@ def _call_custom_attribution_func(
         return custom_attribution_func(multipliers, inputs, baselines)
 
 
+def _extract_device(module, hook_inputs, hook_outputs):
+    params = list(module.parameters())
+    if (
+        (hook_inputs is None or len(hook_inputs) == 0)
+        and (hook_outputs is None or len(hook_outputs) == 0)
+        and len(params) == 0
+    ):
+        raise RuntimeError(
+            """Unable to extract device information for the module
+            {}. Both inputs and outputs to the forward hook and
+            `module.parameters()` are empty.
+            The reason that the inputs to the forward hook are empty
+            could be due to the fact that the arguments to that
+            module {} are all named and are passed as named
+            variables to its forward function.
+            """.format(
+                module, module
+            )
+        )
+    if hook_inputs is not None and len(hook_inputs) > 0:
+        return hook_inputs[0].device
+    if hook_outputs is not None and len(hook_outputs) > 0:
+        return hook_outputs[0].device
+
+    return params[0].device
+
+
 class MaxList:
     """Keep track of N maximal items
 
@@ -462,113 +526,3 @@ class MaxList:
                 self.list.insert(i, (value, item))
                 break
         self.list = self.list[: self.size]
-
-
-class Stat:
-    """Keep track of statistics for a quantity that is measured live
-
-    Implementation of an online statistics tracker, Stat:
-        For a memory efficient way of keeping track of statistics on a large set of
-        numbers. Adding numbers to the object will update the values stored in the
-        object to reflect the statistics of all numbers that the object has seen
-        so far.
-
-    Example usage:
-        s = Stat()
-        s([5,7]) OR s.update([5,7])
-        stats.get_mean() -> 6
-        stats.get_std() -> 1
-
-    """
-
-    def __init__(self):
-        self.count = 0
-        self.mean = 0
-        self.mean_squared_error = 0
-        self.min = float("inf")
-        self.max = float("-inf")
-
-    def _std_size_check(self):
-        if self.count < 2:
-            raise Exception(
-                "Std/Variance is not defined for {} datapoints\
-                ".format(
-                    self.count
-                )
-            )
-
-    def update(self, x):
-        """Update the stats given a new number
-
-        Adds x to the running statistics being kept track of, and updates internal
-        values that relfect that change.
-
-        Args:
-            x: a numeric value, or a list of numeric values
-        """
-        if isinstance(x, list):
-            for value in x:
-                self.update(value)
-        else:
-            x = float(x)
-            self.min = min(self.min, x)
-            self.max = max(self.max, x)
-            self.count += 1
-            delta = x - self.mean
-            self.mean += delta / self.count
-            delta2 = x - self.mean
-            self.mean_squared_error += delta * delta2
-
-    def get_stats(self):
-        """Retrieves a dictionary of statistics for the values seen.
-
-        Returns:
-            a fully populated dictionary for the statistics that have been
-            maintained. This output is easy to pipe into a table with a loop over
-            key value pairs.
-        """
-        self._std_size_check()
-
-        sampleVariance = self.mean_squared_error / (self.count - 1)
-        Variance = self.mean_squared_error / self.count
-
-        return {
-            "mean": self.mean,
-            "sample_variance": sampleVariance,
-            "variance": Variance,
-            "std": Variance ** 0.5,
-            "min": self.min,
-            "max": self.max,
-            "count": self.count,
-        }
-
-    def get_std(self):
-        """get the std of the statistics kept"""
-        self._std_size_check()
-        return (self.mean_squared_error / self.count) ** 0.5
-
-    def get_variance(self):
-        """get the variance of the statistics kept"""
-        self._std_size_check()
-        return self.mean_squared_error / self.count
-
-    def get_sample_variance(self):
-        """get the sample variance of the statistics kept"""
-        self._std_size_check()
-        return self.mean_squared_error / (self.count - 1)
-
-    def get_mean(self):
-        """get the mean of the statistics kept"""
-        return self.mean
-
-    def get_max(self):
-        """get the max of the statistics kept"""
-        return self.max
-
-    def get_min(self):
-        """get the min of the statistics kept"""
-        return self.min
-
-    def get_count(self):
-        """get the count of the statistics kept"""
-        return self.count

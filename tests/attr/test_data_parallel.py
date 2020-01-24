@@ -5,6 +5,7 @@ import unittest
 import torch
 
 from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.deep_lift import DeepLift
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.occlusion import Occlusion
 
@@ -15,6 +16,8 @@ from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
@@ -41,6 +44,20 @@ from .helpers.utils import BaseGPUTest
 class Test(BaseGPUTest):
     def test_simple_input_internal_inf(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            InternalInfluence, net, net.relu, inputs=inp, target=0
+        )
+
+    def test_multi_output_internal_inf(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
         inp = torch.tensor(
             [
                 [0.0, 100.0, 0.0],
@@ -83,6 +100,20 @@ class Test(BaseGPUTest):
         ).cuda()
         self._data_parallel_test_assert(LayerActivation, net, net.relu, inputs=inp)
 
+    def test_multi_output_layer_activation(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerActivation, net, net.relu, alt_device_ids=True, inputs=inp
+        )
+
     def test_multi_input_layer_activation(self):
         net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
@@ -113,6 +144,20 @@ class Test(BaseGPUTest):
             LayerConductance, net, net.relu, inputs=inp, target=1
         )
 
+    def test_multi_output_layer_conductance(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerConductance, net, net.relu, alt_device_ids=True, inputs=inp, target=1
+        )
+
     def test_multi_input_layer_conductance(self):
         net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
@@ -138,6 +183,69 @@ class Test(BaseGPUTest):
             LayerConductance, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
 
+    def test_simple_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer().cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_input_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.model.relu,
+            alt_device_ids=True,
+            inputs=(inp1, inp2),
+            additional_forward_args=(inp3, 5),
+            target=1,
+            test_batches=True,
+        )
+
+    def test_multi_dim_layer_integrated_gradients(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.conv2,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
+        )
+
+    def test_multi_output_layer_integrated_gradients(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerIntegratedGradients,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
+        )
+
     def test_simple_layer_gradient_x_activation(self):
         net = BasicModel_MultiLayer().cuda()
         inp = torch.tensor(
@@ -150,6 +258,25 @@ class Test(BaseGPUTest):
         ).cuda()
         self._data_parallel_test_assert(
             LayerGradientXActivation, net, net.relu, inputs=inp, target=1
+        )
+
+    def test_multi_output_layer_gradient_x_activation(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerGradientXActivation,
+            net,
+            net.relu,
+            alt_device_ids=True,
+            inputs=inp,
+            target=1,
         )
 
     def test_multi_input_layer_gradient_x_activation(self):
@@ -175,6 +302,74 @@ class Test(BaseGPUTest):
         self._data_parallel_test_assert(
             LayerGradCam, net, net.conv2, alt_device_ids=True, inputs=inp, target=1
         )
+
+    def test_multi_output_layer_grad_cam(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        self._data_parallel_test_assert(
+            LayerGradCam, net, net.relu, alt_device_ids=True, inputs=inp, target=1
+        )
+
+    def test_multi_input_layer_ablation(self):
+        net = BasicModel_MultiLayer_MultiInput().cuda()
+        inp1, inp2, inp3 = (
+            10 * torch.randn(12, 3).cuda(),
+            5 * torch.randn(12, 3).cuda(),
+            2 * torch.randn(12, 3).cuda(),
+        )
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                LayerFeatureAblation,
+                net,
+                net.model.relu,
+                alt_device_ids=False,
+                inputs=(inp1, inp2),
+                additional_forward_args=(inp3, 5),
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_output_layer_ablation(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp = torch.tensor(
+            [
+                [0.0, 100.0, 0.0],
+                [20.0, 100.0, 120.0],
+                [30.0, 10.0, 0.0],
+                [0.0, 0.0, 2.0],
+            ]
+        ).cuda()
+        for ablations_per_eval in [1, 2, 3]:
+            self._data_parallel_test_assert(
+                LayerFeatureAblation,
+                net,
+                net.relu,
+                alt_device_ids=False,
+                inputs=inp,
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_dim_layer_ablation(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = 100 * torch.randn(4, 1, 10, 10).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                LayerFeatureAblation,
+                net,
+                net.conv2,
+                alt_device_ids=True,
+                inputs=inp,
+                target=1,
+                ablations_per_eval=ablations_per_eval,
+            )
 
     def test_simple_neuron_conductance(self):
         net = BasicModel_MultiLayer().cuda()
@@ -325,10 +520,32 @@ class Test(BaseGPUTest):
             neuron_index=(3,),
         )
 
+    def test_multi_input_deeplift(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.9, 2.0, 1.9]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [1.2, 3.0, 2.3]], requires_grad=True
+        ).cuda()
+
+        self._data_parallel_test_assert(
+            DeepLift,
+            net,
+            None,
+            inputs=(inp1, inp2),
+            additional_forward_args=None,
+            test_batches=False,
+        )
+
     def test_multi_input_layer_deeplift(self):
         net = ReLULinearDeepLiftModel().cuda()
-        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
-        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+        inp1 = torch.tensor(
+            [[-10.0, 1.0, -5.0], [1.0, 2.0, 3.0]], requires_grad=True
+        ).cuda()
+        inp2 = torch.tensor(
+            [[3.0, 3.0, 1.0], [4.5, 6.3, 2.3]], requires_grad=True
+        ).cuda()
 
         self._data_parallel_test_assert(
             LayerDeepLift,
@@ -356,6 +573,29 @@ class Test(BaseGPUTest):
             net,
             net.l3,
             inputs=(inp1, inp2),
+            baselines=(base1, base2),
+            additional_forward_args=None,
+            test_batches=False,
+        )
+
+    def test_multi_output_layer_deeplift_shap(self):
+        net = BasicModel_MultiLayer(multi_input_module=True).cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
+
+        base1 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+        base2 = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], requires_grad=True
+        ).cuda()
+
+        self._data_parallel_test_assert(
+            LayerDeepLiftShap,
+            net,
+            net.relu,
+            inputs=(inp1, inp2),
+            target=0,
             baselines=(base1, base2),
             additional_forward_args=None,
             test_batches=False,

@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-import warnings
 import torch
-import torch.nn as nn
 from ..._utils.attribution import LayerAttribution
 from ..._core.deep_lift import DeepLift, DeepLiftShap
 from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    _forward_layer_eval,
     compute_layer_gradients_and_eval,
 )
 
@@ -15,10 +12,14 @@ from ..._utils.common import (
     _format_input,
     _format_baseline,
     _format_callable_baseline,
+    _format_additional_forward_args,
     _validate_input,
     _tensorize_baseline,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
+    _expand_additional_forward_args,
+    _expand_target,
+    ExpansionTypes,
 )
 
 
@@ -33,19 +34,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
         """
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            model = model.module
-
         LayerAttribution.__init__(self, model, layer)
         DeepLift.__init__(self, model)
+        self.model = model
 
     def attribute(
         self,
@@ -149,7 +141,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                             #output_dims - 1 elements. Each tuple is applied as the
                             target for the corresponding example.
                         Default: None
-            additional_forward_args (tuple, optional): If the forward function
+            additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -193,14 +185,15 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor*):
+            - **attributions** (*tensor* or tuple of *tensors*):
                 Attribution score computed based on DeepLift's rescale rule with
                 respect to layer's inputs or outputs. Attributions will always be the
                 same size as the provided layer's inputs or outputs, depending on
                 whether we attribute to the inputs or outputs of the layer.
-                Since currently it is assumed that the inputs and outputs of the
-                layer must be single tensor, returned attributions have the shape
-                of that tensor.
+                If the layer input / output is a single tensor, then
+                just a tensor is returned; if the layer input / output
+                has multiple tensors, then a corresponding tuple
+                of tensors is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                 This is computed using the property that the total sum of
                 forward_func(inputs) - forward_func(baselines) must equal the
@@ -233,37 +226,44 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         _validate_input(inputs, baselines)
 
-        # set hooks for baselines
-        self.model.apply(self._register_hooks_ref)
-
         baselines = _tensorize_baseline(inputs, baselines)
 
-        attr_baselines = _forward_layer_eval(
-            self.model,
-            baselines,
-            self.layer,
-            additional_forward_args=additional_forward_args,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
-
-        # remove forward hook set for baselines
-        for forward_handles_ref in self.forward_handles_refs:
-            forward_handles_ref.remove()
+        main_model_pre_hook = self._pre_hook_main_model()
 
         self.model.apply(self._register_hooks)
 
-        gradients, attr_inputs = compute_layer_gradients_and_eval(
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        input_base_additional_args = _expand_additional_forward_args(
+            additional_forward_args, 2, ExpansionTypes.repeat
+        )
+        expanded_target = _expand_target(
+            target, 2, expansion_type=ExpansionTypes.repeat
+        )
+        wrapped_forward_func = self._construct_forward_func(
             self.model,
+            (inputs, baselines),
+            expanded_target,
+            input_base_additional_args,
+        )
+
+        def chunk_output_fn(out):
+            if not isinstance(out, tuple):
+                return out.chunk(2)
+            return tuple(out_sub.chunk(2) for out_sub in out)
+
+        (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
+            wrapped_forward_func,
             self.layer,
             inputs,
-            additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            output_fn=lambda out: chunk_output_fn(out),
         )
-        # Fixme later: we need to do this because `compute_layer_gradients_and_eval`
-        # and `_forward_layer_eval` always returns a tensor
-        attr_baselines = (attr_baselines,)
-        attr_inputs = (attr_inputs,)
-        gradients = (gradients,)
+
+        attr_inputs = tuple(map(lambda attr: attr[0], attrs))
+        attr_baselines = tuple(map(lambda attr: attr[1], attrs))
+        gradients = tuple(map(lambda grad: grad[0], gradients))
 
         if custom_attribution_func is None:
             attributions = tuple(
@@ -276,12 +276,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             attributions = _call_custom_attribution_func(
                 custom_attribution_func, gradients, attr_inputs, attr_baselines
             )
-
         # remove hooks from all activations
+        main_model_pre_hook.remove()
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
-
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
@@ -290,7 +289,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            False,  # currently both the input and output of layer can only be a tensor
+            is_layer_tuple,
         )
 
 
@@ -305,8 +304,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer.
-                          Currently, it is assumed that both inputs and ouputs of
-                          the layer can only be a single tensor.
         """
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
@@ -405,7 +402,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                             target for the corresponding example.
 
                         Default: None
-            additional_forward_args (tuple, optional): If the forward function
+            additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
                         can be provided. It must be either a single additional
@@ -449,14 +446,17 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
 
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
-            - **attributions** (*tensor*):
+            - **attributions** (*tensor* or tuple of *tensors*):
                         Attribution score computed based on DeepLift's rescale rule
                         with respect to layer's inputs or outputs. Attributions
                         will always be the same size as the provided layer's inputs
                         or outputs, depending on whether we attribute to the inputs
-                        or outputs of the layer. Since currently it is assumed that
-                        the inputs and outputs of the layer must be single tensor,
-                        returned attributions have the shape of that tensor.
+                        or outputs of the layer.
+                        Attributions are returned in a tuple based on whether
+                        the layer inputs / outputs are contained in a tuple
+                        from a forward hook. For standard modules, inputs of
+                        a single tensor are usually wrapped in a tuple, while
+                        outputs of a single tensor are not.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the
                         total sum of forward_func(inputs) - forward_func(baselines)
@@ -521,10 +521,17 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         )
         if return_convergence_delta:
             attributions, delta = attributions
-
-        attributions = DeepLiftShap._compute_mean_across_baselines(
-            self, inp_bsz, base_bsz, attributions
-        )
+        if isinstance(attributions, tuple):
+            attributions = tuple(
+                DeepLiftShap._compute_mean_across_baselines(
+                    self, inp_bsz, base_bsz, attrib
+                )
+                for attrib in attributions
+            )
+        else:
+            attributions = DeepLiftShap._compute_mean_across_baselines(
+                self, inp_bsz, base_bsz, attributions
+            )
         if return_convergence_delta:
             return attributions, delta
         else:

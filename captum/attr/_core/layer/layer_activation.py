@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
+
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from ..._utils.attribution import LayerAttribution
+from ..._utils.common import _format_attributions
 from ..._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -18,9 +28,6 @@ class LayerActivation(LayerAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -30,8 +37,11 @@ class LayerActivation(LayerAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
 
     def attribute(
-        self, inputs, additional_forward_args=None, attribute_to_layer_input=False
-    ):
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
+    ) -> Tensor:
         r"""
             Computes activation of selected layer for given input.
 
@@ -45,7 +55,7 @@ class LayerActivation(LayerAttribution):
                             that for all given input tensors, dimension 0 corresponds
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -70,11 +80,18 @@ class LayerActivation(LayerAttribution):
                             Default: False
 
             Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
+                *tensor* or tuple of *tensors* of **attributions**:
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Activation of each neuron in given layer output.
                             Attributions will always be the same size as the
                             output of the given layer.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
+
+
 
             Examples::
 
@@ -90,7 +107,7 @@ class LayerActivation(LayerAttribution):
                 >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            return _forward_layer_eval(
+            layer_eval, is_layer_tuple = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -98,3 +115,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
+        return _format_attributions(is_layer_tuple, layer_eval)

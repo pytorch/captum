@@ -3,7 +3,7 @@ import torch
 
 from ..helpers.utils import BaseTest
 
-from ..helpers.utils import assertTensorAlmostEqual
+from ..helpers.utils import assertTensorTuplesAlmostEqual
 from ..helpers.classification_models import SoftmaxModel
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -26,6 +26,22 @@ class Test(BaseTest):
         expected = [[-8.4, 0.0]]
 
         self._assert_attributions(model, model.linear2, inputs, baselines, 0, expected)
+
+    def test_basic_multi_tensor_output(self):
+        model = BasicModel_MultiLayer(multi_input_module=True)
+        model.eval()
+
+        inputs = torch.tensor([[0.0, 100.0, 0.0]])
+        expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
+        self._assert_attributions(
+            model,
+            model.relu,
+            inputs,
+            torch.zeros_like(inputs),
+            0,
+            expected,
+            n_samples=5,
+        )
 
     def test_basic_multilayer_with_add_args(self):
         model = BasicModel_MultiLayer(inplace=True)
@@ -58,7 +74,7 @@ class Test(BaseTest):
             inputs,
             baselines,
             0,
-            expected,
+            (expected,),
             expected_delta=delta,
             attribute_to_layer_input=True,
         )
@@ -118,11 +134,9 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        if isinstance(attrs, tuple):
-            for attr, exp in zip(attrs, expected):
-                assertTensorAlmostEqual(self, attr, exp, 0.005)
-        else:
-            assertTensorAlmostEqual(self, attrs, expected, 0.005)
+        assertTensorTuplesAlmostEqual(
+            self, attrs, expected, delta=0.005,
+        )
         if expected_delta is None:
             _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)
         else:

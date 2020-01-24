@@ -116,14 +116,16 @@ class Test(BaseTest):
             )
 
     def _gradient_matching_test_assert(self, model, output_layer, test_input):
-        out = _forward_layer_eval(model, test_input, output_layer)
+        out, _ = _forward_layer_eval(model, test_input, output_layer)
+        # Select first element of tuple
+        out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
         for i in range(out.shape[1]):
             neuron = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
-                lambda x: _forward_layer_eval(model, x, output_layer)[
+                lambda x: _forward_layer_eval(model, x, output_layer)[0][0][
                     (slice(None), *neuron)
                 ]
             )

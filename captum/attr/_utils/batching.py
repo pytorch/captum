@@ -25,13 +25,17 @@ def _reduce_list(val_list, red_func=torch.cat):
     """
     Applies reduction function to given list. If each element in the list is
     a Tensor, applies reduction function to all elements of the list, and returns
-    the output Tensor / value. If each element is a tuple, applies reduction
+    the output Tensor / value. If each element is a boolean, apply any method (or).
+    If each element is a tuple, applies reduction
     function to corresponding elements of each tuple in the list, and returns
     tuple of reduction function outputs with length matching the length of tuple
-    val_list[0].
+    val_list[0]. It is assumed that all tuples in the list have the same length
+    and red_func can be applied to all elements in each corresponding position.
     """
     if isinstance(val_list[0], torch.Tensor):
         return red_func(val_list)
+    elif isinstance(val_list[0], bool):
+        return any(val_list)
     assert isinstance(val_list[0], tuple), "Elements to be reduced can only be"
     "either Tensors or tuples containing Tensors."
     final_out = []

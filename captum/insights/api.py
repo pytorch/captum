@@ -180,10 +180,10 @@ class AttributionVisualizer(object):
         widget = CaptumInsights(visualizer=self)
         display(widget)
 
-    def serve(self, blocking=False, debug=False):
+    def serve(self, blocking=False, debug=False, port=None):
         from captum.insights.server import start_server
 
-        start_server(self, blocking=blocking, debug=debug)
+        start_server(self, blocking=blocking, debug=debug, _port=port)
 
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor

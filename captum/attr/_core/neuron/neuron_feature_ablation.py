@@ -92,7 +92,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -201,14 +201,18 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
         def neuron_forward_func(*args):
             with torch.no_grad():
-                layer_eval = _forward_layer_eval(
+                layer_eval, _ = _forward_layer_eval(
                     self.forward_func,
                     args,
                     self.layer,
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                return _verify_select_column(layer_eval, neuron_index)
+                assert len(layer_eval) == 1, (
+                    "Layers with multiple inputs /"
+                    " outputs are not supported for neuron ablation."
+                )
+                return _verify_select_column(layer_eval[0], neuron_index)
 
         ablator = FeatureAblation(neuron_forward_func)
 

@@ -135,7 +135,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                                 target for the corresponding example.
 
                             Default: None
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -246,7 +246,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval, input_grads = _batched_operator(
+        layer_gradients, layer_eval, input_grads, _ = _batched_operator(
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
@@ -258,6 +258,13 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
+
+        # Layer gradients and eval
+        assert (
+            len(layer_gradients) == 1 and len(layer_eval) == 1
+        ), "Layer can only have 1 output tensor for neuron attribution!"
+        layer_gradients = layer_gradients[0]
+        layer_eval = layer_eval[0]
 
         # Multiplies by appropriate gradient of output with respect to hidden neurons
         # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,

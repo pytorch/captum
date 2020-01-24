@@ -29,10 +29,13 @@ class Attribution:
         """
         self.forward_func = forward_func
 
-    def attribute(self, inputs, **kwargs):
+    def attribute(self, inputs):
         r"""
         This method computes and returns the attribution values for each input tensor.
         Deriving classes are responsible for implementing its logic accordingly.
+
+        Specific attribution algorithms that extend this class take relevant
+        additional arguments.
 
         Args:
 
@@ -41,8 +44,6 @@ class Attribution:
                         a tuple of multiple tensors. If multiple input tensors
                         are provided, the batch sizes must be aligned accross all
                         tensors.
-            **kwargs (Any, optional): Arbitrary keyword arguments used by specific
-                        attribution algorithms that extend this class.
 
 
         Returns:
@@ -197,7 +198,7 @@ class GradientAttribution(Attribution):
                                 target for the corresponding example.
 
                             Default: None
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional

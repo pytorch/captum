@@ -1,26 +1,56 @@
-neuron
+Neuron Attribution
 =======
 
-NeuronGradient
+Neuron Gradient
 ^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.neuron_gradient
-
-.. autoclass:: NeuronGradient
+.. autoclass:: captum.attr.NeuronGradient
     :members:
 
-NeuronIntegratedGradients
+Neuron Integrated Gradients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.neuron_integrated_gradients
-
-.. autoclass:: NeuronIntegratedGradients
+.. autoclass:: captum.attr.NeuronIntegratedGradients
     :members:
 
-NeuronConductance
+Neuron Conductance
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: captum.attr._core.neuron_conductance
+.. autoclass:: captum.attr.NeuronConductance
+    :members:
 
-.. autoclass:: NeuronConductance
+Neuron DeepLift
+^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronDeepLift
+    :members:
+
+Neuron DeepLiftShap
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronDeepLiftShap
+    :members:
+
+Neuron GradientShap
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronGradientShap
+    :members:
+
+Neuron Guided Backprop
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronGuidedBackprop
+    :members:
+
+Neuron Deconvolution
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronDeconvolution
+    :members:
+
+Neuron Feature Ablation
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.NeuronFeatureAblation
     :members:

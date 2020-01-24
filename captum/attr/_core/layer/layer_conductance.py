@@ -7,6 +7,7 @@ from ..._utils.common import (
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
+    _format_attributions,
     _expand_additional_forward_args,
     _validate_input,
     _expand_target,
@@ -27,9 +28,6 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
                           this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -49,7 +47,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         target=None,
         additional_forward_args=None,
         n_steps=50,
-        method="riemann_trapezoid",
+        method="gausslegendre",
         internal_batch_size=None,
         return_convergence_delta=False,
         attribute_to_layer_input=False,
@@ -130,7 +128,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                                 target for the corresponding example.
 
                             Default: None
-                additional_forward_args (tuple, optional): If the forward function
+                additional_forward_args (any, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
                             can be provided. It must be either a single additional
@@ -182,13 +180,18 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
             Returns:
                 **attributions** or 2-element tuple of **attributions**, **delta**:
-                - **attributions** (*tensor*):
+                - **attributions** (*tensor* or tuple of *tensors*):
                             Conductance of each neuron in given layer input or
                             output. Attributions will always be the same size as
                             the input or output of the given layer, depending on
                             whether we attribute to the inputs or outputs
                             of the layer which is decided by the input flag
                             `attribute_to_layer_input`.
+                            Attributions are returned in a tuple based on whether
+                            the layer inputs / outputs are contained in a tuple
+                            from a forward hook. For standard modules, inputs of
+                            a single tensor are usually wrapped in a tuple, while
+                            outputs of a single tensor are not.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                             The difference between the total
                             approximated and true conductance.
@@ -246,7 +249,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval = _batched_operator(
+        layer_gradients, layer_evals, is_layer_tuple = _batched_operator(
             compute_layer_gradients_and_eval,
             scaled_features_tpl,
             input_additional_args,
@@ -261,25 +264,34 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         # Compute differences between consecutive evaluations of layer_eval.
         # This approximates the total input gradient of each step multiplied
         # by the step size.
-        grad_diffs = layer_eval[num_examples:] - layer_eval[:-num_examples]
+        grad_diffs = tuple(
+            layer_eval[num_examples:] - layer_eval[:-num_examples]
+            for layer_eval in layer_evals
+        )
 
         # Element-wise multiply gradient of output with respect to hidden layer
         # and summed gradients with respect to input (chain rule) and sum
         # across stepped inputs.
-        attributions = _reshape_and_sum(
-            grad_diffs * layer_gradients[:-num_examples],
-            n_steps,
-            num_examples,
-            layer_eval.shape[1:],
+        attributions = tuple(
+            _reshape_and_sum(
+                grad_diff * layer_gradient[:-num_examples],
+                n_steps,
+                num_examples,
+                layer_eval.shape[1:],
+            )
+            for layer_gradient, layer_eval, grad_diff in zip(
+                layer_gradients, layer_evals, grad_diffs
+            )
         )
+
         if return_convergence_delta:
             start_point, end_point = baselines, inputs
             delta = self.compute_convergence_delta(
-                (attributions,),
+                attributions,
                 start_point,
                 end_point,
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
-            return attributions, delta
-        return attributions
+            return _format_attributions(is_layer_tuple, attributions), delta
+        return _format_attributions(is_layer_tuple, attributions)
