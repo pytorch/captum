@@ -167,9 +167,7 @@ class Test(BaseTest):
 
     def test_multi_inp_shapley_batch_scalar_tensor_0d(self):
         net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: torch.sum(net(*inp))
-        )
+        self._multi_input_batch_scalar_shapley_assert(lambda *inp: torch.sum(net(*inp)))
 
     def test_multi_inp_shapley_batch_scalar_tensor_1d(self):
         net = BasicModel_MultiLayer_MultiInput()

@@ -236,7 +236,9 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
-            single_output_mode = _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval, feature_mask)
+            single_output_mode = _find_output_mode_and_verify(
+                initial_eval, num_examples, ablations_per_eval, feature_mask
+            )
             if not single_output_mode:
                 initial_eval = initial_eval.reshape(1, num_examples)
 

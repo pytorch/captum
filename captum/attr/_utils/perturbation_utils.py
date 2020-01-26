@@ -2,7 +2,10 @@
 
 import torch
 
-def _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval, feature_mask):
+
+def _find_output_mode_and_verify(
+    initial_eval, num_examples, ablations_per_eval, feature_mask
+):
     if isinstance(initial_eval, (int, float)) or (
         isinstance(initial_eval, torch.Tensor)
         and (
@@ -17,13 +20,11 @@ def _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval,
         if feature_mask is not None:
             for single_mask in feature_mask:
                 assert single_mask.shape[0] == 1, (
-                    "Cannot provide multiple masks when function returns"
-                    " a scalar."
+                    "Cannot provide multiple masks when function returns" " a scalar."
                 )
     else:
         single_output_mode = False
         assert (
-            isinstance(initial_eval, torch.Tensor)
-            and initial_eval[0].numel() == 1
+            isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
     return single_output_mode

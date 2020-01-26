@@ -243,7 +243,9 @@ class ShapleyValueSampling(PerturbationAttribution):
             feature_mask = (
                 _format_input(feature_mask) if feature_mask is not None else None
             )
-            single_output_mode = _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval, feature_mask)
+            single_output_mode = _find_output_mode_and_verify(
+                initial_eval, num_examples, ablations_per_eval, feature_mask
+            )
 
             if feature_mask is None:
                 feature_mask = []
