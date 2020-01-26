@@ -8,6 +8,7 @@ from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.deep_lift import DeepLift
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.shapley_sampling import ShapleyValueSampling
 
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -657,15 +658,11 @@ class Test(BaseGPUTest):
 
     def test_basic_layer_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1,
-        )
+        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1)
 
     def test_basic_layer_gradient_shap_with_alt_devices(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1, True,
-        )
+        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1, True)
 
     def _basic_gradient_shap_helper(
         self, net, attr_method_class, layer, alt_device_ids=False
@@ -773,6 +770,33 @@ class Test(BaseGPUTest):
                 None,
                 inputs=(inp1, inp2),
                 sliding_window_shapes=((2,), (1,)),
+                test_batches=False,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_simple_shapley_sampling(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).float().cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValueSampling,
+                net,
+                None,
+                inputs=inp,
+                target=0,
+                ablations_per_eval=ablations_per_eval,
+            )
+
+    def test_multi_input_shapley_sampling(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for ablations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValueSampling,
+                net,
+                None,
+                inputs=(inp1, inp2),
                 test_batches=False,
                 ablations_per_eval=ablations_per_eval,
             )
