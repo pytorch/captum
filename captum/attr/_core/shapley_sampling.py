@@ -13,6 +13,7 @@ from .._utils.common import (
     _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
+from .._utils.perturbation_utils import _find_output_mode_and_verify
 
 
 class ShapleyValueSampling(PerturbationAttribution):
@@ -238,12 +239,12 @@ class ShapleyValueSampling(PerturbationAttribution):
             initial_eval = _run_forward(
                 self.forward_func, baselines, target, additional_forward_args
             )
-            single_output_mode = False
-
             num_examples = inputs[0].shape[0]
             feature_mask = (
                 _format_input(feature_mask) if feature_mask is not None else None
             )
+            single_output_mode = _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval, feature_mask)
+
             if feature_mask is None:
                 feature_mask = []
                 current_num_features = 0

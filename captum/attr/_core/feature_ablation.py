@@ -12,6 +12,7 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
+from .._utils.perturbation_utils import _find_output_mode_and_verify
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -235,29 +236,8 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
-            if isinstance(initial_eval, (int, float)) or (
-                isinstance(initial_eval, torch.Tensor)
-                and (
-                    len(initial_eval.shape) == 0
-                    or (num_examples > 1 and initial_eval.numel() == 1)
-                )
-            ):
-                single_output_mode = True
-                assert (
-                    ablations_per_eval == 1
-                ), "Cannot have ablations_per_eval > 1 when function returns scalar."
-                if feature_mask is not None:
-                    for single_mask in feature_mask:
-                        assert single_mask.shape[0] == 1, (
-                            "Cannot provide multiple masks when function returns"
-                            " a scalar."
-                        )
-            else:
-                single_output_mode = False
-                assert (
-                    isinstance(initial_eval, torch.Tensor)
-                    and initial_eval[0].numel() == 1
-                ), "Target should identify a single element in the model output."
+            single_output_mode = _find_output_mode_and_verify(initial_eval, num_examples, ablations_per_eval, feature_mask)
+            if not single_output_mode:
                 initial_eval = initial_eval.reshape(1, num_examples)
 
             # Initialize attribution totals and counts
