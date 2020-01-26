@@ -799,6 +799,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 test_batches=False,
                 ablations_per_eval=ablations_per_eval,
+                delta=0.05,
             )
 
     def _alt_device_list(self):
@@ -811,6 +812,7 @@ class Test(BaseGPUTest):
         target_layer=None,
         alt_device_ids=False,
         test_batches=False,
+        delta=0.0001,
         **kwargs
     ):
         if alt_device_ids:
@@ -860,24 +862,23 @@ class Test(BaseGPUTest):
                     )
                 else:
                     attributions_dp = attr_dp.attribute(**kwargs)
-
             if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
                     torch.sum(torch.abs(attributions_orig - attributions_dp)),
                     0,
-                    delta=0.0001,
+                    delta=delta,
                 )
             else:
                 for i in range(len(attributions_orig)):
                     self.assertAlmostEqual(
                         torch.sum(torch.abs(attributions_orig[i] - attributions_dp[i])),
                         0,
-                        delta=0.0001,
+                        delta=delta,
                     )
 
             if delta_dp is not None:
                 self.assertAlmostEqual(
-                    torch.sum(torch.abs(delta_orig - delta_dp)), 0, delta=0.0001
+                    torch.sum(torch.abs(delta_orig - delta_dp)), 0, delta=delta
                 )
 
 
