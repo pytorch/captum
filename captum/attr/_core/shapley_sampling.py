@@ -31,10 +31,10 @@ class ShapleyValueSampling(PerturbationAttribution):
         the input tensors are taken as a feature and added independently. Passing
         a feature mask, allows grouping features to be added together. This can
         be used in cases such as images, where an entire segment or region
-        can be grouped together, measuring the importance of the segment (feature group).
-        Each input scalar in the group will be given the same attribution value
-        equal to the change in output as a result of adding back the entire feature
-        group.
+        can be grouped together, measuring the importance of the segment
+        (feature group). Each input scalar in the group will be given the same
+        attribution value equal to the change in output as a result of adding back
+        the entire feature group.
 
         More details regarding Shapley Value sampling can be found in the
         original paper:
@@ -306,8 +306,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         current_add_args,
                     )
                     # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
-                    # (contains 1 more dimension than inputs). This adds extra dimensions
-                    # of 1 to make the tensor broadcastable with the inputs tensor.
+                    # (contains 1 more dimension than inputs). This adds extra
+                    # dimensions of 1 to make the tensor broadcastable with the
+                    # inputs tensor.
                     if single_output_mode:
                         eval_diff = modified_eval - prev_results
                         prev_results = modified_eval
@@ -342,7 +343,6 @@ class ShapleyValueSampling(PerturbationAttribution):
         feature_permutation,
         ablations_per_eval,
     ):
-        current_count = 0
         current_tensors = baselines
         current_tensors_list = []
         current_mask_list = []
@@ -372,7 +372,12 @@ class ShapleyValueSampling(PerturbationAttribution):
                     torch.stack(aligned_masks, dim=0)
                     for aligned_masks in zip(*current_mask_list)
                 )
-                yield combined_inputs, additional_args_repeated, target_repeated, combined_masks
+                yield (
+                    combined_inputs,
+                    additional_args_repeated,
+                    target_repeated,
+                    combined_masks,
+                )
                 current_tensors_list = []
                 current_mask_list = []
 
@@ -395,4 +400,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                 torch.stack(aligned_masks, dim=0)
                 for aligned_masks in zip(*current_mask_list)
             )
-            yield combined_inputs, additional_args_repeated, target_repeated, combined_masks
+            yield (
+                combined_inputs,
+                additional_args_repeated,
+                target_repeated,
+                combined_masks,
+            )

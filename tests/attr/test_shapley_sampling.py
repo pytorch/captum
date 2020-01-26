@@ -6,8 +6,6 @@ import torch
 from captum.attr._core.shapley_sampling import ShapleyValueSampling
 
 from .helpers.basic_models import (
-    BasicModel,
-    BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
