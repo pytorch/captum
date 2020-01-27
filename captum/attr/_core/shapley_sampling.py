@@ -153,7 +153,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             Note that features are grouped across tensors
                             (unlike feature ablation and occlusion), so
                             if the same index is used in different tensors, those
-                            features are still grouped and added together.
+                            features are still grouped and added simultaneously.
                             If the forward function returns a single scalar per batch,
                             we enforce that the first dimension of each mask must be 1,
                             since attributions are returned batch-wise rather than per
@@ -162,7 +162,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature
                             Default: None
-                ablations_per_eval (int, optional): Allows ablation of multiple features
+                ablations_per_eval (int, optional): Allows multiple ablations
                             to be processed simultaneously in one call to forward_fn.
                             Each forward pass will contain a maximum of
                             ablations_per_eval * #examples samples.
@@ -235,6 +235,10 @@ class ShapleyValueSampling(PerturbationAttribution):
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
             )
+            assert (
+                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+            ), "Ablations per evaluation must be at least 1."
+
             baselines = _tensorize_baseline(inputs, baselines)
             initial_eval = _run_forward(
                 self.forward_func, baselines, target, additional_forward_args
@@ -267,10 +271,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
                     + 1
                 )
-
-            assert (
-                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
-            ), "Ablations per evaluation must be at least 1."
 
             # Initialize attribution totals and counts
             total_attrib = [
