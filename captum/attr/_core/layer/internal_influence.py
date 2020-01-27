@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
+
 import torch
+from torch import Tensor
+from torch.nn import Module
+
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
@@ -16,7 +21,12 @@ from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
 class InternalInfluence(LayerAttribution, GradientAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -39,15 +49,19 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        attribute_to_layer_input=False,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        attribute_to_layer_input: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             Computes internal influence by approximating the integral of gradients
             for a particular layer along the path from a baseline input to the
