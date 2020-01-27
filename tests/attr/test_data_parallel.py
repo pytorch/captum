@@ -658,11 +658,15 @@ class Test(BaseGPUTest):
 
     def test_basic_layer_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1)
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1
+        )
 
     def test_basic_layer_gradient_shap_with_alt_devices(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1, True)
+        self._basic_gradient_shap_helper(
+            net, LayerGradientShap, net.linear1, True
+        )
 
     def _basic_gradient_shap_helper(
         self, net, attr_method_class, layer, alt_device_ids=False
@@ -799,7 +803,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 test_batches=False,
                 ablations_per_eval=ablations_per_eval,
-                delta=0.05,
+                delta=0.05
             )
 
     def _alt_device_list(self):
