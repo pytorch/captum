@@ -27,9 +27,9 @@ def _find_output_mode_and_verify(
         ), "Cannot have ablations_per_eval > 1 when function returns scalar."
         if feature_mask is not None:
             for single_mask in feature_mask:
-                assert single_mask.shape[0] == 1, (
-                    "Cannot provide multiple masks when function returns a scalar."
-                )
+                assert (
+                    single_mask.shape[0] == 1
+                ), "Cannot provide multiple masks when function returns a scalar."
     else:
         single_output_mode = False
         assert (

@@ -803,7 +803,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 test_batches=False,
                 ablations_per_eval=ablations_per_eval,
-                delta=0.05
+                delta=0.05,
             )
 
     def _alt_device_list(self):
