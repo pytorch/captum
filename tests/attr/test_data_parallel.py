@@ -659,13 +659,13 @@ class Test(BaseGPUTest):
     def test_basic_layer_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
         self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1
+            net, LayerGradientShap, net.linear1,
         )
 
     def test_basic_layer_gradient_shap_with_alt_devices(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
         self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1, True
+            net, LayerGradientShap, net.linear1, True,
         )
 
     def _basic_gradient_shap_helper(

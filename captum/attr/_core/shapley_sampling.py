@@ -38,7 +38,7 @@ class ShapleyValueSampling(PerturbationAttribution):
 
         More details regarding Shapley Value sampling can be found in the
         original paper:
-        https://arxiv.org/abs/1703.01365
+        https://www.sciencedirect.com/science/article/pii/S0305054808000804
 
         Args:
 
@@ -205,8 +205,8 @@ class ShapleyValueSampling(PerturbationAttribution):
             >>> # each feature. We average over 200 trials (random permutations).
             >>> attr = sv.attribute(input, target=1, n_samples=200)
 
-            >>> # Alternatively, we may want to ablate features in groups, e.g.
-            >>> # grouping each 2x2 square of the inputs and ablating them together.
+            >>> # Alternatively, we may want to add features in groups, e.g.
+            >>> # grouping each 2x2 square of the inputs and adding them together.
             >>> # This can be done by creating a feature mask as follows, which
             >>> # defines the feature groups, e.g.:
             >>> # +---+---+---+---+

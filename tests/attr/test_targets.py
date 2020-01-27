@@ -591,9 +591,6 @@ class Test(BaseTest):
                     target=targets[i : i + 1] if splice_targets else targets,
                     **kwargs
                 )
-                if comp_mode == "max":
-                    print(attributions_orig[i : i + 1], single_attr)
-                    print(attributions_orig[i : i + 1], single_attr_target_list)
                 assertTensorAlmostEqual(
                     self,
                     attributions_orig[i : i + 1],

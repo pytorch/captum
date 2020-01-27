@@ -28,7 +28,7 @@ def _find_output_mode_and_verify(
         if feature_mask is not None:
             for single_mask in feature_mask:
                 assert single_mask.shape[0] == 1, (
-                    "Cannot provide multiple masks when function returns" " a scalar."
+                    "Cannot provide multiple masks when function returns a scalar."
                 )
     else:
         single_output_mode = False
