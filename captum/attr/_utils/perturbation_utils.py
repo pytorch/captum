@@ -6,6 +6,14 @@ import torch
 def _find_output_mode_and_verify(
     initial_eval, num_examples, ablations_per_eval, feature_mask
 ):
+    """
+    This method identifies whether the model outputs a single output for a batch
+    (single_output_mode = True) or whether it outputs a single output per example
+    (single_output_mode = False) and returns single_output_mode. The method also
+    verifies that ablations_per_eval is 1 in the case that single_output_mode is True
+    and also verifies that the first dimension of each feature mask if the model
+    returns a single output for a batch.
+    """
     if isinstance(initial_eval, (int, float)) or (
         isinstance(initial_eval, torch.Tensor)
         and (
