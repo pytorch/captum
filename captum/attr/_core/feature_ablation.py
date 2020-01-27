@@ -271,7 +271,7 @@ class FeatureAblation(PerturbationAttribution):
                     current_add_args,
                     current_target,
                     current_mask,
-                ) in self._ablation_generator(
+                ) in self._perturbation_generator(
                     i,
                     inputs,
                     additional_forward_args,
@@ -317,7 +317,7 @@ class FeatureAblation(PerturbationAttribution):
                 attrib = tuple(total_attrib)
             return _format_attributions(is_inputs_tuple, attrib)
 
-    def _ablation_generator(
+    def _perturbation_generator(
         self,
         i,
         inputs,
