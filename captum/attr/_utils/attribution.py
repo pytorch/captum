@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from typing import Callable
+
 import torch
 import torch.nn.functional as F
 
@@ -29,36 +31,35 @@ class Attribution:
         """
         self.forward_func = forward_func
 
-    def attribute(self, inputs):
-        r"""
-        This method computes and returns the attribution values for each input tensor.
-        Deriving classes are responsible for implementing its logic accordingly.
+    attribute: Callable
+    r"""
+    This method computes and returns the attribution values for each input tensor.
+    Deriving classes are responsible for implementing its logic accordingly.
 
-        Specific attribution algorithms that extend this class take relevant
-        additional arguments.
+    Specific attribution algorithms that extend this class take relevant
+    arguments.
 
-        Args:
+    Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attribution
-                        is computed. It can be provided as a single tensor or
-                        a tuple of multiple tensors. If multiple input tensors
-                        are provided, the batch sizes must be aligned accross all
-                        tensors.
+        inputs (tensor or tuple of tensors):  Input for which attribution
+                    is computed. It can be provided as a single tensor or
+                    a tuple of multiple tensors. If multiple input tensors
+                    are provided, the batch sizes must be aligned accross all
+                    tensors.
 
 
-        Returns:
+    Returns:
 
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
-                        Attribution values for each
-                        input tensor. The `attributions` have the same shape and
-                        dimensionality as the inputs.
-                        If a single tensor is provided as inputs, a single tensor
-                        is returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+        *tensor* or tuple of *tensors* of **attributions**:
+        - **attributions** (*tensor* or tuple of *tensors*):
+                    Attribution values for each
+                    input tensor. The `attributions` have the same shape and
+                    dimensionality as the inputs.
+                    If a single tensor is provided as inputs, a single tensor
+                    is returned. If a tuple is provided for inputs, a tuple of
+                    corresponding sized tensors is returned.
 
-        """
-        raise NotImplementedError("Deriving class should implement attribute method")
+    """
 
     def has_convergence_delta(self):
         r"""
@@ -394,11 +395,14 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
-    def attribute(self, inputs, neuron_index, **kwargs):
+    def attribute(self, inputs, neuron_index):
         r"""
         This method computes and returns the neuron attribution values for each
         input tensor. Deriving classes are responsible for implementing
         its logic accordingly.
+
+        Specific attribution algorithms that extend this class take relevant
+        arguments.
 
         Args:
 
