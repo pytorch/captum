@@ -82,8 +82,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
-        return_convergence_delta: Optional[bool] = False,
-        attribute_to_layer_input: Optional[bool] = False,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
@@ -271,8 +271,12 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         # inputs -> these inputs are scaled
         def gradient_func(
-            forward_fn, inputs, target_ind=None, additional_forward_args=None
+            forward_fn: Callable,
+            inputs: Union[Tensor, Tuple[Tensor,...]],
+            target_ind: int = None,
+            additional_forward_args: Any = None
         ):
+            scattered_inputs: Union[Tuple[Union[Tensor, Tuple[Tensor, ...]]], Union[Tuple[Tensor, ...], List[Tuple[Any, ...]]]]
             if self.device_ids is None:
                 scattered_inputs = (inputs,)
             else:

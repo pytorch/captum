@@ -98,7 +98,10 @@ class Test(BaseTest):
         assertArraysAlmostEqual(attribution, attributions2, 0.01)
         assertArraysAlmostEqual(delta, delta2, 0.05)
 
-    def _assert_compare_with_emb_patching(self, input, baseline, additional_args):
+    def _assert_compare_with_emb_patching(self,
+        input,
+        baseline,
+        additional_args):
         model = BasicEmbeddingModel(nested_second_embedding=True)
         lig = LayerIntegratedGradients(model, model.embedding1)
 
@@ -134,7 +137,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_ig: Tuple[List[List[float]], List[List[float]]],
+        expected_ig: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
