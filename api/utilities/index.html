@@ -256,6 +256,7 @@ embeddings separately and do all operations needed outside of the model.
 The original embedding layer is being replaced by
 <cite>InterpretableEmbeddingBase</cite> layer which passes already
 precomputed embedding vectors to the layers below.</p>
+<p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 <dl class="method">
 <dt id="captum.attr.InterpretableEmbeddingBase.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">*inputs</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
@@ -380,7 +381,7 @@ embedding layer in the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.3.0a0+ee77ccb ))"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – An instance of PyTorch model that contains embeddings</p></li>
 <li><p><strong>interpretable_emb</strong> (<em>tensor</em>) – An instance of <cite>InterpretableEmbeddingBase</cite>
 that was originally created in
 <cite>configure_interpretable_embedding_layer</cite> function and has

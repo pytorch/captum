@@ -226,7 +226,7 @@
                         <span class="n">interpolate_mode</span><span class="o">=</span><span class="n">interpolate_mode</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                     <span class="s2">"Couldn't appropriately interpolate GradCAM attributions for "</span>
                     <span class="s2">"some input tensors, returning None for corresponding attributions."</span>

@@ -26,6 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.integrated_gradients</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -43,6 +44,7 @@
     <span class="n">_expand_target</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensors</span>
 
 
 <div class="viewcode-block" id="IntegratedGradients"><a class="viewcode-back" href="../../../../integrated_gradients.html#captum.attr.IntegratedGradients">[docs]</a><span class="k">class</span> <span class="nc">IntegratedGradients</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
@@ -71,9 +73,37 @@
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IntegratedGradients.attribute"><a class="viewcode-back" href="../../../../integrated_gradients.html#captum.attr.IntegratedGradients.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+    <span class="c1"># The following overloaded method signatures correspond to the case where</span>
+    <span class="c1"># return_convergence_delta is not provided, then only attributions are returned,</span>
+    <span class="c1"># and when return_convergence_delta is provided, the return type is either</span>
+    <span class="c1"># just the attributions or a tuple with both attributions and deltas.</span>
+    <span class="c1"># Note that this doesn't explicitly type the case where return_convergence_delta</span>
+    <span class="c1"># is passed with the value False, the return type when return_convergence_delta is</span>
+    <span class="c1"># given is Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]].</span>
+    <span class="c1"># Supporting separate return types for True and False requires using the Literal</span>
+    <span class="c1"># type functionality, which is only available in Python 3.8. We plan to support</span>
+    <span class="c1"># this in the future.</span>
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"gausslegendre"</span><span class="p">,</span>
+        <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
             <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
         <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -85,9 +115,20 @@
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"gausslegendre"</span><span class="p">,</span>
         <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]</span>
-    <span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TensorOrTupleOfTensors</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensors</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="IntegratedGradients.attribute"><a class="viewcode-back" href="../../../../integrated_gradients.html#captum.attr.IntegratedGradients.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">"gausslegendre"</span><span class="p">,</span>
+        <span class="n">internal_batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
 <span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>

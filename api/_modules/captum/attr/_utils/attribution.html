@@ -26,6 +26,8 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.attribution</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
@@ -56,36 +58,35 @@
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="n">forward_func</span>
 
-<div class="viewcode-block" id="Attribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        This method computes and returns the attribution values for each input tensor.</span>
-<span class="sd">        Deriving classes are responsible for implementing its logic accordingly.</span>
+    <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    This method computes and returns the attribution values for each input tensor.</span>
+<span class="sd">    Deriving classes are responsible for implementing its logic accordingly.</span>
 
-<span class="sd">        Specific attribution algorithms that extend this class take relevant</span>
-<span class="sd">        additional arguments.</span>
+<span class="sd">    Specific attribution algorithms that extend this class take relevant</span>
+<span class="sd">    arguments.</span>
 
-<span class="sd">        Args:</span>
+<span class="sd">    Args:</span>
 
-<span class="sd">            inputs (tensor or tuple of tensors):  Input for which attribution</span>
-<span class="sd">                        is computed. It can be provided as a single tensor or</span>
-<span class="sd">                        a tuple of multiple tensors. If multiple input tensors</span>
-<span class="sd">                        are provided, the batch sizes must be aligned accross all</span>
-<span class="sd">                        tensors.</span>
+<span class="sd">        inputs (tensor or tuple of tensors):  Input for which attribution</span>
+<span class="sd">                    is computed. It can be provided as a single tensor or</span>
+<span class="sd">                    a tuple of multiple tensors. If multiple input tensors</span>
+<span class="sd">                    are provided, the batch sizes must be aligned accross all</span>
+<span class="sd">                    tensors.</span>
 
 
-<span class="sd">        Returns:</span>
+<span class="sd">    Returns:</span>
 
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
-<span class="sd">                        Attribution values for each</span>
-<span class="sd">                        input tensor. The `attributions` have the same shape and</span>
-<span class="sd">                        dimensionality as the inputs.</span>
-<span class="sd">                        If a single tensor is provided as inputs, a single tensor</span>
-<span class="sd">                        is returned. If a tuple is provided for inputs, a tuple of</span>
-<span class="sd">                        corresponding sized tensors is returned.</span>
+<span class="sd">        *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">        - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                    Attribution values for each</span>
+<span class="sd">                    input tensor. The `attributions` have the same shape and</span>
+<span class="sd">                    dimensionality as the inputs.</span>
+<span class="sd">                    If a single tensor is provided as inputs, a single tensor</span>
+<span class="sd">                    is returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                    corresponding sized tensors is returned.</span>
 
-<span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Deriving class should implement attribute method"</span><span class="p">)</span></div>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="Attribution.has_convergence_delta"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -421,11 +422,14 @@
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the neuron attribution values for each</span>
 <span class="sd">        input tensor. Deriving classes are responsible for implementing</span>
 <span class="sd">        its logic accordingly.</span>
+
+<span class="sd">        Specific attribution algorithms that extend this class take relevant</span>
+<span class="sd">        arguments.</span>
 
 <span class="sd">        Args:</span>
 
