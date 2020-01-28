@@ -41,7 +41,7 @@ class LayerActivation(LayerAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> Tensor:
+    ) -> Union[Tensor, Tuple[Tensor]]:
         r"""
             Computes activation of selected layer for given input.
 

@@ -14,12 +14,12 @@ from captum.attr._utils.common import (
 
 from captum.attr._utils.gradient import _forward_layer_eval
 
-from captum.attr._utils.attribution import LayerAttribution
+from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.gradient import _run_forward
 
 
-class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
+class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     r"""
     Layer Integrated Gradients is a variant of Integrated Gradients that assigns
     an importance score to layer inputs or outputs, depending on whether we
@@ -59,7 +59,8 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
 
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids=device_ids)
-        IntegratedGradients.__init__(self, forward_func)
+        GradientAttribution.__init__(self, forward_func)
+        self.ig = IntegratedGradients(forward_func)
 
     def attribute(
         self,
@@ -295,14 +296,13 @@ class LayerIntegratedGradients(LayerAttribution, IntegratedGradients):
                 grads = torch.autograd.grad(torch.unbind(output), inputs)
             return grads
 
-        self.gradient_func = gradient_func
+        self.ig.gradient_func = gradient_func
         all_inputs = (
             (inps + additional_forward_args)
             if additional_forward_args is not None
             else inps
         )
-        attributions = IntegratedGradients.attribute(
-            self,
+        attributions = self.ig.attribute(
             inputs_layer,
             baselines=baselines_layer,
             target=target,
