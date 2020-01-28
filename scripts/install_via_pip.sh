@@ -54,16 +54,12 @@ fi
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   sudo pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
 else
-<<<<<<< HEAD
   # If no version specified, upgrade to latest release.
   if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
     sudo pip install --upgrade torch
   else
     sudo pip install torch==$CHOSEN_TORCH_VERSION
   fi
-=======
-  sudo pip install --upgrade torch
->>>>>>> c26c9745f45c00b80ada973cf398ea83977f144c
 fi
 
 # install deployment bits if asked for
