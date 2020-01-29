@@ -63,7 +63,7 @@ class Test(BaseTest):
             baselines = baselines(inputs)
 
         attrs_ig = []
-        for baseline in baselines:
+        for baseline in torch.unbind(baselines):
             attrs_ig.append(
                 nig.attribute(inputs, neuron_ind, baselines=baseline.unsqueeze(0))
             )
