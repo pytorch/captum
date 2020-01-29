@@ -311,7 +311,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     def attribute(
         self,
         inputs,
-        baselines=None,
+        baselines,
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,

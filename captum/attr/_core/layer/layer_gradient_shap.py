@@ -98,7 +98,7 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                         are provided, the examples must be aligned appropriately.
             baselines (tensor, tuple of tensors, callable):
                         Baselines define the starting point from which expectation
-                        is computed can be provided as:
+                        is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
                             the first dimension equal to the number of examples
