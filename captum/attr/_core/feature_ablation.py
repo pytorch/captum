@@ -284,6 +284,9 @@ class FeatureAblation(PerturbationAttribution):
 
             # Iterate through each feature tensor for ablation
             for i in range(len(inputs)):
+                # Skip any empty input tensors
+                if torch.numel(inputs[i]) == 0:
+                    continue
                 for (
                     current_inputs,
                     current_add_args,
@@ -406,12 +409,16 @@ class FeatureAblation(PerturbationAttribution):
             # Construct ablated batch for features in range num_features_processed
             # to num_features_processed + current_num_ablated_features and return
             # mask with same size as ablated batch. ablated_features has dimension
-            # (current_num_ablated_features, num_examples, + inputs[i].shape[1:])
+            # (current_num_ablated_features, num_examples, inputs[i].shape[1:])
+            # Note that in the case of sparse tensors, the second dimension
+            # may not necessarilly be num_examples and will match the first
+            # dimension of this tensor.
+            current_reshaped = current_features[i].reshape(
+                (current_num_ablated_features, -1) + current_features[i].shape[1:]
+            )
+
             ablated_features, current_mask = self._construct_ablated_input(
-                current_features[i].reshape(
-                    (current_num_ablated_features, num_examples)
-                    + current_features[i].shape[1:]
-                ),
+                current_reshaped,
                 input_mask,
                 baseline,
                 num_features_processed,
