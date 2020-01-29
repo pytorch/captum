@@ -14,7 +14,7 @@ from .._utils.gradient import (
     undo_gradient_requirements,
     _forward_layer_eval,
 )
-from .lrp_rules import PropagationRule, BasicRule
+from .._utils.lrp_rules import PropagationRule, BasicRule
 
 
 class LRP(Attribution):

@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 
 import unittest
 from captum.attr._core.layer_wise_relevance_propagation import LRP, LRP_0
-from captum.attr._core.lrp_rules import (
+from captum.attr._utils.lrp_rules import (
     EpsilonRhoRule,
     EpsilonRule,
     BasicRule,

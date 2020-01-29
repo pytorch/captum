@@ -56,7 +56,8 @@ class EpsilonRhoRule(PropagationRule):
         s = (relevance / z).data
         (z * s.data).sum().backward()
         c = activations.grad
-        propagated_relevance = (activations * c).data
+        propagated_relevance = (activations * c).da
+        ta
 
         return propagated_relevance
 
