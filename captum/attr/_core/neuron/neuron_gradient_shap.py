@@ -42,7 +42,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[Tensor, Callable[..., Tensor], Tuple[Union[Tensor], ...],],
+        baselines: Union[Tensor, Callable[..., Tensor], Tuple[Union[Tensor], ...]],
         n_samples: int = 5,
         stdevs: float = 0.0,
         additional_forward_args: Any = None,
