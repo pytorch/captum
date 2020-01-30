@@ -422,7 +422,7 @@
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NeuronAttribution.attribute"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.NeuronAttribution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">):</span>
+        <span class="n">attribute</span><span class="p">:</span> <span class="n">Callable</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method computes and returns the neuron attribution values for each</span>
 <span class="sd">        input tensor. Deriving classes are responsible for implementing</span>
@@ -447,8 +447,7 @@
 <span class="sd">                        Attribution values for</span>
 <span class="sd">                        each input vector. The `attributions` have the</span>
 <span class="sd">                        dimensionality of inputs.</span>
-<span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"A derived class should implement attribute method"</span><span class="p">)</span></div></div>
+<span class="sd">        """</span></div>
 </pre></div>
 </div>
 </div>
@@ -465,6 +464,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

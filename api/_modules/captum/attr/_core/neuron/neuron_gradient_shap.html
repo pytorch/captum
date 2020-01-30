@@ -69,15 +69,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
         <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">Union</span><span class="p">[</span>
-                <span class="n">Tensor</span><span class="p">,</span>
-                <span class="nb">int</span><span class="p">,</span>
-                <span class="nb">float</span><span class="p">,</span>
-                <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
-                <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
-            <span class="p">]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">stdevs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -135,28 +127,22 @@
 <span class="sd">                        dimension 0 corresponds to number of examples).</span>
 <span class="sd">                        An integer may be provided instead of a tuple of</span>
 <span class="sd">                        length 1.</span>
-<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):</span>
+<span class="sd">            baselines (tensor, tuple of tensors, callable):</span>
 <span class="sd">                        Baselines define the starting point from which expectation</span>
 <span class="sd">                        is computed and can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            exactly the same dimensions as inputs or the first</span>
-<span class="sd">                            dimension is one and the remaining dimensions match</span>
-<span class="sd">                            with inputs.</span>
+<span class="sd">                            the first dimension equal to the number of examples</span>
+<span class="sd">                            in the baselines' distribution. The remaining dimensions</span>
+<span class="sd">                            must match with input tensor's dimension starting from</span>
+<span class="sd">                            the second dimension.</span>
 
-<span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
-<span class="sd">                            be broadcasted for each input value in input tensor.</span>
-
-<span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
-<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
-<span class="sd">                            - either a tensor with matching dimensions to</span>
-<span class="sd">                                corresponding tensor in the inputs' tuple</span>
-<span class="sd">                                or the first dimension is one and the remaining</span>
-<span class="sd">                                dimensions match with the corresponding</span>
-<span class="sd">                                input tensor.</span>
-<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
-<span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
-<span class="sd">                                for corresponding input tensor.</span>
+<span class="sd">                        - a tuple of tensors, if inputs is a tuple of tensors,</span>
+<span class="sd">                            with the first dimension of any tensor inside the tuple</span>
+<span class="sd">                            equal to the number of examples in the baseline's</span>
+<span class="sd">                            distribution. The remaining dimensions must match</span>
+<span class="sd">                            the dimensions of the corresponding input tensor</span>
+<span class="sd">                            starting from the second dimension.</span>
 
 <span class="sd">                        - callable function, optionally takes `inputs` as an</span>
 <span class="sd">                            argument and either returns a single tensor</span>
@@ -164,11 +150,6 @@
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>
-
-<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
-<span class="sd">                        use zero scalar corresponding to each input tensor.</span>
-
-<span class="sd">                        Default: None</span>
 <span class="sd">            n_samples (int, optional):  The number of randomly generated examples</span>
 <span class="sd">                        per sample in the input batch. Random examples are</span>
 <span class="sd">                        generated by adding gaussian random noise to each sample.</span>
@@ -264,6 +245,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html#features">Features</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>

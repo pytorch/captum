@@ -338,7 +338,7 @@
 <div class="viewcode-block" id="LayerDeepLiftShap.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -375,35 +375,31 @@
 <span class="sd">                        to the number of examples (aka batch size), and if</span>
 <span class="sd">                        multiple input tensors are provided, the examples must</span>
 <span class="sd">                        be aligned appropriately.</span>
-<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):</span>
+<span class="sd">            baselines (tensor, tuple of tensors, callable):</span>
 <span class="sd">                        Baselines define reference samples that are compared with</span>
 <span class="sd">                        the inputs. In order to assign attribution scores DeepLift</span>
 <span class="sd">                        computes the differences between the inputs/outputs and</span>
-<span class="sd">                        corresponding references.</span>
-<span class="sd">                        Baselines can be provided either as:</span>
+<span class="sd">                        corresponding references. Baselines can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            exactly the same dimensions as inputs or the first</span>
-<span class="sd">                            dimension is one and the remaining dimensions match</span>
-<span class="sd">                            with inputs.</span>
+<span class="sd">                            the first dimension equal to the number of examples</span>
+<span class="sd">                            in the baselines' distribution. The remaining dimensions</span>
+<span class="sd">                            must match with input tensor's dimension starting from</span>
+<span class="sd">                            the second dimension.</span>
 
-<span class="sd">                        - a tuple of tensors, the baseline corresponding</span>
-<span class="sd">                            to each tensor in the inputs' tuple is either a tensor</span>
-<span class="sd">                            with matching dimensions to corresponding tensor in</span>
-<span class="sd">                            the inputs' tuple or the first dimension is one and the</span>
-<span class="sd">                            remaining dimensions match with the corresponding input</span>
-<span class="sd">                            tensor.</span>
+<span class="sd">                        - a tuple of tensors, if inputs is a tuple of tensors,</span>
+<span class="sd">                            with the first dimension of any tensor inside the tuple</span>
+<span class="sd">                            equal to the number of examples in the baseline's</span>
+<span class="sd">                            distribution. The remaining dimensions must match</span>
+<span class="sd">                            the dimensions of the corresponding input tensor</span>
+<span class="sd">                            starting from the second dimension.</span>
 
 <span class="sd">                        - callable function, optionally takes `inputs` as an</span>
 <span class="sd">                            argument and either returns a single tensor</span>
 <span class="sd">                            or a tuple of those.</span>
-<span class="sd">                        The number of samples in the baselines' tensors must be</span>
-<span class="sd">                        larger than one.</span>
 
-<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
-<span class="sd">                        use zero scalar corresponding to each input tensor.</span>
-
-<span class="sd">                        Default: None</span>
+<span class="sd">                        It is recommended that the number of samples in the baselines'</span>
+<span class="sd">                        tensors is larger than one.</span>
 <span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
 <span class="sd">                        which gradients are computed (for classification cases,</span>
 <span class="sd">                        this is usually the target class).</span>
@@ -579,6 +575,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../neuron.html">Neuron Attribution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../utilities.html">Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../insights.html#features">Features</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
