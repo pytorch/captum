@@ -19,7 +19,11 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import (
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
+)
 
 
 class Test(BaseTest):
@@ -100,20 +104,6 @@ class Test(BaseTest):
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
     ) -> None:
-        def assert_equal_fn(attributions, expected_input_ig):
-            if isinstance(expected_input_ig, tuple):
-                for i in range(len(expected_input_ig)):
-                    for j in range(attributions[i].shape[0]):
-                        assertArraysAlmostEqual(
-                            attributions[i][j].squeeze(0).tolist(),
-                            expected_input_ig[i][j],
-                            delta=0.1,
-                        )
-            else:
-                assertArraysAlmostEqual(
-                    attributions.squeeze(0).tolist(), expected_input_ig, delta=0.1
-                )
-
         for internal_batch_size in [None, 1, 20]:
             grad = NeuronIntegratedGradients(model, target_layer)
             attributions = grad.attribute(
@@ -124,14 +114,16 @@ class Test(BaseTest):
                 additional_forward_args=additional_input,
                 internal_batch_size=internal_batch_size,
             )
-            assert_equal_fn(attributions, expected_input_ig)
+            assertTensorTuplesAlmostEqual(
+                self, attributions, expected_input_ig, delta=0.1
+            )
 
     def _ig_matching_test_assert(
         self,
         model: Module,
         output_layer: Module,
         test_input: Tensor,
-        baseline: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        baseline: Optional[Tensor] = None,
     ) -> None:
         out = model(test_input)
         input_attrib = IntegratedGradients(model)
