@@ -37,8 +37,7 @@ class Test(BaseTest):
         )
 
     def test_compare_with_emb_patching_batch(self) -> None:
-        input1 = torch.tensor([[2, 5, 0, 1], [3,
-         1, 1, 0]])
+        input1 = torch.tensor([[2, 5, 0, 1], [3, 1, 1, 0]])
         baseline1 = torch.tensor([[0, 0, 0, 0]])
         # these ones will be use as an additional forward args
         input2 = torch.tensor([[0, 2, 4, 1], [2, 3, 5, 7]])
@@ -76,10 +75,7 @@ class Test(BaseTest):
         )
 
     def _assert_compare_with_layer_conductance(
-        self,
-        model: Module,
-        input: Tensor,
-        attribute_to_layer_input: bool = False
+        self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
     ):
         lc = LayerConductance(model, model.linear2)
         # For large number of steps layer conductance and layer integrated gradients
@@ -103,10 +99,8 @@ class Test(BaseTest):
         assertArraysAlmostEqual(delta, delta2, 0.05)
 
     def _assert_compare_with_emb_patching(
-        self,
-        input: Tensor,
-        baseline: Tensor,
-        additional_args:Tuple[Tensor, ...]):
+        self, input: Tensor, baseline: Tensor, additional_args: Tuple[Tensor, ...]
+    ):
         model = BasicEmbeddingModel(nested_second_embedding=True)
         lig = LayerIntegratedGradients(model, model.embedding1)
 

@@ -3,6 +3,7 @@ from typing import Callable, List, Optional, Tuple, Union, Any
 import torch
 from torch import Tensor
 
+from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
 from captum.attr._utils.common import (
@@ -45,7 +46,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: torch.nn.Module,
+        layer: Module,
         device_ids: Optional[List[int]] = None,
     ) -> None:
         r"""
@@ -272,15 +273,18 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         # inputs -> these inputs are scaled
         def gradient_func(
             forward_fn: Callable,
-            inputs: Union[Tensor, Tuple[Tensor,...]],
+            inputs: Union[Tensor, Tuple[Tensor, ...]],
             target_ind: int = None,
-            additional_forward_args: Any = None
-        ):
-            scattered_inputs: Union[Tuple[Union[Tensor, Tuple[Tensor, ...]]], Union[Tuple[Tensor, ...], List[Tuple[Any, ...]]]]
+            additional_forward_args: Any = None,
+        ) -> Tuple[Tensor, ...]:
             if self.device_ids is None:
                 scattered_inputs = (inputs,)
             else:
-                scattered_inputs = scatter(inputs, target_gpus=self.device_ids)
+                # scatter method does not have a precise enough return type in its
+                # stub, so suppress the type warning.
+                scattered_inputs = scatter(
+                    inputs, target_gpus=self.device_ids
+                )  # type:ignore
 
             scattered_inputs_dict = {
                 scattered_input[0].device: scattered_input
