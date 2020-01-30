@@ -395,7 +395,7 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
-    def attribute(self, inputs, neuron_index):
+        attribute: Callable
         r"""
         This method computes and returns the neuron attribution values for each
         input tensor. Deriving classes are responsible for implementing
@@ -421,4 +421,3 @@ class NeuronAttribution(InternalAttribution):
                         each input vector. The `attributions` have the
                         dimensionality of inputs.
         """
-        raise NotImplementedError("A derived class should implement attribute method")
