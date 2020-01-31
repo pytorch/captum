@@ -139,6 +139,19 @@ class BasicModelWithReusableModules(nn.Module):
         return self.relu(self.lin2(self.relu(self.lin1(inputs))))
 
 
+class BasicModelWithSparseInputs(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.lin1 = nn.Linear(3, 1)
+        self.lin1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 2.0]]))
+        self.lin1.bias = nn.Parameter(torch.zeros(1))
+
+    def forward(self, inputs, sparse_list):
+        return (
+            self.lin1(inputs) + (sparse_list[0] if torch.numel(sparse_list) > 0 else 0)
+        ).sum()
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
         Same as the ReLUDeepLiftModel, but with activations

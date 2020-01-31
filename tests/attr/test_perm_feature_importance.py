@@ -6,7 +6,12 @@ from captum.attr._core.perm_feature_importance import (
     _permute_feature,
 )
 
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
+from .helpers.basic_models import BasicModelWithSparseInputs
+from .helpers.utils import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
 
 
 class Test(BaseTest):
@@ -193,3 +198,33 @@ class Test(BaseTest):
                 m = (fm == feature).bool()
                 attribs_for_feature = attribs[:, m]
                 assertArraysAlmostEqual(attribs_for_feature[0], -attribs_for_feature[1])
+
+    def test_empty_sparse_features(self):
+        model = BasicModelWithSparseInputs()
+        inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
+        inp2 = torch.tensor([])
+
+        # test empty sparse tensor
+        feature_importance = PermutationFeatureImportance(model)
+        attr1, attr2 = feature_importance.attribute((inp1, inp2))
+        self.assertEqual(attr1.shape, (1, 3))
+        self.assertEqual(attr2.shape, inp2.shape)
+
+    def test_sparse_features(self):
+        model = BasicModelWithSparseInputs()
+        inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
+        # Length of sparse index list may not match # of examples
+        inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
+
+        feature_importance = PermutationFeatureImportance(model)
+        total_attr1 = 0
+        total_attr2 = 0
+        for _ in range(50):
+            attr1, attr2 = feature_importance.attribute((inp1, inp2))
+            total_attr1 += attr1
+            total_attr2 += attr2
+        total_attr1 /= 50
+        total_attr2 /= 50
+        self.assertEqual(total_attr2.shape, (1,))
+        assertTensorAlmostEqual(self, total_attr1, [0.0, 0.0, 0.0])
+        assertTensorAlmostEqual(self, total_attr2, [-6.0], delta=0.2)

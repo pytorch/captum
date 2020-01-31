@@ -7,6 +7,7 @@ from captum.attr._core.feature_ablation import FeatureAblation
 
 from .helpers.basic_models import (
     BasicModel,
+    BasicModelWithSparseInputs,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -203,6 +204,23 @@ class Test(BaseTest):
         ablation = FeatureAblation(lambda inp: torch.sum(net(inp)).item())
         with self.assertRaises(AssertionError):
             _ = ablation.attribute(inp, ablations_per_eval=2)
+
+    def test_empty_sparse_features(self):
+        model = BasicModelWithSparseInputs()
+        inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
+        inp2 = torch.tensor([])
+        self._ablation_test_assert(
+            model, (inp1, inp2), ([[9.0, -3.0, 12.0]], [[]],), target=None,
+        )
+
+    def test_sparse_features(self):
+        model = BasicModelWithSparseInputs()
+        inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
+        # Length of sparse index list may not match # of examples
+        inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
+        self._ablation_test_assert(
+            model, (inp1, inp2), ([[9.0, -3.0, 12.0]], [[2.0]],), target=None,
+        )
 
     def test_single_ablation_batch_scalar_float(self):
         net = BasicModel_MultiLayer()

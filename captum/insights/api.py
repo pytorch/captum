@@ -3,13 +3,13 @@ from collections import namedtuple
 from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 import torch
+from torch import Tensor
+from torch.nn import Module
+
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward, safe_div
 from captum.insights.features import BaseFeature
-from torch import Tensor
-from torch.nn import Module
-
 
 OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
@@ -56,7 +56,7 @@ class Batch:
                         argument of a Tensor or arbitrary (non-tuple) type or a
                         tuple containing multiple additional arguments including
                         tensors or any arbitrary python types. These arguments
-                        are provided to forward_func in order following the
+                        are provided to ``forward_func`` in order following the
                         arguments in inputs.
                         For a tensor, the first dimension of the tensor must
                         correspond to the number of examples.
