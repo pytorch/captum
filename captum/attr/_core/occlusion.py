@@ -349,7 +349,7 @@ class Occlusion(FeatureAblation):
         ]
         pad_values.reverse()
         padded_tensor = torch.nn.functional.pad(
-            sliding_window_tsr, tuple(pad_values) # type: ignore
+            sliding_window_tsr, tuple(pad_values)  # type: ignore
         )
         return padded_tensor.reshape((1,) + padded_tensor.shape)
 
