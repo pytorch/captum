@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from typing import Any
 
 import torch
 
@@ -33,7 +34,6 @@ class FeatureAblation(PerturbationAttribution):
         additional_forward_args=None,
         feature_mask=None,
         ablations_per_eval=1,
-        **kwargs
     ):
         r""""
         A perturbation based approach to computing attribution, involving

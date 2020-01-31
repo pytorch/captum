@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+import typing
+from typing import Any, Callable, List, Optional, Tuple, Union
+
 import torch
+from torch import Tensor
 
 from .feature_ablation import FeatureAblation
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 def _permute_feature(x, feature_mask):
@@ -19,18 +24,29 @@ def _permute_feature(x, feature_mask):
 
 
 class PermutationFeatureImportance(FeatureAblation):
-    def __init__(self, forward_func=None, perm_fn=_permute_feature):
+    def __init__(
+        self,
+        forward_func: Optional[Callable] = None,
+        perm_fn: Callable = _permute_feature,
+    ):
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_fn = perm_fn
 
     def attribute(
         self,
-        inputs,
-        target=None,
-        additional_forward_args=None,
-        feature_mask=None,
-        ablations_per_eval=1,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[
+                int, float, TensorOrTupleOfTensors, Tuple[int, ...], Tuple[float, ...]
+            ]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Optional[Any] = None,
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        ablations_per_eval: Optional[int] = 1,
+    ) -> TensorOrTupleOfTensors:
         return FeatureAblation.attribute(
             self,
             inputs,
@@ -42,8 +58,14 @@ class PermutationFeatureImportance(FeatureAblation):
         )
 
     def _construct_ablated_input(
-        self, feature_tensor, input_mask, baseline, start_feature, end_feature
-    ):
+        self,
+        expanded_input: Tensor,
+        input_mask: Tensor,
+        baseline: Union[int, float, Tensor],
+        start_feature: int,
+        end_feature: int,
+        **kwargs: Any
+    ) -> Tuple[Tensor, Tensor]:
         assert input_mask.shape[0] == 1, (
             "input_mask.shape[0] != 1: pass in one mask in order to permute"
             "the same features for each input"
@@ -55,7 +77,7 @@ class PermutationFeatureImportance(FeatureAblation):
         output = torch.stack(
             [
                 self.perm_fn(x, mask.squeeze(0))
-                for x, mask in zip(feature_tensor, current_mask)
+                for x, mask in zip(expanded_input, current_mask)
             ]
         )
         return output, current_mask
