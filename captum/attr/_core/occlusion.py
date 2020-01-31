@@ -297,7 +297,10 @@ class Occlusion(FeatureAblation):
         ).long()
         ablated_tensor = (
             expanded_input
-            * (torch.ones(1, dtype=torch.long) - input_mask).to(expanded_input.dtype)
+            * (
+                torch.ones(1, dtype=torch.long, device=expanded_input.device)
+                - input_mask
+            ).to(expanded_input.dtype)
         ) + (baseline * input_mask.to(expanded_input.dtype))
         return ablated_tensor, input_mask
 
