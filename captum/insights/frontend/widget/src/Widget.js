@@ -9,7 +9,11 @@ class Widget extends React.Component {
     super(props);
     this.state = {
       data: [],
-      config: [],
+      config: {
+        classes: [],
+        methods: [],
+        method_arguments: {}
+      },
       loading: false,
       callback: null
     };
@@ -42,7 +46,9 @@ class Widget extends React.Component {
   }
 
   _fetchInit = () => {
-    this.setState({ config: this.backbone.model.get("classes") });
+    this.setState({
+      config: this.backbone.model.get("insights_config")
+    });
   };
 
   fetchData = filterConfig => {
