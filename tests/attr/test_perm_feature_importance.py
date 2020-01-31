@@ -106,9 +106,8 @@ class Test(BaseTest):
 
         labels = torch.randn(batch_size)
 
-        # def forward_func(*x: Tuple[Tensor]) -> Tensor:
-        def forward_func(*x):
-            y = 0
+        def forward_func(*x: Tensor) -> Tensor:
+            y = torch.zeros(x[0].shape[0:2])
             for xx in x:
                 y += xx[:, :, 0] * xx[:, :, 1]
             y = y.sum(dim=-1)
@@ -116,7 +115,6 @@ class Test(BaseTest):
             return torch.mean((y - labels) ** 2)
 
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
-
         inp = (
             torch.randn((batch_size,) + inp1_size),
             torch.randn((batch_size,) + inp2_size),
@@ -218,8 +216,8 @@ class Test(BaseTest):
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
 
         feature_importance = PermutationFeatureImportance(model)
-        total_attr1 = torch.tensor(0)
-        total_attr2 = torch.tensor(0)
+        total_attr1 = torch.zeros(1, 3)
+        total_attr2 = torch.zeros(1)
         for _ in range(50):
             attr1, attr2 = feature_importance.attribute((inp1, inp2))
             total_attr1 += attr1

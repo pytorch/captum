@@ -46,6 +46,7 @@ class PermutationFeatureImportance(FeatureAblation):
         additional_forward_args: Optional[Any] = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         ablations_per_eval: Optional[int] = 1,
+        **kwargs: Any
     ) -> TensorOrTupleOfTensors:
         return FeatureAblation.attribute(
             self,
