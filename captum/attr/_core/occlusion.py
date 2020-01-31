@@ -26,11 +26,13 @@ class Occlusion(FeatureAblation):
         FeatureAblation.__init__(self, forward_func)
         self.use_weights = True
 
-    def attribute(
+    def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensors,
-        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...]]],
-        strides: Optional[Union[int, Tuple[int, ...], Tuple[Tuple[int, ...]]]] = None,
+        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
+        strides: Optional[
+            Union[int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]]
+        ] = None,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -294,7 +296,8 @@ class Occlusion(FeatureAblation):
             dim=0,
         ).long()
         ablated_tensor = (
-            expanded_input * (1 - input_mask).to(expanded_input.dtype)
+            expanded_input
+            * (torch.ones(1, dtype=torch.long) - input_mask).to(expanded_input.dtype)
         ) + (baseline * input_mask.to(expanded_input.dtype))
         return ablated_tensor, input_mask
 
@@ -345,7 +348,9 @@ class Occlusion(FeatureAblation):
             val for pair in zip(remaining_padding, current_index) for val in pair
         ]
         pad_values.reverse()
-        padded_tensor = torch.nn.functional.pad(sliding_window_tsr, tuple(pad_values))
+        padded_tensor = torch.nn.functional.pad(
+            sliding_window_tsr, tuple(pad_values)
+        )  # type: ignore
         return padded_tensor.reshape((1,) + padded_tensor.shape)
 
     def _get_feature_range_and_mask(

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-from typing import Union, Tuple, List, Optional, Any
+from typing import Callable, Union, Tuple, List, Optional, Any
 import unittest
 
 import torch
 from torch import Tensor
-from torch.nn import Module
 
 from captum.attr._core.occlusion import Occlusion
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -20,7 +20,7 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 class Test(BaseTest):
     def test_improper_window_shape(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
         occ = Occlusion(net)
         # Check error when too few sliding window dimensions
         with self.assertRaises(AssertionError):
@@ -42,7 +42,7 @@ class Test(BaseTest):
 
     def test_improper_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
         occ = Occlusion(net)
         # Check error when too few stride dimensions
         with self.assertRaises(AssertionError):
@@ -70,7 +70,7 @@ class Test(BaseTest):
 
     def test_too_large_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
         occ = Occlusion(net)
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
@@ -235,7 +235,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
         inp2 = torch.ones((1, 1, 4, 4))
         self._occlusion_test_assert(
             net,
@@ -268,22 +268,26 @@ class Test(BaseTest):
 
     def _occlusion_test_assert(
         self,
-        model: Module,
-        test_input: Union[Tensor, Tuple[Tensor, ...]],
+        model: Callable,
+        test_input: TensorOrTupleOfTensors,
         expected_ablation: Union[
-            float, List[List[float]], Tuple[List[List[float]], ...]
+            float,
+            List[float],
+            List[List[float]],
+            Tuple[Union[Tensor, List[float]], ...],
+            Tuple[List[List[float]], ...],
         ],
-        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...]]] = None,
+        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = 0,
         additional_input: Any = None,
-        ablations_per_eval: Optional[int] = (1,),
+        ablations_per_eval: Tuple[int, ...] = (1,),
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
-        strides: Optional[Union[int, Tuple[int, ...]]] = None,
-    ):
+        strides: Optional[Union[int, Tuple[Union[int, Tuple[int, ...]], ...]]] = None,
+    ) -> None:
         for batch_size in ablations_per_eval:
             ablation = Occlusion(model)
             attributions = ablation.attribute(
