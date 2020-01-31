@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import torch
-import torch.nn as nn
 import unittest
 
-from typing import Optional
+from torch.nn import Module
+from typing import Optional, Tuple, Union
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -55,50 +55,48 @@ class Test(BaseTest):
     def _assert_sigmoid_classification(
         self, type: str = "vanilla", approximation_method: str = "gausslegendre"
     ) -> None:
-        num_in: int = 20
-        input: Tensor = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
-        target: Tensor = torch.tensor(0)
+        num_in = 20
+        input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
+        target = torch.tensor(0)
         # TODO add test cases for multiple different layers
-        model: nn.Module = SigmoidModel(num_in, 5, 1)
+        model = SigmoidModel(num_in, 5, 1)
         self._validate_completness(model, input, target, type, approximation_method)
 
     def _assert_softmax_classification(
         self, type: str = "vanilla", approximation_method: str = "gausslegendre"
     ) -> None:
-        num_in: int = 40
-        input: Tensor = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
-        target: Tensor = torch.tensor(5)
+        num_in = 40
+        input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
+        target = torch.tensor(5)
         # 10-class classification model
-        model: nn.Module = SoftmaxModel(num_in, 20, 10)
+        model = SoftmaxModel(num_in, 20, 10)
         self._validate_completness(model, input, target, type, approximation_method)
 
     def _assert_softmax_classification_batch(
         self, type: str = "vanilla", approximation_method: str = "gausslegendre"
     ) -> None:
-        num_in: int = 40
-        input: Tensor = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(
-            3, num_in
-        )
-        target: Tensor = torch.tensor([5, 5, 2])
-        baseline: Tensor = torch.zeros(1, num_in)
+        num_in = 40
+        input = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
+        target = torch.tensor([5, 5, 2])
+        baseline = torch.zeros(1, num_in)
         # 10-class classification model
-        model: nn.Module = SoftmaxModel(num_in, 20, 10)
+        model = SoftmaxModel(num_in, 20, 10)
         self._validate_completness(
             model, input, target, type, approximation_method, baseline
         )
 
     def _validate_completness(
         self,
-        model: nn.Module,
+        model: Module,
         input: Tensor,
         target: Tensor,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        baseline: Optional[Tensor] = None,
+        baseline: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
     ) -> None:
-        attributions: Tensor
-        delta: Tensor
-        ig: IntegratedGradients = IntegratedGradients(model.forward)
+        ig = IntegratedGradients(model.forward)
         model.zero_grad()
         if type == "vanilla":
             attributions, delta = ig.attribute(
@@ -109,12 +107,12 @@ class Test(BaseTest):
                 n_steps=200,
                 return_convergence_delta=True,
             )
-            delta_expected: float = ig.compute_convergence_delta(
+            delta_expected = ig.compute_convergence_delta(
                 attributions, baseline, input, target
             )
             assertTensorAlmostEqual(self, delta_expected, delta)
 
-            delta_condition: bool = all(abs(delta.numpy().flatten()) < 0.005)
+            delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
             self.assertTrue(
                 delta_condition,
                 "The sum of attribution values {} is not "
@@ -123,8 +121,8 @@ class Test(BaseTest):
             )
             self.assertEqual([input.shape[0]], list(delta.shape))
         else:
-            nt: NoiseTunnel = NoiseTunnel(ig)
-            n_samples: int = 10
+            nt = NoiseTunnel(ig)
+            n_samples = 10
             attributions, delta = nt.attribute(
                 input,
                 baselines=baseline,

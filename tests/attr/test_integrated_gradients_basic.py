@@ -18,8 +18,8 @@ from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, Bas
 
 import unittest
 import torch
-import torch.nn as nn
-from typing import Any, Optional, Tuple
+from torch.nn import Module
+from typing import Any, cast, Optional, Tuple, Union
 
 
 class Test(BaseTest):
@@ -98,15 +98,15 @@ class Test(BaseTest):
     def _assert_multi_variable(
         self, type: str, approximation_method: str = "gausslegendre"
     ) -> None:
-        model: nn.Module = BasicModel2()
+        model = BasicModel2()
 
-        input1: Tensor = torch.tensor([3.0])
-        input2: Tensor = torch.tensor([1.0], requires_grad=True)
+        input1 = torch.tensor([3.0])
+        input2 = torch.tensor([1.0], requires_grad=True)
 
-        baseline1: Tensor = torch.tensor([0.0])
-        baseline2: Tensor = torch.tensor([0.0])
+        baseline1 = torch.tensor([0.0])
+        baseline2 = torch.tensor([0.0])
 
-        attributions1: Tuple[Tensor, ...] = self._compute_attribution_and_evaluate(
+        attributions1 = self._compute_attribution_and_evaluate(
             model,
             (input1, input2),
             (baseline1, baseline2),
@@ -116,8 +116,8 @@ class Test(BaseTest):
         if type == "vanilla":
             assertArraysAlmostEqual(attributions1[0].tolist(), [1.5], delta=0.05)
             assertArraysAlmostEqual(attributions1[1].tolist(), [-0.5], delta=0.05)
-        model: nn.Module = BasicModel3()
-        attributions2: Tuple[Tensor, ...] = self._compute_attribution_and_evaluate(
+        model = BasicModel3()
+        attributions2 = self._compute_attribution_and_evaluate(
             model,
             (input1, input2),
             (baseline1, baseline2),
@@ -133,8 +133,10 @@ class Test(BaseTest):
                 sum(attribution for attribution in attributions2),
             )
 
-    def _assert_univariable(self, type, approximation_method="gausslegendre") -> None:
-        model: nn.Module = BasicModel()
+    def _assert_univariable(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
+        model = BasicModel()
         self._compute_attribution_and_evaluate(
             model,
             torch.tensor([1.0], requires_grad=True),
@@ -158,9 +160,9 @@ class Test(BaseTest):
         )
 
     def _assert_multi_argument(
-        self, type, approximation_method="gausslegendre"
+        self, type: str, approximation_method: str = "gausslegendre"
     ) -> None:
-        model: nn.Module = BasicModel4_MultiArgs()
+        model = BasicModel4_MultiArgs()
         self._compute_attribution_and_evaluate(
             model,
             (
@@ -187,7 +189,7 @@ class Test(BaseTest):
         )
         # uses batching with an integer variable and python list
         # as additional forward arguments
-        model: nn.Module = BasicModel5_MultiArgs()
+        model = BasicModel5_MultiArgs()
         self._compute_attribution_and_evaluate(
             model,
             (
@@ -214,9 +216,9 @@ class Test(BaseTest):
         )
 
     def _assert_multi_tensor_input(
-        self, type, approximation_method="gausslegendre"
+        self, type: str, approximation_method: str = "gausslegendre"
     ) -> None:
-        model: nn.Module = BasicModel6_MultiTensor()
+        model = BasicModel6_MultiTensor()
         self._compute_attribution_and_evaluate(
             model,
             (
@@ -228,10 +230,10 @@ class Test(BaseTest):
         )
 
     def _assert_batched_tensor_input(
-        self, type, approximation_method="gausslegendre"
+        self, type: str, approximation_method: str = "gausslegendre"
     ) -> None:
-        model: nn.Module = BasicModel_MultiLayer()
-        input: Tuple[Tensor] = (
+        model = BasicModel_MultiLayer()
+        input = (
             torch.tensor(
                 [[1.5, 2.0, 1.3], [0.5, 0.1, 2.3], [1.5, 2.0, 1.3]], requires_grad=True
             ),
@@ -244,10 +246,10 @@ class Test(BaseTest):
         )
 
     def _assert_batched_tensor_multi_input(
-        self, type, approximation_method="gausslegendre"
+        self, type: str, approximation_method: str = "gausslegendre"
     ) -> None:
-        model: nn.Module = BasicModel_MultiLayer()
-        input: Tuple[Tensor, ...] = (
+        model = BasicModel_MultiLayer()
+        input = (
             torch.tensor(
                 [[1.5, 2.1, 1.9], [0.5, 0.0, 0.7], [1.5, 2.1, 1.1]], requires_grad=True
             ),
@@ -264,9 +266,11 @@ class Test(BaseTest):
 
     def _compute_attribution_and_evaluate(
         self,
-        model: nn.Module,
+        model: Module,
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[Any] = None,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
         target: Optional[int] = None,
         additional_forward_args: Optional[Any] = None,
         type: Optional[str] = "vanilla",
@@ -276,29 +280,19 @@ class Test(BaseTest):
             attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
         ig = IntegratedGradients(model)
-        inputs_tuple: Tuple[Tensor, ...]
-        if isinstance(inputs, Tensor):
-            inputs_tuple = (inputs,)
-        else:
-            inputs_tuple = inputs
+        if not isinstance(inputs, tuple):
+            inputs = cast(TensorOrTupleOfTensors, (inputs,))
 
-        baselines_tuple: Tuple[Any, ...]
+        if baselines is not None and not isinstance(baselines, tuple):
+            baselines = (baselines,)
+
         if baselines is None:
-            baselines_tuple = _tensorize_baseline(inputs_tuple, _zeros(inputs_tuple))
-        elif not isinstance(baselines, tuple):
-            baselines_tuple = (baselines,)
-        else:
-            baselines_tuple = baselines
+            baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
-        attributions: Tuple[Tensor, ...]
-        attributions_returned: Any
-        attributions_without_delta: Tuple[Tensor, ...]
-        attributions_without_delta_returned: Any
-        delta: Tensor
         if type == "vanilla":
-            attributions_returned, delta = ig.attribute(
-                inputs_tuple,
-                baselines_tuple,
+            attributions, delta = ig.attribute(
+                inputs,
+                baselines,
                 additional_forward_args=additional_forward_args,
                 method=approximation_method,
                 n_steps=500,
@@ -306,9 +300,9 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             )
             model.zero_grad()
-            attributions_without_delta_returned, delta = ig.attribute(
-                inputs_tuple,
-                baselines_tuple,
+            attributions_without_delta, delta = ig.attribute(
+                inputs,
+                baselines,
                 additional_forward_args=additional_forward_args,
                 method=approximation_method,
                 n_steps=500,
@@ -316,13 +310,11 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             )
             model.zero_grad()
-            attributions = attributions_returned
-            attributions_without_delta = attributions_without_delta_returned
-            self.assertEqual([inputs_tuple[0].shape[0]], list(delta.shape))
+            self.assertEqual([inputs[0].shape[0]], list(delta.shape))
             delta_external = ig.compute_convergence_delta(
                 attributions,
-                baselines_tuple,
-                inputs_tuple,
+                baselines,
+                inputs,
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
@@ -330,35 +322,33 @@ class Test(BaseTest):
         else:
             nt = NoiseTunnel(ig)
             n_samples = 5
-            attributions_returned, delta = nt.attribute(
-                inputs_tuple,
+            attributions, delta = nt.attribute(
+                inputs,
                 nt_type=type,
                 n_samples=n_samples,
                 stdevs=0.00000002,
-                baselines=baselines_tuple,
+                baselines=baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 method=approximation_method,
                 n_steps=500,
                 return_convergence_delta=True,
             )
-            attributions_without_delta_returned = nt.attribute(
-                inputs_tuple,
+            attributions_without_delta = nt.attribute(
+                inputs,
                 nt_type=type,
                 n_samples=n_samples,
                 stdevs=0.00000002,
-                baselines=baselines_tuple,
+                baselines=baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 method=approximation_method,
                 n_steps=500,
             )
-            attributions = attributions_returned
-            attributions_without_delta = attributions_without_delta_returned
 
-            self.assertEqual([inputs_tuple[0].shape[0] * n_samples], list(delta.shape))
+            self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
-        for input, attribution in zip(inputs_tuple, attributions):
+        for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
         self.assertTrue(all(abs(delta.numpy().flatten()) < 0.07))
 
@@ -371,39 +361,33 @@ class Test(BaseTest):
                 self, attribution, attribution_without_delta, delta=0.05
             )
 
-        return attributions
+        return cast(Tuple[Tensor, ...], attributions)
 
     def _compute_attribution_batch_helper_evaluate(
         self,
-        model: nn.Module,
+        model: Module,
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[Any] = None,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
         target: Optional[int] = None,
         additional_forward_args: Optional[Any] = None,
         approximation_method: str = "gausslegendre",
-    ):
+    ) -> None:
         ig = IntegratedGradients(model)
-        inputs_tuple: Tuple[Tensor, ...]
-        if isinstance(inputs, Tensor):
-            inputs_tuple = (inputs,)
-        else:
-            inputs_tuple = inputs
+        if not isinstance(inputs, tuple):
+            inputs = cast(TensorOrTupleOfTensors, (inputs,))
 
-        baselines_tuple: Tuple[Any, ...]
+        if baselines is not None and not isinstance(baselines, tuple):
+            baselines = (baselines,)
+
         if baselines is None:
-            baselines_tuple = _tensorize_baseline(inputs_tuple, _zeros(inputs_tuple))
-        elif not isinstance(baselines, tuple):
-            baselines_tuple = (baselines,)
-        else:
-            baselines_tuple = baselines
+            baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
         for internal_batch_size in [None, 1, 20]:
-            attributions: Tuple[Tensor, ...]
-            attributions_returned: Any
-            delta: Tensor
-            attributions_returned, delta = ig.attribute(
-                inputs_tuple,
-                baselines_tuple,
+            attributions, delta = ig.attribute(
+                inputs,
+                baselines,
                 additional_forward_args=additional_forward_args,
                 method=approximation_method,
                 n_steps=100,
@@ -411,15 +395,14 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
             )
-            attributions = attributions_returned
-            total_delta: float = 0.0
-            for i in range(inputs_tuple[0].shape[0]):
-                attributions_indiv: Tuple[Tensor, ...]
-                attributions_indiv_returned: Any
-                delta_indiv: Tensor
-                attributions_indiv_returned, delta_indiv = ig.attribute(
-                    tuple(input[i : i + 1] for input in inputs_tuple),
-                    tuple(baseline[i : i + 1] for baseline in baselines_tuple),
+            total_delta = 0.0
+            for i in range(inputs[0].shape[0]):
+                attributions_indiv, delta_indiv = ig.attribute(
+                    tuple(input[i : i + 1] for input in inputs),
+                    tuple(
+                        baseline[i : i + 1]
+                        for baseline in cast(Tuple[Tensor, ...], baselines)
+                    ),
                     additional_forward_args=additional_forward_args,
                     method=approximation_method,
                     n_steps=100,
@@ -427,7 +410,6 @@ class Test(BaseTest):
                     internal_batch_size=internal_batch_size,
                     return_convergence_delta=True,
                 )
-                attributions_indiv = attributions_indiv_returned
                 total_delta += abs(delta_indiv).sum().item()
                 for j in range(len(attributions)):
                     assertArraysAlmostEqual(
