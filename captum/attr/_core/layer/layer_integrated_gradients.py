@@ -274,7 +274,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         def gradient_func(
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
-            target_ind: int = None,
+            target_ind: Optional[
+                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            ] = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None:
@@ -282,9 +284,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             else:
                 # scatter method does not have a precise enough return type in its
                 # stub, so suppress the type warning.
-                scattered_inputs = scatter(
+                scattered_inputs = scatter(  # type:ignore
                     inputs, target_gpus=self.device_ids
-                )  # type:ignore
+                )
 
             scattered_inputs_dict = {
                 scattered_input[0].device: scattered_input
