@@ -27,17 +27,24 @@ class CaptumInsights(widgets.DOMWidget):
     def __init__(self, **kwargs):
         super(CaptumInsights, self).__init__(**kwargs)
         self.insights_config = self.visualizer.get_insights_config()
+        self.out = widgets.Output()
+        with self.out:
+            print("Captum Insights widget created.")
 
     @observe("config")
     def _fetch_data(self, change):
-        if self.config:
+        if not self.config:
+            return
+        with self.out:
             self.visualizer._update_config(self.config)
             self.output = namedtuple_to_dict(self.visualizer.visualize())
             self.config = dict()
 
     @observe("label_details")
     def _fetch_attribution(self, change):
-        if self.label_details:
+        if not self.label_details:
+            return
+        with self.out:
             self.attribution = namedtuple_to_dict(
                 self.visualizer._calculate_attribution_from_cache(
                     self.label_details["instance"], self.label_details["labelIndex"]
