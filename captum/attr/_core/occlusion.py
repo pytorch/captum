@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
 
 import torch
+from torch import Tensor
 import numpy as np
 
 from .._utils.common import (
@@ -8,12 +10,13 @@ from .._utils.common import (
     _format_and_verify_strides,
     _format_and_verify_sliding_window_shapes,
 )
+from .._utils.typing import TensorOrTupleOfTensors
 
 from .feature_ablation import FeatureAblation
 
 
 class Occlusion(FeatureAblation):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -25,14 +28,18 @@ class Occlusion(FeatureAblation):
 
     def attribute(
         self,
-        inputs,
-        sliding_window_shapes,
-        strides=None,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        ablations_per_eval=1,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...]]],
+        strides: Optional[Union[int, Tuple[int, ...], Tuple[Tuple[int, ...]]]] = None,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        ablations_per_eval: Optional[int] = 1,
+    ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each contiguous rectangular region with a given baseline /
@@ -245,8 +252,16 @@ class Occlusion(FeatureAblation):
         )
 
     def _construct_ablated_input(
-        self, expanded_input, input_mask, baseline, start_feature, end_feature, **kwargs
-    ):
+        self,
+        expanded_input: Tensor,
+        input_mask: Tensor,
+        baseline: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ],
+        start_feature: int,
+        end_feature: int,
+        **kwargs: Any,
+    ) -> Tuple[Tensor, Tensor]:
         r"""
         Ablates given expanded_input tensor with given feature mask, feature range,
         and baselines, and any additional arguments.
@@ -285,12 +300,12 @@ class Occlusion(FeatureAblation):
 
     def _occlusion_mask(
         self,
-        expanded_input,
-        ablated_feature_num,
-        sliding_window_tsr,
-        strides,
-        shift_counts,
-    ):
+        expanded_input: Tensor,
+        ablated_feature_num: int,
+        sliding_window_tsr: Tensor,
+        strides: Union[int, Tuple[int, ...]],
+        shift_counts: Tuple[int, ...],
+    ) -> Tensor:
         """
         This constructs the current occlusion mask, which is the appropriate
         shift of the sliding window tensor based on the ablated feature number.
@@ -333,6 +348,8 @@ class Occlusion(FeatureAblation):
         padded_tensor = torch.nn.functional.pad(sliding_window_tsr, tuple(pad_values))
         return padded_tensor.reshape((1,) + padded_tensor.shape)
 
-    def _get_feature_range_and_mask(self, input, input_mask, **kwargs):
+    def _get_feature_range_and_mask(
+        self, input: Tensor, input_mask: Tensor, **kwargs: Any
+    ) -> Tuple[int, float, None]:
         feature_max = np.prod(kwargs["shift_counts"])
         return 0, feature_max, None
