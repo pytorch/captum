@@ -11,7 +11,7 @@ from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List] = None
+        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
     ) -> None:
         r"""
         Args:
