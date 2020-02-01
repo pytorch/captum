@@ -117,6 +117,23 @@ single floating point tensor.</p>
 </dl>
 </dd></dl>
 <dl class="method">
+<dt id="captum.attr.Attribution.get_name">
+<em class="property">classmethod </em><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.get_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Attribution.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create readable class name by inserting a space before any capital
+characters besides the very first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a readable class name</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>for a class called IntegratedGradients, we return the string
+‘Integrated Gradients’</p>
+</dd></dl>
+<dl class="method">
 <dt id="captum.attr.Attribution.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Attribution.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides

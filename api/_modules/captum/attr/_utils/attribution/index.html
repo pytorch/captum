@@ -32,13 +32,13 @@
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
 <span class="kn">from</span> <span class="nn">.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
-    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_tensorize_baseline</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
     <span class="n">_validate_target</span><span class="p">,</span>
-    <span class="n">_tensorize_baseline</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.gradient</span> <span class="kn">import</span> <span class="n">compute_gradients</span>
 
@@ -137,6 +137,25 @@
 <span class="sd">        """</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="s2">"Deriving sub-class should implement"</span> <span class="s2">" compute_convergence_delta method"</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Attribution.get_name"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution.get_name">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Create readable class name by inserting a space before any capital</span>
+<span class="sd">        characters besides the very first.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: a readable class name</span>
+<span class="sd">        Example:</span>
+<span class="sd">            for a class called IntegratedGradients, we return the string</span>
+<span class="sd">            'Integrated Gradients'</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">char</span> <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span> <span class="ow">or</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">char</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="p">]</span>
         <span class="p">)</span></div></div>
 
 
