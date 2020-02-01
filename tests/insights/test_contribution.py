@@ -160,7 +160,7 @@ class Test(BaseTest):
             dataset=to_iter(data_loader),
             score_func=None,
         )
-        visualizer._config = FilterConfig(steps=2)
+        visualizer._config = FilterConfig(attribution_arguments={"n_steps": 2})
 
         outputs = visualizer.visualize()
 
@@ -203,7 +203,7 @@ class Test(BaseTest):
             dataset=to_iter(data_loader),
             score_func=None,
         )
-        visualizer._config = FilterConfig(steps=2)
+        visualizer._config = FilterConfig(attribution_arguments={"n_steps": 2})
 
         outputs = visualizer.visualize()
 

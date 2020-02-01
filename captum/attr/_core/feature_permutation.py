@@ -22,7 +22,7 @@ def _permute_feature(x, feature_mask):
     )
 
 
-class PermutationFeatureImportance(FeatureAblation):
+class FeaturePermutation(FeatureAblation):
     def __init__(
         self,
         forward_func: Optional[Callable] = None,

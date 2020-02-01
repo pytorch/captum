@@ -3,8 +3,8 @@ from typing import List, Tuple
 
 import torch
 from torch import Tensor
-from captum.attr._core.perm_feature_importance import (
-    PermutationFeatureImportance,
+from captum.attr._core.feature_permutation import (
+    FeaturePermutation,
     _permute_feature,
 )
 
@@ -86,7 +86,7 @@ class Test(BaseTest):
         def forward_func(x: Tensor) -> Tensor:
             return x.sum()
 
-        feature_importance = PermutationFeatureImportance(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         inp = torch.randn((batch_size,) + input_size) * 10
 
@@ -114,7 +114,8 @@ class Test(BaseTest):
 
             return torch.mean((y - labels) ** 2)
 
-        feature_importance = PermutationFeatureImportance(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
+
         inp = (
             torch.randn((batch_size,) + inp1_size),
             torch.randn((batch_size,) + inp2_size),
@@ -151,7 +152,7 @@ class Test(BaseTest):
             return 1 - x
 
         target = 1
-        feature_importance = PermutationFeatureImportance(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         attribs = feature_importance.attribute(
             inp, ablations_per_eval=ablations_per_eval, target=target
@@ -176,7 +177,7 @@ class Test(BaseTest):
         batch_size = 2
         inp = torch.randn((batch_size,) + (3, 4, 4))
 
-        feature_importance = PermutationFeatureImportance(forward_func=forward_func)
+        feature_importance = FeaturePermutation(forward_func=forward_func)
 
         masks = [
             torch.tensor([0]),
@@ -204,7 +205,7 @@ class Test(BaseTest):
         inp2 = torch.tensor([])
 
         # test empty sparse tensor
-        feature_importance = PermutationFeatureImportance(model)
+        feature_importance = FeaturePermutation(model)
         attr1, attr2 = feature_importance.attribute((inp1, inp2))
         self.assertEqual(attr1.shape, (1, 3))
         self.assertEqual(attr2.shape, inp2.shape)
@@ -215,9 +216,10 @@ class Test(BaseTest):
         # Length of sparse index list may not match # of examples
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
 
-        feature_importance = PermutationFeatureImportance(model)
+        feature_importance = FeaturePermutation(model)
         total_attr1 = torch.zeros(1, 3)
         total_attr2 = torch.zeros(1)
+
         for _ in range(50):
             attr1, attr2 = feature_importance.attribute((inp1, inp2))
             total_attr1 += attr1

@@ -6,7 +6,11 @@ class WebApp extends React.Component {
     super(props);
     this.state = {
       data: [],
-      config: [],
+      config: {
+        classes: [],
+        methods: [],
+        method_arguments: {}
+      },
       loading: false
     };
     this._fetchInit();
