@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import typing
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
