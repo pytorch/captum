@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 
 import torch
+import typing
+
+from torch import Tensor
+
+from typing import (
+    Callable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Any
+)
 
 from .._utils.common import (
     _format_attributions,
@@ -15,7 +27,7 @@ from .._utils.attribution import PerturbationAttribution
 
 
 class FeatureAblation(PerturbationAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -25,16 +37,21 @@ class FeatureAblation(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
 
+    @typing.overload
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        feature_mask=None,
-        ablations_per_eval=1,
-        **kwargs
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ]=None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ]=None,
+        additional_forward_args: Any=None,
+        feature_mask: Optional[Union[Tensor, Tuple[Tensor], ...]]=None,
+        ablations_per_eval: Optional[int]=1,
+        **kwargs: Optional[Any]
+    ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each input feature with a given baseline / reference, and
