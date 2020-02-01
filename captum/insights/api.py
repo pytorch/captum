@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
+import inspect
 from collections import namedtuple
-from typing import Callable, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import torch
 from torch import Tensor
@@ -9,7 +20,12 @@ from torch.nn import Module
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward, safe_div
+from captum.insights.config import (
+    ATTRIBUTION_METHOD_CONFIG,
+    ATTRIBUTION_NAMES_TO_METHODS,
+)
 from captum.insights.features import BaseFeature
+from captum.insights.server import namedtuple_to_dict
 
 OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
@@ -20,7 +36,13 @@ SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 
 class FilterConfig(NamedTuple):
-    steps: int = 20
+    attribution_method: str = IntegratedGradients.get_name()
+    attribution_arguments: Dict[str, Any] = {
+        arg: config.value
+        for arg, config in ATTRIBUTION_METHOD_CONFIG[
+            IntegratedGradients.get_name()
+        ].items()
+    }
     prediction: str = "all"
     classes: List[str] = []
     count: int = 4
@@ -128,7 +150,7 @@ class AttributionVisualizer(object):
         self.dataset = dataset
         self.score_func = score_func
         self._outputs = []
-        self._config = FilterConfig(steps=25, prediction="all", classes=[], count=4)
+        self._config = FilterConfig(prediction="all", classes=[], count=4)
         self._use_label_for_attr = use_label_for_attr
 
     def _calculate_attribution_from_cache(
@@ -147,7 +169,9 @@ class AttributionVisualizer(object):
         additional_forward_args: Optional[Tuple[Tensor, ...]],
         label: Optional[Union[Tensor]],
     ) -> Tensor:
-        ig = IntegratedGradients(net)
+        attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[self._config.attribution_method]
+        attribution_method = attribution_cls(net)
+        args = self._config.attribution_arguments
         # TODO support multiple baselines
         baseline = baselines[0] if len(baselines) > 0 else None
         label = (
@@ -155,19 +179,18 @@ class AttributionVisualizer(object):
             if not self._use_label_for_attr or label is None or label.nelement() == 0
             else label
         )
-        attr_ig = ig.attribute(
-            data,
-            baselines=baseline,
-            additional_forward_args=additional_forward_args,
-            target=label,
-            n_steps=self._config.steps,
+        if "baselines" in inspect.signature(attribution_method.attribute).parameters:
+            args["baselines"] = baseline
+        attr = attribution_method.attribute(
+            data, additional_forward_args=additional_forward_args, target=label, **args
         )
 
-        return attr_ig
+        return attr
 
     def _update_config(self, settings):
         self._config = FilterConfig(
-            steps=int(settings["approximation_steps"]),
+            attribution_method=settings["attribution_method"],
+            attribution_arguments=settings["arguments"],
             prediction=settings["prediction"],
             classes=settings["classes"],
             count=4,
@@ -384,3 +407,11 @@ class AttributionVisualizer(object):
             except StopIteration:
                 break
         return [o[0] for o in self._outputs]
+
+    def get_insights_config(self):
+        return {
+            "classes": self.classes,
+            "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),
+            "method_arguments": namedtuple_to_dict(ATTRIBUTION_METHOD_CONFIG),
+            "selected_method": self._config.attribution_method,
+        }

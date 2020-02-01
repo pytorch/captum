@@ -9,6 +9,7 @@ from typing import Optional
 from flask import Flask, jsonify, render_template, request
 from torch import Tensor
 
+
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
 )
@@ -53,7 +54,7 @@ def fetch():
 
 @app.route("/init")
 def init():
-    return jsonify(visualizer.classes)
+    return jsonify(visualizer.get_insights_config())
 
 
 @app.route("/")
