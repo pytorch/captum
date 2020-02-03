@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
 
 import torch
+from torch import Tensor
 
 import numpy as np
 from enum import Enum
 
 from .._utils.attribution import Attribution
+
 from .._utils.common import (
     _validate_noise_tunnel_type,
     _validate_input,
@@ -30,7 +33,7 @@ SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
 class NoiseTunnel(Attribution):
-    def __init__(self, attribution_method):
+    def __init__(self, attribution_method: Attribution) -> None:
         r"""
         attribution_method (Attribution): An instance of any attribution algorithm
                     of type `Attribution`. E.g. Integrated Gradients,
@@ -43,13 +46,13 @@ class NoiseTunnel(Attribution):
 
     def attribute(
         self,
-        inputs,
-        nt_type="smoothgrad",
-        n_samples=5,
-        stdevs=1.0,
-        draw_baseline_from_distrib=False,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        nt_type: str = "smoothgrad",
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 1.0,
+        draw_baseline_from_distrib: bool = False,
         **kwargs
-    ):
+    ) -> Union[Tensor, Tuple[Tensor]]:
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
         and applies the given attribution algorithm to each of the samples.
