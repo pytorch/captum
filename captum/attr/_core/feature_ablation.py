@@ -272,11 +272,11 @@ class FeatureAblation(PerturbationAttribution):
             # Initialize attribution totals and counts
             attrib_type = (
                 initial_eval.dtype
-                if isinstance(initial_eval, torch.Tensor)
+                if isinstance(initial_eval, Tensor)
                 else type(initial_eval)
             )
             total_attrib = [
-                torch.zeros_like(input[0:1] if single_output_mode else input).float()
+                torch.zeros_like(input[0:1] if single_output_mode else input)
                 for input in inputs
             ]
             # Weights are used in cases where ablations may be overlapping.
