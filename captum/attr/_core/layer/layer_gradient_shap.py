@@ -69,7 +69,7 @@ class LayerGradientShap(LayerAttribution, GradientShap):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable],
         n_samples: Optional[int] = 5,
         stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
         target: Optional[

@@ -3,7 +3,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from typing import Union, Tuple, List, Optional, Any
+from typing import Union, Tuple, List, Optional, Any, Callable
 
 from ..helpers.utils import BaseTest
 
@@ -120,18 +120,19 @@ class Test(BaseTest):
         model: Module,
         layer: Module,
         inputs: TensorOrTupleOfTensors,
-        baselines: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable],
         target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]],
-        expected: Union[Tensor, TensorOrTupleOfTensors, List, Tuple[List]],
+        expected: Union[Tensor, Tuple[Tensor, ...], List, Tuple[List, ...]],
         expected_delta: Tensor = None,
         n_samples: Optional[int] = 5,
         attribute_to_layer_input: Optional[bool] = False,
         add_args: Optional[Any] = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
+        print(inputs, baselines)
         attrs, delta = lgs.attribute(
             inputs,
-            baselines=baselines,
+            baselines,
             target=target,
             additional_forward_args=add_args,
             n_samples=n_samples,
@@ -139,6 +140,7 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
+        # delta = torch.zeros(2, 2)
         assertTensorTuplesAlmostEqual(
             self, attrs, expected, delta=0.005,
         )
