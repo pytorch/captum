@@ -274,8 +274,7 @@ class Test(BaseTest):
             float,
             List[float],
             List[List[float]],
-            Tuple[Union[Tensor, List[float]], ...],
-            Tuple[List[List[float]], ...],
+            Tuple[Union[Tensor, List[float], List[List[float]]], ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
         target: Optional[

@@ -40,7 +40,7 @@ class Occlusion(FeatureAblation):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        ablations_per_eval: Optional[int] = 1,
+        ablations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
@@ -256,10 +256,8 @@ class Occlusion(FeatureAblation):
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Tensor,
-        baseline: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ],
+        input_mask: Optional[Tensor],
+        baseline: Union[Tensor, int, float],
         start_feature: int,
         end_feature: int,
         **kwargs: Any,
@@ -358,6 +356,6 @@ class Occlusion(FeatureAblation):
 
     def _get_feature_range_and_mask(
         self, input: Tensor, input_mask: Tensor, **kwargs: Any
-    ) -> Tuple[int, float, None]:
+    ) -> Tuple[int, int, None]:
         feature_max = np.prod(kwargs["shift_counts"])
         return 0, feature_max, None
