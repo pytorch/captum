@@ -268,7 +268,6 @@ class FeatureAblation(PerturbationAttribution):
                     and initial_eval[0].numel() == 1
                 ), "Target should identify a single element in the model output."
                 initial_eval = initial_eval.reshape(1, num_examples)
-
             # Initialize attribution totals and counts
             attrib_type = (
                 initial_eval.dtype
@@ -276,7 +275,9 @@ class FeatureAblation(PerturbationAttribution):
                 else type(initial_eval)
             )
             total_attrib = [
-                torch.zeros_like(input[0:1] if single_output_mode else input)
+                torch.zeros_like(
+                    input[0:1] if single_output_mode else input, dtype=attrib_type
+                )
                 for input in inputs
             ]
             # Weights are used in cases where ablations may be overlapping.
