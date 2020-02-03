@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 
 import torch
+import typing
+
+from torch import Tensor
+
+from typing import (
+    Callable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Any
+)
 
 from torch import Tensor
 
@@ -31,8 +43,10 @@ class FeatureAblation(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
 
+    @typing.overload
     def attribute(
         self,
+<<<<<<< HEAD
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
@@ -43,6 +57,18 @@ class FeatureAblation(PerturbationAttribution):
         additional_forward_args: Optional[Any] = None,
         feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         ablations_per_eval: Optional[int] = 1,
+=======
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ]=None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ]=None,
+        additional_forward_args: Any=None,
+        feature_mask: Optional[Union[Tensor, Tuple[Tensor], ...]]=None,
+        ablations_per_eval: Optional[int]=1,
+>>>>>>> 79f1d0b85047666ce58998d8ca3f2a96e23698ea
         **kwargs: Optional[Any]
     ) -> TensorOrTupleOfTensors:
         r""""
