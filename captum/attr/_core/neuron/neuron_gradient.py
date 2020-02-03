@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from torch import Tensor
 from torch.nn import Module
 from typing import Callable, List, Optional, Tuple, Union, Any
 
@@ -52,7 +53,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> Tensor:
         r"""
             Computes the gradient of the output of a particular neuron with
             respect to the inputs of the network.

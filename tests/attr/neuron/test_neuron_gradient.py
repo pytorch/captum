@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, Union, Any
 from torch.nn import Module
+from torch import Tensor
+from typing import Any, List, Tuple, Union
 import unittest
 
 import torch
@@ -95,7 +96,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
         test_neuron_index: Union[int, Tuple[int, ...]],
-        expected_input_gradient: TensorOrTupleOfTensors,
+        expected_input_gradient: Union[List[float], Tuple[List[float], List[float]], Tuple[List[float], List[float], List[float]]],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> None:
@@ -119,14 +120,14 @@ class Test(BaseTest):
             )
 
     def _gradient_matching_test_assert(
-        self, model: Module, output_layer: Module, test_input: TensorOrTupleOfTensors,
+        self, model: Module, output_layer: Module, test_input: Tensor,
     ) -> None:
         out, _ = _forward_layer_eval(model, test_input, output_layer)
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
         for i in range(out.shape[1]):
-            neuron = (i,)
+            neuron: Any = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
