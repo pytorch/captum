@@ -8,7 +8,7 @@ from .feature_ablation import FeatureAblation
 from .._utils.typing import TensorOrTupleOfTensors
 
 
-def _permute_feature(x, feature_mask):
+def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
     n = x.size(0)
     assert n > 1, "cannot permute features with batch_size = 1"
 
@@ -44,7 +44,7 @@ class FeaturePermutation(FeatureAblation):
         ] = None,
         additional_forward_args: Optional[Any] = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
-        ablations_per_eval: Optional[int] = 1,
+        ablations_per_eval: int = 1,
         **kwargs: Any
     ) -> TensorOrTupleOfTensors:
         return FeatureAblation.attribute(
