@@ -272,8 +272,8 @@ class Test(BaseTest):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[int] = None,
-        additional_forward_args: Optional[Any] = None,
-        type: Optional[str] = "vanilla",
+        additional_forward_args: Any = None,
+        type: str = "vanilla",
         approximation_method: str = "gausslegendre",
     ) -> Tuple[Tensor, ...]:
         r"""
@@ -345,7 +345,6 @@ class Test(BaseTest):
                 method=approximation_method,
                 n_steps=500,
             )
-
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
         for input, attribution in zip(inputs, attributions):
@@ -367,11 +366,9 @@ class Test(BaseTest):
         self,
         model: Module,
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
+        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         target: Optional[int] = None,
-        additional_forward_args: Optional[Any] = None,
+        additional_forward_args: Any = None,
         approximation_method: str = "gausslegendre",
     ) -> None:
         ig = IntegratedGradients(model)
@@ -399,10 +396,7 @@ class Test(BaseTest):
             for i in range(inputs[0].shape[0]):
                 attributions_indiv, delta_indiv = ig.attribute(
                     tuple(input[i : i + 1] for input in inputs),
-                    tuple(
-                        baseline[i : i + 1]
-                        for baseline in cast(Tuple[Tensor, ...], baselines)
-                    ),
+                    tuple(baseline[i : i + 1] for baseline in baselines),
                     additional_forward_args=additional_forward_args,
                     method=approximation_method,
                     n_steps=100,
