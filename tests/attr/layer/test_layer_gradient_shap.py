@@ -20,6 +20,7 @@ from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from ..test_gradient_shap import _assert_attribution_delta
 
+
 class Test(BaseTest):
     def test_basic_multilayer(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
