@@ -96,7 +96,11 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
         test_neuron_index: Union[int, Tuple[int, ...]],
-        expected_input_gradient: Union[List[float], Tuple[List[float], List[float]], Tuple[List[float], List[float], List[float]]],
+        expected_input_gradient: Union[
+            List[float],
+            Tuple[List[float], List[float]],
+            Tuple[List[float], List[float], List[float]],
+        ],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> None:
