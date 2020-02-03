@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import torch
-import typing
 
 from torch import Tensor
 
@@ -13,8 +12,6 @@ from typing import (
     Union,
     Any
 )
-
-from torch import Tensor
 
 from .._utils.common import (
     _format_attributions,
