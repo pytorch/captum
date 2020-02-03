@@ -2,6 +2,11 @@
 
 import torch
 
+from torch import Tensor
+
+from typing import Callable, List, Optional, Tuple, Union, Any
+
+
 from .._utils.common import (
     _format_attributions,
     _format_input,
@@ -12,10 +17,11 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class FeatureAblation(PerturbationAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -27,14 +33,18 @@ class FeatureAblation(PerturbationAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        feature_mask=None,
-        ablations_per_eval=1,
-        **kwargs
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Optional[Any] = None,
+        feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        ablations_per_eval: Optional[int] = 1,
+        **kwargs: Optional[Any]
+    ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each input feature with a given baseline / reference, and
@@ -267,12 +277,9 @@ class FeatureAblation(PerturbationAttribution):
                 else type(initial_eval)
             )
             total_attrib = [
-                torch.zeros_like(
-                    input[0:1] if single_output_mode else input, dtype=attrib_type
-                )
+                torch.zeros_like(input[0:1] if single_output_mode else input).float()
                 for input in inputs
             ]
-
             # Weights are used in cases where ablations may be overlapping.
             if self.use_weights:
                 weights = [
@@ -336,7 +343,8 @@ class FeatureAblation(PerturbationAttribution):
                 )
             else:
                 attrib = tuple(total_attrib)
-            return _format_attributions(is_inputs_tuple, attrib)
+            _result = _format_attributions(is_inputs_tuple, attrib)
+        return _result
 
     def _ablation_generator(
         self,

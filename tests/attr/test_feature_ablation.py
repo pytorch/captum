@@ -3,7 +3,10 @@
 import unittest
 
 import torch
+from torch import Tensor
+from torch.nn import Module
 from captum.attr._core.feature_ablation import FeatureAblation
+from typing import List, Tuple, Union, Optional
 
 from .helpers.basic_models import (
     BasicModel,
@@ -345,15 +348,19 @@ class Test(BaseTest):
 
     def _ablation_test_assert(
         self,
-        model,
-        test_input,
+        model: Module,
+        test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ablation,
-        feature_mask=None,
+        feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         additional_input=None,
         ablations_per_eval=(1,),
-        baselines=None,
-        target=0,
-    ):
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = 0,
+    ) -> None:
         for batch_size in ablations_per_eval:
             ablation = FeatureAblation(model)
             attributions = ablation.attribute(
