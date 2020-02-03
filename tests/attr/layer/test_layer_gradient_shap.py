@@ -126,7 +126,7 @@ class Test(BaseTest):
         expected_delta: Tensor = None,
         n_samples: Optional[int] = 5,
         attribute_to_layer_input: Optional[bool] = False,
-        add_args: Any = None,
+        add_args: Optional[Any] = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
         attrs, delta = lgs.attribute(
