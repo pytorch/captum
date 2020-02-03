@@ -4,14 +4,7 @@ import torch
 
 from torch import Tensor
 
-from typing import (
-    Callable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    Any
-)
+from typing import Callable, List, Optional, Tuple, Union, Any
 
 from .._utils.common import (
     _format_attributions,
