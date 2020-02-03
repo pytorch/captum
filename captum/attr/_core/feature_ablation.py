@@ -275,9 +275,7 @@ class FeatureAblation(PerturbationAttribution):
                 else type(initial_eval)
             )
             total_attrib = [
-                torch.zeros_like(
-                    input[0:1] if single_output_mode else input, dtype=attrib_type
-                )
+                torch.zeros_like(input[0:1] if single_output_mode else input).double()
                 for input in inputs
             ]
             # Weights are used in cases where ablations may be overlapping.
