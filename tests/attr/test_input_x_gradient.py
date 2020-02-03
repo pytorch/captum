@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-from typing import Tuple, Union, Any
+from typing import Any
 import torch
 from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.classification_models import SoftmaxModel
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
@@ -47,7 +48,7 @@ class Test(BaseTest):
     def _input_x_gradient_base_assert(
         self,
         model: Module,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        inputs: TensorOrTupleOfTensors,
         expected_grads: Tensor,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
@@ -77,13 +78,13 @@ class Test(BaseTest):
                     )
                 self.assertEqual(input.shape, attribution.shape)
         else:
-            if nt_type == "vanilla":
+            if nt_type == "vanilla" and isinstance(attributions, Tensor):
                 assertArraysAlmostEqual(
                     attributions.reshape(-1),
                     (expected_grads * inputs).reshape(-1),
                     delta=0.5,
                 )
-            if isinstance(inputs, Tensor):
+            if isinstance(attributions, Tensor):
                 self.assertEqual(inputs.shape, attributions.shape)
 
     def _input_x_gradient_classification_assert(
@@ -101,16 +102,14 @@ class Test(BaseTest):
             output = model(input)[:, target]
             output.backward()
             expercted = input.grad * input
-            if isinstance(attributions, Tensor):
-                self.assertEqual(
-                    expercted.detach().numpy().tolist(),
-                    attributions.detach().numpy().tolist(),
-                )
+            self.assertEqual(
+                expercted.detach().numpy().tolist(),
+                attributions.detach().numpy().tolist(),
+            )
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
                 input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
             )
 
-        if isinstance(attributions, Tensor):
-            assertArraysAlmostEqual(attributions.shape, input.shape)
+        assertArraysAlmostEqual(attributions.shape, input.shape)

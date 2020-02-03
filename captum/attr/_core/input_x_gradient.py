@@ -5,6 +5,7 @@ from torch import Tensor
 from .._utils.common import _format_input, _format_attributions
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class InputXGradient(GradientAttribution):
@@ -19,12 +20,12 @@ class InputXGradient(GradientAttribution):
 
     def attribute(
         self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        inputs: TensorOrTupleOfTensors,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> TensorOrTupleOfTensors:
         r""""
         A baseline approach for computing the attribution. It multiplies input with
         the gradient with respect to input.
