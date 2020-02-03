@@ -20,7 +20,6 @@ from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from ..test_gradient_shap import _assert_attribution_delta
 
-
 class Test(BaseTest):
     def test_basic_multilayer(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
@@ -129,7 +128,6 @@ class Test(BaseTest):
         add_args: Optional[Any] = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
-        print(inputs, baselines)
         attrs, delta = lgs.attribute(
             inputs,
             baselines,
@@ -140,7 +138,6 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        # delta = torch.zeros(2, 2)
         assertTensorTuplesAlmostEqual(
             self, attrs, expected, delta=0.005,
         )
