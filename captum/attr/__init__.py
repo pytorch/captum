@@ -9,7 +9,7 @@ from ._core.gradient_shap import GradientShap  # noqa
 from ._core.guided_backprop_deconvnet import GuidedBackprop, Deconvolution  # noqa
 from ._core.guided_grad_cam import GuidedGradCam  # noqa
 from ._core.feature_ablation import FeatureAblation  # noqa
-from ._core.perm_feature_importance import PermutationFeatureImportance  # noqa
+from ._core.feature_permutation import FeaturePermutation  # noqa
 from ._core.occlusion import Occlusion  # noqa
 from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
@@ -61,7 +61,7 @@ __all__ = [
     "Deconvolution",
     "GuidedGradCam",
     "FeatureAblation",
-    "PermutationFeatureImportance",
+    "FeaturePermutation",
     "Occlusion",
     "LayerConductance",
     "LayerGradientXActivation",

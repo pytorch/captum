@@ -3,8 +3,12 @@
 import torch
 import unittest
 
+from torch.nn import Module
+from typing import Optional, Tuple, Union
+
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.typing import Tensor
 
 from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
@@ -12,45 +16,45 @@ from .helpers.utils import assertTensorAlmostEqual
 
 
 class Test(BaseTest):
-    def test_sigmoid_classification_vanilla(self):
+    def test_sigmoid_classification_vanilla(self) -> None:
         self._assert_sigmoid_classification("vanilla", "riemann_right")
 
-    def test_sigmoid_classification_smoothgrad(self):
+    def test_sigmoid_classification_smoothgrad(self) -> None:
         self._assert_sigmoid_classification("smoothgrad", "riemann_left")
 
-    def test_sigmoid_classification_smoothgrad_sq(self):
+    def test_sigmoid_classification_smoothgrad_sq(self) -> None:
         self._assert_sigmoid_classification("smoothgrad_sq", "riemann_middle")
 
-    def test_sigmoid_classification_vargrad(self):
+    def test_sigmoid_classification_vargrad(self) -> None:
         self._assert_sigmoid_classification("vargrad", "riemann_trapezoid")
 
-    def test_softmax_classification_vanilla(self):
+    def test_softmax_classification_vanilla(self) -> None:
         self._assert_softmax_classification("vanilla", "gausslegendre")
 
-    def test_softmax_classification_smoothgrad(self):
+    def test_softmax_classification_smoothgrad(self) -> None:
         self._assert_softmax_classification("smoothgrad", "riemann_right")
 
-    def test_softmax_classification_smoothgrad_sq(self):
+    def test_softmax_classification_smoothgrad_sq(self) -> None:
         self._assert_softmax_classification("smoothgrad_sq", "riemann_left")
 
-    def test_softmax_classification_vargrad(self):
+    def test_softmax_classification_vargrad(self) -> None:
         self._assert_softmax_classification("vargrad", "riemann_middle")
 
-    def test_softmax_classification_vanilla_batch(self):
+    def test_softmax_classification_vanilla_batch(self) -> None:
         self._assert_softmax_classification_batch("vanilla", "riemann_trapezoid")
 
-    def test_softmax_classification_smoothgrad_batch(self):
+    def test_softmax_classification_smoothgrad_batch(self) -> None:
         self._assert_softmax_classification_batch("smoothgrad", "gausslegendre")
 
-    def test_softmax_classification_smoothgrad_sq_batch(self):
+    def test_softmax_classification_smoothgrad_sq_batch(self) -> None:
         self._assert_softmax_classification_batch("smoothgrad_sq", "riemann_right")
 
-    def test_softmax_classification_vargrad_batch(self):
+    def test_softmax_classification_vargrad_batch(self) -> None:
         self._assert_softmax_classification_batch("vargrad", "riemann_left")
 
     def _assert_sigmoid_classification(
-        self, type="vanilla", approximation_method="gausslegendre"
-    ):
+        self, type: str = "vanilla", approximation_method: str = "gausslegendre"
+    ) -> None:
         num_in = 20
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         target = torch.tensor(0)
@@ -59,8 +63,8 @@ class Test(BaseTest):
         self._validate_completness(model, input, target, type, approximation_method)
 
     def _assert_softmax_classification(
-        self, type="vanilla", approximation_method="gausslegendre"
-    ):
+        self, type: str = "vanilla", approximation_method: str = "gausslegendre"
+    ) -> None:
         num_in = 40
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         target = torch.tensor(5)
@@ -69,8 +73,8 @@ class Test(BaseTest):
         self._validate_completness(model, input, target, type, approximation_method)
 
     def _assert_softmax_classification_batch(
-        self, type="vanilla", approximation_method="gausslegendre"
-    ):
+        self, type: str = "vanilla", approximation_method: str = "gausslegendre"
+    ) -> None:
         num_in = 40
         input = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
         target = torch.tensor([5, 5, 2])
@@ -83,18 +87,20 @@ class Test(BaseTest):
 
     def _validate_completness(
         self,
-        model,
-        inputs,
-        target,
-        type="vanilla",
-        approximation_method="gausslegendre",
-        baseline=None,
-    ):
+        model: Module,
+        input: Tensor,
+        target: Tensor,
+        type: str = "vanilla",
+        approximation_method: str = "gausslegendre",
+        baseline: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+    ) -> None:
         ig = IntegratedGradients(model.forward)
         model.zero_grad()
         if type == "vanilla":
             attributions, delta = ig.attribute(
-                inputs,
+                input,
                 baselines=baseline,
                 target=target,
                 method=approximation_method,
@@ -102,7 +108,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             )
             delta_expected = ig.compute_convergence_delta(
-                attributions, baseline, inputs, target
+                attributions, baseline, input, target
             )
             assertTensorAlmostEqual(self, delta_expected, delta)
 
@@ -113,12 +119,12 @@ class Test(BaseTest):
                 "nearly equal to the difference between the endpoint for "
                 "some samples".format(delta),
             )
-            self.assertEqual([inputs.shape[0]], list(delta.shape))
+            self.assertEqual([input.shape[0]], list(delta.shape))
         else:
             nt = NoiseTunnel(ig)
             n_samples = 10
             attributions, delta = nt.attribute(
-                inputs,
+                input,
                 baselines=baseline,
                 nt_type=type,
                 n_samples=n_samples,
@@ -128,10 +134,10 @@ class Test(BaseTest):
                 method=approximation_method,
                 return_convergence_delta=True,
             )
-            self.assertEqual([inputs.shape[0] * n_samples], list(delta.shape))
+            self.assertEqual([input.shape[0] * n_samples], list(delta.shape))
 
         self.assertTrue(all(abs(delta.numpy().flatten()) < 0.05))
-        self.assertEqual(attributions.shape, inputs.shape)
+        self.assertEqual(attributions.shape, input.shape)
 
 
 if __name__ == "__main__":

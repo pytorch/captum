@@ -18,7 +18,7 @@ def _permute_feature(x, feature_mask):
     )
 
 
-class PermutationFeatureImportance(FeatureAblation):
+class FeaturePermutation(FeatureAblation):
     def __init__(self, forward_func=None, perm_fn=_permute_feature):
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_fn = perm_fn

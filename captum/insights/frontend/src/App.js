@@ -3,6 +3,11 @@ import ReactTags from "react-tag-autocomplete";
 import styles from "./App.module.css";
 import "./App.css";
 
+const ConfigType = Object.freeze({
+  Number: "number",
+  Enum: "enum"
+});
+
 // helper method to convert an array or object into a valid classname
 function cx(obj) {
   if (Array.isArray(obj)) {
@@ -13,6 +18,17 @@ function cx(obj) {
     .join(" ");
 }
 
+function parseEventTargetValue(target) {
+  switch (target.type) {
+    case "checkbox":
+      return target.checked;
+    case "number":
+      return parseInt(target.value);
+    default:
+      return target.value;
+  }
+}
+
 class Header extends React.Component {
   render() {
     return (
@@ -20,7 +36,12 @@ class Header extends React.Component {
         <div className={styles.header__name}>Captum Insights</div>
         <nav className={styles.header__nav}>
           <ul>
-            <li className={cx([styles.header__nav__item, styles['header__nav__item--active']])}>
+            <li
+              className={cx([
+                styles.header__nav__item,
+                styles["header__nav__item--active"]
+              ])}
+            >
               Instance Attribution
             </li>
           </ul>
@@ -33,7 +54,7 @@ class Header extends React.Component {
 function Tooltip(props) {
   return (
     <div className={styles.tooltip}>
-      <div className={styles['tooltip__label']}>{props.label}</div>
+      <div className={styles["tooltip__label"]}>{props.label}</div>
     </div>
   );
 }
@@ -41,13 +62,16 @@ function Tooltip(props) {
 class FilterContainer extends React.Component {
   constructor(props) {
     super(props);
-    const suggested_classes = props.config.map((c, i) => ({ id: i, name: c }));
-
+    const suggested_classes = props.config.classes.map((c, i) => ({
+      id: i,
+      name: c
+    }));
     this.state = {
       prediction: "all",
-      approximation_steps: 20,
       classes: [],
-      suggested_classes: suggested_classes
+      suggested_classes: suggested_classes,
+      selected_method: props.config.selected_method,
+      method_arguments: props.config.method_arguments
     };
   }
 
@@ -71,18 +95,36 @@ class FilterContainer extends React.Component {
 
   handleInputChange = event => {
     const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
+    const value = parseEventTargetValue(event.target);
     const name = target.name;
     this.setState({
       [name]: value
     });
   };
 
+  handleArgumentChange = event => {
+    const target = event.target;
+    const name = target.name;
+    const value = parseEventTargetValue(target);
+    const method_arguments = this.state.method_arguments;
+    method_arguments[this.state.selected_method][name].value = value;
+    this.setState({ method_arguments });
+  };
+
   handleSubmit = event => {
+    const method = this.state.selected_method;
+    const method_arguments = this.state.method_arguments;
+    const argument_config =
+      method in method_arguments ? method_arguments[method] : {};
+    const args = {};
+    Object.keys(argument_config).forEach(function(key) {
+      args[key] = argument_config[key].value;
+    });
     const data = {
       prediction: this.state.prediction,
-      approximation_steps: this.state.approximation_steps,
-      classes: this.state.classes.map(i => i["name"])
+      classes: this.state.classes.map(i => i["name"]),
+      attribution_method: method,
+      arguments: args
     };
     this.props.fetchData(data);
     event.preventDefault();
@@ -94,10 +136,13 @@ class FilterContainer extends React.Component {
         prediction={this.state.prediction}
         classes={this.state.classes}
         suggestedClasses={this.state.suggested_classes}
-        approximationSteps={this.state.approximation_steps}
+        selectedMethod={this.state.selected_method}
+        methodArguments={this.state.method_arguments}
+        methods={this.props.config.methods}
         handleClassAdd={this.handleClassAdd}
         handleClassDelete={this.handleClassDelete}
         handleInputChange={this.handleInputChange}
+        handleArgumentChange={this.handleArgumentChange}
         handleSubmit={this.handleSubmit}
       />
     );
@@ -120,13 +165,94 @@ class ClassFilter extends React.Component {
   }
 }
 
-class Filter extends React.Component {
+class NumberArgument extends React.Component {
   render() {
+    var min = this.props.limit[0];
+    var max = this.props.limit[1];
+    return (
+      <div>
+        {this.props.name + ": "}
+        <input
+          className={cx([styles.input, styles["input--narrow"]])}
+          name={this.props.name}
+          type="number"
+          value={this.props.value}
+          min={min}
+          max={max}
+          onChange={this.props.handleInputChange}
+        />
+      </div>
+    );
+  }
+}
+
+class EnumArgument extends React.Component {
+  render() {
+    const options = this.props.limit.map((item, key) => (
+      <option value={item}>{item}</option>
+    ));
+    return (
+      <div>
+        {this.props.name + ": "}
+        <select
+          className={styles.select}
+          name={this.props.name}
+          value={this.props.value}
+          onChange={this.props.handleInputChange}
+        >
+          {options}
+        </select>
+      </div>
+    );
+  }
+}
+
+class Filter extends React.Component {
+  createComponentFromConfig = (name, config) => {
+    switch (config.type) {
+      case ConfigType.Number:
+        return (
+          <NumberArgument
+            name={name}
+            limit={config.limit}
+            value={config.value}
+            handleInputChange={this.props.handleArgumentChange}
+          />
+        );
+      case ConfigType.Enum:
+        return (
+          <EnumArgument
+            name={name}
+            limit={config.limit}
+            value={config.value}
+            handleInputChange={this.props.handleArgumentChange}
+          />
+        );
+    }
+  };
+
+  render() {
+    const methods = this.props.methods.map((item, key) => (
+      <option key={key} value={item}>
+        {item}
+      </option>
+    ));
+    var method_args_components = null;
+    if (this.props.selectedMethod in this.props.methodArguments) {
+      const method_arguments = this.props.methodArguments[
+        this.props.selectedMethod
+      ];
+      method_args_components = Object.keys(method_arguments).map((key, idx) =>
+        this.createComponentFromConfig(key, method_arguments[key])
+      );
+    }
     return (
       <form onSubmit={this.props.handleSubmit}>
         <div className={styles["filter-panel"]}>
           <div className={styles["filter-panel__column"]}>
-            <div className={styles["filter-panel__column__title"]}>Filter by Classes</div>
+            <div className={styles["filter-panel__column__title"]}>
+              Filter by Classes
+            </div>
             <div className={styles["filter-panel__column__body"]}>
               <ClassFilter
                 handleClassDelete={this.props.handleClassDelete}
@@ -156,21 +282,43 @@ class Filter extends React.Component {
           </div>
           <div className={styles["filter-panel__column"]}>
             <div className={styles["filter-panel__column__title"]}>
-              Integrated Gradients
+              Choose Attribution Method
             </div>
             <div className={styles["filter-panel__column__body"]}>
-              Approximation steps:{" "}
-              <input
-                className={cx([styles.input, styles["input--narrow"]])}
-                name="approximation_steps"
-                type="number"
-                value={this.props.approximationSteps}
+              Attribution Method:{" "}
+              <select
+                className={styles.select}
+                name="selected_method"
                 onChange={this.props.handleInputChange}
-              />
+                value={this.props.selectedMethod}
+              >
+                {methods}
+              </select>
             </div>
           </div>
-          <div className={cx([styles["filter-panel__column"], styles["filter-panel__column--end"]])}>
-            <button className={cx([styles.btn, styles["btn--outline"], styles["btn--large"]])}>Fetch</button>
+          <div className={styles["filter-panel__column"]}>
+            <div className={styles["filter-panel__column__title"]}>
+              Attribution Method Arguments
+            </div>
+            <div className={styles["filter-panel__column__body"]}>
+              {method_args_components}
+            </div>
+          </div>
+          <div
+            className={cx([
+              styles["filter-panel__column"],
+              styles["filter-panel__column--end"]
+            ])}
+          >
+            <button
+              className={cx([
+                styles.btn,
+                styles["btn--outline"],
+                styles["btn--large"]
+              ])}
+            >
+              Fetch
+            </button>
           </div>
         </div>
       </form>
@@ -210,7 +358,9 @@ function calcHSLFromScore(percentage, zeroDefault = false) {
 function ImageFeature(props) {
   return (
     <>
-      <div className={styles["panel__column__title"]}>{props.data.name} (Image)</div>
+      <div className={styles["panel__column__title"]}>
+        {props.data.name} (Image)
+      </div>
       <div className={styles["panel__column__body"]}>
         <div className={styles.gallery}>
           <div className={styles["gallery__item"]}>
@@ -251,7 +401,9 @@ function TextFeature(props) {
   });
   return (
     <>
-      <div className={styles["panel__column__title"]}>{props.data.name} (Text)</div>
+      <div className={styles["panel__column__title"]}>
+        {props.data.name} (Text)
+      </div>
       <div className={styles["panel__column__body"]}>{color_words}</div>
     </>
   );
@@ -280,7 +432,9 @@ function GeneralFeature(props) {
   });
   return (
     <>
-      <div className={styles["panel__column__title"]}>{props.data.name} (General)</div>
+      <div className={styles["panel__column__title"]}>
+        {props.data.name} (General)
+      </div>
       <div className={styles["panel__column__body"]}>{bars}</div>
     </>
   );
@@ -418,7 +572,14 @@ class Visualization extends React.Component {
               </div>
             </div>
           </div>
-          <div className={cx([styles["panel__column"], styles["panel__column--stretch"]])}>{features}</div>
+          <div
+            className={cx([
+              styles["panel__column"],
+              styles["panel__column--stretch"]
+            ])}
+          >
+            {features}
+          </div>
         </div>
       </>
     );
@@ -441,7 +602,8 @@ function Visualizations(props) {
       <div className={styles.viz}>
         <div className={styles.panel}>
           <div className={styles["panel__column"]}>
-            Please press <strong className={styles["text-feature-word"]}>Fetch</strong> to
+            Please press{" "}
+            <strong className={styles["text-feature-word"]}>Fetch</strong> to
             start loading data.
           </div>
         </div>
@@ -474,7 +636,7 @@ class AppBase extends React.Component {
         <FilterContainer
           fetchData={this.props.fetchData}
           config={this.props.config}
-          key={this.props.config}
+          key={this.props.config.classes}
         />
         <Visualizations
           data={this.props.data}
