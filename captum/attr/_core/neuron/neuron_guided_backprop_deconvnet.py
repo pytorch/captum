@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
+from typing import Any, List, Optional, Tuple, Union
+
+from torch.nn import Module
+
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
+from ..._utils.typing import TensorOrTupleOfTensors
 from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(
+        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+    ) -> None:
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
-            layer (torch.nn.Module): Layer for which attributions are computed.
+            model (Module):  The reference to PyTorch model instance.
+            layer (Module): Layer for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
                           the inputs or outputs of the layer, corresponding to
@@ -31,11 +38,11 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        additional_forward_args=None,
-        attribute_to_neuron_input=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Computes attribution of the given neuron using deconvolution.
         Deconvolution computes the gradient of the target output with
@@ -130,12 +137,14 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
 
 class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(
+        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+    ) -> None:
         r"""
         Args:
 
-            model (nn.Module):  The reference to PyTorch model instance.
-            layer (torch.nn.Module): Layer for which neuron attributions are computed.
+            model (Module):  The reference to PyTorch model instance.
+            layer (Module): Layer for which neuron attributions are computed.
                           Attributions for a particular neuron in the output of
                           this layer are computed using the argument neuron_index
                           in the attribute method.
@@ -153,11 +162,11 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        additional_forward_args=None,
-        attribute_to_neuron_input=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Computes attribution of the given neuron using guided backpropagation.
         Guided backpropagation computes the gradient of the target neuron
