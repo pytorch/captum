@@ -8,6 +8,7 @@ from typing import Callable, List, Optional, Tuple, Union, Any
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
 from ..._utils.common import _verify_select_column
 from ..._utils.gradient import _forward_layer_eval
+from .._utils.typing import TensorOrTupleOfTensors
 
 from ..feature_ablation import FeatureAblation
 
@@ -42,13 +43,13 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        neuron_index: Union[int, Tuple[int]],
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         additional_forward_args: Any = None,
-        feature_mask: Union[Tensor, Tuple[Tensor, ...]] = None,
+        feature_mask: TensorOrTupleOfTensors = None,
         attribute_to_neuron_input: bool = False,
         ablations_per_eval: int = 1,
     ):
@@ -210,7 +211,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>>                          feature_mask=feature_mask)
         """
 
-        def neuron_forward_func(*args: str):
+        def neuron_forward_func(*args: Any):
             with torch.no_grad():
                 layer_eval, _ = _forward_layer_eval(
                     self.forward_func,
@@ -225,7 +226,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                 )
                 return _verify_select_column(layer_eval[0], neuron_index)
 
-        ablator: FeatureAblation = FeatureAblation(neuron_forward_func)
+        ablator = FeatureAblation(neuron_forward_func)
 
         return ablator.attribute(
             inputs,

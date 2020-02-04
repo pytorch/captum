@@ -14,7 +14,7 @@ from ..helpers.utils import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
-    def test_simple_ablation_with_mask(self):
+    def test_simple_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._ablation_test_assert(
@@ -26,7 +26,7 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_sample_ablation_with_mask(self):
+    def test_multi_sample_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
@@ -39,7 +39,7 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_input_ablation_with_mask(self):
+    def test_multi_input_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -85,7 +85,7 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_input_ablation(self):
+    def test_multi_input_ablation(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -123,9 +123,9 @@ class Test(BaseTest):
             ablations_per_eval=(1, 2, 3),
         )
 
-    def test_simple_multi_input_conv(self):
+    def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         self._ablation_test_assert(
             net,
@@ -156,9 +156,9 @@ class Test(BaseTest):
             ablations_per_eval=(1, 3, 7, 14),
         )
 
-    def test_simple_multi_input_conv_intermediate(self):
+    def test_simple_multi_input_conv_intermediate(self) -> None:
         net = BasicModel_ConvNet_One_Conv(inplace=True)
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         self._ablation_test_assert(
             net,
@@ -214,7 +214,7 @@ class Test(BaseTest):
         baselines=None,
         neuron_index=0,
         attribute_to_neuron_input=False,
-    ):
+    ) -> None:
         for batch_size in ablations_per_eval:
             ablation = NeuronFeatureAblation(model, layer)
             attributions = ablation.attribute(
