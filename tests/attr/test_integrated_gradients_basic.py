@@ -3,6 +3,7 @@
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _zeros, _tensorize_baseline
+from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensors
 
 from .helpers.basic_models import (
     BasicModel,
@@ -17,82 +18,86 @@ from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, Bas
 
 import unittest
 import torch
+from torch.nn import Module
+from typing import Any, cast, Optional, Tuple, Union
 
 
 class Test(BaseTest):
-    def test_multivariable_vanilla(self):
+    def test_multivariable_vanilla(self) -> None:
         self._assert_multi_variable("vanilla", "riemann_right")
 
-    def test_multivariable_smoothgrad(self):
+    def test_multivariable_smoothgrad(self) -> None:
         self._assert_multi_variable("smoothgrad", "riemann_left")
 
-    def test_multivariable_smoothgrad_sq(self):
+    def test_multivariable_smoothgrad_sq(self) -> None:
         self._assert_multi_variable("smoothgrad_sq", "riemann_middle")
 
-    def test_multivariable_vargrad(self):
+    def test_multivariable_vargrad(self) -> None:
         self._assert_multi_variable("vargrad", "riemann_trapezoid")
 
-    def test_multi_argument_vanilla(self):
+    def test_multi_argument_vanilla(self) -> None:
         self._assert_multi_argument("vanilla", "gausslegendre")
 
-    def test_multi_argument_smoothgrad(self):
+    def test_multi_argument_smoothgrad(self) -> None:
         self._assert_multi_argument("smoothgrad", "riemann_right")
 
-    def test_multi_argument_smoothgrad_sq(self):
+    def test_multi_argument_smoothgrad_sq(self) -> None:
         self._assert_multi_argument("smoothgrad_sq", "riemann_left")
 
-    def test_multi_argument_vargrad(self):
+    def test_multi_argument_vargrad(self) -> None:
         self._assert_multi_argument("vargrad", "riemann_middle")
 
-    def test_univariable_vanilla(self):
+    def test_univariable_vanilla(self) -> None:
         self._assert_univariable("vanilla", "riemann_trapezoid")
 
-    def test_univariable_smoothgrad(self):
+    def test_univariable_smoothgrad(self) -> None:
         self._assert_univariable("smoothgrad", "gausslegendre")
 
-    def test_univariable_smoothgrad_sq(self):
+    def test_univariable_smoothgrad_sq(self) -> None:
         self._assert_univariable("smoothgrad_sq", "riemann_right")
 
-    def test_univariable_vargrad(self):
+    def test_univariable_vargrad(self) -> None:
         self._assert_univariable("vargrad", "riemann_left")
 
-    def test_multi_tensor_input_vanilla(self):
+    def test_multi_tensor_input_vanilla(self) -> None:
         self._assert_multi_tensor_input("vanilla", "riemann_middle")
 
-    def test_multi_tensor_input_smoothgrad(self):
+    def test_multi_tensor_input_smoothgrad(self) -> None:
         self._assert_multi_tensor_input("smoothgrad", "riemann_trapezoid")
 
-    def test_multi_tensor_input_smoothgrad_sq(self):
+    def test_multi_tensor_input_smoothgrad_sq(self) -> None:
         self._assert_multi_tensor_input("smoothgrad_sq", "gausslegendre")
 
-    def test_multi_tensor_input_vargrad(self):
+    def test_multi_tensor_input_vargrad(self) -> None:
         self._assert_multi_tensor_input("vargrad", "riemann_right")
 
-    def test_batched_input_vanilla(self):
+    def test_batched_input_vanilla(self) -> None:
         self._assert_batched_tensor_input("vanilla", "riemann_left")
 
-    def test_batched_input_smoothgrad(self):
+    def test_batched_input_smoothgrad(self) -> None:
         self._assert_batched_tensor_input("smoothgrad", "riemann_middle")
 
-    def test_batched_input_smoothgrad_sq(self):
+    def test_batched_input_smoothgrad_sq(self) -> None:
         self._assert_batched_tensor_input("smoothgrad_sq", "riemann_trapezoid")
 
-    def test_batched_input_vargrad(self):
+    def test_batched_input_vargrad(self) -> None:
         self._assert_batched_tensor_input("vargrad", "gausslegendre")
 
-    def test_batched_multi_input_vanilla(self):
+    def test_batched_multi_input_vanilla(self) -> None:
         self._assert_batched_tensor_multi_input("vanilla", "riemann_right")
 
-    def test_batched_multi_input_smoothgrad(self):
+    def test_batched_multi_input_smoothgrad(self) -> None:
         self._assert_batched_tensor_multi_input("smoothgrad", "riemann_left")
 
-    def test_batched_multi_input_smoothgrad_sq(self):
+    def test_batched_multi_input_smoothgrad_sq(self) -> None:
         self._assert_batched_tensor_multi_input("smoothgrad_sq", "riemann_middle")
 
-    def test_batched_multi_input_vargrad(self):
+    def test_batched_multi_input_vargrad(self) -> None:
         self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid")
 
-    def _assert_multi_variable(self, type, approximation_method="gausslegendre"):
+    def _assert_multi_variable(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel2()
 
         input1 = torch.tensor([3.0])
@@ -128,7 +133,9 @@ class Test(BaseTest):
                 sum(attribution for attribution in attributions2),
             )
 
-    def _assert_univariable(self, type, approximation_method="gausslegendre"):
+    def _assert_univariable(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel()
         self._compute_attribution_and_evaluate(
             model,
@@ -152,7 +159,9 @@ class Test(BaseTest):
             approximation_method=approximation_method,
         )
 
-    def _assert_multi_argument(self, type, approximation_method="gausslegendre"):
+    def _assert_multi_argument(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel4_MultiArgs()
         self._compute_attribution_and_evaluate(
             model,
@@ -206,7 +215,9 @@ class Test(BaseTest):
             approximation_method=approximation_method,
         )
 
-    def _assert_multi_tensor_input(self, type, approximation_method="gausslegendre"):
+    def _assert_multi_tensor_input(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel6_MultiTensor()
         self._compute_attribution_and_evaluate(
             model,
@@ -218,7 +229,9 @@ class Test(BaseTest):
             approximation_method=approximation_method,
         )
 
-    def _assert_batched_tensor_input(self, type, approximation_method="gausslegendre"):
+    def _assert_batched_tensor_input(
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel_MultiLayer()
         input = (
             torch.tensor(
@@ -233,8 +246,8 @@ class Test(BaseTest):
         )
 
     def _assert_batched_tensor_multi_input(
-        self, type, approximation_method="gausslegendre"
-    ):
+        self, type: str, approximation_method: str = "gausslegendre"
+    ) -> None:
         model = BasicModel_MultiLayer()
         input = (
             torch.tensor(
@@ -253,20 +266,22 @@ class Test(BaseTest):
 
     def _compute_attribution_and_evaluate(
         self,
-        model,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        type="vanilla",
-        approximation_method="gausslegendre",
-    ):
+        model: Module,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[int] = None,
+        additional_forward_args: Any = None,
+        type: str = "vanilla",
+        approximation_method: str = "gausslegendre",
+    ) -> Tuple[Tensor, ...]:
         r"""
             attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = (inputs,)
+            inputs = cast(TensorOrTupleOfTensors, (inputs,))
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)
@@ -345,20 +360,20 @@ class Test(BaseTest):
                 self, attribution, attribution_without_delta, delta=0.05
             )
 
-        return attributions
+        return cast(Tuple[Tensor, ...], attributions)
 
     def _compute_attribution_batch_helper_evaluate(
         self,
-        model,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        approximation_method="gausslegendre",
-    ):
+        model: Module,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        target: Optional[int] = None,
+        additional_forward_args: Any = None,
+        approximation_method: str = "gausslegendre",
+    ) -> None:
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = (inputs,)
+            inputs = cast(TensorOrTupleOfTensors, (inputs,))
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)
@@ -377,7 +392,7 @@ class Test(BaseTest):
                 internal_batch_size=internal_batch_size,
                 return_convergence_delta=True,
             )
-            total_delta = 0
+            total_delta = 0.0
             for i in range(inputs[0].shape[0]):
                 attributions_indiv, delta_indiv = ig.attribute(
                     tuple(input[i : i + 1] for input in inputs),

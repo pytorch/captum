@@ -8,11 +8,15 @@ from captum.attr._core.guided_grad_cam import GuidedGradCam
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
+from torch.nn import Module
+from typing import Any
+from captum.attr._utils.typing import TensorOrTupleOfTensors
+
 
 class Test(BaseTest):
-    def test_simple_input_conv(self):
+    def test_simple_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         ex = [
             [0.0, 0.0, 4.0, 4.0],
             [0.0, 0.0, 12.0, 8.0],
@@ -21,9 +25,9 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.relu1, inp, ex)
 
-    def test_simple_multi_input_conv(self):
+    def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -33,9 +37,9 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, ex))
 
-    def test_simple_multi_input_relu_input_inplace(self):
+    def test_simple_multi_input_relu_input_inplace(self) -> None:
         net = BasicModel_ConvNet_One_Conv(inplace=True)
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -47,9 +51,9 @@ class Test(BaseTest):
             net, net.relu1, (inp, inp2), (ex, ex), attribute_to_layer_input=True
         )
 
-    def test_simple_multi_input_conv_inplace(self):
+    def test_simple_multi_input_conv_inplace(self) -> None:
         net = BasicModel_ConvNet_One_Conv(inplace=True)
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -59,9 +63,9 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, ex))
 
-    def test_improper_dims_multi_input_conv(self):
+    def test_improper_dims_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -71,9 +75,9 @@ class Test(BaseTest):
         ]
         self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, None))
 
-    def test_improper_method_multi_input_conv(self):
+    def test_improper_method_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         self._guided_grad_cam_test_assert(
             net, net.conv1, (inp, inp2), (None, None), interpolate_mode="triilinear"
@@ -81,14 +85,14 @@ class Test(BaseTest):
 
     def _guided_grad_cam_test_assert(
         self,
-        model,
-        target_layer,
-        test_input,
+        model: Module,
+        target_layer: Module,
+        test_input: TensorOrTupleOfTensors,
         expected,
-        additional_input=None,
-        interpolate_mode="nearest",
-        attribute_to_layer_input=False,
-    ):
+        additional_input: Any = None,
+        interpolate_mode: str = "nearest",
+        attribute_to_layer_input: bool = False,
+    ) -> None:
         guided_gc = GuidedGradCam(model, target_layer)
         attributions = guided_gc.attribute(
             test_input,
