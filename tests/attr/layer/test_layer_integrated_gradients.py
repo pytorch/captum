@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
+from typing import List, Tuple, Union, Any, cast
+
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from ..helpers.utils import assertArraysAlmostEqual, assertTensorTuplesAlmostEqual
 
@@ -21,7 +25,7 @@ from ..helpers.basic_models import (
 
 
 class Test(BaseTest):
-    def test_compare_with_emb_patching(self):
+    def test_compare_with_emb_patching(self) -> None:
         input1 = torch.tensor([[2, 5, 0, 1]])
         baseline1 = torch.tensor([[0, 0, 0, 0]])
         # these ones will be use as an additional forward args
@@ -32,7 +36,7 @@ class Test(BaseTest):
             input1, baseline1, additional_args=(input2, input3)
         )
 
-    def test_compare_with_emb_patching_batch(self):
+    def test_compare_with_emb_patching_batch(self) -> None:
         input1 = torch.tensor([[2, 5, 0, 1], [3, 1, 1, 0]])
         baseline1 = torch.tensor([[0, 0, 0, 0]])
         # these ones will be use as an additional forward args
@@ -43,12 +47,12 @@ class Test(BaseTest):
             input1, baseline1, additional_args=(input2, input3)
         )
 
-    def test_compare_with_layer_conductance_attr_to_outputs(self):
+    def test_compare_with_layer_conductance_attr_to_outputs(self) -> None:
         model = BasicModel_MultiLayer()
         input = torch.tensor([[50.0, 50.0, 50.0]], requires_grad=True)
         self._assert_compare_with_layer_conductance(model, input)
 
-    def test_compare_with_layer_conductance_attr_to_inputs(self):
+    def test_compare_with_layer_conductance_attr_to_inputs(self) -> None:
         # Note that Layer Conductance and Layer Integrated Gradients (IG) aren't
         # exactly the same. Layer IG computes partial derivative of the output
         # with respect to the layer and sums along the straight line. While Layer
@@ -60,7 +64,7 @@ class Test(BaseTest):
         input = torch.tensor([[50.0, 50.0, 50.0]], requires_grad=True)
         self._assert_compare_with_layer_conductance(model, input, True)
 
-    def test_multiple_tensors_compare_with_expected(self):
+    def test_multiple_tensors_compare_with_expected(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._assert_compare_with_expected(
@@ -71,7 +75,7 @@ class Test(BaseTest):
         )
 
     def _assert_compare_with_layer_conductance(
-        self, model, input, attribute_to_layer_input=False
+        self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
     ):
         lc = LayerConductance(model, model.linear2)
         # For large number of steps layer conductance and layer integrated gradients
@@ -83,7 +87,7 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        lig = LayerIntegratedGradients(model, model.linear2)
+        lig = LayerIntegratedGradients(model, cast(Module, model.linear2))
         attributions2, delta2 = lig.attribute(
             input,
             target=0,
@@ -94,7 +98,9 @@ class Test(BaseTest):
         assertArraysAlmostEqual(attribution, attributions2, 0.01)
         assertArraysAlmostEqual(delta, delta2, 0.05)
 
-    def _assert_compare_with_emb_patching(self, input, baseline, additional_args):
+    def _assert_compare_with_emb_patching(
+        self, input: Tensor, baseline: Tensor, additional_args: Tuple[Tensor, ...]
+    ):
         model = BasicEmbeddingModel(nested_second_embedding=True)
         lig = LayerIntegratedGradients(model, model.embedding1)
 
@@ -126,7 +132,12 @@ class Test(BaseTest):
         assertArraysAlmostEqual(delta, delta_with_ig)
 
     def _assert_compare_with_expected(
-        self, model, target_layer, test_input, expected_ig, additional_input=None,
+        self,
+        model: Module,
+        target_layer: Module,
+        test_input: Union[Tensor, Tuple[Tensor, ...]],
+        expected_ig: Tuple[List[List[float]], ...],
+        additional_input: Any = None,
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(

@@ -5,10 +5,10 @@ from collections import namedtuple
 from io import BytesIO
 from typing import Callable, List, Optional, Union
 
+import numpy as np
+
 from captum.attr._utils import visualization as viz
 from captum.attr._utils.common import safe_div
-
-import numpy as np
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
@@ -24,6 +24,14 @@ def _convert_figure_base64(fig):
 
 
 class BaseFeature:
+    r"""
+    All Feature classes extend this class to implement custom visualizations in
+    Insights.
+
+    It enforces child classes to implement ``visualization_type`` and ``visualize``
+    methods.
+    """
+
     def __init__(
         self,
         name: str,
@@ -31,6 +39,26 @@ class BaseFeature:
         input_transforms: Optional[Union[Callable, List[Callable]]],
         visualization_transform: Optional[Callable],
     ):
+        r"""
+            Args:
+
+                name (str): The label of the specific feature. For example, an
+                            ImageFeature's name can be "Photo".
+                baseline_transforms (list, callable, optional): Optional list of
+                            callables (e.g. functions) to be called on the input tensor
+                            to construct multiple baselines. Currently only one baseline
+                            is supported. See
+                            :py:class:`.IntegratedGradients` for more
+                            information about baselines.
+                input_transforms (list, callable, optional): Optional list of callables
+                            (e.g. functions) called on the input tensor sequentially to
+                            convert it into the format expected by the model.
+                visualization_transform (callable, optional): Optional callable (e.g.
+                            function) applied as a postprocessing step of the original
+                            input data (before ``input_transforms``) to convert it to a
+                            format to be understood by the frontend visualizer as
+                            specified in ``captum/captum/insights/frontend/App.js``.
+        """
         self.name = name
         self.baseline_transforms = baseline_transforms
         self.input_transforms = input_transforms
@@ -44,6 +72,12 @@ class BaseFeature:
 
 
 class ImageFeature(BaseFeature):
+    r"""
+    ImageFeature is used to visualize image features in Insights. It expects an image in
+    NCHW format. If C has a dimension of 1, its assumed to be a greyscale image.
+    If it has a dimension of 3, its expected to be in RGB format.
+    """
+
     def __init__(
         self,
         name: str,
@@ -51,6 +85,24 @@ class ImageFeature(BaseFeature):
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable] = None,
     ):
+        r"""
+            Args:
+                name (str): The label of the specific feature. For example, an
+                            ImageFeature's name can be "Photo".
+                baseline_transforms (list, callable, optional): Optional list of
+                            callables (e.g. functions) to be called on the input tensor
+                            to construct multiple baselines. Currently only one baseline
+                            is supported. See
+                            :py:class:`.IntegratedGradients` for more
+                            information about baselines.
+                input_transforms (list, callable, optional): A list of transforms
+                            or transform to be applied to the input. For images,
+                            normalization is often applied here.
+                visualization_transform (callable, optional): Optional callable (e.g.
+                            function) applied as a postprocessing step of the original
+                            input data (before input_transforms) to convert it to a
+                            format to be visualized.
+        """
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -93,6 +145,12 @@ class ImageFeature(BaseFeature):
 
 
 class TextFeature(BaseFeature):
+    r"""
+    TextFeature is used to visualize text (e.g. sentences) in Insights.
+    It expects the visualization transform to convert the input data (e.g. index to
+    string) to the raw text.
+    """
+
     def __init__(
         self,
         name: str,
@@ -100,6 +158,35 @@ class TextFeature(BaseFeature):
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Callable,
     ):
+        r"""
+            Args:
+                name (str): The label of the specific feature. For example, an
+                            ImageFeature's name can be "Photo".
+                baseline_transforms (list, callable, optional): Optional list of
+                            callables (e.g. functions) to be called on the input tensor
+                            to construct multiple baselines. Currently only one baseline
+                            is supported. See
+                            :py:class:`.IntegratedGradients` for more
+                            information about baselines.
+                            For text features, a common baseline is a tensor of indices
+                            corresponding to PAD with the same size as the input
+                            tensor. See :py:class:`.TokenReferenceBase` for more
+                            information.
+                input_transforms (list, callable, optional): A list of transforms
+                            or transform to be applied to the input. For text, a common
+                            transform is to convert the tokenized input tensor into an
+                            interpretable embedding. See
+                            :py:class:`.InterpretableEmbeddingBase`
+                            and
+                            :py:func:`~.configure_interpretable_embedding_layer`
+                            for more information.
+                visualization_transform (callable, optional): Optional callable (e.g.
+                            function) applied as a postprocessing step of the original
+                            input data (before ``input_transforms``) to convert it to a
+                            suitable format for visualization. For text features,
+                            a common function is to convert the token indices to their
+                            corresponding (sub)words.
+        """
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -135,7 +222,23 @@ class TextFeature(BaseFeature):
 
 
 class GeneralFeature(BaseFeature):
+    r"""
+    GeneralFeature is used for non-specified feature visualization in Insights.
+    It can be used for dense or sparse features.
+
+    Currently general features are only supported for 2-d tensors, in the format (N, C)
+    where N is the number of samples and C is the number of categories.
+    """
+
     def __init__(self, name: str, categories: List[str]):
+        r"""
+            Args:
+                name (str): The label of the specific feature. For example, an
+                            ImageFeature's name can be "Photo".
+                categories (list[str]): Category labels for the general feature. The
+                            order and size should match the second dimension of the
+                            ``data`` tensor parameter in ``visualize``.
+        """
         super().__init__(
             name,
             baseline_transforms=None,
