@@ -49,7 +49,7 @@ class Test(BaseTest):
         self,
         model: Module,
         inputs: TensorOrTupleOfTensors,
-        expected_grads: Tensor,
+        expected_grads: TensorOrTupleOfTensors,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
     ) -> None:
@@ -77,15 +77,14 @@ class Test(BaseTest):
                         attribution.reshape(-1), (expected_grad * input).reshape(-1)
                     )
                 self.assertEqual(input.shape, attribution.shape)
-        else:
+        elif isinstance(attributions, Tensor):
             if nt_type == "vanilla" and isinstance(attributions, Tensor):
                 assertArraysAlmostEqual(
                     attributions.reshape(-1),
                     (expected_grads * inputs).reshape(-1),
                     delta=0.5,
                 )
-            if isinstance(attributions, Tensor):
-                self.assertEqual(inputs.shape, attributions.shape)
+            self.assertEqual(inputs.shape, attributions.shape)
 
     def _input_x_gradient_classification_assert(
         self, nt_type: str = "vanilla",
@@ -112,4 +111,4 @@ class Test(BaseTest):
                 input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
             )
 
-        assertArraysAlmostEqual(attributions.shape, input.shape)
+        self.assertEqual(attributions.shape, input.shape)
