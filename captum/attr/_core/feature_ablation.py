@@ -2,9 +2,9 @@
 
 import torch
 
-from torch import Tensor
+from torch import Tensor, dtype
 
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Optional, Tuple, Union, Any, cast
 
 from .._utils.common import (
     _format_attributions,
@@ -32,6 +32,7 @@ class FeatureAblation(PerturbationAttribution):
 
     def attribute(
         self,
+        # type:ignore
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
@@ -269,13 +270,16 @@ class FeatureAblation(PerturbationAttribution):
                 ), "Target should identify a single element in the model output."
                 initial_eval = initial_eval.reshape(1, num_examples)
             # Initialize attribution totals and counts
-            attrib_type = (
+            attrib_type = cast(
+                dtype,
                 initial_eval.dtype
                 if isinstance(initial_eval, Tensor)
-                else type(initial_eval)
+                else type(initial_eval),
             )
             total_attrib = [
-                torch.zeros_like(input[0:1] if single_output_mode else input).double()
+                torch.zeros_like(
+                    input[0:1] if single_output_mode else input, dtype=attrib_type
+                )
                 for input in inputs
             ]
             # Weights are used in cases where ablations may be overlapping.
