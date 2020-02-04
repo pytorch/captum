@@ -300,12 +300,14 @@ class LRP(Attribution):
     def _register_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             # Convert Max-Pooling to Average Pooling layer
-            if isinstance(layer, torch.nn.MaxPool2d):
-                layer = torch.nn.AvgPool2d(layer.kernel_size)
+            #TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
+            #if isinstance(layer, torch.nn.MaxPool2d):
+            #    layer = torch.nn.AvgPool2d(layer.kernel_size)
             # Propagate relevance for Conv2D, Linear and Pooling
             if isinstance(
                 layer,
                 (
+                    torch.nn.MaxPool2d,
                     torch.nn.Conv2d,
                     torch.nn.AvgPool2d,
                     torch.nn.AdaptiveAvgPool2d,

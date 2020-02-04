@@ -37,7 +37,6 @@ class Z_Rule(PropagationRule):
         self._handle_output_hook = outputs.register_hook(output_hook)
 
     def backward_hook_activation(self, module, grad_input, grad_output):
-        #self.relevance = grad_output
         return grad_output
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
@@ -45,7 +44,6 @@ class Z_Rule(PropagationRule):
 
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
-            #self.relevance = grad * inputs
             return grad * inputs
         return _backward_hook_input
 

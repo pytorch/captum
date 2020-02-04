@@ -149,15 +149,21 @@ class Test(BaseTest):
 
         classification = model(image)
         score, classIndex = torch.max(classification, 1)
-
         rules = suggested_rules("vgg16")
-        rules = list(repeat(Z_Rule(), 38))
+        rules = list(repeat(Z_Rule(), 39))
         lrp = LRP(model, rules)
         relevance = lrp.attribute(image, classIndex.item())
         self.assertEqual(relevance.shape, image.shape)
-        relevance = relevance
+        relevance_oldImplementation = torch.load("relevance_loopimplementation_zRule.pt")
         relevance_sum = torch.sum(relevance)
         delta = relevance_sum - score.item()
+        delta_old = torch.sum(relevance_oldImplementation) - score.item()
+        delta_implementation = relevance_oldImplementation - relevance
+        delta_sum = torch.sum(delta_implementation)
+        old_max = torch.max(relevance_oldImplementation)
+        old_min = torch.min(relevance_oldImplementation)
+        new_max = torch.max(relevance)
+        new_min = torch.min(relevance)
         #relevance = torch.clamp(relevance, -10, 10)
 
         _ = viz.visualize_image_attr(
