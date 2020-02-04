@@ -242,10 +242,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             target, 2, expansion_type=ExpansionTypes.repeat
         )
         wrapped_forward_func = self._construct_forward_func(
-            self.model,
-            (inputs, baselines),
-            expanded_target,
-            input_base_additional_args,
+            self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
 
         def chunk_output_fn(out):

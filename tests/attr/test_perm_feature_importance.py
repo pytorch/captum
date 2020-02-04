@@ -7,11 +7,7 @@ from captum.attr._core.perm_feature_importance import (
 )
 
 from .helpers.basic_models import BasicModelWithSparseInputs
-from .helpers.utils import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

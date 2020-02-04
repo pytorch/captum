@@ -58,10 +58,7 @@ class Test(BaseTest):
     def test_basic_scalar_baselines_multi_input(self):
         inputs = (torch.ones(10, 3), torch.rand(10, 4))
         baselines_scalars = (0.0, 0.0)
-        baselines_tensors = (
-            torch.zeros(1, 3),
-            torch.zeros(10, 4),
-        )
+        baselines_tensors = (torch.zeros(1, 3), torch.zeros(10, 4))
 
         model = BasicLinearModel()
         model.eval()
