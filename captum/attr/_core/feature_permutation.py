@@ -42,7 +42,7 @@ class FeaturePermutation(FeatureAblation):
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
+        additional_forward_args: Any = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         ablations_per_eval: int = 1,
         **kwargs: Any
