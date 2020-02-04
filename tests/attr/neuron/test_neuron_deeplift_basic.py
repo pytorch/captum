@@ -15,7 +15,7 @@ from ..layer.test_layer_deeplift_basic import (
 
 from typing import Optional, Tuple, Union
 from torch import Tensor
-from ....captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
