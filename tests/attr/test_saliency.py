@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, cast
 
 import torch
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -22,15 +22,20 @@ def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
     return BasicModel(), input, grads, None
 
 
-def _get_multiargs_basic_config() -> Tuple[Module, Tuple[Tensor, ...], Any, Any]:
+def _get_multiargs_basic_config() -> Tuple[
+    Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any
+]:
     model = BasicModel5_MultiArgs()
     additional_forward_args = ([2, 3], 1)
     inputs = (
         torch.tensor([[1.5, 2.0, 34.3], [3.4, 1.2, 2.0]], requires_grad=True),
         torch.tensor([[3.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True),
     )
-    grads = compute_gradients(
-        model, inputs, additional_forward_args=additional_forward_args
+    grads = cast(
+        Tuple[Tensor, ...],
+        compute_gradients(
+            model, inputs, additional_forward_args=additional_forward_args
+        ),
     )
     return model, inputs, grads, additional_forward_args
 
@@ -112,12 +117,11 @@ class Test(BaseTest):
 
             output = model(input)[:, target]
             output.backward()
-            if input.grad:
-                expected = torch.abs(input.grad)
-                self.assertEqual(
-                    expected.detach().numpy().tolist(),
-                    attributions.detach().numpy().tolist(),
-                )
+            expected = torch.abs(cast(Tensor, input.grad))
+            self.assertEqual(
+                expected.detach().numpy().tolist(),
+                attributions.detach().numpy().tolist(),
+            )
         else:
             nt = NoiseTunnel(saliency)
             attributions = nt.attribute(
