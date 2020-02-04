@@ -17,18 +17,8 @@ class PropagationRule(object):
     STABILITY_FACTOR = 1e-9
 
     def forward_hook(self, module, inputs, outputs):
-        raise NotImplementedError
-
-    def backward_hook_activation(self, module, grad_input, grad_output):
-        raise NotImplementedError
-
-class Z_Rule(PropagationRule):
-
-    def __init__(self, epsilon=1e-9):
-        self.epsilon = epsilon
-
-    def forward_hook(self, module, inputs, outputs):
-        # designed as forward hook
+        """Function that registers backward hooks on input and output
+        tensors of linear layers in the model."""
         module.activations = inputs[0].data
         module.outputs = outputs.data
         input_hook = self._create_backward_hook_input(inputs[0].data)
@@ -37,7 +27,31 @@ class Z_Rule(PropagationRule):
         self._handle_output_hook = outputs.register_hook(output_hook)
 
     def backward_hook_activation(self, module, grad_input, grad_output):
+        """Function that serves as backward hook to propagate relevance
+        over non-linear activations without manipulation."""
         return grad_output
+
+    def _create_backward_hook_input(self, inputs):
+        raise NotImplementedError
+
+    def _create_backward_hook_output(self, outputs):
+        raise NotImplementedError
+
+
+class EpsilonRule(PropagationRule):
+    """
+    Rule for relevance propagation using a small value of epsilon
+    to avoid numerical instabilities and remove noise.
+
+    Use for middle layers.
+
+    Args:
+        epsilon (integer, float): Value by which is added to the
+        discriminator during propagation.
+    """
+
+    def __init__(self, epsilon=1e-9):
+        self.epsilon = epsilon
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output * module.outputs
@@ -45,12 +59,20 @@ class Z_Rule(PropagationRule):
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
             return grad * inputs
+
         return _backward_hook_input
 
     def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
             return grad / (outputs + self.epsilon)
+
         return _backward_hook_output
+
+
+class Z_Rule(EpsilonRule):
+    def __init__(self):
+        super(Z_Rule, self).__init__(epsilon=1e-9)
+
 
 class EpsilonRhoRule(PropagationRule):
     """
@@ -82,13 +104,13 @@ class EpsilonRhoRule(PropagationRule):
         del layer.activations
 
         layer_copy = copy.deepcopy(layer)
-        layer_rho = layer_copy #= self._apply_rho(layer_copy)
+        layer_rho = layer_copy  # = self._apply_rho(layer_copy)
         torch.set_grad_enabled(False)
-        z = layer_rho(activations) #self.epsilon(layer_rho.forward(activations))
-        s = (relevance[0] / z)
-        #(z * s).sum().backward()
+        z = layer_rho(activations)  # self.epsilon(layer_rho.forward(activations))
+        s = relevance[0] / z
+        # (z * s).sum().backward()
         c = z.backward(s)
-        #c = activations.grad
+        # c = activations.grad
         propagated_relevance = (activations * c).data
 
         grad_input[0] = propagated_relevance
@@ -115,22 +137,6 @@ class BasicRule(EpsilonRhoRule):
 
     def __init__(self):
         super(BasicRule, self).__init__()
-
-
-class EpsilonRule(EpsilonRhoRule):
-    """
-    Rule for relevance propagation using a small value of epsilon
-    to avoid numerical instabilities and remove noise.
-
-    Use for middle layers.
-
-    Args:
-        epsilon (callable): Function to manipulate z-values during propagation
-            example: lambda z: z + 1e-9
-    """
-
-    def __init__(self, epsilon):
-        super(EpsilonRule, self).__init__(epsilon=epsilon)
 
 
 class GammaRule(EpsilonRhoRule):

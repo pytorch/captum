@@ -8,7 +8,12 @@ import torch.nn as nn
 import torch.onnx
 import torch.onnx.utils
 
-from .._utils.common import _format_attributions, _format_input, _run_forward, _select_targets
+from .._utils.common import (
+    _format_attributions,
+    _format_input,
+    _run_forward,
+    _select_targets,
+)
 from .._utils.attribution import Attribution, GradientAttribution
 from .._utils.gradient import (
     apply_gradient_requirements,
@@ -168,16 +173,16 @@ class LRP(Attribution):
         relevances = compute_gradients(self.model, inputs, target_ind=target)
 
         output = _select_targets(output, target)
-        relevances = tuple(relevance * input * output for relevance, input in zip(relevances, inputs))
+        relevances = tuple(
+            relevance * input * output for relevance, input in zip(relevances, inputs)
+        )
 
         if return_for_all_layers:
-            warnings.warn(
-            """Return for all layers is not implemented"""
-            )
-            #relevances = [relevances]
-            #for layer in self.layers:
+            warnings.warn("""Return for all layers is not implemented""")
+            # relevances = [relevances]
+            # for layer in self.layers:
             #    relevances.append(layer.relevance)
-            #relevances = (relevances,)
+            # relevances = (relevances,)
 
         self._remove_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
@@ -300,8 +305,8 @@ class LRP(Attribution):
     def _register_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             # Convert Max-Pooling to Average Pooling layer
-            #TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
-            #if isinstance(layer, torch.nn.MaxPool2d):
+            # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
+            # if isinstance(layer, torch.nn.MaxPool2d):
             #    layer = torch.nn.AvgPool2d(layer.kernel_size)
             # Propagate relevance for Conv2D, Linear and Pooling
             if isinstance(
@@ -322,11 +327,13 @@ class LRP(Attribution):
             else:
                 if self.verbose:
                     print(f"\nRelevance passed over {layer} without manipulation.")
-                backward_handle = layer.register_backward_hook(rule.backward_hook_activation)
+                backward_handle = layer.register_backward_hook(
+                    rule.backward_hook_activation
+                )
                 self.backward_handles.append(backward_handle)
 
     def _forward_hook(self, module, input, output):
-        #setattr(module, 'activations', *input)
+        # setattr(module, 'activations', *input)
         self.layers.append(module)
 
     def _remove_hooks(self):
@@ -341,6 +348,7 @@ class LRP(Attribution):
                 rule._handle_output_hook.remove()
             if hasattr(rule, "_handle_layer_hook"):
                 rule._handle_layer_hook.remove()
+
 
 class LRP_0(LRP):
     """
