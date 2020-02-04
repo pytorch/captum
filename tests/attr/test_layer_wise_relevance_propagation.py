@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import vgg16, resnet18
 import torchvision.transforms as transforms
-
+from itertools import repeat
 import unittest
 from captum.attr._core.layer_wise_relevance_propagation import LRP, LRP_0
 from captum.attr._utils.lrp_rules import (
@@ -14,7 +14,8 @@ from captum.attr._utils.lrp_rules import (
     GammaRule,
     Alpha1_Beta0_Rule,
     zB_Rule,
-    suggested_rules
+    suggested_rules,
+    Z_Rule
 )
 from captum.attr import visualization as viz
 
@@ -65,11 +66,14 @@ class Test(BaseTest):
     def test_lrp_creator_activation(self):
         self._creator_error_assert(*_get_basic_config(), error="activationType")
 
+    def test_lrp_basic_attributions(self):
+        self._basic_attributions(*_get_basic_config())
+
+    def test_lrp_simple_attributions(self):
+        self._simple_attributions()
+
     def test_lrp_vgg(self):
         self._attributions_assert_vgg(*_get_vgg_config())
-
-    # def test_lrp_graph(self):
-    #    self._get_graph(*_get_vgg_config())
 
     def test_basic_rule(self):
         self._rule_assert(*_get_rule_config(), rule="BasicPropagate")
@@ -111,21 +115,56 @@ class Test(BaseTest):
         lrp = LRP(model, [Alpha1_Beta0_Rule()])
         lrp._get_graph(image)
 
+    def _simple_attributions(self):
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+                self.linear = nn.Linear(3, 3, bias=False)
+                self.linear.weight.data.fill_(2.0)
+                self.relu = torch.nn.functional.relu
+                self.linear2 = nn.Linear(3, 1, bias=False)
+                self.linear2.weight.data.fill_(3.0)
+            def forward(self, x):
+                return self.linear2(self.relu(self.linear(x)))
+
+        model = Model()
+        model.eval()
+        inputs = torch.tensor([1.0, 2.0, 3.0])
+        logits = model(inputs)
+        lrp = LRP(model, 3*[Z_Rule()])
+        relevance = lrp.attribute(inputs)
+        assertTensorAlmostEqual(self, relevance, torch.tensor([18, 36, 54]))
+
+    def _basic_attributions(self, model, inputs, grads, expected_activations, expected):
+        logits = model(inputs)
+        score, classIndex = torch.max(logits, 1)
+        rules = list(repeat(Z_Rule(), 4))
+        lrp = LRP(model, rules)
+        relevance = lrp.attribute(inputs, classIndex.item(), return_for_all_layers=False)
+        self.assertEqual(relevance[0].shape, inputs.shape)
+        relevance_sum = torch.sum(relevance[0])
+        delta = relevance_sum - score.item()
+
     def _attributions_assert_vgg(self, model, image, image2):
 
         classification = model(image)
         score, classIndex = torch.max(classification, 1)
 
         rules = suggested_rules("vgg16")
+        rules = list(repeat(Z_Rule(), 38))
         lrp = LRP(model, rules)
         relevance = lrp.attribute(image, classIndex.item())
         self.assertEqual(relevance.shape, image.shape)
+        relevance = relevance
+        relevance_sum = torch.sum(relevance)
+        delta = relevance_sum - score.item()
+        #relevance = torch.clamp(relevance, -10, 10)
 
         _ = viz.visualize_image_attr(
             np.transpose(relevance.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             np.transpose(image.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             sign="all",
-            method="blended_heat_map",
+            method="heat_map",
             cmap="bwr",
         )
 
@@ -171,3 +210,4 @@ def _convert_image(path):
     image = loader(image).float()
     image = image.unsqueeze(0)
     return image
+

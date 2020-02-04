@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
 from itertools import repeat
+import warnings
 
 import torch
 import torch.nn as nn
 import torch.onnx
 import torch.onnx.utils
 
-from .._utils.common import _format_attributions, _format_input, _run_forward
+from .._utils.common import _format_attributions, _format_input, _run_forward, _select_targets
 from .._utils.attribution import Attribution, GradientAttribution
 from .._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
+    compute_gradients,
     _forward_layer_eval,
 )
 from .._utils.lrp_rules import PropagationRule, BasicRule
@@ -153,39 +155,32 @@ class LRP(Attribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
-        relevances = tuple()
+        self.verbose = verbose
+        self.backward_handles = list()
+        self.forward_handles = list()
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
-        output = self._get_activations(inputs, None, additional_forward_args)
-        relevance = self._mask_relevance(output, target)
-        for layer, rule, activation in zip(
-            reversed(self.layers), reversed(self.rules), reversed(self.activations)
-        ):
-            # Convert Max-Pooling to Average Pooling layer
-            if isinstance(layer, torch.nn.MaxPool2d):
-                layer = torch.nn.AvgPool2d(layer.kernel_size)
-            # Propagate relevance for Conv2D, Linear and Pooling
-            if isinstance(
-                layer,
-                (
-                    torch.nn.Conv2d,
-                    torch.nn.AvgPool2d,
-                    torch.nn.AdaptiveAvgPool2d,
-                    torch.nn.Linear,
-                ),
-            ):
-                if verbose:
-                    print(f"\nRelevance propagated over {layer} with manipulation.")
-                relevance = rule.propagate(relevance, layer, activation)
+        output = self._get_layers(inputs, None, additional_forward_args)
 
-            else:
-                if verbose:
-                    print(f"\nRelevance passed over {layer} without manipulation.")
-                pass
-            relevances = (relevance,) + relevances
+        self._register_hooks()
 
-        if not return_for_all_layers:
-            relevances = (relevances[0],)
+        gradient_mask = apply_gradient_requirements(inputs)
+        relevances = compute_gradients(self.model, inputs, target_ind=target)
+
+        output = _select_targets(output, target)
+        relevances = tuple(relevance * input * output for relevance, input in zip(relevances, inputs))
+
+        if return_for_all_layers:
+            warnings.warn(
+            """Return for all layers is not implemented"""
+            )
+            #relevances = [relevances]
+            #for layer in self.layers:
+            #    relevances.append(layer.relevance)
+            #relevances = (relevances,)
+
+        self._remove_hooks()
+        undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
@@ -287,50 +282,63 @@ class LRP(Attribution):
             else:
                 self._get_layerset(layer)
 
-    def _get_graph(self, input):
-
-        trace, out = torch.jit.get_trace_graph(self.model, args=(input,))
-        trace_graph = torch.onnx.utils._optimize_graph(
-            trace.graph(), torch.onnx.OperatorExportTypes.ONNX
-        )
-        # trace_graph = trace.graph()
-        nodes = list()
-        for node in trace_graph.nodes():
-            op = node.kind()
-            scope = node.scopeName()
-            outputs = list(node.outputs())
-            nodes.append((scope, op, outputs))
-
-    def _get_activations(self, inputs, target=None, additional_forward_args=None):
-        self.activations = list()
+    def _get_layers(self, inputs, target=None, additional_forward_args=None):
+        # TODO: Check if still necessary or get_layerset is sufficient
         self.layers = list()
-
         hooks = list()
+
         for layer in self.layerset:
             registered_hook = layer.register_forward_hook(self._forward_hook)
             hooks.append(registered_hook)
-        relevance = _run_forward(self.model, inputs, target, additional_forward_args)
+        output = _run_forward(self.model, inputs, target, additional_forward_args)
 
         for registered_hook in hooks:
             registered_hook.remove()
 
-        return relevance
+        return output
+
+    def _register_hooks(self):
+        for layer, rule in zip(self.layers, self.rules):
+            # Convert Max-Pooling to Average Pooling layer
+            if isinstance(layer, torch.nn.MaxPool2d):
+                layer = torch.nn.AvgPool2d(layer.kernel_size)
+            # Propagate relevance for Conv2D, Linear and Pooling
+            if isinstance(
+                layer,
+                (
+                    torch.nn.Conv2d,
+                    torch.nn.AvgPool2d,
+                    torch.nn.AdaptiveAvgPool2d,
+                    torch.nn.Linear,
+                ),
+            ):
+                if self.verbose:
+                    print(f"\nRelevance propagated over {layer} with manipulation.")
+                forward_handle = layer.register_forward_hook(rule.forward_hook)
+                self.forward_handles.append(forward_handle)
+
+            else:
+                if self.verbose:
+                    print(f"\nRelevance passed over {layer} without manipulation.")
+                backward_handle = layer.register_backward_hook(rule.backward_hook_activation)
+                self.backward_handles.append(backward_handle)
 
     def _forward_hook(self, module, input, output):
-        self.activations.append(*input)
+        #setattr(module, 'activations', *input)
         self.layers.append(module)
 
-    def _mask_relevance(self, output, target=None):
-        """
-        If target is class of classification task, the output layer is masked with zeros except the class output.
-        """
-        if target is None:
-            return output
-        elif isinstance(target, int):
-            masked_output = torch.zeros(output.size())
-            masked_output[slice(None), target] = output[slice(None), target]
-            return masked_output
-
+    def _remove_hooks(self):
+        for forward_handle in self.forward_handles:
+            forward_handle.remove()
+        for backward_handle in self.backward_handles:
+            backward_handle.remove()
+        for rule in self.rules:
+            if hasattr(rule, "_handle_input_hook"):
+                rule._handle_input_hook.remove()
+            if hasattr(rule, "_handle_output_hook"):
+                rule._handle_output_hook.remove()
+            if hasattr(rule, "_handle_layer_hook"):
+                rule._handle_layer_hook.remove()
 
 class LRP_0(LRP):
     """

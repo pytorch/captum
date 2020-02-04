@@ -16,9 +16,43 @@ class PropagationRule(object):
 
     STABILITY_FACTOR = 1e-9
 
-    def propagate(self, relevance, layer, activations):
+    def forward_hook(self, module, inputs, outputs):
         raise NotImplementedError
 
+    def backward_hook_activation(self, module, grad_input, grad_output):
+        raise NotImplementedError
+
+class Z_Rule(PropagationRule):
+
+    def __init__(self, epsilon=1e-9):
+        self.epsilon = epsilon
+
+    def forward_hook(self, module, inputs, outputs):
+        # designed as forward hook
+        module.activations = inputs[0].data
+        module.outputs = outputs.data
+        input_hook = self._create_backward_hook_input(inputs[0].data)
+        output_hook = self._create_backward_hook_output(outputs.data)
+        self._handle_input_hook = inputs[0].register_hook(input_hook)
+        self._handle_output_hook = outputs.register_hook(output_hook)
+
+    def backward_hook_activation(self, module, grad_input, grad_output):
+        #self.relevance = grad_output
+        return grad_output
+
+    def _backward_hook_relevance(self, module, grad_input, grad_output):
+        module.relevance = grad_output * module.outputs
+
+    def _create_backward_hook_input(self, inputs):
+        def _backward_hook_input(grad):
+            #self.relevance = grad * inputs
+            return grad * inputs
+        return _backward_hook_input
+
+    def _create_backward_hook_output(self, outputs):
+        def _backward_hook_output(grad):
+            return grad / (outputs + self.epsilon)
+        return _backward_hook_output
 
 class EpsilonRhoRule(PropagationRule):
     """
@@ -44,22 +78,23 @@ class EpsilonRhoRule(PropagationRule):
         self.epsilon = epsilon
         self.rho = rho
 
-    def propagate(self, relevance, layer, activations):
+    def propagate(self, layer, grad_input, relevance):
+        # designed as backward hook
+        activations = (layer.activations.data).requires_grad_(False)
+        del layer.activations
 
-        activations = (activations.data).requires_grad_(True)
         layer_copy = copy.deepcopy(layer)
-        layer_rho = self._apply_rho(layer_copy)
-        z = self.epsilon(layer_rho.forward(activations))
-        # Correct shape when tensor is flattened
-        if relevance.shape != z.shape:
-            relevance = relevance.view(z.shape)
-        s = (relevance / z).data
-        (z * s.data).sum().backward()
-        c = activations.grad
-        propagated_relevance = (activations * c).da
-        ta
+        layer_rho = layer_copy #= self._apply_rho(layer_copy)
+        torch.set_grad_enabled(False)
+        z = layer_rho(activations) #self.epsilon(layer_rho.forward(activations))
+        s = (relevance[0] / z)
+        #(z * s).sum().backward()
+        c = z.backward(s)
+        #c = activations.grad
+        propagated_relevance = (activations * c).data
 
-        return propagated_relevance
+        grad_input[0] = propagated_relevance
+        return grad_input
 
     def _apply_rho(self, layer):
         if hasattr(layer, "weight") and layer.weight is not None:
