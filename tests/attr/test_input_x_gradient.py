@@ -78,7 +78,7 @@ class Test(BaseTest):
                     )
                 self.assertEqual(input.shape, attribution.shape)
         elif isinstance(attributions, Tensor):
-            if nt_type == "vanilla" and isinstance(attributions, Tensor):
+            if nt_type == "vanilla":
                 assertArraysAlmostEqual(
                     attributions.reshape(-1),
                     (expected_grads * inputs).reshape(-1),
