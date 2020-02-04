@@ -13,10 +13,9 @@ from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
 
-from typing import Optional, Tuple, Union
-from torch import Tensor
+from typing import Callable, Optional, Tuple, Union, Any
+from torch.nn import Module
 from .._utils.typing import TensorOrTupleOfTensors
-
 
 class Test(BaseTest):
     def test_relu_neuron_deeplift(self) -> None:
@@ -123,16 +122,16 @@ class Test(BaseTest):
         attr_method,
         inputs: TensorOrTupleOfTensors,
         baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ],
-        expected,
+                        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+                   ] = None,
+        expected
     ) -> None:
         def custom_attr_func(
             multipliers: TensorOrTupleOfTensors,
             inputs: TensorOrTupleOfTensors,
             baselines: Optional[
-                Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-            ] = None,
+                            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+                       ] = None
         ) -> Tuple:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 

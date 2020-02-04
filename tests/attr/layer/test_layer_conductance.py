@@ -157,7 +157,7 @@ class Test(BaseTest):
             )
 
             assertTensorTuplesAlmostEqual(
-                self, attributions, expected_conductance, delta=0.1
+                self, attributions, expected_conductance, delta=0.1,
             )
 
     def _conductance_reference_test_assert(
