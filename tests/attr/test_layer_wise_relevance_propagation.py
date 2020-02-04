@@ -152,7 +152,8 @@ class Test(BaseTest):
         rules = suggested_rules("vgg16")
         rules = list(repeat(Z_Rule(), 39))
         lrp = LRP(model, rules)
-        relevance = lrp.attribute(image, classIndex.item())
+        relevance_all_layers = lrp.attribute(image, classIndex.item(), return_for_all_layers=True)
+        relevance = relevance_all_layers[0]
         self.assertEqual(relevance.shape, image.shape)
         relevance_oldImplementation = torch.load("relevance_loopimplementation_zRule.pt")
         relevance_sum = torch.sum(relevance)
@@ -167,7 +168,7 @@ class Test(BaseTest):
         #relevance = torch.clamp(relevance, -10, 10)
 
         _ = viz.visualize_image_attr(
-            np.transpose(relevance.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
+            np.transpose(relevance_all_layers[31].data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             np.transpose(image.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             sign="all",
             method="heat_map",

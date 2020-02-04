@@ -5,8 +5,6 @@ import copy
 import torch
 import torch.nn as nn
 
-# TODO: Implement w^2 rule
-
 
 class PropagationRule(object):
     """
@@ -19,7 +17,6 @@ class PropagationRule(object):
     def forward_hook(self, module, inputs, outputs):
         """Function that registers backward hooks on input and output
         tensors of linear layers in the model."""
-        module.activations = inputs[0].data
         module.outputs = outputs.data
         input_hook = self._create_backward_hook_input(inputs[0].data)
         output_hook = self._create_backward_hook_output(outputs.data)
@@ -30,6 +27,9 @@ class PropagationRule(object):
         """Function that serves as backward hook to propagate relevance
         over non-linear activations without manipulation."""
         return grad_output
+
+    def _backward_hook_relevance(self, module, grad_input, grad_output):
+        module.relevance = grad_output[0] * module.outputs
 
     def _create_backward_hook_input(self, inputs):
         raise NotImplementedError
@@ -52,9 +52,6 @@ class EpsilonRule(PropagationRule):
 
     def __init__(self, epsilon=1e-9):
         self.epsilon = epsilon
-
-    def _backward_hook_relevance(self, module, grad_input, grad_output):
-        module.relevance = grad_output * module.outputs
 
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):

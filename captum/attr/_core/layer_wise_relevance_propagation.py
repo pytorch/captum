@@ -160,6 +160,7 @@ class LRP(Attribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
+        self.return_for_all_layers = return_for_all_layers
         self.verbose = verbose
         self.backward_handles = list()
         self.forward_handles = list()
@@ -177,12 +178,14 @@ class LRP(Attribution):
             relevance * input * output for relevance, input in zip(relevances, inputs)
         )
 
-        if return_for_all_layers:
-            warnings.warn("""Return for all layers is not implemented""")
-            # relevances = [relevances]
-            # for layer in self.layers:
-            #    relevances.append(layer.relevance)
-            # relevances = (relevances,)
+        if self.return_for_all_layers:
+            relevances = [*relevances]
+            for layer in self.layers:
+                if hasattr(layer, 'relevance'):
+                    relevances.append(layer.relevance)
+                else:
+                    relevances.append(relevances[-1])
+            relevances = (relevances,)
 
         self._remove_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
@@ -323,6 +326,9 @@ class LRP(Attribution):
                     print(f"\nRelevance propagated over {layer} with manipulation.")
                 forward_handle = layer.register_forward_hook(rule.forward_hook)
                 self.forward_handles.append(forward_handle)
+                if self.return_for_all_layers:
+                    relevance_handle = layer.register_backward_hook(rule._backward_hook_relevance)
+                    self.backward_handles.append(relevance_handle)
 
             else:
                 if self.verbose:
