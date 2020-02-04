@@ -55,31 +55,6 @@ class Test(BaseTest):
         ):
             assertTensorAlmostEqual(self, attribution, attribution_without_delta)
 
-    def test_basic_scalar_baselines_multi_input(self):
-        inputs = (torch.ones(10, 3), torch.rand(10, 4))
-        baselines_scalars = (0.0, 0.0)
-        baselines_tensors = (
-            torch.zeros(1, 3),
-            torch.zeros(10, 4),
-        )
-
-        model = BasicLinearModel()
-        model.eval()
-
-        gradient_shap = GradientShap(model)
-        attributions_base_scalars, _ = gradient_shap.attribute(
-            inputs, baselines_scalars, n_samples=50, return_convergence_delta=True
-        )
-        attributions_base_tnsrs, _ = gradient_shap.attribute(
-            inputs, baselines_tensors, n_samples=50, return_convergence_delta=True
-        )
-        assertTensorAlmostEqual(
-            self, attributions_base_scalars[0], attributions_base_tnsrs[0]
-        )
-        assertTensorAlmostEqual(
-            self, attributions_base_scalars[1], attributions_base_tnsrs[1]
-        )
-
     def test_classification_baselines_as_function(self):
         num_in = 40
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)

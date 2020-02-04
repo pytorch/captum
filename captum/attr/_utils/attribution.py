@@ -5,13 +5,13 @@ import torch
 import torch.nn.functional as F
 
 from .common import (
-    _run_forward,
+    _format_additional_forward_args,
     _format_input_baseline,
     _format_tensor_into_tuples,
-    _format_additional_forward_args,
+    _run_forward,
+    _tensorize_baseline,
     _validate_input,
     _validate_target,
-    _tensorize_baseline,
 )
 from .gradient import compute_gradients
 
@@ -110,6 +110,25 @@ class Attribution:
         """
         raise NotImplementedError(
             "Deriving sub-class should implement" " compute_convergence_delta method"
+        )
+
+    @classmethod
+    def get_name(cls):
+        r"""
+        Create readable class name by inserting a space before any capital
+        characters besides the very first.
+
+        Returns:
+            str: a readable class name
+        Example:
+            for a class called IntegratedGradients, we return the string
+            'Integrated Gradients'
+        """
+        return "".join(
+            [
+                char if char.islower() or idx == 0 else " " + char
+                for idx, char in enumerate(cls.__name__)
+            ]
         )
 
 
@@ -395,7 +414,7 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
-    def attribute(self, inputs, neuron_index):
+        attribute: Callable
         r"""
         This method computes and returns the neuron attribution values for each
         input tensor. Deriving classes are responsible for implementing
@@ -421,4 +440,3 @@ class NeuronAttribution(InternalAttribution):
                         each input vector. The `attributions` have the
                         dimensionality of inputs.
         """
-        raise NotImplementedError("A derived class should implement attribute method")
