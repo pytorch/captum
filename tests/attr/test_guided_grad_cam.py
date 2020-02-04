@@ -9,16 +9,14 @@ from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 from torch.nn import Module
-from torch import Tensor
-from typing import Any, Union, Tuple, TypeVar, List, Optional
-
-TensorOrTupleOfTensors = TypeVar("TensorOrTupleOfTensors", Tensor, Tuple[Tensor, ...])
+from typing import Any
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
     def test_simple_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         ex = [
             [0.0, 0.0, 4.0, 4.0],
             [0.0, 0.0, 12.0, 8.0],
@@ -29,7 +27,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -41,7 +39,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_relu_input_inplace(self) -> None:
         net = BasicModel_ConvNet_One_Conv(inplace=True)
-        inp = torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -55,7 +53,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv_inplace(self) -> None:
         net = BasicModel_ConvNet_One_Conv(inplace=True)
-        inp = torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -67,7 +65,7 @@ class Test(BaseTest):
 
     def test_improper_dims_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         ex = [
             [14.5, 29.0, 38.0, 19.0],
@@ -79,7 +77,7 @@ class Test(BaseTest):
 
     def test_improper_method_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(0.0, 16.0, 1.0).view(1, 1, 4, 4)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         self._guided_grad_cam_test_assert(
             net, net.conv1, (inp, inp2), (None, None), interpolate_mode="triilinear"
@@ -90,11 +88,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
-        expected: Union[
-            List[List[float]],
-            Tuple[Optional[List[List[float]]], ...],
-            Tuple[List[List[float]], List[List[float]]],
-        ],
+        expected,
         additional_input: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,

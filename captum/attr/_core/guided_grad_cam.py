@@ -37,11 +37,13 @@ class GuidedGradCam(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], None] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
         additional_forward_args: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> TensorOrTupleOfTensors:
         r"""
             Computes element-wise product of guided backpropagation attributions
             with upsampled (non-negative) GradCAM attributions.

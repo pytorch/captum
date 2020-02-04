@@ -16,8 +16,7 @@ from .common import (
 from .gradient import compute_gradients
 
 from torch import Tensor
-from typing import Union, Tuple, Any
-from .._utils.typing import TensorOrTupleOfTensors
+from typing import Union, Tuple
 
 
 class Attribution:
@@ -342,9 +341,9 @@ class LayerAttribution(InternalAttribution):
     @staticmethod
     def interpolate(
         layer_attribution: Tensor,
-        interpolate_dims: Union[int, Tuple[Any, ...]],
+        interpolate_dims: Union[int, Tuple[int, ...]],
         interpolate_mode: str = "nearest",
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> Tensor:
         r"""
         Interpolates given 3D, 4D or 5D layer attribution to given dimensions.
         This is often utilized to upsample the attribution of a convolutional layer
