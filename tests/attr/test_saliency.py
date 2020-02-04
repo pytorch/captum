@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Optional, Tuple, cast
+from typing import Any, Tuple, cast
 
 import torch
 from captum.attr._core.noise_tunnel import NoiseTunnel
