@@ -55,13 +55,13 @@ class LayerGradientShap(LayerAttribution, GradientShap):
         self,
         inputs: TensorOrTupleOfTensors,
         baselines: TensorOrTupleOfTensors,
-        n_samples: Optional[int] = 5,
+        n_samples: int = 5,
         stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        attribute_to_layer_input: Optional[bool] = False,
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -70,14 +70,14 @@ class LayerGradientShap(LayerAttribution, GradientShap):
         self,
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable],
-        n_samples: Optional[int] = 5,
+        n_samples: int = 5,
         stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        return_convergence_delta: Optional[bool] = False,
-        attribute_to_layer_input: Optional[bool] = False,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
     ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         ...
 
@@ -335,8 +335,8 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        attribute_to_layer_input: Optional[bool] = False,
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -350,9 +350,9 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        return_convergence_delta: Optional[bool] = False,
-        attribute_to_layer_input: Optional[bool] = False,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
     ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         ...
 
