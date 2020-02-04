@@ -7,9 +7,16 @@ from .._utils.common import _format_input, _format_attributions
 from .layer.grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
 
+from torch.nn import Module
+from torch import Tensor
+from typing import Optional, List, Tuple, Any, Union
+from .._utils.typing import TensorOrTupleOfTensors
+
 
 class GuidedGradCam(GradientAttribution):
-    def __init__(self, model, layer, device_ids=None):
+    def __init__(
+        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+    ) -> None:
         r"""
         Args
 
@@ -29,12 +36,14 @@ class GuidedGradCam(GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        target=None,
-        additional_forward_args=None,
-        interpolate_mode="nearest",
-        attribute_to_layer_input=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        interpolate_mode: str = "nearest",
+        attribute_to_layer_input: bool = False,
+    ) -> TensorOrTupleOfTensors:
         r"""
             Computes element-wise product of guided backpropagation attributions
             with upsampled (non-negative) GradCAM attributions.
