@@ -7,7 +7,7 @@ from ..deep_lift import DeepLift, DeepLiftShap
 from typing import Callable, Optional, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
-from .._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
