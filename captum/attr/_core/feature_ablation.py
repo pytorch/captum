@@ -33,7 +33,6 @@ class FeatureAblation(PerturbationAttribution):
     def attribute(
         self,
         # type:ignore
-        # inputs: Union[Tensor, Tuple[Tensor, ...]],
         inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
@@ -42,7 +41,6 @@ class FeatureAblation(PerturbationAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        # feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         ablations_per_eval: int = 1,
         **kwargs: Any
