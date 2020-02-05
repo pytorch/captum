@@ -155,7 +155,7 @@ class GammaRule(Z_Rule):
             )
 
 
-class Alpha1_Beta0_Rule(EpsilonRhoRule):
+class Alpha1_Beta0_Rule(Z_Rule):
     """
     Alpha1_Beta0 rule for relevance backpropagation, also known
     as Deep-Taylor. Only positive relevance is propagated, resulting
@@ -165,11 +165,11 @@ class Alpha1_Beta0_Rule(EpsilonRhoRule):
     """
 
     def __init__(self):
-        def _rho_function(tensor_input):
-            tensor_output = torch.clamp(tensor_input, min=0)
-            return tensor_output
+        super(Alpha1_Beta0_Rule, self).__init__()
 
-        super(Alpha1_Beta0_Rule, self).__init__(rho=_rho_function)
+    def forward_hook_weights(self, module, inputs, outputs):
+        if hasattr(module, "weight"):
+            module.weight.data = module.weight.data.clamp(min=0)
 
 
 class zB_Rule(PropagationRule):
