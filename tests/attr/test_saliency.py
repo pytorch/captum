@@ -3,12 +3,13 @@
 from typing import Any, Tuple, cast
 
 import torch
+from torch import Tensor
+from torch.nn import Module
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients
 from captum.attr._utils.typing import TensorOrTupleOfTensors
-from torch import Tensor
-from torch.nn import Module
+
 
 from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from .helpers.classification_models import SoftmaxModel
@@ -31,11 +32,8 @@ def _get_multiargs_basic_config() -> Tuple[
         torch.tensor([[1.5, 2.0, 34.3], [3.4, 1.2, 2.0]], requires_grad=True),
         torch.tensor([[3.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True),
     )
-    grads = cast(
-        Tuple[Tensor, ...],
-        compute_gradients(
-            model, inputs, additional_forward_args=additional_forward_args
-        ),
+    grads = compute_gradients(
+        model, inputs, additional_forward_args=additional_forward_args
     )
     return model, inputs, grads, additional_forward_args
 

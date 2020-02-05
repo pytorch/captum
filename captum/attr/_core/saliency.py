@@ -27,7 +27,7 @@ class Saliency(GradientAttribution):
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        abs: Optional[bool] = True,
+        abs: bool = True,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
         r""""
