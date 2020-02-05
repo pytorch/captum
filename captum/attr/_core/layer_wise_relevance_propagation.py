@@ -36,8 +36,8 @@ class LRP(Attribution):
                         (i.e. ReLU) the rule can be None.
         """
         self.model = model
-        self.layerset = []
-        self._get_layerset(model)
+        self.layers = []
+        self._get_layers(model)
         self.changes_weights = False
 
         for rule in rules:
@@ -169,7 +169,6 @@ class LRP(Attribution):
         self.forward_handles = list()
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
-        output = self._get_layers(inputs, None, additional_forward_args)
         gradient_mask = apply_gradient_requirements(inputs)
 
         self._register_forward_hooks()
@@ -178,9 +177,9 @@ class LRP(Attribution):
 
         relevances = compute_gradients(self.model, inputs, target_ind=target)
 
-        output = _select_targets(output, target)
+        output = _run_forward(self.model, inputs, target, additional_forward_args)
         relevances = tuple(
-            relevance * input * output for relevance, input in zip(relevances, inputs)
+            relevance * input * output  for relevance, input in zip(relevances, inputs)
         )
 
         if self.return_for_all_layers:
@@ -281,7 +280,7 @@ class LRP(Attribution):
         relevance = _run_forward(self.model, inputs, target, additional_forward_args)
         return torch.sum(relevance) - torch.sum(attributions)
 
-    def _get_layerset(self, model):
+    def _get_layers(self, model):
         """
         Get list of children modules of the forward function or model.
         Checks wether Sigmoid or Tanh activations are used and raises error if that is the case.
@@ -292,24 +291,10 @@ class LRP(Attribution):
                     raise TypeError(
                         "Invalid activation used. Implementation is only valid for ReLU activations."
                     )
-                self.layerset.append(layer)
+                self.layers.append(layer)
             else:
-                self._get_layerset(layer)
+                self._get_layers(layer)
 
-    def _get_layers(self, inputs, target=None, additional_forward_args=None):
-        # TODO: Check if still necessary or get_layerset is sufficient
-        self.layers = list()
-        hooks = list()
-
-        for layer in self.layerset:
-            registered_hook = layer.register_forward_hook(self._forward_hook)
-            hooks.append(registered_hook)
-        output = _run_forward(self.model, inputs, target, additional_forward_args)
-
-        for registered_hook in hooks:
-            registered_hook.remove()
-
-        return output
 
     def _register_forward_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
