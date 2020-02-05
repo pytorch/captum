@@ -16,7 +16,11 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from ..helpers.utils import (
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+    BaseTest,
+)
 
 
 class Test(BaseTest):
@@ -101,26 +105,16 @@ class Test(BaseTest):
         attribute_to_neuron_input: bool = False,
     ) -> None:
         grad = NeuronGradient(model, target_layer)
-        attributions: Tensor = grad.attribute(
+        attributions = grad.attribute(
             test_input,
             test_neuron_index,
             additional_forward_args=additional_input,
             attribute_to_neuron_input=attribute_to_neuron_input,
         )
-        if isinstance(expected_input_gradient, tuple):
-            for i in range(len(expected_input_gradient)):
-                assertArraysAlmostEqual(
-                    attributions[i].squeeze(0).tolist(),
-                    expected_input_gradient[i],
-                    delta=0.1,
-                )
-        else:
-            assertArraysAlmostEqual(
-                attributions.squeeze(0).tolist(), expected_input_gradient, delta=0.1
-            )
+        assertTensorTuplesAlmostEqual(self, attributions, expected_input_gradient)
 
     def _gradient_matching_test_assert(
-        self, model: Module, output_layer: Module, test_input: Tensor,
+        self, model: Module, output_layer: Module, test_input: Tensor
     ) -> None:
         out, _ = _forward_layer_eval(model, test_input, output_layer)
         # Select first element of tuple
