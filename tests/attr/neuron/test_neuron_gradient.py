@@ -96,16 +96,12 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
         test_neuron_index: Union[int, Tuple[int, ...]],
-        expected_input_gradient: Union[
-            List[float],
-            Tuple[List[float], List[float]],
-            Tuple[List[float], List[float], List[float]],
-        ],
+        expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> None:
         grad = NeuronGradient(model, target_layer)
-        attributions = grad.attribute(
+        attributions: Tensor = grad.attribute(
             test_input,
             test_neuron_index,
             additional_forward_args=additional_input,
@@ -131,7 +127,7 @@ class Test(BaseTest):
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
         for i in range(out.shape[1]):
-            neuron: Any = (i,)
+            neuron: Tuple[int, ...] = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
