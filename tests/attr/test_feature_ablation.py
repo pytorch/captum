@@ -16,6 +16,7 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
@@ -349,11 +350,13 @@ class Test(BaseTest):
     def _ablation_test_assert(
         self,
         model: Module,
-        test_input: Union[Tensor, Tuple[Tensor, ...]],
-        expected_ablation,
-        feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        additional_input=None,
-        ablations_per_eval=(1,),
+        # test_input: Union[Tensor, Tuple[Tensor, ...]],
+        test_input: TensorOrTupleOfTensors,
+        expected_ablation: Tuple,
+        # feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        additional_input: Optional[TensorOrTupleOfTensors] = None,
+        ablations_per_eval: Tuple = (1,),
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,

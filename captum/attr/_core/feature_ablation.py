@@ -33,17 +33,19 @@ class FeatureAblation(PerturbationAttribution):
     def attribute(
         self,
         # type:ignore
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        # inputs: Union[Tensor, Tuple[Tensor, ...]],
+        inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        ablations_per_eval: Optional[int] = 1,
-        **kwargs: Optional[Any]
+        additional_forward_args: Any = None,
+        # feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        ablations_per_eval: int = 1,
+        **kwargs: Any
     ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
@@ -224,21 +226,31 @@ class FeatureAblation(PerturbationAttribution):
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
         """
+        is_inputs_tuple = isinstance(inputs, tuple)
+        inputs, baselines = _format_input_baseline(inputs, baselines)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        num_examples = inputs[0].shape[0]
+        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
+        assert (
+            isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+        ), "Ablations per evaluation must be at least 1."
         with torch.no_grad():
             # Keeps track whether original input is a tuple or not before
             # converting it into a tuple.
-            is_inputs_tuple = isinstance(inputs, tuple)
-            inputs, baselines = _format_input_baseline(inputs, baselines)
-            additional_forward_args = _format_additional_forward_args(
-                additional_forward_args
-            )
-            num_examples = inputs[0].shape[0]
-            feature_mask = (
-                _format_input(feature_mask) if feature_mask is not None else None
-            )
-            assert (
-                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
-            ), "Ablations per evaluation must be at least 1."
+            # is_inputs_tuple = isinstance(inputs, tuple)
+            # inputs, baselines = _format_input_baseline(inputs, baselines)
+            # additional_forward_args = _format_additional_forward_args(
+            #     additional_forward_args
+            # )
+            # num_examples = inputs[0].shape[0]
+            # feature_mask = (
+            #     _format_input(feature_mask) if feature_mask is not None else None
+            # )
+            # assert (
+            #     isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+            # ), "Ablations per evaluation must be at least 1."
 
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
