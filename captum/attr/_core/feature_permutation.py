@@ -31,14 +31,11 @@ class FeaturePermutation(FeatureAblation):
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_fn = perm_fn
 
-    def attribute(
+    # suppressing error caused by the child class not having a matching
+    # signature to the parent
+    def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[
-                int, float, TensorOrTupleOfTensors, Tuple[int, ...], Tuple[float, ...]
-            ]
-        ] = None,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,

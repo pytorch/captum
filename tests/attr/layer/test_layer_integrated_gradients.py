@@ -18,7 +18,10 @@ from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGr
 from captum.attr._core.layer.layer_conductance import LayerConductance
 
 from ..helpers.utils import BaseTest
-from ..helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
+from ..helpers.basic_models import (
+    BasicEmbeddingModel,
+    BasicModel_MultiLayer,
+)
 
 
 class Test(BaseTest):
