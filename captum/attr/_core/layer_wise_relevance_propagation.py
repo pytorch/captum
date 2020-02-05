@@ -21,7 +21,7 @@ from .._utils.gradient import (
     compute_gradients,
     _forward_layer_eval,
 )
-from .._utils.lrp_rules import PropagationRule, BasicRule
+from .._utils.lrp_rules import PropagationRule, Z_Rule
 
 
 class LRP(Attribution):
@@ -38,12 +38,15 @@ class LRP(Attribution):
         self.model = model
         self.layerset = []
         self._get_layerset(model)
+        self.changes_weights = False
 
         for rule in rules:
             if not isinstance(rule, PropagationRule) and rule is not None:
                 raise TypeError(
                     "Please select propagation rules inherited from class PropagationRule"
                 )
+            if hasattr(rule, "forward_hook_weights"):
+                self.changes_weights = True
         self.rules = rules
         super(LRP, self).__init__(model)
 
@@ -167,10 +170,12 @@ class LRP(Attribution):
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
         output = self._get_layers(inputs, None, additional_forward_args)
-
-        self._register_hooks()
-
         gradient_mask = apply_gradient_requirements(inputs)
+
+        self._register_forward_hooks()
+
+        self._change_weights(inputs)
+
         relevances = compute_gradients(self.model, inputs, target_ind=target)
 
         output = _select_targets(output, target)
@@ -181,13 +186,14 @@ class LRP(Attribution):
         if self.return_for_all_layers:
             relevances = [*relevances]
             for layer in self.layers:
-                if hasattr(layer, 'relevance'):
+                if hasattr(layer, "relevance"):
                     relevances.append(layer.relevance)
                 else:
                     relevances.append(relevances[-1])
             relevances = (relevances,)
 
-        self._remove_hooks()
+        self._remove_backward_hooks()
+        self._remove_forward_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
@@ -305,7 +311,7 @@ class LRP(Attribution):
 
         return output
 
-    def _register_hooks(self):
+    def _register_forward_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             # Convert Max-Pooling to Average Pooling layer
             # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
@@ -327,7 +333,9 @@ class LRP(Attribution):
                 forward_handle = layer.register_forward_hook(rule.forward_hook)
                 self.forward_handles.append(forward_handle)
                 if self.return_for_all_layers:
-                    relevance_handle = layer.register_backward_hook(rule._backward_hook_relevance)
+                    relevance_handle = layer.register_backward_hook(
+                        rule._backward_hook_relevance
+                    )
                     self.backward_handles.append(relevance_handle)
 
             else:
@@ -342,9 +350,34 @@ class LRP(Attribution):
         # setattr(module, 'activations', *input)
         self.layers.append(module)
 
-    def _remove_hooks(self):
+    def _register_weight_hooks(self):
+        for layer, rule in zip(self.layers, self.rules):
+            if hasattr(rule, "forward_hook_weights"):
+                if isinstance(
+                    layer,
+                    (
+                        torch.nn.MaxPool2d,
+                        torch.nn.Conv2d,
+                        torch.nn.AvgPool2d,
+                        torch.nn.AdaptiveAvgPool2d,
+                        torch.nn.Linear,
+                    ),
+                ):
+                    forward_handle = layer.register_forward_hook(
+                        rule.forward_hook_weights
+                    )
+                    self.forward_handles.append(forward_handle)
+
+    def _change_weights(self, inputs):
+        if self.changes_weights:
+            self._register_weight_hooks()
+            _ = _run_forward(self.model, inputs)
+
+    def _remove_forward_hooks(self):
         for forward_handle in self.forward_handles:
             forward_handle.remove()
+
+    def _remove_backward_hooks(self):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
         for rule in self.rules:

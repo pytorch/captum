@@ -30,6 +30,7 @@ class PropagationRule(object):
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output[0] * module.outputs
+        # print(torch.sum(module.relevance))
 
     def _create_backward_hook_input(self, inputs):
         raise NotImplementedError
@@ -67,6 +68,14 @@ class EpsilonRule(PropagationRule):
 
 
 class Z_Rule(EpsilonRule):
+    """
+    Basic rule for relevance propagation, also called LRP-0,
+    see Montavon et al. Explainable AI book.
+    Implemented using the EpsilonRhoRule.
+
+    Use for upper layers.
+    """
+
     def __init__(self):
         super(Z_Rule, self).__init__(epsilon=1e-9)
 
@@ -123,20 +132,7 @@ class EpsilonRhoRule(PropagationRule):
         return layer
 
 
-class BasicRule(EpsilonRhoRule):
-    """
-    Basic rule for relevance propagation, also called LRP-0,
-    see Montavon et al. Explainable AI book.
-    Implemented using the EpsilonRhoRule.
-
-    Use for upper layers.
-    """
-
-    def __init__(self):
-        super(BasicRule, self).__init__()
-
-
-class GammaRule(EpsilonRhoRule):
+class GammaRule(Z_Rule):
     """
     Gamma rule for relevance propagation, gives more importance to
     positive relevance.
@@ -149,12 +145,14 @@ class GammaRule(EpsilonRhoRule):
     """
 
     def __init__(self, gamma=0.25):
-        def _gamma_function(tensor_input):
-            tensor_positive = torch.clamp(tensor_input, min=0)
-            tensor_output = tensor_input + (gamma * tensor_positive)
-            return tensor_output
+        super(GammaRule, self).__init__()
+        self.gamma = gamma
 
-        super(GammaRule, self).__init__(rho=_gamma_function)
+    def forward_hook_weights(self, module, inputs, outputs):
+        if hasattr(module, "weight"):
+            module.weight.data = (
+                module.weight.data + self.gamma * module.weight.data.clamp(min=0)
+            )
 
 
 class Alpha1_Beta0_Rule(EpsilonRhoRule):
