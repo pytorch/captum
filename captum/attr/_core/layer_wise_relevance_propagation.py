@@ -182,18 +182,11 @@ class LRP(Attribution):
             relevance * input * output  for relevance, input in zip(relevances, inputs)
         )
 
-        if self.return_for_all_layers:
-            relevances = [*relevances]
-            for layer in self.layers:
-                if hasattr(layer, "relevance"):
-                    relevances.append(layer.relevance)
-                else:
-                    relevances.append(relevances[-1])
-            relevances = (relevances,)
-
         self._remove_backward_hooks()
         self._remove_forward_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
+
+        relevances = self._select_layer_output(relevances)
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
@@ -373,6 +366,17 @@ class LRP(Attribution):
             if hasattr(rule, "_handle_layer_hook"):
                 rule._handle_layer_hook.remove()
 
+    def _select_layer_output(self, relevances):
+        if self.return_for_all_layers:
+            relevances = [*relevances]
+            for layer in self.layers:
+                if hasattr(layer, "relevance"):
+                    relevances.append(layer.relevance)
+                else:
+                    relevances.append(relevances[-1])
+            return (relevances,)
+        else:
+            return relevances
 
 class LRP_0(LRP):
     """
