@@ -3,8 +3,8 @@
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 import torch
-from captum.attr._utils.typing import TensorOrTupleOfTensors
 from torch import Tensor
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions, _format_input

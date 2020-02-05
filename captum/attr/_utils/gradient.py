@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import threading
 import warnings
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -69,7 +69,9 @@ def undo_gradient_requirements(inputs, grad_required):
 def compute_gradients(
     forward_fn: Module,
     inputs: TensorOrTupleOfTensors,
-    target_ind: Optional[TensorOrTupleOfTensors] = None,
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+    ] = None,
     additional_forward_args: Any = None,
 ) -> Tuple[Tensor, ...]:
     r"""
