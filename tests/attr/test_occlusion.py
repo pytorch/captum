@@ -20,7 +20,7 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 class Test(BaseTest):
     def test_improper_window_shape(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         # Check error when too few sliding window dimensions
         with self.assertRaises(AssertionError):
@@ -42,7 +42,7 @@ class Test(BaseTest):
 
     def test_improper_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         # Check error when too few stride dimensions
         with self.assertRaises(AssertionError):
@@ -70,7 +70,7 @@ class Test(BaseTest):
 
     def test_too_large_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
@@ -235,7 +235,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).to(torch.float)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         self._occlusion_test_assert(
             net,
