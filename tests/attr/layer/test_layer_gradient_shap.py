@@ -122,7 +122,14 @@ class Test(BaseTest):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable],
         target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]],
-        expected: Union[Tensor, Tuple[Tensor, ...], List, Tuple[List, ...]],
+        expected: Union[
+            Tensor,
+            Tuple[Tensor, ...],
+            List[float],
+            List[List[float]],
+            Tuple[List[float], ...],
+            Tuple[List[List[float]], ...],
+        ],
         expected_delta: Tensor = None,
         n_samples: int = 5,
         attribute_to_layer_input: bool = False,
@@ -143,7 +150,5 @@ class Test(BaseTest):
         if expected_delta is None:
             _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)
         else:
-            for delta_i, expected_delta_i in zip(
-                torch.unbind(delta), torch.unbind(expected_delta)
-            ):
+            for delta_i, expected_delta_i in zip(delta, expected_delta):
                 assertTensorAlmostEqual(self, delta_i, expected_delta_i, delta=0.01)
