@@ -217,8 +217,7 @@ class Test(BaseTest):
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
 
         feature_importance = FeaturePermutation(model)
-        total_attr1 = torch.zeros(1, 3)
-        total_attr2 = torch.zeros(1)
+        total_attr1, total_attr2 = feature_importance.attribute((inp1, inp2))
 
         for _ in range(50):
             attr1, attr2 = feature_importance.attribute((inp1, inp2))
