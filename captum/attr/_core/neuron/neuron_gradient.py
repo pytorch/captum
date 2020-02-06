@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+from torch.nn import Module
+from typing import Callable, List, Optional, Tuple, Union, Any
+
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.common import (
     _format_input,
@@ -10,10 +13,16 @@ from ..._utils.gradient import (
     undo_gradient_requirements,
     _forward_layer_eval_with_neuron_grads,
 )
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -39,11 +48,11 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        additional_forward_args=None,
-        attribute_to_neuron_input=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> TensorOrTupleOfTensors:
         r"""
             Computes the gradient of the output of a particular neuron with
             respect to the inputs of the network.

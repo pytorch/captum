@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-
+from typing import Any
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.classification_models import SoftmaxModel
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
@@ -11,45 +14,45 @@ from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 
 class Test(BaseTest):
-    def test_input_x_gradient_test_basic_vanilla(self):
+    def test_input_x_gradient_test_basic_vanilla(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config())
 
-    def test_input_x_gradient_test_basic_smoothgrad(self):
+    def test_input_x_gradient_test_basic_smoothgrad(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="smoothgrad")
 
-    def test_input_x_gradient_test_basic_vargrad(self):
+    def test_input_x_gradient_test_basic_vargrad(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="vargrad")
 
-    def test_saliency_test_basic_multi_variable_vanilla(self):
+    def test_saliency_test_basic_multi_variable_vanilla(self) -> None:
         self._input_x_gradient_base_assert(*_get_multiargs_basic_config())
 
-    def test_saliency_test_basic_multi_variable_smoothgrad(self):
+    def test_saliency_test_basic_multi_variable_smoothgrad(self) -> None:
         self._input_x_gradient_base_assert(
             *_get_multiargs_basic_config(), nt_type="smoothgrad"
         )
 
-    def test_saliency_test_basic_multi_vargrad(self):
+    def test_saliency_test_basic_multi_vargrad(self) -> None:
         self._input_x_gradient_base_assert(
             *_get_multiargs_basic_config(), nt_type="vargrad"
         )
 
-    def test_input_x_gradient_classification_vanilla(self):
+    def test_input_x_gradient_classification_vanilla(self) -> None:
         self._input_x_gradient_classification_assert()
 
-    def test_input_x_gradient_classification_smoothgrad(self):
+    def test_input_x_gradient_classification_smoothgrad(self) -> None:
         self._input_x_gradient_classification_assert(nt_type="smoothgrad")
 
-    def test_input_x_gradient_classification_vargrad(self):
+    def test_input_x_gradient_classification_vargrad(self) -> None:
         self._input_x_gradient_classification_assert(nt_type="vargrad")
 
     def _input_x_gradient_base_assert(
         self,
-        model,
-        inputs,
-        expected_grads,
-        additional_forward_args=None,
-        nt_type="vanilla",
-    ):
+        model: Module,
+        inputs: TensorOrTupleOfTensors,
+        expected_grads: TensorOrTupleOfTensors,
+        additional_forward_args: Any = None,
+        nt_type: str = "vanilla",
+    ) -> None:
         input_x_grad = InputXGradient(model)
         if nt_type == "vanilla":
             attributions = input_x_grad.attribute(
@@ -74,7 +77,7 @@ class Test(BaseTest):
                         attribution.reshape(-1), (expected_grad * input).reshape(-1)
                     )
                 self.assertEqual(input.shape, attribution.shape)
-        else:
+        elif isinstance(attributions, Tensor):
             if nt_type == "vanilla":
                 assertArraysAlmostEqual(
                     attributions.reshape(-1),
@@ -83,7 +86,9 @@ class Test(BaseTest):
                 )
             self.assertEqual(inputs.shape, attributions.shape)
 
-    def _input_x_gradient_classification_assert(self, nt_type="vanilla"):
+    def _input_x_gradient_classification_assert(
+        self, nt_type: str = "vanilla",
+    ) -> None:
         num_in = 5
         input = torch.tensor([[0.0, 1.0, 2.0, 3.0, 4.0]], requires_grad=True)
         target = torch.tensor(5)
@@ -106,4 +111,4 @@ class Test(BaseTest):
                 input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
             )
 
-        self.assertAlmostEqual(attributions.shape, input.shape)
+        self.assertEqual(attributions.shape, input.shape)
