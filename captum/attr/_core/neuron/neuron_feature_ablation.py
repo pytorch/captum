@@ -49,10 +49,10 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         additional_forward_args: Any = None,
-        feature_mask: TensorOrTupleOfTensors = None,
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
         attribute_to_neuron_input: bool = False,
         ablations_per_eval: int = 1,
-    ):
+    ) -> TensorOrTupleOfTensors:
         r"""
             A perturbation based approach to computing neuron attribution,
             involving replacing each input feature with a given baseline /

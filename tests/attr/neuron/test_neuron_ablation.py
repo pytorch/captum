@@ -8,7 +8,7 @@ from torch.nn import Module
 
 from captum.attr._utils.typing import TensorOrTupleOfTensors
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
-from typing import Optional, Tuple, Union, Any
+from typing import Optional, Tuple, Union, Any, List
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
@@ -212,7 +212,12 @@ class Test(BaseTest):
         model: Module,
         layer: Module,
         test_input: TensorOrTupleOfTensors,
-        expected_ablation: Any,
+        expected_ablation: Union[
+            List[float],
+            List[List[float]],
+            Tuple[Tensor, ...],
+            Tuple[List[List[float]], ...],
+        ],
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         additional_input: Any = None,
         ablations_per_eval: Tuple[int, ...] = (1,),
