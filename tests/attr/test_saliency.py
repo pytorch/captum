@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 from typing import Any, Tuple, cast
+import torch
+from torch import Tensor
+from torch.nn import Module
 
 import torch
 from torch import Tensor
