@@ -11,10 +11,12 @@ from .._utils.common import (
 )
 
 from .noise_tunnel import NoiseTunnel
+from typing import Callable, Union, Optional, Tuple, List, Any
+from .._utils.typing import Tensor, TensorOrTupleOfTensors
 
 
 class GradientShap(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -25,14 +27,14 @@ class GradientShap(GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines,
-        n_samples=5,
-        stdevs=0.0,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
+        n_samples: Optional[int] = 5,
+        stdevs: Optional[Union[float, Tuple[float]]] = 0.0,
+        target: Optional[Union[int, Tuple, Tensor, List[Any]]] = None,
+        additional_forward_args: Optional[Any] = None,
+        return_convergence_delta: Optional[bool] = False,
+    ) -> TensorOrTupleOfTensors:
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
         author. For reference, please, view:
@@ -219,12 +221,12 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
 
 class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -235,12 +237,14 @@ class InputBaselineXGradient(GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[Union[int, Tuple, Tensor, List[Any]]] = None,
+        additional_forward_args: Optional[Any] = None,
+        return_convergence_delta: Optional[bool] = False,
+    ) -> TensorOrTupleOfTensors:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
@@ -279,10 +283,15 @@ class InputBaselineXGradient(GradientAttribution):
             is_inputs_tuple,
         )
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
-    def _scale_input(self, input, baseline, rand_coefficient):
+    def _scale_input(
+        self,
+        input: Tensor,
+        baseline: Union[Tensor, int, float],
+        rand_coefficient: Tensor,
+    ) -> Tensor:
         # batch size
         bsz = input.shape[0]
         inp_shape_wo_bsz = input.shape[1:]
@@ -292,6 +301,6 @@ class InputBaselineXGradient(GradientAttribution):
         rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
 
         input_baseline_scaled = (
-            rand_coefficient * input + (1 - rand_coefficient) * baseline
+            rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
         )
         return input_baseline_scaled
