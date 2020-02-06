@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
 from typing import Any, Tuple, cast
-import torch
-from torch import Tensor
-from torch.nn import Module
 
 import torch
 from torch import Tensor
@@ -12,7 +9,6 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients
 from captum.attr._utils.typing import TensorOrTupleOfTensors
-
 
 from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from .helpers.classification_models import SoftmaxModel
