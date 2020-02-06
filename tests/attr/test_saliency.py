@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-
+from typing import Tuple, Any
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -11,14 +13,16 @@ from .helpers.classification_models import SoftmaxModel
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
 
 
-def _get_basic_config():
+def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:
     input = torch.tensor([1.0, 2.0, 3.0, 0.0, -1.0, 7.0], requires_grad=True)
     # manually percomputed gradients
     grads = torch.tensor([-0.0, -0.0, -0.0, 1.0, 1.0, -0.0])
     return BasicModel(), input, grads, None
 
 
-def _get_multiargs_basic_config():
+def _get_multiargs_basic_config() -> Tuple[
+    Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any
+]:
     model = BasicModel5_MultiArgs()
     additional_forward_args = ([2, 3], 1)
     inputs = (

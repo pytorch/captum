@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+from typing import Callable, List, Optional, Tuple, Union, Any
+from torch import Tensor
+
 from .._utils.common import _format_input, _format_attributions
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class InputXGradient(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -14,7 +18,14 @@ class InputXGradient(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
-    def attribute(self, inputs, target=None, additional_forward_args=None):
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
         r""""
         A baseline approach for computing the attribution. It multiplies input with
         the gradient with respect to input.
