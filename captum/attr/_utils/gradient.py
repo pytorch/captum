@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 import threading
-import torch
 import warnings
+from typing import Any, List, Optional, Tuple, Union
 
-from .common import _run_forward, _verify_select_column
+import torch
+from torch import Tensor
+from torch.nn import Module
+from captum.attr._utils.typing import TensorOrTupleOfTensors
+
 from .batching import _reduce_list, _sort_key_list
+from .common import _run_forward, _verify_select_column
 
 
 def apply_gradient_requirements(inputs):
@@ -62,8 +67,13 @@ def undo_gradient_requirements(inputs, grad_required):
 
 
 def compute_gradients(
-    forward_fn, inputs, target_ind=None, additional_forward_args=None
-):
+    forward_fn: Module,
+    inputs: TensorOrTupleOfTensors,
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+    ] = None,
+    additional_forward_args: Any = None,
+) -> Tuple[Tensor, ...]:
     r"""
         Computes gradients of the output with respect to inputs for an
         arbitrary forward function.
@@ -410,7 +420,7 @@ def compute_layer_gradients_and_eval(
 
 
 def construct_neuron_grad_fn(
-    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False,
+    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
 ):
     def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
