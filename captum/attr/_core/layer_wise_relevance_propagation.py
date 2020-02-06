@@ -21,7 +21,7 @@ from .._utils.gradient import (
     compute_gradients,
     _forward_layer_eval,
 )
-from .._utils.lrp_rules import PropagationRule, Z_Rule, PropagationRule_ManipulateModules
+from .._utils.lrp_rules import PropagationRule, Z_Rule, PropagationRule_ManipulateModules, Alpha1_Beta0_Rule
 
 
 class LRP(Attribution):
@@ -300,16 +300,7 @@ class LRP(Attribution):
             # if isinstance(layer, torch.nn.MaxPool2d):
             #    layer = torch.nn.AvgPool2d(layer.kernel_size)
             # Propagate relevance for Conv2D, Linear and Pooling
-            if isinstance(
-                layer,
-                (
-                    torch.nn.MaxPool2d,
-                    torch.nn.Conv2d,
-                    torch.nn.AvgPool2d,
-                    torch.nn.AdaptiveAvgPool2d,
-                    torch.nn.Linear,
-                ),
-            ):
+            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
                 if self.verbose:
                     print(f"\nRelevance propagated over {layer} with manipulation.")
                 forward_handle = layer.register_forward_hook(rule.forward_hook)
@@ -328,6 +319,7 @@ class LRP(Attribution):
                 )
                 self.backward_handles.append(backward_handle)
 
+
     def _forward_hook(self, module, input, output):
         # setattr(module, 'activations', *input)
         self.layers.append(module)
@@ -335,16 +327,7 @@ class LRP(Attribution):
     def _register_weight_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             if hasattr(rule, "forward_hook_weights"):
-                if isinstance(
-                    layer,
-                    (
-                        torch.nn.MaxPool2d,
-                        torch.nn.Conv2d,
-                        torch.nn.AvgPool2d,
-                        torch.nn.AdaptiveAvgPool2d,
-                        torch.nn.Linear,
-                    ),
-                ):
+                if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
                     forward_handle = layer.register_forward_hook(
                         rule.forward_hook_weights
                     )
@@ -353,16 +336,7 @@ class LRP(Attribution):
     def _register_pre_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             if hasattr(rule, "forward_hook_weights"):
-                if isinstance(
-                    layer,
-                    (
-                        torch.nn.MaxPool2d,
-                        torch.nn.Conv2d,
-                        torch.nn.AvgPool2d,
-                        torch.nn.AdaptiveAvgPool2d,
-                        torch.nn.Linear,
-                    ),
-                ):
+                if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
                     forward_handle = layer.register_forward_pre_hook(
                         rule.forward_pre_hook_activations
                     )
@@ -409,11 +383,11 @@ class LRP(Attribution):
         else:
             return relevances
 
-class LRP_0(LRP):
-    """
-    LRP class, which uses the base rule for every layer.
-    """
+SUPPORTED_LINEAR_LAYERS = {
+    torch.nn.MaxPool2d: Alpha1_Beta0_Rule,
+    torch.nn.Conv2d: Alpha1_Beta0_Rule,
+    torch.nn.AvgPool2d: Alpha1_Beta0_Rule,
+    torch.nn.AdaptiveAvgPool2d: Alpha1_Beta0_Rule,
+    torch.nn.Linear: Alpha1_Beta0_Rule,
+    }
 
-    def __init__(self, forward_func):
-        rules = repeat(BasicRule(), 1000)
-        super(LRP_0, self).__init__(forward_func, rules)
