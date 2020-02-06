@@ -226,8 +226,6 @@ class FeatureAblation(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        # Computes initial evaluation with all features, which is compared
-        # to each ablated result.
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
@@ -239,6 +237,8 @@ class FeatureAblation(PerturbationAttribution):
             isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
         with torch.no_grad():
+            # Computes initial evaluation with all features, which is compared
+            # to each ablated result.
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
