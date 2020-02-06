@@ -21,7 +21,12 @@ from .._utils.gradient import (
     compute_gradients,
     _forward_layer_eval,
 )
-from .._utils.lrp_rules import PropagationRule, Z_Rule, PropagationRule_ManipulateModules, Alpha1_Beta0_Rule
+from .._utils.lrp_rules import (
+    PropagationRule,
+    Z_Rule,
+    PropagationRule_ManipulateModules,
+    Alpha1_Beta0_Rule,
+)
 
 
 class LRP(Attribution):
@@ -170,12 +175,14 @@ class LRP(Attribution):
         output = _run_forward(self.model, inputs, target, additional_forward_args)
         gradient_mask = apply_gradient_requirements(inputs)
 
-        self._change_weights(inputs) # 1. Forward pass
+        self._change_weights(inputs)  # 1. Forward pass
         self._register_forward_hooks()
-        relevances = compute_gradients(self.model, inputs, target_ind=target) # 2. Forward pass + backward pass
+        relevances = compute_gradients(
+            self.model, inputs, target_ind=target
+        )  # 2. Forward pass + backward pass
 
         relevances = tuple(
-            relevance * input * output  for relevance, input in zip(relevances, inputs)
+            relevance * input * output for relevance, input in zip(relevances, inputs)
         )
 
         self._remove_backward_hooks()
@@ -319,11 +326,6 @@ class LRP(Attribution):
                 )
                 self.backward_handles.append(backward_handle)
 
-
-    def _forward_hook(self, module, input, output):
-        # setattr(module, 'activations', *input)
-        self.layers.append(module)
-
     def _register_weight_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             if hasattr(rule, "forward_hook_weights"):
@@ -344,12 +346,6 @@ class LRP(Attribution):
 
     def _change_weights(self, inputs):
         if self.changes_weights:
-            # 1st pass
-            #self._register_activation_hooks()
-            #_ = _run_forward(self.model, inputs)
-            #self._remove_forward_hooks()
-            # 2nd pass
-            print("REGISTER WEIGHT HOOKS")
             self._register_weight_hooks()
             _ = _run_forward(self.model, inputs)
             self._remove_forward_hooks()
@@ -383,11 +379,12 @@ class LRP(Attribution):
         else:
             return relevances
 
+
 SUPPORTED_LINEAR_LAYERS = {
     torch.nn.MaxPool2d: Alpha1_Beta0_Rule,
     torch.nn.Conv2d: Alpha1_Beta0_Rule,
     torch.nn.AvgPool2d: Alpha1_Beta0_Rule,
     torch.nn.AdaptiveAvgPool2d: Alpha1_Beta0_Rule,
     torch.nn.Linear: Alpha1_Beta0_Rule,
-    }
+}
 

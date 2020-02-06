@@ -18,7 +18,7 @@ class PropagationRule:
         """Function that registers backward hooks on input and output
         tensors of linear layers in the model."""
         module.outputs = outputs.data
-        #print(f"Initial output: {torch.sum(outputs.data)}")
+        # print(f"Initial output: {torch.sum(outputs.data)}")
         input_hook = self._create_backward_hook_input(inputs[0].data)
         output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_input_hook = inputs[0].register_hook(input_hook)
@@ -31,22 +31,24 @@ class PropagationRule:
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output[0] * module.outputs
-        #print(f"Intermediate relevance: {torch.sum(module.relevance)}")
+        # print(f"Intermediate relevance: {torch.sum(module.relevance)}")
 
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
-            #print("run input hook")
+            # print("run input hook")
             return grad * inputs
+
         return _backward_hook_input
 
     def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
-            #print("run output hook")
+            # print("run output hook")
             return grad / (outputs + self.STABILITY_FACTOR)
+
         return _backward_hook_output
 
-class PropagationRule_ManipulateModules(PropagationRule):
 
+class PropagationRule_ManipulateModules(PropagationRule):
     def __init__(self, set_bias_to_zero=False):
         self.set_bias_to_zero = set_bias_to_zero
 
@@ -89,7 +91,6 @@ class Z_Rule(EpsilonRule):
     """
 
 
-
 class GammaRule(PropagationRule_ManipulateModules):
     """
     Gamma rule for relevance propagation, gives more importance to
@@ -111,10 +112,10 @@ class GammaRule(PropagationRule_ManipulateModules):
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
             )
-            print("register weight hook")
         if self.set_bias_to_zero and hasattr(module, "bias"):
             if module.bias is not None:
                 module.bias.data = torch.zeros_like(module.bias.data)
+
 
 class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
     """
@@ -138,6 +139,8 @@ class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
 
 class zB_Rule(PropagationRule):
     """
+    Attention: Implementation is not using hooks!
+
     Propagation rule for pixel layers (first layer).
     If image is normalized, the mean and std need to be given.
 
@@ -213,10 +216,7 @@ def suggested_rules(model):
     if model == "vgg16":
         layer0 = [zB_Rule(0, 1, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
         layers1_16 = [GammaRule() for i in range(16)]
-        layers17_30 = [
-            EpsilonRule()
-            for i in range(14)
-        ]
+        layers17_30 = [EpsilonRule() for i in range(14)]
         layers31_38 = [EpsilonRule() for i in range(8)]
         rules = layer0 + layers1_16 + layers17_30 + layers31_38
     else:
