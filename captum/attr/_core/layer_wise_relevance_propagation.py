@@ -2,7 +2,7 @@
 
 from itertools import repeat
 import warnings
-
+import copy
 import torch
 import torch.nn as nn
 import torch.onnx
@@ -21,7 +21,7 @@ from .._utils.gradient import (
     compute_gradients,
     _forward_layer_eval,
 )
-from .._utils.lrp_rules import PropagationRule, Z_Rule
+from .._utils.lrp_rules import PropagationRule, Z_Rule, PropagationRule_ManipulateModules
 
 
 class LRP(Attribution):
@@ -39,15 +39,8 @@ class LRP(Attribution):
         self.layers = []
         self._get_layers(model)
         self.changes_weights = False
-
-        for rule in rules:
-            if not isinstance(rule, PropagationRule) and rule is not None:
-                raise TypeError(
-                    "Please select propagation rules inherited from class PropagationRule"
-                )
-            if hasattr(rule, "forward_hook_weights"):
-                self.changes_weights = True
         self.rules = rules
+        self._check_rules()
         super(LRP, self).__init__(model)
 
     def attribute(
@@ -163,21 +156,24 @@ class LRP(Attribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
+        if self.changes_weights:
+            self.model = copy.deepcopy(self.model)
+            self.layers = []
+            self._get_layers(self.model)
         self.return_for_all_layers = return_for_all_layers
         self.verbose = verbose
         self.backward_handles = list()
         self.forward_handles = list()
+
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
+        output = _run_forward(self.model, inputs, target, additional_forward_args)
         gradient_mask = apply_gradient_requirements(inputs)
 
+        self._change_weights(inputs) # 1. Forward pass
         self._register_forward_hooks()
+        relevances = compute_gradients(self.model, inputs, target_ind=target) # 2. Forward pass + backward pass
 
-        self._change_weights(inputs)
-
-        relevances = compute_gradients(self.model, inputs, target_ind=target)
-
-        output = _run_forward(self.model, inputs, target, additional_forward_args)
         relevances = tuple(
             relevance * input * output  for relevance, input in zip(relevances, inputs)
         )
@@ -288,6 +284,14 @@ class LRP(Attribution):
             else:
                 self._get_layers(layer)
 
+    def _check_rules(self):
+        for rule in self.rules:
+            if not isinstance(rule, PropagationRule) and rule is not None:
+                raise TypeError(
+                    "Please select propagation rules inherited from class PropagationRule"
+                )
+            if isinstance(rule, PropagationRule_ManipulateModules):
+                self.changes_weights = True
 
     def _register_forward_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
@@ -346,10 +350,37 @@ class LRP(Attribution):
                     )
                     self.forward_handles.append(forward_handle)
 
+    def _register_pre_hooks(self):
+        for layer, rule in zip(self.layers, self.rules):
+            if hasattr(rule, "forward_hook_weights"):
+                if isinstance(
+                    layer,
+                    (
+                        torch.nn.MaxPool2d,
+                        torch.nn.Conv2d,
+                        torch.nn.AvgPool2d,
+                        torch.nn.AdaptiveAvgPool2d,
+                        torch.nn.Linear,
+                    ),
+                ):
+                    forward_handle = layer.register_forward_pre_hook(
+                        rule.forward_pre_hook_activations
+                    )
+                    self.forward_handles.append(forward_handle)
+
     def _change_weights(self, inputs):
         if self.changes_weights:
+            # 1st pass
+            #self._register_activation_hooks()
+            #_ = _run_forward(self.model, inputs)
+            #self._remove_forward_hooks()
+            # 2nd pass
+            print("REGISTER WEIGHT HOOKS")
             self._register_weight_hooks()
             _ = _run_forward(self.model, inputs)
+            self._remove_forward_hooks()
+            # pre_hooks for 3rd pass
+            self._register_pre_hooks()
 
     def _remove_forward_hooks(self):
         for forward_handle in self.forward_handles:

@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 
-class PropagationRule(object):
+class PropagationRule:
     """
     Abstract class as basis for all propagation rule classes.
     STABILITY_FACTOR is used for assuring that no zero divison occurs.
@@ -18,6 +18,7 @@ class PropagationRule(object):
         """Function that registers backward hooks on input and output
         tensors of linear layers in the model."""
         module.outputs = outputs.data
+        #print(f"Initial output: {torch.sum(outputs.data)}")
         input_hook = self._create_backward_hook_input(inputs[0].data)
         output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_input_hook = inputs[0].register_hook(input_hook)
@@ -30,13 +31,37 @@ class PropagationRule(object):
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output[0] * module.outputs
-        # print(torch.sum(module.relevance))
+        #print(f"Intermediate relevance: {torch.sum(module.relevance)}")
 
     def _create_backward_hook_input(self, inputs):
-        raise NotImplementedError
+        def _backward_hook_input(grad):
+            #print("run input hook")
+            return grad * inputs
+        return _backward_hook_input
 
     def _create_backward_hook_output(self, outputs):
+        def _backward_hook_output(grad):
+            #print("run output hook")
+            return grad / (outputs + self.STABILITY_FACTOR)
+        return _backward_hook_output
+
+class PropagationRule_ManipulateModules(PropagationRule):
+
+    def __init__(self, set_bias_to_zero=False):
+        self.set_bias_to_zero = set_bias_to_zero
+
+    def forward_hook_weights(self, module, inputs, outputs):
+        """Save initial activations a_j before modules are changed"""
+        module.activation = inputs[0].data
+        self._manipulate_weights(module, inputs, outputs)
+
+    def _manipulate_weights(self, module, inputs, outputs):
         raise NotImplementedError
+
+    def forward_pre_hook_activations(self, module, inputs):
+        """Pass initial activations to graph generation pass"""
+        inputs[0].data = module.activation.data
+        return inputs
 
 
 class EpsilonRule(PropagationRule):
@@ -52,87 +77,20 @@ class EpsilonRule(PropagationRule):
     """
 
     def __init__(self, epsilon=1e-9):
-        self.epsilon = epsilon
-
-    def _create_backward_hook_input(self, inputs):
-        def _backward_hook_input(grad):
-            return grad * inputs
-
-        return _backward_hook_input
-
-    def _create_backward_hook_output(self, outputs):
-        def _backward_hook_output(grad):
-            return grad / (outputs + self.epsilon)
-
-        return _backward_hook_output
+        self.STABILITY_FACTOR = epsilon
 
 
 class Z_Rule(EpsilonRule):
     """
     Basic rule for relevance propagation, also called LRP-0,
     see Montavon et al. Explainable AI book.
-    Implemented using the EpsilonRhoRule.
 
     Use for upper layers.
     """
 
-    def __init__(self):
-        super(Z_Rule, self).__init__(epsilon=1e-9)
 
 
-class EpsilonRhoRule(PropagationRule):
-    """
-    General propagation rule which is basis for many special cases.
-    Implementation of epsilon-rho-rule according to Montavon et al.
-    in Explainable AI book
-
-    Args:
-        rho (callable): Function by which the layer weights and bias is manipulated
-            during propagation.
-            Example:
-                def _rho_function(tensor_input):
-                    tensor_positive = torch.clamp(tensor_input, min=0)
-                    tensor_output = tensor_input + (0.25 * tensor_positive)
-                    return tensor_output
-        epsilon (callable): Function to manipulate z-values during propagation
-            example: lambda z: z + 1e-9
-    """
-
-    def __init__(
-        self, rho=lambda p: p, epsilon=lambda z: z + PropagationRule.STABILITY_FACTOR
-    ):
-        self.epsilon = epsilon
-        self.rho = rho
-
-    def propagate(self, layer, grad_input, relevance):
-        # designed as backward hook
-        activations = (layer.activations.data).requires_grad_(False)
-        del layer.activations
-
-        layer_copy = copy.deepcopy(layer)
-        layer_rho = layer_copy  # = self._apply_rho(layer_copy)
-        torch.set_grad_enabled(False)
-        z = layer_rho(activations)  # self.epsilon(layer_rho.forward(activations))
-        s = relevance[0] / z
-        # (z * s).sum().backward()
-        c = z.backward(s)
-        # c = activations.grad
-        propagated_relevance = (activations * c).data
-
-        grad_input[0] = propagated_relevance
-        return grad_input
-
-    def _apply_rho(self, layer):
-        if hasattr(layer, "weight") and layer.weight is not None:
-            new_weights = self.rho(layer.weight.data)
-            layer.weight.data = new_weights
-        if hasattr(layer, "bias") and layer.bias is not None:
-            new_bias = self.rho(layer.bias.data)
-            layer.bias.data = new_bias
-        return layer
-
-
-class GammaRule(Z_Rule):
+class GammaRule(PropagationRule_ManipulateModules):
     """
     Gamma rule for relevance propagation, gives more importance to
     positive relevance.
@@ -148,14 +106,17 @@ class GammaRule(Z_Rule):
         super(GammaRule, self).__init__()
         self.gamma = gamma
 
-    def forward_hook_weights(self, module, inputs, outputs):
+    def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
             )
+            print("register weight hook")
+        if self.set_bias_to_zero and hasattr(module, "bias"):
+            if module.bias is not None:
+                module.bias.data = torch.zeros_like(module.bias.data)
 
-
-class Alpha1_Beta0_Rule(Z_Rule):
+class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
     """
     Alpha1_Beta0 rule for relevance backpropagation, also known
     as Deep-Taylor. Only positive relevance is propagated, resulting
@@ -167,9 +128,12 @@ class Alpha1_Beta0_Rule(Z_Rule):
     def __init__(self):
         super(Alpha1_Beta0_Rule, self).__init__()
 
-    def forward_hook_weights(self, module, inputs, outputs):
+    def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):
             module.weight.data = module.weight.data.clamp(min=0)
+        if self.set_bias_to_zero and hasattr(module, "bias"):
+            if module.bias is not None:
+                module.bias.data = torch.zeros_like(module.bias.data)
 
 
 class zB_Rule(PropagationRule):
@@ -248,14 +212,12 @@ def suggested_rules(model):
     """
     if model == "vgg16":
         layer0 = [zB_Rule(0, 1, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
-        layers1_16 = [GammaRule(gamma=0.25) for i in range(16)]
+        layers1_16 = [GammaRule() for i in range(16)]
         layers17_30 = [
-            EpsilonRule(
-                epsilon=lambda z: z + 1e-9 + 0.25 * ((z ** 2).mean() ** 0.5).data
-            )
+            EpsilonRule()
             for i in range(14)
         ]
-        layers31_38 = [EpsilonRule(epsilon=lambda z: z + 1e-9) for i in range(8)]
+        layers31_38 = [EpsilonRule() for i in range(8)]
         rules = layer0 + layers1_16 + layers17_30 + layers31_38
     else:
         raise NotImplementedError("No suggested rules for given model")
