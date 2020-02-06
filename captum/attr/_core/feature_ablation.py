@@ -31,8 +31,8 @@ class FeatureAblation(PerturbationAttribution):
         self.use_weights = False
 
     def attribute(
-        self,
         # type:ignore
+        self,
         inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
@@ -224,6 +224,10 @@ class FeatureAblation(PerturbationAttribution):
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
         """
+        # Keeps track whether original input is a tuple or not before
+        # converting it into a tuple.
+        # Computes initial evaluation with all features, which is compared
+        # to each ablated result.
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
@@ -235,23 +239,6 @@ class FeatureAblation(PerturbationAttribution):
             isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
         ), "Ablations per evaluation must be at least 1."
         with torch.no_grad():
-            # Keeps track whether original input is a tuple or not before
-            # converting it into a tuple.
-            # is_inputs_tuple = isinstance(inputs, tuple)
-            # inputs, baselines = _format_input_baseline(inputs, baselines)
-            # additional_forward_args = _format_additional_forward_args(
-            #     additional_forward_args
-            # )
-            # num_examples = inputs[0].shape[0]
-            # feature_mask = (
-            #     _format_input(feature_mask) if feature_mask is not None else None
-            # )
-            # assert (
-            #     isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
-            # ), "Ablations per evaluation must be at least 1."
-
-            # Computes initial evaluation with all features, which is compared
-            # to each ablated result.
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
@@ -279,6 +266,7 @@ class FeatureAblation(PerturbationAttribution):
                     and initial_eval[0].numel() == 1
                 ), "Target should identify a single element in the model output."
                 initial_eval = initial_eval.reshape(1, num_examples)
+
             # Initialize attribution totals and counts
             attrib_type = cast(
                 dtype,
@@ -292,6 +280,7 @@ class FeatureAblation(PerturbationAttribution):
                 )
                 for input in inputs
             ]
+
             # Weights are used in cases where ablations may be overlapping.
             if self.use_weights:
                 weights = [
