@@ -26,18 +26,25 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.neuron.neuron_guided_backprop_deconvnet</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
+<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensors</span>
 <span class="kn">from</span> <span class="nn">..guided_backprop_deconvnet</span> <span class="kn">import</span> <span class="n">GuidedBackprop</span><span class="p">,</span> <span class="n">Deconvolution</span>
 
 
 <div class="viewcode-block" id="NeuronDeconvolution"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeconvolution">[docs]</a><span class="k">class</span> <span class="nc">NeuronDeconvolution</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
-<span class="sd">            layer (torch.nn.Module): Layer for which attributions are computed.</span>
+<span class="sd">            model (Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            layer (Module): Layer for which attributions are computed.</span>
 <span class="sd">                          Output size of attribute matches this layer's input or</span>
 <span class="sd">                          output dimensions, depending on whether we attribute to</span>
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
@@ -58,11 +65,11 @@
 
 <div class="viewcode-block" id="NeuronDeconvolution.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeconvolution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">neuron_index</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
+        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
 <span class="sd">        Computes attribution of the given neuron using deconvolution.</span>
 <span class="sd">        Deconvolution computes the gradient of the target output with</span>
@@ -157,12 +164,14 @@
 
 
 <div class="viewcode-block" id="NeuronGuidedBackprop"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop">[docs]</a><span class="k">class</span> <span class="nc">NeuronGuidedBackprop</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
-<span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
-<span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
+<span class="sd">            model (Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            layer (Module): Layer for which neuron attributions are computed.</span>
 <span class="sd">                          Attributions for a particular neuron in the output of</span>
 <span class="sd">                          this layer are computed using the argument neuron_index</span>
 <span class="sd">                          in the attribute method.</span>
@@ -180,11 +189,11 @@
 
 <div class="viewcode-block" id="NeuronGuidedBackprop.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">neuron_index</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
+        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
 <span class="sd">        Computes attribution of the given neuron using guided backpropagation.</span>
 <span class="sd">        Guided backpropagation computes the gradient of the target neuron</span>

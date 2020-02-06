@@ -42,6 +42,9 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.gradient</span> <span class="kn">import</span> <span class="n">compute_gradients</span>
 
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
+
 
 <div class="viewcode-block" id="Attribution"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.Attribution">[docs]</a><span class="k">class</span> <span class="nc">Attribution</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
@@ -381,7 +384,12 @@
 <span class="sd">        """</span>
         <span class="n">InternalAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="n">layer_attribution</span><span class="p">,</span> <span class="n">interpolate_dims</span><span class="p">,</span> <span class="n">interpolate_mode</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">):</span>
+<div class="viewcode-block" id="LayerAttribution.interpolate"><a class="viewcode-back" href="../../../../base_classes.html#captum.attr.LayerAttribution.interpolate">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span>
+        <span class="n">layer_attribution</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">interpolate_dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">interpolate_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Interpolates given 3D, 4D or 5D layer attribution to given dimensions.</span>
 <span class="sd">        This is often utilized to upsample the attribution of a convolutional layer</span>
