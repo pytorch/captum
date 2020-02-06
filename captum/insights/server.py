@@ -36,7 +36,9 @@ def namedtuple_to_dict(obj):
 
 @app.route("/attribute", methods=["POST"])
 def attribute():
-    r = request.json
+    # force=True needed for Colab notebooks, which doesn't use the correct
+    # Content-Type header when forwarding requests through the Colab proxy
+    r = request.get_json(force=True)
     return jsonify(
         namedtuple_to_dict(
             visualizer._calculate_attribution_from_cache(r["instance"], r["labelIndex"])
@@ -46,7 +48,8 @@ def attribute():
 
 @app.route("/fetch", methods=["POST"])
 def fetch():
-    visualizer._update_config(request.json)
+    # force=True needed, see comment for "/attribute" route above
+    visualizer._update_config(request.get_json(force=True))
     visualizer_output = visualizer.visualize()
     clean_output = namedtuple_to_dict(visualizer_output)
     return jsonify(clean_output)

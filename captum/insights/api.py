@@ -14,9 +14,6 @@ from typing import (
 )
 
 import torch
-from torch import Tensor
-from torch.nn import Module
-
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward, safe_div
@@ -26,6 +23,54 @@ from captum.insights.config import (
 )
 from captum.insights.features import BaseFeature
 from captum.insights.server import namedtuple_to_dict
+from torch import Tensor
+from torch.nn import Module
+
+
+_CONTEXT_COLAB = "_CONTEXT_COLAB"
+_CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
+_CONTEXT_NONE = "_CONTEXT_NONE"
+
+
+def _get_context():
+    """Determine the most specific context that we're in.
+    Implementation from TensorBoard: https://git.io/JvObD.
+
+    Returns:
+    _CONTEXT_COLAB: If in Colab with an IPython notebook context.
+    _CONTEXT_IPYTHON: If not in Colab, but we are in an IPython notebook
+      context (e.g., from running `jupyter notebook` at the command
+      line).
+    _CONTEXT_NONE: Otherwise (e.g., by running a Python script at the
+      command-line or using the `ipython` interactive shell).
+    """
+    # In Colab, the `google.colab` module is available, but the shell
+    # returned by `IPython.get_ipython` does not have a `get_trait`
+    # method.
+    try:
+        import google.colab  # noqa: F401
+        import IPython
+    except ImportError:
+        pass
+    else:
+        if IPython.get_ipython() is not None:
+            # We'll assume that we're in a Colab notebook context.
+            return _CONTEXT_COLAB
+
+    # In an IPython command line shell or Jupyter notebook, we can
+    # directly query whether we're in a notebook context.
+    try:
+        import IPython
+    except ImportError:
+        pass
+    else:
+        ipython = IPython.get_ipython()
+        if ipython is not None and ipython.has_trait("kernel"):
+            return _CONTEXT_IPYTHON
+
+    # Otherwise, we're not in a known notebook context.
+    return _CONTEXT_NONE
+
 
 OutputScore = namedtuple("OutputScore", "score index label")
 VisualizationOutput = namedtuple(
@@ -196,19 +241,78 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self, debug=True):
+    def render(self):
         from IPython.display import display
         from captum.insights.widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
-        if debug:
-            display(widget.out)
 
     def serve(self, blocking=False, debug=False, port=None):
+        context = _get_context()
+        if context == _CONTEXT_COLAB:
+            self._serve_colab(blocking=blocking, debug=debug, port=port)
+        else:
+            self._serve(blocking=blocking, debug=debug, port=port)
+
+    def _serve(self, blocking=False, debug=False, port=None):
         from captum.insights.server import start_server
 
         start_server(self, blocking=blocking, debug=debug, _port=port)
+
+    def _serve_colab(self, blocking=False, debug=False, port=None):
+        from IPython.display import display, HTML
+        from captum.insights.server import start_server
+        import ipywidgets as widgets
+
+        # TODO: Output widget only captures beginning of server logs. It seems
+        # the context manager isn't respected when the web server is run on a
+        # separate thread. We should fix to display entirety of the logs
+        out = widgets.Output()
+        with out:
+            port = start_server(self, blocking=blocking, debug=debug, _port=port)
+        shell = """
+            <div id="root"></div>
+            <script>
+            (function() {
+              document.querySelector("base").href = "http://localhost:%PORT%";
+              function reloadScriptsAndCSS(root) {
+                // Referencing TensorBoard's method for reloading scripts,
+                // we remove and reinsert each script
+                for (const script of root.querySelectorAll("script")) {
+                  const newScript = document.createElement("script");
+                  newScript.type = script.type;
+                  if (script.src) {
+                    newScript.src = script.src;
+                  }
+                  if (script.textContent) {
+                    newScript.textContent = script.textContent;
+                  }
+                  root.appendChild(newScript);
+                  script.remove();
+                }
+                // A similar method is used to reload styles
+                for (const link of root.querySelectorAll("link")) {
+                  const newLink = document.createElement("link");
+                  newLink.rel = link.rel;
+                  newLink.href = link.href;
+                  document.querySelector("head").appendChild(newLink);
+                  link.remove();
+                }
+              }
+              const root = document.getElementById("root");
+              fetch(".")
+                .then(x => x.text())
+                .then(html => void (root.innerHTML = html))
+                .then(() => reloadScriptsAndCSS(root));
+            })();
+            </script>
+        """.replace(
+            "%PORT%", str(port)
+        )
+        html = HTML(shell)
+        display(html)
+        display(out)
 
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
