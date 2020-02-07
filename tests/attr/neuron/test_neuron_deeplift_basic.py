@@ -13,7 +13,7 @@ from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
 
-from typing import Optional, Tuple, Union, Any
+from typing import Optional, Tuple, Union
 from torch import Tensor
 from captum.attr._utils.typing import TensorOrTupleOfTensors
 
@@ -120,7 +120,7 @@ class Test(BaseTest):
 
     def _relu_custom_attr_func_assert(
         self,
-        attr_method: Any,
+        attr_method: Union[NeuronDeepLift, NeuronDeepLiftShap],
         inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
@@ -128,12 +128,10 @@ class Test(BaseTest):
         expected,
     ) -> None:
         def custom_attr_func(
-            multipliers: TensorOrTupleOfTensors,
-            inputs: TensorOrTupleOfTensors,
-            baselines: Optional[
-                Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-            ] = None,
-        ) -> TensorOrTupleOfTensors:
+            multipliers: Tuple[Tensor, ...],
+            inputs: Tuple[Tensor, ...],
+            baselines: Optional[Tuple[Union[Tensor, int, float], ...]] = None,
+        ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
         attr = attr_method.attribute(
