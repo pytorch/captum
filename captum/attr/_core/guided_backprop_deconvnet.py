@@ -2,7 +2,7 @@
 import warnings
 import torch
 import torch.nn.functional as F
-from typing import Callable, Any, List, Union, Tuple, Optional
+from typing import Any, List, Union, Tuple, Optional
 
 from torch import Tensor
 from torch.nn import Module
@@ -31,12 +31,13 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         )
 
     def attribute(
-            self,
-            inputs: TensorOrTupleOfTensors,
-            target: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-            ] = None,
-            additional_forward_args: Any = None):
+        self,
+        inputs: TensorOrTupleOfTensors,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Computes attribution by overriding relu gradients. Based on constructor
         flag use_relu_grad_output, performs either GuidedBackpropagation if False
@@ -76,10 +77,11 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             self.backward_hooks.append(hook)
 
     def _backward_hook(
-            self,
-            module: Module,
-            grad_input: Union[Tensor, Tuple[Tensor, ...]],
-            grad_output: Union[Tensor, Tuple[Tensor, ...]]):
+        self,
+        module: Module,
+        grad_input: Union[Tensor, Tuple[Tensor, ...]],
+        grad_output: Union[Tensor, Tuple[Tensor, ...]],
+    ):
         to_override_grads = grad_output if self.use_relu_grad_output else grad_input
         if isinstance(to_override_grads, tuple):
             return tuple(
@@ -105,12 +107,13 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         )
 
     def attribute(
-            self,
-            inputs: TensorOrTupleOfTensors,
-            target: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-            ] = None,
-            additional_forward_args: Any = None):
+        self,
+        inputs: TensorOrTupleOfTensors,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Computes attribution using guided backpropagation. Guided backpropagation
         computes the gradient of the target output with respect to the input,
@@ -207,12 +210,13 @@ class Deconvolution(ModifiedReluGradientAttribution):
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
     def attribute(
-            self,
-            inputs: TensorOrTupleOfTensors,
-            target: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-            ] = None,
-            additional_forward_args: Any = None):
+        self,
+        inputs: TensorOrTupleOfTensors,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Computes attribution using deconvolution. Deconvolution
         computes the gradient of the target output with respect to the input,
