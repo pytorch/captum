@@ -34,9 +34,9 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        attribute_to_neuron_input: Optional[bool] = False,
-        custom_attribution_func: Optional[Callable] = None,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensors:
         r""""
         Implements DeepLIFT algorithm for the neuron based on the following paper:
@@ -216,13 +216,12 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                 int,
                 float,
                 Tensor,
-                Tuple[Union[Tensor, int, float], ...],
-                Callable[..., Tensor],
+                Tuple[Union[Tensor, int, float], ...]
             ]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        attribute_to_neuron_input: Optional[bool] = False,
-        custom_attribution_func: Optional[Callable] = None,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensors:
         r"""
         Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
