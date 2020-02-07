@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+import typing
+from typing import Optional, Tuple, Union, Any, List, Callable, cast
+
 import warnings
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 import numpy as np
 
@@ -24,12 +28,13 @@ from .._utils.common import (
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fn, outputs):
-    def is_output_cloned(output_fn, input_grad_fn):
+def _check_valid_module(inputs_grad_fn, outputs) -> bool:
+    def is_output_cloned(output_fn, input_grad_fn) -> bool:
         """
         Checks if the output has been cloned. This happens especially in case of
         layer deeplift.
@@ -55,7 +60,7 @@ def _check_valid_module(inputs_grad_fn, outputs):
 
 
 class DeepLift(GradientAttribution):
-    def __init__(self, model):
+    def __init__(self, model: nn.Module) -> None:
         r"""
         Args:
 
@@ -63,8 +68,49 @@ class DeepLift(GradientAttribution):
         """
         GradientAttribution.__init__(self, model)
         self.model = model
-        self.forward_handles = []
-        self.backward_handles = []
+        self.forward_handles: List[Any] = []
+        self.backward_handles: List[Any] = []
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[
+                int,
+                Tensor,
+                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
+                Tuple[Union[int, Tensor], ...],
+            ]
+        ] = None,
+        additional_forward_args: Any = None,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> TensorOrTupleOfTensors:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[
+                int,
+                Tensor,
+                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
+                Tuple[Union[int, Tensor], ...],
+            ]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        ...
 
     def attribute(
         self,
@@ -310,10 +356,10 @@ class DeepLift(GradientAttribution):
             forward_fn.device_ids = forward_func.device_ids
         return forward_fn
 
-    def _is_non_linear(self, module):
+    def _is_non_linear(self, module: nn.Module) -> bool:
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
-    def _forward_pre_hook_ref(self, module, inputs):
+    def _forward_pre_hook_ref(self, module: Any, inputs: TensorOrTupleOfTensors) -> None:
         inputs = _format_tensor_into_tuples(inputs)
         module.input_ref = tuple(input.clone().detach() for input in inputs)
 
@@ -403,10 +449,10 @@ class DeepLift(GradientAttribution):
 
         return multipliers
 
-    def satisfies_attribute_criteria(self, module):
+    def satisfies_attribute_criteria(self, module: nn.Module) -> bool:
         return hasattr(module, "input") and hasattr(module, "output")
 
-    def _can_register_hook(self, module):
+    def _can_register_hook(self, module) -> bool:
         # TODO find a better way of checking if a module is a container or not
         module_fullname = str(type(module))
         has_already_hooks = len(module._backward_hooks) > 0
@@ -416,7 +462,7 @@ class DeepLift(GradientAttribution):
             or not self._is_non_linear(module)
         )
 
-    def _register_hooks(self, module):
+    def _register_hooks(self, module: nn.Module) -> None:
         if not self._can_register_hook(module):
             return
         # adds forward hook to leaf nodes that are non-linear
@@ -427,7 +473,7 @@ class DeepLift(GradientAttribution):
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
 
-    def _remove_hooks(self):
+    def _remove_hooks(self) -> None:
         for forward_handle in self.forward_handles:
             forward_handle.remove()
         for backward_handle in self.backward_handles:
@@ -454,12 +500,12 @@ class DeepLift(GradientAttribution):
         else:
             return self.model.register_forward_pre_hook(pre_hook)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
 
 class DeepLiftShap(DeepLift):
-    def __init__(self, model):
+    def __init__(self, model: nn.Module) -> None:
         r"""
         Args:
 
@@ -672,7 +718,18 @@ class DeepLiftShap(DeepLift):
             return _format_attributions(is_inputs_tuple, attributions)
 
     def _expand_inputs_baselines_targets(
-        self, baselines, inputs, target, additional_forward_args
+        self,
+        baselines: Tuple[Tensor, ...],
+        inputs: Tuple[Tensor, ...],
+        target: Optional[
+            Union[
+                int,
+                Tensor,
+                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
+                Tuple[Union[int, Tensor], ...],
+            ]
+        ],
+        additional_forward_args: Any,
     ):
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
@@ -714,7 +771,7 @@ class DeepLiftShap(DeepLift):
         return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
 
 
-def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def nonlinear(module: nn.Module, inputs: Tensor, outputs: Tensor, grad_input: Tensor, grad_output: Tensor, eps: float=1e-10):
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
@@ -792,7 +849,7 @@ def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool(
-    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10,
+    module, pool_func, unpool_func, inputs, outputs, grad_inputs, grad_output, eps=1e-10,
 ):
     with torch.no_grad():
         input, input_ref = inputs.chunk(2)
@@ -858,7 +915,7 @@ def maxpool(
         return (new_grad_inp,)
 
 
-def _compute_diffs(inputs, outputs):
+def _compute_diffs(inputs: Tensor, outputs: Tensor) -> Tuple[Tensor, Tensor]:
     input, input_ref = inputs.chunk(2)
     # if the model is a single non-linear module and we apply Rescale rule on it
     # we might not be able to perform chunk-ing because the output of the module is
