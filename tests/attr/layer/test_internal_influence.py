@@ -171,7 +171,7 @@ class Test(BaseTest):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
             assertTensorTuplesAlmostEqual(
-                self, attributions, expected_activation, delta=0.01, mode="max"
+                self, attributions, expected_activation, delta=0.01, mode="max",
             )
 
 
