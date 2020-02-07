@@ -13,6 +13,7 @@ from .._utils.common import (
 from .noise_tunnel import NoiseTunnel
 from typing import Callable, Union, Optional, Tuple, List, Any
 from .._utils.typing import Tensor, TensorOrTupleOfTensors
+import typing
 
 
 class GradientShap(GradientAttribution):
@@ -25,14 +26,54 @@ class GradientShap(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tensor,
+        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Optional[bool] = False,
+    ) -> Tensor:
+        r"""
+        This is an overload method which returns a Tensor if input is Tensor.
+        i.e. not a "Tuple of Tensor"
+        """
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Optional[bool] = False,
+    ) -> Tuple[Tensor, ...]:
+        r"""
+        This is an overload method which returns a 'Tuple of Tensor'
+        if input is a 'Tuple of Tensor'.
+        """
+        ...
+
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
         baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
-        n_samples: Optional[int] = 5,
-        stdevs: Optional[Union[float, Tuple[float]]] = 0.0,
-        target: Optional[Union[int, Tuple, Tensor, List[Any]]] = None,
-        additional_forward_args: Optional[Any] = None,
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
         return_convergence_delta: Optional[bool] = False,
     ) -> TensorOrTupleOfTensors:
         r"""

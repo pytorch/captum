@@ -8,7 +8,7 @@ from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2, BasicLinearModel
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from typing import Union, Tuple, List, Any
+from typing import Union, Tuple, List
 from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensors
 
 
@@ -177,7 +177,7 @@ class Test(BaseTest):
 
     def _assert_shap_ig_comparision(
         self,
-        attributions1: Union[Tensor, Tuple[Any]],
+        attributions1: Union[Tensor, Tuple[Tensor, ...]],
         attributions2: TensorOrTupleOfTensors,
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
@@ -189,8 +189,8 @@ class Test(BaseTest):
 
 def _assert_attribution_delta(
     test: BaseTest,
-    inputs: Union[Tuple[Tensor], Tuple[Tensor, Tensor]],
-    attributions: Union[Tensor, Tuple[Any]],
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    attributions: Union[Tensor, Tuple[Tensor, ...]],
     n_samples: int,
     delta: Tensor,
     is_layer: bool = False,
