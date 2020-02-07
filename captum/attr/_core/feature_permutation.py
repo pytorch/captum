@@ -24,9 +24,7 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 
 class FeaturePermutation(FeatureAblation):
     def __init__(
-        self,
-        forward_func: Optional[Callable] = None,
-        perm_fn: Callable = _permute_feature,
+        self, forward_func: Callable, perm_fn: Callable = _permute_feature,
     ):
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_fn = perm_fn
