@@ -73,9 +73,7 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensors,
-        expected: Union[
-            Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]
-        ],
+        expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
         guided_backprop = GuidedBackprop(model)
@@ -91,9 +89,7 @@ class Test(BaseTest):
         layer: Module,
         neuron_index: Union[int, Tuple[int, ...]],
         test_input: TensorOrTupleOfTensors,
-        expected: Union[
-            Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]
-        ],
+        expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
         guided_backprop = NeuronGuidedBackprop(model, layer)
