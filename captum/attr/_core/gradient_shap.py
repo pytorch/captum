@@ -304,14 +304,14 @@ class InputBaselineXGradient(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
         target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
