@@ -274,7 +274,7 @@ class DeepLift(GradientAttribution):
         wrapped_forward_func = self._construct_forward_func(
             self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
-        gradients = self.gradient_func(wrapped_forward_func, inputs,)
+        gradients = self.gradient_func(wrapped_forward_func, inputs)
         if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
@@ -727,7 +727,7 @@ def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
     new_grad_inp[0] = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
 
     # If the module is invalid, save the newly computed gradients
@@ -742,7 +742,7 @@ def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
 
     new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
     # normalizing
     n = np.prod(grad_input[0].shape)
@@ -792,7 +792,7 @@ def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool(
-    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10,
+    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10
 ):
     with torch.no_grad():
         input, input_ref = inputs.chunk(2)
