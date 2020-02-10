@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 import torch
+from torch import Tensor
+from torch.nn import Module
+
+from typing import Union, Tuple, List, Any, Callable
 
 from ..helpers.utils import BaseTest
 
-from ..helpers.utils import assertTensorTuplesAlmostEqual
+from ..helpers.utils import assertTensorTuplesAlmostEqual, assertTensorAlmostEqual
 from ..helpers.classification_models import SoftmaxModel
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -12,12 +16,13 @@ from ..helpers.basic_models import (
 
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from ..test_gradient_shap import _assert_attribution_delta
 
 
 class Test(BaseTest):
-    def test_basic_multilayer(self):
+    def test_basic_multilayer(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         model.eval()
 
@@ -27,7 +32,7 @@ class Test(BaseTest):
 
         self._assert_attributions(model, model.linear2, inputs, baselines, 0, expected)
 
-    def test_basic_multi_tensor_output(self):
+    def test_basic_multi_tensor_output(self) -> None:
         model = BasicModel_MultiLayer(multi_input_module=True)
         model.eval()
 
@@ -43,7 +48,7 @@ class Test(BaseTest):
             n_samples=5,
         )
 
-    def test_basic_multilayer_with_add_args(self):
+    def test_basic_multilayer_with_add_args(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         model.eval()
 
@@ -56,7 +61,7 @@ class Test(BaseTest):
             model, model.linear2, inputs, baselines, 0, expected, add_args=add_args
         )
 
-    def test_basic_multilayer_compare_w_inp_features(self):
+    def test_basic_multilayer_compare_w_inp_features(self) -> None:
         model = BasicModel_MultiLayer()
         model.eval()
 
@@ -79,7 +84,7 @@ class Test(BaseTest):
             attribute_to_layer_input=True,
         )
 
-    def test_classification(self):
+    def test_classification(self) -> None:
         def custom_baseline_fn(inputs):
             num_in = inputs.shape[1]
             return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
@@ -99,7 +104,7 @@ class Test(BaseTest):
             model, model.relu1, inputs, baselines, 1, expected, n_samples=n_samples
         )
 
-    def test_basic_multi_input(self):
+    def test_basic_multi_input(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
 
         inputs = (torch.tensor([[10.0, 20.0, 10.0]]), torch.tensor([[1.0, 2.0, 1.0]]))
@@ -112,21 +117,28 @@ class Test(BaseTest):
 
     def _assert_attributions(
         self,
-        model,
-        layer,
-        inputs,
-        baselines,
-        target,
-        expected,
-        expected_delta=None,
-        n_samples=5,
-        attribute_to_layer_input=False,
-        add_args=None,
-    ):
+        model: Module,
+        layer: Module,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable],
+        target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]],
+        expected: Union[
+            Tensor,
+            Tuple[Tensor, ...],
+            List[float],
+            List[List[float]],
+            Tuple[List[float], ...],
+            Tuple[List[List[float]], ...],
+        ],
+        expected_delta: Tensor = None,
+        n_samples: int = 5,
+        attribute_to_layer_input: bool = False,
+        add_args: Any = None,
+    ) -> None:
         lgs = LayerGradientShap(model, layer)
         attrs, delta = lgs.attribute(
             inputs,
-            baselines=baselines,
+            baselines,
             target=target,
             additional_forward_args=add_args,
             n_samples=n_samples,
@@ -134,11 +146,9 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertTensorTuplesAlmostEqual(
-            self, attrs, expected, delta=0.005,
-        )
+        assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
         if expected_delta is None:
             _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)
         else:
             for delta_i, expected_delta_i in zip(delta, expected_delta):
-                self.assertAlmostEqual(delta_i, expected_delta_i, delta=0.01)
+                assertTensorAlmostEqual(self, delta_i, expected_delta_i, delta=0.01)
