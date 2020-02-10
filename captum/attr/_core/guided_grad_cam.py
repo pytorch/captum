@@ -197,7 +197,7 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        output_attr = []
+        output_attr: List[Any] = []
         for i in range(len(inputs)):
             try:
                 output_attr.append(
@@ -213,5 +213,6 @@ class GuidedGradCam(GradientAttribution):
                     "Couldn't appropriately interpolate GradCAM attributions for "
                     "some input tensors, returning None for corresponding attributions."
                 )
+                output_attr.append(None)
 
         return _format_attributions(is_inputs_tuple, tuple(output_attr))
