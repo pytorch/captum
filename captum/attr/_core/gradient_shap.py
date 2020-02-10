@@ -37,7 +37,7 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: Optional[bool] = False,
+        return_convergence_delta: bool = False,
     ) -> Tensor:
         r"""
         This is an overload method which returns a Tensor if input is Tensor.
@@ -56,7 +56,7 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: Optional[bool] = False,
+        return_convergence_delta: bool = False,
     ) -> Tuple[Tensor, ...]:
         r"""
         This is an overload method which returns a 'Tuple of Tensor'
@@ -74,7 +74,7 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: Optional[bool] = False,
+        return_convergence_delta: bool = False,
     ) -> TensorOrTupleOfTensors:
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
@@ -276,15 +276,41 @@ class InputBaselineXGradient(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tensor,
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Tensor:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Tuple[Tensor, ...]:
+        ...
+
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Optional[Union[int, Tuple, Tensor, List[Any]]] = None,
-        additional_forward_args: Optional[Any] = None,
-        return_convergence_delta: Optional[bool] = False,
+        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
     ) -> TensorOrTupleOfTensors:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
