@@ -134,7 +134,9 @@ class Test(BaseTest):
             return_convergence_delta=True,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        assertTensorTuplesAlmostEqual(self, attrs, expected, delta=0.005)
+        assertTensorTuplesAlmostEqual(
+            self, attrs, expected, delta=0.005,
+        )
         if expected_delta is None:
             _assert_attribution_delta(self, inputs, attrs, n_samples, delta, True)
         else:

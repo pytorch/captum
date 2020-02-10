@@ -51,7 +51,7 @@ class NoiseTunnel(Attribution):
         stdevs: Union[float, Tuple[float, ...]] = 1.0,
         draw_baseline_from_distrib: bool = False,
         **kwargs: Any
-    ):
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
         and applies the given attribution algorithm to each of the samples.
@@ -167,7 +167,10 @@ class NoiseTunnel(Attribution):
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
-        def add_noise_to_input(input: Tensor, stdev: float) -> Tensor:
+        def add_noise_to_input(
+            input: Tensor,
+            stdev: float
+            ) -> Tensor:
             # batch size
             bsz = input.shape[0]
 
@@ -268,7 +271,7 @@ class NoiseTunnel(Attribution):
 
         _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
-        delta = None
+        delta = 0
         inputs_with_noise = add_noise_to_inputs()
         # if the algorithm supports targets, baselines and/or additional_forward_args
         # they will be expanded based on the n_steps and corresponding kwargs
@@ -332,7 +335,7 @@ class NoiseTunnel(Attribution):
         attributions: Union[Tensor, Tuple[Tensor, ...]],
         is_attrib_tuple: bool,
         return_convergence_delta: bool,
-        delta: Optional[Tensor],
+        delta: Optional[float],
     ):
         attributions = _format_attributions(is_attrib_tuple, attributions)
 

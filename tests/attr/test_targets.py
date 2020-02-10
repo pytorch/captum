@@ -396,7 +396,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
         self._target_batch_test_assert(
-            LayerDeepLift, net, inputs=inp, target_layer=net.relu, targets=[0, 1, 1, 0]
+            LayerDeepLift, net, inputs=inp, target_layer=net.relu, targets=[0, 1, 1, 0],
         )
 
     def test_simple_target_layer_deeplift_shap(self):

@@ -284,7 +284,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     hook = self.layer.register_forward_hook(layer_forward_hook)
 
                 output = _run_forward(
-                    self.forward_func, additional_forward_args, target_ind
+                    self.forward_func, additional_forward_args, target_ind,
                 )
                 hook.remove()
                 assert output[0].numel() == 1, (

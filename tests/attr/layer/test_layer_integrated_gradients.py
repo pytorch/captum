@@ -14,7 +14,10 @@ from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGr
 from captum.attr._core.layer.layer_conductance import LayerConductance
 
 from ..helpers.utils import BaseTest
-from ..helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
+from ..helpers.basic_models import (
+    BasicEmbeddingModel,
+    BasicModel_MultiLayer,
+)
 
 
 class Test(BaseTest):
@@ -123,7 +126,7 @@ class Test(BaseTest):
         assertArraysAlmostEqual(delta, delta_with_ig)
 
     def _assert_compare_with_expected(
-        self, model, target_layer, test_input, expected_ig, additional_input=None
+        self, model, target_layer, test_input, expected_ig, additional_input=None,
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
