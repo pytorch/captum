@@ -20,7 +20,7 @@ from captum.attr._utils.typing import TensorOrTupleOfTensors
 class Test(BaseTest):
     def test_simple_input_conv_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
             [2.0, 3.0, 3.0, 1.0],
             [3.0, 5.0, 5.0, 2.0],
@@ -31,7 +31,7 @@ class Test(BaseTest):
 
     def test_simple_input_conv_neuron_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
             [2.0, 3.0, 3.0, 1.0],
             [3.0, 5.0, 5.0, 2.0],
@@ -42,7 +42,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
             [2.0, 3.0, 3.0, 1.0],
@@ -54,7 +54,7 @@ class Test(BaseTest):
 
     def test_simple_multi_input_conv_neuron_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
             [2.0, 3.0, 3.0, 1.0],
@@ -75,7 +75,7 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensors,
-        expected: List[List[float]],
+        expected: Union[Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]],
         additional_input: Any = None,
     ) -> None:
         deconv = Deconvolution(model)
@@ -91,7 +91,7 @@ class Test(BaseTest):
         layer: Module,
         neuron_index: Union[int, Tuple[int, ...]],
         test_input: TensorOrTupleOfTensors,
-        expected: List[List[float]],
+        expected: Union[Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]],
         additional_input: Any = None,
     ) -> None:
         deconv = NeuronDeconvolution(model, layer)
