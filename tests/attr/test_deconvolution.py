@@ -75,7 +75,9 @@ class Test(BaseTest):
         self,
         model: Module,
         test_input: TensorOrTupleOfTensors,
-        expected: Union[Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]],
+        expected: Union[
+            Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]
+        ],
         additional_input: Any = None,
     ) -> None:
         deconv = Deconvolution(model)
@@ -91,7 +93,9 @@ class Test(BaseTest):
         layer: Module,
         neuron_index: Union[int, Tuple[int, ...]],
         test_input: TensorOrTupleOfTensors,
-        expected: Union[Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]],
+        expected: Union[
+            Tuple[List[List[float]]], Tuple[List[List[float]], List[List[float]]]
+        ],
         additional_input: Any = None,
     ) -> None:
         deconv = NeuronDeconvolution(model, layer)
