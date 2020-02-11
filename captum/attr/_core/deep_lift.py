@@ -832,7 +832,9 @@ class DeepLiftShap(DeepLift):
             input_additional_args,
         )
 
-    def _compute_mean_across_baselines(self, inp_bsz, base_bsz, attribution):
+    def _compute_mean_across_baselines(
+        self, inp_bsz: int, base_bsz: int, attribution: Tensor
+    ) -> Tensor:
         # Average for multiple references
         attr_shape = (inp_bsz, base_bsz)
         if len(attribution.shape) > 1:
