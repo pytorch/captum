@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
-
 import torch
 import torch.nn as nn
 
@@ -9,16 +7,15 @@ import torch.nn as nn
 class PropagationRule:
     """
     Base class for all propagation rule classes, also called Z-Rule.
-    STABILITY_FACTOR is used to make sure that no zero divison occurs.
+    STABILITY_FACTOR is used to assure that no zero divison occurs.
     """
 
     STABILITY_FACTOR = 1e-9
 
     def forward_hook(self, module, inputs, outputs):
-        """Function that registers backward hooks on input and output
+        """Register backward hooks on input and output
         tensors of linear layers in the model."""
         module.outputs = outputs.data
-        # print(f"Initial output: {torch.sum(outputs.data)}")
         input_hook = self._create_backward_hook_input(inputs[0].data)
         output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_input_hook = inputs[0].register_hook(input_hook)
@@ -26,29 +23,24 @@ class PropagationRule:
 
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
-        """Function that serves as backward hook to propagate relevance
-        over non-linear activations without manipulation."""
+        """Backward hook to propagate relevance over non-linear activations without manipulation."""
         if type(module) == nn.BatchNorm2d:
-            #print(f"{module}: input shape {list(input.shape for input in grad_input)} output shape: {list(output.shape for output in grad_output)}")
-            #print(f"len of output: {len((grad_output[0], *grad_input[1:]))}")
             return (grad_output[0], *grad_input[1:])
         else:
             return grad_output
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output[0] * module.outputs
-        print(f"Intermediate relevance: {torch.sum(module.relevance)},\n layer: {module}")
+        print(f"Intermediate relevance: {torch.sum(module.relevance)}, layer: {module}")
 
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
-            # print("run input hook")
             return grad * inputs
 
         return _backward_hook_input
 
     def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
-            # print("run output hook")
             return grad / (outputs + self.STABILITY_FACTOR)
 
         return _backward_hook_output

@@ -1,32 +1,26 @@
 #!/usr/bin/env python3
 
-from itertools import repeat
-import warnings
 import copy
 import torch
 import torch.nn as nn
-import torch.onnx
-import torch.onnx.utils
 
 from .._utils.common import (
     _format_attributions,
     _format_input,
-    _run_forward,
-    _select_targets,
+    _run_forward
 )
-from .._utils.attribution import Attribution, GradientAttribution
+from .._utils.attribution import Attribution
 from .._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    compute_gradients,
-    _forward_layer_eval,
+    compute_gradients
 )
 from .._utils.lrp_rules import (
     PropagationRule,
     PropagationRule_ManipulateModules,
     Alpha1_Beta0_Rule,
     EpsilonRule,
-    GammaRule
+    GammaRule,
 )
 
 
@@ -37,11 +31,12 @@ class LRP(Attribution):
 
             model (callable): The forward function of the model or
                         any modification of it
-            rules (dictionary(int, PropagationRule)): Dictionary of index and Rules for specific layers
+            rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
                         of forward_func.
         """
         self.original_model = model
         self.custom_rules = rules
+        self._check_rules()
         super(LRP, self).__init__(model)
 
     def attribute(
@@ -63,11 +58,6 @@ class LRP(Attribution):
 
             Attention: The implementation is only tested for ReLU activation layers, linear and conv2D layers. An error
             is raised if other activation functions (sigmoid, tanh) are used.
-            Skip connections as in Resnets are not supported.
-
-            #TODO: To generalize to a broader range of models the detection of layers and their connections
-            need to be improved. One way may be to get the graph of the model and evaluate all graph nodes
-            to use them for backward propagation in a way similar to the description in [https://arxiv.org/abs/1904.04734]
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -125,8 +115,8 @@ class LRP(Attribution):
                         relevance values for all layers. If False, only the relevance
                         values for the input layer are returned.
 
-                verbose (bool, optional): Indicates whether information on skipped layers
-                        during propagation is printed.
+                verbose (bool, optional): Indicates whether information on application
+                        of rules is printed during propagation.
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
@@ -137,7 +127,9 @@ class LRP(Attribution):
                         providing the attribution of the corresponding input index.
                         If a single tensor is provided as inputs, a single tensor is
                         returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+                        corresponding sized tensors is returned. The sum of attributions
+                        is one and not corresponding to the prediction score as in other
+                        implementations.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
 
                         Delta is calculated per example, meaning that the number of
@@ -148,10 +140,8 @@ class LRP(Attribution):
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
                 >>> # and returns an Nx10 tensor of class probabilities. It has one
                 >>> # Conv2D and a ReLU layer.
-                >>> from lrp_rules import Alpha1_Beta0_Rule
                 >>> net = ImageClassifier()
-                >>> rules = [Alpha1_Beta0_Rule(), None]
-                >>> lrp = LRP(net, rules)
+                >>> lrp = LRP(net)
                 >>> input = torch.randn(3, 3, 32, 32)
                 >>> # Attribution size matches input size: 3x3x32x32
                 >>> attribution = lrp.attribute(input, target=5)
@@ -163,14 +153,13 @@ class LRP(Attribution):
         self._get_layers(self.model)
         self.rules = []
         self._get_rules()
-        self._check_rules()
+        self._check_if_weights_are_changed()
         self.return_for_all_layers = return_for_all_layers
         self.backward_handles = []
         self.forward_handles = []
 
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
-        output = _run_forward(self.model, inputs, target, additional_forward_args)
         gradient_mask = apply_gradient_requirements(inputs)
         # 1. Forward pass
         self._change_weights(inputs)
@@ -181,7 +170,7 @@ class LRP(Attribution):
         )
 
         relevances = tuple(
-            relevance * input * output for relevance, input in zip(relevances, inputs)
+            relevance * input for relevance, input in zip(relevances, inputs)
         )
 
         self._remove_backward_hooks()
@@ -272,14 +261,9 @@ class LRP(Attribution):
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-        relevance = _run_forward(self.model, inputs, target, additional_forward_args)
-        return torch.sum(relevance) - torch.sum(attributions)
+        return 1 - torch.sum(attributions)
 
     def _get_layers(self, model):
-        """
-        Get list of children modules of the forward function or model.
-        Checks wether Sigmoid or Tanh activations are used and raises error if that is the case.
-        """
         for layer in model.children():
             if list(layer.children()) == []:
                 self.layers.append(layer)
@@ -296,28 +280,28 @@ class LRP(Attribution):
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 rule = None
             else:
-                raise TypeError(f"Module type {type(layer)} is not supported. No default rule defined.")
+                raise TypeError(
+                    f"Module type {type(layer)} is not supported. No default rule defined."
+                )
             self.rules.append(rule)
-
 
     def _check_rules(self):
         self.changes_weights = False
-        for rule in self.rules:
+        for rule in self.custom_rules.values():
             if not isinstance(rule, PropagationRule) and rule is not None:
                 raise TypeError(
                     "Please select propagation rules inherited from class PropagationRule"
                 )
+
+    def _check_if_weights_are_changed(self):
+        self.changes_weights = False
+        for rule in self.rules:
             if isinstance(rule, PropagationRule_ManipulateModules):
                 self.changes_weights = True
-        print(f"changes weights {self.changes_weights}")
 
     def _register_forward_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
-            # Convert Max-Pooling to Average Pooling layer
             # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
-            # if isinstance(layer, torch.nn.MaxPool2d):
-            #    layer = torch.nn.AvgPool2d(layer.kernel_size)
-            # Propagate relevance for Conv2D, Linear and Pooling
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handle = layer.register_backward_hook(
                     PropagationRule.backward_hook_activation
@@ -334,13 +318,10 @@ class LRP(Attribution):
                     )
                     self.backward_handles.append(relevance_handle)
 
-
     def _register_weight_hooks(self):
         for layer, rule in zip(self.layers, self.rules):
             if isinstance(rule, PropagationRule_ManipulateModules):
-                forward_handle = layer.register_forward_hook(
-                    rule.forward_hook_weights
-                )
+                forward_handle = layer.register_forward_hook(rule.forward_hook_weights)
                 self.forward_handles.append(forward_handle)
 
     def _register_pre_hooks(self):
@@ -393,12 +374,7 @@ SUPPORTED_LINEAR_LAYERS = {
     torch.nn.AvgPool2d: EpsilonRule,
     torch.nn.AdaptiveAvgPool2d: EpsilonRule,
     torch.nn.Linear: EpsilonRule,
-    torch.nn.BatchNorm2d: EpsilonRule
 }
 
-SUPPORTED_NON_LINEAR_LAYERS = [
-    torch.nn.ReLU,
-    torch.nn.Dropout
-    #torch.nn.BatchNorm2d
-]
+SUPPORTED_NON_LINEAR_LAYERS = [torch.nn.ReLU, torch.nn.Dropout, torch.nn.BatchNorm2d]
 
