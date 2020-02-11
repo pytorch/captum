@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
+from typing import List, Tuple
 
 import torch
+from torch import Tensor
 from captum.attr._core.feature_permutation import (
     FeaturePermutation,
     _permute_feature,
 )
 
 from .helpers.basic_models import BasicModelWithSparseInputs
-from .helpers.utils import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-)
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
-    def _check_features_are_permuted(self, inp, perm_inp, mask):
+    def _check_features_are_permuted(
+        self, inp: Tensor, perm_inp: Tensor, mask: Tensor
+    ) -> None:
         permuted_features = mask.expand_as(inp[0])
         unpermuted_features = permuted_features.bitwise_not()
 
@@ -28,13 +28,13 @@ class Test(BaseTest):
             (inp[:, unpermuted_features] == perm_inp[:, unpermuted_features]).all()
         )
 
-    def _check_perm_fn_with_mask(self, inp, mask):
+    def _check_perm_fn_with_mask(self, inp: Tensor, mask: Tensor) -> None:
         perm_inp = _permute_feature(inp, mask)
         self._check_features_are_permuted(inp, perm_inp, mask)
 
-    def test_perm_fn_single_feature(self):
+    def test_perm_fn_single_feature(self) -> None:
         batch_size = 2
-        sizes_to_test = [(10,), (4, 5), (3, 4, 5)]
+        sizes_to_test: List[Tuple[int, ...]] = [(10,), (4, 5), (3, 4, 5)]
         for inp_size in sizes_to_test:
             inp = torch.randn((batch_size,) + inp_size)
             flat_mask = torch.zeros_like(inp[0]).flatten().bool()
@@ -45,7 +45,7 @@ class Test(BaseTest):
                 self._check_perm_fn_with_mask(inp, flat_mask.view_as(inp[0]))
                 flat_mask[i] = 0
 
-    def test_perm_fn_broadcastable_masks(self):
+    def test_perm_fn_broadcastable_masks(self) -> None:
         batch_size = 5
         inp_size = (3, 20, 30)
 
@@ -59,7 +59,7 @@ class Test(BaseTest):
         # dimensions are implied to be = 1
         #
         # Here I write them explicitly for clarity
-        mask_sizes = [
+        mask_sizes: List[Tuple[int, ...]] = [
             # dims = 1
             (1, 20, 30),
             (3, 1, 30),
@@ -79,11 +79,11 @@ class Test(BaseTest):
 
             self._check_perm_fn_with_mask(inp, mask)
 
-    def test_single_input(self):
+    def test_single_input(self) -> None:
         batch_size = 2
         input_size = (3,)
 
-        def forward_func(x):
+        def forward_func(x: Tensor) -> Tensor:
             return x.sum()
 
         feature_importance = FeaturePermutation(forward_func=forward_func)
@@ -99,15 +99,15 @@ class Test(BaseTest):
             self.assertTrue((attribs[:, 1] != 0).all())
             self.assertTrue((attribs[:, 2] != 0).all())
 
-    def test_multi_input(self):
+    def test_multi_input(self) -> None:
         batch_size = 20
         inp1_size = (5, 2)
         inp2_size = (5, 3)
 
         labels = torch.randn(batch_size)
 
-        def forward_func(*x):
-            y = 0
+        def forward_func(*x: Tensor) -> Tensor:
+            y = torch.zeros(x[0].shape[0:2])
             for xx in x:
                 y += xx[:, :, 0] * xx[:, :, 1]
             y = y.sum(dim=-1)
@@ -141,7 +141,7 @@ class Test(BaseTest):
         self.assertTrue((attribs[0] != 0).all())
         self.assertTrue((attribs[1][:, :, 0] != 0).all())
 
-    def test_mulitple_ablations_per_eval(self):
+    def test_mulitple_ablations_per_eval(self) -> None:
         ablations_per_eval = 4
         batch_size = 2
         input_size = (4,)
@@ -168,10 +168,10 @@ class Test(BaseTest):
         actual_diff = torch.stack([(y[0] - y[1])[target], (y[1] - y[0])[target]])
         assertTensorAlmostEqual(self, attribs[:, target], actual_diff)
 
-    def test_broadcastable_masks(self):
+    def test_broadcastable_masks(self) -> None:
         # integration test to ensure that
         # permutation function works with custom masks
-        def forward_func(x):
+        def forward_func(x: Tensor) -> Tensor:
             return x.view(x.shape[0], -1).sum(dim=-1)
 
         batch_size = 2
@@ -199,7 +199,7 @@ class Test(BaseTest):
                 attribs_for_feature = attribs[:, m]
                 assertArraysAlmostEqual(attribs_for_feature[0], -attribs_for_feature[1])
 
-    def test_empty_sparse_features(self):
+    def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
         inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
         inp2 = torch.tensor([])
@@ -210,15 +210,15 @@ class Test(BaseTest):
         self.assertEqual(attr1.shape, (1, 3))
         self.assertEqual(attr2.shape, inp2.shape)
 
-    def test_sparse_features(self):
+    def test_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
         inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
         # Length of sparse index list may not match # of examples
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
 
         feature_importance = FeaturePermutation(model)
-        total_attr1 = 0
-        total_attr2 = 0
+        total_attr1, total_attr2 = feature_importance.attribute((inp1, inp2))
+
         for _ in range(50):
             attr1, attr2 = feature_importance.attribute((inp1, inp2))
             total_attr1 += attr1

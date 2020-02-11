@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-
+from typing import Callable, Union, Tuple, List, Optional, Any
 import unittest
 
 import torch
+from torch import Tensor
+
 from captum.attr._core.occlusion import Occlusion
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -15,9 +18,9 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
-    def test_improper_window_shape(self):
+    def test_improper_window_shape(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         # Check error when too few sliding window dimensions
         with self.assertRaises(AssertionError):
@@ -37,9 +40,9 @@ class Test(BaseTest):
                 target=0,
             )
 
-    def test_improper_stride(self):
+    def test_improper_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         # Check error when too few stride dimensions
         with self.assertRaises(AssertionError):
@@ -65,9 +68,9 @@ class Test(BaseTest):
                 target=0,
             )
 
-    def test_too_large_stride(self):
+    def test_too_large_stride(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         occ = Occlusion(net)
         with self.assertRaises(AssertionError):
             _ = occ.attribute(
@@ -85,7 +88,7 @@ class Test(BaseTest):
                 inp, sliding_window_shapes=((2, 1, 2),), strides=2, target=0
             )
 
-    def test_simple_input(self):
+    def test_simple_input(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._occlusion_test_assert(
@@ -96,7 +99,7 @@ class Test(BaseTest):
             sliding_window_shapes=((1,)),
         )
 
-    def test_simple_multi_input_int_to_int(self):
+    def test_simple_multi_input_int_to_int(self) -> None:
         net = BasicModel3()
         inp1 = torch.tensor([[-10], [3]])
         inp2 = torch.tensor([[-5], [1]])
@@ -107,7 +110,7 @@ class Test(BaseTest):
             sliding_window_shapes=((1,), (1,)),
         )
 
-    def test_simple_multi_input_int_to_float(self):
+    def test_simple_multi_input_int_to_float(self) -> None:
         net = BasicModel3()
 
         def wrapper_func(*inp):
@@ -122,7 +125,7 @@ class Test(BaseTest):
             sliding_window_shapes=((1,), (1,)),
         )
 
-    def test_simple_multi_input(self):
+    def test_simple_multi_input(self) -> None:
         net = BasicModel3()
         inp1 = torch.tensor([[-10.0], [3.0]])
         inp2 = torch.tensor([[-5.0], [1.0]])
@@ -133,7 +136,7 @@ class Test(BaseTest):
             sliding_window_shapes=((1,), (1,)),
         )
 
-    def test_simple_multi_input_0d(self):
+    def test_simple_multi_input_0d(self) -> None:
         net = BasicModel3()
         inp1 = torch.tensor([-10.0, 3.0])
         inp2 = torch.tensor([-5.0, 1.0])
@@ -145,7 +148,7 @@ class Test(BaseTest):
             target=None,
         )
 
-    def test_simple_input_larger_shape(self):
+    def test_simple_input_larger_shape(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._occlusion_test_assert(
@@ -157,7 +160,7 @@ class Test(BaseTest):
             baselines=torch.tensor([10.0, 10.0, 10.0]),
         )
 
-    def test_simple_input_shape_with_stride(self):
+    def test_simple_input_shape_with_stride(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._occlusion_test_assert(
@@ -169,7 +172,7 @@ class Test(BaseTest):
             strides=2,
         )
 
-    def test_multi_sample_ablation(self):
+    def test_multi_sample_ablation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         self._occlusion_test_assert(
@@ -180,7 +183,7 @@ class Test(BaseTest):
             sliding_window_shapes=((1,),),
         )
 
-    def test_multi_input_ablation_with_mask(self):
+    def test_multi_input_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -206,7 +209,7 @@ class Test(BaseTest):
             sliding_window_shapes=((3,), (1,)),
         )
 
-    def test_multi_input_ablation_with_baselines(self):
+    def test_multi_input_ablation_with_baselines(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -230,9 +233,9 @@ class Test(BaseTest):
             strides=(2, 1, 2),
         )
 
-    def test_simple_multi_input_conv(self):
+    def test_simple_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         self._occlusion_test_assert(
             net,
@@ -265,16 +268,25 @@ class Test(BaseTest):
 
     def _occlusion_test_assert(
         self,
-        model,
-        test_input,
-        expected_ablation,
-        sliding_window_shapes=None,
-        target=0,
-        additional_input=None,
-        ablations_per_eval=(1,),
-        baselines=None,
-        strides=None,
-    ):
+        model: Callable,
+        test_input: TensorOrTupleOfTensors,
+        expected_ablation: Union[
+            float,
+            List[float],
+            List[List[float]],
+            Tuple[Union[Tensor, List[float], List[List[float]]], ...],
+        ],
+        sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = 0,
+        additional_input: Any = None,
+        ablations_per_eval: Tuple[int, ...] = (1,),
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        strides: Optional[Union[int, Tuple[Union[int, Tuple[int, ...]], ...]]] = None,
+    ) -> None:
         for batch_size in ablations_per_eval:
             ablation = Occlusion(model)
             attributions = ablation.attribute(

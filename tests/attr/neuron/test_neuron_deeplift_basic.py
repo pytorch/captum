@@ -13,9 +13,13 @@ from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
 
+from typing import Optional, Tuple, Union
+from torch import Tensor
+from captum.attr._utils.typing import TensorOrTupleOfTensors
+
 
 class Test(BaseTest):
-    def test_relu_neuron_deeplift(self):
+    def test_relu_neuron_deeplift(self) -> None:
         model = ReLULinearDeepLiftModel(inplace=True)
 
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
@@ -28,7 +32,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 0.0, 0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
 
-    def test_deeplift_compare_with_and_without_inplace(self):
+    def test_deeplift_compare_with_and_without_inplace(self) -> None:
         model1 = ReLULinearDeepLiftModel(inplace=True)
         model2 = ReLULinearDeepLiftModel()
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
@@ -43,7 +47,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
         assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
 
-    def test_linear_neuron_deeplift(self):
+    def test_linear_neuron_deeplift(self) -> None:
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
@@ -61,14 +65,14 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[-0.0, 0.0, -0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[6.0, 9.0, 0.0]])
 
-    def test_relu_deeplift_with_custom_attr_func(self):
+    def test_relu_deeplift_with_custom_attr_func(self) -> None:
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
         expected = ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
-    def test_relu_neuron_deeplift_shap(self):
+    def test_relu_neuron_deeplift_shap(self) -> None:
         model = ReLULinearDeepLiftModel()
         (
             inputs,
@@ -83,7 +87,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 0.0, 0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
 
-    def test_linear_neuron_deeplift_shap(self):
+    def test_linear_neuron_deeplift_shap(self) -> None:
         model = ReLULinearDeepLiftModel()
         (
             inputs,
@@ -104,7 +108,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[-0.0, 0.0, -0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[6.0, 9.0, 0.0]])
 
-    def test_relu_deepliftshap_with_custom_attr_func(self):
+    def test_relu_deepliftshap_with_custom_attr_func(self) -> None:
         model = ReLULinearDeepLiftModel()
         (
             inputs,
@@ -114,8 +118,20 @@ class Test(BaseTest):
         expected = (torch.zeros(3, 3), torch.zeros(3, 3))
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
-    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines, expected):
-        def custom_attr_func(multipliers, inputs, baselines):
+    def _relu_custom_attr_func_assert(
+        self,
+        attr_method: Union[NeuronDeepLift, NeuronDeepLiftShap],
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ],
+        expected,
+    ) -> None:
+        def custom_attr_func(
+            multipliers: Tuple[Tensor, ...],
+            inputs: Tuple[Tensor, ...],
+            baselines: Optional[Tuple[Union[Tensor, int, float], ...]] = None,
+        ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
         attr = attr_method.attribute(
