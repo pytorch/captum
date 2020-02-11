@@ -10,14 +10,17 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
 )
 
+from typing import Any, Tuple, Union, List
+from torch.nn import Module
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
-    def test_simple_input_conv_deconv(self):
+    def test_simple_input_conv_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
             [2.0, 3.0, 3.0, 1.0],
             [3.0, 5.0, 5.0, 2.0],
@@ -26,9 +29,9 @@ class Test(BaseTest):
         ]
         self._deconv_test_assert(net, (inp,), (exp,))
 
-    def test_simple_input_conv_neuron_deconv(self):
+    def test_simple_input_conv_neuron_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = 1.0 * torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         exp = [
             [2.0, 3.0, 3.0, 1.0],
             [3.0, 5.0, 5.0, 2.0],
@@ -37,9 +40,9 @@ class Test(BaseTest):
         ]
         self._neuron_deconv_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
-    def test_simple_multi_input_conv_deconv(self):
+    def test_simple_multi_input_conv_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
             [2.0, 3.0, 3.0, 1.0],
@@ -49,9 +52,9 @@ class Test(BaseTest):
         ]
         self._deconv_test_assert(net, (inp, inp2), (ex_attr, ex_attr))
 
-    def test_simple_multi_input_conv_neuron_deconv(self):
+    def test_simple_multi_input_conv_neuron_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
-        inp = torch.arange(16).view(1, 1, 4, 4).type(torch.FloatTensor)
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones((1, 1, 4, 4))
         ex_attr = [
             [2.0, 3.0, 3.0, 1.0],
@@ -63,12 +66,18 @@ class Test(BaseTest):
             net, net.fc1, (3,), (inp, inp2), (ex_attr, ex_attr)
         )
 
-    def test_deconv_matching(self):
+    def test_deconv_matching(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
         inp = 100.0 * torch.randn(1, 1, 4, 4)
         self._deconv_matching_assert(net, net.relu2, inp)
 
-    def _deconv_test_assert(self, model, test_input, expected, additional_input=None):
+    def _deconv_test_assert(
+        self,
+        model: Module,
+        test_input: TensorOrTupleOfTensors,
+        expected: Tuple[List[List[float]], ...],
+        additional_input: Any = None,
+    ) -> None:
         deconv = Deconvolution(model)
         attributions = deconv.attribute(
             test_input, target=0, additional_forward_args=additional_input
@@ -77,8 +86,14 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
 
     def _neuron_deconv_test_assert(
-        self, model, layer, neuron_index, test_input, expected, additional_input=None
-    ):
+        self,
+        model: Module,
+        layer: Module,
+        neuron_index: Union[int, Tuple[int, ...]],
+        test_input: TensorOrTupleOfTensors,
+        expected: Tuple[List[List[float]], ...],
+        additional_input: Any = None,
+    ) -> None:
         deconv = NeuronDeconvolution(model, layer)
         attributions = deconv.attribute(
             test_input,
@@ -88,7 +103,9 @@ class Test(BaseTest):
         for i in range(len(test_input)):
             assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
 
-    def _deconv_matching_assert(self, model, output_layer, test_input):
+    def _deconv_matching_assert(
+        self, model: Module, output_layer: Module, test_input: TensorOrTupleOfTensors
+    ) -> None:
         out = model(test_input)
         attrib = Deconvolution(model)
         neuron_attrib = NeuronDeconvolution(model, output_layer)
