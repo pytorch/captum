@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, List, Union, Optional, Callable
+from typing import Tuple, List, Union, Callable
 
 import torch
 from torch import Tensor
@@ -10,8 +10,6 @@ from inspect import signature
 
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-
-from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.utils import (
     assertAttributionComparision,
@@ -187,9 +185,7 @@ class Test(BaseTest):
         def gen_baselines_scalar() -> Tuple[float, ...]:
             return (0.0, 0.0001)
 
-        def gen_baselines_with_inputs(
-            inputs: Tuple[Tensor, Tensor]
-        ) -> Tuple[Tensor, ...]:
+        def gen_baselines_with_inputs(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]:
             b1 = torch.cat([inputs[0], inputs[0] - 10])
             b2 = torch.cat([inputs[1], inputs[1] - 10])
             return (b1, b2)
@@ -279,7 +275,7 @@ class Test(BaseTest):
         model: Module,
         attr_method: Union[DeepLift, DeepLiftShap],
         inputs: Tuple[Tensor, ...],
-        baselines,  # ?
+        baselines,
         custom_attr_func: Callable[..., Tuple[Tensor, ...]] = None,
     ) -> None:
         input_bsz = len(inputs[0])
@@ -342,7 +338,11 @@ class Test(BaseTest):
                 assertAttributionComparision(self, attributions, attributions_ig)
 
 
-def _hypothetical_contrib_func(multipliers, inputs, baselines):
+def _hypothetical_contrib_func(
+    multipliers: Tuple[Tensor, ...],
+    inputs: Tuple[Tensor, ...],
+    baselines: Tuple[Tensor, ...],
+) -> Tuple[Tensor, ...]:
     r"""
     Implements hypothetical input contributions based on the logic described here:
     https://github.com/kundajelab/deeplift/pull/36/files
