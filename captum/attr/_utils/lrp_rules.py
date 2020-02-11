@@ -24,7 +24,8 @@ class PropagationRule:
         self._handle_input_hook = inputs[0].register_hook(input_hook)
         self._handle_output_hook = outputs.register_hook(output_hook)
 
-    def backward_hook_activation(self, module, grad_input, grad_output):
+    @staticmethod
+    def backward_hook_activation(module, grad_input, grad_output):
         """Function that serves as backward hook to propagate relevance
         over non-linear activations without manipulation."""
         if type(module) == nn.BatchNorm2d:
@@ -144,10 +145,11 @@ def suggested_rules(model):
         layer0 = [
             EpsilonRule()
         ]  # [zB_Rule(0, 1, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
-        layers1_16 = 16 * [GammaRule()]
-        layers17_30 = 14 * [EpsilonRule()]
-        layers31_38 = 8 * [EpsilonRule()]
+        layers1_16 = [GammaRule() for i in range(16)]
+        layers17_30 = [EpsilonRule() for i in range(14)]
+        layers31_38 = [EpsilonRule() for i in range(8)]
         rules = layer0 + layers1_16 + layers17_30 + layers31_38
+        rules = dict(zip(range(len(rules)), rules))
     else:
         raise NotImplementedError("No suggested rules for given model")
 

@@ -31,22 +31,17 @@ from .._utils.lrp_rules import (
 
 
 class LRP(Attribution):
-    def __init__(self, model, rules):
+    def __init__(self, model, rules=dict()):
         """
         Args:
 
             model (callable): The forward function of the model or
                         any modification of it
-            rules (iterator of PropagationRules or None): List of Rules for each layer
-                        of forward_func. For layers where the relevances are not propagated
-                        (i.e. ReLU) the rule can be None.
+            rules (dictionary(int, PropagationRule)): Dictionary of index and Rules for specific layers
+                        of forward_func.
         """
-        self.model = model
-        self.layers = []
-        self._get_layers(model)
-        self.changes_weights = False
-        self.rules = rules
-        self._check_rules()
+        self.original_model = model
+        self.custom_rules = rules
         super(LRP, self).__init__(model)
 
     def attribute(
@@ -162,17 +157,16 @@ class LRP(Attribution):
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
-        # only to check SUPPORTED_LAYERS implementation
-        self.changes_weights = True
-        #
-        if self.changes_weights:
-            self.model = copy.deepcopy(self.model)
-            self.layers = []
-            self._get_layers(self.model)
-        self.return_for_all_layers = return_for_all_layers
         self.verbose = verbose
-        self.backward_handles = list()
-        self.forward_handles = list()
+        self.model = copy.deepcopy(self.original_model)
+        self.layers = []
+        self._get_layers(self.model)
+        self.rules = []
+        self._get_rules()
+        self._check_rules()
+        self.return_for_all_layers = return_for_all_layers
+        self.backward_handles = []
+        self.forward_handles = []
 
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
@@ -288,15 +282,26 @@ class LRP(Attribution):
         """
         for layer in model.children():
             if list(layer.children()) == []:
-                if isinstance(layer, (nn.Sigmoid, nn.Tanh)):
-                    raise TypeError(
-                        "Invalid activation used. Implementation is only valid for ReLU activations."
-                    )
                 self.layers.append(layer)
             else:
                 self._get_layers(layer)
 
+    def _get_rules(self):
+        for index, layer in enumerate(self.layers):
+            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
+                if index in self.custom_rules.keys():
+                    rule = self.custom_rules[index]
+                else:
+                    rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
+            elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
+                rule = None
+            else:
+                raise TypeError(f"Module type {type(layer)} is not supported. No default rule defined.")
+            self.rules.append(rule)
+
+
     def _check_rules(self):
+        self.changes_weights = False
         for rule in self.rules:
             if not isinstance(rule, PropagationRule) and rule is not None:
                 raise TypeError(
@@ -304,57 +309,54 @@ class LRP(Attribution):
                 )
             if isinstance(rule, PropagationRule_ManipulateModules):
                 self.changes_weights = True
+        print(f"changes weights {self.changes_weights}")
 
     def _register_forward_hooks(self):
-        for layer in self.layers:
+        for layer, rule in zip(self.layers, self.rules):
             # Convert Max-Pooling to Average Pooling layer
             # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
             # if isinstance(layer, torch.nn.MaxPool2d):
             #    layer = torch.nn.AvgPool2d(layer.kernel_size)
             # Propagate relevance for Conv2D, Linear and Pooling
-            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
-                rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
+            if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
+                backward_handle = layer.register_backward_hook(
+                    PropagationRule.backward_hook_activation
+                )
+                self.backward_handles.append(backward_handle)
+            else:
                 forward_handle = layer.register_forward_hook(rule.forward_hook)
                 self.forward_handles.append(forward_handle)
+                if self.verbose:
+                    print(f"Applied {rule} on layer {layer}")
                 if self.return_for_all_layers:
                     relevance_handle = layer.register_backward_hook(
                         rule._backward_hook_relevance
                     )
                     self.backward_handles.append(relevance_handle)
-            elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = layer.register_backward_hook(
-                    rule.backward_hook_activation
-                )
-                self.backward_handles.append(backward_handle)
-            else:
-                print(f"Warning! No rule for type of {type(layer)} defined!")
+
 
     def _register_weight_hooks(self):
-        for layer in self.layers:
-            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
-                rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
-                if isinstance(rule, PropagationRule_ManipulateModules):
-                    forward_handle = layer.register_forward_hook(
-                        rule.forward_hook_weights
-                    )
-                    self.forward_handles.append(forward_handle)
+        for layer, rule in zip(self.layers, self.rules):
+            if isinstance(rule, PropagationRule_ManipulateModules):
+                forward_handle = layer.register_forward_hook(
+                    rule.forward_hook_weights
+                )
+                self.forward_handles.append(forward_handle)
 
     def _register_pre_hooks(self):
-        for layer in self.layers:
-            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
-                rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
-                if isinstance(rule, PropagationRule_ManipulateModules):
-                    forward_handle = layer.register_forward_pre_hook(
-                        rule.forward_pre_hook_activations
-                    )
-                    self.forward_handles.append(forward_handle)
+        for layer, rule in zip(self.layers, self.rules):
+            if isinstance(rule, PropagationRule_ManipulateModules):
+                forward_handle = layer.register_forward_pre_hook(
+                    rule.forward_pre_hook_activations
+                )
+                self.forward_handles.append(forward_handle)
 
     def _change_weights(self, inputs):
         if self.changes_weights:
             self._register_weight_hooks()
             _ = _run_forward(self.model, inputs)
             self._remove_forward_hooks()
-            # pre_hooks for 3rd pass
+            # pre_hooks for 2nd pass
             self._register_pre_hooks()
 
     def _remove_forward_hooks(self):
@@ -387,15 +389,16 @@ class LRP(Attribution):
 
 SUPPORTED_LINEAR_LAYERS = {
     torch.nn.MaxPool2d: EpsilonRule,
-    torch.nn.Conv2d: Alpha1_Beta0_Rule,
+    torch.nn.Conv2d: EpsilonRule,
     torch.nn.AvgPool2d: EpsilonRule,
     torch.nn.AdaptiveAvgPool2d: EpsilonRule,
-    torch.nn.Linear: Alpha1_Beta0_Rule,
+    torch.nn.Linear: EpsilonRule,
     torch.nn.BatchNorm2d: EpsilonRule
 }
 
 SUPPORTED_NON_LINEAR_LAYERS = [
     torch.nn.ReLU,
+    torch.nn.Dropout
     #torch.nn.BatchNorm2d
 ]
 
