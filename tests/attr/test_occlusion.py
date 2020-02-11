@@ -92,7 +92,7 @@ class Test(BaseTest):
             net,
             inp,
             [80.0, 200.0, 120.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,)),
         )
 
@@ -152,7 +152,7 @@ class Test(BaseTest):
             net,
             inp,
             [200.0, 220.0, 240.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             baselines=torch.tensor([10.0, 10.0, 10.0]),
         )
@@ -164,7 +164,7 @@ class Test(BaseTest):
             net,
             inp,
             [280.0, 280.0, 120.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             strides=2,
         )
@@ -176,7 +176,7 @@ class Test(BaseTest):
             net,
             inp,
             [[8.0, 35.0, 12.0], [80.0, 200.0, 120.0]],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,),),
         )
 
@@ -202,7 +202,7 @@ class Test(BaseTest):
             (inp1, inp2),
             expected[0:1],
             additional_input=(inp3, 1),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((3,), (1,)),
         )
 
@@ -238,7 +238,7 @@ class Test(BaseTest):
             net,
             (inp, inp2),
             (67 * torch.ones_like(inp), 13 * torch.ones_like(inp2)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
             sliding_window_shapes=((1, 4, 4), (1, 4, 4)),
         )
         self._occlusion_test_assert(
@@ -258,7 +258,7 @@ class Test(BaseTest):
                     [0.0, 0.0, 0.0, 0.0],
                 ],
             ),
-            ablations_per_eval=(1, 3, 7, 14),
+            perturbations_per_eval=(1, 3, 7, 14),
             sliding_window_shapes=((1, 2, 3), (1, 1, 2)),
             strides=((1, 2, 1), (1, 1, 2)),
         )
@@ -271,11 +271,11 @@ class Test(BaseTest):
         sliding_window_shapes=None,
         target=0,
         additional_input=None,
-        ablations_per_eval=(1,),
+        perturbations_per_eval=(1,),
         baselines=None,
         strides=None,
     ):
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)
             attributions = ablation.attribute(
                 test_input,
@@ -283,7 +283,7 @@ class Test(BaseTest):
                 target=target,
                 additional_forward_args=additional_input,
                 baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
                 strides=strides,
             )
             if isinstance(expected_ablation, tuple):

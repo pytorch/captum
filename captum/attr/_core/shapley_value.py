@@ -3,6 +3,7 @@
 import torch
 
 from .._utils.common import (
+    _find_output_mode_and_verify,
     _format_attributions,
     _format_input,
     _format_input_baseline,
@@ -13,40 +14,41 @@ from .._utils.common import (
     _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.perturbation_utils import _find_output_mode_and_verify
 
 
 class ShapleyValueSampling(PerturbationAttribution):
+    """
+    A perturbation based approach to compute attribution, based on the concept
+    of Shapley Values from cooperative game theory. This method involves taking
+    a random permutation of the input features and adding them one-by-one to the
+    given baseline. The output difference after adding each feature corresponds
+    to its attribution, and these difference are averaged when repeating this
+    process n_samples times, each time choosing a new random permutation of
+    the input features.
+
+    By default, each scalar value within
+    the input tensors are taken as a feature and added independently. Passing
+    a feature mask, allows grouping features to be added together. This can
+    be used in cases such as images, where an entire segment or region
+    can be grouped together, measuring the importance of the segment
+    (feature group). Each input scalar in the group will be given the same
+    attribution value equal to the change in output as a result of adding back
+    the entire feature group.
+
+    More details regarding Shapley Value sampling can be found in the
+    original paper:
+    https://www.sciencedirect.com/science/article/pii/S0305054808000804
+    """
+
     def __init__(self, forward_func):
         r"""
-        A perturbation based approach to computing attribution, based on the concept
-        of Shapley Values from cooperative game theory. This method involves taking
-        a random permutation of the input features and adding them one-by-one to the
-        given baseline. The output difference after adding each feature corresponds
-        to its attribution, and these difference are averaged when repeating this
-        process n_samples times, each time choosing a new random permutation of
-        the input features.
-
-        By default, each scalar value within
-        the input tensors are taken as a feature and added independently. Passing
-        a feature mask, allows grouping features to be added together. This can
-        be used in cases such as images, where an entire segment or region
-        can be grouped together, measuring the importance of the segment
-        (feature group). Each input scalar in the group will be given the same
-        attribution value equal to the change in output as a result of adding back
-        the entire feature group.
-
-        More details regarding Shapley Value sampling can be found in the
-        original paper:
-        https://www.sciencedirect.com/science/article/pii/S0305054808000804
-
         Args:
 
             forward_func (callable): The forward function of the model or
                         any modification of it. The forward function can either
                         return a scalar per example, or a single scalar for the
                         full batch. If a single scalar is returned for the batch,
-                        `ablations_per_eval` must be 1, and the returned
+                        `perturbations_per_eval` must be 1, and the returned
                         attributions will have first dimension 1, corresponding to
                         feature importance across all examples in the batch.
         """
@@ -60,8 +62,8 @@ class ShapleyValueSampling(PerturbationAttribution):
         target=None,
         additional_forward_args=None,
         feature_mask=None,
-        n_samples=100,
-        ablations_per_eval=1,
+        n_samples=25,
+        perturbations_per_eval=1,
     ):
         r""""
         NOTE: The feature_mask argument differs from other perturbation based
@@ -146,10 +148,10 @@ class ShapleyValueSampling(PerturbationAttribution):
                             should contain the same number of tensors as inputs.
                             Each tensor should
                             be the same size as the corresponding input or
-                            broadcastable to match the input tensor. Each tensor
-                            should contain integers in the range 0 to num_features
-                            - 1, and indices corresponding to the same feature should
-                            have the same value.
+                            broadcastable to match the input tensor. Values across
+                            all tensors should be integers in the range 0 to
+                            num_features - 1, and indices corresponding to the same
+                            feature should have the same value.
                             Note that features are grouped across tensors
                             (unlike feature ablation and occlusion), so
                             if the same index is used in different tensors, those
@@ -162,17 +164,20 @@ class ShapleyValueSampling(PerturbationAttribution):
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature
                             Default: None
-                ablations_per_eval (int, optional): Allows multiple ablations
+                n_samples (int, optional):  The number of feature permutations
+                            tested.
+                            Default: `25` if `n_samples` is not provided.
+                perturbations_per_eval (int, optional): Allows multiple ablations
                             to be processed simultaneously in one call to forward_fn.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             If the forward function returns a single scalar per batch,
-                            ablations_per_eval must be set to 1.
+                            perturbations_per_eval must be set to 1.
                             Default: 1
 
         Returns:
@@ -236,7 +241,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 additional_forward_args
             )
             assert (
-                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+                isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
             ), "Ablations per evaluation must be at least 1."
 
             baselines = _tensorize_baseline(inputs, baselines)
@@ -247,8 +252,8 @@ class ShapleyValueSampling(PerturbationAttribution):
             feature_mask = (
                 _format_input(feature_mask) if feature_mask is not None else None
             )
-            single_output_mode = _find_output_mode_and_verify(
-                initial_eval, num_examples, ablations_per_eval, feature_mask
+            agg_output_mode = _find_output_mode_and_verify(
+                initial_eval, num_examples, perturbations_per_eval, feature_mask
             )
 
             if feature_mask is None:
@@ -274,28 +279,28 @@ class ShapleyValueSampling(PerturbationAttribution):
 
             # Initialize attribution totals and counts
             total_attrib = [
-                torch.zeros_like(input[0:1] if single_output_mode else input)
+                torch.zeros_like(input[0:1] if agg_output_mode else input)
                 for input in inputs
             ]
 
             # Iterate for number of samples, generate a permutation of the features
-            # and evalute the incremntal increase for each feature.
+            # and evalute the incremental increase for each feature.
             for i in range(n_samples):
-                feature_permutation = torch.randperm(total_features + 1)
+                feature_permutation = torch.randperm(total_features)
                 prev_results = initial_eval
                 for (
                     current_inputs,
                     current_add_args,
                     current_target,
                     current_masks,
-                ) in self._ablation_generator(
+                ) in self._perturbation_generator(
                     inputs,
                     additional_forward_args,
                     target,
                     baselines,
                     feature_mask,
                     feature_permutation,
-                    ablations_per_eval,
+                    perturbations_per_eval,
                 ):
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
@@ -305,11 +310,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                         current_target,
                         current_add_args,
                     )
-                    # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
-                    # (contains 1 more dimension than inputs). This adds extra
-                    # dimensions of 1 to make the tensor broadcastable with the
-                    # inputs tensor.
-                    if single_output_mode:
+                    if agg_output_mode:
                         eval_diff = modified_eval - prev_results
                         prev_results = modified_eval
                     else:
@@ -318,7 +319,12 @@ class ShapleyValueSampling(PerturbationAttribution):
                         prev_results = all_eval[-num_examples:]
                     for j in range(len(total_attrib)):
                         current_eval_diff = eval_diff
-                        if not single_output_mode:
+                        if not agg_output_mode:
+                            # current_eval_diff dimensions:
+                            # (#features in batch, #num_examples, 1,.. 1)
+                            # (contains 1 more dimension than inputs). This adds extra
+                            # dimensions of 1 to make the tensor broadcastable with the
+                            # inputs tensor.
                             current_eval_diff = current_eval_diff.reshape(
                                 (-1, num_examples) + (len(inputs[j].shape) - 1) * (1,)
                             )
@@ -333,7 +339,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
             return _format_attributions(is_inputs_tuple, attrib)
 
-    def _ablation_generator(
+    def _perturbation_generator(
         self,
         inputs,
         additional_args,
@@ -341,29 +347,36 @@ class ShapleyValueSampling(PerturbationAttribution):
         baselines,
         input_masks,
         feature_permutation,
-        ablations_per_eval,
+        perturbations_per_eval,
     ):
+        """
+        This method is a generator which yields each perturbation to be evaluated including
+        inputs, additional_forward_args, targets, and mask.
+        """
+        # current_tensors starts at baselines and includes each additional feature as added
+        # based on the permutation order.
         current_tensors = baselines
         current_tensors_list = []
         current_mask_list = []
 
         # Compute repeated additional args and targets
         additional_args_repeated = (
-            _expand_additional_forward_args(additional_args, ablations_per_eval)
+            _expand_additional_forward_args(additional_args, perturbations_per_eval)
             if additional_args is not None
             else None
         )
-        target_repeated = _expand_target(target, ablations_per_eval)
+        target_repeated = _expand_target(target, perturbations_per_eval)
         for i in range(len(feature_permutation)):
             current_tensors = tuple(
-                current + input * (mask == feature_permutation[i]).to(input.dtype)
+                current * (1 - (mask == feature_permutation[i]).to(current.dtype))
+                + input * (mask == feature_permutation[i]).to(input.dtype)
                 for input, current, mask in zip(inputs, current_tensors, input_masks)
             )
             current_tensors_list.append(current_tensors)
             current_mask_list.append(
                 tuple(mask == feature_permutation[i] for mask in input_masks)
             )
-            if len(current_tensors_list) == ablations_per_eval:
+            if len(current_tensors_list) == perturbations_per_eval:
                 combined_inputs = tuple(
                     torch.cat(aligned_tensors, dim=0)
                     for aligned_tensors in zip(*current_tensors_list)
@@ -382,7 +395,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 current_mask_list = []
 
         # Create batch with remaining evaluations, may not be a complete batch
-        # (= ablations_per_eval)
+        # (= perturbations_per_eval)
         if len(current_tensors_list) != 0:
             additional_args_repeated = (
                 _expand_additional_forward_args(

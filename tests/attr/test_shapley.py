@@ -3,7 +3,7 @@
 import unittest
 
 import torch
-from captum.attr._core.shapley_sampling import ShapleyValueSampling
+from captum.attr._core.shapley_value import ShapleyValueSampling
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -20,7 +20,7 @@ class Test(BaseTest):
             net,
             inp,
             [76.66666, 196.66666, 116.66666],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             n_samples=250,
         )
 
@@ -32,7 +32,7 @@ class Test(BaseTest):
             inp,
             [275.0, 275.0, 115.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_simple_shapley_sampling_with_baselines(self):
@@ -41,10 +41,10 @@ class Test(BaseTest):
         self._shapley_test_assert(
             net,
             inp,
-            [280.0, 280.0, 120.0],
+            [248.0, 248.0, 104.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_sample_ablation(self):
@@ -54,8 +54,7 @@ class Test(BaseTest):
             net,
             inp,
             [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
-            ablations_per_eval=(1, 2, 3),
-            delta=0.5,
+            perturbations_per_eval=(1, 2, 3),
             n_samples=200,
         )
 
@@ -68,7 +67,21 @@ class Test(BaseTest):
             inp,
             [[39.5, 39.5, 10.5], [275.0, 275.0, 115.0]],
             feature_mask=mask,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_input_ablation_without_mask(self):
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
+        inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 100.0, 10.0], [0.0, 10.0, 0.0]])
+        expected = (
+            [[90, 0, 0], [78.0, 198.0, 118.0]],
+            [[78, 0, 198], [0.0, 398.0, 0.0]],
+            [[0, 398, 38], [0.0, 38.0, 0.0]],
+        )
+        self._shapley_test_assert(
+            net, (inp1, inp2, inp3), expected, additional_input=(1,), n_samples=200,
         )
 
     def test_multi_input_ablation_with_mask(self):
@@ -90,12 +103,11 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
-            delta=0.8,
         )
         expected_with_baseline = (
-            [[1092, 1092, 1092], [260, 600.0, 260]],
-            [[80, 1092, 160], [260, 600.0, 0]],
-            [[80, 1092, 160], [260, 260, 260]],
+            [[1040, 1040, 1040], [184, 580.0, 184]],
+            [[52, 1040, 132], [184, 580.0, -12.0]],
+            [[52, 1040, 132], [184, 184, 184]],
         )
         self._shapley_test_assert(
             net,
@@ -104,7 +116,7 @@ class Test(BaseTest):
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     # Remaining tests are for cases where forward function returns a scalar
@@ -188,7 +200,7 @@ class Test(BaseTest):
             inp,
             [[79.0, 79.0, 21.0]],
             feature_mask=mask,
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
         )
 
@@ -201,7 +213,7 @@ class Test(BaseTest):
             inp,
             [[629.0, 629.0, 251.0]],
             feature_mask=mask,
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
         )
 
@@ -224,10 +236,9 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
             n_samples=700,
-            delta=0.8,
         )
 
     def _shapley_test_assert(
@@ -237,13 +248,13 @@ class Test(BaseTest):
         expected_ablation,
         feature_mask=None,
         additional_input=None,
-        ablations_per_eval=(1,),
+        perturbations_per_eval=(1,),
         baselines=None,
         target=0,
         n_samples=100,
-        delta=0.5,
+        delta=1.0,
     ):
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             shapley_samp = ShapleyValueSampling(model)
             attributions = shapley_samp.attribute(
                 test_input,
@@ -251,7 +262,7 @@ class Test(BaseTest):
                 feature_mask=feature_mask,
                 additional_forward_args=additional_input,
                 baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
                 n_samples=n_samples,
             )
             assertTensorTuplesAlmostEqual(

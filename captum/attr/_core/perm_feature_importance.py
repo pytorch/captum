@@ -29,7 +29,7 @@ class PermutationFeatureImportance(FeatureAblation):
         target=None,
         additional_forward_args=None,
         feature_mask=None,
-        ablations_per_eval=1,
+        perturbations_per_eval=1,
     ):
         return FeatureAblation.attribute(
             self,
@@ -38,7 +38,7 @@ class PermutationFeatureImportance(FeatureAblation):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=ablations_per_eval,
         )
 
     def _construct_ablated_input(

@@ -11,7 +11,7 @@ from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.shapley_sampling import ShapleyValueSampling
+from captum.attr._core.shapley_value import ShapleyValueSampling
 
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_conductance import LayerConductance

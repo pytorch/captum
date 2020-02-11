@@ -3,6 +3,7 @@
 import torch
 
 from .._utils.common import (
+    _find_output_mode_and_verify,
     _format_attributions,
     _format_input,
     _format_input_baseline,
@@ -12,7 +13,6 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.perturbation_utils import _find_output_mode_and_verify
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -33,7 +33,7 @@ class FeatureAblation(PerturbationAttribution):
         target=None,
         additional_forward_args=None,
         feature_mask=None,
-        ablations_per_eval=1,
+        perturbations_per_eval=1,
         **kwargs
     ):
         r""""
@@ -50,7 +50,7 @@ class FeatureAblation(PerturbationAttribution):
 
         The forward function can either return a scalar per example, or a single
         scalar for the full batch. If a single scalar is returned for the batch,
-        `ablations_per_eval` must be 1, and the returned attributions will have
+        `perturbations_per_eval` must be 1, and the returned attributions will have
         first dimension 1, corresponding to feature importance across all
         examples in the batch.
 
@@ -146,17 +146,17 @@ class FeatureAblation(PerturbationAttribution):
                             each scalar within a tensor as a separate feature, which
                             is ablated independently.
                             Default: None
-                ablations_per_eval (int, optional): Allows ablation of multiple features
+                perturbations_per_eval (int, optional): Allows ablation of multiple features
                             to be processed simultaneously in one call to forward_fn.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             If the forward function returns a single scalar per batch,
-                            ablations_per_eval must be set to 1.
+                            perturbations_per_eval must be set to 1.
                             Default: 1
                 **kwargs (Any, optional): Any additional arguments used by child
                             classes of FeatureAblation (such as Occlusion) to construct
@@ -228,7 +228,7 @@ class FeatureAblation(PerturbationAttribution):
                 _format_input(feature_mask) if feature_mask is not None else None
             )
             assert (
-                isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+                isinstance(perturbations_per_eval, int) and ablations_per_eval >= 1
             ), "Ablations per evaluation must be at least 1."
 
             # Computes initial evaluation with all features, which is compared
@@ -236,10 +236,10 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
-            single_output_mode = _find_output_mode_and_verify(
-                initial_eval, num_examples, ablations_per_eval, feature_mask
+            agg_output_mode = _find_output_mode_and_verify(
+                initial_eval, num_examples, perturbations_per_eval, feature_mask
             )
-            if not single_output_mode:
+            if not agg_output_mode:
                 initial_eval = initial_eval.reshape(1, num_examples)
 
             # Initialize attribution totals and counts
@@ -250,7 +250,7 @@ class FeatureAblation(PerturbationAttribution):
             )
             total_attrib = [
                 torch.zeros_like(
-                    input[0:1] if single_output_mode else input, dtype=attrib_type
+                    input[0:1] if agg_output_mode else input, dtype=attrib_type
                 )
                 for input in inputs
             ]
@@ -258,9 +258,7 @@ class FeatureAblation(PerturbationAttribution):
             # Weights are used in cases where ablations may be overlapping.
             if self.use_weights:
                 weights = [
-                    torch.zeros_like(
-                        input[0:1] if single_output_mode else input
-                    ).float()
+                    torch.zeros_like(input[0:1] if agg_output_mode else input).float()
                     for input in inputs
                 ]
 
@@ -278,7 +276,7 @@ class FeatureAblation(PerturbationAttribution):
                     target,
                     baselines,
                     feature_mask,
-                    ablations_per_eval,
+                    perturbations_per_eval,
                     **kwargs
                 ):
                     # modified_eval dimensions: 1D tensor with length
@@ -293,7 +291,7 @@ class FeatureAblation(PerturbationAttribution):
                     # (contains 1 more dimension than inputs). This adds extra
                     # dimensions of 1 to make the tensor broadcastable with the inputs
                     # tensor.
-                    if single_output_mode:
+                    if agg_output_mode:
                         eval_diff = initial_eval - modified_eval
                     else:
                         eval_diff = (
@@ -325,9 +323,13 @@ class FeatureAblation(PerturbationAttribution):
         target,
         baselines,
         input_mask,
-        ablations_per_eval,
+        perturbations_per_eval,
         **kwargs
     ):
+        """
+        This method is a generator which yields each perturbation to be evaluated including
+        inputs, additional_forward_args, targets, and mask.
+        """
         extra_args = {}
         for key, value in kwargs.items():
             # For any tuple argument in kwargs, we choose index i of the tuple.
@@ -341,31 +343,31 @@ class FeatureAblation(PerturbationAttribution):
             inputs[i], input_mask, **extra_args
         )
         num_examples = inputs[0].shape[0]
-        ablations_per_eval = min(ablations_per_eval, num_features)
+        perturbations_per_eval = min(ablations_per_eval, num_features)
         baseline = baselines[i] if isinstance(baselines, tuple) else baselines
         if isinstance(baseline, torch.Tensor):
             baseline = baseline.reshape((1,) + baseline.shape)
 
         # Repeat features and additional args for batch size.
         all_features_repeated = [
-            torch.cat([inputs[j]] * ablations_per_eval, dim=0)
+            torch.cat([inputs[j]] * perturbations_per_eval, dim=0)
             for j in range(len(inputs))
         ]
         additional_args_repeated = (
-            _expand_additional_forward_args(additional_args, ablations_per_eval)
+            _expand_additional_forward_args(additional_args, perturbations_per_eval)
             if additional_args is not None
             else None
         )
-        target_repeated = _expand_target(target, ablations_per_eval)
+        target_repeated = _expand_target(target, perturbations_per_eval)
 
         num_features_processed = min_feature
         while num_features_processed < num_features:
             current_num_ablated_features = min(
-                ablations_per_eval, num_features - num_features_processed
+                perturbations_per_eval, num_features - num_features_processed
             )
 
             # Store appropriate inputs and additional args based on batch size.
-            if current_num_ablated_features != ablations_per_eval:
+            if current_num_ablated_features != perturbations_per_eval:
                 current_features = [
                     feature_repeated[0 : current_num_ablated_features * num_examples]
                     for feature_repeated in all_features_repeated

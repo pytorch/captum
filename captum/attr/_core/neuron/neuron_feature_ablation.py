@@ -39,7 +39,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         additional_forward_args=None,
         feature_mask=None,
         attribute_to_neuron_input=False,
-        ablations_per_eval=1,
+        perturbations_per_eval=1,
     ):
         r"""
             A perturbation based approach to computing neuron attribution,
@@ -131,14 +131,14 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
-                ablations_per_eval (int, optional): Allows ablation of multiple features
+                perturbations_per_eval (int, optional): Allows ablation of multiple features
                             to be processed simultaneously in one call to forward_fn.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
 
@@ -221,5 +221,5 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             baselines=baselines,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=ablations_per_eval,
         )
