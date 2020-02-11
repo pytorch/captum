@@ -376,7 +376,9 @@ class DeepLift(GradientAttribution):
         self, module: Module, inputs: TensorOrTupleOfTensors
     ) -> None:
         inputs = _format_tensor_into_tuples(inputs)
-        module.input_ref = tuple(input.clone().detach() for input in inputs)  # type: ignore
+        module.input_ref = tuple(  # type: ignore
+            input.clone().detach() for input in inputs
+        )
 
     def _forward_pre_hook(self, module: Module, inputs: TensorOrTupleOfTensors) -> None:
         """
@@ -494,7 +496,7 @@ class DeepLift(GradientAttribution):
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
         pre_forward_handle = module.register_forward_pre_hook(self._forward_pre_hook)
-        backward_handle = module.register_backward_hook(self._backward_hook)  # type: ignore
+        backward_handle = module.register_backward_hook(self._backward_hook)
         self.forward_handles.append(forward_handle)
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
