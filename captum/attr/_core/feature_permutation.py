@@ -28,12 +28,13 @@ class FeaturePermutation(FeatureAblation):
         Args:
 
             forward_func (callable): The forward function of the model or
-                        any modification of it
-            perm_func (callable): A function that accepts a batch of inputs and a feature mask, 
-                                  and "permutes" the feature across the batch. NOTE: one obviously does 
-                                  not have to perform a permutation. See `_permute_feature` as an example on how 
-                                  to implement your own permutation function.
-                                  Default: `_permute_feature`
+                any modification of it
+            perm_func (callable): A function that accepts a batch of inputs and
+                a feature mask, and "permutes" the feature across the batch.
+                NOTE: one obviously does not have to perform a permutation.
+                See `_permute_feature` as an example on how to implement
+                your own permutation function.
+                Default: `_permute_feature`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
         self.perm_func = perm_func
@@ -52,8 +53,9 @@ class FeaturePermutation(FeatureAblation):
         **kwargs: Any,
     ) -> TensorOrTupleOfTensors:
         r"""
-        This attribution method essentially implements the permutation feature importance algorithm, 
-        as described here: https://christophm.github.io/interpretable-ml-book/feature-importance.html
+        This attribution method essentially implements the permutation feature
+        importance algorithm, as described here:
+        https://christophm.github.io/interpretable-ml-book/feature-importance.html
 
         A basic tl;dr of the algorithm is:
 
@@ -69,12 +71,15 @@ class FeaturePermutation(FeatureAblation):
             sort importance in descending order
             return importance
 
-        It should be noted that the `error_metric` must be called in the `forward_func`. You do
-        not need to provide an error metric, e.g. you could simply return the logits (the model output), but this may or may not provide a meaningful attribution.
+        It should be noted that the `error_metric` must be called in the
+        `forward_func`. You do not need to provide an error metric, e.g. you
+        could simply return the logits (the model output), but this may or may
+        not provide a meaningful attribution.
 
-        This function is almost equivalent to `FeatureAblation.attribute`. The main difference
-        is the way ablated examples are generated. Specifically they are generated through the 
-        `perm_func`, as we set the baselines for `FeatureAblation.attribute` to None.
+        This function is almost equivalent to `FeatureAblation.attribute`. The
+        main difference is the way ablated examples are generated. Specifically
+        they are generated through the `perm_func`, as we set the baselines for
+        `FeatureAblation.attribute` to None.
 
 
         Args:
@@ -187,14 +192,18 @@ class FeaturePermutation(FeatureAblation):
         **kwargs: Any,
     ) -> Tuple[Tensor, Tensor]:
         r"""
-        This function ablates `expanded_input` with a given feature mask and feature range. Ablation
-        occurs via calling `self.perm_func` across each batch within `expanded_input`. As 
-        with `FeatureAblation._construct_ablated_input`:
+        This function ablates `expanded_input` with a given feature mask and
+        feature range. Ablation occurs via calling `self.perm_func` across each
+        batch within `expanded_input`. As with
+        `FeatureAblation._construct_ablated_input`:
         - `expanded_input.shape = (num_features, num_examples, ...)`
-        - `num_features = end_feature - start_feature` (i.e. start and end is a half-closed interval)
-        - `input_mask` is a tensor of the same shape as one input, which describes the locations of each feature via their "index"
-        
-        Since `baselines` is set to None for `FeatureAblation.attribute, this will be the zero tensor, however, it is not used.
+        - `num_features = end_feature - start_feature` (i.e. start and end is a
+          half-closed interval)
+        - `input_mask` is a tensor of the same shape as one input, which
+          describes the locations of each feature via their "index"
+
+        Since `baselines` is set to None for `FeatureAblation.attribute, this
+        will be the zero tensor, however, it is not used.
         """
         assert input_mask.shape[0] == 1, (
             "input_mask.shape[0] != 1: pass in one mask in order to permute"
