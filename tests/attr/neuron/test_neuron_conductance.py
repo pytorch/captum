@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tensor, Tuple, Union, Any
+from typing import List, Optional, Tuple, Union, Any
 import torch
+from torch import Tensor
 from torch.nn import Module
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
