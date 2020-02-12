@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+from typing import Optional, Tuple, Union, Any
 
 import torch
+from torch import Tensor
 
 import numpy as np
 from enum import Enum
@@ -30,7 +32,7 @@ SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
 class NoiseTunnel(Attribution):
-    def __init__(self, attribution_method):
+    def __init__(self, attribution_method: Attribution) -> None:
         r"""
         attribution_method (Attribution): An instance of any attribution algorithm
                     of type `Attribution`. E.g. Integrated Gradients,
@@ -43,12 +45,12 @@ class NoiseTunnel(Attribution):
 
     def attribute(
         self,
-        inputs,
-        nt_type="smoothgrad",
-        n_samples=5,
-        stdevs=1.0,
-        draw_baseline_from_distrib=False,
-        **kwargs
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        nt_type: str = "smoothgrad",
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 1.0,
+        draw_baseline_from_distrib: bool = False,
+        **kwargs: Any
     ):
         r"""
         Adds gaussian noise to each input in the batch `n_samples` times
@@ -147,7 +149,7 @@ class NoiseTunnel(Attribution):
             >>>                            n_samples=10, target=3)
         """
 
-        def add_noise_to_inputs():
+        def add_noise_to_inputs() -> Tuple[Tensor, ...]:
             if isinstance(stdevs, tuple):
                 assert len(stdevs) == len(inputs), (
                     "The number of input tensors "
@@ -165,7 +167,7 @@ class NoiseTunnel(Attribution):
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
-        def add_noise_to_input(input, stdev):
+        def add_noise_to_input(input: Tensor, stdev: float) -> Tensor:
             # batch size
             bsz = input.shape[0]
 
@@ -266,7 +268,7 @@ class NoiseTunnel(Attribution):
 
         _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
-        delta = 0
+        delta = None
         inputs_with_noise = add_noise_to_inputs()
         # if the algorithm supports targets, baselines and/or additional_forward_args
         # they will be expanded based on the n_steps and corresponding kwargs
@@ -326,7 +328,11 @@ class NoiseTunnel(Attribution):
         )
 
     def _apply_checks_and_return_attributions(
-        self, attributions, is_attrib_tuple, return_convergence_delta, delta
+        self,
+        attributions: Union[Tensor, Tuple[Tensor, ...]],
+        is_attrib_tuple: bool,
+        return_convergence_delta: bool,
+        delta: Optional[Tensor],
     ):
         attributions = _format_attributions(is_attrib_tuple, attributions)
 
@@ -336,5 +342,5 @@ class NoiseTunnel(Attribution):
             else attributions
         )
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return self.is_delta_supported

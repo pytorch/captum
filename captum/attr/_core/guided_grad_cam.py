@@ -197,7 +197,7 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        output_attr = []
+        output_attr: List[Optional[Tensor]] = []
         for i in range(len(inputs)):
             try:
                 output_attr.append(
