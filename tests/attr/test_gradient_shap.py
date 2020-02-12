@@ -8,8 +8,9 @@ from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2, BasicLinearModel
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from typing import Union, Tuple, List
-from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensors
+from typing import Union, Tuple
+from captum.attr._utils.typing import Tensor
+from numpy import ndarray
 
 
 class Test(BaseTest):
@@ -48,7 +49,7 @@ class Test(BaseTest):
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
         attributions_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(attributions, attributions_ig)
+        self._assert_shap_ig_comparision(tuple(attributions), attributions_ig)
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag
@@ -67,7 +68,7 @@ class Test(BaseTest):
         def generate_baselines_with_inputs(inputs: Tensor) -> Tensor:
             return torch.arange(0.0, inputs.shape[1] * 2.0).reshape(2, inputs.shape[1])
 
-        def generate_baselines_returns_array() -> List:
+        def generate_baselines_returns_array() -> ndarray:
             return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
         # 10-class classification model
@@ -173,12 +174,10 @@ class Test(BaseTest):
 
         ig = IntegratedGradients(model)
         attributions_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(attributions, attributions_ig)
+        self._assert_shap_ig_comparision(tuple(attributions), attributions_ig)
 
     def _assert_shap_ig_comparision(
-        self,
-        attributions1: Union[Tensor, Tuple[Tensor, ...]],
-        attributions2: TensorOrTupleOfTensors,
+        self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...],
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
             for attr_row1, attr_row2 in zip(
@@ -208,7 +207,7 @@ def _assert_attribution_delta(
     _assert_delta(test, delta)
 
 
-def _assert_delta(test, delta: Tensor) -> None:
+def _assert_delta(test: BaseTest, delta: Tensor) -> None:
     delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
     test.assertTrue(
         delta_condition,

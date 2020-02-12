@@ -29,7 +29,7 @@ class GradientShap(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: Tensor,
+        inputs: TensorOrTupleOfTensors,
         baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
@@ -37,18 +37,14 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Tensor:
-        r"""
-        This is an overload method which returns a Tensor if input is Tensor.
-        i.e. not a "Tuple of Tensor"
-        """
+        return_convergence_delta: bool = True,
+    ) -> TensorOrTupleOfTensors:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: Tuple[Tensor, ...],
+        inputs: TensorOrTupleOfTensors,
         baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
@@ -56,12 +52,7 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Tuple[Tensor, ...]:
-        r"""
-        This is an overload method which returns a 'Tuple of Tensor'
-        if input is a 'Tuple of Tensor'.
-        """
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         ...
 
     def attribute(
@@ -75,7 +66,7 @@ class GradientShap(GradientAttribution):
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ):
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
         author. For reference, please, view:
@@ -279,27 +270,26 @@ class InputBaselineXGradient(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: Tensor,
+        inputs: TensorOrTupleOfTensors,
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
         target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Tensor:
+        return_convergence_delta: bool = True,
+    ) -> TensorOrTupleOfTensors:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: Tuple[Tensor, ...],
+        inputs: TensorOrTupleOfTensors,
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
         target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Tuple[Tensor, ...]:
+    ) -> TensorOrTupleOfTensors:
         ...
 
     def attribute(
