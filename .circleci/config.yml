@@ -149,6 +149,24 @@ jobs:
       - unit_tests
       - sphinx
 
+  test_py36_pip_torch_1_3:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-f -v 1.3"
+      - unit_tests
+
+  test_py36_pip_torch_1_2:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - pip_install:
+          args: "-f -v 1.2"
+      - unit_tests
+
   lint_test_py37_conda:
     docker:
       - image: continuumio/miniconda3
@@ -206,6 +224,10 @@ workflows:
       - lint_test_py36_pip_release:
           filters: *exclude_ghpages_fbconfig
       - lint_test_py37_conda:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_2:
+          filters: *exclude_ghpages_fbconfig
+      - test_py36_pip_torch_1_3:
           filters: *exclude_ghpages_fbconfig
       - test_cuda_multi_gpu:
           filters: *exclude_ghpages_fbconfig

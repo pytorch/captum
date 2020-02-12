@@ -4,13 +4,15 @@ set -e
 
 PYTORCH_NIGHTLY=false
 DEPLOY=false
+CHOSEN_TORCH_VERSION=-1
 
-while getopts 'ndf' flag; do
+while getopts 'ndfv:' flag; do
   case "${flag}" in
     n) PYTORCH_NIGHTLY=true ;;
     d) DEPLOY=true ;;
     f) FRAMEWORKS=true ;;
-    *) echo "usage: $0 [-n] [-d] [-f]" >&2
+    v) CHOSEN_TORCH_VERSION=${OPTARG};;
+    *) echo "usage: $0 [-n] [-d] [-f] [-v version]" >&2
        exit 1 ;;
     esac
   done
@@ -50,7 +52,14 @@ fi
 
 # install pytorch nightly if asked for
 if [[ $PYTORCH_NIGHTLY == true ]]; then
-  sudo pip install torch_nightly -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+  sudo pip install --upgrade --pre torch -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
+else
+  # If no version specified, upgrade to latest release.
+  if [[ $CHOSEN_TORCH_VERSION == -1 ]]; then
+    sudo pip install --upgrade torch
+  else
+    sudo pip install torch==$CHOSEN_TORCH_VERSION
+  fi
 fi
 
 # install deployment bits if asked for

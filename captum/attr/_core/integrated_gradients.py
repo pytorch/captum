@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import typing
 from typing import Callable, List, Optional, Tuple, Union, Any
 
 import torch
@@ -16,6 +17,7 @@ from .._utils.common import (
     _expand_target,
 )
 from .._utils.attribution import GradientAttribution
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class IntegratedGradients(GradientAttribution):
@@ -44,9 +46,37 @@ class IntegratedGradients(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    # The following overloaded method signatures correspond to the case where
+    # return_convergence_delta is not provided, then only attributions are returned,
+    # and when return_convergence_delta is provided, the return type is either
+    # just the attributions or a tuple with both attributions and deltas.
+    # Note that this doesn't explicitly type the case where return_convergence_delta
+    # is passed with the value False, the return type when return_convergence_delta is
+    # given is Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]].
+    # Supporting separate return types for True and False requires using the Literal
+    # type functionality, which is only available in Python 3.8. We plan to support
+    # this in the future.
+    @typing.overload
     def attribute(
         self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+    ) -> TensorOrTupleOfTensors:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
@@ -58,9 +88,20 @@ class IntegratedGradients(GradientAttribution):
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
-    ]:
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        ...
+
+    def attribute(
+        self,
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        n_steps=50,
+        method="gausslegendre",
+        internal_batch_size=None,
+        return_convergence_delta=False,
+    ):
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a

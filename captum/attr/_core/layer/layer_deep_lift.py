@@ -311,7 +311,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     def attribute(
         self,
         inputs,
-        baselines=None,
+        baselines,
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
@@ -348,35 +348,31 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
+            baselines (tensor, tuple of tensors, callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
-                        corresponding references.
-                        Baselines can be provided either as:
+                        corresponding references. Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                            the first dimension equal to the number of examples
+                            in the baselines' distribution. The remaining dimensions
+                            must match with input tensor's dimension starting from
+                            the second dimension.
 
-                        - a tuple of tensors, the baseline corresponding
-                            to each tensor in the inputs' tuple is either a tensor
-                            with matching dimensions to corresponding tensor in
-                            the inputs' tuple or the first dimension is one and the
-                            remaining dimensions match with the corresponding input
-                            tensor.
+                        - a tuple of tensors, if inputs is a tuple of tensors,
+                            with the first dimension of any tensor inside the tuple
+                            equal to the number of examples in the baseline's
+                            distribution. The remaining dimensions must match
+                            the dimensions of the corresponding input tensor
+                            starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
                             argument and either returns a single tensor
                             or a tuple of those.
-                        The number of samples in the baselines' tensors must be
-                        larger than one.
 
-                        In the cases when `baselines` is not provided, we internally
-                        use zero scalar corresponding to each input tensor.
-
-                        Default: None
+                        It is recommended that the number of samples in the baselines'
+                        tensors is larger than one.
             target (int, tuple, tensor or list, optional):  Output indices for
                         which gradients are computed (for classification cases,
                         this is usually the target class).

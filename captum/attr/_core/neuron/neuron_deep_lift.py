@@ -4,9 +4,14 @@ from ..._utils.gradient import construct_neuron_grad_fn
 
 from ..deep_lift import DeepLift, DeepLiftShap
 
+from typing import Callable, Optional, Tuple, Union, Any
+from torch import Tensor
+from torch.nn import Module
+from ..._utils.typing import TensorOrTupleOfTensors
+
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
 
@@ -24,13 +29,15 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        baselines=None,
-        additional_forward_args=None,
-        attribute_to_neuron_input=False,
-        custom_attribution_func=None,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensors:
         r""""
         Implements DeepLIFT algorithm for the neuron based on the following paper:
         Learning Important Features Through Propagating Activation Differences,
@@ -185,7 +192,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
 
 class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
 
@@ -202,13 +209,21 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        baselines=None,
-        additional_forward_args=None,
-        attribute_to_neuron_input=False,
-        custom_attribution_func=None,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        baselines: Optional[
+            Union[
+                int,
+                float,
+                Tensor,
+                Tuple[Union[Tensor, int, float], ...],
+                Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+            ]
+        ] = None,
+        additional_forward_args: Any = None,
+        attribute_to_neuron_input: bool = False,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensors:
         r"""
         Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
         approximates SHAP values for given input `layer` and `neuron_index`.
@@ -245,35 +260,31 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         dimension 0 corresponds to number of examples).
                         An integer may be provided instead of a tuple of
                         length 1.
-            baselines (scalar, tensor, tuple of scalars or tensors, callable, optional):
+            baselines (tensor, tuple of tensors, callable):
                         Baselines define reference samples that are compared with
                         the inputs. In order to assign attribution scores DeepLift
                         computes the differences between the inputs/outputs and
-                        corresponding references.
-                        Baselines can be provided as:
+                        corresponding references. Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                            the first dimension equal to the number of examples
+                            in the baselines' distribution. The remaining dimensions
+                            must match with input tensor's dimension starting from
+                            the second dimension.
 
-                        - a tuple of tensors, the baseline corresponding
-                            to each tensor in the inputs' tuple is either a tensor
-                            with matching dimensions to corresponding tensor in
-                            the inputs' tuple or the first dimension is one and the
-                            remaining dimensions match with the corresponding input
-                            tensor.
+                        - a tuple of tensors, if inputs is a tuple of tensors,
+                            with the first dimension of any tensor inside the tuple
+                            equal to the number of examples in the baseline's
+                            distribution. The remaining dimensions must match
+                            the dimensions of the corresponding input tensor
+                            starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
                             argument and either returns a single tensor
                             or a tuple of those.
-                        The number of samples in the baselines' tensors must be
-                        larger than one.
 
-                        In the cases when `baselines` is not provided, we internally
-                        use zero scalar corresponding to each input tensor.
-
-                        Default: None
+                        It is recommended that the number of samples in the baselines'
+                        tensors is larger than one.
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument

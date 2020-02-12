@@ -2,6 +2,10 @@
 
 import torch
 
+from torch import Tensor, dtype
+
+from typing import Callable, List, Optional, Tuple, Union, Any, cast
+
 from .._utils.common import (
     _find_output_mode_and_verify,
     _format_attributions,
@@ -13,10 +17,11 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
+from .._utils.typing import TensorOrTupleOfTensors
 
 
 class FeatureAblation(PerturbationAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -27,15 +32,20 @@ class FeatureAblation(PerturbationAttribution):
         self.use_weights = False
 
     def attribute(
+        # type:ignore
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        feature_mask=None,
-        perturbations_per_eval=1,
-        **kwargs
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        perturbations_per_eval: int = 1,
+        **kwargs: Any
+    ) -> TensorOrTupleOfTensors:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each input feature with a given baseline / reference, and
@@ -216,7 +226,20 @@ class FeatureAblation(PerturbationAttribution):
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = ablator.attribute(input, target=1, feature_mask=feature_mask)
         """
+        # Keeps track whether original input is a tuple or not before
+        # converting it into a tuple.
+        is_inputs_tuple = isinstance(inputs, tuple)
+        inputs, baselines = _format_input_baseline(inputs, baselines)
+        additional_forward_args = _format_additional_forward_args(
+            additional_forward_args
+        )
+        num_examples = inputs[0].shape[0]
+        feature_mask = _format_input(feature_mask) if feature_mask is not None else None
+        assert (
+            isinstance(ablations_per_eval, int) and ablations_per_eval >= 1
+        ), "Ablations per evaluation must be at least 1."
         with torch.no_grad():
+<<<<<<< HEAD
             # Keeps track whether original input is a tuple or not before
             # converting it into a tuple.
             is_inputs_tuple = isinstance(inputs, tuple)
@@ -232,6 +255,8 @@ class FeatureAblation(PerturbationAttribution):
                 isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
             ), "Ablations per evaluation must be at least 1."
 
+=======
+>>>>>>> 667217ad52b0c810b0d983686189b6ab4abe109a
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
             initial_eval = _run_forward(
@@ -244,10 +269,11 @@ class FeatureAblation(PerturbationAttribution):
                 initial_eval = initial_eval.reshape(1, num_examples)
 
             # Initialize attribution totals and counts
-            attrib_type = (
+            attrib_type = cast(
+                dtype,
                 initial_eval.dtype
-                if isinstance(initial_eval, torch.Tensor)
-                else type(initial_eval)
+                if isinstance(initial_eval, Tensor)
+                else type(initial_eval),
             )
             total_attrib = [
                 torch.zeros_like(
@@ -265,6 +291,9 @@ class FeatureAblation(PerturbationAttribution):
 
             # Iterate through each feature tensor for ablation
             for i in range(len(inputs)):
+                # Skip any empty input tensors
+                if torch.numel(inputs[i]) == 0:
+                    continue
                 for (
                     current_inputs,
                     current_add_args,
@@ -314,7 +343,8 @@ class FeatureAblation(PerturbationAttribution):
                 )
             else:
                 attrib = tuple(total_attrib)
-            return _format_attributions(is_inputs_tuple, attrib)
+            _result = _format_attributions(is_inputs_tuple, attrib)
+        return _result
 
     def _perturbation_generator(
         self,
@@ -391,12 +421,16 @@ class FeatureAblation(PerturbationAttribution):
             # Construct ablated batch for features in range num_features_processed
             # to num_features_processed + current_num_ablated_features and return
             # mask with same size as ablated batch. ablated_features has dimension
-            # (current_num_ablated_features, num_examples, + inputs[i].shape[1:])
+            # (current_num_ablated_features, num_examples, inputs[i].shape[1:])
+            # Note that in the case of sparse tensors, the second dimension
+            # may not necessarilly be num_examples and will match the first
+            # dimension of this tensor.
+            current_reshaped = current_features[i].reshape(
+                (current_num_ablated_features, -1) + current_features[i].shape[1:]
+            )
+
             ablated_features, current_mask = self._construct_ablated_input(
-                current_features[i].reshape(
-                    (current_num_ablated_features, num_examples)
-                    + current_features[i].shape[1:]
-                ),
+                current_reshaped,
                 input_mask,
                 baseline,
                 num_features_processed,

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+from typing import Callable, Union
+
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from ..helpers.utils import BaseTest
 
@@ -14,7 +18,7 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 
 
 class Test(BaseTest):
-    def test_basic_multilayer(self):
+    def test_basic_multilayer(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         model.eval()
 
@@ -23,8 +27,8 @@ class Test(BaseTest):
 
         self._assert_attributions(model, model.linear1, inputs, baselines, 0)
 
-    def test_classification(self):
-        def custom_baseline_fn(inputs):
+    def test_classification(self) -> None:
+        def custom_baseline_fn(inputs: Tensor) -> Tensor:
             num_in = inputs.shape[1]
             return torch.arange(0.0, num_in * 5.0).reshape(5, num_in)
 
@@ -41,8 +45,14 @@ class Test(BaseTest):
         self._assert_attributions(model, model.relu1, inputs, baselines, 1, n_samples)
 
     def _assert_attributions(
-        self, model, layer, inputs, baselines, neuron_ind, n_samples=5
-    ):
+        self,
+        model: Module,
+        layer: Module,
+        inputs: Tensor,
+        baselines: Union[Tensor, Callable[..., Tensor]],
+        neuron_ind: Union[int, tuple],
+        n_samples: int = 5,
+    ) -> None:
         ngs = NeuronGradientShap(model, layer)
         nig = NeuronIntegratedGradients(model, layer)
         attrs_gs = ngs.attribute(
@@ -53,9 +63,9 @@ class Test(BaseTest):
             baselines = baselines(inputs)
 
         attrs_ig = []
-        for baseline in baselines:
+        for baseline in torch.unbind(baselines):
             attrs_ig.append(
                 nig.attribute(inputs, neuron_ind, baselines=baseline.unsqueeze(0))
             )
-        attrs_ig = torch.stack(attrs_ig, axis=0).mean(axis=0)
-        assertTensorAlmostEqual(self, attrs_gs, attrs_ig, 0.5)
+        combined_attrs_ig = torch.stack(attrs_ig, dim=0).mean(dim=0)
+        assertTensorAlmostEqual(self, attrs_gs, combined_attrs_ig, 0.5)

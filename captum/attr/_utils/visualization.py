@@ -417,7 +417,7 @@ class VisualizationDataRecord:
         "word_attributions",
         "pred_prob",
         "pred_class",
-        "target_class",
+        "true_class",
         "attr_class",
         "attr_score",
         "raw_input",
@@ -429,7 +429,7 @@ class VisualizationDataRecord:
         word_attributions,
         pred_prob,
         pred_class,
-        target_class,
+        true_class,
         attr_class,
         attr_score,
         raw_input,
@@ -438,7 +438,7 @@ class VisualizationDataRecord:
         self.word_attributions = word_attributions
         self.pred_prob = pred_prob
         self.pred_class = pred_class
-        self.target_class = target_class
+        self.true_class = true_class
         self.attr_class = attr_class
         self.attr_score = attr_score
         self.raw_input = raw_input
@@ -502,7 +502,7 @@ def visualize_text(datarecords: Iterable[VisualizationDataRecord]):
     )
     dom = ["<table width: 100%>"]
     rows = [
-        "<tr><th>Target Label</th>"
+        "<tr><th>True Label</th>"
         "<th>Predicted Label</th>"
         "<th>Attribution Label</th>"
         "<th>Attribution Score</th>"
@@ -513,7 +513,7 @@ def visualize_text(datarecords: Iterable[VisualizationDataRecord]):
             "".join(
                 [
                     "<tr>",
-                    format_classname(datarecord.target_class),
+                    format_classname(datarecord.true_class),
                     format_classname(
                         "{0} ({1:.2f})".format(
                             datarecord.pred_class, datarecord.pred_prob
