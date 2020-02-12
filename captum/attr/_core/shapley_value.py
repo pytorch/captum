@@ -263,7 +263,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
 
             if feature_mask is None:
-
+                feature_mask, total_features = self.construct_feature_mask(inputs)
             else:
                 total_features = (
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
@@ -413,6 +413,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 target_repeated,
                 combined_masks,
             )
+
     def construct_feature_mask(self, inputs):
         feature_mask = []
         current_num_features = 0
