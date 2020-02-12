@@ -6,7 +6,7 @@ import torch
 
 from torch import Tensor
 from torch.nn import Module
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import cast, Any, Callable, List, Optional, Tuple, Union
 from captum.attr._core.layer.layer_conductance import LayerConductance
 
 from ..helpers.basic_models import (
@@ -20,7 +20,6 @@ from ..helpers.utils import (
     assertTensorTuplesAlmostEqual,
     BaseTest,
 )
-from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 class Test(BaseTest):
     def test_simple_input_conductance(self) -> None:
@@ -170,31 +169,31 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: Union[Tensor, Tuple[Tensor, ...]],
+        test_input: Tensor,
         test_baseline: Optional[
-            Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
+            Tensor
         ] = None
     ) -> None:
         layer_output = None
-
         def forward_hook(module, inp, out):
             nonlocal layer_output
             layer_output = out
 
         hook = target_layer.register_forward_hook(forward_hook)
         final_output = model(test_input)
+        layer_output = cast(Tensor, layer_output)
         hook.remove()
         target_index = torch.argmax(torch.sum(final_output, 0))
         cond = LayerConductance(model, target_layer)
         cond_ref = ConductanceReference(model, target_layer)
-        attributions, delta = cond.attribute(
+        attributions, delta = cast (Tuple[Tensor, Tensor], cond.attribute(
             test_input,
             baselines=test_baseline,
             target=target_index,
             n_steps=300,
             method="gausslegendre",
             return_convergence_delta=True,
-        )
+        ))
         delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
         self.assertTrue(
             delta_condition,
@@ -222,7 +221,7 @@ class Test(BaseTest):
         # Test if batching is working correctly for inputs with multiple examples
         if test_input.shape[0] > 1:
             for i in range(test_input.shape[0]):
-                single_attributions = cond.attribute(
+                single_attributions = cast(Tensor, cond.attribute(
                     test_input[i : i + 1],
                     baselines=test_baseline[i : i + 1]
                     if test_baseline is not None
@@ -230,7 +229,7 @@ class Test(BaseTest):
                     target=target_index,
                     n_steps=300,
                     method="gausslegendre",
-                )
+                ))
                 # Verify that attributions when passing example independently
                 # matches corresponding attribution of batched input.
                 assertArraysAlmostEqual(

@@ -16,7 +16,6 @@ from ..._utils.common import (
     _expand_target,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class LayerConductance(LayerAttribution, GradientAttribution):
