@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from typing import Callable, List, Optional, Tuple, Union, Any
-from torch import Tensor
 from torch.nn import Module
 
 from ..gradient_shap import GradientShap
@@ -42,7 +41,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[Tensor, Callable[..., Tensor], Tuple[Union[Tensor], ...]],
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         n_samples: int = 5,
         stdevs: float = 0.0,
         additional_forward_args: Any = None,

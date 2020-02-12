@@ -30,14 +30,13 @@ class GradientShap(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = True,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -45,20 +44,7 @@ class GradientShap(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
-        n_samples: int = 5,
-        stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
-        additional_forward_args: Any = None,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[Tensor, Callable, Tuple[Tensor, ...]],
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
@@ -66,6 +52,18 @@ class GradientShap(GradientAttribution):
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        ...
+
+    def attribute(
+        self,
+        inputs,
+        baselines,
+        n_samples=5,
+        stdevs=0.0,
+        target=None,
+        additional_forward_args=None,
+        return_convergence_delta=False,
     ):
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
@@ -276,7 +274,6 @@ class InputBaselineXGradient(GradientAttribution):
         ] = None,
         target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = True,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -289,19 +286,18 @@ class InputBaselineXGradient(GradientAttribution):
         ] = None,
         target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
         additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
     ) -> TensorOrTupleOfTensors:
         ...
 
     def attribute(
         self,
-        inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
-        ] = None,
-        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        inputs,
+        baselines=None,
+        target=None,
+        additional_forward_args=None,
+        return_convergence_delta=False,
+    ):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = isinstance(inputs, tuple)
