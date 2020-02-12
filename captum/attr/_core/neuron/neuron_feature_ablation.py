@@ -131,8 +131,9 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
-                perturbations_per_eval (int, optional): Allows ablation of multiple features
-                            to be processed simultaneously in one call to forward_fn.
+                perturbations_per_eval (int, optional): Allows ablation of multiple
+                            features to be processed simultaneously in one call to
+                            forward_fn.
                             Each forward pass will contain a maximum of
                             perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
@@ -221,5 +222,5 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             baselines=baselines,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            perturbations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
         )

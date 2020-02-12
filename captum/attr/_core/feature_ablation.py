@@ -146,8 +146,9 @@ class FeatureAblation(PerturbationAttribution):
                             each scalar within a tensor as a separate feature, which
                             is ablated independently.
                             Default: None
-                perturbations_per_eval (int, optional): Allows ablation of multiple features
-                            to be processed simultaneously in one call to forward_fn.
+                perturbations_per_eval (int, optional): Allows ablation of multiple
+                            features to be processed simultaneously in one call to
+                            forward_fn.
                             Each forward pass will contain a maximum of
                             perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
@@ -228,7 +229,7 @@ class FeatureAblation(PerturbationAttribution):
                 _format_input(feature_mask) if feature_mask is not None else None
             )
             assert (
-                isinstance(perturbations_per_eval, int) and ablations_per_eval >= 1
+                isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
             ), "Ablations per evaluation must be at least 1."
 
             # Computes initial evaluation with all features, which is compared
@@ -327,8 +328,8 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs
     ):
         """
-        This method is a generator which yields each perturbation to be evaluated including
-        inputs, additional_forward_args, targets, and mask.
+        This method is a generator which yields each perturbation to be evaluated
+        including inputs, additional_forward_args, targets, and mask.
         """
         extra_args = {}
         for key, value in kwargs.items():
@@ -343,7 +344,7 @@ class FeatureAblation(PerturbationAttribution):
             inputs[i], input_mask, **extra_args
         )
         num_examples = inputs[0].shape[0]
-        perturbations_per_eval = min(ablations_per_eval, num_features)
+        perturbations_per_eval = min(perturbations_per_eval, num_features)
         baseline = baselines[i] if isinstance(baselines, tuple) else baselines
         if isinstance(baseline, torch.Tensor):
             baseline = baseline.reshape((1,) + baseline.shape)

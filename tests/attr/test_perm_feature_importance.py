@@ -150,7 +150,7 @@ class Test(BaseTest):
         feature_importance = PermutationFeatureImportance(forward_func=forward_func)
 
         attribs = feature_importance.attribute(
-            inp, perturbations_per_eval=ablations_per_eval, target=target
+            inp, perturbations_per_eval=perturbations_per_eval, target=target
         )
         self.assertTrue(attribs.size() == (batch_size,) + input_size)
 

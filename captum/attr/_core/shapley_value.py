@@ -16,6 +16,11 @@ from .._utils.common import (
 from .._utils.attribution import PerturbationAttribution
 
 
+def _perm_generator(num_features, num_samples):
+    for i in range(num_samples):
+        yield torch.randperm(num_features)
+
+
 class ShapleyValueSampling(PerturbationAttribution):
     """
     A perturbation based approach to compute attribution, based on the concept
@@ -53,6 +58,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                         feature importance across all examples in the batch.
         """
         PerturbationAttribution.__init__(self, forward_func)
+        self.permutation_generator = _perm_generator
         self.use_weights = False
 
     def attribute(
@@ -257,20 +263,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
 
             if feature_mask is None:
-                feature_mask = []
-                current_num_features = 0
-                for i in range(len(inputs)):
-                    num_features = torch.numel(inputs[i][0])
-                    feature_mask.append(
-                        current_num_features
-                        + torch.reshape(
-                            torch.arange(num_features, device=inputs[i].device),
-                            inputs[i][0:1].shape,
-                        )
-                    )
-                    current_num_features += num_features
-                total_features = current_num_features
-                feature_mask = tuple(feature_mask)
+
             else:
                 total_features = (
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
@@ -285,8 +278,9 @@ class ShapleyValueSampling(PerturbationAttribution):
 
             # Iterate for number of samples, generate a permutation of the features
             # and evalute the incremental increase for each feature.
-            for i in range(n_samples):
-                feature_permutation = torch.randperm(total_features)
+            for feature_permutation in self.permutation_generator(
+                total_features, n_samples
+            ):
                 prev_results = initial_eval
                 for (
                     current_inputs,
@@ -350,11 +344,11 @@ class ShapleyValueSampling(PerturbationAttribution):
         perturbations_per_eval,
     ):
         """
-        This method is a generator which yields each perturbation to be evaluated including
-        inputs, additional_forward_args, targets, and mask.
+        This method is a generator which yields each perturbation to be evaluated
+        including inputs, additional_forward_args, targets, and mask.
         """
-        # current_tensors starts at baselines and includes each additional feature as added
-        # based on the permutation order.
+        # current_tensors starts at baselines and includes each additional feature as
+        # added based on the permutation order.
         current_tensors = baselines
         current_tensors_list = []
         current_mask_list = []
@@ -419,3 +413,19 @@ class ShapleyValueSampling(PerturbationAttribution):
                 target_repeated,
                 combined_masks,
             )
+    def construct_feature_mask(self, inputs):
+        feature_mask = []
+        current_num_features = 0
+        for i in range(len(inputs)):
+            num_features = torch.numel(inputs[i][0])
+            feature_mask.append(
+                current_num_features
+                + torch.reshape(
+                    torch.arange(num_features, device=inputs[i].device),
+                    inputs[i][0:1].shape,
+                )
+            )
+            current_num_features += num_features
+        total_features = current_num_features
+        feature_mask = tuple(feature_mask)
+        return feature_mask, total_features

@@ -334,7 +334,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 additional_forward_args=(inp3, 5),
                 target=1,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_output_layer_ablation(self):
@@ -355,7 +355,7 @@ class Test(BaseGPUTest):
                 alt_device_ids=False,
                 inputs=inp,
                 target=1,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_dim_layer_ablation(self):
@@ -369,7 +369,7 @@ class Test(BaseGPUTest):
                 alt_device_ids=True,
                 inputs=inp,
                 target=1,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_neuron_conductance(self):
@@ -712,7 +712,7 @@ class Test(BaseGPUTest):
                 neuron_index=0,
                 additional_forward_args=None,
                 test_batches=False,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
                 alt_device_ids=True,
             )
 
@@ -733,7 +733,7 @@ class Test(BaseGPUTest):
                 baselines=(base1, base2),
                 additional_forward_args=None,
                 test_batches=False,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_feature_ablation(self):
@@ -746,7 +746,7 @@ class Test(BaseGPUTest):
                 None,
                 inputs=inp,
                 target=0,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_occlusion(self):
@@ -760,7 +760,7 @@ class Test(BaseGPUTest):
                 inputs=inp,
                 sliding_window_shapes=(1, 4, 2),
                 target=0,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_input_occlusion(self):
@@ -775,7 +775,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 sliding_window_shapes=((2,), (1,)),
                 test_batches=False,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_shapley_sampling(self):
@@ -788,7 +788,7 @@ class Test(BaseGPUTest):
                 None,
                 inputs=inp,
                 target=0,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_input_shapley_sampling(self):
@@ -802,8 +802,8 @@ class Test(BaseGPUTest):
                 None,
                 inputs=(inp1, inp2),
                 test_batches=False,
-                perturbations_per_eval=ablations_per_eval,
-                delta=0.05,
+                perturbations_per_eval=perturbations_per_eval,
+                delta=0.1,
             )
 
     def _alt_device_list(self):

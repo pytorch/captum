@@ -146,9 +146,9 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
-                perturbations_per_eval (int, optional): Allows ablation of multiple neuron
-                            (groups) to be processed simultaneously in one call
-                            to forward_fn.
+                perturbations_per_eval (int, optional): Allows ablation of multiple
+                            neuron (groups) to be processed simultaneously in one
+                            call to forward_fn.
                             Each forward pass will contain a maximum of
                             perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
@@ -270,6 +270,6 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,
-                perturbations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
             return _format_attributions(is_layer_tuple, layer_attribs)

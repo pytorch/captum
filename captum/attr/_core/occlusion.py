@@ -238,7 +238,7 @@ class Occlusion(FeatureAblation):
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
-            perturbations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
             sliding_window_tensors=sliding_window_tensors,
             shift_counts=tuple(shift_counts),
             strides=strides,

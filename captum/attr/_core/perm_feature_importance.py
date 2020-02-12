@@ -38,7 +38,7 @@ class PermutationFeatureImportance(FeatureAblation):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            perturbations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
         )
 
     def _construct_ablated_input(

@@ -492,9 +492,10 @@ def _find_output_mode_and_verify(
         ), "Cannot have perturbations_per_eval > 1 when function returns scalar."
         if feature_mask is not None:
             for single_mask in feature_mask:
-                assert (
-                    single_mask.shape[0] == 1
-                ), "Cannot provide different masks for each example when function returns a scalar."
+                assert single_mask.shape[0] == 1, (
+                    "Cannot provide different masks for each example when function "
+                    "returns a scalar."
+                )
     else:
         agg_output_mode = False
         assert (
