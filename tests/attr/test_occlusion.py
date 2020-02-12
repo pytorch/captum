@@ -287,7 +287,7 @@ class Test(BaseTest):
         ] = None,
         strides: Optional[Union[int, Tuple[Union[int, Tuple[int, ...]], ...]]] = None,
     ) -> None:
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)
             attributions = ablation.attribute(
                 test_input,

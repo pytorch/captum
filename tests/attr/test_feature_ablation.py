@@ -374,7 +374,7 @@ class Test(BaseTest):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = 0,
     ) -> None:
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = FeatureAblation(model)
             attributions = ablation.attribute(
                 test_input,

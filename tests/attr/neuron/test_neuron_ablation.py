@@ -209,20 +209,6 @@ class Test(BaseTest):
 
     def _ablation_test_assert(
         self,
-<<<<<<< HEAD
-        model,
-        layer,
-        test_input,
-        expected_ablation,
-        feature_mask=None,
-        additional_input=None,
-        perturbations_per_eval=(1,),
-        baselines=None,
-        neuron_index=0,
-        attribute_to_neuron_input=False,
-    ):
-        for batch_size in perturbations_per_eval:
-=======
         model: Module,
         layer: Module,
         test_input: TensorOrTupleOfTensors,
@@ -234,15 +220,14 @@ class Test(BaseTest):
         ],
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         additional_input: Any = None,
-        ablations_per_eval: Tuple[int, ...] = (1,),
+        perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         neuron_index: Union[int, Tuple[int, ...]] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:
-        for batch_size in ablations_per_eval:
->>>>>>> 667217ad52b0c810b0d983686189b6ab4abe109a
+        for batch_size in perturbations_per_eval:
             ablation = NeuronFeatureAblation(model, layer)
             attributions = ablation.attribute(
                 test_input,
