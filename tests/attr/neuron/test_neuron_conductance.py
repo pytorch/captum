@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Tuple, Union, Any
+from typing import List, Optional, Tensor, Tuple, Union, Any
 import torch
 from torch.nn import Module
 from captum.attr._core.layer.layer_conductance import LayerConductance
@@ -110,7 +110,7 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
         test_neuron: Union[int, Tuple[int, ...]],
-        expected_input_conductance: Tuple[List[List[float]]],
+        expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
     ) -> None:
         for internal_batch_size in (None, 1, 20):
@@ -133,18 +133,25 @@ class Test(BaseTest):
                             delta=0.1,
                         )
             else:
-                assertArraysAlmostEqual(
-                    attributions.squeeze(0).tolist(),
-                    expected_input_conductance,
-                    delta=0.1,
-                )
+                if isinstance(attributions, Tensor):
+                    assertArraysAlmostEqual(
+                        attributions.squeeze(0).tolist(),
+                        expected_input_conductance,
+                        delta=0.1,
+                    )
+                else:
+                    raise AssertionError(
+                        "Attributions not returning a Tensor when expected."
+                    )
 
     def _conductance_input_sum_test_assert(
         self,
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensors,
-        test_baseline: Any = None,
+        test_baseline: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
         attributions = layer_cond.attribute(
@@ -167,8 +174,8 @@ class Test(BaseTest):
                     )
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
-                            torch.sum(neuron_vals[n]),
-                            attributions[n, i, j, k],
+                            torch.sum(neuron_vals[n]).item(),
+                            attributions[n, i, j, k].item(),
                             delta=0.005,
                         )
 
