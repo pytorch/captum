@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import torch
+from torch import Tensor
+from torch.nn import Module
+from typing import Callable, List, Optional, Tuple, Union, Any
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
@@ -13,10 +16,16 @@ from ..._utils.common import (
     _expand_target,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class LayerConductance(LayerAttribution, GradientAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Union[Tensor, Module],
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -37,21 +46,25 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Optional[Any] = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        return_convergence_delta: Optional[bool] = False,
+        attribute_to_layer_input: Optional[bool] = False,
+    ) -> Union[Union[Tensor, Tuple[Tensor, ...]], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]]:
         r"""
             Computes conductance with respect to the given layer. The
             returned output is in the shape of the layer's output, showing the total
