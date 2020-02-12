@@ -86,9 +86,7 @@ class Test(BaseTest):
                 )
             self.assertEqual(inputs.shape, attributions.shape)
 
-    def _input_x_gradient_classification_assert(
-        self, nt_type: str = "vanilla",
-    ) -> None:
+    def _input_x_gradient_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5
         input = torch.tensor([[0.0, 1.0, 2.0, 3.0, 4.0]], requires_grad=True)
         target = torch.tensor(5)

@@ -63,7 +63,10 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         internal_batch_size: Optional[int] = None,
         return_convergence_delta: Optional[bool] = False,
         attribute_to_layer_input: Optional[bool] = False,
-    ) -> Union[Union[Tensor, Tuple[Tensor, ...]], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]]:
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...]],
+        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r"""
             Computes conductance with respect to the given layer. The
             returned output is in the shape of the layer's output, showing the total
