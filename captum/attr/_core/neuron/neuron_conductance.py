@@ -66,11 +66,11 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
-        additional_forward_args: Optional[Any] = None,
-        n_steps: Optional[int] = 50,
-        method: Optional[str] = "riemann_trapezoid",
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "riemann_trapezoid",
         internal_batch_size: Optional[int] = None,
-        attribute_to_neuron_input: Optional[bool] = False,
+        attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensors:
         r"""
             Computes conductance with respect to particular hidden neuron. The

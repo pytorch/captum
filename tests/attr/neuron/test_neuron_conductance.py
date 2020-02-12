@@ -111,7 +111,7 @@ class Test(BaseTest):
         test_input: TensorOrTupleOfTensors,
         test_neuron: Union[int, Tuple[int, ...]],
         expected_input_conductance: Tuple[List[List[float]]],
-        additional_input: Optional[Any] = None,
+        additional_input: Any = None,
     ) -> None:
         for internal_batch_size in (None, 1, 20):
             cond = NeuronConductance(model, target_layer)
