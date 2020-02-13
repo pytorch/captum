@@ -43,7 +43,7 @@ class Occlusion(FeatureAblation):
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensors:
         r""""
-        A perturbation based approach to computing attribution, involving
+        A perturbation based approach to compute attribution, involving
         replacing each contiguous rectangular region with a given baseline /
         reference, and computing the difference in output. For features located
         in multiple regions (hyperrectangles), the corresponding output differences

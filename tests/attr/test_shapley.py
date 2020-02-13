@@ -52,7 +52,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_sample_ablation(self) -> None:
+    def test_multi_sample_shapley_sampling(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]])
         self._shapley_test_assert(
@@ -63,7 +63,7 @@ class Test(BaseTest):
             n_samples=200,
         )
 
-    def test_multi_sample_ablation_with_mask(self) -> None:
+    def test_multi_sample_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
@@ -75,7 +75,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_input_ablation_without_mask(self) -> None:
+    def test_multi_input_shapley_sampling_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
@@ -89,7 +89,7 @@ class Test(BaseTest):
             net, (inp1, inp2, inp3), expected, additional_input=(1,), n_samples=200,
         )
 
-    def test_multi_input_ablation_with_mask(self) -> None:
+    def test_multi_input_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -254,7 +254,7 @@ class Test(BaseTest):
         self,
         model: Callable,
         test_input: TensorOrTupleOfTensors,
-        expected_ablation,
+        expected_attr,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
@@ -277,7 +277,7 @@ class Test(BaseTest):
                 n_samples=n_samples,
             )
             assertTensorTuplesAlmostEqual(
-                self, attributions, expected_ablation, delta=delta, mode="max"
+                self, attributions, expected_attr, delta=delta, mode="max"
             )
 
 
