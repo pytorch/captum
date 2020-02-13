@@ -148,7 +148,7 @@ class Test(BaseTest):
         model: Module,
         attr_method: Union[DeepLift, DeepLiftShap],
         input: Tensor,
-        baselines: Union[Tensor, int, float],
+        baselines,
         target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
     ) -> None:
         # TODO add test cases for multiple different layers

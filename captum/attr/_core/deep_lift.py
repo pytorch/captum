@@ -77,16 +77,11 @@ class DeepLift(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
         target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
@@ -101,12 +96,7 @@ class DeepLift(GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -353,12 +343,7 @@ class DeepLift(GradientAttribution):
         forward_func: Callable,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> Callable:
@@ -373,14 +358,16 @@ class DeepLift(GradientAttribution):
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
     def _forward_pre_hook_ref(
-        self, module: Module, inputs: TensorOrTupleOfTensors
+        self, module: Module, inputs: Union[Tensor, Tuple[Tensor, ...]]
     ) -> None:
         inputs = _format_tensor_into_tuples(inputs)
         module.input_ref = tuple(  # type: ignore
             input.clone().detach() for input in inputs
         )
 
-    def _forward_pre_hook(self, module: Module, inputs: TensorOrTupleOfTensors) -> None:
+    def _forward_pre_hook(
+        self, module: Module, inputs: Union[Tensor, Tuple[Tensor, ...]]
+    ) -> None:
         """
         For the modules that perform in-place operations such as ReLUs, we cannot
         use inputs from forward hooks. This is because in that case inputs
@@ -412,8 +399,8 @@ class DeepLift(GradientAttribution):
     def _forward_hook(
         self,
         module: Module,
-        inputs: TensorOrTupleOfTensors,
-        outputs: TensorOrTupleOfTensors,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        outputs: Union[Tensor, Tuple[Tensor, ...]],
     ) -> None:
         r"""
         we need forward hook to access and detach the inputs and
@@ -442,8 +429,8 @@ class DeepLift(GradientAttribution):
     def _backward_hook(
         self,
         module: Module,
-        grad_input: TensorOrTupleOfTensors,
-        grad_output: TensorOrTupleOfTensors,
+        grad_input: Union[Tensor, Tuple[Tensor, ...]],
+        grad_output: Union[Tensor, Tuple[Tensor, ...]],
         eps: float = 1e-10,
     ):
         r"""
@@ -551,12 +538,7 @@ class DeepLiftShap(DeepLift):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
@@ -569,12 +551,7 @@ class DeepLiftShap(DeepLift):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -790,14 +767,7 @@ class DeepLiftShap(DeepLift):
         self,
         baselines: Tuple[Tensor, ...],
         inputs: Tuple[Tensor, ...],
-        target: Optional[
-            Union[
-                int,
-                Tensor,
-                List[Union[int, Tensor, Tuple[Union[int, Tensor], ...]]],
-                Tuple[Union[int, Tensor], ...],
-            ]
-        ],
+        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
         additional_forward_args: Any,
     ):
         inp_bsz = inputs[0].shape[0]
@@ -836,10 +806,10 @@ class DeepLiftShap(DeepLift):
         self, inp_bsz: int, base_bsz: int, attribution: Tensor
     ) -> Tensor:
         # Average for multiple references
-        attr_shape = (inp_bsz, base_bsz)
+        attr_shape: Tuple = (inp_bsz, base_bsz)
         if len(attribution.shape) > 1:
             attr_shape += attribution.shape[1:]
-        return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
+        return torch.mean(attribution.view(attr_shape), dim=1, keepdim=False)
 
 
 def nonlinear(
@@ -989,7 +959,7 @@ def maxpool(
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input.shape),
+                list(cast(torch.Size, module.input.shape)),
             ),
             2,
         )
@@ -1007,7 +977,7 @@ def maxpool(
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input.shape),
+                list(cast(torch.Size, module.input.shape)),
             ),
         )
 

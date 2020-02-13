@@ -368,7 +368,7 @@ def _hypothetical_contrib_func(
             hypothetical_input[:, :, i] = 1.0
             hypothetical_input_ref_diff = hypothetical_input - baselines[k]
             sub_attributions[:, :, i] = torch.sum(
-                hypothetical_input_ref_diff * multipliers[k], axis=-1
+                hypothetical_input_ref_diff * multipliers[k], dim=-1
             )
         attributions.append(sub_attributions)
     return tuple(attributions)
