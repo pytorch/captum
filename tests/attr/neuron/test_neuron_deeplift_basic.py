@@ -122,9 +122,7 @@ class Test(BaseTest):
         self,
         attr_method: Union[NeuronDeepLift, NeuronDeepLiftShap],
         inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ],
+        baselines,
         expected,
     ) -> None:
         def custom_attr_func(
