@@ -272,7 +272,9 @@ class InputBaselineXGradient(GradientAttribution):
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
         ...
@@ -284,7 +286,9 @@ class InputBaselineXGradient(GradientAttribution):
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Optional[Union[int, Tuple, Tensor, List[Tensor]]] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
     ) -> TensorOrTupleOfTensors:

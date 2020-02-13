@@ -8,7 +8,7 @@ from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2, BasicLinearModel
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from typing import Union, Tuple
+from typing import Union, Tuple, cast
 from captum.attr._utils.typing import Tensor
 from numpy import ndarray
 
@@ -39,8 +39,11 @@ class Test(BaseTest):
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
         n_samples = 50
-        attributions, delta = gradient_shap.attribute(
-            inputs, baselines, n_samples=n_samples, return_convergence_delta=True
+        attributions, delta = cast(
+            Tuple[Tuple[Tensor, ...], Tensor],
+            gradient_shap.attribute(
+                inputs, baselines, n_samples=n_samples, return_convergence_delta=True
+            ),
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
@@ -49,7 +52,7 @@ class Test(BaseTest):
         ig = IntegratedGradients(model)
         baselines = (torch.zeros(batch_size, 3), torch.zeros(batch_size, 4))
         attributions_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(tuple(attributions), attributions_ig)
+        self._assert_shap_ig_comparision(attributions, attributions_ig)
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag
@@ -164,17 +167,20 @@ class Test(BaseTest):
 
         gs = GradientShap(model)
         n_samples = 30000
-        attributions, delta = gs.attribute(
-            inputs,
-            baselines=baselines,
-            n_samples=n_samples,
-            return_convergence_delta=True,
+        attributions, delta = cast(
+            Tuple[Tuple[Tensor, ...], Tensor],
+            gs.attribute(
+                inputs,
+                baselines=baselines,
+                n_samples=n_samples,
+                return_convergence_delta=True,
+            ),
         )
         _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
 
         ig = IntegratedGradients(model)
         attributions_ig = ig.attribute(inputs, baselines=baselines)
-        self._assert_shap_ig_comparision(tuple(attributions), attributions_ig)
+        self._assert_shap_ig_comparision(attributions, attributions_ig)
 
     def _assert_shap_ig_comparision(
         self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...],
