@@ -83,14 +83,15 @@ class FeaturePermutation(FeatureAblation):
 
         Args:
                 inputs (tensor or tuple of tensors):  Input for which
-                            permutation attributions are computed. If forward_func takes a
-                            single tensor as input, a single input tensor should be
-                            provided.  If forward_func takes multiple tensors as input, a
-                            tuple of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds to the
-                            number of examples (aka batch size), and if multiple input
-                            tensors are provided, the examples must be aligned
-                            appropriately.
+                            permutation attributions are computed. If
+                            forward_func takes a single tensor as input, a
+                            single input tensor should be provided.  If
+                            forward_func takes multiple tensors as input, a
+                            tuple of the input tensors should be provided. It is
+                            assumed that for all given input tensors, dimension
+                            0 corresponds to the number of examples (aka batch
+                            size), and if multiple input tensors are provided,
+                            the examples must be aligned appropriately.
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
@@ -135,10 +136,10 @@ class FeaturePermutation(FeatureAblation):
                             feature_mask defines a mask for the input, grouping
                             features which should be ablated together. feature_mask
                             should contain the same number of tensors as inputs.
-                            Each tensor should be the same size as the 
-                            corresponding input or broadcastable to match the 
+                            Each tensor should be the same size as the
+                            corresponding input or broadcastable to match the
                             input tensor. Each tensor should contain integers in
-                            the range 0 to num_features - 1, and indices 
+                            the range 0 to num_features - 1, and indices
                             corresponding to the same feature should have the
                             same value.  Note that features within each input
                             tensor are ablated independently (not across
@@ -151,7 +152,7 @@ class FeaturePermutation(FeatureAblation):
                             each scalar within a tensor as a separate feature, which
                             is permuted independently.
                             Default: None
-                ablations_per_eval (int, optional): Allows permutations (ablations) 
+                ablations_per_eval (int, optional): Allows permutations (ablations)
                             of multiple features to be processed simultaneously
                             in one call to forward_fn.  Each forward pass will
                             contain a maximum of ablations_per_eval * #examples
