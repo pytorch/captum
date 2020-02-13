@@ -281,7 +281,8 @@ class Test(BaseTest):
         """
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = cast(TensorOrTupleOfTensors, (inputs,))
+            inputs = (inputs,)  # type: ignore
+        inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)
@@ -373,7 +374,8 @@ class Test(BaseTest):
     ) -> None:
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = cast(TensorOrTupleOfTensors, (inputs,))
+            inputs = (inputs,)  # type: ignore
+        inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)
