@@ -25,6 +25,28 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 class FeaturePermutation(FeatureAblation):
     def __init__(self, forward_func: Callable, perm_func: Callable = _permute_feature):
         r"""
+        This attribution method essentially implements the permutation feature
+        importance algorithm, as described here:
+        https://christophm.github.io/interpretable-ml-book/feature-importance.html
+
+        A basic tl;dr of the algorithm is:
+
+        perm_feature_importance(batch):
+            importance = dict()
+            baseline_error = error_metric(model(batch), batch_labels)
+            for each feature:
+                permute this feature across the batch
+                error = error_metric(model(permuted_batch), batch_labels)
+                importance[feature] = baseline_error - error
+                "un-permute" the feature across the batch
+
+            return importance
+
+        It should be noted that the `error_metric` must be called in the
+        `forward_func`. You do not need to provide an error metric, e.g. you
+        could simply return the logits (the model output), but this may or may
+        not provide a meaningful attribution.
+
         Args:
 
             forward_func (callable): The forward function of the model or
@@ -53,29 +75,6 @@ class FeaturePermutation(FeatureAblation):
         **kwargs: Any,
     ) -> TensorOrTupleOfTensors:
         r"""
-        This attribution method essentially implements the permutation feature
-        importance algorithm, as described here:
-        https://christophm.github.io/interpretable-ml-book/feature-importance.html
-
-        A basic tl;dr of the algorithm is:
-
-        perm_feature_importance(batch):
-            importance = dict()
-            baseline_error = error_metric(model(batch), batch_labels)
-            for each feature:
-                permute this feature across the batch
-                error = error_metric(model(permuted_batch), batch_labels)
-                importance[feature] = baseline_error - error
-                "un-permute" the feature across the batch
-
-            sort importance in descending order
-            return importance
-
-        It should be noted that the `error_metric` must be called in the
-        `forward_func`. You do not need to provide an error metric, e.g. you
-        could simply return the logits (the model output), but this may or may
-        not provide a meaningful attribution.
-
         This function is almost equivalent to `FeatureAblation.attribute`. The
         main difference is the way ablated examples are generated. Specifically
         they are generated through the `perm_func`, as we set the baselines for
@@ -83,15 +82,15 @@ class FeaturePermutation(FeatureAblation):
 
 
         Args:
-                inputs (tensor or tuple of tensors):  Input for which ablation
-                            attributions are computed. If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples (aka batch size), and if
-                            multiple input tensors are provided, the examples must
-                            be aligned appropriately.
+                inputs (tensor or tuple of tensors):  Input for which
+                            permutation attributions are computed. If forward_func takes a
+                            single tensor as input, a single input tensor should be
+                            provided.  If forward_func takes multiple tensors as input, a
+                            tuple of the input tensors should be provided. It is assumed
+                            that for all given input tensors, dimension 0 corresponds to the
+                            number of examples (aka batch size), and if multiple input
+                            tensors are provided, the examples must be aligned
+                            appropriately.
                 target (int, tuple, tensor or list, optional):  Output indices for
                             which difference is computed (for classification cases,
                             this is usually the target class).
@@ -136,30 +135,29 @@ class FeaturePermutation(FeatureAblation):
                             feature_mask defines a mask for the input, grouping
                             features which should be ablated together. feature_mask
                             should contain the same number of tensors as inputs.
-                            Each tensor should
-                            be the same size as the corresponding input or
-                            broadcastable to match the input tensor. Each tensor
-                            should contain integers in the range 0 to num_features
-                            - 1, and indices corresponding to the same feature should
-                            have the same value.
-                            Note that features within each input tensor are ablated
-                            independently (not across tensors).
+                            Each tensor should be the same size as the 
+                            corresponding input or broadcastable to match the 
+                            input tensor. Each tensor should contain integers in
+                            the range 0 to num_features - 1, and indices 
+                            corresponding to the same feature should have the
+                            same value.  Note that features within each input
+                            tensor are ablated independently (not across
+                            tensors).
 
                             The first dimension of each mask must be 1, as we require
                             to have the same group of features for each input sample.
-                            TODO
 
                             If None, then a feature mask is constructed which assigns
                             each scalar within a tensor as a separate feature, which
                             is permuted independently.
                             Default: None
-                ablations_per_eval (int, optional): Allows ablation of multiple features
-                            to be processed simultaneously in one call to forward_fn.
-                            Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
-                            For DataParallel models, each batch is split among the
-                            available devices, so evaluations on each available
-                            device contain at most
+                ablations_per_eval (int, optional): Allows permutations (ablations) 
+                            of multiple features to be processed simultaneously
+                            in one call to forward_fn.  Each forward pass will
+                            contain a maximum of ablations_per_eval * #examples
+                            samples.  For DataParallel models, each batch is
+                            split among the available devices, so evaluations on
+                            each available device contain at most
                             (ablations_per_eval * #examples) / num_devices
                             samples.
                             If the forward function returns a single scalar per batch,
@@ -192,9 +190,9 @@ class FeaturePermutation(FeatureAblation):
         **kwargs: Any,
     ) -> Tuple[Tensor, Tensor]:
         r"""
-        This function ablates `expanded_input` with a given feature mask and
-        feature range. Ablation occurs via calling `self.perm_func` across each
-        batch within `expanded_input`. As with
+        This function permutes the features of `expanded_input` with a given
+        feature mask and feature range. Permutation occurs via calling
+        `self.perm_func` across each batch within `expanded_input`. As with
         `FeatureAblation._construct_ablated_input`:
         - `expanded_input.shape = (num_features, num_examples, ...)`
         - `num_features = end_feature - start_feature` (i.e. start and end is a
