@@ -270,7 +270,9 @@ def _zeros(inputs):
     return tuple(0 for input in inputs)
 
 
-def _tensorize_baseline(inputs, baselines):
+def _tensorize_baseline(
+    inputs: Tuple[Tensor, ...], baselines: Tuple[Union[int, float, Tensor], ...]
+) -> Tuple[Tensor, ...]:
     def _tensorize_single_baseline(baseline, input):
         if isinstance(baseline, (int, float)):
             return torch.full_like(input, baseline)

@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 
+from typing import Any, Callable, Optional, Tuple, Union
+
 import unittest
 
 import torch
+from torch import Tensor
+
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -13,7 +18,7 @@ from .helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
 
 
 class Test(BaseTest):
-    def test_simple_shapley_sampling(self):
+    def test_simple_shapley_sampling(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._shapley_test_assert(
@@ -24,7 +29,7 @@ class Test(BaseTest):
             n_samples=250,
         )
 
-    def test_simple_shapley_sampling_with_mask(self):
+    def test_simple_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._shapley_test_assert(
@@ -35,7 +40,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_simple_shapley_sampling_with_baselines(self):
+    def test_simple_shapley_sampling_with_baselines(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]])
         self._shapley_test_assert(
@@ -47,7 +52,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_sample_ablation(self):
+    def test_multi_sample_ablation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]])
         self._shapley_test_assert(
@@ -58,7 +63,7 @@ class Test(BaseTest):
             n_samples=200,
         )
 
-    def test_multi_sample_ablation_with_mask(self):
+    def test_multi_sample_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
@@ -70,7 +75,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_multi_input_ablation_without_mask(self):
+    def test_multi_input_ablation_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
@@ -84,7 +89,7 @@ class Test(BaseTest):
             net, (inp1, inp2, inp3), expected, additional_input=(1,), n_samples=200,
         )
 
-    def test_multi_input_ablation_with_mask(self):
+    def test_multi_input_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -121,77 +126,79 @@ class Test(BaseTest):
 
     # Remaining tests are for cases where forward function returns a scalar
     # per batch, as either a float, integer, 0d tensor or 1d tensor.
-    def test_single_shapley_batch_scalar_float(self):
+    def test_single_shapley_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp)).item()
         )
 
-    def test_single_shapley_batch_scalar_tensor_0d(self):
+    def test_single_shapley_batch_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp))
         )
 
-    def test_single_shapley_batch_scalar_tensor_1d(self):
+    def test_single_shapley_batch_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp)).reshape(1)
         )
 
-    def test_single_shapley_batch_scalar_tensor_int(self):
+    def test_single_shapley_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_shapley_assert(
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
-    def test_multi_sample_shapley_batch_scalar_float(self):
+    def test_multi_sample_shapley_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp)).item()
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_0d(self):
+    def test_multi_sample_shapley_batch_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp))
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_1d(self):
+    def test_multi_sample_shapley_batch_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_shapley_assert(
             lambda inp: torch.sum(net(inp)).reshape(1)
         )
 
-    def test_multi_sample_shapley_batch_scalar_tensor_int(self):
+    def test_multi_sample_shapley_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_shapley_assert(
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
-    def test_multi_inp_shapley_batch_scalar_float(self):
+    def test_multi_inp_shapley_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_shapley_assert(
             lambda *inp: torch.sum(net(*inp)).item()
         )
 
-    def test_multi_inp_shapley_batch_scalar_tensor_0d(self):
+    def test_multi_inp_shapley_batch_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_shapley_assert(lambda *inp: torch.sum(net(*inp)))
 
-    def test_multi_inp_shapley_batch_scalar_tensor_1d(self):
+    def test_multi_inp_shapley_batch_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_shapley_assert(
             lambda *inp: torch.sum(net(*inp)).reshape(1)
         )
 
-    def test_mutli_inp_shapley_batch_scalar_tensor_int(self):
+    def test_mutli_inp_shapley_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_shapley_assert(
             lambda *inp: int(torch.sum(net(*inp)).item())
         )
 
-    def _single_input_one_sample_batch_scalar_shapley_assert(self, func):
+    def _single_input_one_sample_batch_scalar_shapley_assert(
+        self, func: Callable
+    ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
 
@@ -204,7 +211,9 @@ class Test(BaseTest):
             target=None,
         )
 
-    def _single_input_multi_sample_batch_scalar_shapley_assert(self, func):
+    def _single_input_multi_sample_batch_scalar_shapley_assert(
+        self, func: Callable
+    ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
 
@@ -217,7 +226,7 @@ class Test(BaseTest):
             target=None,
         )
 
-    def _multi_input_batch_scalar_shapley_assert(self, func):
+    def _multi_input_batch_scalar_shapley_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [20.0, 10.0, 13.0]])
@@ -243,17 +252,19 @@ class Test(BaseTest):
 
     def _shapley_test_assert(
         self,
-        model,
-        test_input,
+        model: Callable,
+        test_input: TensorOrTupleOfTensors,
         expected_ablation,
-        feature_mask=None,
-        additional_input=None,
-        perturbations_per_eval=(1,),
-        baselines=None,
-        target=0,
-        n_samples=100,
-        delta=1.0,
-    ):
+        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        additional_input: Any = None,
+        perturbations_per_eval: Tuple[int, ...] = (1,),
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[int] = 0,
+        n_samples: int = 100,
+        delta: float = 1.0,
+    ) -> None:
         for batch_size in perturbations_per_eval:
             shapley_samp = ShapleyValueSampling(model)
             attributions = shapley_samp.attribute(
