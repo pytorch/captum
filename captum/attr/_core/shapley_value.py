@@ -65,7 +65,6 @@ class ShapleyValueSampling(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.permutation_generator = _perm_generator
 
-
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
