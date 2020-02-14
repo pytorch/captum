@@ -77,7 +77,7 @@ class Test(BaseTest):
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
     ):
-        lc = LayerConductance(model, model.linear2)
+        lc = LayerConductance(model, cast(Module, model.linear2))
         # For large number of steps layer conductance and layer integrated gradients
         # become very close
         attribution, delta = lc.attribute(
