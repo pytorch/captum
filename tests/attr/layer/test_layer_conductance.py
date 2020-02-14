@@ -171,15 +171,10 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-<<<<<<< HEAD
-        test_input: Tensor,
-        test_baseline: Optional[Tensor] = None,
-=======
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         test_baseline: Optional[
             Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
         ] = None
->>>>>>> parent of fe302da... Final Typing hint changes for layer_conductance and test_layer_conductance
     ) -> None:
         layer_output = None
 
@@ -193,18 +188,6 @@ class Test(BaseTest):
         target_index = torch.argmax(torch.sum(final_output, 0))
         cond = LayerConductance(model, target_layer)
         cond_ref = ConductanceReference(model, target_layer)
-<<<<<<< HEAD
-        attributions, delta = cast(
-            Tuple[Tensor, Tensor],
-            cond.attribute(
-                test_input,
-                baselines=test_baseline,
-                target=target_index,
-                n_steps=300,
-                method="gausslegendre",
-                return_convergence_delta=True,
-            ),
-=======
         attributions, delta = cond.attribute(
             test_input,
             baselines=test_baseline,
@@ -212,7 +195,6 @@ class Test(BaseTest):
             n_steps=300,
             method="gausslegendre",
             return_convergence_delta=True,
->>>>>>> parent of fe302da... Final Typing hint changes for layer_conductance and test_layer_conductance
         )
         delta_condition = all(abs(delta.numpy().flatten()) < 0.005)
         self.assertTrue(
@@ -241,19 +223,6 @@ class Test(BaseTest):
         # Test if batching is working correctly for inputs with multiple examples
         if test_input.shape[0] > 1:
             for i in range(test_input.shape[0]):
-<<<<<<< HEAD
-                single_attributions = cast(
-                    Tensor,
-                    cond.attribute(
-                        test_input[i : i + 1],
-                        baselines=test_baseline[i : i + 1]
-                        if test_baseline is not None
-                        else None,
-                        target=target_index,
-                        n_steps=300,
-                        method="gausslegendre",
-                    ),
-=======
                 single_attributions = cond.attribute(
                     test_input[i : i + 1],
                     baselines=test_baseline[i : i + 1]
@@ -262,7 +231,6 @@ class Test(BaseTest):
                     target=target_index,
                     n_steps=300,
                     method="gausslegendre",
->>>>>>> parent of fe302da... Final Typing hint changes for layer_conductance and test_layer_conductance
                 )
                 # Verify that attributions when passing example independently
                 # matches corresponding attribution of batched input.
