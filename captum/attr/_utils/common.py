@@ -270,7 +270,9 @@ def _zeros(inputs):
     return tuple(0 for input in inputs)
 
 
-def _tensorize_baseline(inputs, baselines):
+def _tensorize_baseline(
+    inputs: Tuple[Tensor, ...], baselines: Tuple[Union[int, float, Tensor], ...]
+) -> Tuple[Tensor, ...]:
     def _tensorize_single_baseline(baseline, input):
         if isinstance(baseline, (int, float)):
             return torch.full_like(input, baseline)
@@ -466,6 +468,42 @@ def _extract_device(module, hook_inputs, hook_outputs):
         return hook_outputs[0].device
 
     return params[0].device
+
+
+def _find_output_mode_and_verify(
+    initial_eval, num_examples, perturbations_per_eval, feature_mask
+):
+    """
+    This method identifies whether the model outputs a single output for a batch
+    (agg_output_mode = True) or whether it outputs a single output per example
+    (agg_output_mode = False) and returns agg_output_mode. The method also
+    verifies that perturbations_per_eval is 1 in the case that agg_output_mode is True
+    and also verifies that the first dimension of each feature mask if the model
+    returns a single output for a batch.
+    """
+    if isinstance(initial_eval, (int, float)) or (
+        isinstance(initial_eval, torch.Tensor)
+        and (
+            len(initial_eval.shape) == 0
+            or (num_examples > 1 and initial_eval.numel() == 1)
+        )
+    ):
+        agg_output_mode = True
+        assert (
+            perturbations_per_eval == 1
+        ), "Cannot have perturbations_per_eval > 1 when function returns scalar."
+        if feature_mask is not None:
+            for single_mask in feature_mask:
+                assert single_mask.shape[0] == 1, (
+                    "Cannot provide different masks for each example when function "
+                    "returns a scalar."
+                )
+    else:
+        agg_output_mode = False
+        assert (
+            isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
+        ), "Target should identify a single element in the model output."
+    return agg_output_mode
 
 
 class MaxList:

@@ -47,7 +47,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         additional_forward_args=None,
         layer_mask=None,
         attribute_to_layer_input=False,
-        ablations_per_eval=1,
+        perturbations_per_eval=1,
     ):
         r"""
             A perturbation based approach to computing layer attribution, involving
@@ -146,15 +146,15 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
-                ablations_per_eval (int, optional): Allows ablation of multiple neuron
-                            (groups) to be processed simultaneously in one call
-                            to forward_fn.
+                perturbations_per_eval (int, optional): Allows ablation of multiple
+                            neuron (groups) to be processed simultaneously in one
+                            call to forward_fn.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
 
@@ -270,6 +270,6 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
             return _format_attributions(is_layer_tuple, layer_attribs)

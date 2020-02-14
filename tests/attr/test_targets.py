@@ -11,6 +11,7 @@ from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.shapley_value import ShapleyValueSampling
 
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_conductance import LayerConductance
@@ -144,6 +145,43 @@ class Test(BaseTest):
             additional_forward_args=(None, True),
             targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             sliding_window_shapes=(2,),
+        )
+
+    def test_simple_target_shapley_value_sampling(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            ShapleyValueSampling,
+            net,
+            inputs=inp,
+            targets=[0, 1, 1, 0],
+            delta=0.50,
+            comp_mode="max",
+        )
+
+    def test_simple_target_shapley_value_sampling_tensor(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            ShapleyValueSampling,
+            net,
+            inputs=inp,
+            targets=torch.tensor([0, 1, 1, 0]),
+            delta=0.50,
+            comp_mode="max",
+        )
+
+    def test_multi_target_shapley_value_sampling(self):
+        net = BasicModel_MultiLayer()
+        inp = torch.randn(4, 3)
+        self._target_batch_test_assert(
+            ShapleyValueSampling,
+            net,
+            inputs=inp,
+            additional_forward_args=(None, True),
+            targets=[(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
+            delta=0.50,
+            comp_mode="max",
         )
 
     def test_simple_target_deep_lift(self):
@@ -519,6 +557,7 @@ class Test(BaseTest):
         test_batches=False,
         splice_targets=True,
         delta=0.0001,
+        comp_mode="sum",
         **kwargs
     ):
         if target_layer:
@@ -553,13 +592,18 @@ class Test(BaseTest):
                     **kwargs
                 )
                 assertTensorAlmostEqual(
-                    self, attributions_orig[i : i + 1], single_attr, delta=delta
+                    self,
+                    attributions_orig[i : i + 1],
+                    single_attr,
+                    delta=delta,
+                    mode=comp_mode,
                 )
                 assertTensorAlmostEqual(
                     self,
                     attributions_orig[i : i + 1],
                     single_attr_target_list,
                     delta=delta,
+                    mode=comp_mode,
                 )
 
 

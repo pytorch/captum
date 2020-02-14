@@ -28,7 +28,7 @@ class Test(BaseTest):
             inp,
             [280.0, 280.0, 120.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_sample_ablation_with_mask(self) -> None:
@@ -41,7 +41,7 @@ class Test(BaseTest):
             inp,
             [[41.0, 41.0, 12.0], [280.0, 280.0, 120.0]],
             feature_mask=mask,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_input_ablation_with_mask(self) -> None:
@@ -72,7 +72,7 @@ class Test(BaseTest):
             expected[0:1],
             additional_input=(inp3, 1),
             feature_mask=(mask1, mask2),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
         expected_with_baseline = (
             [[468.0, 468.0, 468.0], [184.0, 192.0, 184.0]],
@@ -87,7 +87,7 @@ class Test(BaseTest):
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_input_ablation(self) -> None:
@@ -109,7 +109,7 @@ class Test(BaseTest):
             ),
             additional_input=(1,),
             baselines=(baseline1, baseline2, baseline3),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
         baseline1_exp = torch.tensor([[3.0, 0.0, 0.0], [3.0, 0.0, 2.0]])
         baseline2_exp = torch.tensor([[0.0, 1.0, 0.0], [0.0, 1.0, 4.0]])
@@ -125,7 +125,7 @@ class Test(BaseTest):
             ),
             additional_input=(1,),
             baselines=(baseline1_exp, baseline2_exp, baseline3_exp),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_simple_multi_input_conv(self) -> None:
@@ -138,7 +138,7 @@ class Test(BaseTest):
             (inp, inp2),
             (67 * torch.ones_like(inp), 13 * torch.ones_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
         )
         self._ablation_test_assert(
             net,
@@ -158,7 +158,7 @@ class Test(BaseTest):
                     [0.0, 0.0, 0.0, 0.0],
                 ],
             ),
-            ablations_per_eval=(1, 3, 7, 14),
+            perturbations_per_eval=(1, 3, 7, 14),
         )
 
     def test_simple_multi_input_conv_intermediate(self) -> None:
@@ -171,7 +171,7 @@ class Test(BaseTest):
             (inp, inp2),
             (torch.zeros_like(inp), torch.zeros_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
             neuron_index=(1, 0, 0),
         )
         self._ablation_test_assert(
@@ -180,7 +180,7 @@ class Test(BaseTest):
             (inp, inp2),
             (45 * torch.ones_like(inp), 9 * torch.ones_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
             neuron_index=(1, 0, 0),
             attribute_to_neuron_input=True,
         )
@@ -202,7 +202,7 @@ class Test(BaseTest):
                     [0.0, 0.0, 0.0, 0.0],
                 ],
             ),
-            ablations_per_eval=(1, 3, 7, 14),
+            perturbations_per_eval=(1, 3, 7, 14),
             neuron_index=(1, 0, 0),
             attribute_to_neuron_input=True,
         )
@@ -220,14 +220,14 @@ class Test(BaseTest):
         ],
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
         additional_input: Any = None,
-        ablations_per_eval: Tuple[int, ...] = (1,),
+        perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: Optional[
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         neuron_index: Union[int, Tuple[int, ...]] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = NeuronFeatureAblation(model, layer)
             attributions = ablation.attribute(
                 test_input,
@@ -235,7 +235,7 @@ class Test(BaseTest):
                 feature_mask=feature_mask,
                 additional_forward_args=additional_input,
                 baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
                 attribute_to_neuron_input=attribute_to_neuron_input,
             )
             if isinstance(expected_ablation, tuple):

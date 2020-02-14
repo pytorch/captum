@@ -8,6 +8,9 @@ from .helpers.classification_models import SoftmaxModel
 from .helpers.basic_models import BasicModel2, BasicLinearModel
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from typing import Union, Tuple, cast
+from captum.attr._utils.typing import Tensor
+from numpy import ndarray
 
 
 class Test(BaseTest):
@@ -15,7 +18,7 @@ class Test(BaseTest):
     # This test reproduces some of the test cases from the original implementation
     # https://github.com/slundberg/shap/
     # explainers/test_gradient.py
-    def test_basic_multi_input(self):
+    def test_basic_multi_input(self) -> None:
         batch_size = 10
 
         x1 = torch.ones(batch_size, 3)
@@ -36,8 +39,11 @@ class Test(BaseTest):
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
         n_samples = 50
-        attributions, delta = gradient_shap.attribute(
-            inputs, baselines, n_samples=n_samples, return_convergence_delta=True
+        attributions, delta = cast(
+            Tuple[Tuple[Tensor, ...], Tensor],
+            gradient_shap.attribute(
+                inputs, baselines, n_samples=n_samples, return_convergence_delta=True
+            ),
         )
         attributions_without_delta = gradient_shap.attribute((x1, x2), baselines)
 
@@ -55,17 +61,17 @@ class Test(BaseTest):
         ):
             assertTensorAlmostEqual(self, attribution, attribution_without_delta)
 
-    def test_classification_baselines_as_function(self):
+    def test_classification_baselines_as_function(self) -> None:
         num_in = 40
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
 
-        def generate_baselines():
+        def generate_baselines() -> Tensor:
             return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
-        def generate_baselines_with_inputs(inputs):
+        def generate_baselines_with_inputs(inputs: Tensor) -> Tensor:
             return torch.arange(0.0, inputs.shape[1] * 2.0).reshape(2, inputs.shape[1])
 
-        def generate_baselines_returns_array():
+        def generate_baselines_returns_array() -> ndarray:
             return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
         # 10-class classification model
@@ -105,7 +111,7 @@ class Test(BaseTest):
                 return_convergence_delta=True,
             )
 
-    def test_classification(self):
+    def test_classification(self) -> None:
         num_in = 40
         inputs = torch.arange(0.0, num_in * 2.0).reshape(2, num_in)
         baselines = torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
@@ -148,7 +154,7 @@ class Test(BaseTest):
         attributions_ig = ig.attribute(inputs, baselines=baselines, target=target)
         self._assert_shap_ig_comparision((attributions,), (attributions_ig,))
 
-    def test_basic_relu_multi_input(self):
+    def test_basic_relu_multi_input(self) -> None:
         model = BasicModel2()
 
         input1 = torch.tensor([[3.0]])
@@ -161,11 +167,14 @@ class Test(BaseTest):
 
         gs = GradientShap(model)
         n_samples = 30000
-        attributions, delta = gs.attribute(
-            inputs,
-            baselines=baselines,
-            n_samples=n_samples,
-            return_convergence_delta=True,
+        attributions, delta = cast(
+            Tuple[Tuple[Tensor, ...], Tensor],
+            gs.attribute(
+                inputs,
+                baselines=baselines,
+                n_samples=n_samples,
+                return_convergence_delta=True,
+            ),
         )
         _assert_attribution_delta(self, inputs, attributions, n_samples, delta)
 
@@ -173,7 +182,9 @@ class Test(BaseTest):
         attributions_ig = ig.attribute(inputs, baselines=baselines)
         self._assert_shap_ig_comparision(attributions, attributions_ig)
 
-    def _assert_shap_ig_comparision(self, attributions1, attributions2):
+    def _assert_shap_ig_comparision(
+        self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...],
+    ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
             for attr_row1, attr_row2 in zip(
                 attribution1.detach().numpy(), attribution2.detach().numpy()
@@ -182,8 +193,13 @@ class Test(BaseTest):
 
 
 def _assert_attribution_delta(
-    test, inputs, attributions, n_samples, delta, is_layer=False
-):
+    test: BaseTest,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    attributions: Union[Tensor, Tuple[Tensor, ...]],
+    n_samples: int,
+    delta: Tensor,
+    is_layer: bool = False,
+) -> None:
     if not is_layer:
         for input, attribution in zip(inputs, attributions):
             test.assertEqual(attribution.shape, input.shape)
@@ -197,7 +213,7 @@ def _assert_attribution_delta(
     _assert_delta(test, delta)
 
 
-def _assert_delta(test, delta):
+def _assert_delta(test: BaseTest, delta: Tensor) -> None:
     delta_condition = all(abs(delta.numpy().flatten()) < 0.0006)
     test.assertTrue(
         delta_condition,

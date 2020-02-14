@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import unittest
-
+from typing import List, Optional, Tuple, Union, Any
 import torch
+from torch import Tensor
+from torch.nn import Module
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 
@@ -12,27 +14,28 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import assertArraysAlmostEqual, BaseTest
+from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
-    def test_simple_conductance_input_linear2(self):
+    def test_simple_conductance_input_linear2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._conductance_input_test_assert(
             net, net.linear2, inp, (0,), [0.0, 390.0, 0.0]
         )
 
-    def test_simple_conductance_input_linear1(self):
+    def test_simple_conductance_input_linear1(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_input_test_assert(net, net.linear1, inp, 0, [0.0, 90.0, 0.0])
 
-    def test_simple_conductance_input_relu(self):
+    def test_simple_conductance_input_relu(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 70.0, 30.0]], requires_grad=True)
         self._conductance_input_test_assert(net, net.relu, inp, (3,), [0.0, 70.0, 30.0])
 
-    def test_simple_conductance_multi_input_linear2(self):
+    def test_simple_conductance_multi_input_linear2(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 0.0]])
         inp2 = torch.tensor([[0.0, 10.0, 0.0]])
@@ -46,7 +49,7 @@ class Test(BaseTest):
             (4,),
         )
 
-    def test_simple_conductance_multi_input_relu(self):
+    def test_simple_conductance_multi_input_relu(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0]])
@@ -60,7 +63,7 @@ class Test(BaseTest):
             (inp3, 5),
         )
 
-    def test_simple_conductance_multi_input_batch_relu(self):
+    def test_simple_conductance_multi_input_batch_relu(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 10.0, 1.0], [0.0, 0.0, 10.0]])
         inp2 = torch.tensor([[0.0, 4.0, 5.0], [0.0, 0.0, 10.0]])
@@ -77,7 +80,7 @@ class Test(BaseTest):
             (inp3, 5),
         )
 
-    def test_matching_conv2_multi_input_conductance(self):
+    def test_matching_conv2_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10)
         self._conductance_input_sum_test_assert(net, net.conv2, inp, 0.0)
@@ -85,18 +88,18 @@ class Test(BaseTest):
         # trying different baseline
         self._conductance_input_sum_test_assert(net, net.conv2, inp, 0.000001)
 
-    def test_matching_relu2_multi_input_conductance(self):
+    def test_matching_relu2_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.relu2, inp, baseline)
 
-    def test_matching_relu2_with_scalar_base_multi_input_conductance(self):
+    def test_matching_relu2_with_scalar_base_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(3, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.relu2, inp, 0.0)
 
-    def test_matching_pool2_multi_input_conductance(self):
+    def test_matching_pool2_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(1, 1, 10, 10)
         baseline = 20 * torch.randn(1, 1, 10, 10, requires_grad=True)
@@ -104,13 +107,13 @@ class Test(BaseTest):
 
     def _conductance_input_test_assert(
         self,
-        model,
-        target_layer,
-        test_input,
-        test_neuron,
-        expected_input_conductance,
-        additional_input=None,
-    ):
+        model: Module,
+        target_layer: Module,
+        test_input: TensorOrTupleOfTensors,
+        test_neuron: Union[int, Tuple[int, ...]],
+        expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
+        additional_input: Any = None,
+    ) -> None:
         for internal_batch_size in (None, 1, 20):
             cond = NeuronConductance(model, target_layer)
             attributions = cond.attribute(
@@ -131,14 +134,25 @@ class Test(BaseTest):
                             delta=0.1,
                         )
             else:
-                assertArraysAlmostEqual(
-                    attributions.squeeze(0).tolist(),
-                    expected_input_conductance,
-                    delta=0.1,
-                )
+                if isinstance(attributions, Tensor):
+                    assertArraysAlmostEqual(
+                        attributions.squeeze(0).tolist(),
+                        expected_input_conductance,
+                        delta=0.1,
+                    )
+                else:
+                    raise AssertionError(
+                        "Attributions not returning a Tensor when expected."
+                    )
 
     def _conductance_input_sum_test_assert(
-        self, model, target_layer, test_input, test_baseline=None
+        self,
+        model: Module,
+        target_layer: Module,
+        test_input: TensorOrTupleOfTensors,
+        test_baseline: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
         attributions = layer_cond.attribute(
@@ -161,8 +175,8 @@ class Test(BaseTest):
                     )
                     for n in range(attributions.shape[0]):
                         self.assertAlmostEqual(
-                            torch.sum(neuron_vals[n]),
-                            attributions[n, i, j, k],
+                            torch.sum(neuron_vals[n]).item(),
+                            attributions[n, i, j, k].item(),
                             delta=0.005,
                         )
 
