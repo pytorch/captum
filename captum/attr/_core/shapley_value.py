@@ -22,7 +22,7 @@ from .._utils.typing import TensorOrTupleOfTensors
 
 
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Tensor]:
-    for i in range(num_samples):
+    for _ in range(num_samples):
         yield torch.randperm(num_features)
 
 
@@ -309,7 +309,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                         warnings.warn(
                             "Feature mask is missing some integers between 0 and "
                             "num_features, for optimal performance, make sure each"
-                            " consecutive integer correponds to a feature."
+                            " consecutive integer corresponds to a feature."
                         )
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
