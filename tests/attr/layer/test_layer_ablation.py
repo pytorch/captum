@@ -23,7 +23,7 @@ class Test(BaseTest):
             inp,
             ([280.0, 280.0, 120.0],),
             layer_mask=torch.tensor([[0, 0, 1]]),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             attribute_to_layer_input=True,
         )
 
@@ -40,7 +40,7 @@ class Test(BaseTest):
             ([[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],),
             additional_input=(1,),
             baselines=baseline,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             attribute_to_layer_input=True,
         )
         self._ablation_test_assert(
@@ -50,7 +50,7 @@ class Test(BaseTest):
             [[168.0, 992.0, 148.0], [84.0, 632.0, 120.0]],
             additional_input=(1,),
             baselines=baseline,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             attribute_to_layer_input=False,
         )
 
@@ -68,7 +68,7 @@ class Test(BaseTest):
             ([[316.0, 992.0, 316.0], [84.0, 632.0, 120.0]],),
             additional_input=(1,),
             baselines=baseline,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             layer_mask=layer_mask,
             attribute_to_layer_input=True,
         )
@@ -80,7 +80,7 @@ class Test(BaseTest):
             additional_input=(1,),
             baselines=baseline,
             layer_mask=layer_mask,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_simple_multi_input_conv_intermediate(self):
@@ -92,7 +92,7 @@ class Test(BaseTest):
             net.relu1,
             (inp, inp2),
             [[[4.0, 13.0], [40.0, 49.0]], [[0, 0], [-15.0, -24.0]]],
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
         )
         self._ablation_test_assert(
             net,
@@ -102,7 +102,7 @@ class Test(BaseTest):
             baselines=torch.tensor(
                 [[[-4.0, -13.0], [-2.0, -2.0]], [[0, 0], [0.0, 0.0]]]
             ),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
             attribute_to_layer_input=True,
         )
         self._ablation_test_assert(
@@ -110,7 +110,7 @@ class Test(BaseTest):
             net.relu1,
             (inp, inp2),
             [[[17.0, 17.0], [67.0, 67.0]], [[0, 0], [-39.0, -39.0]]],
-            ablations_per_eval=(1, 2, 4),
+            perturbations_per_eval=(1, 2, 4),
             layer_mask=torch.tensor([[[[0, 0], [1, 1]], [[2, 2], [3, 3]]]]),
         )
 
@@ -140,12 +140,12 @@ class Test(BaseTest):
         expected_ablation,
         layer_mask=None,
         additional_input=None,
-        ablations_per_eval=(1,),
+        perturbations_per_eval=(1,),
         baselines=None,
         target=0,
         attribute_to_layer_input=False,
     ):
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = LayerFeatureAblation(model, layer)
             attributions = ablation.attribute(
                 test_input,
@@ -153,7 +153,7 @@ class Test(BaseTest):
                 layer_mask=layer_mask,
                 additional_forward_args=additional_input,
                 layer_baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
             assertTensorTuplesAlmostEqual(self, attributions, expected_ablation)

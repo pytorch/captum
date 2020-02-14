@@ -39,7 +39,7 @@ class FeaturePermutation(FeatureAblation):
         ] = None,
         additional_forward_args: Any = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
-        ablations_per_eval: int = 1,
+        perturbations_per_eval: int = 1,
         **kwargs: Any
     ) -> TensorOrTupleOfTensors:
         return FeatureAblation.attribute(
@@ -49,7 +49,7 @@ class FeaturePermutation(FeatureAblation):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
         )
 
     def _construct_ablated_input(

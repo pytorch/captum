@@ -40,10 +40,10 @@ class Occlusion(FeatureAblation):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
         ] = None,
         additional_forward_args: Any = None,
-        ablations_per_eval: int = 1,
+        perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensors:
         r""""
-        A perturbation based approach to computing attribution, involving
+        A perturbation based approach to compute attribution, involving
         replacing each contiguous rectangular region with a given baseline /
         reference, and computing the difference in output. For features located
         in multiple regions (hyperrectangles), the corresponding output differences
@@ -161,16 +161,16 @@ class Occlusion(FeatureAblation):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                ablations_per_eval (int, optional): Allows multiple occlusions
+                perturbations_per_eval (int, optional): Allows multiple occlusions
                             to be included in one batch (one call to forward_fn).
-                            By default, ablations_per_eval is 1, so each occlusion
+                            By default, perturbations_per_eval is 1, so each occlusion
                             is processed individually.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
 
@@ -247,7 +247,7 @@ class Occlusion(FeatureAblation):
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
             sliding_window_tensors=sliding_window_tensors,
             shift_counts=tuple(shift_counts),
             strides=strides,
