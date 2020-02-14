@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 
 
-class PropagationRule:
+class PropagationRule(ABC):
     """
     Base class for all propagation rule classes, also called Z-Rule.
     STABILITY_FACTOR is used to assure that no zero divison occurs.
@@ -24,11 +25,7 @@ class PropagationRule:
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
         """Backward hook to propagate relevance over non-linear activations without manipulation."""
-        print(f"grad fn: {grad_input[0].grad_fn}")
-        if type(module) == nn.BatchNorm2d:
-            return (grad_output[0], *grad_input[1:])
-        else:
-            return grad_output
+        return grad_output
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
         module.relevance = grad_output[0] * module.outputs
@@ -56,6 +53,7 @@ class PropagationRule_ManipulateModules(PropagationRule):
         module.activation = inputs[0].data
         self._manipulate_weights(module, inputs, outputs)
 
+    @abstractmethod
     def _manipulate_weights(self, module, inputs, outputs):
         raise NotImplementedError
 
@@ -129,15 +127,16 @@ class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
 
 def suggested_rules(model):
     """
-    Return a list of rules for a given model.
+    Return a dictionary of suggested rules for specific models. These can be
+    passed to LRP(model, rules) to use instead of default rules. So far, only
+    a recommendation for vgg16 is implemented.
 
     Args:
         model (str): Name of the used model (vgg16)
     """
     if model == "vgg16":
-        layer0 = [
-            EpsilonRule()
-        ]  # [zB_Rule(0, 1, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+        # Similar to rules suggested in https://doi.org/10.1007/978-3-030-28954-6_10
+        layer0 = [EpsilonRule()]  # zB-Rule
         layers1_16 = [GammaRule() for i in range(16)]
         layers17_30 = [EpsilonRule() for i in range(14)]
         layers31_38 = [EpsilonRule() for i in range(8)]
