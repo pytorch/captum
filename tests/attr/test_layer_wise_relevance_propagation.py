@@ -14,7 +14,7 @@ from captum.attr._utils.lrp_rules import (
     EpsilonRule,
     GammaRule,
     Alpha1_Beta0_Rule,
-    suggested_rules,
+    suggested_rules
 )
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
@@ -66,6 +66,22 @@ def _get_simple_model():
     return model
 
 
+def _get_simple_model2():
+    class MyModel(nn.Module):
+        def __init__(self, inplace=False):
+            super().__init__()
+            self.lin = nn.Linear(2, 2)
+            self.lin.weight = nn.Parameter(torch.ones(2, 2))
+
+        def forward(self, input):
+            return self.lin(input)[0].unsqueeze(0)
+
+    input = torch.tensor([[1.0, 2.0], [1.0, 3.0]])
+    model = MyModel()
+
+    return model, input
+
+
 class Test(BaseTest):
     def test_lrp_creator(self):
         self._creator_error_assert(*_get_basic_config(), error="ruleType")
@@ -78,6 +94,9 @@ class Test(BaseTest):
 
     def test_lrp_simple_attributions(self):
         self._simple_attributions(_get_simple_model())
+
+    def test_lrp_simple2_attributions(self):
+        self._simple2_attributions(*_get_simple_model2())
 
     def test_lrp_vgg(self):
         self._attributions_assert_vgg(*_get_vgg_config())
@@ -102,6 +121,12 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
         )
+
+    def _simple2_attributions(self, model, input):
+        output = model(input)
+        lrp = LRP(model)
+        relevance = lrp.attribute(input, 0)
+        self.assertEqual(relevance.shape, input.shape)
 
     def _basic_attributions(self, model, inputs, grads, expected_activations, expected):
         logits = model(inputs)
