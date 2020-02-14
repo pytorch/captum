@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import torch
+from typing import Callable, List, Optional, Tuple, Union, Any
+from torch import Tensor
+from torch.nn import Module
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
@@ -14,10 +17,16 @@ from ..._utils.common import (
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -49,16 +58,20 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs,
-        neuron_index,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="riemann_trapezoid",
-        internal_batch_size=None,
-        attribute_to_neuron_input=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        neuron_index: Union[int, Tuple[int, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "riemann_trapezoid",
+        internal_batch_size: Optional[int] = None,
+        attribute_to_neuron_input: bool = False,
+    ) -> TensorOrTupleOfTensors:
         r"""
             Computes conductance with respect to particular hidden neuron. The
             returned output is in the shape of the input, showing the attribution
