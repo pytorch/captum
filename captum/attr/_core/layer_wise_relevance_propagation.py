@@ -147,7 +147,6 @@ class LRP(Attribution):
         self.model = copy.deepcopy(self.original_model)
         self.layers = []
         self._get_layers(self.model)
-        self.rules = []
         self._get_rules()
         self._check_if_weights_are_changed()
         self.return_for_all_layers = return_for_all_layers
@@ -172,6 +171,7 @@ class LRP(Attribution):
         self._remove_backward_hooks()
         self._remove_forward_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
+        self._remove_rules()
 
         relevances = self._select_layer_output(relevances)
 
@@ -279,7 +279,7 @@ class LRP(Attribution):
                 raise TypeError(
                     f"Module type {type(layer)} is not supported. No default rule defined."
                 )
-            self.rules.append(rule)
+            layer.rule = rule
 
     def _check_rules(self):
         self.changes_weights = False
@@ -291,12 +291,12 @@ class LRP(Attribution):
 
     def _check_if_weights_are_changed(self):
         self.changes_weights = False
-        for rule in self.rules:
-            if isinstance(rule, PropagationRule_ManipulateModules):
+        for layer in self.layers:
+            if isinstance(layer.rule, PropagationRule_ManipulateModules):
                 self.changes_weights = True
 
     def _register_forward_hooks(self):
-        for layer, rule in zip(self.layers, self.rules):
+        for layer in self.layers:
             # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handle = layer.register_backward_hook(
@@ -304,27 +304,27 @@ class LRP(Attribution):
                 )
                 self.backward_handles.append(backward_handle)
             else:
-                forward_handle = layer.register_forward_hook(rule.forward_hook)
+                forward_handle = layer.register_forward_hook(layer.rule.forward_hook)
                 self.forward_handles.append(forward_handle)
                 if self.verbose:
-                    print(f"Applied {rule} on layer {layer}")
+                    print(f"Applied {layer.rule} on layer {layer}")
                 if self.return_for_all_layers:
                     relevance_handle = layer.register_backward_hook(
-                        rule._backward_hook_relevance
+                        layer.rule._backward_hook_relevance
                     )
                     self.backward_handles.append(relevance_handle)
 
     def _register_weight_hooks(self):
-        for layer, rule in zip(self.layers, self.rules):
-            if isinstance(rule, PropagationRule_ManipulateModules):
-                forward_handle = layer.register_forward_hook(rule.forward_hook_weights)
+        for layer in self.layers:
+            if isinstance(layer.rule, PropagationRule_ManipulateModules):
+                forward_handle = layer.register_forward_hook(layer.rule.forward_hook_weights)
                 self.forward_handles.append(forward_handle)
 
     def _register_pre_hooks(self):
-        for layer, rule in zip(self.layers, self.rules):
-            if isinstance(rule, PropagationRule_ManipulateModules):
+        for layer in self.layers:
+            if isinstance(layer.rule, PropagationRule_ManipulateModules):
                 forward_handle = layer.register_forward_pre_hook(
-                    rule.forward_pre_hook_activations
+                    layer.rule.forward_pre_hook_activations
                 )
                 self.forward_handles.append(forward_handle)
 
@@ -343,13 +343,18 @@ class LRP(Attribution):
     def _remove_backward_hooks(self):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
-        for rule in self.rules:
-            if hasattr(rule, "_handle_input_hook"):
-                rule._handle_input_hook.remove()
-            if hasattr(rule, "_handle_output_hook"):
-                rule._handle_output_hook.remove()
-            if hasattr(rule, "_handle_layer_hook"):
-                rule._handle_layer_hook.remove()
+        for layer in self.layers:
+            if hasattr(layer.rule, "_handle_input_hook"):
+                layer.rule._handle_input_hook.remove()
+            if hasattr(layer.rule, "_handle_output_hook"):
+                layer.rule._handle_output_hook.remove()
+            if hasattr(layer.rule, "_handle_layer_hook"):
+                layer.rule._handle_layer_hook.remove()
+
+    def _remove_rules(self):
+        for layer in self.layers:
+            if hasattr(layer, "rule"):
+                del layer.rule
 
     def _select_layer_output(self, relevances):
         if self.return_for_all_layers:
