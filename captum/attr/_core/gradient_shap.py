@@ -11,10 +11,13 @@ from .._utils.common import (
 )
 
 from .noise_tunnel import NoiseTunnel
+from typing import Callable, Union, Optional, Tuple, List, Any
+from .._utils.typing import Tensor, TensorOrTupleOfTensors
+import typing
 
 
 class GradientShap(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -22,6 +25,35 @@ class GradientShap(GradientAttribution):
                        any modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        ...
 
     def attribute(
         self,
@@ -219,12 +251,12 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
 
 class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -232,6 +264,35 @@ class InputBaselineXGradient(GradientAttribution):
                        any modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+    ) -> TensorOrTupleOfTensors:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> TensorOrTupleOfTensors:
+        ...
 
     def attribute(
         self,
@@ -279,10 +340,15 @@ class InputBaselineXGradient(GradientAttribution):
             is_inputs_tuple,
         )
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
-    def _scale_input(self, input, baseline, rand_coefficient):
+    def _scale_input(
+        self,
+        input: Tensor,
+        baseline: Union[Tensor, int, float],
+        rand_coefficient: Tensor,
+    ) -> Tensor:
         # batch size
         bsz = input.shape[0]
         inp_shape_wo_bsz = input.shape[1:]
@@ -292,6 +358,6 @@ class InputBaselineXGradient(GradientAttribution):
         rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
 
         input_baseline_scaled = (
-            rand_coefficient * input + (1 - rand_coefficient) * baseline
+            rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
         )
         return input_baseline_scaled
