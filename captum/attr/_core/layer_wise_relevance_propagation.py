@@ -4,16 +4,12 @@ import copy
 import torch
 import torch.nn as nn
 
-from .._utils.common import (
-    _format_attributions,
-    _format_input,
-    _run_forward
-)
+from .._utils.common import _format_attributions, _format_input, _run_forward
 from .._utils.attribution import Attribution
 from .._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
-    compute_gradients
+    compute_gradients,
 )
 from .._utils.lrp_rules import (
     PropagationRule,
@@ -374,7 +370,8 @@ SUPPORTED_LINEAR_LAYERS = {
     torch.nn.AvgPool2d: EpsilonRule,
     torch.nn.AdaptiveAvgPool2d: EpsilonRule,
     torch.nn.Linear: EpsilonRule,
+    torch.nn.BatchNorm2d: EpsilonRule,
 }
 
-SUPPORTED_NON_LINEAR_LAYERS = [torch.nn.ReLU, torch.nn.Dropout, torch.nn.BatchNorm2d]
+SUPPORTED_NON_LINEAR_LAYERS = [torch.nn.ReLU, torch.nn.Dropout]
 

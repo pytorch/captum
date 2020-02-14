@@ -24,6 +24,7 @@ class PropagationRule:
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
         """Backward hook to propagate relevance over non-linear activations without manipulation."""
+        print(f"grad fn: {grad_input[0].grad_fn}")
         if type(module) == nn.BatchNorm2d:
             return (grad_output[0], *grad_input[1:])
         else:

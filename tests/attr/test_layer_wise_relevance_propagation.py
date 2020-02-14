@@ -8,6 +8,7 @@ from torchvision.models import vgg16, resnet18
 import torchvision.transforms as transforms
 
 from captum.attr import visualization as viz
+from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.layer_wise_relevance_propagation import LRP
 from captum.attr._utils.lrp_rules import (
     EpsilonRule,
@@ -48,6 +49,23 @@ def _get_vgg_config():
     return model, image, image2
 
 
+def _get_simple_model():
+    class Model(nn.Module):
+        def __init__(self):
+            super(Model, self).__init__()
+            self.linear = nn.Linear(3, 3, bias=False)
+            self.linear.weight.data.fill_(2.0)
+            self.relu = torch.nn.ReLU()
+            self.linear2 = nn.Linear(3, 1, bias=False)
+            self.linear2.weight.data.fill_(3.0)
+
+        def forward(self, x):
+            return self.linear2(self.relu(self.linear(x)))
+
+    model = Model()
+    return model
+
+
 class Test(BaseTest):
     def test_lrp_creator(self):
         self._creator_error_assert(*_get_basic_config(), error="ruleType")
@@ -59,7 +77,7 @@ class Test(BaseTest):
         self._basic_attributions(*_get_basic_config())
 
     def test_lrp_simple_attributions(self):
-        self._simple_attributions()
+        self._simple_attributions(_get_simple_model())
 
     def test_lrp_vgg(self):
         self._attributions_assert_vgg(*_get_vgg_config())
@@ -74,22 +92,10 @@ class Test(BaseTest):
             lrp = LRP(model)
             self.assertRaises(TypeError, lrp.attribute, inputs)
 
-    def _simple_attributions(self):
-        class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-                self.linear = nn.Linear(3, 3, bias=False)
-                self.linear.weight.data.fill_(2.0)
-                self.relu = torch.nn.ReLU()
-                self.linear2 = nn.Linear(3, 1, bias=False)
-                self.linear2.weight.data.fill_(3.0)
-
-            def forward(self, x):
-                return self.linear2(self.relu(self.linear(x)))
-
-        model = Model()
+    def _simple_attributions(self, model):
         model.eval()
         inputs = torch.tensor([1.0, 2.0, 3.0])
+        output = model(inputs)
         rules = {0: EpsilonRule(), 2: EpsilonRule()}
         lrp = LRP(model, rules=rules)
         relevance = lrp.attribute(inputs)
@@ -111,25 +117,20 @@ class Test(BaseTest):
         print(f"classindex: {classIndex}. score: {score}")
         rules = suggested_rules("vgg16")
         lrp = LRP(model)
+        itg = InputXGradient(model)
         relevance_all_layers = lrp.attribute(
             image, classIndex.item(), return_for_all_layers=True, verbose=True
         )
-        relevance = relevance_all_layers[1]
-        relevance_oldImplementation = torch.load(
-            "relevance_loopimplementation_zRule.pt"
-        )
-        relevance_sum = torch.sum(relevance)
-        delta = relevance_sum - score.item()
-        old_max = torch.max(relevance_oldImplementation)
-        old_min = torch.min(relevance_oldImplementation)
+        relevance_itg = itg.attribute(image, classIndex.item())
+        relevance = relevance_all_layers[0]
+        itg_max = torch.max(relevance_itg)
+        itg_min = torch.min(relevance_itg)
         new_max = torch.max(relevance)
         new_min = torch.min(relevance)
         print(f"min: {new_min}, max: {new_max}")
+        print(f"input times gradient:\nmin: {itg_min}, max: {itg_max}")
         _ = viz.visualize_image_attr(
-            np.transpose(
-                relevance_all_layers[1].data[0].squeeze().cpu().detach().numpy(),
-                (1, 2, 0),
-            ),
+            np.transpose(relevance.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             np.transpose(image.data[0].squeeze().cpu().detach().numpy(), (1, 2, 0)),
             sign="all",
             method="heat_map",
