@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tuple, Union, Any
+from typing import List, Optional, Tuple, Union, Any, cast
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -155,12 +155,15 @@ class Test(BaseTest):
         ] = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
-        attributions = layer_cond.attribute(
-            test_input,
-            baselines=test_baseline,
-            target=0,
-            n_steps=500,
-            method="gausslegendre",
+        attributions = cast(
+            Tensor,
+            layer_cond.attribute(
+                test_input,
+                baselines=test_baseline,
+                target=0,
+                n_steps=500,
+                method="gausslegendre",
+            ),
         )
         neuron_cond = NeuronConductance(model, target_layer)
         for i in range(attributions.shape[1]):

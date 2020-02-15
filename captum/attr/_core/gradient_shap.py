@@ -314,7 +314,7 @@ class InputBaselineXGradient(GradientAttribution):
         )
 
         input_baseline_scaled = tuple(
-            self._scale_input(input, baseline, rand_coefficient)
+            _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
         grads = self.gradient_func(
@@ -343,21 +343,19 @@ class InputBaselineXGradient(GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
-    def _scale_input(
-        self,
-        input: Tensor,
-        baseline: Union[Tensor, int, float],
-        rand_coefficient: Tensor,
-    ) -> Tensor:
-        # batch size
-        bsz = input.shape[0]
-        inp_shape_wo_bsz = input.shape[1:]
-        inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
 
-        # expand and reshape the indices
-        rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+def _scale_input(
+    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor,
+) -> Tensor:
+    # batch size
+    bsz = input.shape[0]
+    inp_shape_wo_bsz = input.shape[1:]
+    inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
 
-        input_baseline_scaled = (
-            rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
-        )
-        return input_baseline_scaled
+    # expand and reshape the indices
+    rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+
+    input_baseline_scaled = (
+        rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
+    )
+    return input_baseline_scaled
