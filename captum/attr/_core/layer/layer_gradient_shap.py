@@ -9,10 +9,10 @@ from typing import Callable, List, Optional, Tuple, Union, Any
 
 import numpy as np
 
-from ..._utils.attribution import LayerAttribution
+from ..._utils.attribution import LayerAttribution, GradientAttribution
 from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_eval
 
-from ..gradient_shap import GradientShap, InputBaselineXGradient
+from ..gradient_shap import _scale_input
 from ..._utils.common import (
     _format_input_baseline,
     _format_callable_baseline,
@@ -23,7 +23,7 @@ from ..._utils.typing import TensorOrTupleOfTensors
 from ..noise_tunnel import NoiseTunnel
 
 
-class LayerGradientShap(LayerAttribution, GradientShap):
+class LayerGradientShap(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
@@ -48,7 +48,7 @@ class LayerGradientShap(LayerAttribution, GradientShap):
                           then it is not necessary to provide this argument.
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
-        GradientShap.__init__(self, forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     @typing.overload
     def attribute(
@@ -297,8 +297,11 @@ class LayerGradientShap(LayerAttribution, GradientShap):
 
         return attributions
 
+    def has_convergence_delta(self) -> bool:
+        return True
 
-class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
+
+class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
@@ -323,7 +326,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
                           then it is not necessary to provide this argument.
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
-        InputBaselineXGradient.__init__(self, forward_func)
+        GradientAttribution.__init__(self, forward_func)
 
     @typing.overload
     def attribute(
@@ -373,7 +376,7 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
         )
 
         input_baseline_scaled = tuple(
-            self._scale_input(input, baseline, rand_coefficient)
+            _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
         grads, _, is_layer_tuple = compute_layer_gradients_and_eval(
@@ -420,3 +423,6 @@ class LayerInputBaselineXGradient(LayerAttribution, InputBaselineXGradient):
             target,
             is_layer_tuple,
         )
+
+    def has_convergence_delta(self) -> bool:
+        return True

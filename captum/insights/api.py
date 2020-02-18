@@ -241,12 +241,14 @@ class AttributionVisualizer(object):
             count=4,
         )
 
-    def render(self):
+    def render(self, debug=True):
         from IPython.display import display
         from captum.insights.widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
+        if debug:
+            display(widget.out)
 
     def serve(self, blocking=False, debug=False, port=None):
         context = _get_context()
