@@ -217,7 +217,7 @@ class Test(BaseTest):
         def custom_attr_func(
             multipliers: Tuple[Tensor, ...],
             inputs: Tuple[Tensor, ...],
-            baselines: Tuple[Union[Tensor, int, float], ...],
+            baselines: Tuple[Tensor, ...],
         ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 

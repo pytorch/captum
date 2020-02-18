@@ -495,9 +495,7 @@ class DeepLift(GradientAttribution):
             backward_handle.remove()
 
     def _pre_hook_main_model(self) -> RemovableHandle:
-        def pre_hook(
-            module: Module, baseline_inputs_add_args: Tuple[Tensor, ...]
-        ) -> Tuple[Tensor, ...]:
+        def pre_hook(module: Module, baseline_inputs_add_args: Tuple) -> Tuple:
             inputs = baseline_inputs_add_args[0]
             baselines = baseline_inputs_add_args[1]
             additional_args = None
