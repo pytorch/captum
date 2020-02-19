@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
+from typing import Union, Tuple, Optional, List
+
 import torch
+from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -14,7 +18,7 @@ from .helpers.basic_models import BasicModel_ConvNet_MaxPool3d
 
 
 class Test(BaseTest):
-    def test_sigmoid_classification(self):
+    def test_sigmoid_classification(self) -> None:
         num_in = 20
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         baseline = 0 * input
@@ -33,7 +37,7 @@ class Test(BaseTest):
         attributions_ig = ig.attribute(input, baseline, target=target)
         assertAttributionComparision(self, (attributions,), (attributions_ig,))
 
-    def test_softmax_classification_zero_baseline(self):
+    def test_softmax_classification_zero_baseline(self) -> None:
         num_in = 20
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         baselines = 0.0
@@ -43,7 +47,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
-    def test_softmax_classification_batch_zero_baseline(self):
+    def test_softmax_classification_batch_zero_baseline(self) -> None:
         num_in = 40
         input = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
         baselines = 0
@@ -54,7 +58,7 @@ class Test(BaseTest):
             model, dl, input, baselines, torch.tensor([2, 2, 2])
         )
 
-    def test_softmax_classification_batch_multi_target(self):
+    def test_softmax_classification_batch_multi_target(self) -> None:
         num_in = 40
         inputs = torch.arange(0.0, num_in * 3.0, requires_grad=True).reshape(3, num_in)
         baselines = torch.arange(1.0, num_in + 1).reshape(1, num_in)
@@ -65,7 +69,7 @@ class Test(BaseTest):
             model, dl, inputs, baselines, torch.tensor([2, 2, 2])
         )
 
-    def test_softmax_classification_multi_baseline(self):
+    def test_softmax_classification_multi_baseline(self) -> None:
         num_in = 40
         input = torch.arange(0.0, num_in * 1.0, requires_grad=True).unsqueeze(0)
         baselines = torch.randn(5, 40)
@@ -75,7 +79,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
-    def test_softmax_classification_batch_multi_baseline(self):
+    def test_softmax_classification_batch_multi_baseline(self) -> None:
         num_in = 40
         input = torch.arange(0.0, num_in * 2.0, requires_grad=True).reshape(2, num_in)
         baselines = torch.randn(5, 40)
@@ -85,7 +89,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baselines, torch.tensor(2))
 
-    def test_convnet_with_maxpool3d(self):
+    def test_convnet_with_maxpool3d(self) -> None:
         input = 100 * torch.randn(2, 1, 10, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10, 10)
 
@@ -94,7 +98,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def test_convnet_with_maxpool3d_large_baselines(self):
+    def test_convnet_with_maxpool3d_large_baselines(self) -> None:
         input = 100 * torch.randn(2, 1, 10, 10, 10, requires_grad=True)
         baseline = 600 * torch.randn(2, 1, 10, 10, 10)
 
@@ -103,7 +107,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def test_convnet_with_maxpool2d(self):
+    def test_convnet_with_maxpool2d(self) -> None:
         input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10, 10)
 
@@ -112,7 +116,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def test_convnet_with_maxpool2d_large_baselines(self):
+    def test_convnet_with_maxpool2d_large_baselines(self) -> None:
         input = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
         baseline = 500 * torch.randn(2, 1, 10, 10)
 
@@ -121,7 +125,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def test_convnet_with_maxpool1d(self):
+    def test_convnet_with_maxpool1d(self) -> None:
         input = 100 * torch.randn(2, 1, 10, requires_grad=True)
         baseline = 20 * torch.randn(2, 1, 10)
 
@@ -130,7 +134,7 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def test_convnet_with_maxpool1d_large_baselines(self):
+    def test_convnet_with_maxpool1d_large_baselines(self) -> None:
         input = 100 * torch.randn(2, 1, 10, requires_grad=True)
         baseline = 500 * torch.randn(2, 1, 10)
 
@@ -139,7 +143,14 @@ class Test(BaseTest):
 
         self.softmax_classification(model, dl, input, baseline, torch.tensor(2))
 
-    def softmax_classification(self, model, attr_method, input, baselines, target):
+    def softmax_classification(
+        self,
+        model: Module,
+        attr_method: Union[DeepLift, DeepLiftShap],
+        input: Tensor,
+        baselines,
+        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+    ) -> None:
         # TODO add test cases for multiple different layers
         model.zero_grad()
         attributions, delta = attr_method.attribute(
@@ -155,8 +166,16 @@ class Test(BaseTest):
         self._assert_attributions(model, attributions, input, baselines, delta, target2)
 
     def _assert_attributions(
-        self, model, attributions, inputs, baselines, delta, target=None
-    ):
+        self,
+        model: Module,
+        attributions: Tensor,
+        inputs: Tensor,
+        baselines: Union[Tensor, int, float],
+        delta: Tensor,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        ] = None,
+    ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)
 
         delta_condition = all(abs(delta.numpy().flatten()) < 0.003)
