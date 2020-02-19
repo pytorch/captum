@@ -211,15 +211,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[
-                int,
-                float,
-                Tensor,
-                Tuple[Union[Tensor, int, float], ...],
-                Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
-            ]
-        ] = None,
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
         custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
