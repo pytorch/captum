@@ -23,30 +23,32 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 
 
 class FeaturePermutation(FeatureAblation):
+    r"""
+    This attribution method essentially implements the permutation feature
+    importance algorithm, as described here:
+    https://christophm.github.io/interpretable-ml-book/feature-importance.html
+
+    A basic tl;dr of the algorithm is:
+
+    perm_feature_importance(batch):
+        importance = dict()
+        baseline_error = error_metric(model(batch), batch_labels)
+        for each feature:
+            permute this feature across the batch
+            error = error_metric(model(permuted_batch), batch_labels)
+            importance[feature] = baseline_error - error
+            "un-permute" the feature across the batch
+
+        return importance
+
+    It should be noted that the `error_metric` must be called in the
+    `forward_func`. You do not need to provide an error metric, e.g. you
+    could simply return the logits (the model output), but this may or may
+    not provide a meaningful attribution.
+    """
+
     def __init__(self, forward_func: Callable, perm_func: Callable = _permute_feature):
         r"""
-        This attribution method essentially implements the permutation feature
-        importance algorithm, as described here:
-        https://christophm.github.io/interpretable-ml-book/feature-importance.html
-
-        A basic tl;dr of the algorithm is:
-
-        perm_feature_importance(batch):
-            importance = dict()
-            baseline_error = error_metric(model(batch), batch_labels)
-            for each feature:
-                permute this feature across the batch
-                error = error_metric(model(permuted_batch), batch_labels)
-                importance[feature] = baseline_error - error
-                "un-permute" the feature across the batch
-
-            return importance
-
-        It should be noted that the `error_metric` must be called in the
-        `forward_func`. You do not need to provide an error metric, e.g. you
-        could simply return the logits (the model output), but this may or may
-        not provide a meaningful attribution.
-
         Args:
 
             forward_func (callable): The forward function of the model or
