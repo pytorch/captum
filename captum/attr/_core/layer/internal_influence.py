@@ -54,7 +54,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

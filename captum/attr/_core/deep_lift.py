@@ -13,6 +13,7 @@ from torch.utils.hooks import RemovableHandle
 import numpy as np
 
 from .._utils.common import (
+    _is_tuple,
     _format_input,
     _format_baseline,
     _format_callable_baseline,
@@ -81,7 +82,7 @@ class DeepLift(GradientAttribution):
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
@@ -96,7 +97,7 @@ class DeepLift(GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -278,7 +279,7 @@ class DeepLift(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
@@ -341,9 +342,9 @@ class DeepLift(GradientAttribution):
     def _construct_forward_func(
         self,
         forward_func: Callable,
-        inputs: TensorOrTupleOfTensors,
+        inputs: Tuple,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> Callable:
@@ -536,7 +537,7 @@ class DeepLiftShap(DeepLift):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
@@ -549,7 +550,7 @@ class DeepLiftShap(DeepLift):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -765,7 +766,9 @@ class DeepLiftShap(DeepLift):
         self,
         baselines: Tuple[Tensor, ...],
         inputs: Tuple[Tensor, ...],
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ],
         additional_forward_args: Any,
     ):
         inp_bsz = inputs[0].shape[0]

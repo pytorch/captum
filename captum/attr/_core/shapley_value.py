@@ -11,6 +11,7 @@ from .._utils.common import (
     _format_attributions,
     _format_input,
     _format_input_baseline,
+    _is_tuple,
     _run_forward,
     _expand_additional_forward_args,
     _expand_target,
@@ -72,7 +73,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,
@@ -251,7 +252,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
@@ -353,7 +354,9 @@ class ShapleyValueSampling(PerturbationAttribution):
         self,
         inputs: Tuple[Tensor, ...],
         additional_args: Any,
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ],
         baselines: Tuple[Tensor, ...],
         input_masks: TensorOrTupleOfTensors,
         feature_permutation: Tensor,
@@ -362,7 +365,9 @@ class ShapleyValueSampling(PerturbationAttribution):
         Tuple[
             Tuple[Tensor, ...],
             Any,
-            Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+            Optional[
+                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+            ],
             Tuple[Tensor, ...],
         ]
     ]:

@@ -1,13 +1,34 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union, overload
+import typing
+from typing import (
+    Optional,
+    Tuple,
+    Union,
+    overload,
+    List,
+    Any,
+    TYPE_CHECKING,
+    Callable,
+    cast,
+)
 
 import torch
-from torch import Tensor
+from torch import Tensor, device
+from torch.nn import Module
 
 from enum import Enum
 from inspect import signature
 
 from .approximation_methods import SUPPORTED_METHODS
+from .typing import TensorOrTupleOfTensors
+
+import sys
+
+if TYPE_CHECKING:
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
 
 
 class ExpansionTypes(Enum):
@@ -15,7 +36,21 @@ class ExpansionTypes(Enum):
     repeat_interleave = 2
 
 
-def safe_div(denom, quotient, default_value=None):
+@typing.overload
+def _is_tuple(inputs: Tensor) -> "Literal"[False]:
+    ...
+
+
+@typing.overload
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> "Literal"[True]:
+    ...
+
+
+def _is_tuple(inputs):
+    return isinstance(inputs, tuple)
+
+
+def safe_div(denom: Tensor, quotient: float, default_value: Tensor) -> Tensor:
     r"""
         A simple utility function to perform `denom / quotient`
         if the statement is undefined => result will be `default_value`
@@ -23,7 +58,12 @@ def safe_div(denom, quotient, default_value=None):
     return denom / quotient if quotient != 0.0 else default_value
 
 
-def _validate_target(num_samples, target):
+def _validate_target(
+    num_samples: int,
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+) -> None:
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1
     ):
@@ -36,12 +76,12 @@ def _validate_target(num_samples, target):
 
 
 def _validate_input(
-    inputs,
-    baselines,
-    n_steps=50,
-    method="riemann_trapezoid",
-    draw_baseline_from_distrib=False,
-):
+    inputs: Tuple[Tensor, ...],
+    baselines: Tuple[Union[Tensor, int, float], ...],
+    n_steps: int = 50,
+    method: str = "riemann_trapezoid",
+    draw_baseline_from_distrib: bool = False,
+) -> None:
     assert len(inputs) == len(baselines), (
         "Input and baseline must have the same "
         "dimensions, baseline has {} features whereas input has {}.".format(
@@ -84,7 +124,9 @@ def _validate_input(
     )
 
 
-def _validate_noise_tunnel_type(nt_type, supported_noise_tunnel_types):
+def _validate_noise_tunnel_type(
+    nt_type: str, supported_noise_tunnel_types: List[str]
+) -> None:
     assert nt_type in supported_noise_tunnel_types, (
         "Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "
         "Given {}".format(nt_type)
@@ -103,9 +145,7 @@ def _format_tensor_into_tuples(
     ...
 
 
-def _format_tensor_into_tuples(
-    inputs: Optional[Union[Tensor, Tuple[Tensor, ...]]]
-) -> Optional[Tuple[Tensor, ...]]:
+def _format_tensor_into_tuples(inputs):
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
@@ -120,7 +160,7 @@ def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ..
     return _format_tensor_into_tuples(inputs)
 
 
-def _format_additional_forward_args(additional_forward_args):
+def _format_additional_forward_args(additional_forward_args: Any) -> Optional[Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
     ):
@@ -165,7 +205,18 @@ def _format_input_baseline(
 # This function can potentially be merged with the `format_baseline` function
 # however, since currently not all algorithms support baselines of type
 # callable this will be kept in a separate function.
-def _format_callable_baseline(baselines, inputs):
+def _format_callable_baseline(
+    baselines: Optional[
+        Union[
+            Callable[..., TensorOrTupleOfTensors],
+            Tensor,
+            int,
+            float,
+            Tuple[Union[Tensor, int, float], ...],
+        ]
+    ],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Union[Tensor, int, float], ...]:
     if callable(baselines):
         # Note: this assumes that if baselines is a function and if it takes
         # arguments, then the first argument is the `inputs`.
@@ -178,7 +229,21 @@ def _format_callable_baseline(baselines, inputs):
     return _format_baseline(baselines, inputs)
 
 
-def _format_attributions(is_inputs_tuple, attributions):
+@typing.overload
+def _format_attributions(
+    is_inputs_tuple: "Literal"[True], attributions: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _format_attributions(
+    is_inputs_tuple: "Literal"[False], attributions: Tuple[Tensor, ...]
+) -> Tensor:
+    ...
+
+
+def _format_attributions(is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]):
     r"""
     In case input is a tensor and the attributions is returned in form of a
     tensor we take the first element of the attributions' tuple to match the
@@ -192,20 +257,25 @@ def _format_attributions(is_inputs_tuple, attributions):
     return attributions if is_inputs_tuple else attributions[0]
 
 
-def _format_and_verify_strides(strides, inputs):
+def _format_and_verify_strides(
+    strides: Optional[
+        Union[int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]]
+    ],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Union[int, Tuple[int, ...]], ...]:
     # Formats strides, which are necessary for occlusion
     # Assumes inputs are already formatted (in tuple)
     if strides is None:
         strides = tuple(1 for input in inputs)
     if len(inputs) == 1 and not (isinstance(strides, tuple) and len(strides) == 1):
-        strides = (strides,)
+        strides = (strides,)  # type: ignore
     assert isinstance(strides, tuple) and len(strides) == len(
         inputs
     ), "Strides must be provided for each input tensor."
     for i in range(len(inputs)):
         assert isinstance(strides[i], int) or (
             isinstance(strides[i], tuple)
-            and len(strides[i]) == len(inputs[i].shape) - 1
+            and len(strides[i]) == len(inputs[i].shape) - 1  # type: ignore
         ), (
             "Stride for input index {} is {}, which is invalid for input with "
             "shape {}. It must be either an int or a tuple with length equal to "
@@ -217,11 +287,15 @@ def _format_and_verify_strides(strides, inputs):
     return strides
 
 
-def _format_and_verify_sliding_window_shapes(sliding_window_shapes, inputs):
+def _format_and_verify_sliding_window_shapes(
+    sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
+    inputs: Tuple[Tensor, ...],
+) -> Tuple[Tuple[int, ...], ...]:
     # Formats shapes of sliding windows, which is necessary for occlusion
     # Assumes inputs is already formatted (in tuple)
-    if not isinstance(sliding_window_shapes[0], tuple):
-        sliding_window_shapes = (sliding_window_shapes,)
+    if isinstance(sliding_window_shapes[0], int):
+        sliding_window_shapes = (sliding_window_shapes,)  # type: ignore
+    sliding_window_shapes: Tuple[Tuple[int, ...], ...]
     assert len(sliding_window_shapes) == len(
         inputs
     ), "Must provide sliding window dimensions for each input tensor."
@@ -240,11 +314,11 @@ def _format_and_verify_sliding_window_shapes(sliding_window_shapes, inputs):
 
 def _compute_conv_delta_and_format_attrs(
     attr_algo,
-    return_convergence_delta,
+    return_convergence_delta: bool,
     attributions,
     start_point,
     end_point,
-    additional_forward_args,
+    additional_forward_args: Any,
     target,
     is_inputs_tuple=False,
 ):
@@ -262,7 +336,7 @@ def _compute_conv_delta_and_format_attrs(
         return _format_attributions(is_inputs_tuple, attributions)
 
 
-def _zeros(inputs):
+def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     r"""
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
@@ -292,7 +366,9 @@ def _tensorize_baseline(
     )
 
 
-def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
+def _reshape_and_sum(
+    tensor_input: Tensor, num_steps: int, num_examples: int, layer_size: Tuple[int, ...]
+) -> Tensor:
     # Used for attribution methods which perform integration
     # Sums across integration steps by reshaping tensor to
     # (num_steps, num_examples, (layer_size)) and summing over
@@ -302,15 +378,22 @@ def _reshape_and_sum(tensor_input, num_steps, num_examples, layer_size):
     )
 
 
-def _verify_select_column(output, target):
-    target = (target,) if isinstance(target, int) else target
+def _verify_select_column(
+    output: Tensor, target: Union[int, Tuple[int, ...]]
+) -> Tensor:
+    target = cast(Tuple[int, ...], (target,) if isinstance(target, int) else target)
     assert (
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)
     return output[(slice(None), *target)]
 
 
-def _select_targets(output, target):
+def _select_targets(
+    output: Tensor,
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+) -> Tensor:
     if target is None:
         return output
 
@@ -320,7 +403,7 @@ def _select_targets(output, target):
         return _verify_select_column(output, target)
     elif isinstance(target, torch.Tensor):
         if torch.numel(target) == 1 and isinstance(target.item(), int):
-            return _verify_select_column(output, target.item())
+            return _verify_select_column(output, cast(int, target.item()))
         elif len(target.shape) == 1 and torch.numel(target) == num_examples:
             assert dims == 2, "Output must be 2D to select tensor of targets."
             return torch.gather(output, 1, target.reshape(len(output), 1))
@@ -331,12 +414,15 @@ def _select_targets(output, target):
             )
     elif isinstance(target, list):
         assert len(target) == num_examples, "Target list length does not match output!"
-        if type(target[0]) is int:
+        if isinstance(target[0], int):
             assert dims == 2, "Output must be 2D to select tensor of targets."
             return torch.gather(output, 1, torch.tensor(target).reshape(len(output), 1))
-        elif type(target[0]) is tuple:
+        elif isinstance(target[0], tuple):
             return torch.stack(
-                [output[(i,) + targ_elem] for i, targ_elem in enumerate(target)]
+                [
+                    output[(i,) + cast(Tuple, targ_elem)]
+                    for i, targ_elem in enumerate(target)
+                ]
             )
         else:
             raise AssertionError("Target element type in list is not valid.")
@@ -344,7 +430,14 @@ def _select_targets(output, target):
         raise AssertionError("Target type %r is not valid." % target)
 
 
-def _run_forward(forward_func, inputs, target=None, additional_forward_args=None):
+def _run_forward(
+    forward_func: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+) -> Tensor:
     forward_func_args = signature(forward_func).parameters
     if len(forward_func_args) == 0:
         output = forward_func()
@@ -364,11 +457,15 @@ def _run_forward(forward_func, inputs, target=None, additional_forward_args=None
 
 
 def _expand_additional_forward_args(
-    additional_forward_args, n_steps, expansion_type=ExpansionTypes.repeat
-):
+    additional_forward_args: Any,
+    n_steps: int,
+    expansion_type: ExpansionTypes = ExpansionTypes.repeat,
+) -> Optional[Tuple]:
     def _expand_tensor_forward_arg(
-        additional_forward_arg, n_steps, expansion_type=ExpansionTypes.repeat
-    ):
+        additional_forward_arg: Tensor,
+        n_steps: int,
+        expansion_type: ExpansionTypes = ExpansionTypes.repeat,
+    ) -> Tensor:
         if len(additional_forward_arg.size()) == 0:
             return additional_forward_arg
         if expansion_type == ExpansionTypes.repeat:
@@ -392,7 +489,13 @@ def _expand_additional_forward_args(
     )
 
 
-def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
+def _expand_target(
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+    n_steps: int,
+    expansion_type: ExpansionTypes = ExpansionTypes.repeat,
+) -> Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]]:
     if isinstance(target, list):
         if expansion_type == ExpansionTypes.repeat:
             return target * n_steps
@@ -400,7 +503,7 @@ def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
             expanded_target = []
             for i in target:
                 expanded_target.extend([i] * n_steps)
-            return expanded_target
+            return cast(Union[List[Tuple[int, ...]], List[int]], expanded_target)
         else:
             raise NotImplementedError(
                 "Currently only `repeat` and `repeat_interleave`"
@@ -422,8 +525,11 @@ def _expand_target(target, n_steps, expansion_type=ExpansionTypes.repeat):
 
 
 def _call_custom_attribution_func(
-    custom_attribution_func, multipliers, inputs, baselines
-):
+    custom_attribution_func: Callable[..., Tuple[Tensor, ...]],
+    multipliers: Tuple[Tensor, ...],
+    inputs: Tuple[Tensor, ...],
+    baselines: Tuple[Tensor, ...],
+) -> Tuple[Tensor, ...]:
     assert callable(custom_attribution_func), (
         "`custom_attribution_func`"
         " must be a callable function but {} provided".format(
@@ -431,9 +537,6 @@ def _call_custom_attribution_func(
         )
     )
     custom_attr_func_params = signature(custom_attribution_func).parameters
-    assert len(custom_attr_func_params) in range(1, 4), (
-        "`custom_attribution_func`" " must take at least one and at most 3 arguments"
-    )
 
     if len(custom_attr_func_params) == 1:
         return custom_attribution_func(multipliers)
@@ -441,9 +544,17 @@ def _call_custom_attribution_func(
         return custom_attribution_func(multipliers, inputs)
     elif len(custom_attr_func_params) == 3:
         return custom_attribution_func(multipliers, inputs, baselines)
+    else:
+        raise AssertionError(
+            "`custom_attribution_func` must take at least one and at most 3 arguments."
+        )
 
 
-def _extract_device(module, hook_inputs, hook_outputs):
+def _extract_device(
+    module: Module,
+    hook_inputs: Union[Tensor, Tuple[Tensor, ...]],
+    hook_outputs: Optional[Union[Tensor, Tuple[Tensor, ...]]],
+) -> device:
     params = list(module.parameters())
     if (
         (hook_inputs is None or len(hook_inputs) == 0)
@@ -471,8 +582,11 @@ def _extract_device(module, hook_inputs, hook_outputs):
 
 
 def _find_output_mode_and_verify(
-    initial_eval, num_examples, perturbations_per_eval, feature_mask
-):
+    initial_eval: Union[int, float, Tensor],
+    num_examples: int,
+    perturbations_per_eval: int,
+    feature_mask: Optional[TensorOrTupleOfTensors],
+) -> bool:
     """
     This method identifies whether the model outputs a single output for a batch
     (agg_output_mode = True) or whether it outputs a single output per example
@@ -504,63 +618,3 @@ def _find_output_mode_and_verify(
             isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
     return agg_output_mode
-
-
-class MaxList:
-    """Keep track of N maximal items
-
-    Implementation of MaxList:
-        for keeping track of the N top values of a large collection of items.
-        Maintains a sorted list of the top N items that can be fetched with
-        getlist().
-
-    Example use:
-        m = MaxList(2, key=lamda x: len(x))
-        ml.add("Hello World")
-        ml.add("Mermaid Man!!!!")
-        ml.add("Why?")
-        ml.getlist() -> ["Mermaid Man!!!!", "Hello World"]
-
-    If storing values that are not comparable, please provide a key function that
-        that maps the values to some numeric value.
-    """
-
-    def __init__(self, size, key=lambda x: x):
-        self.size = size
-        self.key = key
-        self.list = []
-
-    def add(self, item):
-        """Add an element to the MaxList
-
-        Args:
-            item: the item that you want to add to the MaxList
-        """
-        value = self.key(item)
-        if len(self.list) < self.size:
-            if len(self.list) == 0:
-                self.list.append((value, item))
-            elif self.list[-1][0] >= value:
-                self.list.append((value, item))
-            else:
-                self._insert(item, value)
-        if self.list[-1][0] < value:
-            self._insert(item, value)
-
-    def get_list(self):
-        """Retrive the list of N maximal items in sorted order
-
-        Returns:
-            list: the sorted list of maximal items
-        """
-        return [item[1] for item in self.list]
-
-    def _insert(self, item, value):
-        if len(self.list) == 0:
-            self.list.append((value, item))
-
-        for i in range(len(self.list)):
-            if self.list[i][0] < value:
-                self.list.insert(i, (value, item))
-                break
-        self.list = self.list[: self.size]

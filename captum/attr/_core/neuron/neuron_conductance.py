@@ -7,6 +7,7 @@ from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
 from ..._utils.common import (
+    _is_tuple,
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
@@ -64,7 +65,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -222,7 +223,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inputs, baselines, n_steps, method)

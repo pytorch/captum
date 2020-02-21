@@ -35,7 +35,7 @@ class FeaturePermutation(FeatureAblation):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         feature_mask: Optional[TensorOrTupleOfTensors] = None,

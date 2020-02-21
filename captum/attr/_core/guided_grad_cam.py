@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import torch
 import warnings
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import _format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions, _is_tuple
 
 from .layer.grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
@@ -38,7 +39,7 @@ class GuidedGradCam(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         interpolate_mode: str = "nearest",
@@ -177,7 +178,7 @@ class GuidedGradCam(GradientAttribution):
                 >>> # attribution size matches input size, Nx3x32x32
                 >>> attribution = guided_gc.attribute(input, 3)
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         grad_cam_attr = self.grad_cam.attribute(
             inputs=inputs,
@@ -197,7 +198,7 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        output_attr: List[Optional[Tensor]] = []
+        output_attr: List[Tensor] = []
         for i in range(len(inputs)):
             try:
                 output_attr.append(
@@ -213,6 +214,6 @@ class GuidedGradCam(GradientAttribution):
                     "Couldn't appropriately interpolate GradCAM attributions for "
                     "some input tensors, returning None for corresponding attributions."
                 )
-                output_attr.append(None)
+                output_attr.append(torch.tensor([]))
 
         return _format_attributions(is_inputs_tuple, tuple(output_attr))

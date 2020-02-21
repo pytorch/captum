@@ -4,6 +4,7 @@ from typing import Callable, List, Optional, Tuple, Union, Any
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.common import (
+    _is_tuple,
     _format_input,
     _format_additional_forward_args,
     _format_attributions,
@@ -127,7 +128,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
@@ -139,7 +140,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             inputs,
             self.layer,
             additional_forward_args,
-            neuron_index,
+            gradient_neuron_index=neuron_index,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )

@@ -9,7 +9,7 @@ from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.typing import TensorOrTupleOfTensors
 
@@ -34,7 +34,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
@@ -48,7 +48,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
@@ -110,7 +110,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
@@ -213,7 +213,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:

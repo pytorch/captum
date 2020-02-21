@@ -9,6 +9,7 @@ from enum import Enum
 
 from .._utils.attribution import Attribution
 from .._utils.common import (
+    _is_tuple,
     _validate_noise_tunnel_type,
     _validate_input,
     _format_baseline,
@@ -20,6 +21,7 @@ from .._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
+from .._utils.typing import TrueOrFalse
 
 
 class NoiseTunnelType(Enum):
@@ -288,7 +290,7 @@ class NoiseTunnel(Attribution):
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
 
-        is_attrib_tuple = isinstance(attributions, tuple)
+        is_attrib_tuple = _is_tuple(attributions)
         attributions = _format_tensor_into_tuples(attributions)
 
         expected_attributions = []
@@ -329,8 +331,8 @@ class NoiseTunnel(Attribution):
 
     def _apply_checks_and_return_attributions(
         self,
-        attributions: Union[Tensor, Tuple[Tensor, ...]],
-        is_attrib_tuple: bool,
+        attributions: Tuple[Tensor, ...],
+        is_attrib_tuple: TrueOrFalse,
         return_convergence_delta: bool,
         delta: Optional[Tensor],
     ):

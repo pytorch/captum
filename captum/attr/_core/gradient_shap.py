@@ -5,6 +5,7 @@ import numpy as np
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import (
+    _is_tuple,
     _format_input_baseline,
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
@@ -34,7 +35,7 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
@@ -48,7 +49,7 @@ class GradientShap(GradientAttribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -273,7 +274,7 @@ class InputBaselineXGradient(GradientAttribution):
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensors:
@@ -287,7 +288,7 @@ class InputBaselineXGradient(GradientAttribution):
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -304,7 +305,7 @@ class InputBaselineXGradient(GradientAttribution):
     ):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs, baselines = _format_input_baseline(inputs, baselines)
 
         rand_coefficient = torch.tensor(

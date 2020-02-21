@@ -7,7 +7,7 @@ from torch import Tensor
 from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_attributions, _format_input
+from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
@@ -25,7 +25,7 @@ class Saliency(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensors,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         abs: bool = True,
         additional_forward_args: Any = None,
@@ -117,7 +117,7 @@ class Saliency(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)

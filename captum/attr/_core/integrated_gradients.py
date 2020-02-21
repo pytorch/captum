@@ -15,6 +15,7 @@ from .._utils.common import (
     _reshape_and_sum,
     _expand_additional_forward_args,
     _expand_target,
+    _is_tuple,
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.typing import TensorOrTupleOfTensors
@@ -64,7 +65,7 @@ class IntegratedGradients(GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -81,7 +82,7 @@ class IntegratedGradients(GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -243,7 +244,7 @@ class IntegratedGradients(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
 

@@ -58,7 +58,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         n_samples: int = 5,
         stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
@@ -73,7 +73,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         n_samples: int = 5,
         stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
@@ -336,7 +336,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
@@ -351,7 +351,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,

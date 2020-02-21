@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import torch
 from torch.nn.parallel.scatter_gather import scatter
+from torch import Tensor
+from torch.nn import Module
+
+from typing import Callable, List, Optional, Tuple, Union, Any
 
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
@@ -11,12 +15,16 @@ from ..._utils.common import (
     _extract_device,
 )
 from ..._utils.gradient import _forward_layer_eval
-
 from ..feature_ablation import FeatureAblation
 
 
 class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Optional[List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -41,14 +49,18 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
     def attribute(
         self,
-        inputs,
-        layer_baselines=None,
-        target=None,
-        additional_forward_args=None,
-        layer_mask=None,
-        attribute_to_layer_input=False,
-        perturbations_per_eval=1,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        layer_baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        layer_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        attribute_to_layer_input: bool = False,
+        perturbations_per_eval: int = 1,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
             A perturbation based approach to computing layer attribution, involving
             replacing values in the input / output of a layer with a given baseline /
@@ -272,4 +284,5 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 feature_mask=layer_mask,
                 perturbations_per_eval=perturbations_per_eval,
             )
-            return _format_attributions(is_layer_tuple, layer_attribs)
+            _attr = _format_attributions(is_layer_tuple, layer_attribs)
+        return _attr

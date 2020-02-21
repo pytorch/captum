@@ -4,7 +4,7 @@ from ..._utils.gradient import construct_neuron_grad_fn
 
 from ..deep_lift import DeepLift, DeepLiftShap
 
-from typing import Callable, Optional, Tuple, Union, Any
+from typing import Callable, Optional, Tuple, Union, Any, cast
 from torch import Tensor
 from torch.nn import Module
 from ..._utils.typing import TensorOrTupleOfTensors
@@ -176,7 +176,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLift(self.forward_func)
+        dl = DeepLift(cast(Module, self.forward_func))
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -340,7 +340,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLiftShap(self.forward_func)
+        dl = DeepLiftShap(cast(Module, self.forward_func))
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,

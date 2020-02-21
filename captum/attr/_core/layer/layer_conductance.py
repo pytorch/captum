@@ -55,7 +55,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
             Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

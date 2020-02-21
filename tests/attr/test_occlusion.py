@@ -278,7 +278,7 @@ class Test(BaseTest):
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = 0,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),

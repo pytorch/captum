@@ -149,7 +149,9 @@ class Test(BaseTest):
         attr_method: Union[DeepLift, DeepLiftShap],
         input: Tensor,
         baselines,
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ],
     ) -> None:
         # TODO add test cases for multiple different layers
         model.zero_grad()
@@ -173,7 +175,7 @@ class Test(BaseTest):
         baselines: Union[Tensor, int, float],
         delta: Tensor,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)

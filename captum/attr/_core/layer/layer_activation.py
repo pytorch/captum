@@ -115,4 +115,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return _format_attributions(is_layer_tuple, layer_eval)
+        return _format_attributions(is_layer_tuple, layer_eval)  # type: ignore

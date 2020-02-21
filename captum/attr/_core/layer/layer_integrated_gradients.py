@@ -77,7 +77,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -275,7 +275,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
             target_ind: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
             ] = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
@@ -307,7 +307,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     hook = self.layer.register_forward_hook(layer_forward_hook)
 
                 output = _run_forward(
-                    self.forward_func, additional_forward_args, target_ind,
+                    self.forward_func, tuple(), target_ind, additional_forward_args
                 )
                 hook.remove()
                 assert output[0].numel() == 1, (
@@ -333,7 +333,6 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             n_steps=n_steps,
             method=method,
             internal_batch_size=internal_batch_size,
-            return_convergence_delta=False,
         )
 
         if return_convergence_delta:

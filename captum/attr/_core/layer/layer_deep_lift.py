@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+import typing
+from typing import Optional, Tuple, Union, Any, List, Callable, Sequence
+
 import torch
+from torch import Tensor
+from torch.nn import Module
+
 from ..._utils.attribution import LayerAttribution
 from ..._core.deep_lift import DeepLift, DeepLiftShap
 from ..._utils.gradient import (
@@ -21,10 +27,11 @@ from ..._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
+from ..._utils.typing import TensorOrTupleOfTensors
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module):
         r"""
         Args:
 
@@ -38,6 +45,42 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         LayerAttribution.__init__(self, model, layer)
         DeepLift.__init__(self, model)
         self.model = model
+
+    @typing.overload  # type: ignore
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...]],
+        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
+        ...
 
     def attribute(
         self,
@@ -248,10 +291,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             input_base_additional_args,
         )
 
-        def chunk_output_fn(out):
-            if not isinstance(out, tuple):
+        def chunk_output_fn(out: TensorOrTupleOfTensors,) -> Sequence:
+            if isinstance(out, Tensor):
                 return out.chunk(2)
-            return tuple(out_sub.chunk(2) for out_sub in out)
+            else:
+                return tuple(out_sub.chunk(2) for out_sub in out)
 
         (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
             wrapped_forward_func,
@@ -294,7 +338,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
 
@@ -307,6 +351,42 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         """
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
+
+    @typing.overload  # type: ignore
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...]],
+        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
+        ...
 
     def attribute(
         self,

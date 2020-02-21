@@ -121,7 +121,7 @@ class Test(BaseTest):
         layer: Module,
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable],
-        target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]],
+        target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
         expected: Union[
             Tensor,
             Tuple[Tensor, ...],

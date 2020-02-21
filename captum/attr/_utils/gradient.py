@@ -1,18 +1,37 @@
 #!/usr/bin/env python3
 import threading
 import warnings
-from typing import Any, List, Optional, Tuple, Union
+import typing
+from typing import (
+    Any,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Callable,
+    Dict,
+    cast,
+    TYPE_CHECKING,
+)
 
 import torch
-from torch import Tensor
+from torch import Tensor, device
 from torch.nn import Module
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensors, TrueOrFalse
 
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
 
+import sys
 
-def apply_gradient_requirements(inputs):
+if TYPE_CHECKING:
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
+
+
+def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
     each Tensor, and ensures all grads are set to zero. To ensure that the input
@@ -42,7 +61,9 @@ def apply_gradient_requirements(inputs):
     return grad_required
 
 
-def undo_gradient_requirements(inputs, grad_required):
+def undo_gradient_requirements(
+    inputs: Tuple[Tensor, ...], grad_required: List[bool]
+) -> None:
     """
     Iterates through list of tensors, zeros each gradient, and sets required
     grad to false if the corresponding index in grad_required is False.
@@ -67,12 +88,12 @@ def undo_gradient_requirements(inputs, grad_required):
 
 
 def compute_gradients(
-    forward_fn: Module,
-    inputs: TensorOrTupleOfTensors,
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
     ] = None,
-    additional_forward_args: Any = None,
+    additional_forward_args: Optional[Any] = None,
 ) -> Tuple[Tensor, ...]:
     r"""
         Computes gradients of the output with respect to inputs for an
@@ -103,7 +124,12 @@ def compute_gradients(
     return grads
 
 
-def _neuron_gradients(inputs, saved_layer, key_list, gradient_neuron_index):
+def _neuron_gradients(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    saved_layer: Dict[device, Tuple[Tensor]],
+    key_list: List[device],
+    gradient_neuron_index: Union[int, Tuple[int, ...]],
+) -> Tuple[Tensor, ...]:
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
@@ -119,17 +145,18 @@ def _neuron_gradients(inputs, saved_layer, key_list, gradient_neuron_index):
                     inputs,
                 )
             )
-        return _reduce_list(gradient_tensors, sum)
+        _total_gradients = _reduce_list(gradient_tensors, sum)
+    return _total_gradients
 
 
 def _forward_layer_eval(
-    forward_fn,
-    inputs,
-    layer,
-    additional_forward_args=None,
-    device_ids=None,
-    attribute_to_layer_input=False,
-):
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Any = None,
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Tuple[Tuple[Tensor, ...], TrueOrFalse]:
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
         inputs,
@@ -139,6 +166,37 @@ def _forward_layer_eval(
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
     )
+
+
+@typing.overload
+def _forward_layer_distributed_eval(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    attribute_to_layer_input: bool = False,
+    forward_hook_with_return: "Literal"[False] = False,
+) -> Tuple[Dict[device, Tuple[Tensor, ...]], TrueOrFalse]:
+    ...
+
+
+@typing.overload
+def _forward_layer_distributed_eval(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    attribute_to_layer_input: bool = False,
+    *,
+    forward_hook_with_return: "Literal"[True],
+) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, TrueOrFalse]:
+    ...
 
 
 def _forward_layer_distributed_eval(
@@ -210,7 +268,11 @@ def _forward_layer_distributed_eval(
     return saved_layer, is_eval_tuple
 
 
-def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
+def _gather_distributed_tensors(
+    saved_layer: Dict[device, Tuple[Tensor, ...]],
+    device_ids: Optional[List[int]] = None,
+    key_list: Optional[List[device]] = None,
+) -> Tuple[Tensor, ...]:
     r"""
     A helper function to concatenate intermediate layer results stored on
     different devices in `saved_layer`. `saved_layer` is a dictionary that
@@ -227,7 +289,11 @@ def _gather_distributed_tensors(saved_layer, device_ids=None, key_list=None):
     return _reduce_list([saved_layer[device_id] for device_id in key_list])
 
 
-def _extract_device_ids(forward_fn, saved_layer, device_ids):
+def _extract_device_ids(
+    forward_fn: Callable,
+    saved_layer: Dict[device, Tuple[Tensor, ...]],
+    device_ids: Optional[List[int]],
+) -> Optional[List[int]]:
     r"""
     A helper function to extract device_ids from `forward_function` in case it is
     provided as part of a `DataParallel` model or if is accessible from
@@ -238,8 +304,11 @@ def _extract_device_ids(forward_fn, saved_layer, device_ids):
     # device IDs if given or available from forward function
     # (DataParallel model object).
     if len(saved_layer) > 1 and device_ids is None:
-        if hasattr(forward_fn, "device_ids") and forward_fn.device_ids is not None:
-            device_ids = forward_fn.device_ids
+        if (
+            hasattr(forward_fn, "device_ids")
+            and cast(Any, forward_fn).device_ids is not None
+        ):
+            device_ids = cast(Any, forward_fn).device_ids
         else:
             raise AssertionError(
                 "Layer tensors are saved on multiple devices, however unable to access"
@@ -249,6 +318,33 @@ def _extract_device_ids(forward_fn, saved_layer, device_ids):
                 " for identifying device batch ordering."
             )
     return device_ids
+
+
+@typing.overload
+def _forward_layer_eval_with_neuron_grads(
+    forward_fn: Callable,
+    inputs: TensorOrTupleOfTensors,
+    layer: Module,
+    additional_forward_args: Any = None,
+    *,
+    gradient_neuron_index: Union[int, Tuple[int, ...]],
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Tuple[Tuple[Tensor, ...], TensorOrTupleOfTensors, TrueOrFalse]:
+    ...
+
+
+@typing.overload
+def _forward_layer_eval_with_neuron_grads(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Any = None,
+    gradient_neuron_index: None = None,
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Tuple[Tuple[Tensor, ...], TrueOrFalse]:
+    ...
 
 
 def _forward_layer_eval_with_neuron_grads(
@@ -302,6 +398,48 @@ def _forward_layer_eval_with_neuron_grads(
             _gather_distributed_tensors(saved_layer, key_list=key_list),
             is_layer_tuple,
         )
+
+
+@typing.overload
+def compute_layer_gradients_and_eval(
+    forward_fn: Callable,
+    layer: Module,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    *,
+    gradient_neuron_index: Union[int, Tuple[int, ...]],
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    output_fn: Optional[Callable] = None,
+) -> Tuple[
+    Union[Tensor, Tuple[Tensor, ...]],
+    Union[Tensor, Tuple[Tensor, ...]],
+    Union[Tensor, Tuple[Tensor, ...]],
+    TrueOrFalse,
+]:
+    ...
+
+
+@typing.overload
+def compute_layer_gradients_and_eval(
+    forward_fn: Callable,
+    layer: Module,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    gradient_neuron_index: None = None,
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    output_fn: Optional[Callable] = None,
+) -> Tuple[
+    Union[Tensor, Tuple[Tensor, ...]], Union[Tensor, Tuple[Tensor, ...]], TrueOrFalse
+]:
+    ...
 
 
 def compute_layer_gradients_and_eval(
@@ -402,12 +540,12 @@ def compute_layer_gradients_and_eval(
             for layer_tensor in saved_layer[device_id]
         )
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
-        saved_grads = tuple(
+        saved_grads = [
             saved_grads[i : i + num_tensors]
             for i in range(0, len(saved_grads), num_tensors)
-        )
+        ]
         if output_fn is not None:
-            saved_grads = tuple(output_fn(saved_grad) for saved_grad in saved_grads)
+            saved_grads = [output_fn(saved_grad) for saved_grad in saved_grads]
 
         all_grads = _reduce_list(saved_grads)
         if gradient_neuron_index is not None:
@@ -420,15 +558,25 @@ def compute_layer_gradients_and_eval(
 
 
 def construct_neuron_grad_fn(
-    layer, neuron_index, device_ids=None, attribute_to_neuron_input=False
-):
-    def grad_fn(forward_fn, inputs, target_ind=None, additional_forward_args=None):
+    layer: Module,
+    neuron_index: Union[int, Tuple[int, ...]],
+    device_ids: Optional[List[int]] = None,
+    attribute_to_neuron_input: bool = False,
+) -> Callable:
+    def grad_fn(
+        forward_fn: Callable,
+        inputs: TensorOrTupleOfTensors,
+        target_ind: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Optional[Any] = None,
+    ):
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
             forward_fn,
             inputs,
             layer,
             additional_forward_args,
-            neuron_index,
+            gradient_neuron_index=neuron_index,
             device_ids=device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
