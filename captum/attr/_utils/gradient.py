@@ -17,8 +17,7 @@ from typing import (
 import torch
 from torch import Tensor, device
 from torch.nn import Module
-from captum.attr._utils.typing import TensorOrTupleOfTensors, TrueOrFalse
-
+from .typing import TensorOrTupleOfTensors
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
 
@@ -156,7 +155,7 @@ def _forward_layer_eval(
     additional_forward_args: Any = None,
     device_ids: Optional[List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], TrueOrFalse]:
+) -> Tuple[Tuple[Tensor, ...], Union["Literal"[True], "Literal"[False]]]:
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
         inputs,
@@ -179,7 +178,7 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: "Literal"[False] = False,
-) -> Tuple[Dict[device, Tuple[Tensor, ...]], TrueOrFalse]:
+) -> Tuple[Dict[device, Tuple[Tensor, ...]], Union["Literal"[True], "Literal"[False]]]:
     ...
 
 
@@ -195,7 +194,9 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: "Literal"[True],
-) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, TrueOrFalse]:
+) -> Tuple[
+    Dict[device, Tuple[Tensor, ...]], Tensor, Union["Literal"[True], "Literal"[False]]
+]:
     ...
 
 
@@ -330,7 +331,9 @@ def _forward_layer_eval_with_neuron_grads(
     gradient_neuron_index: Union[int, Tuple[int, ...]],
     device_ids: Optional[List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], TensorOrTupleOfTensors, TrueOrFalse]:
+) -> Tuple[
+    Tuple[Tensor, ...], TensorOrTupleOfTensors, Union["Literal"[True], "Literal"[False]]
+]:
     ...
 
 
@@ -343,7 +346,7 @@ def _forward_layer_eval_with_neuron_grads(
     gradient_neuron_index: None = None,
     device_ids: Optional[List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], TrueOrFalse]:
+) -> Tuple[Tuple[Tensor, ...], Union["Literal"[True], "Literal"[False]]]:
     ...
 
 
@@ -418,7 +421,7 @@ def compute_layer_gradients_and_eval(
     Union[Tensor, Tuple[Tensor, ...]],
     Union[Tensor, Tuple[Tensor, ...]],
     Union[Tensor, Tuple[Tensor, ...]],
-    TrueOrFalse,
+    Union["Literal"[True], "Literal"[False]],
 ]:
     ...
 
@@ -437,7 +440,9 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Optional[Callable] = None,
 ) -> Tuple[
-    Union[Tensor, Tuple[Tensor, ...]], Union[Tensor, Tuple[Tensor, ...]], TrueOrFalse
+    Union[Tensor, Tuple[Tensor, ...]],
+    Union[Tensor, Tuple[Tensor, ...]],
+    Union["Literal"[True], "Literal"[False]],
 ]:
     ...
 

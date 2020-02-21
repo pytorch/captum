@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union, Any
+from typing import Optional, Tuple, Union, Any, TYPE_CHECKING
 
 import torch
 from torch import Tensor
@@ -21,7 +21,13 @@ from .._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
-from .._utils.typing import TrueOrFalse
+import sys
+
+if TYPE_CHECKING:
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
 
 
 class NoiseTunnelType(Enum):
@@ -332,7 +338,7 @@ class NoiseTunnel(Attribution):
     def _apply_checks_and_return_attributions(
         self,
         attributions: Tuple[Tensor, ...],
-        is_attrib_tuple: TrueOrFalse,
+        is_attrib_tuple: Union["Literal"[True], "Literal"[False]],
         return_convergence_delta: bool,
         delta: Optional[Tensor],
     ):

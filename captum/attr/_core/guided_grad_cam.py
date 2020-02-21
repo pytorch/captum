@@ -58,10 +58,10 @@ class GuidedGradCam(GradientAttribution):
             each input tensor are computed by upsampling the GradCAM
             attributions to match that input's dimensions. If interpolation is
             not possible for the input tensor dimensions and interpolation mode,
-            then None is returned in the attributions for the corresponding
-            position of that input tensor. This can occur if the input tensor
-            does not have the same number of dimensions as the chosen layer's
-            output or is not either 3D, 4D or 5D.
+            then an empty tensor is returned in the attributions for the
+            corresponding position of that input tensor. This can occur if the
+            input tensor does not have the same number of dimensions as the chosen
+            layer's output or is not either 3D, 4D or 5D.
 
             Note that attributions are only meaningful for input tensors
             which are spatially alligned with the chosen layer, e.g. an input
@@ -211,8 +211,9 @@ class GuidedGradCam(GradientAttribution):
                 )
             except RuntimeError:
                 warnings.warn(
-                    "Couldn't appropriately interpolate GradCAM attributions for "
-                    "some input tensors, returning None for corresponding attributions."
+                    "Couldn't appropriately interpolate GradCAM attributions for some "
+                    "input tensors, returning empty tensor for corresponding "
+                    "attributions."
                 )
                 output_attr.append(torch.tensor([]))
 
