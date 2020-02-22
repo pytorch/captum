@@ -153,7 +153,9 @@ class GradientAttribution(Attribution):
     def compute_convergence_delta(
         self,
         attributions: Union[Tensor, Tuple[Tensor, ...]],
-        start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+        start_point: Optional[
+            Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
+        ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
