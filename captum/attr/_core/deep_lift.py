@@ -554,6 +554,7 @@ class DeepLiftShap(DeepLift):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
+        return_convergence_delta: "Literal"[False] = False,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
     ) -> TensorOrTupleOfTensors:
         ...
@@ -567,20 +568,23 @@ class DeepLiftShap(DeepLift):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
+        *,
+        return_convergence_delta: "Literal"[True],
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
     def attribute(
         self,
-        inputs,
-        baselines,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        custom_attribution_func=None,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         r"""
         Extends DeepLift algorithm and approximates SHAP values using Deeplift.
         For each input sample it computes DeepLift attribution with respect to
@@ -739,7 +743,7 @@ class DeepLiftShap(DeepLift):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
 
@@ -760,14 +764,18 @@ class DeepLiftShap(DeepLift):
             exp_base,
             target=exp_tgt,
             additional_forward_args=exp_addit_args,
-            return_convergence_delta=return_convergence_delta,
+            return_convergence_delta=cast(
+                Union["Literal"[True], "Literal"[False]], return_convergence_delta
+            ),
             custom_attribution_func=custom_attribution_func,
         )
         if return_convergence_delta:
-            attributions, delta = attributions
+            attributions, delta = cast(Tuple[Tuple[Tensor, ...], Tensor], attributions)
 
         attributions = tuple(
-            self._compute_mean_across_baselines(inp_bsz, base_bsz, attribution)
+            self._compute_mean_across_baselines(
+                inp_bsz, base_bsz, cast(Tensor, attribution)
+            )
             for attribution in attributions
         )
 
@@ -784,7 +792,12 @@ class DeepLiftShap(DeepLift):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ],
         additional_forward_args: Any,
-    ):
+    ) -> Tuple[
+        Tuple[Tensor, ...],
+        Tuple[Tensor, ...],
+        Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]],
+        Any,
+    ]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
