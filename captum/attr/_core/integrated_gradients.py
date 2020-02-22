@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Optional, Tuple, Union, Any, TYPE_CHECKING
 
 import torch
 from torch import Tensor
@@ -19,6 +19,14 @@ from .._utils.common import (
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.typing import TensorOrTupleOfTensors
+
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
 
 
 class IntegratedGradients(GradientAttribution):
@@ -71,7 +79,27 @@ class IntegratedGradients(GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         internal_batch_size: Optional[int] = None,
+        return_convergence_delta: "Literal"[False] = False,
     ) -> TensorOrTupleOfTensors:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        *,
+        return_convergence_delta: "Literal"[True],
+    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
     @typing.overload
@@ -92,17 +120,21 @@ class IntegratedGradients(GradientAttribution):
     ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         ...
 
-    def attribute(
+    def attribute(  # type: ignore
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Optional[int] = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a

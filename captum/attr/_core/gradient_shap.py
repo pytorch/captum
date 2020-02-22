@@ -12,9 +12,17 @@ from .._utils.common import (
 )
 
 from .noise_tunnel import NoiseTunnel
-from typing import Callable, Union, Optional, Tuple, List, Any
+from typing import Callable, Union, Optional, Tuple, List, Any, TYPE_CHECKING
 from .._utils.typing import Tensor, TensorOrTupleOfTensors
 import typing
+
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
 
 
 class GradientShap(GradientAttribution):
@@ -38,7 +46,9 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+        *,
+        return_convergence_delta: "Literal"[True],
+    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
     @typing.overload
@@ -52,20 +62,22 @@ class GradientShap(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        return_convergence_delta: "Literal"[False] = False,
+    ) -> TensorOrTupleOfTensors:
         ...
 
     def attribute(
         self,
-        inputs,
-        baselines,
-        n_samples=5,
-        stdevs=0.0,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         r"""
         Implements gradient SHAP based on the implementation from SHAP's primary
         author. For reference, please, view:
@@ -277,7 +289,9 @@ class InputBaselineXGradient(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+        *,
+        return_convergence_delta: "Literal"[True],
+    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
     @typing.overload
@@ -291,18 +305,22 @@ class InputBaselineXGradient(GradientAttribution):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
+        return_convergence_delta: "Literal"[False] = False,
     ) -> TensorOrTupleOfTensors:
         ...
 
-    def attribute(
+    def attribute(  # type: ignore
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[
+            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)

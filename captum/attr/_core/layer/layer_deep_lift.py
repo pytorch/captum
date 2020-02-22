@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 import typing
-from typing import Optional, Tuple, Union, Any, List, Callable, Sequence
+from typing import (
+    Optional,
+    Tuple,
+    Union,
+    Any,
+    List,
+    Callable,
+    Sequence,
+    TYPE_CHECKING,
+    cast,
+)
 
 import torch
 from torch import Tensor
@@ -29,6 +39,14 @@ from ..._utils.common import (
 )
 from ..._utils.typing import TensorOrTupleOfTensors
 
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
+
 
 class LayerDeepLift(LayerAttribution, DeepLift):
     def __init__(self, model: Module, layer: Module):
@@ -46,6 +64,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         DeepLift.__init__(self, model)
         self.model = model
 
+    # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
     def attribute(
         self,
@@ -352,6 +371,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
 
+    # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
     def attribute(
         self,
@@ -363,12 +383,30 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
+        return_convergence_delta: "Literal"[False] = False,
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
     @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: "Literal"[True],
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
+
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -386,18 +424,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         Union[Tensor, Tuple[Tensor, ...]],
         Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
-        ...
-
-    def attribute(
-        self,
-        inputs,
-        baselines,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-        custom_attribution_func=None,
-    ):
         r"""
         Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
         values for given input `layer`.
@@ -564,7 +590,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         """
         inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
-
         assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (
             "Baselines distribution has to be provided in form of a torch.Tensor"
             " with more than one example but found: {}."
@@ -600,7 +625,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         if isinstance(attributions, tuple):
             attributions = tuple(
                 DeepLiftShap._compute_mean_across_baselines(
-                    self, inp_bsz, base_bsz, attrib
+                    self, inp_bsz, base_bsz, cast(Tensor, attrib)
                 )
                 for attrib in attributions
             )

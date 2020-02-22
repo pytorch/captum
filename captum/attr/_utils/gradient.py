@@ -21,9 +21,9 @@ from .typing import TensorOrTupleOfTensors
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
 
-import sys
-
 if TYPE_CHECKING:
+    import sys
+
     if sys.version_info >= (3, 8):
         from typing import Literal
     else:
@@ -92,7 +92,7 @@ def compute_gradients(
     target_ind: Optional[
         Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
     ] = None,
-    additional_forward_args: Optional[Any] = None,
+    additional_forward_args: Any = None,
 ) -> Tuple[Tensor, ...]:
     r"""
         Computes gradients of the output with respect to inputs for an
@@ -125,7 +125,7 @@ def compute_gradients(
 
 def _neuron_gradients(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    saved_layer: Dict[device, Tuple[Tensor]],
+    saved_layer: Dict[device, Tuple[Tensor, ...]],
     key_list: List[device],
     gradient_neuron_index: Union[int, Tuple[int, ...]],
 ) -> Tuple[Tensor, ...]:
@@ -201,14 +201,19 @@ def _forward_layer_distributed_eval(
 
 
 def _forward_layer_distributed_eval(
-    forward_fn,
-    inputs,
-    layer,
-    target_ind=None,
-    additional_forward_args=None,
-    attribute_to_layer_input=False,
-    forward_hook_with_return=False,
-):
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    attribute_to_layer_input: bool = False,
+    forward_hook_with_return: bool = False,
+) -> Union[
+    Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, bool],
+    Tuple[Dict[device, Tuple[Tensor, ...]], bool],
+]:
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
     pass and returns intermediate layer results, stored in a dictionary,
@@ -220,7 +225,7 @@ def _forward_layer_distributed_eval(
     using `DataParallel`s for example.
     """
     saved_layer = {}
-    is_eval_tuple = None
+    is_eval_tuple = False
     lock = threading.Lock()
     # Set a forward hook on specified module and run forward pass to
     # get layer output tensor(s).
@@ -324,7 +329,7 @@ def _extract_device_ids(
 @typing.overload
 def _forward_layer_eval_with_neuron_grads(
     forward_fn: Callable,
-    inputs: TensorOrTupleOfTensors,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
     additional_forward_args: Any = None,
     *,
@@ -332,7 +337,7 @@ def _forward_layer_eval_with_neuron_grads(
     device_ids: Optional[List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Tuple[
-    Tuple[Tensor, ...], TensorOrTupleOfTensors, Union["Literal"[True], "Literal"[False]]
+    Tuple[Tensor, ...], Tuple[Tensor, ...], Union["Literal"[True], "Literal"[False]]
 ]:
     ...
 
@@ -351,14 +356,16 @@ def _forward_layer_eval_with_neuron_grads(
 
 
 def _forward_layer_eval_with_neuron_grads(
-    forward_fn,
-    inputs,
-    layer,
-    additional_forward_args=None,
-    gradient_neuron_index=None,
-    device_ids=None,
-    attribute_to_layer_input=False,
-):
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: Module,
+    additional_forward_args: Any = None,
+    gradient_neuron_index: Optional[Union[int, Tuple[int, ...]]] = None,
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> Union[
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool], Tuple[Tuple[Tensor, ...], bool]
+]:
     """
     This method computes forward evaluation for a particular layer using a
     forward hook. If a gradient_neuron_index is provided, then gradients with
@@ -418,9 +425,9 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Optional[Callable] = None,
 ) -> Tuple[
-    Union[Tensor, Tuple[Tensor, ...]],
-    Union[Tensor, Tuple[Tensor, ...]],
-    Union[Tensor, Tuple[Tensor, ...]],
+    Tuple[Tensor, ...],
+    Tuple[Tensor, ...],
+    Tuple[Tensor, ...],
     Union["Literal"[True], "Literal"[False]],
 ]:
     ...
@@ -440,24 +447,27 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Optional[Callable] = None,
 ) -> Tuple[
-    Union[Tensor, Tuple[Tensor, ...]],
-    Union[Tensor, Tuple[Tensor, ...]],
-    Union["Literal"[True], "Literal"[False]],
+    Tuple[Tensor, ...], Tuple[Tensor, ...], Union["Literal"[True], "Literal"[False]],
 ]:
     ...
 
 
 def compute_layer_gradients_and_eval(
-    forward_fn,
-    layer,
-    inputs,
-    target_ind=None,
-    additional_forward_args=None,
-    gradient_neuron_index=None,
-    device_ids=None,
-    attribute_to_layer_input=False,
-    output_fn=None,
-):
+    forward_fn: Callable,
+    layer: Module,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    target_ind: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ] = None,
+    additional_forward_args: Any = None,
+    gradient_neuron_index: Optional[Union[int, Tuple[int, ...]]] = None,
+    device_ids: Optional[List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    output_fn: Optional[Callable] = None,
+) -> Union[
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
+]:
     r"""
         Computes gradients of the output with respect to a given layer as well
         as the output evaluation of the layer for an arbitrary forward function
@@ -558,8 +568,7 @@ def compute_layer_gradients_and_eval(
                 inputs, saved_layer, key_list, gradient_neuron_index
             )
             return all_grads, all_outputs, inp_grads, is_layer_tuple
-        else:
-            return all_grads, all_outputs, is_layer_tuple
+    return all_grads, all_outputs, is_layer_tuple
 
 
 def construct_neuron_grad_fn(

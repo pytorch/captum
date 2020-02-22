@@ -22,9 +22,10 @@ from inspect import signature
 from .approximation_methods import SUPPORTED_METHODS
 from .typing import TensorOrTupleOfTensors
 
-import sys
-
 if TYPE_CHECKING:
+    from .attribution import GradientAttribution
+    import sys
+
     if sys.version_info >= (3, 8):
         from typing import Literal
     else:
@@ -46,7 +47,7 @@ def _is_tuple(inputs: Tuple[Tensor, ...]) -> "Literal"[True]:
     ...
 
 
-def _is_tuple(inputs):
+def _is_tuple(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> bool:
     return isinstance(inputs, tuple)
 
 
@@ -145,7 +146,9 @@ def _format_tensor_into_tuples(
     ...
 
 
-def _format_tensor_into_tuples(inputs):
+def _format_tensor_into_tuples(
+    inputs: Optional[Union[Tensor, Tuple[Tensor, ...]]]
+) -> Optional[Tuple[Tensor, ...]]:
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
@@ -205,17 +208,47 @@ def _format_input_baseline(
 # This function can potentially be merged with the `format_baseline` function
 # however, since currently not all algorithms support baselines of type
 # callable this will be kept in a separate function.
+@typing.overload
 def _format_callable_baseline(
     baselines: Optional[
         Union[
-            Callable[..., TensorOrTupleOfTensors],
+            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+            Tensor,
+            Tuple[Tensor, ...],
+        ]
+    ],
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _format_callable_baseline(
+    baselines: Optional[
+        Union[
+            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
             Tensor,
             int,
             float,
             Tuple[Union[Tensor, int, float], ...],
         ]
     ],
-    inputs: Tuple[Tensor, ...],
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+) -> Tuple[Union[Tensor, int, float], ...]:
+    ...
+
+
+def _format_callable_baseline(
+    baselines: Optional[
+        Union[
+            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+            Tensor,
+            int,
+            float,
+            Tuple[Union[Tensor, int, float], ...],
+        ]
+    ],
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> Tuple[Union[Tensor, int, float], ...]:
     if callable(baselines):
         # Note: this assumes that if baselines is a function and if it takes
@@ -226,7 +259,7 @@ def _format_callable_baseline(
             baselines = baselines()
         else:
             baselines = baselines(inputs)
-    return _format_baseline(baselines, inputs)
+    return _format_baseline(baselines, _format_input(inputs))
 
 
 @typing.overload
@@ -243,7 +276,16 @@ def _format_attributions(
     ...
 
 
-def _format_attributions(is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]):
+@typing.overload
+def _format_attributions(
+    is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+def _format_attributions(
+    is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
     r"""
     In case input is a tensor and the attributions is returned in form of a
     tensor we take the first element of the attributions' tuple to match the
@@ -312,16 +354,52 @@ def _format_and_verify_sliding_window_shapes(
     return sliding_window_shapes
 
 
+@typing.overload
 def _compute_conv_delta_and_format_attrs(
-    attr_algo,
+    attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
-    attributions,
-    start_point,
-    end_point,
+    attributions: Tuple[Tensor, ...],
+    start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+    end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target,
-    is_inputs_tuple=False,
-):
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+    is_inputs_tuple: "Literal"[False] = False,
+) -> Union[Tensor, Tuple[Tensor, Tensor]]:
+    ...
+
+
+@typing.overload
+def _compute_conv_delta_and_format_attrs(
+    attr_algo: "GradientAttribution",
+    return_convergence_delta: bool,
+    attributions: Tuple[Tensor, ...],
+    start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+    end_point: Union[Tensor, Tuple[Tensor, ...]],
+    additional_forward_args: Any,
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+    is_inputs_tuple: "Literal"[True],
+) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]:
+    ...
+
+
+def _compute_conv_delta_and_format_attrs(
+    attr_algo: "GradientAttribution",
+    return_convergence_delta: bool,
+    attributions: Tuple[Tensor, ...],
+    start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
+    end_point: Union[Tensor, Tuple[Tensor, ...]],
+    additional_forward_args: Any,
+    target: Optional[
+        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    ],
+    is_inputs_tuple: bool = False,
+) -> Union[
+    Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
+]:
     if return_convergence_delta:
         # computes convergence error
         delta = attr_algo.compute_convergence_delta(

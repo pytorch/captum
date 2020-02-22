@@ -5,7 +5,7 @@ from torch import Tensor
 from torch.nn import Module
 
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Optional, Tuple, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -21,6 +21,14 @@ from ..._utils.common import (
 from ..._utils.typing import TensorOrTupleOfTensors
 
 from ..noise_tunnel import NoiseTunnel
+
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal  # noqa: F401
 
 
 class LayerGradientShap(LayerAttribution, GradientAttribution):
@@ -56,13 +64,15 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         inputs: TensorOrTupleOfTensors,
         baselines: TensorOrTupleOfTensors,
         n_samples: int = 5,
-        stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: "Literal"[True],
         attribute_to_layer_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
     @typing.overload
@@ -71,27 +81,32 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable],
         n_samples: int = 5,
-        stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: "Literal"[False] = False,
+        attribute_to_layer_input: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensors,
+        baselines: Union[TensorOrTupleOfTensors, Callable],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
-    def attribute(
-        self,
-        inputs,
-        baselines,
-        n_samples=5,
-        stdevs=0.0,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-    ):
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...]],
+        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r"""
         Implements gradient SHAP for layer based on the implementation from SHAP's
         primary author. For reference, please, view:

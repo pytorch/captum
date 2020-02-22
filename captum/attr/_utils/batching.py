@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Optional, Tuple, Union, Iterator, Dict, TypeVar
+from typing import Any, Callable, List, Optional, Tuple, Union, Iterator, Dict
 
 import torch
 from torch import Tensor, device
@@ -19,7 +19,9 @@ def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple:
     ...
 
 
-def _tuple_splice_range(inputs, start, end):
+def _tuple_splice_range(
+    inputs: Optional[Tuple], start: int, end: int
+) -> Optional[Tuple]:
     """
     Splices each tensor element of given tuple (inputs) from range start
     (inclusive) to end (non-inclusive) on its first dimension. If element
@@ -141,11 +143,8 @@ def _batched_generator(
             ) else target_ind
 
 
-ReturnType = TypeVar("ReturnType", Tensor, Tuple, bool)
-
-
 def _batched_operator(
-    operator: Callable[..., ReturnType],
+    operator: Callable[..., TupleOrTensorOrBool],
     inputs: TensorOrTupleOfTensors,
     additional_forward_args: Any = None,
     target_ind: Optional[
@@ -153,7 +152,7 @@ def _batched_operator(
     ] = None,
     internal_batch_size: Optional[int] = None,
     **kwargs: Any
-) -> ReturnType:
+) -> TupleOrTensorOrBool:
     """
     Batches the operation of the given operator, applying the given batch size
     to inputs and additional forward arguments, and returning the concatenation
