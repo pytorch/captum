@@ -194,6 +194,24 @@ def _format_baseline(
     return baselines
 
 
+@typing.overload
+def _format_input_baseline(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    baselines: Union[Tensor, Tuple[Tensor, ...]],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def _format_input_baseline(
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    baselines: Optional[
+        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+    ],
+) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
+    ...
+
+
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     baselines: Optional[

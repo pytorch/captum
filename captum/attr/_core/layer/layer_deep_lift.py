@@ -590,6 +590,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         """
         inputs = _format_input(inputs)
         baselines = _format_callable_baseline(baselines, inputs)
+
         assert isinstance(baselines[0], torch.Tensor) and baselines[0].shape[0] > 1, (
             "Baselines distribution has to be provided in form of a torch.Tensor"
             " with more than one example but found: {}."

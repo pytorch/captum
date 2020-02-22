@@ -102,24 +102,6 @@ class IntegratedGradients(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
-    @typing.overload
-    def attribute(
-        self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-        ] = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-        return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensors,

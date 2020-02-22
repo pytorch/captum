@@ -112,7 +112,7 @@ class DeepLift(GradientAttribution):
         *,
         return_convergence_delta: "Literal"[True],
         custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
     def attribute(  # type: ignore
