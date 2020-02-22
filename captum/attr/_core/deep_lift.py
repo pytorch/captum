@@ -86,15 +86,15 @@ class DeepLift(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensors,
-        baselines: Union[
-            Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
         ] = None,
         target: Optional[
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: "Literal"[False] = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -111,7 +111,7 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: "Literal"[True],
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
@@ -126,7 +126,7 @@ class DeepLift(GradientAttribution):
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         r""""
         Implements DeepLIFT algorithm based on the following paper:
@@ -555,7 +555,7 @@ class DeepLiftShap(DeepLift):
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: "Literal"[False] = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> TensorOrTupleOfTensors:
         ...
 
@@ -570,11 +570,11 @@ class DeepLiftShap(DeepLift):
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: "Literal"[True],
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
         ...
 
-    def attribute(
+    def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensors,
         baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
@@ -583,7 +583,7 @@ class DeepLiftShap(DeepLift):
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
         r"""
         Extends DeepLift algorithm and approximates SHAP values using Deeplift.

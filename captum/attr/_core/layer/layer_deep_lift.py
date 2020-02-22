@@ -76,8 +76,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
+        return_convergence_delta: "Literal"[False] = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
@@ -92,25 +93,30 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
+        *,
+        return_convergence_delta: "Literal"[True],
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
-    ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
-    ]:
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-        custom_attribution_func=None,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Optional[
+            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        ] = None,
+        target: Optional[
+            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        ] = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        Union[Tensor, Tuple[Tensor, ...]],
+        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r""""
         Implements DeepLIFT algorithm for the layer based on the following paper:
         Learning Important Features Through Propagating Activation Differences,
@@ -617,7 +623,9 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             exp_base,
             target=exp_target,
             additional_forward_args=exp_addit_args,
-            return_convergence_delta=return_convergence_delta,
+            return_convergence_delta=cast(
+                Union["Literal"[True], "Literal"[False]], return_convergence_delta
+            ),
             attribute_to_layer_input=attribute_to_layer_input,
             custom_attribution_func=custom_attribution_func,
         )
