@@ -391,7 +391,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         additional_forward_args: Any = None,
         return_convergence_delta: "Literal"[False] = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
@@ -409,7 +409,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         *,
         return_convergence_delta: "Literal"[True],
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
@@ -425,7 +425,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Callable[..., Tuple[Tensor, ...]] = None,
+        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
         Union[Tensor, Tuple[Tensor, ...]],
         Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],

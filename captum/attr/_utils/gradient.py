@@ -584,7 +584,7 @@ def construct_neuron_grad_fn(
             Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ] = None,
         additional_forward_args: Optional[Any] = None,
-    ):
+    ) -> Tuple[Tensor, ...]:
         _, grads, _ = _forward_layer_eval_with_neuron_grads(
             forward_fn,
             inputs,

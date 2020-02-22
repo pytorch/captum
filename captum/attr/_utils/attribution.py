@@ -187,7 +187,7 @@ class GradientAttribution(Attribution):
                             dimension 0 corresponds to the number of
                             examples, and if multiple input tensors are provided,
                             the examples must be aligned appropriately.
-                start_point (tensor or tuple of tensors): `start_point`
+                start_point (tensor or tuple of tensors, optional): `start_point`
                             is passed as an input to model's forward function. It
                             is the starting point of attributions' approximation.
                             It is assumed that both `start_point` and `end_point`

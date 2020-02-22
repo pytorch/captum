@@ -126,7 +126,7 @@ def gauss_legendre_builders() -> Tuple[
         # Scaling from 2 to 1
         return list(0.5 * np.polynomial.legendre.leggauss(n)[1])
 
-    def alphas(n) -> List[float]:
+    def alphas(n: int) -> List[float]:
         assert n > 0, "The number of steps has to be larger than zero"
         # Scaling from [-1, 1] to [0, 1]
         return list(0.5 * (1 + np.polynomial.legendre.leggauss(n)[0]))

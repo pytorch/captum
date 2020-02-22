@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import torch
 from torch import Tensor
-from typing import Tuple, Union, cast
+from typing import Tuple, Union, List, cast
 
 from ..helpers.utils import (
     BaseTest,
@@ -208,10 +208,10 @@ class TestDeepLift(BaseTest):
     def _relu_custom_attr_func_assert(
         self,
         attr_method: Union[LayerDeepLift, LayerDeepLiftShap],
-        inputs,
-        baselines,
-        expected,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        expected: List[List[float]],
+    ) -> None:
         def custom_attr_func(multipliers, inputs, baselines):
             return tuple(multiplier * 2 for multiplier in multipliers)
 
