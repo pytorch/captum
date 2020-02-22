@@ -190,7 +190,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             each scalar within a tensor as a separate feature
                             Default: None
                 n_samples (int, optional):  The number of feature permutations
-                            tested. Note that for Shapley Values, this argument
+                            tested. Note that for ShapleyValues, this argument
                             is ignored and all possible permutations are tested.
                             Default: `25` if `n_samples` is not provided.
                 perturbations_per_eval (int, optional): Allows multiple ablations
