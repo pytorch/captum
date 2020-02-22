@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, Iterable
+from typing import Any, Callable, List, Optional, Tuple, Union, Iterable, Sequence
 
+import itertools
 import torch
 from torch import Tensor
 
@@ -19,6 +20,11 @@ from .._utils.common import (
 )
 from .._utils.attribution import PerturbationAttribution
 from .._utils.typing import TensorOrTupleOfTensors
+
+
+def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
+    for perm in itertools.permutations(range(num_features)):
+        yield perm
 
 
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Tensor]:
@@ -45,9 +51,9 @@ class ShapleyValueSampling(PerturbationAttribution):
     attribution value equal to the change in output as a result of adding back
     the entire feature group.
 
-    More details regarding Shapley Value sampling can be found in the
-    original paper:
+    More details regarding Shapley Value sampling can be found in these papers:
     https://www.sciencedirect.com/science/article/pii/S0305054808000804
+    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
     """
 
     def __init__(self, forward_func: Callable) -> None:
@@ -63,7 +69,9 @@ class ShapleyValueSampling(PerturbationAttribution):
                         feature importance across all examples in the batch.
         """
         PerturbationAttribution.__init__(self, forward_func)
-        self.permutation_generator = _perm_generator
+        self.permutation_generator: Callable[
+            [int, int], Iterable[Union[Tensor, Sequence[int]]]
+        ] = _perm_generator
 
     def attribute(
         self,
@@ -182,7 +190,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                             each scalar within a tensor as a separate feature
                             Default: None
                 n_samples (int, optional):  The number of feature permutations
-                            tested.
+                            tested. Note that for Shapley Values, this argument
+                            is ignored and all possible permutations are tested.
                             Default: `25` if `n_samples` is not provided.
                 perturbations_per_eval (int, optional): Allows multiple ablations
                             to be processed simultaneously in one call to forward_fn.
@@ -221,11 +230,11 @@ class ShapleyValueSampling(PerturbationAttribution):
             >>> # Generating random input with size 2 x 4 x 4
             >>> input = torch.randn(2, 4, 4)
             >>> # Defining ShapleyValueSampling interpreter
-            >>> sv = ShapleyValueSampling(net)
+            >>> svs = ShapleyValueSampling(net)
             >>> # Computes attribution, taking random orderings
             >>> # of the 16 features and computing the output change when adding
             >>> # each feature. We average over 200 trials (random permutations).
-            >>> attr = sv.attribute(input, target=1, n_samples=200)
+            >>> attr = svs.attribute(input, target=1, n_samples=200)
 
             >>> # Alternatively, we may want to add features in groups, e.g.
             >>> # grouping each 2x2 square of the inputs and adding them together.
@@ -247,6 +256,11 @@ class ShapleyValueSampling(PerturbationAttribution):
             >>> # feature mask has dimensions 1 x 4 x 4
             >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
             >>>                             [2,2,3,3],[2,2,3,3]]])
+            >>> attr = svs.attribute(input, target=1, feature_mask=feature_mask)
+
+            >>> # With only 4 features, it is also feasible to compute exact
+            >>> # Shapley Values. These can be computed as follows:
+            >>> sv = ShapleyValues(net)
             >>> attr = sv.attribute(input, target=1, feature_mask=feature_mask)
         """
         # Keeps track whether original input is a tuple or not before
@@ -285,11 +299,13 @@ class ShapleyValueSampling(PerturbationAttribution):
                 for input in inputs
             ]
 
+            iter_count = 0
             # Iterate for number of samples, generate a permutation of the features
             # and evalute the incremental increase for each feature.
             for feature_permutation in self.permutation_generator(
                 total_features, n_samples
             ):
+                iter_count += 1
                 prev_results = initial_eval
                 for (
                     current_inputs,
@@ -344,7 +360,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             # Divide total attributions by number of random permutations and return
             # formatted attributions.
             attrib = tuple(
-                tensor_attrib_total / n_samples for tensor_attrib_total in total_attrib
+                tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
             )
             formatted_attr = _format_attributions(is_inputs_tuple, attrib)
         return formatted_attr
@@ -356,7 +372,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
         baselines: Tuple[Tensor, ...],
         input_masks: TensorOrTupleOfTensors,
-        feature_permutation: Tensor,
+        feature_permutation: Union[Tensor, Sequence[int]],
         perturbations_per_eval: int,
     ) -> Iterable[
         Tuple[
@@ -456,3 +472,49 @@ class ShapleyValueSampling(PerturbationAttribution):
         total_features = current_num_features
         feature_mask = tuple(feature_mask)
         return feature_mask, total_features
+
+
+class ShapleyValues(ShapleyValueSampling):
+    """
+    A perturbation based approach to compute attribution, based on the concept
+    of Shapley Values from cooperative game theory. This method involves taking
+    each permutation of the input features and adding them one-by-one to the
+    given baseline. The output difference after adding each feature corresponds
+    to its attribution, and these difference are averaged over all possible
+    random permutations of the input features.
+
+    By default, each scalar value within
+    the input tensors are taken as a feature and added independently. Passing
+    a feature mask, allows grouping features to be added together. This can
+    be used in cases such as images, where an entire segment or region
+    can be grouped together, measuring the importance of the segment
+    (feature group). Each input scalar in the group will be given the same
+    attribution value equal to the change in output as a result of adding back
+    the entire feature group.
+
+    More details regarding Shapley Values can be found in these papers:
+    https://www.sciencedirect.com/science/article/pii/S0305054808000804
+    https://pdfs.semanticscholar.org/7715/bb1070691455d1fcfc6346ff458dbca77b2c.pdf
+
+    NOTE: The method implemented here is very computationally intensive, and
+    should only be used with a very small number of features (e.g. < 7).
+    This implementation simply extends ShapleyValueSampling and
+    evaluates all permutations, leading to a total of n * n! evaluations for n
+    features. Shapley values can alternatively be computed with only 2^n
+    evaluations, and we plan to add this approach in the future.
+    """
+
+    def __init__(self, forward_func: Callable) -> None:
+        r"""
+        Args:
+
+            forward_func (callable): The forward function of the model or
+                        any modification of it. The forward function can either
+                        return a scalar per example, or a single scalar for the
+                        full batch. If a single scalar is returned for the batch,
+                        `perturbations_per_eval` must be 1, and the returned
+                        attributions will have first dimension 1, corresponding to
+                        feature importance across all examples in the batch.
+        """
+        ShapleyValueSampling.__init__(self, forward_func)
+        self.permutation_generator = _all_perm_generator
