@@ -28,7 +28,7 @@ from the repository root. No additional configuration should be needed (see the
 [black documentation](https://black.readthedocs.io/en/stable/installation_and_usage.html#usage)
 for advanced usage).
 
-Captum also uses isort [isort]https://github.com/timothycrosley/isort) to sort imports 
+Captum also uses [isort](https://github.com/timothycrosley/isort) to sort imports 
 alphabetically and separate into sections. isort is installed easily via
 pip using `pip install isort`, and run locally by calling
 ```bash
@@ -37,7 +37,7 @@ isort
 from the repository root. No additional configuration should be needed.
 
 We feel strongly that having a consistent code style is extremely important, so
-Travis will fail on your PR if it does not adhere to the black formatting style or isort import ordering.
+CircleCI will fail on your PR if it does not adhere to the black formatting style or isort import ordering.
 
 
 #### Type Hints
@@ -45,9 +45,11 @@ Travis will fail on your PR if it does not adhere to the black formatting style 
 Captum is fully typed using python 3.6+
 [type hints](https://www.python.org/dev/peps/pep-0484/).
 We expect any contributions to also use proper type annotations, and we enforce 
-consistency of these in our continuous integration tests. To type check your code 
-locally, make sure mypy [mypy](https://github.com/python/mypy) is installed and run this 
-script from the repository root:
+consistency of these in our continuous integration tests. 
+
+To type check your code locally, install [mypy](https://github.com/python/mypy), 
+which can be done with pip using `pip install "mypy>=0.760"`
+Then run this script from the repository root:
 ```bash
 ./scripts/run_mypy.sh
 ```
