@@ -219,7 +219,6 @@ _ = viz.visualize_image_attr_multiple(np.transpose(attributions_occ.squeeze().cp
 
 occlusion = Occlusion(model)
 
-rand_img_dist = torch.cat([input * 0, input * 1])
 attributions_occ = occlusion.attribute(input,
                                        strides = (3, 50, 50),
                                        target=pred_label_idx,

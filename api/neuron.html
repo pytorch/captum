@@ -36,7 +36,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -152,7 +152,7 @@ corresponding sized tensors is returned.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -337,7 +337,7 @@ corresponding sized tensors is returned.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -557,8 +557,8 @@ corresponding sized tensors is returned.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -744,8 +744,8 @@ corresponding sized tensors is returned.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -776,6 +776,7 @@ the additive composition of feature effects.</p></li>
 </dl>
 <p>Although, it assumes a linear model for each explanation, the overall
 model across multiple explanations can be complex and non-linear.
+:type inputs: ~TensorOrTupleOfTensors
 :param inputs: Input for which layer</p>
 <blockquote>
 <div><p>attributions are computed. If forward_func takes a
@@ -920,7 +921,7 @@ corresponding sized tensors is returned.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 The output size of the attribute method matches the
 dimensions of the inputs or ouputs of the neuron with
 index <cite>neuron_index</cite> in this layer, depending on whether
@@ -1348,7 +1349,7 @@ corresponding sized tensors is returned.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+ac9da29 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -1365,7 +1366,7 @@ then it is not necessary to provide this argument.</p></li>
 </dl>
 <dl class="method">
 <dt id="captum.attr.NeuronFeatureAblation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em>, <em class="sig-param">ablations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>A perturbation based approach to computing neuron attribution,
 involving replacing each input feature with a given baseline /
@@ -1472,13 +1473,14 @@ attribute to the input or output, is a single tensor.
 Support for multiple tensors will be added later.
 Default: False</p>
 </dd>
-<dt>ablations_per_eval (int, optional): Allows ablation of multiple features</dt><dd><p>to be processed simultaneously in one call to forward_fn.
+<dt>perturbations_per_eval (int, optional): Allows ablation of multiple</dt><dd><p>features to be processed simultaneously in one call to
+forward_fn.
 Each forward pass will contain a maximum of
-ablations_per_eval * #examples samples.
+perturbations_per_eval * #examples samples.
 For DataParallel models, each batch is split among the
 available devices, so evaluations on each available
 device contain at most
-(ablations_per_eval * #examples) / num_devices
+(perturbations_per_eval * #examples) / num_devices
 samples.
 Default: 1</p>
 </dd>
@@ -1544,6 +1546,11 @@ corresponding sized tensors is returned.</p>
 <span class="gp">&gt;&gt;&gt; </span>                         <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~TensorOrTupleOfTensors</p>
+</dd>
+</dl>
 </dd></dl>
 </dd></dl>
 </div>
@@ -1598,7 +1605,7 @@ corresponding sized tensors is returned.</p>
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

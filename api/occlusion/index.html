@@ -37,9 +37,9 @@ any modification of it</p>
 </dl>
 <dl class="method">
 <dt id="captum.attr.Occlusion.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sliding_window_shapes</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">ablations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/occlusion.html#Occlusion.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Occlusion.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sliding_window_shapes</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/occlusion.html#Occlusion.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Occlusion.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
-A perturbation based approach to computing attribution, involving
+A perturbation based approach to compute attribution, involving
 replacing each contiguous rectangular region with a given baseline /
 reference, and computing the difference in output. For features located
 in multiple regions (hyperrectangles), the corresponding output differences
@@ -181,16 +181,16 @@ the given argument is used for all forward evaluations.
 Note that attributions are not computed with respect
 to these arguments.
 Default: None</p></li>
-<li><p><strong>ablations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Allows multiple occlusions
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Allows multiple occlusions
 to be included in one batch (one call to forward_fn).
-By default, ablations_per_eval is 1, so each occlusion
+By default, perturbations_per_eval is 1, so each occlusion
 is processed individually.
 Each forward pass will contain a maximum of
-ablations_per_eval * #examples samples.
+perturbations_per_eval * #examples samples.
 For DataParallel models, each batch is split among the
 available devices, so evaluations on each available
 device contain at most
-(ablations_per_eval * #examples) / num_devices
+(perturbations_per_eval * #examples) / num_devices
 samples.
 Default: 1</p></li>
 </ul>
@@ -285,7 +285,7 @@ corresponding sized tensors is returned.</p>
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

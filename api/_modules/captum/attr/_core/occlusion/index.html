@@ -67,10 +67,10 @@
             <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
         <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ablations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        A perturbation based approach to computing attribution, involving</span>
+<span class="sd">        A perturbation based approach to compute attribution, involving</span>
 <span class="sd">        replacing each contiguous rectangular region with a given baseline /</span>
 <span class="sd">        reference, and computing the difference in output. For features located</span>
 <span class="sd">        in multiple regions (hyperrectangles), the corresponding output differences</span>
@@ -188,16 +188,16 @@
 <span class="sd">                            Note that attributions are not computed with respect</span>
 <span class="sd">                            to these arguments.</span>
 <span class="sd">                            Default: None</span>
-<span class="sd">                ablations_per_eval (int, optional): Allows multiple occlusions</span>
+<span class="sd">                perturbations_per_eval (int, optional): Allows multiple occlusions</span>
 <span class="sd">                            to be included in one batch (one call to forward_fn).</span>
-<span class="sd">                            By default, ablations_per_eval is 1, so each occlusion</span>
+<span class="sd">                            By default, perturbations_per_eval is 1, so each occlusion</span>
 <span class="sd">                            is processed individually.</span>
 <span class="sd">                            Each forward pass will contain a maximum of</span>
-<span class="sd">                            ablations_per_eval * #examples samples.</span>
+<span class="sd">                            perturbations_per_eval * #examples samples.</span>
 <span class="sd">                            For DataParallel models, each batch is split among the</span>
 <span class="sd">                            available devices, so evaluations on each available</span>
 <span class="sd">                            device contain at most</span>
-<span class="sd">                            (ablations_per_eval * #examples) / num_devices</span>
+<span class="sd">                            (perturbations_per_eval * #examples) / num_devices</span>
 <span class="sd">                            samples.</span>
 <span class="sd">                            Default: 1</span>
 
@@ -274,7 +274,7 @@
             <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
-            <span class="n">ablations_per_eval</span><span class="o">=</span><span class="n">ablations_per_eval</span><span class="p">,</span>
+            <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="n">sliding_window_tensors</span><span class="o">=</span><span class="n">sliding_window_tensors</span><span class="p">,</span>
             <span class="n">shift_counts</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shift_counts</span><span class="p">),</span>
             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
@@ -426,7 +426,7 @@
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

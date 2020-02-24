@@ -37,7 +37,7 @@ any modification of it</p>
 </dl>
 <dl class="method">
 <dt id="captum.attr.FeatureAblation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">ablations_per_eval=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_ablation.html#FeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.FeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">perturbations_per_eval=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_ablation.html#FeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.FeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
 A perturbation based approach to computing attribution, involving
 replacing each input feature with a given baseline / reference, and
@@ -51,7 +51,7 @@ equal to the change in target as a result of ablating the entire feature
 group.</p>
 <p>The forward function can either return a scalar per example, or a single
 scalar for the full batch. If a single scalar is returned for the batch,
-<cite>ablations_per_eval</cite> must be 1, and the returned attributions will have
+<cite>perturbations_per_eval</cite> must be 1, and the returned attributions will have
 first dimension 1, corresponding to feature importance across all
 examples in the batch.</p>
 <dl class="field-list simple">
@@ -174,17 +174,18 @@ If None, then a feature mask is constructed which assigns
 each scalar within a tensor as a separate feature, which
 is ablated independently.
 Default: None</p></li>
-<li><p><strong>ablations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple features
-to be processed simultaneously in one call to forward_fn.
+<li><p><strong>perturbations_per_eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Allows ablation of multiple
+features to be processed simultaneously in one call to
+forward_fn.
 Each forward pass will contain a maximum of
-ablations_per_eval * #examples samples.
+perturbations_per_eval * #examples samples.
 For DataParallel models, each batch is split among the
 available devices, so evaluations on each available
 device contain at most
-(ablations_per_eval * #examples) / num_devices
+(perturbations_per_eval * #examples) / num_devices
 samples.
 If the forward function returns a single scalar per batch,
-ablations_per_eval must be set to 1.
+perturbations_per_eval must be set to 1.
 Default: 1</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Any additional arguments used by child
 classes of FeatureAblation (such as Occlusion) to construct
@@ -309,7 +310,7 @@ corresponding sized tensors is returned.</p>
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

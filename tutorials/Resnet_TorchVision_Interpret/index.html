@@ -504,7 +504,6 @@ It also loads an image from the <code>img/resnet/</code> folder that will be use
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">occlusion</span> <span class="o">=</span> <span class="n">Occlusion</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-<span class="n">rand_img_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="nb">input</span> <span class="o">*</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">input</span> <span class="o">*</span> <span class="mi">1</span><span class="p">])</span>
 <span class="n">attributions_occ</span> <span class="o">=</span> <span class="n">occlusion</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span>
                                        <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
                                        <span class="n">target</span><span class="o">=</span><span class="n">pred_label_idx</span><span class="p">,</span>

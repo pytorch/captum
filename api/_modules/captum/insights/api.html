@@ -41,9 +41,6 @@
 <span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-
 <span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.batching</span> <span class="kn">import</span> <span class="n">_batched_generator</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_run_forward</span><span class="p">,</span> <span class="n">safe_div</span>
@@ -53,6 +50,54 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.insights.features</span> <span class="kn">import</span> <span class="n">BaseFeature</span>
 <span class="kn">from</span> <span class="nn">captum.insights.server</span> <span class="kn">import</span> <span class="n">namedtuple_to_dict</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+
+
+<span class="n">_CONTEXT_COLAB</span> <span class="o">=</span> <span class="s2">"_CONTEXT_COLAB"</span>
+<span class="n">_CONTEXT_IPYTHON</span> <span class="o">=</span> <span class="s2">"_CONTEXT_IPYTHON"</span>
+<span class="n">_CONTEXT_NONE</span> <span class="o">=</span> <span class="s2">"_CONTEXT_NONE"</span>
+
+
+<span class="k">def</span> <span class="nf">_get_context</span><span class="p">():</span>
+    <span class="sd">"""Determine the most specific context that we're in.</span>
+<span class="sd">    Implementation from TensorBoard: https://git.io/JvObD.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    _CONTEXT_COLAB: If in Colab with an IPython notebook context.</span>
+<span class="sd">    _CONTEXT_IPYTHON: If not in Colab, but we are in an IPython notebook</span>
+<span class="sd">      context (e.g., from running `jupyter notebook` at the command</span>
+<span class="sd">      line).</span>
+<span class="sd">    _CONTEXT_NONE: Otherwise (e.g., by running a Python script at the</span>
+<span class="sd">      command-line or using the `ipython` interactive shell).</span>
+<span class="sd">    """</span>
+    <span class="c1"># In Colab, the `google.colab` module is available, but the shell</span>
+    <span class="c1"># returned by `IPython.get_ipython` does not have a `get_trait`</span>
+    <span class="c1"># method.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">google.colab</span>  <span class="c1"># noqa: F401</span>
+        <span class="kn">import</span> <span class="nn">IPython</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">IPython</span><span class="o">.</span><span class="n">get_ipython</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We'll assume that we're in a Colab notebook context.</span>
+            <span class="k">return</span> <span class="n">_CONTEXT_COLAB</span>
+
+    <span class="c1"># In an IPython command line shell or Jupyter notebook, we can</span>
+    <span class="c1"># directly query whether we're in a notebook context.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">IPython</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ipython</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">get_ipython</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ipython</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ipython</span><span class="o">.</span><span class="n">has_trait</span><span class="p">(</span><span class="s2">"kernel"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_CONTEXT_IPYTHON</span>
+
+    <span class="c1"># Otherwise, we're not in a known notebook context.</span>
+    <span class="k">return</span> <span class="n">_CONTEXT_NONE</span>
+
 
 <span class="n">OutputScore</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">"OutputScore"</span><span class="p">,</span> <span class="s2">"score index label"</span><span class="p">)</span>
 <span class="n">VisualizationOutput</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span>
@@ -233,9 +278,70 @@
             <span class="n">display</span><span class="p">(</span><span class="n">widget</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">serve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">_get_context</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="n">_CONTEXT_COLAB</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_serve_colab</span><span class="p">(</span><span class="n">blocking</span><span class="o">=</span><span class="n">blocking</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_serve</span><span class="p">(</span><span class="n">blocking</span><span class="o">=</span><span class="n">blocking</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_serve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">captum.insights.server</span> <span class="kn">import</span> <span class="n">start_server</span>
 
         <span class="n">start_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="n">blocking</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">_port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_serve_colab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+        <span class="kn">from</span> <span class="nn">captum.insights.server</span> <span class="kn">import</span> <span class="n">start_server</span>
+        <span class="kn">import</span> <span class="nn">ipywidgets</span> <span class="k">as</span> <span class="nn">widgets</span>
+
+        <span class="c1"># TODO: Output widget only captures beginning of server logs. It seems</span>
+        <span class="c1"># the context manager isn't respected when the web server is run on a</span>
+        <span class="c1"># separate thread. We should fix to display entirety of the logs</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="n">start_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="n">blocking</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span> <span class="n">_port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+        <span class="n">shell</span> <span class="o">=</span> <span class="s2">"""</span>
+<span class="s2">            &lt;div id="root"&gt;&lt;/div&gt;</span>
+<span class="s2">            &lt;script&gt;</span>
+<span class="s2">            (function() {</span>
+<span class="s2">              document.querySelector("base").href = "http://localhost:%PORT%";</span>
+<span class="s2">              function reloadScriptsAndCSS(root) {</span>
+<span class="s2">                // Referencing TensorBoard's method for reloading scripts,</span>
+<span class="s2">                // we remove and reinsert each script</span>
+<span class="s2">                for (const script of root.querySelectorAll("script")) {</span>
+<span class="s2">                  const newScript = document.createElement("script");</span>
+<span class="s2">                  newScript.type = script.type;</span>
+<span class="s2">                  if (script.src) {</span>
+<span class="s2">                    newScript.src = script.src;</span>
+<span class="s2">                  }</span>
+<span class="s2">                  if (script.textContent) {</span>
+<span class="s2">                    newScript.textContent = script.textContent;</span>
+<span class="s2">                  }</span>
+<span class="s2">                  root.appendChild(newScript);</span>
+<span class="s2">                  script.remove();</span>
+<span class="s2">                }</span>
+<span class="s2">                // A similar method is used to reload styles</span>
+<span class="s2">                for (const link of root.querySelectorAll("link")) {</span>
+<span class="s2">                  const newLink = document.createElement("link");</span>
+<span class="s2">                  newLink.rel = link.rel;</span>
+<span class="s2">                  newLink.href = link.href;</span>
+<span class="s2">                  document.querySelector("head").appendChild(newLink);</span>
+<span class="s2">                  link.remove();</span>
+<span class="s2">                }</span>
+<span class="s2">              }</span>
+<span class="s2">              const root = document.getElementById("root");</span>
+<span class="s2">              fetch(".")</span>
+<span class="s2">                .then(x =&gt; x.text())</span>
+<span class="s2">                .then(html =&gt; void (root.innerHTML = html))</span>
+<span class="s2">                .then(() =&gt; reloadScriptsAndCSS(root));</span>
+<span class="s2">            })();</span>
+<span class="s2">            &lt;/script&gt;</span>
+<span class="s2">        """</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="s2">"%PORT%"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">html</span> <span class="o">=</span> <span class="n">HTML</span><span class="p">(</span><span class="n">shell</span><span class="p">)</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_labels_from_scores</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Tensor</span>
@@ -484,7 +590,7 @@
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>

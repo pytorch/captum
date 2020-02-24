@@ -297,7 +297,9 @@
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_tensorize_baseline</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">def</span> <span class="nf">_tensorize_single_baseline</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">)</span>
@@ -495,6 +497,42 @@
     <span class="k">return</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
 
 
+<span class="k">def</span> <span class="nf">_find_output_mode_and_verify</span><span class="p">(</span>
+    <span class="n">initial_eval</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
+<span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    This method identifies whether the model outputs a single output for a batch</span>
+<span class="sd">    (agg_output_mode = True) or whether it outputs a single output per example</span>
+<span class="sd">    (agg_output_mode = False) and returns agg_output_mode. The method also</span>
+<span class="sd">    verifies that perturbations_per_eval is 1 in the case that agg_output_mode is True</span>
+<span class="sd">    and also verifies that the first dimension of each feature mask if the model</span>
+<span class="sd">    returns a single output for a batch.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="n">num_examples</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">perturbations_per_eval</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"Cannot have perturbations_per_eval &gt; 1 when function returns scalar."</span>
+        <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">single_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s2">"Cannot provide different masks for each example when function "</span>
+                    <span class="s2">"returns a scalar."</span>
+                <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">initial_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">"Target should identify a single element in the model output."</span>
+    <span class="k">return</span> <span class="n">agg_output_mode</span>
+
+
 <div class="viewcode-block" id="MaxList"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common.MaxList">[docs]</a><span class="k">class</span> <span class="nc">MaxList</span><span class="p">:</span>
     <span class="sd">"""Keep track of N maximal items</span>
 
@@ -593,7 +631,7 @@
 </form>
 </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 </div>
 </div>
 <div class="clearer"></div>
