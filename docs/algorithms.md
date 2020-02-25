@@ -65,13 +65,13 @@ To learn more about Saliency, visit the following resources:
 Input X Gradient is an extension of the saliency approach, taking the gradients of the output with respect to the input and multiplying by the input feature values. One intuition for this approach considers a linear model; the gradients are simply the coefficients of each input, and the product of the input with a coefficient corresponds to the total contribution of the feature to the linear model's output.
 
 ### Guided Backpropagation
-Guided backpropagation computes the gradient of the target output with respect to the input, but backpropagation of ReLU functions is overridden so that only non-negative gradients are backpropagated (any negative gradients are set to 0). Guided backpropagation was proposed in the context of an all-convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
+Guided backpropagation computes the gradient of the target output with respect to the input, but backpropagation of ReLU functions is overridden so that only non-negative gradients are backpropagated (applying ReLU to the input gradient). Guided backpropagation was proposed in the context of an all-convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
 
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
 
 ### Deconvolution
-Deconvolution computes the gradient of the target output with respect to the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed taking ReLU of the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
+Deconvolution computes the gradient of the target output with respect to the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed by applying ReLU to the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
 Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
 
 To learn more about Deconvolution, visit the following resources:  
@@ -96,9 +96,9 @@ This can be used in cases such as images, where an entire segment or region can 
         
 
 ### Feature Permutation
-Feature permutation is a perturbation based approach which takes each feature individually, randomly permutes the feature values within a batch and computes the change in output (or loss) as a result of this modification. Life feature ablation, input features can also be grouped and shuffled together rather than individually.
+Feature permutation is a perturbation based approach which takes each feature individually, randomly permutes the feature values within a batch and computes the change in output (or loss) as a result of this modification. Like feature ablation, input features can also be grouped and shuffled together rather than individually.
 
-To learn more about FEature Permutation, visit the following resources:  
+To learn more about Feature Permutation, visit the following resources:  
 - [Interpretable ML Book](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
 
 ### Occlusion
@@ -109,8 +109,8 @@ To learn more about Occlusion (also called grey-box / sliding window method), vi
 - [DeepExplain Implementation](https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tensorflow/methods.py)
 
 ### Shapley Values
-Shapley values are an attribution method based on a concept from cooperative game theory. This method involves each permutation of the input features and adding them one-by-one to a given baseline.
-The output difference after adding each feature corresponds to its contribution, and these difference are averaged over all permutation to obtain the attribution.
+Shapley values are an attribution method based on a concept from cooperative game theory. This method involves taking each permutation of the input features and adding them one-by-one to a given baseline.
+The output difference after adding each feature corresponds to its contribution, and these differences are averaged over all permutations to obtain the attribution.
 
 Since this method is extremely computationally intensive for larger numbers of features, we also implement Shapley Value Sampling, where we sample some random permutations and average the marginal contribution of features based on these permutations.
 Like feature ablation, input features can also be grouped and added together rather than individually.
@@ -212,13 +212,13 @@ To learn more about Integrated Gradients, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1703.01365)
 
 ### Neuron Guided Backpropagation
-Neuron guided backpropagation is the analog of guided backpropagation for a particular neuron. It computes the gradient of the target neuron with respect the input, but backpropagation of ReLU functions is overridden so that only non-negative gradients are backpropagated (any negative gradients are set to 0). Guided backpropagation was proposed in the context of an all-convolutional network and is generally used for neurons in convolutional networks, although the approach can be applied generically.
+Neuron guided backpropagation is the analog of guided backpropagation for a particular neuron. It computes the gradient of the target neuron with respect the input, but backpropagation of ReLU functions is overridden so that only non-negative gradients are backpropagated (applying ReLU to the input gradient) Guided backpropagation was proposed in the context of an all-convolutional network and is generally used for neurons in convolutional networks, although the approach can be applied generically.
 
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
 
 ### Neuron Deconvolution
-Neuron guided backpropagation is the analog of deconvolution for a particular neuron. It computes the gradient of the target neuron with respect the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed taking ReLU of the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
+Neuron deconvolution is the analog of deconvolution for a particular neuron. It computes the gradient of the target neuron with respect the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed taking ReLU of the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
 Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
 
 To learn more about Deconvolution, visit the following resources:  
