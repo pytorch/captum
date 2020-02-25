@@ -75,7 +75,7 @@ Deconvolution computes the gradient of the target output with respect to the inp
 Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
 
 To learn more about Deconvolution, visit the following resources:  
-- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Original paper](https://arxiv.org/abs/1311.2901)
 - [Salient Deconvolutional Networks](https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8)
 
 ### Guided GradCAM
@@ -173,7 +173,7 @@ To learn more about GradientSHAP, visit the following resources:
 ## Layer DeepLIFT
 Layer DeepLIFT is the analog of the DeepLIFT method for hidden layers in a network. 
 
-To learn more about DeepLIFT, see this [section](### DeepLIFT) above, or visit the following resources:  
+To learn more about DeepLIFT, see this [section](###DeepLIFT) above, or visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1704.02685)  
 - [Explanatory videos attached to paper](https://www.youtube.com/playlist?list=PLJLjQOkqSRTP3cLB2cOOi_bQFw6KPGKML)
 - [Towards Better Understanding of Gradient-Based Attribution Methods for Deep Neural Networks](https://openreview.net/pdf?id=Sy21R9JAW)
@@ -222,7 +222,7 @@ Neuron deconvolution is the analog of deconvolution for a particular neuron. It 
 Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
 
 To learn more about Deconvolution, visit the following resources:  
-- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Original paper](https://arxiv.org/abs/1311.2901)
 - [Salient Deconvolutional Networks](https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8)
 
 ## Neuron GradientSHAP
@@ -235,7 +235,7 @@ To learn more about GradientSHAP, visit the following resources:
 ### Neuron DeepLIFT
 Neuron DeepLIFT is the analog of the DeepLIFT method for a particular neuron. 
 
-To learn more about DeepLIFT, see this [section](### DeepLIFT) above, or visit the following resources:  
+To learn more about DeepLIFT, see this [section](###DeepLIFT) above, or visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1704.02685)  
 - [Explanatory videos attached to paper](https://www.youtube.com/playlist?list=PLJLjQOkqSRTP3cLB2cOOi_bQFw6KPGKML)
 - [Towards Better Understanding of Gradient-Based Attribution Methods for Deep Neural Networks](https://openreview.net/pdf?id=Sy21R9JAW)
