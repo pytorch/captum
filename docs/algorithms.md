@@ -70,7 +70,13 @@ Guided backpropagation computes the gradient of the target output with respect t
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
 
-Note: this method is currently available in master and will be available in pip / conda releases soon.
+### Deconvolution
+Deconvolution computes the gradient of the target output with respect to the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed taking ReLU of the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
+Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
+
+To learn more about Deconvolution, visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Salient Deconvolutional Networks](https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8)
 
 ### Guided GradCAM
 Guided GradCAM computes the element-wise product of [guided backpropagation](###Guided-Backpropagation) attributions with upsampled (layer) [GradCAM](###GradCAM) attributions. GradCAM attributions are computed
@@ -84,7 +90,33 @@ To learn more about Guided GradCAM, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
-Note: this method is currently available in master and will be available in pip / conda releases soon.
+### Feature Ablation
+Feature ablation is a perturbation based approach to computing attribution, involving replacing each input feature with a given baseline / reference value (e.g. 0), and computing the difference in output. Input features can also be grouped and ablated together rather than individually.
+This can be used in cases such as images, where an entire segment or region can be ablated, measuring the importance of the segment (feature group).
+        
+
+### Feature Permutation
+Feature permutation is a perturbation based approach which takes each feature individually, randomly permutes the feature values within a batch and computes the change in output (or loss) as a result of this modification. Life feature ablation, input features can also be grouped and shuffled together rather than individually.
+
+To learn more about FEature Permutation, visit the following resources:  
+- [Interpretable ML Book](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
+
+### Occlusion
+Occlusion is a perturbation based approach to compute attribution, involving replacing each contiguous rectangular region with a given baseline / reference, and computing the difference in output. For features located in multiple regions (hyperrectangles), the corresponding output differences are averaged to compute the attribution for that feature. Occlusion is most useful in cases such as images, where pixels in a contiguous rectangular region are likely to be highly correlated.
+
+To learn more about Occlusion (also called grey-box / sliding window method), visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1311.2901)
+- [DeepExplain Implementation](https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tensorflow/methods.py)
+
+### Shapley Values
+Shapley values are an attribution method based on a concept from cooperative game theory. This method involves each permutation of the input features and adding them one-by-one to a given baseline.
+The output difference after adding each feature corresponds to its contribution, and these difference are averaged over all permutation to obtain the attribution.
+
+Since this method is extremely computationally intensive for larger numbers of features, we also implement Shapley Value Sampling, where we sample some random permutations and average the marginal contribution of features based on these permutations.
+Like feature ablation, input features can also be grouped and added together rather than individually.
+
+To learn more about Shapley Value Sampling, visit the following resources:  
+- [Original paper](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 
 ## Layer Attribution
 ### Layer Conductance
@@ -100,7 +132,7 @@ To learn more about Conductance, visit the following resources:
 - [Computationally Efficient Measures of Internal Neuron Importance](https://arxiv.org/pdf/1807.09946.pdf)  
 
 ### Internal Influence
-Internal influence approximates the integral of gradients with respect to a particular layer along the path from a baseline input to the given input. This method is similar to applying integrated gradients, integrating the gradient with respect to the layer (rather than the input).
+Internal Influence approximates the integral of gradients with respect to a particular layer along the path from a baseline input to the given input. This method is similar to applying integrated gradients, integrating the gradient with respect to the layer (rather than the input).
 
 To learn more about Internal Influence, visit the following resources:  
 - [Original Paper](https://arxiv.org/pdf/1802.03788.pdf)
@@ -125,7 +157,36 @@ To learn more about GradCAM, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
-Note: this method is currently available in master and will be available in pip / conda releases soon.
+## Layer Integrated Gradients
+Layer integrated gradients represents the integral of gradients with respect to the layer inputs / outputs along the straight-line path from the layer activations at the given baseline to the layer activation at the input.
+
+To learn more about Integrated Gradients, visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1703.01365)
+
+## Layer GradientSHAP
+Layer GradientSHAP is the analog of GradientSHAP for a particular layer. Layer GradientSHAP adds Gaussian noise to each input sample multiple times, selects a random point along the path between baseline and input, and computes the gradient of the output with respect to the identified layer. The final SHAP values approximate the expected value of gradients * (layer activation of inputs - layer activation of baselines).
+
+To learn more about GradientSHAP, visit the following resources:
+- [SHAP paper](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
+- [Original Implementation](https://github.com/slundberg/shap/#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models)
+
+## Layer DeepLIFT
+Layer DeepLIFT is the analog of the DeepLIFT method for hidden layers in a network. 
+
+To learn more about DeepLIFT, see this [section](### DeepLIFT) above, or visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1704.02685)  
+- [Explanatory videos attached to paper](https://www.youtube.com/playlist?list=PLJLjQOkqSRTP3cLB2cOOi_bQFw6KPGKML)
+- [Towards Better Understanding of Gradient-Based Attribution Methods for Deep Neural Networks](https://openreview.net/pdf?id=Sy21R9JAW)
+
+## Layer DeepLIFT SHAP
+
+Layer DeepLIFT SHAP is the analog of DeepLIFT SHAP for a particular layer. Layer DeepLIFT SHAP takes a distribution of baselines and computes the Layer DeepLIFT attribution for each input-baseline pair and averages the resulting attributions per input example.
+
+To learn more about DeepLIFT SHAP, visit the following resources:  
+- [SHAP paper](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
+
+## Layer Feature Ablation
+Layer feature ablation is the analog of feature ablation for an identified layer. It is a perturbation based approach to computing attribution, involving replacing each value in the identified layer with a given baseline / reference value (e.g. 0), and computing the difference in output. Values within the layer can also be grouped and ablated together rather than individually.
 
 ## Neuron Attribution
 ### Neuron Conductance
@@ -156,7 +217,39 @@ Neuron guided backpropagation is the analog of guided backpropagation for a part
 To learn more about Guided Backpropagation, visit the following resources:  
 - [Original paper](https://arxiv.org/abs/1412.6806)
 
-Note: this method is currently available in master and will be available in pip / conda releases soon.
+### Neuron Deconvolution
+Neuron guided backpropagation is the analog of deconvolution for a particular neuron. It computes the gradient of the target neuron with respect the input, but gradients of ReLU functions are overridden so that the gradient of the ReLU input is simply computed taking ReLU of the output gradient, essentially only propagating non-negative gradients (without dependence on the sign of the ReLU input).
+Deconvolution was proposed in the context of a convolutional network and is generally used for convolutional networks, although the approach can be applied generically.
+
+To learn more about Deconvolution, visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1412.6806)
+- [Salient Deconvolutional Networks](https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8)
+
+## Neuron GradientSHAP
+Neuron GradientSHAP is the analog of GradientSHAP for a particular neuron. Neuron GradientSHAP adds Gaussian noise to each input sample multiple times, selects a random point along the path between baseline and input, and computes the gradient of the target neuron with respect to each selected random points. The final SHAP values approximate the expected value of gradients * (inputs - baselines).
+
+To learn more about GradientSHAP, visit the following resources:
+- [SHAP paper](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
+- [Original Implementation](https://github.com/slundberg/shap/#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models)
+
+### Neuron DeepLIFT
+Neuron DeepLIFT is the analog of the DeepLIFT method for a particular neuron. 
+
+To learn more about DeepLIFT, see this [section](### DeepLIFT) above, or visit the following resources:  
+- [Original paper](https://arxiv.org/abs/1704.02685)  
+- [Explanatory videos attached to paper](https://www.youtube.com/playlist?list=PLJLjQOkqSRTP3cLB2cOOi_bQFw6KPGKML)
+- [Towards Better Understanding of Gradient-Based Attribution Methods for Deep Neural Networks](https://openreview.net/pdf?id=Sy21R9JAW)
+
+### Neuron DeepLIFT SHAP
+
+Neuron DeepLIFT SHAP is the analog of DeepLIFT SHAP for a particular neuron. Neuron DeepLIFT SHAP takes a distribution of baselines and computes the Neuron DeepLIFT attribution for each input-baseline pair and averages the resulting attributions per input example.
+
+To learn more about DeepLIFT SHAP, visit the following resources:  
+- [SHAP paper](http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions)
+
+### Neuron Feature Ablation
+Neuron feature ablation is the analog of feature ablation for a particular neuron. It is a perturbation based approach to computing attribution, involving replacing each input feature with a given baseline / reference value (e.g. 0), and computing the difference in the target neuron's value. Input features can also be grouped and ablated together rather than individually.
+This can be used in cases such as images, where an entire segment or region can be ablated, measuring the importance of the segment (feature group).
 
 ## Noise Tunnel
 Noise Tunnel is a method that can be used on top of any of the attribution methods. Noise tunnel computes attribution multiple times, adding Gaussian noise to the input each time, and combines the calculated attributions based on the chosen type. The supported types for noise tunnel are:
