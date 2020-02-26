@@ -5,6 +5,8 @@ title: Algorithm Comparison Matrix
 
 # **Attribution Algorithm Comparison Matrix**
 
+<div style="overflow-x: scroll;" markdown="block">
+
 |  <div style="width:200px">***&nbsp;&nbsp;Algorithm&nbsp;&nbsp;***</div> | ***&nbsp;&nbsp;Type&nbsp;&nbsp;*** | <div style="width:200px">***&nbsp;&nbsp;Application&nbsp;&nbsp;***</div> | ***Space&nbsp;Complexity*** | <div style="width:200px">***Model&nbsp;Passes&nbsp;(Forward Only or Forward and Backward))***</div> | <div style="width:200px">***Number&nbsp;of&nbsp;Samples&nbsp;Passed through Model's Forward (and Backward) Passes***</div> | <div style="width:200px">***Requires&nbsp;Baseline&nbsp;aka Reference ?***</div> | <div style="width:390px">***&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;***</div> |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  **Integrated Gradients˚^** | Gradient | Any model that can be represented<br/> as a differentiable function. | O(#steps * #examples * #features) | Forward and Backward | #steps * #examples | Yes (Single Baseline Per Input Example) | Approximates the integral of gradients along<br/>the path (straight line from baseline to input)<br/>and multiplies with (input - baseline) |
@@ -26,6 +28,8 @@ title: Algorithm Comparison Matrix
 |  **Shapely Value** | Perturbation | Any traditional or neural network model. | O(#examples * #features * #perturbations_per_eval ) | Forward | #examples * #features * #features! | Yes (usually, zero baseline is used) | Computes feature importances based on all permutations of all input features. It adds each feature for each permutation one-by-one to the baseline and computes the magnitudes of output changes for each feature which are ultimately being averaged across all permutations to estimate final attribution score. |
 |  **Shapely Value Sampling** | Perturbation | Any traditional or neural network model. | O(#examples * # features * #perturbations_per_eval ) | Forward | #examples * #features * #samples | Yes (usually, zero baseline is used) | Similar to Shapely value, but instead of considering all feature permutations it considers only #samples random permutations. |
 |  **NoiseTunnel** | - | This can be used in combination with any above mentioned attribution algorithms | Depends on the choice of above mentioned attribution algorithm. | Forward or Forward and Backward - It depends on the choice of above mentioned attribution algorithm. | Depends on the choice of above mentioned attribution algorithm. | Depends on the choice of above mentioned attribution algorithm. | Adds gaussian noise to each input example #samples times, calls any above mentioned attribution algorithm for all #samples per example and aggregates / smoothens them based on different techniques for each input example. Supported smoothing techniques include: smoothgrad, vargrad, smoothgrad_sq. |
+
+</div>
 
 **^ Including Layer Variant**
 
