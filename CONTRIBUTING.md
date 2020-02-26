@@ -1,6 +1,6 @@
 # Contributing to Captum
 
-We want to make contributing to Captum is as easy and transparent as possible.
+We want to make contributing to Captum as easy and transparent as possible.
 
 
 ## Development installation
@@ -18,29 +18,46 @@ pip install -e .[dev]
 
 #### Code Style
 
-Captum uses the [black](https://github.com/ambv/black) code formatter to
-enforce a common code style across the code base. black is installed easily via
-pip using `pip install black`, and run locally by calling
+Captum uses [black](https://github.com/ambv/black) and  [flake8](https://github.com/PyCQA/flake8) to
+enforce a common code style across the code base. black and flake8 are installed easily via
+pip using `pip install black flake8`, and run locally by calling
 ```bash
 black .
+flake8 .
 ```
 from the repository root. No additional configuration should be needed (see the
 [black documentation](https://black.readthedocs.io/en/stable/installation_and_usage.html#usage)
 for advanced usage).
 
+Captum also uses [isort](https://github.com/timothycrosley/isort) to sort imports 
+alphabetically and separate into sections. isort is installed easily via
+pip using `pip install isort`, and run locally by calling
+```bash
+isort
+```
+from the repository root. No additional configuration should be needed.
+
 We feel strongly that having a consistent code style is extremely important, so
-Travis will fail on your PR if it does not adhere to the black formatting style.
+CircleCI will fail on your PR if it does not adhere to the black or flake8 formatting style or isort import ordering.
 
 
 #### Type Hints
 
 Captum is fully typed using python 3.6+
 [type hints](https://www.python.org/dev/peps/pep-0484/).
-We expect any contributions to also use proper type annotations. While we
-currently do not enforce full consistency of these in our continuous integration
-test, you should strive to type check your code locally. For this we recommend
-using [pyre](https://pyre-check.org/).
+We expect any contributions to also use proper type annotations, and we enforce 
+consistency of these in our continuous integration tests. 
 
+To type check your code locally, install [mypy](https://github.com/python/mypy), 
+which can be done with pip using `pip install "mypy>=0.760"`
+Then run this script from the repository root:
+```bash
+./scripts/run_mypy.sh
+```
+Note that we expect mypy to have version 0.760 or higher, and when type checking, use PyTorch 1.4 or 
+higher due to fixes to PyTorch type hints available in 1.4. We also use the Literal feature which is 
+available only in Python 3.8 or above. If type-checking using a previous version of Python, you will 
+need to install the typing-extension package which can be done with pip using `pip install typing-extensions`.
 
 #### Unit Tests
 
