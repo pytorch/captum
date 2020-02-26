@@ -1,6 +1,6 @@
 # Contributing to Captum
 
-We want to make contributing to Captum is as easy and transparent as possible.
+We want to make contributing to Captum as easy and transparent as possible.
 
 
 ## Development installation
@@ -18,11 +18,12 @@ pip install -e .[dev]
 
 #### Code Style
 
-Captum uses the [black](https://github.com/ambv/black) code formatter to
-enforce a common code style across the code base. black is installed easily via
-pip using `pip install black`, and run locally by calling
+Captum uses [black](https://github.com/ambv/black) and  [flake8](https://github.com/PyCQA/flake8) to
+enforce a common code style across the code base. black and flake8 installed easily via
+pip using `pip install black flake8`, and run locally by calling
 ```bash
 black .
+flake8 .
 ```
 from the repository root. No additional configuration should be needed (see the
 [black documentation](https://black.readthedocs.io/en/stable/installation_and_usage.html#usage)
@@ -37,7 +38,7 @@ isort
 from the repository root. No additional configuration should be needed.
 
 We feel strongly that having a consistent code style is extremely important, so
-CircleCI will fail on your PR if it does not adhere to the black formatting style or isort import ordering.
+CircleCI will fail on your PR if it does not adhere to the black or flake8 formatting style or isort import ordering.
 
 
 #### Type Hints
@@ -54,7 +55,9 @@ Then run this script from the repository root:
 ./scripts/run_mypy.sh
 ```
 Note that we expect mypy to have version 0.760 or higher, and when type checking, use PyTorch 1.4 or 
-higher due to fixes to PyTorch type hints available in 1.4.
+higher due to fixes to PyTorch type hints available in 1.4. We also use the Literal feature which is 
+available only in Python 3.8 or above. If type-checking using a previous version of Python, you will 
+need to install the typing-extension package which can be done with pip using `pip install typing-extensions`.
 
 #### Unit Tests
 
