@@ -12,7 +12,7 @@ from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
 from typing import Any, Tuple, Union, List
 from torch.nn import Module
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Test(BaseTest):
@@ -72,7 +72,7 @@ class Test(BaseTest):
     def _guided_backprop_test_assert(
         self,
         model: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
@@ -88,7 +88,7 @@ class Test(BaseTest):
         model: Module,
         layer: Module,
         neuron_index: Union[int, Tuple[int, ...]],
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
@@ -102,7 +102,10 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
 
     def _guided_backprop_matching_assert(
-        self, model: Module, output_layer: Module, test_input: TensorOrTupleOfTensors
+        self,
+        model: Module,
+        output_layer: Module,
+        test_input: TensorOrTupleOfTensorsGeneric,
     ):
         out = model(test_input)
         attrib = GuidedBackprop(model)

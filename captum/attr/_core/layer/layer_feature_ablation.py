@@ -4,7 +4,7 @@ from torch.nn.parallel.scatter_gather import scatter
 from torch import Tensor
 from torch.nn import Module
 
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
@@ -23,7 +23,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -50,14 +50,14 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        layer_baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        layer_baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        layer_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         attribute_to_layer_input: bool = False,
         perturbations_per_eval: int = 1,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:

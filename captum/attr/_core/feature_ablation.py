@@ -4,7 +4,7 @@ import torch
 
 from torch import Tensor, dtype
 
-from typing import Callable, List, Optional, Tuple, Union, Any, cast
+from typing import Callable, List, Tuple, Union, Any, cast
 
 from .._utils.common import (
     _find_output_mode_and_verify,
@@ -18,7 +18,7 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -34,18 +34,18 @@ class FeatureAblation(PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         perturbations_per_eval: int = 1,
         **kwargs: Any
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each input feature with a given baseline / reference, and

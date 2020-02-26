@@ -9,7 +9,7 @@ import torch
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._utils.gradient import _forward_layer_eval
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
@@ -98,7 +98,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron_index: Union[int, Tuple[int, ...]],
         expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,

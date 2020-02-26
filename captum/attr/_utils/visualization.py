@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Iterable, Union, Tuple, Optional, Any, List
+from typing import Iterable, Union, Tuple, Any, List
 
 from enum import Enum
 import numpy as np
@@ -86,15 +86,15 @@ def _normalize_image_attr(
 
 def visualize_image_attr(
     attr: ndarray,
-    original_image: Optional[ndarray] = None,
+    original_image: Union[None, ndarray] = None,
     method: str = "heat_map",
     sign: str = "absolute_value",
-    plt_fig_axis: Optional[Tuple[figure, axis]] = None,
+    plt_fig_axis: Union[None, Tuple[figure, axis]] = None,
     outlier_perc: Union[int, float] = 2,
-    cmap: Optional[str] = None,
+    cmap: Union[None, str] = None,
     alpha_overlay: float = 0.5,
     show_colorbar: bool = False,
-    title: Optional[str] = None,
+    title: Union[None, str] = None,
     fig_size: Tuple[int, int] = (6, 6),
     use_pyplot: bool = True,
 ):
@@ -308,10 +308,10 @@ def visualize_image_attr(
 
 def visualize_image_attr_multiple(
     attr: ndarray,
-    original_image: Optional[ndarray],
+    original_image: Union[None, ndarray],
     methods: List[str],
     signs: List[str],
-    titles: Optional[List[str]] = None,
+    titles: Union[None, List[str]] = None,
     fig_size: Tuple[int, int] = (8, 6),
     use_pyplot: bool = True,
     **kwargs: Any

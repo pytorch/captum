@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Optional, Tuple, Union, Any, List, Callable, cast, TYPE_CHECKING
+from typing import Tuple, Union, Any, List, Callable, cast
 
 import warnings
 import torch
@@ -31,15 +31,7 @@ from .._utils.common import (
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensors
-
-if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -85,49 +77,51 @@ class DeepLift(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
+        return_convergence_delta: Literal[False] = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r""""
         Implements DeepLIFT algorithm based on the following paper:
         Learning Important Features Through Propagating Activation Differences,
@@ -357,8 +351,8 @@ class DeepLift(GradientAttribution):
         self,
         forward_func: Callable,
         inputs: Tuple,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
     ) -> Callable:
@@ -548,43 +542,51 @@ class DeepLiftShap(DeepLift):
     @typing.overload  # type: ignore
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
+        return_convergence_delta: Literal[False] = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
         Extends DeepLift algorithm and approximates SHAP values using Deeplift.
         For each input sample it computes DeepLift attribution with respect to
@@ -765,7 +767,7 @@ class DeepLiftShap(DeepLift):
             target=exp_tgt,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=cast(
-                Union["Literal"[True], "Literal"[False]], return_convergence_delta
+                Literal[True, False], return_convergence_delta
             ),
             custom_attribution_func=custom_attribution_func,
         )
@@ -788,14 +790,14 @@ class DeepLiftShap(DeepLift):
         self,
         baselines: Tuple[Tensor, ...],
         inputs: Tuple[Tensor, ...],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ],
         additional_forward_args: Any,
     ) -> Tuple[
         Tuple[Tensor, ...],
         Tuple[Tensor, ...],
-        Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]],
+        Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
         Any,
     ]:
         inp_bsz = inputs[0].shape[0]

@@ -7,7 +7,7 @@ from torch.nn import Module
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from .helpers.classification_models import SoftmaxModel
@@ -67,8 +67,8 @@ class Test(BaseTest):
     def _saliency_base_assert(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        expected: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        expected: TensorOrTupleOfTensorsGeneric,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
     ) -> None:

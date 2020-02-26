@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-from typing import Callable, Union, Tuple, List, Optional, Any
+from typing import Callable, Union, Tuple, List, Any
 import unittest
 
 import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -269,7 +269,7 @@ class Test(BaseTest):
     def _occlusion_test_assert(
         self,
         model: Callable,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             float,
             List[float],
@@ -277,15 +277,15 @@ class Test(BaseTest):
             Tuple[Union[Tensor, List[float], List[List[float]]], ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = 0,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        strides: Optional[Union[int, Tuple[Union[int, Tuple[int, ...]], ...]]] = None,
+        strides: Union[None, int, Tuple[Union[int, Tuple[int, ...]], ...]] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)

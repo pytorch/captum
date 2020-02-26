@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any, TYPE_CHECKING
+from typing import Callable, List, Tuple, Union, Any
 import torch
 from torch import Tensor
 
@@ -21,14 +21,7 @@ from captum.attr._utils.gradient import _forward_layer_eval
 from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.gradient import _run_forward
-
-if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
+from captum.attr._utils.typing import Literal
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
@@ -56,7 +49,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -83,17 +76,17 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-        return_convergence_delta: "Literal"[False] = False,
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
@@ -102,18 +95,18 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         *,
-        return_convergence_delta: "Literal"[True],
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
@@ -121,16 +114,16 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
@@ -322,8 +315,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         def gradient_func(
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
-            target_ind: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+            target_ind: Union[
+                None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
             ] = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:

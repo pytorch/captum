@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, Union, Tuple, Any, Type, List, Optional, cast
+from typing import Callable, Union, Tuple, Any, Type, List, cast
 
 import torch
 import torch.nn.functional as F
@@ -153,12 +153,12 @@ class GradientAttribution(Attribution):
     def compute_convergence_delta(
         self,
         attributions: Union[Tensor, Tuple[Tensor, ...]],
-        start_point: Optional[
-            Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
+        start_point: Union[
+            None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
     ) -> Tensor:
@@ -273,13 +273,13 @@ class GradientAttribution(Attribution):
             return input.view(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
-            start_eval_sum = _sum_rows(
+            start_out_sum = _sum_rows(
                 _run_forward(
                     self.forward_func, start_point, target, additional_forward_args
                 )
             )
 
-            end_eval_sum = _sum_rows(
+            end_out_sum = _sum_rows(
                 _run_forward(
                     self.forward_func, end_point, target, additional_forward_args
                 )
@@ -288,7 +288,7 @@ class GradientAttribution(Attribution):
             attr_sum = torch.stack(
                 [cast(Tensor, sum(row_sum)) for row_sum in zip(*row_sums)]
             )
-            _delta = attr_sum - (end_eval_sum - start_eval_sum)
+            _delta = attr_sum - (end_out_sum - start_out_sum)
         return _delta
 
 
@@ -320,7 +320,7 @@ class InternalAttribution(Attribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -353,7 +353,7 @@ class LayerAttribution(InternalAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -423,7 +423,7 @@ class NeuronAttribution(InternalAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:

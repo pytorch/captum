@@ -5,7 +5,7 @@ from torch import Tensor
 from torch.nn import Module
 
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any, TYPE_CHECKING
+from typing import Callable, List, Tuple, Union, Any
 
 import numpy as np
 
@@ -18,17 +18,9 @@ from ..._utils.common import (
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
 
 from ..noise_tunnel import NoiseTunnel
-
-if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
 
 
 class LayerGradientShap(LayerAttribution, GradientAttribution):
@@ -36,7 +28,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -61,16 +53,16 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable],
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
@@ -78,34 +70,33 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable],
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable],
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r"""
         Implements gradient SHAP for layer based on the implementation from SHAP's
@@ -321,7 +312,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ):
         r"""
         Args:
@@ -348,11 +339,11 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
@@ -362,12 +353,12 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
@@ -376,15 +367,14 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         baselines: Union[Tensor, Tuple[Tensor, ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         inputs, baselines = _format_input_baseline(inputs, baselines)
         rand_coefficient = torch.tensor(

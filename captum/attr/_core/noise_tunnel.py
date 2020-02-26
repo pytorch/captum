@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union, Any
+from typing import Tuple, Union, Any
 
 import torch
 from torch import Tensor
@@ -333,7 +333,7 @@ class NoiseTunnel(Attribution):
         attributions: Tuple[Tensor, ...],
         is_attrib_tuple: bool,
         return_convergence_delta: bool,
-        delta: Optional[Tensor],
+        delta: Union[None, Tensor],
     ):
         attributions = _format_attributions(is_attrib_tuple, attributions)
 

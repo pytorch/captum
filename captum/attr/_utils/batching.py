@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Optional, Tuple, Union, Iterator, Dict
+from typing import Any, Callable, List, Tuple, Union, Iterator, Dict
 
 import torch
 from torch import Tensor, device
 
 from .common import _format_input, _format_additional_forward_args
-from .typing import TensorOrTupleOfTensors, TupleOrTensorOrBool
+from .typing import TensorOrTupleOfTensorsGeneric, TupleOrTensorOrBool
 
 
 @typing.overload
@@ -20,8 +20,8 @@ def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple:
 
 
 def _tuple_splice_range(
-    inputs: Optional[Tuple], start: int, end: int
-) -> Optional[Tuple]:
+    inputs: Union[None, Tuple], start: int, end: int
+) -> Union[None, Tuple]:
     """
     Splices each tensor element of given tuple (inputs) from range start
     (inclusive) to end (non-inclusive) on its first dimension. If element
@@ -70,7 +70,7 @@ def _reduce_list(
 
 
 def _sort_key_list(
-    keys: List[device], device_ids: Optional[List[int]] = None
+    keys: List[device], device_ids: Union[None, List[int]] = None
 ) -> List[device]:
     """
     Sorts list of torch devices (keys) by given index list, device_ids. If keys
@@ -100,17 +100,17 @@ def _sort_key_list(
 
 
 def _batched_generator(
-    inputs: TensorOrTupleOfTensors,
+    inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    target_ind: Union[
+        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
     ] = None,
-    internal_batch_size: Optional[int] = None,
+    internal_batch_size: Union[None, int] = None,
 ) -> Iterator[
     Tuple[
         Tuple[Tensor, ...],
         Any,
-        Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]],
+        Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
     ]
 ]:
     """
@@ -145,12 +145,12 @@ def _batched_generator(
 
 def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBool],
-    inputs: TensorOrTupleOfTensors,
+    inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    target_ind: Union[
+        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
     ] = None,
-    internal_batch_size: Optional[int] = None,
+    internal_batch_size: Union[None, int] = None,
     **kwargs: Any
 ) -> TupleOrTensorOrBool:
     """

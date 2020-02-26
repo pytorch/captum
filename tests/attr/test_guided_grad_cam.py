@@ -10,7 +10,7 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 from torch.nn import Module
 from typing import Any
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Test(BaseTest):
@@ -87,7 +87,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected,
         additional_input: Any = None,
         interpolate_mode: str = "nearest",

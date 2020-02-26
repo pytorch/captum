@@ -6,7 +6,7 @@ from torch.nn import Module
 
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.classification_models import SoftmaxModel
 from .helpers.utils import assertArraysAlmostEqual, BaseTest
@@ -48,8 +48,8 @@ class Test(BaseTest):
     def _input_x_gradient_base_assert(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        expected_grads: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        expected_grads: TensorOrTupleOfTensorsGeneric,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
     ) -> None:

@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, TypeVar
+from typing import Tuple, TypeVar, TYPE_CHECKING
 from torch import Tensor
 
-TensorOrTupleOfTensors = TypeVar("TensorOrTupleOfTensors", Tensor, Tuple[Tensor, ...])
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal  # noqa: F401
+    else:
+        from typing_extensions import Literal  # noqa: F401
+else:
+    Literal = None
+
+TensorOrTupleOfTensorsGeneric = TypeVar(
+    "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
+)
 TupleOrTensorOrBool = TypeVar("TupleOrTensorOrBool", Tuple, Tensor, bool)

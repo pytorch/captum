@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any, TYPE_CHECKING
+from typing import Callable, List, Tuple, Union, Any
 
 import torch
 from torch import Tensor
@@ -18,15 +18,7 @@ from .._utils.common import (
     _is_tuple,
 )
 from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTupleOfTensors
-
-if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
 
 
 class IntegratedGradients(GradientAttribution):
@@ -62,55 +54,57 @@ class IntegratedGradients(GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-        return_convergence_delta: "Literal"[False] = False,
-    ) -> TensorOrTupleOfTensors:
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         *,
-        return_convergence_delta: "Literal"[True],
-    ) -> Tuple[TensorOrTupleOfTensors, Tensor]:
+        return_convergence_delta: Literal[True],
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a

@@ -4,10 +4,10 @@ from ..._utils.gradient import construct_neuron_grad_fn
 
 from ..deep_lift import DeepLift, DeepLiftShap
 
-from typing import Callable, Optional, Tuple, Union, Any, cast
+from typing import Callable, Tuple, Union, Any, cast
 from torch import Tensor
 from torch.nn import Module
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
@@ -29,15 +29,15 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Implements DeepLIFT algorithm for the neuron based on the following paper:
         Learning Important Features Through Propagating Activation Differences,
@@ -209,13 +209,15 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
         approximates SHAP values for given input `layer` and `neuron_index`.

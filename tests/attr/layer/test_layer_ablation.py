@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tuple, Union, Any
+from typing import List, Tuple, Union, Any
 
 import torch
 from torch import Tensor
@@ -141,13 +141,13 @@ class Test(BaseTest):
         layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ablation: Union[List, Tuple],
-        layer_mask: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[int] = 0,
+        target: Union[None, int] = 0,
         attribute_to_layer_input: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import typing
 from typing import (
-    Optional,
     Tuple,
     Union,
     overload,
@@ -20,16 +19,10 @@ from enum import Enum
 from inspect import signature
 
 from .approximation_methods import SUPPORTED_METHODS
-from .typing import TensorOrTupleOfTensors
+from .typing import TensorOrTupleOfTensorsGeneric, Literal
 
 if TYPE_CHECKING:
     from .attribution import GradientAttribution
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
 
 
 class ExpansionTypes(Enum):
@@ -38,12 +31,12 @@ class ExpansionTypes(Enum):
 
 
 @typing.overload
-def _is_tuple(inputs: Tensor) -> "Literal"[False]:
+def _is_tuple(inputs: Tensor) -> Literal[False]:
     ...
 
 
 @typing.overload
-def _is_tuple(inputs: Tuple[Tensor, ...]) -> "Literal"[True]:
+def _is_tuple(inputs: Tuple[Tensor, ...]) -> Literal[True]:
     ...
 
 
@@ -61,9 +54,7 @@ def safe_div(denom: Tensor, quotient: float, default_value: Tensor) -> Tensor:
 
 def _validate_target(
     num_samples: int,
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
 ) -> None:
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1
@@ -147,8 +138,8 @@ def _format_tensor_into_tuples(
 
 
 def _format_tensor_into_tuples(
-    inputs: Optional[Union[Tensor, Tuple[Tensor, ...]]]
-) -> Optional[Tuple[Tensor, ...]]:
+    inputs: Union[None, Tensor, Tuple[Tensor, ...]]
+) -> Union[None, Tuple[Tensor, ...]]:
     if inputs is None:
         return None
     if not isinstance(inputs, tuple):
@@ -163,7 +154,7 @@ def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ..
     return _format_tensor_into_tuples(inputs)
 
 
-def _format_additional_forward_args(additional_forward_args: Any) -> Optional[Tuple]:
+def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
     ):
@@ -172,9 +163,7 @@ def _format_additional_forward_args(additional_forward_args: Any) -> Optional[Tu
 
 
 def _format_baseline(
-    baselines: Optional[
-        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-    ],
+    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
     inputs: Tuple[Tensor, ...],
 ) -> Tuple[Union[Tensor, int, float], ...]:
     if baselines is None:
@@ -205,18 +194,14 @@ def _format_input_baseline(
 @typing.overload
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    baselines: Optional[
-        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-    ],
+    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     ...
 
 
 def _format_input_baseline(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    baselines: Optional[
-        Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-    ],
+    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     inputs = _format_input(inputs)
     baselines = _format_baseline(baselines, inputs)
@@ -228,12 +213,11 @@ def _format_input_baseline(
 # callable this will be kept in a separate function.
 @typing.overload
 def _format_callable_baseline(
-    baselines: Optional[
-        Union[
-            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
-            Tensor,
-            Tuple[Tensor, ...],
-        ]
+    baselines: Union[
+        None,
+        Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+        Tensor,
+        Tuple[Tensor, ...],
     ],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> Tuple[Tensor, ...]:
@@ -242,14 +226,13 @@ def _format_callable_baseline(
 
 @typing.overload
 def _format_callable_baseline(
-    baselines: Optional[
-        Union[
-            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
-            Tensor,
-            int,
-            float,
-            Tuple[Union[Tensor, int, float], ...],
-        ]
+    baselines: Union[
+        None,
+        Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+        Tensor,
+        int,
+        float,
+        Tuple[Union[Tensor, int, float], ...],
     ],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> Tuple[Union[Tensor, int, float], ...]:
@@ -257,14 +240,13 @@ def _format_callable_baseline(
 
 
 def _format_callable_baseline(
-    baselines: Optional[
-        Union[
-            Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
-            Tensor,
-            int,
-            float,
-            Tuple[Union[Tensor, int, float], ...],
-        ]
+    baselines: Union[
+        None,
+        Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
+        Tensor,
+        int,
+        float,
+        Tuple[Union[Tensor, int, float], ...],
     ],
     inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> Tuple[Union[Tensor, int, float], ...]:
@@ -282,14 +264,14 @@ def _format_callable_baseline(
 
 @typing.overload
 def _format_attributions(
-    is_inputs_tuple: "Literal"[True], attributions: Tuple[Tensor, ...]
+    is_inputs_tuple: Literal[True], attributions: Tuple[Tensor, ...]
 ) -> Tuple[Tensor, ...]:
     ...
 
 
 @typing.overload
 def _format_attributions(
-    is_inputs_tuple: "Literal"[False], attributions: Tuple[Tensor, ...]
+    is_inputs_tuple: Literal[False], attributions: Tuple[Tensor, ...]
 ) -> Tensor:
     ...
 
@@ -318,9 +300,7 @@ def _format_attributions(
 
 
 def _format_and_verify_strides(
-    strides: Optional[
-        Union[int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]]
-    ],
+    strides: Union[None, int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]],
     inputs: Tuple[Tensor, ...],
 ) -> Tuple[Union[int, Tuple[int, ...]], ...]:
     # Formats strides, which are necessary for occlusion
@@ -380,10 +360,8 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
-    is_inputs_tuple: "Literal"[False] = False,
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
+    is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     ...
 
@@ -396,14 +374,14 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
-    is_inputs_tuple: "Literal"[True],
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
+    is_inputs_tuple: Literal[True],
 ) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]:
     ...
 
 
+# FIXME: GradientAttribution is provided as a string due to a circular import.
+# This should be fixed when common is refactored into separate files.
 def _compute_conv_delta_and_format_attrs(
     attr_algo: "GradientAttribution",
     return_convergence_delta: bool,
@@ -411,9 +389,7 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
     is_inputs_tuple: bool = False,
 ) -> Union[
     Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
@@ -486,9 +462,7 @@ def _verify_select_column(
 
 def _select_targets(
     output: Tensor,
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
 ) -> Tensor:
     if target is None:
         return output
@@ -529,8 +503,8 @@ def _select_targets(
 def _run_forward(
     forward_func: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+    target: Union[
+        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
     ] = None,
     additional_forward_args: Any = None,
 ) -> Tensor:
@@ -556,7 +530,7 @@ def _expand_additional_forward_args(
     additional_forward_args: Any,
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
-) -> Optional[Tuple]:
+) -> Union[None, Tuple]:
     def _expand_tensor_forward_arg(
         additional_forward_arg: Tensor,
         n_steps: int,
@@ -586,12 +560,10 @@ def _expand_additional_forward_args(
 
 
 def _expand_target(
-    target: Optional[
-        Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-    ],
+    target: Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
-) -> Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]]:
+) -> Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]:
     if isinstance(target, list):
         if expansion_type == ExpansionTypes.repeat:
             return target * n_steps
@@ -648,8 +620,8 @@ def _call_custom_attribution_func(
 
 def _extract_device(
     module: Module,
-    hook_inputs: Union[Tensor, Tuple[Tensor, ...]],
-    hook_outputs: Optional[Union[Tensor, Tuple[Tensor, ...]]],
+    hook_inputs: Union[None, Tensor, Tuple[Tensor, ...]],
+    hook_outputs: Union[None, Tensor, Tuple[Tensor, ...]],
 ) -> device:
     params = list(module.parameters())
     if (
@@ -681,7 +653,7 @@ def _find_output_mode_and_verify(
     initial_eval: Union[int, float, Tensor],
     num_examples: int,
     perturbations_per_eval: int,
-    feature_mask: Optional[TensorOrTupleOfTensors],
+    feature_mask: Union[None, TensorOrTupleOfTensorsGeneric],
 ) -> bool:
     """
     This method identifies whether the model outputs a single output for a batch

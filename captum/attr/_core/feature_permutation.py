@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from .feature_ablation import FeatureAblation
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
@@ -33,15 +33,15 @@ class FeaturePermutation(FeatureAblation):
     # signature to the parent
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         **kwargs: Any
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         return FeatureAblation.attribute(
             self,
             inputs,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, Iterable
+from typing import Any, Callable, List, Tuple, Union, Iterable
 
 import torch
 from torch import Tensor
@@ -19,7 +19,7 @@ from .._utils.common import (
     _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Tensor]:
@@ -68,18 +68,18 @@ class ShapleyValueSampling(PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
@@ -354,19 +354,20 @@ class ShapleyValueSampling(PerturbationAttribution):
         self,
         inputs: Tuple[Tensor, ...],
         additional_args: Any,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
         ],
         baselines: Tuple[Tensor, ...],
-        input_masks: TensorOrTupleOfTensors,
+        input_masks: TensorOrTupleOfTensorsGeneric,
         feature_permutation: Tensor,
         perturbations_per_eval: int,
     ) -> Iterable[
         Tuple[
             Tuple[Tensor, ...],
             Any,
-            Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+            Union[
+                None,
+                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
             ],
             Tuple[Tensor, ...],
         ]

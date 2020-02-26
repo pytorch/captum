@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions, _format_input, _is_tuple
@@ -23,13 +23,13 @@ class Saliency(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         abs: bool = True,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         A baseline approach for computing input attribution. It returns
         the gradients with respect to inputs. If `abs` is set to True, which is

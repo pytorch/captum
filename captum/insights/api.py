@@ -8,7 +8,6 @@ from typing import (
     Iterable,
     List,
     NamedTuple,
-    Optional,
     Tuple,
     Union,
 )
@@ -97,7 +96,7 @@ class Batch:
     def __init__(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        labels: Optional[Tensor],
+        labels: Union[None, Tensor],
         additional_args=None,
     ):
         r"""
@@ -140,7 +139,7 @@ class AttributionVisualizer(object):
         classes: List[str],
         features: Union[List[BaseFeature], BaseFeature],
         dataset: Iterable[Batch],
-        score_func: Optional[Callable] = None,
+        score_func: Union[None, Callable] = None,
         use_label_for_attr: bool = True,
     ):
         r"""
@@ -199,7 +198,7 @@ class AttributionVisualizer(object):
         self._use_label_for_attr = use_label_for_attr
 
     def _calculate_attribution_from_cache(
-        self, index: int, target: Optional[Tensor]
+        self, index: int, target: Union[None, Tensor]
     ) -> VisualizationOutput:
         c = self._outputs[index][1]
         return self._calculate_vis_output(
@@ -209,10 +208,10 @@ class AttributionVisualizer(object):
     def _calculate_attribution(
         self,
         net: Module,
-        baselines: Optional[List[Tuple[Tensor, ...]]],
+        baselines: Union[None, List[Tuple[Tensor, ...]]],
         data: Tuple[Tensor, ...],
-        additional_forward_args: Optional[Tuple[Tensor, ...]],
-        label: Optional[Union[Tensor]],
+        additional_forward_args: Union[None, Tuple[Tensor, ...]],
+        label: Union[None, Tensor],
     ) -> Tensor:
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[self._config.attribution_method]
         attribution_method = attribution_cls(net)
@@ -399,7 +398,7 @@ class AttributionVisualizer(object):
 
     def _calculate_vis_output(
         self, inputs, additional_forward_args, label, target=None
-    ) -> Optional[VisualizationOutput]:
+    ) -> Union[None, VisualizationOutput]:
         net = self.models[0]  # TODO process multiple models
 
         # initialize baselines

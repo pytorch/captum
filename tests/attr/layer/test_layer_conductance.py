@@ -5,7 +5,7 @@ import unittest
 import torch
 from torch import Tensor
 from torch.nn import Module
-from typing import cast, Any, List, Optional, Tuple, Union
+from typing import cast, Any, List, Tuple, Union
 from captum.attr._core.layer.layer_conductance import LayerConductance
 
 from ..helpers.basic_models import (
@@ -137,8 +137,8 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_conductance: Union[List[List[float]], Tuple[List[List[float]], ...]],
-        baselines: Optional[
-            Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]]
+        baselines: Union[
+            None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
         ] = None,
         additional_args: Any = None,
     ) -> None:
@@ -170,7 +170,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: Tensor,
-        test_baseline: Optional[Tensor] = None,
+        test_baseline: Union[None, Tensor] = None,
     ) -> None:
         layer_output = None
 

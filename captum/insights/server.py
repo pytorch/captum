@@ -4,7 +4,7 @@ import os
 import socket
 import threading
 from time import sleep
-from typing import Optional
+from typing import Union
 
 from flask import Flask, jsonify, render_template, request
 from torch import Tensor
@@ -78,7 +78,7 @@ def run_app(debug: bool = True):
 
 
 def start_server(
-    _viz, blocking: bool = False, debug: bool = False, _port: Optional[int] = None
+    _viz, blocking: bool = False, debug: bool = False, _port: Union[None, int] = None
 ):
     global visualizer
     visualizer = _viz

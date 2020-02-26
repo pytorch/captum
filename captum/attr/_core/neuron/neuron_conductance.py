@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import torch
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
 from ..._utils.approximation_methods import approximation_parameters
@@ -18,7 +18,7 @@ from ..._utils.common import (
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -26,7 +26,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -59,20 +59,20 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             Computes conductance with respect to particular hidden neuron. The
             returned output is in the shape of the input, showing the attribution

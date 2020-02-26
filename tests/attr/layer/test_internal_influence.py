@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Union, Tuple, List, Optional, Any
+from typing import Union, Tuple, List, Any
 
 import unittest
 
@@ -152,8 +152,8 @@ class Test(BaseTest):
         expected_activation: Union[
             float, List[List[float]], Tuple[List[List[float]], ...]
         ],
-        baseline: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baseline: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,

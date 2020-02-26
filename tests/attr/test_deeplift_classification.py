@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union, Tuple, Optional, List
+from typing import Union, Tuple, List
 
 import torch
 from torch import Tensor
@@ -149,8 +149,8 @@ class Test(BaseTest):
         attr_method: Union[DeepLift, DeepLiftShap],
         input: Tensor,
         baselines,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ],
     ) -> None:
         # TODO add test cases for multiple different layers
@@ -174,8 +174,8 @@ class Test(BaseTest):
         inputs: Tensor,
         baselines: Union[Tensor, int, float],
         delta: Tensor,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)

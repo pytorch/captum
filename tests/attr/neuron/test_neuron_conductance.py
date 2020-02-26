@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tuple, Union, Any, cast
+from typing import List, Tuple, Union, Any, cast
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -14,7 +14,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import assertArraysAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Test(BaseTest):
@@ -109,7 +109,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron: Union[int, Tuple[int, ...]],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
@@ -149,9 +149,9 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
-        test_baseline: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        test_input: TensorOrTupleOfTensorsGeneric,
+        test_baseline: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
     ):
         layer_cond = LayerConductance(model, target_layer)

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 import typing
 from typing import (
-    Optional,
     Tuple,
     Union,
     Any,
     List,
     Callable,
     Sequence,
-    TYPE_CHECKING,
     cast,
 )
 
@@ -37,15 +35,7 @@ from ..._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
-from ..._utils.typing import TensorOrTupleOfTensors
-
-if TYPE_CHECKING:
-    import sys
-
-    if sys.version_info >= (3, 8):
-        from typing import Literal
-    else:
-        from typing_extensions import Literal  # noqa: F401
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
@@ -69,16 +59,16 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
@@ -86,36 +76,35 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
+        baselines: Union[
+            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r""""
         Implements DeepLIFT algorithm for the layer based on the following paper:
@@ -316,11 +305,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             input_base_additional_args,
         )
 
-        def chunk_output_fn(out: TensorOrTupleOfTensors,) -> Sequence:
+        def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
             if isinstance(out, Tensor):
                 return out.chunk(2)
-            else:
-                return tuple(out_sub.chunk(2) for out_sub in out)
+            return tuple(out_sub.chunk(2) for out_sub in out)
 
         (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
             wrapped_forward_func,
@@ -385,13 +373,13 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: "Literal"[False] = False,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
@@ -402,14 +390,14 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         *,
-        return_convergence_delta: "Literal"[True],
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
@@ -419,16 +407,15 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+        target: Union[
+            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
         ] = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r"""
         Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
@@ -624,7 +611,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             target=exp_target,
             additional_forward_args=exp_addit_args,
             return_convergence_delta=cast(
-                Union["Literal"[True], "Literal"[False]], return_convergence_delta
+                Literal[True, False], return_convergence_delta
             ),
             attribute_to_layer_input=attribute_to_layer_input,
             custom_attribution_func=custom_attribution_func,
