@@ -19,7 +19,7 @@ pip install -e .[dev]
 #### Code Style
 
 Captum uses [black](https://github.com/ambv/black) and  [flake8](https://github.com/PyCQA/flake8) to
-enforce a common code style across the code base. black and flake8 installed easily via
+enforce a common code style across the code base. black and flake8 are installed easily via
 pip using `pip install black flake8`, and run locally by calling
 ```bash
 black .
