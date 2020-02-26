@@ -1,6 +1,6 @@
 ---
 id: algorithms
-title: Algorithms
+title: Algorithm Descriptions
 ---
 
 Captum is a library within which different interpretability methods can be implemented.  The Captum team welcomes any contributions in the form of algorithms, methods or library extensions!  
