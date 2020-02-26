@@ -9,7 +9,6 @@ from typing import Optional
 from flask import Flask, jsonify, render_template, request
 from torch import Tensor
 
-
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
 )
@@ -94,7 +93,8 @@ def start_server(
         port = _port or get_free_tcp_port()
         print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
         # Start in a new thread to not block notebook execution
-        t = threading.Thread(target=run_app, kwargs={"debug": debug}).start()
+        t = threading.Thread(target=run_app, kwargs={"debug": debug})
+        t.start()
         sleep(0.01)  # add a short delay to allow server to start up
         if blocking:
             t.join()
