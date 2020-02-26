@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     else:
         from typing_extensions import Literal  # noqa: F401
 else:
-    Literal = None
+    Literal = {True: bool, False: bool, (True, False): bool}
 
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
