@@ -15,6 +15,7 @@ from ..._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
+from ..._utils.typing import TargetType
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):
@@ -47,9 +48,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        target: Union[
-            None, Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:

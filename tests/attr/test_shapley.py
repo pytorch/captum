@@ -257,7 +257,7 @@ class Test(BaseTest):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[BaselineType] = None,
+        baselines: BaselineType = None,
         target: Union[None, int] = 0,
         n_samples: int = 100,
         delta: float = 1.0,

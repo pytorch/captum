@@ -44,7 +44,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[BaselineType] = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,

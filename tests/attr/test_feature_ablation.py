@@ -372,7 +372,7 @@ class Test(BaseTest):
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
-        target: Union[TargetType] = 0,
+        target: TargetType = 0,
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = FeatureAblation(model)

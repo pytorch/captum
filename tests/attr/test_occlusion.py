@@ -281,7 +281,7 @@ class Test(BaseTest):
             Tuple[Union[Tensor, List[float], List[List[float]]], ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        target: Union[TargetType] = 0,
+        target: TargetType = 0,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,

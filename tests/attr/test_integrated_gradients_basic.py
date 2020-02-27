@@ -272,7 +272,7 @@ class Test(BaseTest):
         self,
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[BaselineType] = None,
+        baselines: BaselineType = None,
         target: Union[None, int] = None,
         additional_forward_args: Any = None,
         type: str = "vanilla",

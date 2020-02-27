@@ -4,7 +4,6 @@ import torch
 import unittest
 
 from torch.nn import Module
-from typing import Union
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -92,7 +91,7 @@ class Test(BaseTest):
         target: Tensor,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        baseline: Union[BaselineType] = None,
+        baseline: BaselineType = None,
     ) -> None:
         ig = IntegratedGradients(model.forward)
         model.zero_grad()

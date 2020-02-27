@@ -150,7 +150,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_baseline: Union[BaselineType] = None,
+        test_baseline: BaselineType = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(

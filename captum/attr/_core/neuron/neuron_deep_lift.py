@@ -31,7 +31,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[BaselineType] = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,

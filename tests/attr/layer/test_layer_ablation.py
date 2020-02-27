@@ -145,7 +145,7 @@ class Test(BaseTest):
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[BaselineType] = None,
+        baselines: BaselineType = None,
         target: Union[None, int] = 0,
         attribute_to_layer_input: bool = False,
     ) -> None:

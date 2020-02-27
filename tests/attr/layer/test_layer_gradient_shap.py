@@ -16,7 +16,7 @@ from ..helpers.basic_models import (
 
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 from ..test_gradient_shap import _assert_attribution_delta
 
@@ -121,7 +121,7 @@ class Test(BaseTest):
         layer: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
-        target: Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
+        target: TargetType,
         expected: Union[
             Tensor,
             Tuple[Tensor, ...],

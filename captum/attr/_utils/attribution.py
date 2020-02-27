@@ -158,7 +158,7 @@ class GradientAttribution(Attribution):
             None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
-        target: Union[TargetType] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
     ) -> Tensor:
         r"""

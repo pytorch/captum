@@ -52,7 +52,7 @@ def safe_div(denom: Tensor, quotient: float, default_value: Tensor) -> Tensor:
     return denom / quotient if quotient != 0.0 else default_value
 
 
-def _validate_target(num_samples: int, target: Union[TargetType],) -> None:
+def _validate_target(num_samples: int, target: TargetType) -> None:
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1
     ):
@@ -354,7 +354,7 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Union[TargetType],
+    target: TargetType,
     is_inputs_tuple: Literal[False] = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     ...
@@ -368,7 +368,7 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Union[TargetType],
+    target: TargetType,
     is_inputs_tuple: Literal[True],
 ) -> Union[Tuple[Tensor, ...], Tuple[Tuple[Tensor, ...], Tensor]]:
     ...
@@ -383,7 +383,7 @@ def _compute_conv_delta_and_format_attrs(
     start_point: Union[int, float, Tensor, Tuple[Union[int, float, Tensor], ...]],
     end_point: Union[Tensor, Tuple[Tensor, ...]],
     additional_forward_args: Any,
-    target: Union[TargetType],
+    target: TargetType,
     is_inputs_tuple: bool = False,
 ) -> Union[
     Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
@@ -454,7 +454,7 @@ def _verify_select_column(
     return output[(slice(None), *target)]
 
 
-def _select_targets(output: Tensor, target: Union[TargetType],) -> Tensor:
+def _select_targets(output: Tensor, target: TargetType) -> Tensor:
     if target is None:
         return output
 
@@ -494,7 +494,7 @@ def _select_targets(output: Tensor, target: Union[TargetType],) -> Tensor:
 def _run_forward(
     forward_func: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target: Union[TargetType] = None,
+    target: TargetType = None,
     additional_forward_args: Any = None,
 ) -> Tensor:
     forward_func_args = signature(forward_func).parameters
@@ -549,10 +549,10 @@ def _expand_additional_forward_args(
 
 
 def _expand_target(
-    target: Union[TargetType],
+    target: TargetType,
     n_steps: int,
     expansion_type: ExpansionTypes = ExpansionTypes.repeat,
-) -> Union[TargetType]:
+) -> TargetType:
     if isinstance(target, list):
         if expansion_type == ExpansionTypes.repeat:
             return target * n_steps

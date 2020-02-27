@@ -150,7 +150,7 @@ class Test(BaseTest):
         attr_method: Union[DeepLift, DeepLiftShap],
         input: Tensor,
         baselines,
-        target: Union[TargetType],
+        target: TargetType,
     ) -> None:
         # TODO add test cases for multiple different layers
         model.zero_grad()
@@ -173,7 +173,7 @@ class Test(BaseTest):
         inputs: Tensor,
         baselines: Union[Tensor, int, float],
         delta: Tensor,
-        target: Union[TargetType] = None,
+        target: TargetType = None,
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)
 

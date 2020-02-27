@@ -153,7 +153,7 @@ class Test(BaseTest):
         expected_activation: Union[
             float, List[List[float]], Tuple[List[List[float]], ...]
         ],
-        baseline: Union[BaselineType] = None,
+        baseline: BaselineType = None,
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,
     ):

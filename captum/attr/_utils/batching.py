@@ -106,9 +106,9 @@ def _sort_key_list(
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Union[TargetType] = None,
+    target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
-) -> Iterator[Tuple[Tuple[Tensor, ...], Any, Union[TargetType]]]:
+) -> Iterator[Tuple[Tuple[Tensor, ...], Any, TargetType]]:
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
@@ -143,7 +143,7 @@ def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBool],
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Union[TargetType] = None,
+    target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
     **kwargs: Any
 ) -> TupleOrTensorOrBool:
