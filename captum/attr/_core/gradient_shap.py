@@ -18,6 +18,7 @@ from .._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     Literal,
     TargetType,
+    BaselineType,
 )
 import typing
 
@@ -281,9 +282,7 @@ class InputBaselineXGradient(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
@@ -295,9 +294,7 @@ class InputBaselineXGradient(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
@@ -307,9 +304,7 @@ class InputBaselineXGradient(GradientAttribution):
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
