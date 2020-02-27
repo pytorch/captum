@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable
 
 import torch
-from torch import Tensor
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .._utils.attribution import GradientAttribution

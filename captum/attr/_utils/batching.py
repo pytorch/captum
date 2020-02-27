@@ -104,7 +104,7 @@ def _batched_generator(
     additional_forward_args: Any = None,
     target_ind: Union[TargetType] = None,
     internal_batch_size: Union[None, int] = None,
-) -> Iterator[Tuple[Tuple[Tensor, ...], Any, Union[TargetType],]]:
+) -> Iterator[Tuple[Tuple[Tensor, ...], Any, Union[TargetType]]]:
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,

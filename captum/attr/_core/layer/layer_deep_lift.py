@@ -4,7 +4,6 @@ from typing import (
     Tuple,
     Union,
     Any,
-    List,
     Callable,
     Sequence,
     cast,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union, Tuple, List
+from typing import Union
 
 import torch
 from torch import Tensor

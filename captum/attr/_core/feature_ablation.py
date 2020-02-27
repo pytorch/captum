@@ -4,7 +4,7 @@ import torch
 
 from torch import Tensor, dtype
 
-from typing import Callable, List, Tuple, Union, Any, cast
+from typing import Any, Callable, Tuple, Union, cast
 
 from .._utils.common import (
     _find_output_mode_and_verify,

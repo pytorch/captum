@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Tuple, Union, Any
-from torch import Tensor
+from typing import Any, Callable
 
 from .._utils.common import _format_input, _format_attributions, _is_tuple
 from .._utils.attribution import GradientAttribution
