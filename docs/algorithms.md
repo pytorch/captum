@@ -10,9 +10,9 @@ The algorithms in Captum are separated into three groups, primary attribution, l
 * Layer Attribution: Evaluates contribution of each neuron in a given layer to the output of the model.
 * Neuron Attribution: Evaluates contribution of each input feature on the activation of a particular hidden neuron.
 
-Below is a short summary of the various methods currently implemented for general, layer, and neuron attribution within Captum, as well as noise tunnel, which can be used to smooth the results of any attribution method.
+Below is a short summary of the various methods currently implemented for primary, layer, and neuron attribution within Captum, as well as noise tunnel, which can be used to smooth the results of any attribution method.
 
-## General Attribution
+## Primary Attribution
 ### Integrated Gradients
 Integrated gradients represents the integral of gradients with respect to inputs along the path from a given baseline to input. The integral can be approximated using a Riemann Sum or Gauss Legendre quadrature rule. Formally, it can be described as follows:
 
@@ -155,28 +155,28 @@ To learn more about GradCAM, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1610.02391)
 - [Website](http://gradcam.cloudcv.org/)
 
-## Layer Integrated Gradients
+### Layer Integrated Gradients
 Layer integrated gradients represents the integral of gradients with respect to the layer inputs / outputs along the straight-line path from the layer activations at the given baseline to the layer activation at the input.
 
 To learn more about Integrated Gradients, see this [section](###Integrated-Gradients) above. 
 
-## Layer GradientSHAP
+### Layer GradientSHAP
 Layer GradientSHAP is the analog of GradientSHAP for a particular layer. Layer GradientSHAP adds Gaussian noise to each input sample multiple times, selects a random point along the path between baseline and input, and computes the gradient of the output with respect to the identified layer. The final SHAP values approximate the expected value of gradients * (layer activation of inputs - layer activation of baselines).
 
 To learn more about Gradient SHAP, see this [section](###Gradient-SHAP) above.
 
-## Layer DeepLIFT
+### Layer DeepLIFT
 Layer DeepLIFT is the analog of the DeepLIFT method for hidden layers in a network. 
 
 To learn more about DeepLIFT, see this [section](###DeepLIFT) above.
 
-## Layer DeepLIFT SHAP
+### Layer DeepLIFT SHAP
 
 Layer DeepLIFT SHAP is the analog of DeepLIFT SHAP for a particular layer. Layer DeepLIFT SHAP takes a distribution of baselines and computes the Layer DeepLIFT attribution for each input-baseline pair and averages the resulting attributions per input example.
 
 To learn more about DeepLIFT SHAP, see this [section](###DeepLIFT-SHAP) above.
 
-## Layer Feature Ablation
+### Layer Feature Ablation
 Layer feature ablation is the analog of feature ablation for an identified layer input or output. It is a perturbation based approach to compute attribution, involving replacing each value in the identified layer with a given baseline / reference value (e.g. 0), and computing the difference in output. Values within the layer can also be grouped and ablated together rather than individually.
 
 ## Neuron Attribution
