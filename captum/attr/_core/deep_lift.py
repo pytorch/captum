@@ -31,7 +31,7 @@ from .._utils.common import (
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -81,9 +81,7 @@ class DeepLift(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -97,9 +95,7 @@ class DeepLift(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -113,9 +109,7 @@ class DeepLift(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -351,9 +345,7 @@ class DeepLift(GradientAttribution):
         self,
         forward_func: Callable,
         inputs: Tuple,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
     ) -> Callable:
         def forward_fn():
@@ -546,9 +538,7 @@ class DeepLiftShap(DeepLift):
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -562,9 +552,7 @@ class DeepLiftShap(DeepLift):
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -578,9 +566,7 @@ class DeepLiftShap(DeepLift):
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
@@ -790,15 +776,10 @@ class DeepLiftShap(DeepLift):
         self,
         baselines: Tuple[Tensor, ...],
         inputs: Tuple[Tensor, ...],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ],
+        target: TargetType,
         additional_forward_args: Any,
     ) -> Tuple[
-        Tuple[Tensor, ...],
-        Tuple[Tensor, ...],
-        Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
-        Any,
+        Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any,
     ]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]

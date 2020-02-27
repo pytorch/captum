@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from .feature_ablation import FeatureAblation
-from .._utils.typing import TensorOrTupleOfTensorsGeneric
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
@@ -34,9 +34,7 @@ class FeaturePermutation(FeatureAblation):
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,

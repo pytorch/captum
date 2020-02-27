@@ -21,7 +21,7 @@ from captum.attr._utils.gradient import _forward_layer_eval
 from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.gradient import _run_forward
-from captum.attr._utils.typing import Literal
+from captum.attr._utils.typing import Literal, TargetType
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
@@ -79,9 +79,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -98,9 +96,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -117,9 +113,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -315,9 +309,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         def gradient_func(
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
-            target_ind: Union[
-                None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-            ] = None,
+            target_ind: TargetType = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None:

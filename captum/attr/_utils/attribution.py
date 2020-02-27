@@ -14,6 +14,7 @@ from .common import (
     _validate_target,
 )
 from .gradient import compute_gradients
+from .typing import TargetType
 
 from torch import Tensor
 from torch.nn import Module
@@ -157,9 +158,7 @@ class GradientAttribution(Attribution):
             None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
         ],
         end_point: Union[Tensor, Tuple[Tensor, ...]],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: Union[TargetType] = None,
         additional_forward_args: Any = None,
     ) -> Tensor:
         r"""

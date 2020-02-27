@@ -18,7 +18,7 @@ from ..._utils.common import (
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -64,9 +64,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",

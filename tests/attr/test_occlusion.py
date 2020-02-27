@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -277,9 +277,7 @@ class Test(BaseTest):
             Tuple[Union[Tensor, List[float], List[List[float]]], ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = 0,
+        target: Union[TargetType] = 0,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: Union[

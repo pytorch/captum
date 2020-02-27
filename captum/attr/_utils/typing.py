@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, TypeVar, TYPE_CHECKING
+from typing import Tuple, TypeVar, TYPE_CHECKING, Union, List
 from torch import Tensor
 
 if TYPE_CHECKING:
@@ -17,3 +17,4 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
 TupleOrTensorOrBool = TypeVar("TupleOrTensorOrBool", Tuple, Tensor, bool)
+TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]

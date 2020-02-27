@@ -18,6 +18,7 @@ from ..._utils.common import (
     _expand_target,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.typing import TargetType
 
 
 class InternalInfluence(LayerAttribution, GradientAttribution):
@@ -53,9 +54,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",

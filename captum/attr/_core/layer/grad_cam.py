@@ -16,6 +16,7 @@ from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
+from ..._utils.typing import TargetType
 
 
 class LayerGradCam(LayerAttribution, GradientAttribution):
@@ -46,9 +47,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,

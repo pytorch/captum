@@ -15,6 +15,7 @@ from ..._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
+from ..._utils.typing import TargetType
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):

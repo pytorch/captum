@@ -35,7 +35,7 @@ from ..._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
@@ -62,9 +62,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
@@ -79,9 +77,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -96,9 +92,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
@@ -373,9 +367,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
@@ -390,9 +382,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -407,9 +397,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         baselines: Union[
             Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
         ],
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,

@@ -18,7 +18,7 @@ from .._utils.common import (
     _is_tuple,
 )
 from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
 
 
 class IntegratedGradients(GradientAttribution):
@@ -58,9 +58,7 @@ class IntegratedGradients(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -76,9 +74,7 @@ class IntegratedGradients(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
@@ -94,9 +90,7 @@ class IntegratedGradients(GradientAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",

@@ -13,7 +13,7 @@ from .._utils.common import (
 
 from .noise_tunnel import NoiseTunnel
 from typing import Callable, Union, Tuple, List, Any
-from .._utils.typing import Tensor, TensorOrTupleOfTensorsGeneric, Literal
+from .._utils.typing import Tensor, TensorOrTupleOfTensorsGeneric, Literal, TargetType
 import typing
 
 
@@ -36,9 +36,7 @@ class GradientShap(GradientAttribution):
         ],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -54,9 +52,7 @@ class GradientShap(GradientAttribution):
         ],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -70,9 +66,7 @@ class GradientShap(GradientAttribution):
         ],
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 0.0,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
     ) -> Union[
@@ -285,9 +279,7 @@ class InputBaselineXGradient(GradientAttribution):
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         *,
         return_convergence_delta: Literal[True],
@@ -301,9 +293,7 @@ class InputBaselineXGradient(GradientAttribution):
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -315,9 +305,7 @@ class InputBaselineXGradient(GradientAttribution):
         baselines: Union[
             Tensor, int, float, Tuple[Union[Tensor, int, float], ...], None
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
     ) -> Union[

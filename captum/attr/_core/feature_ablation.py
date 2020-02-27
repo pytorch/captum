@@ -18,7 +18,7 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -38,9 +38,7 @@ class FeatureAblation(PerturbationAttribution):
         baselines: Union[
             None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
         ] = None,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         perturbations_per_eval: int = 1,

@@ -15,7 +15,7 @@ from typing import (
 import torch
 from torch import Tensor, device
 from torch.nn import Module
-from .typing import TensorOrTupleOfTensorsGeneric, Literal
+from .typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
 
@@ -79,9 +79,7 @@ def undo_gradient_requirements(
 def compute_gradients(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
 ) -> Tuple[Tensor, ...]:
     r"""
@@ -162,9 +160,7 @@ def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
@@ -177,9 +173,7 @@ def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     *,
@@ -192,9 +186,7 @@ def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
@@ -401,9 +393,7 @@ def compute_layer_gradients_and_eval(
     forward_fn: Callable,
     layer: Module,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     *,
     gradient_neuron_index: Union[int, Tuple[int, ...]],
@@ -421,9 +411,7 @@ def compute_layer_gradients_and_eval(
     forward_fn: Callable,
     layer: Module,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     gradient_neuron_index: None = None,
     device_ids: Union[None, List[int]] = None,
@@ -439,9 +427,7 @@ def compute_layer_gradients_and_eval(
     forward_fn: Callable,
     layer: Module,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     additional_forward_args: Any = None,
     gradient_neuron_index: Union[None, int, Tuple[int, ...]] = None,
     device_ids: Union[None, List[int]] = None,
@@ -563,9 +549,7 @@ def construct_neuron_grad_fn(
     def grad_fn(
         forward_fn: Callable,
         inputs: TensorOrTupleOfTensorsGeneric,
-        target_ind: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target_ind: Union[TargetType] = None,
         additional_forward_args: Any = None,
     ) -> Tuple[Tensor, ...]:
         _, grads, _ = _forward_layer_eval_with_neuron_grads(

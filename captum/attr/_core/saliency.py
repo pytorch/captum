@@ -9,6 +9,7 @@ from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.typing import TargetType
 
 
 class Saliency(GradientAttribution):
@@ -24,9 +25,7 @@ class Saliency(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         abs: bool = True,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:

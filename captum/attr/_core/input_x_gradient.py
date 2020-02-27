@@ -5,7 +5,7 @@ from torch import Tensor
 from .._utils.common import _format_input, _format_attributions, _is_tuple
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensorsGeneric
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class InputXGradient(GradientAttribution):
@@ -21,9 +21,7 @@ class InputXGradient(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""

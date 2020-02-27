@@ -6,7 +6,7 @@ import torch
 from torch import Tensor, device
 
 from .common import _format_input, _format_additional_forward_args
-from .typing import TensorOrTupleOfTensorsGeneric, TupleOrTensorOrBool
+from .typing import TensorOrTupleOfTensorsGeneric, TupleOrTensorOrBool, TargetType
 
 
 @typing.overload
@@ -102,17 +102,9 @@ def _sort_key_list(
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     internal_batch_size: Union[None, int] = None,
-) -> Iterator[
-    Tuple[
-        Tuple[Tensor, ...],
-        Any,
-        Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
-    ]
-]:
+) -> Iterator[Tuple[Tuple[Tensor, ...], Any, Union[TargetType],]]:
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
@@ -147,9 +139,7 @@ def _batched_operator(
     operator: Callable[..., TupleOrTensorOrBool],
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
-    target_ind: Union[
-        None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-    ] = None,
+    target_ind: Union[TargetType] = None,
     internal_batch_size: Union[None, int] = None,
     **kwargs: Any
 ) -> TupleOrTensorOrBool:

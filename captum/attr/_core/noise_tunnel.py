@@ -21,6 +21,7 @@ from .._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
+from .._utils.typing import TargetType
 
 
 class NoiseTunnelType(Enum):

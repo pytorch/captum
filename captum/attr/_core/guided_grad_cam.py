@@ -11,7 +11,7 @@ from .guided_backprop_deconvnet import GuidedBackprop
 from torch.nn import Module
 from torch import Tensor
 from typing import List, Tuple, Any, Union
-from .._utils.typing import TensorOrTupleOfTensorsGeneric
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class GuidedGradCam(GradientAttribution):
@@ -38,9 +38,7 @@ class GuidedGradCam(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        target: Union[
-            None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
