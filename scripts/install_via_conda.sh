@@ -30,10 +30,10 @@ fi
 
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   # install CPU version for much smaller download
-  conda update -y pytorch cpuonly -c pytorch-nightly
+  conda install -y pytorch cpuonly -c pytorch-nightly
 else
  # install CPU version for much smaller download
- conda update -y -c pytorch pytorch-cpu
+ conda install -y -c pytorch pytorch-cpu
 fi
 
 # install other deps
