@@ -10,7 +10,7 @@ from .._utils.common import (
     _format_and_verify_strides,
     _format_and_verify_sliding_window_shapes,
 )
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 from .feature_ablation import FeatureAblation
 
@@ -33,9 +33,7 @@ class Occlusion(FeatureAblation):
         strides: Union[
             None, int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]
         ] = None,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,

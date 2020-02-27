@@ -19,7 +19,7 @@ from enum import Enum
 from inspect import signature
 
 from .approximation_methods import SUPPORTED_METHODS
-from .typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from .typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType, BaselineType
 
 if TYPE_CHECKING:
     from .attribution import GradientAttribution
@@ -160,8 +160,7 @@ def _format_additional_forward_args(additional_forward_args: Any) -> Union[None,
 
 
 def _format_baseline(
-    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
-    inputs: Tuple[Tensor, ...],
+    baselines: BaselineType, inputs: Tuple[Tensor, ...],
 ) -> Tuple[Union[Tensor, int, float], ...]:
     if baselines is None:
         return _zeros(inputs)
@@ -190,15 +189,13 @@ def _format_input_baseline(
 
 @typing.overload
 def _format_input_baseline(
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
+    inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     ...
 
 
 def _format_input_baseline(
-    inputs: Union[Tensor, Tuple[Tensor, ...]],
-    baselines: Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]],
+    inputs: Union[Tensor, Tuple[Tensor, ...]], baselines: BaselineType,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Union[Tensor, int, float], ...]]:
     inputs = _format_input(inputs)
     baselines = _format_baseline(baselines, inputs)

@@ -18,3 +18,4 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
 )
 TupleOrTensorOrBool = TypeVar("TupleOrTensorOrBool", Tuple, Tensor, bool)
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]

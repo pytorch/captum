@@ -11,7 +11,7 @@ from .guided_backprop_deconvnet import GuidedBackprop
 from torch.nn import Module
 from torch import Tensor
 from typing import Any, List, Union
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class GuidedGradCam(GradientAttribution):

@@ -15,7 +15,11 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from captum.attr._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    TargetType,
+    BaselineType,
+)
 
 
 class Test(BaseTest):
@@ -367,9 +371,7 @@ class Test(BaseTest):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: Union[TargetType] = 0,
     ) -> None:
         for batch_size in perturbations_per_eval:

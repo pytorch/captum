@@ -8,6 +8,7 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.layer.internal_influence import InternalInfluence
+from captum.attr._utils.typing import BaselineType
 
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -152,9 +153,7 @@ class Test(BaseTest):
         expected_activation: Union[
             float, List[List[float]], Tuple[List[List[float]], ...]
         ],
-        baseline: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baseline: Union[BaselineType] = None,
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,
     ):

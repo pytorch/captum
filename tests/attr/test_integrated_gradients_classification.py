@@ -4,11 +4,11 @@ import torch
 import unittest
 
 from torch.nn import Module
-from typing import Tuple, Union
+from typing import Union
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.typing import Tensor
+from captum.attr._utils.typing import Tensor, BaselineType
 
 from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
@@ -92,9 +92,7 @@ class Test(BaseTest):
         target: Tensor,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        baseline: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baseline: Union[BaselineType] = None,
     ) -> None:
         ig = IntegratedGradients(model.forward)
         model.zero_grad()

@@ -34,7 +34,12 @@ from ..._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from ..._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+    BaselineType,
+)
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
@@ -58,9 +63,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
@@ -73,9 +76,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
@@ -88,9 +89,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,

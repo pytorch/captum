@@ -15,7 +15,7 @@ from ..._utils.common import (
     _extract_device,
 )
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import TargetType
+from ..._utils.typing import TargetType, BaselineType
 from ..feature_ablation import FeatureAblation
 
 
@@ -51,9 +51,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        layer_baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        layer_baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,

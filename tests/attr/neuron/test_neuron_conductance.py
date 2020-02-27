@@ -14,7 +14,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import assertArraysAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 
 class Test(BaseTest):
@@ -150,9 +150,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_baseline: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        test_baseline: Union[BaselineType] = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(

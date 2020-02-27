@@ -31,7 +31,12 @@ from .._utils.common import (
 )
 from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from .._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+    BaselineType,
+)
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -78,9 +83,7 @@ class DeepLift(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
@@ -92,9 +95,7 @@ class DeepLift(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         *,
@@ -106,9 +107,7 @@ class DeepLift(GradientAttribution):
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,

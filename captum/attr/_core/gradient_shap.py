@@ -13,7 +13,12 @@ from .._utils.common import (
 
 from .noise_tunnel import NoiseTunnel
 from typing import Any, Callable, Tuple, Union
-from .._utils.typing import Tensor, TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from .._utils.typing import (
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+)
 import typing
 
 

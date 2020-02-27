@@ -18,7 +18,11 @@ from ..._utils.common import (
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from ..._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+)
 
 from ..noise_tunnel import NoiseTunnel
 

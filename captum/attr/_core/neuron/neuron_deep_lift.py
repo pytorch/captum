@@ -7,7 +7,7 @@ from ..deep_lift import DeepLift, DeepLiftShap
 from typing import Callable, Tuple, Union, Any, cast
 from torch import Tensor
 from torch.nn import Module
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
@@ -31,9 +31,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,

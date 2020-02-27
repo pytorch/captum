@@ -18,7 +18,7 @@ from .._utils.common import (
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -35,9 +35,7 @@ class FeatureAblation(PerturbationAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,

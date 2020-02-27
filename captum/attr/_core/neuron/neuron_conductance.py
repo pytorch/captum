@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import torch
 from typing import Callable, List, Tuple, Union, Any
-from torch import Tensor
 from torch.nn import Module
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
@@ -18,7 +17,7 @@ from ..._utils.common import (
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -61,9 +60,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

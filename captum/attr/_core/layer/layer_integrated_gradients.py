@@ -21,7 +21,7 @@ from captum.attr._utils.gradient import _forward_layer_eval
 from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.gradient import _run_forward
-from captum.attr._utils.typing import Literal, TargetType
+from captum.attr._utils.typing import Literal, TargetType, BaselineType
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
@@ -76,9 +76,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -93,9 +91,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -110,9 +106,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

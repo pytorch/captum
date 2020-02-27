@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 from typing import Tuple, Union, Any, List
 
@@ -221,9 +221,7 @@ class Test(BaseTest):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         neuron_index: Union[int, Tuple[int, ...]] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:

@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
+from captum.attr._utils.typing import BaselineType
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
@@ -144,9 +145,7 @@ class Test(BaseTest):
         layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         target: Union[None, int] = 0,
         attribute_to_layer_input: bool = False,
     ) -> None:

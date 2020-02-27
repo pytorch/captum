@@ -19,7 +19,7 @@ from .._utils.common import (
     _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 def _perm_generator(num_features: int, num_samples: int) -> Iterable[Tensor]:
@@ -69,9 +69,7 @@ class ShapleyValueSampling(PerturbationAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,

@@ -18,7 +18,7 @@ from ..._utils.common import (
     _expand_target,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TargetType
+from ..._utils.typing import TargetType, BaselineType
 
 
 class InternalInfluence(LayerAttribution, GradientAttribution):
@@ -51,9 +51,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

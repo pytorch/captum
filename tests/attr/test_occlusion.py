@@ -6,7 +6,11 @@ import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from captum.attr._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    TargetType,
+    BaselineType,
+)
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -280,9 +284,7 @@ class Test(BaseTest):
         target: Union[TargetType] = 0,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         strides: Union[None, int, Tuple[Union[int, Tuple[int, ...]], ...]] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:

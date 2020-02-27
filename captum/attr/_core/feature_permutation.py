@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from .feature_ablation import FeatureAblation
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:

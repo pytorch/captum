@@ -18,7 +18,12 @@ from .._utils.common import (
     _is_tuple,
 )
 from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from .._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+    BaselineType,
+)
 
 
 class IntegratedGradients(GradientAttribution):
@@ -55,9 +60,7 @@ class IntegratedGradients(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -71,9 +74,7 @@ class IntegratedGradients(GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -87,9 +88,7 @@ class IntegratedGradients(GradientAttribution):
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,

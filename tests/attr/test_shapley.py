@@ -5,10 +5,9 @@ from typing import Any, Callable, Tuple, Union
 import unittest
 
 import torch
-from torch import Tensor
 
 from captum.attr._core.shapley_value import ShapleyValueSampling
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
@@ -258,9 +257,7 @@ class Test(BaseTest):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         target: Union[None, int] = 0,
         n_samples: int = 100,
         delta: float = 1.0,

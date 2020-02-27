@@ -15,7 +15,7 @@ from typing import (
 import torch
 from torch import Tensor, device
 from torch.nn import Module
-from .typing import TensorOrTupleOfTensorsGeneric, Literal, TargetType
+from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
 

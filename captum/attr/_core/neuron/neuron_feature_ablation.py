@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import torch
-from torch import Tensor
 from torch.nn import Module
 from typing import Callable, List, Tuple, Union, Any
 
@@ -8,7 +7,7 @@ from typing import Callable, List, Tuple, Union, Any
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
 from ..._utils.common import _verify_select_column
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 from ..feature_ablation import FeatureAblation
 
@@ -45,9 +44,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,

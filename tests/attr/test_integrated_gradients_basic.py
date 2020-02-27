@@ -3,7 +3,11 @@
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _zeros, _tensorize_baseline
-from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.typing import (
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
+)
 
 from .helpers.basic_models import (
     BasicModel,
@@ -268,9 +272,7 @@ class Test(BaseTest):
         self,
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
-        baselines: Union[
-            None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]
-        ] = None,
+        baselines: Union[BaselineType] = None,
         target: Union[None, int] = None,
         additional_forward_args: Any = None,
         type: str = "vanilla",
