@@ -30,6 +30,7 @@ fi
 
 if [[ $PYTORCH_NIGHTLY == true ]]; then
   conda install -y -c pytorch-nightly pytorch
+  conda upgrade -y -c pytorch-nightly pytorch
 else
  # install CPU version for much smaller download
  conda install -y -c pytorch pytorch-cpu
