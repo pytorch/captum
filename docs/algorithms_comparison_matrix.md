@@ -74,7 +74,7 @@ title: Algorithm Comparison Matrix
      <td>#examples </td>
     <td>No</td>
     <td>The gradients of the output w.r.t. inputs.</td>
-  </tr>s
+  </tr>
   <tr>
     <td><strong>Guided BackProp˚ / DeconvNet˚</strong></td>
     <td>Gradient</td>
