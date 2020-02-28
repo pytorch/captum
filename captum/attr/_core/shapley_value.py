@@ -254,11 +254,6 @@ class ShapleyValueSampling(PerturbationAttribution):
             >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
             >>>                             [2,2,3,3],[2,2,3,3]]])
             >>> attr = svs.attribute(input, target=1, feature_mask=feature_mask)
-
-            >>> # With only 4 features, it is also feasible to compute exact
-            >>> # Shapley Values. These can be computed as follows:
-            >>> sv = ShapleyValues(net)
-            >>> attr = sv.attribute(input, target=1, feature_mask=feature_mask)
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
