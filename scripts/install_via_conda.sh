@@ -29,7 +29,8 @@ if [[ $FRAMEWORKS == true ]]; then
 fi
 
 if [[ $PYTORCH_NIGHTLY == true ]]; then
-  conda install -y -c pytorch-nightly pytorch==1.5.0
+  # install CPU version for much smaller download
+  conda install -y pytorch cpuonly -c pytorch-nightly
 else
  # install CPU version for much smaller download
  conda install -y -c pytorch pytorch-cpu
