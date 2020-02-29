@@ -4,6 +4,8 @@ title: Algorithm Comparison Matrix
 ---
 
 # **Attribution Algorithm Comparison Matrix**
+
+Please, scroll to the right for more details.
 <table style="overflow-x: scroll; overflow: auto; display: block;" width="100%">
   <tr>
     <th style="padding: 30px;">Algorithm</th>
@@ -74,7 +76,7 @@ title: Algorithm Comparison Matrix
      <td>#examples </td>
     <td>No</td>
     <td>The gradients of the output w.r.t. inputs.</td>
-  </tr>s
+  </tr>
   <tr>
     <td><strong>Guided BackProp˚ / DeconvNet˚</strong></td>
     <td>Gradient</td>
