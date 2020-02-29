@@ -4,6 +4,8 @@ title: Algorithm Comparison Matrix
 ---
 
 # **Attribution Algorithm Comparison Matrix**
+
+Please, scroll to the right for more details.
 <table style="overflow-x: scroll; overflow: auto; display: block;" width="100%">
   <tr>
     <th style="padding: 30px;">Algorithm</th>
