@@ -359,10 +359,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         Tuple[
             Tuple[Tensor, ...],
             Any,
-            Union[
-                None,
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]],
-            ],
+            TargetType,
             Tuple[Tensor, ...],
         ]
     ]:
