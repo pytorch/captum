@@ -8,7 +8,7 @@ from torch import Tensor, device
 from .common import _format_input, _format_additional_forward_args
 from .typing import (
     TensorOrTupleOfTensorsGeneric,
-    TupleOrTensorOrBool,
+    TupleOrTensorOrBoolGeneric,
     TargetType,
 )
 
@@ -43,8 +43,9 @@ def _tuple_splice_range(
 
 
 def _reduce_list(
-    val_list: List[TupleOrTensorOrBool], red_func: Callable[[List], Any] = torch.cat
-) -> TupleOrTensorOrBool:
+    val_list: List[TupleOrTensorOrBoolGeneric],
+    red_func: Callable[[List], Any] = torch.cat,
+) -> TupleOrTensorOrBoolGeneric:
     """
     Applies reduction function to given list. If each element in the list is
     a Tensor, applies reduction function to all elements of the list, and returns
@@ -140,13 +141,13 @@ def _batched_generator(
 
 
 def _batched_operator(
-    operator: Callable[..., TupleOrTensorOrBool],
+    operator: Callable[..., TupleOrTensorOrBoolGeneric],
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Any = None,
     target_ind: TargetType = None,
     internal_batch_size: Union[None, int] = None,
     **kwargs: Any
-) -> TupleOrTensorOrBool:
+) -> TupleOrTensorOrBoolGeneric:
     """
     Batches the operation of the given operator, applying the given batch size
     to inputs and additional forward arguments, and returning the concatenation

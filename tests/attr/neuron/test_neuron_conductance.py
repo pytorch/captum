@@ -164,9 +164,10 @@ class Test(BaseTest):
             ),
         )
         neuron_cond = NeuronConductance(model, target_layer)
-        for i in range(attributions.shape[1]):
-            for j in range(attributions.shape[2]):
-                for k in range(attributions.shape[3]):
+        attr_shape = cast(Tuple[int, ...], attributions.shape)
+        for i in range(attr_shape[1]):
+            for j in range(attr_shape[2]):
+                for k in range(attr_shape[3]):
                     neuron_vals = neuron_cond.attribute(
                         test_input,
                         (i, j, k),

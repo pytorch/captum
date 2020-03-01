@@ -2,7 +2,7 @@
 
 from torch.nn import Module
 from torch import Tensor
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, cast
 import unittest
 
 import torch
@@ -120,7 +120,7 @@ class Test(BaseTest):
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
-        for i in range(out.shape[1]):
+        for i in range(cast(Tuple[int, ...], out.shape)[1]):
             neuron: Tuple[int, ...] = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)

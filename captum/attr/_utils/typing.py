@@ -16,6 +16,6 @@ else:
 TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
-TupleOrTensorOrBool = TypeVar("TupleOrTensorOrBool", Tuple, Tensor, bool)
+TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
 BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
