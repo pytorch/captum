@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, NamedTuple, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple
 
 from captum.attr import (
     Deconvolution,
@@ -14,7 +14,7 @@ from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 
 class NumberConfig(NamedTuple):
     value: int = 1
-    limit: Tuple[Union[None, int], Union[None, int]] = (None, None)
+    limit: Tuple[Optional[int], Optional[int]] = (None, None)
     type: str = "number"
 
 
