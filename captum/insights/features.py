@@ -3,7 +3,7 @@ import base64
 import warnings
 from collections import namedtuple
 from io import BytesIO
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 
@@ -35,9 +35,9 @@ class BaseFeature:
     def __init__(
         self,
         name: str,
-        baseline_transforms: Union[None, Callable, List[Callable]],
-        input_transforms: Union[None, Callable, List[Callable]],
-        visualization_transform: Union[None, Callable],
+        baseline_transforms: Optional[Union[Callable, List[Callable]]],
+        input_transforms: Optional[Union[Callable, List[Callable]]],
+        visualization_transform: Optional[Callable],
     ):
         r"""
             Args:
@@ -83,7 +83,7 @@ class ImageFeature(BaseFeature):
         name: str,
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
-        visualization_transform: Union[None, Callable] = None,
+        visualization_transform: Optional[Callable] = None,
     ):
         r"""
             Args:
