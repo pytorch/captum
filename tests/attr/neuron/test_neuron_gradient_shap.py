@@ -29,7 +29,7 @@ class Test(BaseTest):
 
     def test_classification(self) -> None:
         def custom_baseline_fn(inputs: Tensor) -> Tensor:
-            num_in = inputs.shape[1]
+            num_in = inputs.shape[1]  # type: ignore
             return torch.arange(0.0, num_in * 5.0).reshape(5, num_in)
 
         num_in = 40

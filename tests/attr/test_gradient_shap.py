@@ -69,7 +69,8 @@ class Test(BaseTest):
             return torch.arange(0.0, num_in * 4.0).reshape(4, num_in)
 
         def generate_baselines_with_inputs(inputs: Tensor) -> Tensor:
-            return torch.arange(0.0, inputs.shape[1] * 2.0).reshape(2, inputs.shape[1])
+            inp_shape = cast(Tuple[int, ...], inputs.shape)
+            return torch.arange(0.0, inp_shape[1] * 2.0,).reshape(2, inp_shape[1])
 
         def generate_baselines_returns_array() -> ndarray:
             return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
