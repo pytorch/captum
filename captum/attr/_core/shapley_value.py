@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, List, Tuple, Union, Iterable
+from typing import Any, Callable, Tuple, Union, Iterable
 
 import torch
 from torch import Tensor
@@ -355,14 +355,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         input_masks: TensorOrTupleOfTensorsGeneric,
         feature_permutation: Tensor,
         perturbations_per_eval: int,
-    ) -> Iterable[
-        Tuple[
-            Tuple[Tensor, ...],
-            Any,
-            TargetType,
-            Tuple[Tensor, ...],
-        ]
-    ]:
+    ) -> Iterable[Tuple[Tuple[Tensor, ...], Any, TargetType, Tuple[Tensor, ...]]]:
         """
         This method is a generator which yields each perturbation to be evaluated
         including inputs, additional_forward_args, targets, and mask.
