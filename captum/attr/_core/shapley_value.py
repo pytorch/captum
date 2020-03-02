@@ -8,14 +8,19 @@ import torch
 from torch import Tensor
 
 from .._utils.attribution import PerturbationAttribution
-from .._utils.common import (_expand_additional_forward_args, _expand_target,
-                             _find_output_mode_and_verify,
-                             _format_additional_forward_args,
-                             _format_attributions, _format_input,
-                             _format_input_baseline, _is_tuple, _run_forward,
-                             _tensorize_baseline)
-from .._utils.typing import (BaselineType, TargetType,
-                             TensorOrTupleOfTensorsGeneric)
+from .._utils.common import (
+    _expand_additional_forward_args,
+    _expand_target,
+    _find_output_mode_and_verify,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_input,
+    _format_input_baseline,
+    _is_tuple,
+    _run_forward,
+    _tensorize_baseline,
+)
+from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:

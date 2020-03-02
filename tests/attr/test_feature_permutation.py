@@ -4,12 +4,10 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 
-from captum.attr._core.feature_permutation import (FeaturePermutation,
-                                                   _permute_feature)
+from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
 
 from .helpers.basic_models import BasicModelWithSparseInputs
-from .helpers.utils import (BaseTest, assertArraysAlmostEqual,
-                            assertTensorAlmostEqual)
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

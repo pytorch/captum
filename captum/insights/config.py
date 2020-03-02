@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 from typing import List, NamedTuple, Optional, Tuple
 
-from captum.attr import (Deconvolution, DeepLift, GuidedBackprop,
-                         InputXGradient, IntegratedGradients, Saliency)
+from captum.attr import (
+    Deconvolution,
+    DeepLift,
+    GuidedBackprop,
+    InputXGradient,
+    IntegratedGradients,
+    Saliency,
+)
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 
 

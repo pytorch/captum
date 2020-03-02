@@ -6,9 +6,15 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
 
-from .common import (_format_additional_forward_args, _format_input_baseline,
-                     _format_tensor_into_tuples, _run_forward,
-                     _tensorize_baseline, _validate_input, _validate_target)
+from .common import (
+    _format_additional_forward_args,
+    _format_input_baseline,
+    _format_tensor_into_tuples,
+    _run_forward,
+    _tensorize_baseline,
+    _validate_input,
+    _validate_target,
+)
 from .gradient import compute_gradients
 from .typing import TargetType
 

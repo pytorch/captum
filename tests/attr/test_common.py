@@ -5,8 +5,11 @@ from typing import List, Tuple, cast
 import torch
 
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
-from captum.attr._utils.common import (_select_targets, _validate_input,
-                                       _validate_noise_tunnel_type)
+from captum.attr._utils.common import (
+    _select_targets,
+    _validate_input,
+    _validate_noise_tunnel_type,
+)
 
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 

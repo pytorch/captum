@@ -2,9 +2,13 @@
 
 import torch
 
-from captum.attr._utils.batching import (_batched_generator, _batched_operator,
-                                         _reduce_list, _sort_key_list,
-                                         _tuple_splice_range)
+from captum.attr._utils.batching import (
+    _batched_generator,
+    _batched_operator,
+    _reduce_list,
+    _sort_key_list,
+    _tuple_splice_range,
+)
 
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 

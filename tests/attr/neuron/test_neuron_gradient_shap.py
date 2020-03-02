@@ -6,8 +6,9 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
-from captum.attr._core.neuron.neuron_integrated_gradients import \
-    NeuronIntegratedGradients
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
 
 from ..helpers.basic_models import BasicModel_MultiLayer
 from ..helpers.classification_models import SoftmaxModel

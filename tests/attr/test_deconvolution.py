@@ -9,8 +9,9 @@ import torch
 from torch.nn import Module
 
 from captum.attr._core.guided_backprop_deconvnet import Deconvolution
-from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import \
-    NeuronDeconvolution
+from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
+    NeuronDeconvolution,
+)
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv

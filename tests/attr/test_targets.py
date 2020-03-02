@@ -11,13 +11,10 @@ from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_deep_lift import (LayerDeepLift,
-                                                     LayerDeepLiftShap)
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-from captum.attr._core.layer.layer_gradient_x_activation import \
-    LayerGradientXActivation
-from captum.attr._core.layer.layer_integrated_gradients import \
-    LayerIntegratedGradients
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.occlusion import Occlusion

@@ -7,9 +7,11 @@ import unittest
 import torch
 from torch.nn import Embedding
 
-from captum.attr._models.base import (InterpretableEmbeddingBase,
-                                      configure_interpretable_embedding_layer,
-                                      remove_interpretable_embedding_layer)
+from captum.attr._models.base import (
+    InterpretableEmbeddingBase,
+    configure_interpretable_embedding_layer,
+    remove_interpretable_embedding_layer,
+)
 
 from ..helpers.basic_models import BasicEmbeddingModel, TextModule
 from ..helpers.utils import assertArraysAlmostEqual

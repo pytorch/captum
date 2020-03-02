@@ -12,8 +12,7 @@ from captum.attr._utils.typing import Tensor
 
 from .helpers.basic_models import BasicLinearModel, BasicModel2
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import (BaseTest, assertArraysAlmostEqual,
-                            assertTensorAlmostEqual)
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

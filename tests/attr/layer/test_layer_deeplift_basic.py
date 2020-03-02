@@ -7,15 +7,20 @@ from typing import List, Tuple, Union, cast
 import torch
 from torch import Tensor
 
-from captum.attr._core.layer.layer_deep_lift import (LayerDeepLift,
-                                                     LayerDeepLiftShap)
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
-from ..helpers.basic_models import (BasicModel_MultiLayer,
-                                    LinearMaxPoolLinearModel,
-                                    ReLULinearDeepLiftModel)
-from ..helpers.utils import (BaseTest, assert_delta, assertArraysAlmostEqual,
-                             assertTensorAlmostEqual,
-                             assertTensorTuplesAlmostEqual)
+from ..helpers.basic_models import (
+    BasicModel_MultiLayer,
+    LinearMaxPoolLinearModel,
+    ReLULinearDeepLiftModel,
+)
+from ..helpers.utils import (
+    BaseTest,
+    assert_delta,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 
 
 class TestDeepLift(BaseTest):

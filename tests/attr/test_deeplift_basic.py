@@ -10,13 +10,20 @@ from torch.nn import Module
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
-from .helpers.basic_models import (BasicModelWithReusableModules,
-                                   Conv1dDeepLiftModel,
-                                   LinearMaxPoolLinearModel, ReLUDeepLiftModel,
-                                   ReLULinearDeepLiftModel, TanhDeepLiftModel)
-from .helpers.utils import (BaseTest, assertArraysAlmostEqual,
-                            assertAttributionComparision,
-                            assertTensorAlmostEqual)
+from .helpers.basic_models import (
+    BasicModelWithReusableModules,
+    Conv1dDeepLiftModel,
+    LinearMaxPoolLinearModel,
+    ReLUDeepLiftModel,
+    ReLULinearDeepLiftModel,
+    TanhDeepLiftModel,
+)
+from .helpers.utils import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertAttributionComparision,
+    assertTensorAlmostEqual,
+)
 
 
 class Test(BaseTest):

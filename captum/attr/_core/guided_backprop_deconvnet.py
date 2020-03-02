@@ -10,8 +10,7 @@ from torch.utils.hooks import RemovableHandle
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions, _format_input, _is_tuple
-from .._utils.gradient import (apply_gradient_requirements,
-                               undo_gradient_requirements)
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 

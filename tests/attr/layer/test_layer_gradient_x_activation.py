@@ -6,11 +6,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from captum.attr._core.layer.layer_gradient_x_activation import \
-    LayerGradientXActivation
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 
-from ..helpers.basic_models import (BasicModel_MultiLayer,
-                                    BasicModel_MultiLayer_MultiInput)
+from ..helpers.basic_models import (
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
+)
 from ..helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 

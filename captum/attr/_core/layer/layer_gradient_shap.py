@@ -9,11 +9,12 @@ from torch import Tensor
 from torch.nn import Module
 
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.common import (_compute_conv_delta_and_format_attrs,
-                              _format_callable_baseline,
-                              _format_input_baseline)
-from ..._utils.gradient import (_forward_layer_eval,
-                                compute_layer_gradients_and_eval)
+from ..._utils.common import (
+    _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
+)
+from ..._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from ..gradient_shap import _scale_input
 from ..noise_tunnel import NoiseTunnel

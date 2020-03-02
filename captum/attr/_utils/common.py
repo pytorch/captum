@@ -2,16 +2,14 @@
 import typing
 from enum import Enum
 from inspect import signature
-from typing import (TYPE_CHECKING, Any, Callable, List, Tuple, Union, cast,
-                    overload)
+from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union, cast, overload
 
 import torch
 from torch import Tensor, device
 from torch.nn import Module
 
 from .approximation_methods import SUPPORTED_METHODS
-from .typing import (BaselineType, Literal, TargetType,
-                     TensorOrTupleOfTensorsGeneric)
+from .typing import BaselineType, Literal, TargetType, TensorOrTupleOfTensorsGeneric
 
 if TYPE_CHECKING:
     from .attribution import GradientAttribution

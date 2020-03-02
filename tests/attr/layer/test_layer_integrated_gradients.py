@@ -8,14 +8,18 @@ from torch.nn import Module
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_integrated_gradients import \
-    LayerIntegratedGradients
-from captum.attr._models.base import (configure_interpretable_embedding_layer,
-                                      remove_interpretable_embedding_layer)
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._models.base import (
+    configure_interpretable_embedding_layer,
+    remove_interpretable_embedding_layer,
+)
 
 from ..helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
-from ..helpers.utils import (BaseTest, assertArraysAlmostEqual,
-                             assertTensorTuplesAlmostEqual)
+from ..helpers.utils import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 
 
 class Test(BaseTest):

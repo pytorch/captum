@@ -6,12 +6,18 @@ import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import (BaselineType, TargetType,
-                                       TensorOrTupleOfTensorsGeneric)
+from captum.attr._utils.typing import (
+    BaselineType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
-from .helpers.basic_models import (BasicModel3, BasicModel_ConvNet_One_Conv,
-                                   BasicModel_MultiLayer,
-                                   BasicModel_MultiLayer_MultiInput)
+from .helpers.basic_models import (
+    BasicModel3,
+    BasicModel_ConvNet_One_Conv,
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
+)
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 

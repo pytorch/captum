@@ -16,10 +16,8 @@ from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_deep_lift import LayerDeepLift  # noqa
 from ._core.layer.layer_deep_lift import LayerDeepLiftShap
 from ._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
-from ._core.layer.layer_gradient_x_activation import \
-    LayerGradientXActivation  # noqa
-from ._core.layer.layer_integrated_gradients import \
-    LayerIntegratedGradients  # noqa
+from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
+from ._core.layer.layer_integrated_gradients import LayerIntegratedGradients  # noqa
 from ._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from ._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
 from ._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
@@ -27,17 +25,20 @@ from ._core.neuron.neuron_feature_ablation import NeuronFeatureAblation  # noqa
 from ._core.neuron.neuron_gradient import NeuronGradient  # noqa
 from ._core.neuron.neuron_gradient_shap import NeuronGradientShap  # noqa
 from ._core.neuron.neuron_guided_backprop_deconvnet import (  # noqa
-    NeuronDeconvolution, NeuronGuidedBackprop)
-from ._core.neuron.neuron_integrated_gradients import \
-    NeuronIntegratedGradients  # noqa
+    NeuronDeconvolution,
+    NeuronGuidedBackprop,
+)
+from ._core.neuron.neuron_integrated_gradients import NeuronIntegratedGradients  # noqa
 from ._core.noise_tunnel import NoiseTunnel  # noqa
 from ._core.occlusion import Occlusion  # noqa
 from ._core.saliency import Saliency  # noqa
 from ._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
 from ._models.base import InterpretableEmbeddingBase  # noqa
-from ._models.base import (TokenReferenceBase,
-                           configure_interpretable_embedding_layer,
-                           remove_interpretable_embedding_layer)
+from ._models.base import (
+    TokenReferenceBase,
+    configure_interpretable_embedding_layer,
+    remove_interpretable_embedding_layer,
+)
 from ._utils import visualization  # noqa
 from ._utils.attribution import Attribution  # noqa
 from ._utils.attribution import GradientAttribution  # noqa

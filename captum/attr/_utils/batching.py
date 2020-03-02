@@ -6,8 +6,11 @@ import torch
 from torch import Tensor, device
 
 from .common import _format_additional_forward_args, _format_input
-from .typing import (TargetType, TensorOrTupleOfTensorsGeneric,
-                     TupleOrTensorOrBoolGeneric)
+from .typing import (
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+    TupleOrTensorOrBoolGeneric,
+)
 
 
 @typing.overload

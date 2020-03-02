@@ -6,11 +6,19 @@ import numpy as np
 import torch
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import (_compute_conv_delta_and_format_attrs,
-                             _format_callable_baseline, _format_input_baseline,
-                             _is_tuple)
-from .._utils.typing import (BaselineType, Literal, TargetType, Tensor,
-                             TensorOrTupleOfTensorsGeneric)
+from .._utils.common import (
+    _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
+    _is_tuple,
+)
+from .._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+)
 from .noise_tunnel import NoiseTunnel
 
 
