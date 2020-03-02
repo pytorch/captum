@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, List, Tuple, Union, Iterable, Sequence
+from typing import Any, Callable, Tuple, Union, Iterable, Sequence
 
 import itertools
 import torch
@@ -505,17 +505,13 @@ class ShapleyValues(PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
