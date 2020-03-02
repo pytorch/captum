@@ -2,14 +2,14 @@
 
 from torch.nn import Module
 from torch import Tensor
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, cast
 import unittest
 
 import torch
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._utils.gradient import _forward_layer_eval
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
@@ -98,7 +98,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron_index: Union[int, Tuple[int, ...]],
         expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
@@ -120,7 +120,7 @@ class Test(BaseTest):
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
-        for i in range(out.shape[1]):
+        for i in range(cast(Tuple[int, ...], out.shape)[1]):
             neuron: Tuple[int, ...] = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 from torch.nn import Module
 
 from ..gradient_shap import GradientShap
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class NeuronGradientShap(NeuronAttribution, GradientAttribution):
@@ -13,7 +13,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -39,14 +39,16 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[TensorOrTupleOfTensors, Callable[..., TensorOrTupleOfTensors]],
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
         n_samples: int = 5,
         stdevs: float = 0.0,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Implements gradient SHAP for a neuron in a hidden layer based on the
         implementation from SHAP's primary author. For reference, please, view:

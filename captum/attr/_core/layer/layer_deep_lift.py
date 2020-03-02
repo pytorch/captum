@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
+import typing
+from typing import (
+    Tuple,
+    Union,
+    Any,
+    Callable,
+    Sequence,
+    cast,
+)
+
 import torch
+from torch import Tensor
+from torch.nn import Module
+
 from ..._utils.attribution import LayerAttribution
 from ..._core.deep_lift import DeepLift, DeepLiftShap
 from ..._utils.gradient import (
@@ -21,10 +34,16 @@ from ..._utils.common import (
     _expand_target,
     ExpansionTypes,
 )
+from ..._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+    BaselineType,
+)
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module):
         r"""
         Args:
 
@@ -39,16 +58,46 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         DeepLift.__init__(self, model)
         self.model = model
 
+    # Ignoring mypy error for inconsistent signature with DeepLift
+    @typing.overload  # type: ignore
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-        custom_attribution_func=None,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
+
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r""""
         Implements DeepLIFT algorithm for the layer based on the following paper:
         Learning Important Features Through Propagating Activation Differences,
@@ -248,8 +297,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             input_base_additional_args,
         )
 
-        def chunk_output_fn(out):
-            if not isinstance(out, tuple):
+        def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
+            if isinstance(out, Tensor):
                 return out.chunk(2)
             return tuple(out_sub.chunk(2) for out_sub in out)
 
@@ -294,7 +343,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
-    def __init__(self, model, layer):
+    def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
 
@@ -308,16 +357,52 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         LayerDeepLift.__init__(self, model, layer)
         DeepLiftShap.__init__(self, model)
 
+    # Ignoring mypy error for inconsistent signature with DeepLiftShap
+    @typing.overload  # type: ignore
     def attribute(
         self,
-        inputs,
-        baselines,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-        custom_attribution_func=None,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
+
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[
+            Tensor, Tuple[Tensor, ...], Callable[..., Union[Tensor, Tuple[Tensor, ...]]]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r"""
         Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
         values for given input `layer`.
@@ -511,7 +596,9 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             exp_base,
             target=exp_target,
             additional_forward_args=exp_addit_args,
-            return_convergence_delta=return_convergence_delta,
+            return_convergence_delta=cast(
+                Literal[True, False], return_convergence_delta
+            ),
             attribute_to_layer_input=attribute_to_layer_input,
             custom_attribution_func=custom_attribution_func,
         )
@@ -520,7 +607,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         if isinstance(attributions, tuple):
             attributions = tuple(
                 DeepLiftShap._compute_mean_across_baselines(
-                    self, inp_bsz, base_bsz, attrib
+                    self, inp_bsz, base_bsz, cast(Tensor, attrib)
                 )
                 for attrib in attributions
             )

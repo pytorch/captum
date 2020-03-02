@@ -6,9 +6,9 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
-from typing import Optional, Tuple, Union, Any, List
+from typing import Tuple, Union, Any, List
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
@@ -211,19 +211,17 @@ class Test(BaseTest):
         self,
         model: Module,
         layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             List[float],
             List[List[float]],
             Tuple[Tensor, ...],
             Tuple[List[List[float]], ...],
         ],
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
+        baselines: BaselineType = None,
         neuron_index: Union[int, Tuple[int, ...]] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:

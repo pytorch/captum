@@ -10,7 +10,7 @@ from .helpers.utils import assertTensorAlmostEqual, BaseTest
 
 from torch.nn import Module
 from typing import Any
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Test(BaseTest):
@@ -73,21 +73,21 @@ class Test(BaseTest):
             [65.0, 130.0, 148.0, 74.0],
             [32.5, 65.0, 74.0, 37.0],
         ]
-        self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, None))
+        self._guided_grad_cam_test_assert(net, net.conv1, (inp, inp2), (ex, []))
 
     def test_improper_method_multi_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         self._guided_grad_cam_test_assert(
-            net, net.conv1, (inp, inp2), (None, None), interpolate_mode="triilinear"
+            net, net.conv1, (inp, inp2), ([], []), interpolate_mode="triilinear"
         )
 
     def _guided_grad_cam_test_assert(
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected,
         additional_input: Any = None,
         interpolate_mode: str = "nearest",
@@ -103,8 +103,6 @@ class Test(BaseTest):
         )
         if isinstance(test_input, tuple):
             for i in range(len(test_input)):
-                if attributions[i] is None and expected[i] is None:
-                    continue
                 assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
         else:
             assertTensorAlmostEqual(self, attributions, expected, delta=0.01)

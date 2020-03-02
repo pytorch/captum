@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
+import torch
 import warnings
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import _format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions, _is_tuple
 
 from .layer.grad_cam import LayerGradCam
 from .guided_backprop_deconvnet import GuidedBackprop
 
 from torch.nn import Module
 from torch import Tensor
-from typing import Optional, List, Tuple, Any, Union
-from .._utils.typing import TensorOrTupleOfTensors
+from typing import Any, List, Union
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class GuidedGradCam(GradientAttribution):
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+        self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
         r"""
         Args
@@ -36,14 +37,12 @@ class GuidedGradCam(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             Computes element-wise product of guided backpropagation attributions
             with upsampled (non-negative) GradCAM attributions.
@@ -57,10 +56,10 @@ class GuidedGradCam(GradientAttribution):
             each input tensor are computed by upsampling the GradCAM
             attributions to match that input's dimensions. If interpolation is
             not possible for the input tensor dimensions and interpolation mode,
-            then None is returned in the attributions for the corresponding
-            position of that input tensor. This can occur if the input tensor
-            does not have the same number of dimensions as the chosen layer's
-            output or is not either 3D, 4D or 5D.
+            then an empty tensor is returned in the attributions for the
+            corresponding position of that input tensor. This can occur if the
+            input tensor does not have the same number of dimensions as the chosen
+            layer's output or is not either 3D, 4D or 5D.
 
             Note that attributions are only meaningful for input tensors
             which are spatially alligned with the chosen layer, e.g. an input
@@ -177,7 +176,7 @@ class GuidedGradCam(GradientAttribution):
                 >>> # attribution size matches input size, Nx3x32x32
                 >>> attribution = guided_gc.attribute(input, 3)
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         grad_cam_attr = self.grad_cam.attribute(
             inputs=inputs,
@@ -197,7 +196,7 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
-        output_attr: List[Optional[Tensor]] = []
+        output_attr: List[Tensor] = []
         for i in range(len(inputs)):
             try:
                 output_attr.append(
@@ -210,9 +209,10 @@ class GuidedGradCam(GradientAttribution):
                 )
             except RuntimeError:
                 warnings.warn(
-                    "Couldn't appropriately interpolate GradCAM attributions for "
-                    "some input tensors, returning None for corresponding attributions."
+                    "Couldn't appropriately interpolate GradCAM attributions for some "
+                    "input tensors, returning empty tensor for corresponding "
+                    "attributions."
                 )
-                output_attr.append(None)
+                output_attr.append(torch.empty(0))
 
         return _format_attributions(is_inputs_tuple, tuple(output_attr))

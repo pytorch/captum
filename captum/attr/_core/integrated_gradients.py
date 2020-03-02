@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Any, Callable, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -15,9 +15,15 @@ from .._utils.common import (
     _reshape_and_sum,
     _expand_additional_forward_args,
     _expand_target,
+    _is_tuple,
 )
 from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+    BaselineType,
+)
 
 
 class IntegratedGradients(GradientAttribution):
@@ -47,61 +53,51 @@ class IntegratedGradients(GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
 
     # The following overloaded method signatures correspond to the case where
-    # return_convergence_delta is not provided, then only attributions are returned,
-    # and when return_convergence_delta is provided, the return type is either
-    # just the attributions or a tuple with both attributions and deltas.
-    # Note that this doesn't explicitly type the case where return_convergence_delta
-    # is passed with the value False, the return type when return_convergence_delta is
-    # given is Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]].
-    # Supporting separate return types for True and False requires using the Literal
-    # type functionality, which is only available in Python 3.8. We plan to support
-    # this in the future.
+    # return_convergence_delta is False, then only attributions are returned,
+    # and when return_convergence_delta is True, the return type is
+    # a tuple with both attributions and deltas.
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-    ) -> TensorOrTupleOfTensors:
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
+        *,
+        return_convergence_delta: Literal[True],
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    def attribute(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
-    def attribute(
-        self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-    ):
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
@@ -243,7 +239,7 @@ class IntegratedGradients(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
 

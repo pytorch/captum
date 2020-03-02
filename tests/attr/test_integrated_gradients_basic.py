@@ -3,7 +3,11 @@
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _zeros, _tensorize_baseline
-from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensors
+from captum.attr._utils.typing import (
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
+)
 
 from .helpers.basic_models import (
     BasicModel,
@@ -19,7 +23,7 @@ from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, Bas
 import unittest
 import torch
 from torch.nn import Module
-from typing import Any, cast, Optional, Tuple, Union
+from typing import Any, cast, Tuple, Union
 
 
 class Test(BaseTest):
@@ -267,11 +271,9 @@ class Test(BaseTest):
     def _compute_attribution_and_evaluate(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[int] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: Union[None, int] = None,
         additional_forward_args: Any = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
@@ -366,9 +368,9 @@ class Test(BaseTest):
     def _compute_attribution_batch_helper_evaluate(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        target: Optional[int] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        target: Union[None, int] = None,
         additional_forward_args: Any = None,
         approximation_method: str = "gausslegendre",
     ) -> None:

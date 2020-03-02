@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tuple, Union, Any, cast
+from typing import List, Tuple, Union, Any, cast
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -14,7 +14,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import assertArraysAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 
 class Test(BaseTest):
@@ -109,7 +109,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron: Union[int, Tuple[int, ...]],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
@@ -149,10 +149,8 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
-        test_baseline: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
+        test_input: TensorOrTupleOfTensorsGeneric,
+        test_baseline: BaselineType = None,
     ):
         layer_cond = LayerConductance(model, target_layer)
         attributions = cast(
@@ -166,9 +164,10 @@ class Test(BaseTest):
             ),
         )
         neuron_cond = NeuronConductance(model, target_layer)
-        for i in range(attributions.shape[1]):
-            for j in range(attributions.shape[2]):
-                for k in range(attributions.shape[3]):
+        attr_shape = cast(Tuple[int, ...], attributions.shape)
+        for i in range(attr_shape[1]):
+            for j in range(attr_shape[2]):
+                for k in range(attr_shape[3]):
                     neuron_vals = neuron_cond.attribute(
                         test_input,
                         (i, j, k),

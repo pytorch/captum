@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from .feature_ablation import FeatureAblation
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
@@ -67,15 +67,13 @@ class FeaturePermutation(FeatureAblation):
     # signature to the parent
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
-        ablations_per_eval: int = 1,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
+        perturbations_per_eval: int = 1,
         **kwargs: Any,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This function is almost equivalent to `FeatureAblation.attribute`. The
         main difference is the way ablated examples are generated. Specifically
@@ -154,17 +152,17 @@ class FeaturePermutation(FeatureAblation):
                             each scalar within a tensor as a separate feature, which
                             is permuted independently.
                             Default: None
-                ablations_per_eval (int, optional): Allows permutations (ablations)
+                perturbations_per_eval (int, optional): Allows permutations
                             of multiple features to be processed simultaneously
                             in one call to forward_fn.  Each forward pass will
-                            contain a maximum of ablations_per_eval * #examples
+                            contain a maximum of perturbations_per_eval * #examples
                             samples.  For DataParallel models, each batch is
                             split among the available devices, so evaluations on
                             each available device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             If the forward function returns a single scalar per batch,
-                            ablations_per_eval must be set to 1.
+                            perturbations_per_eval must be set to 1.
                             Default: 1
                 **kwargs (Any, optional): Any additional arguments used by child
                             classes of FeatureAblation (such as Occlusion) to construct
@@ -179,7 +177,7 @@ class FeaturePermutation(FeatureAblation):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
             **kwargs,
         )
 

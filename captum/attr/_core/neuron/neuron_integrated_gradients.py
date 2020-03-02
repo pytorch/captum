@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..integrated_gradients import IntegratedGradients
 
@@ -15,7 +15,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ):
         r"""
         Args:
@@ -42,15 +42,15 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
+        baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             Approximates the integral of gradients for a particular neuron
             along the path from a baseline input to the given input.

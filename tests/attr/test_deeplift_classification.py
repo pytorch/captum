@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union, Tuple, Optional, List
+from typing import Union
 
 import torch
 from torch import Tensor
@@ -8,6 +8,7 @@ from torch.nn import Module
 
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._utils.typing import TargetType
 
 from .helpers.utils import assertAttributionComparision, BaseTest
 from .helpers.classification_models import SigmoidDeepLiftModel
@@ -149,7 +150,7 @@ class Test(BaseTest):
         attr_method: Union[DeepLift, DeepLiftShap],
         input: Tensor,
         baselines,
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+        target: TargetType,
     ) -> None:
         # TODO add test cases for multiple different layers
         model.zero_grad()
@@ -172,9 +173,7 @@ class Test(BaseTest):
         inputs: Tensor,
         baselines: Union[Tensor, int, float],
         delta: Tensor,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        target: TargetType = None,
     ) -> None:
         self.assertEqual(inputs.shape, attributions.shape)
 

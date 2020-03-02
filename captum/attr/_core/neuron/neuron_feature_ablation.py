@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 import torch
-from torch import Tensor
 from torch.nn import Module
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 
 
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
 from ..._utils.common import _verify_select_column
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 from ..feature_ablation import FeatureAblation
 
@@ -18,7 +17,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -43,16 +42,14 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         attribute_to_neuron_input: bool = False,
         perturbations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             A perturbation based approach to computing neuron attribution,
             involving replacing each input feature with a given baseline /

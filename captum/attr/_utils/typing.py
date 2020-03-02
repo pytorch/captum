@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, TypeVar
+from typing import Tuple, TypeVar, TYPE_CHECKING, Union, List
 from torch import Tensor
 
-TensorOrTupleOfTensors = TypeVar("TensorOrTupleOfTensors", Tensor, Tuple[Tensor, ...])
+if TYPE_CHECKING:
+    import sys
+
+    if sys.version_info >= (3, 8):
+        from typing import Literal  # noqa: F401
+    else:
+        from typing_extensions import Literal  # noqa: F401
+else:
+    Literal = {True: bool, False: bool, (True, False): bool}
+
+TensorOrTupleOfTensorsGeneric = TypeVar(
+    "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
+)
+TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
+TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
+BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]

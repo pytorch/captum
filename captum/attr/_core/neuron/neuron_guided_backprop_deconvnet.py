@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+        self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
         r"""
         Args:
@@ -38,11 +38,11 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Computes attribution of the given neuron using deconvolution.
         Deconvolution computes the gradient of the target output with
@@ -138,7 +138,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
 class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+        self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
         r"""
         Args:
@@ -162,11 +162,11 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Computes attribution of the given neuron using guided backpropagation.
         Guided backpropagation computes the gradient of the target neuron
