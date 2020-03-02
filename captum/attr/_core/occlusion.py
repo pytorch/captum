@@ -16,6 +16,26 @@ from .feature_ablation import FeatureAblation
 
 
 class Occlusion(FeatureAblation):
+    r"""
+    A perturbation based approach to compute attribution, involving
+    replacing each contiguous rectangular region with a given baseline /
+    reference, and computing the difference in output. For features located
+    in multiple regions (hyperrectangles), the corresponding output differences
+    are averaged to compute the attribution for that feature.
+
+    The first patch is applied with the corner aligned with all indices 0,
+    and strides are applied until the entire dimension range is covered. Note
+    that this may cause the final patch applied in a direction to be cut-off
+    and thus smaller than the target occlusion shape.
+
+    More details regarding the occlusion (or grey-box / sliding window)
+    method can be found in the original paper and in the DeepExplain
+    implementation.
+    https://arxiv.org/abs/1311.2901
+    https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\
+    /tensorflow/methods.py#L401
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -39,24 +59,6 @@ class Occlusion(FeatureAblation):
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        A perturbation based approach to compute attribution, involving
-        replacing each contiguous rectangular region with a given baseline /
-        reference, and computing the difference in output. For features located
-        in multiple regions (hyperrectangles), the corresponding output differences
-        are averaged to compute the attribution for that feature.
-
-        The first patch is applied with the corner aligned with all indices 0,
-        and strides are applied until the entire dimension range is covered. Note
-        that this may cause the final patch applied in a direction to be cut-off
-        and thus smaller than the target occlusion shape.
-
-        More details regarding the occlusion (or grey-box / sliding window)
-        method can be found in the original paper and in the DeepExplain
-        implementation.
-        https://arxiv.org/abs/1311.2901
-        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\
-        /tensorflow/methods.py#L401
-
         Args:
 
                 inputs (tensor or tuple of tensors):  Input for which occlusion

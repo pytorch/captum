@@ -94,6 +94,21 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
 
 class GuidedBackprop(ModifiedReluGradientAttribution):
+    r"""
+    Computes attribution using guided backpropagation. Guided backpropagation
+    computes the gradient of the target output with respect to the input,
+    but gradients of ReLU functions are overridden so that only
+    non-negative gradients are backpropagated.
+
+    More details regarding the guided backpropagation algorithm can be found
+    in the original paper here:
+    https://arxiv.org/abs/1412.6806
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(self, model: Module):
         r"""
         Args:
@@ -111,19 +126,6 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        Computes attribution using guided backpropagation. Guided backpropagation
-        computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overridden so that only
-        non-negative gradients are backpropagated.
-
-        More details regarding the guided backpropagation algorithm can be found
-        in the original paper here:
-        https://arxiv.org/abs/1412.6806
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overridden appropriately.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -197,6 +199,24 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
 
 class Deconvolution(ModifiedReluGradientAttribution):
+    r"""
+    Computes attribution using deconvolution. Deconvolution
+    computes the gradient of the target output with respect to the input,
+    but gradients of ReLU functions are overridden so that the gradient
+    of the ReLU input is simply computed taking ReLU of the output gradient,
+    essentially only propagating non-negative gradients (without
+    dependence on the sign of the ReLU input).
+
+    More details regarding the deconvolution algorithm can be found
+    in these papers:
+    https://arxiv.org/abs/1311.2901
+    https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(self, model: Module):
         r"""
         Args:
@@ -212,22 +232,6 @@ class Deconvolution(ModifiedReluGradientAttribution):
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        Computes attribution using deconvolution. Deconvolution
-        computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overridden so that the gradient
-        of the ReLU input is simply computed taking ReLU of the output gradient,
-        essentially only propagating non-negative gradients (without
-        dependence on the sign of the ReLU input).
-
-        More details regarding the deconvolution algorithm can be found
-        in these papers:
-        https://arxiv.org/abs/1311.2901
-        https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overridden appropriately.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which

@@ -22,6 +22,25 @@ from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineT
 
 
 class FeatureAblation(PerturbationAttribution):
+    r"""
+    A perturbation based approach to computing attribution, involving
+    replacing each input feature with a given baseline / reference, and
+    computing the difference in output. By default, each scalar value within
+    each input tensor is taken as a feature and replaced independently. Passing
+    a feature mask, allows grouping features to be ablated together. This can
+    be used in cases such as images, where an entire segment or region
+    can be ablated, measuring the importance of the segment (feature group).
+    Each input scalar in the group will be given the same attribution value
+    equal to the change in target as a result of ablating the entire feature
+    group.
+
+    The forward function can either return a scalar per example, or a single
+    scalar for the full batch. If a single scalar is returned for the batch,
+    `perturbations_per_eval` must be 1, and the returned attributions will have
+    first dimension 1, corresponding to feature importance across all
+    examples in the batch.
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -43,23 +62,6 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs: Any
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        A perturbation based approach to computing attribution, involving
-        replacing each input feature with a given baseline / reference, and
-        computing the difference in output. By default, each scalar value within
-        each input tensor is taken as a feature and replaced independently. Passing
-        a feature mask, allows grouping features to be ablated together. This can
-        be used in cases such as images, where an entire segment or region
-        can be ablated, measuring the importance of the segment (feature group).
-        Each input scalar in the group will be given the same attribution value
-        equal to the change in target as a result of ablating the entire feature
-        group.
-
-        The forward function can either return a scalar per example, or a single
-        scalar for the full batch. If a single scalar is returned for the batch,
-        `perturbations_per_eval` must be 1, and the returned attributions will have
-        first dimension 1, corresponding to feature importance across all
-        examples in the batch.
-
         Args:
 
                 inputs (tensor or tuple of tensors):  Input for which ablation
