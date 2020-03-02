@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import Any
 
 import torch
+from torch.nn import Module
+
 from captum.attr._core.guided_grad_cam import GuidedGradCam
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
-
-from torch.nn import Module
-from typing import Any
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

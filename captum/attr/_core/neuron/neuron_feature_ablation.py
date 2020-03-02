@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
 from torch.nn import Module
-from typing import Callable, List, Tuple, Union, Any
-
 
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
 from ..._utils.common import _verify_select_column
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
-
+from ..._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..feature_ablation import FeatureAblation
 
 

@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
-import torch
 import unittest
 
+import torch
 from torch.nn import Module
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.typing import Tensor, BaselineType
+from captum.attr._utils.typing import BaselineType, Tensor
 
-from .helpers.utils import BaseTest
 from .helpers.classification_models import SigmoidModel, SoftmaxModel
-from .helpers.utils import assertTensorAlmostEqual
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

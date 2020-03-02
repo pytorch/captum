@@ -5,9 +5,9 @@ import json
 import os
 
 import nbformat
-from bs4 import BeautifulSoup
 from nbconvert import HTMLExporter, ScriptExporter
 
+from bs4 import BeautifulSoup
 
 TEMPLATE = """const CWD = process.cwd();
 

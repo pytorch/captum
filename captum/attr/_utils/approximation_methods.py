@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-from typing import List, Callable, Tuple
-import numpy as np
 from enum import Enum
+from typing import Callable, List, Tuple
+
+import numpy as np
 
 
 class Riemann(Enum):

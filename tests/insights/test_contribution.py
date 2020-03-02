@@ -5,6 +5,7 @@ from typing import Callable, List, Union
 
 import torch
 import torch.nn as nn
+
 from captum.insights import AttributionVisualizer, Batch, FilterConfig
 from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
 from tests.attr.helpers.utils import BaseTest

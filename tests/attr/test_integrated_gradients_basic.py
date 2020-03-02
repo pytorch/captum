@@ -1,29 +1,24 @@
 #!/usr/bin/env python3
 
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _zeros, _tensorize_baseline
-from captum.attr._utils.typing import (
-    Tensor,
-    TensorOrTupleOfTensorsGeneric,
-    BaselineType,
-)
-
-from .helpers.basic_models import (
-    BasicModel,
-    BasicModel2,
-    BasicModel3,
-    BasicModel4_MultiArgs,
-    BasicModel5_MultiArgs,
-    BasicModel6_MultiTensor,
-    BasicModel_MultiLayer,
-)
-from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
-
 import unittest
+from typing import Any, Tuple, Union, cast
+
 import torch
 from torch.nn import Module
-from typing import Any, cast, Tuple, Union
+
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.common import _tensorize_baseline, _zeros
+from captum.attr._utils.typing import (BaselineType, Tensor,
+                                       TensorOrTupleOfTensorsGeneric)
+
+from .helpers.basic_models import (BasicModel, BasicModel2, BasicModel3,
+                                   BasicModel4_MultiArgs,
+                                   BasicModel5_MultiArgs,
+                                   BasicModel6_MultiTensor,
+                                   BasicModel_MultiLayer)
+from .helpers.utils import (BaseTest, assertArraysAlmostEqual,
+                            assertTensorAlmostEqual)
 
 
 class Test(BaseTest):

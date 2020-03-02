@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from typing import Union, Tuple, List, Any
-
 import unittest
+from typing import Any, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -10,11 +9,9 @@ from torch.nn import Module
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._utils.typing import BaselineType
 
-from ..helpers.basic_models import (
-    BasicModel_MultiLayer,
-    BasicModel_MultiLayer_MultiInput,
-)
-from ..helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
+from ..helpers.basic_models import (BasicModel_MultiLayer,
+                                    BasicModel_MultiLayer_MultiInput)
+from ..helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 
 class Test(BaseTest):

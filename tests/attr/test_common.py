@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
+from typing import List, Tuple, cast
+
 import torch
-from typing import cast, List, Tuple
 
-from captum.attr._utils.common import (
-    _validate_input,
-    _validate_noise_tunnel_type,
-    _select_targets,
-)
 from captum.attr._core.noise_tunnel import SUPPORTED_NOISE_TUNNEL_TYPES
+from captum.attr._utils.common import (_select_targets, _validate_input,
+                                       _validate_noise_tunnel_type)
 
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

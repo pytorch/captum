@@ -3,8 +3,8 @@
 from __future__ import print_function
 
 import os
-import unittest
 import tempfile
+import unittest
 
 import torch
 

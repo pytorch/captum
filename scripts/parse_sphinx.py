@@ -5,7 +5,6 @@ import os
 
 from bs4 import BeautifulSoup
 
-
 js_scripts = """
 <script type="text/javascript" id="documentation_options" data-url_root="./"
   src="/js/documentation_options.js"></script>

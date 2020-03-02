@@ -4,6 +4,7 @@ from typing import Any, Tuple, cast
 import torch
 from torch import Tensor
 from torch.nn import Module
+
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients

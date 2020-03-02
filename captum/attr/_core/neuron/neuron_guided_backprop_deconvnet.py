@@ -3,10 +3,10 @@ from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
 
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
 from ..._utils.typing import TensorOrTupleOfTensorsGeneric
-from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
+from ..guided_backprop_deconvnet import Deconvolution, GuidedBackprop
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Tuple, Union, Any
+from typing import Any, Callable, List, Tuple, Union
+
 from torch.nn import Module
 
-from ..gradient_shap import GradientShap
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
 from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..gradient_shap import GradientShap
 
 
 class NeuronGradientShap(NeuronAttribution, GradientAttribution):

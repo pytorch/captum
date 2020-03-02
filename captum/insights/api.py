@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
 import inspect
 from collections import namedtuple
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import (Any, Callable, Dict, Iterable, List, NamedTuple, Optional,
+                    Tuple, Union, cast)
 
 import torch
 from torch import Tensor
@@ -21,10 +11,8 @@ from torch.nn import Module
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
 from captum.attr._utils.common import _run_forward, safe_div
-from captum.insights.config import (
-    ATTRIBUTION_METHOD_CONFIG,
-    ATTRIBUTION_NAMES_TO_METHODS,
-)
+from captum.insights.config import (ATTRIBUTION_METHOD_CONFIG,
+                                    ATTRIBUTION_NAMES_TO_METHODS)
 from captum.insights.features import BaseFeature
 from captum.insights.server import namedtuple_to_dict
 

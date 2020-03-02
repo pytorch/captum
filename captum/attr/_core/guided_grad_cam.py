@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-import torch
 import warnings
+from typing import Any, List, Union
+
+import torch
+from torch import Tensor
+from torch.nn import Module
 
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import _format_input, _format_attributions, _is_tuple
-
-from .layer.grad_cam import LayerGradCam
-from .guided_backprop_deconvnet import GuidedBackprop
-
-from torch.nn import Module
-from torch import Tensor
-from typing import Any, List, Union
+from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from .guided_backprop_deconvnet import GuidedBackprop
+from .layer.grad_cam import LayerGradCam
 
 
 class GuidedGradCam(GradientAttribution):
