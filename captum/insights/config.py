@@ -34,7 +34,9 @@ SUPPORTED_ATTRIBUTION_METHODS = [
 ]
 
 ATTRIBUTION_NAMES_TO_METHODS = {
-    cls.get_name(): cls for cls in SUPPORTED_ATTRIBUTION_METHODS
+    # mypy bug - treating it as a type instead of a class
+    cls.get_name(): cls  # type: ignore
+    for cls in SUPPORTED_ATTRIBUTION_METHODS
 }
 
 ATTRIBUTION_METHOD_CONFIG = {
