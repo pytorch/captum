@@ -536,7 +536,6 @@ class DeepLiftShap(DeepLift):
             the additive composition of feature effects.
     Although, it assumes a linear model for each explanation, the overall
     model across multiple explanations can be complex and non-linear.
-
     """
 
     def __init__(self, model: Module) -> None:
