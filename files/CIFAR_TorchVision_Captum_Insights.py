@@ -112,13 +112,13 @@ visualizer = AttributionVisualizer(
 )
 
 
-# In[ ]:
+# In[4]:
 
 
 visualizer.render()
 
 
-# In[4]:
+# In[5]:
 
 
 # show a screenshot if using notebook non-interactively
