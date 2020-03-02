@@ -14,7 +14,7 @@ class LayerActivation(LayerAttribution):
     r"""
     Computes activation of selected layer for given input.
     """
-    
+
     def __init__(
         self,
         forward_func: Callable,

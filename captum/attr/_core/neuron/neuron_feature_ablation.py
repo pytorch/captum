@@ -26,7 +26,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
     equal to the change in target as a result of ablating the entire feature
     group.
     """
-    
+
     def __init__(
         self,
         forward_func: Callable,

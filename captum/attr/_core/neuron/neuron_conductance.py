@@ -28,6 +28,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     The details of the approach can be found here:
     https://arxiv.org/abs/1805.12233
     """
+
     def __init__(
         self,
         forward_func: Callable,

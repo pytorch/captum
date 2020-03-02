@@ -44,6 +44,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     randomly draw samples from the distribution of baselines, add noise to input
     samples and compute the expectation (smoothgrad).
     """
+
     def __init__(
         self,
         forward_func: Callable,

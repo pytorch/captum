@@ -22,6 +22,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
     Note that this method is equivalent to applying integrated gradients
     where the output is the output of the identified neuron.
     """
+
     def __init__(
         self,
         forward_func: Callable,

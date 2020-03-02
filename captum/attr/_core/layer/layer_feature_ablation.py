@@ -32,6 +32,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
     equal to the change in target as a result of ablating the entire neuron
     group.
     """
+
     def __init__(
         self,
         forward_func: Callable,

@@ -20,6 +20,7 @@ class Saliency(GradientAttribution):
     More details about the approach can be found in the following paper:
         https://arxiv.org/pdf/1312.6034.pdf
     """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:

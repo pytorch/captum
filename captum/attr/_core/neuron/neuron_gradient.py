@@ -22,6 +22,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
     Computes the gradient of the output of a particular neuron with
     respect to the inputs of the network.
     """
+
     def __init__(
         self,
         forward_func: Callable,

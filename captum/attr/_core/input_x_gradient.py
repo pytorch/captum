@@ -13,7 +13,7 @@ class InputXGradient(GradientAttribution):
     the gradient with respect to input.
     https://arxiv.org/abs/1611.07270
     """
-    
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:

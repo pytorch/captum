@@ -35,6 +35,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
     features, utilize NeuronConductance instead, and provide the target
     neuron index.
     """
+
     def __init__(
         self,
         forward_func: Callable,

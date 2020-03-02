@@ -23,6 +23,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
     Computes element-wise product of gradient and activation for selected
     layer on given inputs.
     """
+
     def __init__(
         self,
         forward_func: Callable,

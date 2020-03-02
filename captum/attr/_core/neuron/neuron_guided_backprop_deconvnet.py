@@ -10,7 +10,7 @@ from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
-    """        
+    r"""
     Computes attribution of the given neuron using deconvolution.
     Deconvolution computes the gradient of the target output with
     respect to the input, but gradients of ReLU functions are overriden so
@@ -27,6 +27,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     given model are performed using a module (nn.module.ReLU).
     If nn.functional.ReLU is used, gradients are not overriden appropriately.
     """
+
     def __init__(
         self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
@@ -152,6 +153,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
     given model are performed using a module (nn.module.ReLU).
     If nn.functional.ReLU is used, gradients are not overriden appropriately.
     """
+
     def __init__(
         self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
