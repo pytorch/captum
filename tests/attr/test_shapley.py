@@ -6,7 +6,7 @@ import unittest
 
 import torch
 
-from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._core.shapley_value import ShapleyValueSampling, ShapleyValues
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
 
 from .helpers.basic_models import (
@@ -85,7 +85,12 @@ class Test(BaseTest):
             [[0, 398, 38], [0.0, 38.0, 0.0]],
         )
         self._shapley_test_assert(
-            net, (inp1, inp2, inp3), expected, additional_input=(1,), n_samples=200,
+            net,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            n_samples=200,
+            test_true_shapley=False,
         )
 
     def test_multi_input_shapley_sampling_with_mask(self) -> None:
@@ -261,6 +266,7 @@ class Test(BaseTest):
         target: Union[None, int] = 0,
         n_samples: int = 100,
         delta: float = 1.0,
+        test_true_shapley: bool = True,
     ) -> None:
         for batch_size in perturbations_per_eval:
             shapley_samp = ShapleyValueSampling(model)
@@ -276,6 +282,19 @@ class Test(BaseTest):
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
+            if test_true_shapley:
+                shapley_val = ShapleyValues(model)
+                attributions = shapley_val.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                )
+                assertTensorTuplesAlmostEqual(
+                    self, attributions, expected_attr, mode="max", delta=0.001
+                )
 
 
 if __name__ == "__main__":

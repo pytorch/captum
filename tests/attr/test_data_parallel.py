@@ -8,7 +8,7 @@ from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.deep_lift import DeepLift
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._core.shapley_value import ShapleyValueSampling, ShapleyValues
 
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -804,6 +804,20 @@ class Test(BaseGPUTest):
                 test_batches=False,
                 perturbations_per_eval=perturbations_per_eval,
                 delta=0.1,
+            )
+
+    def test_multi_input_shapley_values(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for perturbations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValues,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                test_batches=False,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def _alt_device_list(self):

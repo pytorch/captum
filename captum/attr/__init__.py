@@ -11,7 +11,7 @@ from ._core.guided_grad_cam import GuidedGradCam  # noqa
 from ._core.feature_ablation import FeatureAblation  # noqa
 from ._core.feature_permutation import FeaturePermutation  # noqa
 from ._core.occlusion import Occlusion  # noqa
-from ._core.shapley_value import ShapleyValueSampling  # noqa
+from ._core.shapley_value import ShapleyValueSampling, ShapleyValues  # noqa
 from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
 from ._core.layer.layer_activation import LayerActivation  # noqa
@@ -65,6 +65,7 @@ __all__ = [
     "FeaturePermutation",
     "Occlusion",
     "ShapleyValueSampling",
+    "ShapleyValues",
     "LayerConductance",
     "LayerGradientXActivation",
     "LayerActivation",
