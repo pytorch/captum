@@ -32,56 +32,29 @@
 <dd><p>In case input is a tensor and the attributions is returned in form of a
 tensor we take the first element of the attributions’ tuple to match the
 same shape signatues of the inputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]</p>
+</dd>
+</dl>
 </dd></dl>
 <dl class="function">
 <dt id="captum.attr._utils.common._reshape_and_sum">
 <code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_reshape_and_sum</code><span class="sig-paren">(</span><em class="sig-param">tensor_input</em>, <em class="sig-param">num_steps</em>, <em class="sig-param">num_examples</em>, <em class="sig-param">layer_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_reshape_and_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._reshape_and_sum" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 <dl class="function">
 <dt id="captum.attr._utils.common._run_forward">
 <code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_run_forward</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_run_forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._run_forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-<dl class="class">
-<dt id="captum.attr._utils.common.MaxList">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">MaxList</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">key=&lt;function MaxList.&lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Keep track of N maximal items</p>
-<dl class="simple">
-<dt>Implementation of MaxList:</dt><dd><p>for keeping track of the N top values of a large collection of items.
-Maintains a sorted list of the top N items that can be fetched with
-getlist().</p>
-</dd>
-<dt>Example use:</dt><dd><p>m = MaxList(2, key=lamda x: len(x))
-ml.add(“Hello World”)
-ml.add(“Mermaid Man!!!!”)
-ml.add(“Why?”)
-ml.getlist() -&gt; [“Mermaid Man!!!!”, “Hello World”]</p>
-</dd>
-<dt>If storing values that are not comparable, please provide a key function that</dt><dd><p>that maps the values to some numeric value.</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="captum.attr._utils.common.MaxList.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList.add" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add an element to the MaxList</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>item</strong> – the item that you want to add to the MaxList</p>
-</dd>
-</dl>
-</dd></dl>
-<dl class="method">
-<dt id="captum.attr._utils.common.MaxList.get_list">
-<code class="sig-name descname">get_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#MaxList.get_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common.MaxList.get_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrive the list of N maximal items in sorted order</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the sorted list of maximal items</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
-</dd>
-</dl>
-</dd></dl>
 </dd></dl>
 </div>
 </div>

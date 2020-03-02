@@ -96,11 +96,12 @@ be represented in these modes.</p>
 on which to visualize. If None is provided, then a new figure
 and axis are created.
 Default: None</p></li>
-<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Top attribution values which correspond
-to a total of outlier_perc percentage of the total attribution
-are set to 1 and scaling is performed using the minimum of
-these values. For sign=`all`, outliers and scale value are
-computed using absolute value of attributions.
+<li><p><strong>outlier_perc</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Top attribution values which
+correspond to a total of outlier_perc percentage of the
+total attribution are set to 1 and scaling is performed
+using the minimum of these values. For sign=`all`, outliers a
+nd scale value are computed using absolute value of
+attributions.
 Default: 2</p></li>
 <li><p><strong>cmap</strong> (<em>string</em><em>, </em><em>optional</em>) – String corresponding to desired colormap for
 heatmap visualization. This defaults to “Reds” for negative

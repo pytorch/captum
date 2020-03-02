@@ -59,10 +59,10 @@ convolutional layer.</p>
 each input tensor are computed by upsampling the GradCAM
 attributions to match that input’s dimensions. If interpolation is
 not possible for the input tensor dimensions and interpolation mode,
-then None is returned in the attributions for the corresponding
-position of that input tensor. This can occur if the input tensor
-does not have the same number of dimensions as the chosen layer’s
-output or is not either 3D, 4D or 5D.</p>
+then an empty tensor is returned in the attributions for the
+corresponding position of that input tensor. This can occur if the
+input tensor does not have the same number of dimensions as the chosen
+layer’s output or is not either 3D, 4D or 5D.</p>
 <p>Note that attributions are only meaningful for input tensors
 which are spatially alligned with the chosen layer, e.g. an input
 image tensor for a convolutional layer.</p>

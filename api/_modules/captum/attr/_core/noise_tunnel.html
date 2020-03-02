@@ -26,7 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.noise_tunnel</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
@@ -36,6 +36,7 @@
 
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">Attribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_validate_noise_tunnel_type</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
     <span class="n">_format_baseline</span><span class="p">,</span>
@@ -315,7 +316,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">attributions</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">attributions</span>
 
-        <span class="n">is_attrib_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="n">is_attrib_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
         <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span>
 
         <span class="n">expected_attributions</span> <span class="o">=</span> <span class="p">[]</span>
@@ -356,10 +357,10 @@
 
     <span class="k">def</span> <span class="nf">_apply_checks_and_return_attributions</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">attributions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">is_attrib_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-        <span class="n">delta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">delta</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
     <span class="p">):</span>
         <span class="n">attributions</span> <span class="o">=</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_attrib_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 

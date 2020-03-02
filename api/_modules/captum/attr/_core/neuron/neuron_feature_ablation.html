@@ -27,15 +27,14 @@
 <h1>Source code for captum.attr._core.neuron.neuron_feature_ablation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
 
 
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_verify_select_column</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
-<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensors</span>
+<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">BaselineType</span>
 
 <span class="kn">from</span> <span class="nn">..feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
 
@@ -45,7 +44,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
-        <span class="n">device_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -70,16 +69,14 @@
 
 <div class="viewcode-block" id="NeuronFeatureAblation.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronFeatureAblation.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TensorOrTupleOfTensors</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">            A perturbation based approach to computing neuron attribution,</span>
 <span class="sd">            involving replacing each input feature with a given baseline /</span>

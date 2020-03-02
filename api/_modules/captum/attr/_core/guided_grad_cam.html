@@ -26,23 +26,24 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.guided_grad_cam</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_attributions</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_is_tuple</span>
 
 <span class="kn">from</span> <span class="nn">.layer.grad_cam</span> <span class="kn">import</span> <span class="n">LayerGradCam</span>
 <span class="kn">from</span> <span class="nn">.guided_backprop_deconvnet</span> <span class="kn">import</span> <span class="n">GuidedBackprop</span>
 
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span>
-<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensors</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 
 
 <div class="viewcode-block" id="GuidedGradCam"><a class="viewcode-back" href="../../../../guided_grad_cam.html#captum.attr.GuidedGradCam">[docs]</a><span class="k">class</span> <span class="nc">GuidedGradCam</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args</span>
@@ -63,14 +64,12 @@
 
 <div class="viewcode-block" id="GuidedGradCam.attribute"><a class="viewcode-back" href="../../../../guided_grad_cam.html#captum.attr.GuidedGradCam.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">,</span>
-        <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">interpolate_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensors</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">            Computes element-wise product of guided backpropagation attributions</span>
 <span class="sd">            with upsampled (non-negative) GradCAM attributions.</span>
@@ -84,10 +83,10 @@
 <span class="sd">            each input tensor are computed by upsampling the GradCAM</span>
 <span class="sd">            attributions to match that input's dimensions. If interpolation is</span>
 <span class="sd">            not possible for the input tensor dimensions and interpolation mode,</span>
-<span class="sd">            then None is returned in the attributions for the corresponding</span>
-<span class="sd">            position of that input tensor. This can occur if the input tensor</span>
-<span class="sd">            does not have the same number of dimensions as the chosen layer's</span>
-<span class="sd">            output or is not either 3D, 4D or 5D.</span>
+<span class="sd">            then an empty tensor is returned in the attributions for the</span>
+<span class="sd">            corresponding position of that input tensor. This can occur if the</span>
+<span class="sd">            input tensor does not have the same number of dimensions as the chosen</span>
+<span class="sd">            layer's output or is not either 3D, 4D or 5D.</span>
 
 <span class="sd">            Note that attributions are only meaningful for input tensors</span>
 <span class="sd">            which are spatially alligned with the chosen layer, e.g. an input</span>
@@ -204,7 +203,7 @@
 <span class="sd">                &gt;&gt;&gt; # attribution size matches input size, Nx3x32x32</span>
 <span class="sd">                &gt;&gt;&gt; attribution = guided_gc.attribute(input, 3)</span>
 <span class="sd">        """</span>
-        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">grad_cam_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_cam</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
@@ -224,7 +223,7 @@
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">output_attr</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">output_attr</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">output_attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -237,10 +236,11 @@
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">"Couldn't appropriately interpolate GradCAM attributions for "</span>
-                    <span class="s2">"some input tensors, returning None for corresponding attributions."</span>
+                    <span class="s2">"Couldn't appropriately interpolate GradCAM attributions for some "</span>
+                    <span class="s2">"input tensors, returning empty tensor for corresponding "</span>
+                    <span class="s2">"attributions."</span>
                 <span class="p">)</span>
-                <span class="n">output_attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">output_attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_attr</span><span class="p">))</span></div></div>
 </pre></div>

@@ -26,7 +26,20 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer.layer_deep_lift</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+<span class="p">)</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
+
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">..._core.deep_lift</span> <span class="kn">import</span> <span class="n">DeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
@@ -48,10 +61,16 @@
     <span class="n">_expand_target</span><span class="p">,</span>
     <span class="n">ExpansionTypes</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+    <span class="n">Literal</span><span class="p">,</span>
+    <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">BaselineType</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="LayerDeepLift"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift">[docs]</a><span class="k">class</span> <span class="nc">LayerDeepLift</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">DeepLift</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -66,16 +85,46 @@
         <span class="n">DeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 
+    <span class="c1"># Ignoring mypy error for inconsistent signature with DeepLift</span>
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>  <span class="c1"># type: ignore</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span>
+        <span class="o">...</span>
+
 <div class="viewcode-block" id="LayerDeepLift.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLift.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">custom_attribution_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">""""</span>
 <span class="sd">        Implements DeepLIFT algorithm for the layer based on the following paper:</span>
 <span class="sd">        Learning Important Features Through Propagating Activation Differences,</span>
@@ -275,8 +324,8 @@
             <span class="n">input_base_additional_args</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">chunk_output_fn</span><span class="p">(</span><span class="n">out</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">chunk_output_fn</span><span class="p">(</span><span class="n">out</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">out_sub</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">out_sub</span> <span class="ow">in</span> <span class="n">out</span><span class="p">)</span>
 
@@ -321,7 +370,7 @@
 
 
 <div class="viewcode-block" id="LayerDeepLiftShap"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">LayerDeepLiftShap</span><span class="p">(</span><span class="n">LayerDeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -335,16 +384,52 @@
         <span class="n">LayerDeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="n">DeepLiftShap</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 
+    <span class="c1"># Ignoring mypy error for inconsistent signature with DeepLiftShap</span>
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>  <span class="c1"># type: ignore</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
+        <span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
+        <span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span>
+        <span class="o">...</span>
+
 <div class="viewcode-block" id="LayerDeepLiftShap.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerDeepLiftShap.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">baselines</span><span class="p">,</span>
-        <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">custom_attribution_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
+        <span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP</span>
 <span class="sd">        values for given input `layer`.</span>
@@ -538,7 +623,9 @@
             <span class="n">exp_base</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">exp_target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">exp_addit_args</span><span class="p">,</span>
-            <span class="n">return_convergence_delta</span><span class="o">=</span><span class="n">return_convergence_delta</span><span class="p">,</span>
+            <span class="n">return_convergence_delta</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span>
+                <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="n">return_convergence_delta</span>
+            <span class="p">),</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
         <span class="p">)</span>
@@ -547,7 +634,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attributions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">DeepLiftShap</span><span class="o">.</span><span class="n">_compute_mean_across_baselines</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">attrib</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">inp_bsz</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">attrib</span> <span class="ow">in</span> <span class="n">attributions</span>
             <span class="p">)</span>

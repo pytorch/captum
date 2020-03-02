@@ -26,6 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.approximation_methods</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 
@@ -47,7 +48,9 @@
 <span class="n">SUPPORTED_METHODS</span> <span class="o">=</span> <span class="n">SUPPORTED_RIEMANN_METHODS</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"gausslegendre"</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">approximation_parameters</span><span class="p">(</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
     <span class="sa">r</span><span class="sd">"""Retrieves parameters for the input approximation `method`</span>
 
 <span class="sd">        Args:</span>
@@ -61,7 +64,9 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid integral approximation method name: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">riemann_builders</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">riemann_builders</span><span class="p">(</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Riemann</span> <span class="o">=</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
     <span class="sa">r</span><span class="sd">"""Step sizes are identical and alphas are scaled in [0, 1]</span>
 
 <span class="sd">        Args:</span>
@@ -83,7 +88,7 @@
 
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">step_sizes</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">step_sizes</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than one"</span>
         <span class="n">deltas</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">:</span>
@@ -91,16 +96,18 @@
             <span class="n">deltas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/=</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">deltas</span>
 
-    <span class="k">def</span> <span class="nf">alphas</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">alphas</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than one"</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">trapezoid</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">middle</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">middle</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Riemann</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Provided Reimann approximation method is not valid."</span><span class="p">)</span>
         <span class="c1"># This is not a standard riemann method but in many cases it</span>
         <span class="c1"># leades to faster approaximation. Test cases for small number of steps</span>
         <span class="c1"># do not make sense but for larger number of steps the approximation is</span>
@@ -111,7 +118,9 @@
     <span class="k">return</span> <span class="n">step_sizes</span><span class="p">,</span> <span class="n">alphas</span>
 
 
-<span class="k">def</span> <span class="nf">gauss_legendre_builders</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">gauss_legendre_builders</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+    <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+<span class="p">]:</span>
     <span class="sa">r</span><span class="sd">""" Numpy's `np.polynomial.legendre` function helps to compute step sizes</span>
 <span class="sd">    and alpha coefficients using gauss-legendre quadrature rule.</span>
 <span class="sd">    Since numpy returns the integration parameters in different scales we need to</span>
@@ -139,12 +148,12 @@
 
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">step_sizes</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">step_sizes</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than zero"</span>
         <span class="c1"># Scaling from 2 to 1</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">alphas</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">alphas</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"The number of steps has to be larger than zero"</span>
         <span class="c1"># Scaling from [-1, 1] to [0, 1]</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">polynomial</span><span class="o">.</span><span class="n">legendre</span><span class="o">.</span><span class="n">leggauss</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>

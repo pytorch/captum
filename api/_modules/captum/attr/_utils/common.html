@@ -26,15 +26,30 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._utils.common</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">overload</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+    <span class="n">overload</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">device</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span>
 
 <span class="kn">from</span> <span class="nn">.approximation_methods</span> <span class="kn">import</span> <span class="n">SUPPORTED_METHODS</span>
+<span class="kn">from</span> <span class="nn">.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">BaselineType</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
 
 
 <span class="k">class</span> <span class="nc">ExpansionTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -42,7 +57,21 @@
     <span class="n">repeat_interleave</span> <span class="o">=</span> <span class="mi">2</span>
 
 
-<span class="k">def</span> <span class="nf">safe_div</span><span class="p">(</span><span class="n">denom</span><span class="p">,</span> <span class="n">quotient</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="k">def</span> <span class="nf">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">safe_div</span><span class="p">(</span><span class="n">denom</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">quotient</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">default_value</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        A simple utility function to perform `denom / quotient`</span>
 <span class="sd">        if the statement is undefined =&gt; result will be `default_value`</span>
@@ -50,7 +79,7 @@
     <span class="k">return</span> <span class="n">denom</span> <span class="o">/</span> <span class="n">quotient</span> <span class="k">if</span> <span class="n">quotient</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">default_value</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_target</span><span class="p">(</span><span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
     <span class="p">):</span>
@@ -63,12 +92,12 @@
 
 
 <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span>
-    <span class="n">inputs</span><span class="p">,</span>
-    <span class="n">baselines</span><span class="p">,</span>
-    <span class="n">n_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">"riemann_trapezoid"</span><span class="p">,</span>
-    <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">):</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"riemann_trapezoid"</span><span class="p">,</span>
+    <span class="n">draw_baseline_from_distrib</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">baselines</span><span class="p">),</span> <span class="p">(</span>
         <span class="s2">"Input and baseline must have the same "</span>
         <span class="s2">"dimensions, baseline has </span><span class="si">{}</span><span class="s2"> features whereas input has </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -111,7 +140,9 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_noise_tunnel_type</span><span class="p">(</span><span class="n">nt_type</span><span class="p">,</span> <span class="n">supported_noise_tunnel_types</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_noise_tunnel_type</span><span class="p">(</span>
+    <span class="n">nt_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">supported_noise_tunnel_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">assert</span> <span class="n">nt_type</span> <span class="ow">in</span> <span class="n">supported_noise_tunnel_types</span><span class="p">,</span> <span class="p">(</span>
         <span class="s2">"Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "</span>
         <span class="s2">"Given </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nt_type</span><span class="p">)</span>
@@ -131,8 +162,8 @@
 
 
 <span class="k">def</span> <span class="nf">_format_tensor_into_tuples</span><span class="p">(</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
     <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -147,7 +178,7 @@
     <span class="k">return</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_format_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_format_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
         <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">tuple</span>
     <span class="p">):</span>
@@ -156,10 +187,7 @@
 
 
 <span class="k">def</span> <span class="nf">_format_baseline</span><span class="p">(</span>
-    <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
-    <span class="p">],</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
@@ -178,11 +206,23 @@
     <span class="k">return</span> <span class="n">baselines</span>
 
 
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
 <span class="k">def</span> <span class="nf">_format_input_baseline</span><span class="p">(</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-    <span class="n">baselines</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]</span>
-    <span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_input_baseline</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="o">...</span>
+
+
+<span class="k">def</span> <span class="nf">_format_input_baseline</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]]:</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
@@ -192,7 +232,45 @@
 <span class="c1"># This function can potentially be merged with the `format_baseline` function</span>
 <span class="c1"># however, since currently not all algorithms support baselines of type</span>
 <span class="c1"># callable this will be kept in a separate function.</span>
-<span class="k">def</span> <span class="nf">_format_callable_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_callable_baseline</span><span class="p">(</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_callable_baseline</span><span class="p">(</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">Tensor</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">,</span>
+        <span class="nb">float</span><span class="p">,</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="k">def</span> <span class="nf">_format_callable_baseline</span><span class="p">(</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]],</span>
+        <span class="n">Tensor</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">,</span>
+        <span class="nb">float</span><span class="p">,</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">baselines</span><span class="p">):</span>
         <span class="c1"># Note: this assumes that if baselines is a function and if it takes</span>
         <span class="c1"># arguments, then the first argument is the `inputs`.</span>
@@ -202,10 +280,33 @@
             <span class="n">baselines</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">baselines</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="_format_attributions"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._format_attributions">[docs]</a><span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">):</span>
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="o">...</span>
+
+
+<div class="viewcode-block" id="_format_attributions"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._format_attributions">[docs]</a><span class="k">def</span> <span class="nf">_format_attributions</span><span class="p">(</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    In case input is a tensor and the attributions is returned in form of a</span>
 <span class="sd">    tensor we take the first element of the attributions' tuple to match the</span>
@@ -219,20 +320,23 @@
     <span class="k">return</span> <span class="n">attributions</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">attributions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 
-<span class="k">def</span> <span class="nf">_format_and_verify_strides</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_format_and_verify_strides</span><span class="p">(</span>
+    <span class="n">strides</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="o">...</span><span class="p">]:</span>
     <span class="c1"># Formats strides, which are necessary for occlusion</span>
     <span class="c1"># Assumes inputs are already formatted (in tuple)</span>
     <span class="k">if</span> <span class="n">strides</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">strides</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="n">strides</span><span class="p">,)</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="p">(</span><span class="n">strides</span><span class="p">,)</span>  <span class="c1"># type: ignore</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
         <span class="n">inputs</span>
     <span class="p">),</span> <span class="s2">"Strides must be provided for each input tensor."</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">)</span>
-            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># type: ignore</span>
         <span class="p">),</span> <span class="p">(</span>
             <span class="s2">"Stride for input index </span><span class="si">{}</span><span class="s2"> is </span><span class="si">{}</span><span class="s2">, which is invalid for input with "</span>
             <span class="s2">"shape </span><span class="si">{}</span><span class="s2">. It must be either an int or a tuple with length equal to "</span>
@@ -244,11 +348,15 @@
     <span class="k">return</span> <span class="n">strides</span>
 
 
-<span class="k">def</span> <span class="nf">_format_and_verify_sliding_window_shapes</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_format_and_verify_sliding_window_shapes</span><span class="p">(</span>
+    <span class="n">sliding_window_shapes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
     <span class="c1"># Formats shapes of sliding windows, which is necessary for occlusion</span>
     <span class="c1"># Assumes inputs is already formatted (in tuple)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
-        <span class="n">sliding_window_shapes</span> <span class="o">=</span> <span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">,)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">sliding_window_shapes</span> <span class="o">=</span> <span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">,)</span>  <span class="c1"># type: ignore</span>
+    <span class="n">sliding_window_shapes</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sliding_window_shapes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
         <span class="n">inputs</span>
     <span class="p">),</span> <span class="s2">"Must provide sliding window dimensions for each input tensor."</span>
@@ -265,16 +373,48 @@
     <span class="k">return</span> <span class="n">sliding_window_shapes</span>
 
 
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
 <span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
-    <span class="n">attr_algo</span><span class="p">,</span>
-    <span class="n">return_convergence_delta</span><span class="p">,</span>
-    <span class="n">attributions</span><span class="p">,</span>
-    <span class="n">start_point</span><span class="p">,</span>
-    <span class="n">end_point</span><span class="p">,</span>
-    <span class="n">additional_forward_args</span><span class="p">,</span>
-    <span class="n">target</span><span class="p">,</span>
-    <span class="n">is_inputs_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">):</span>
+    <span class="n">attr_algo</span><span class="p">:</span> <span class="s2">"GradientAttribution"</span><span class="p">,</span>
+    <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">start_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">end_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+<span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+    <span class="n">attr_algo</span><span class="p">:</span> <span class="s2">"GradientAttribution"</span><span class="p">,</span>
+    <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">start_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">end_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="o">...</span>
+
+
+<span class="c1"># FIXME: GradientAttribution is provided as a string due to a circular import.</span>
+<span class="c1"># This should be fixed when common is refactored into separate files.</span>
+<span class="k">def</span> <span class="nf">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
+    <span class="n">attr_algo</span><span class="p">:</span> <span class="s2">"GradientAttribution"</span><span class="p">,</span>
+    <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">attributions</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">start_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">end_point</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]</span>
+<span class="p">]:</span>
     <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
         <span class="c1"># computes convergence error</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">attr_algo</span><span class="o">.</span><span class="n">compute_convergence_delta</span><span class="p">(</span>
@@ -289,7 +429,7 @@
         <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Takes a tuple of tensors as input and returns a tuple that has the same</span>
 <span class="sd">    length as `inputs` with each element as the integer 0.</span>
@@ -319,7 +459,9 @@
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="_reshape_and_sum"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._reshape_and_sum">[docs]</a><span class="k">def</span> <span class="nf">_reshape_and_sum</span><span class="p">(</span><span class="n">tensor_input</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">layer_size</span><span class="p">):</span>
+<div class="viewcode-block" id="_reshape_and_sum"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._reshape_and_sum">[docs]</a><span class="k">def</span> <span class="nf">_reshape_and_sum</span><span class="p">(</span>
+    <span class="n">tensor_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">layer_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="c1"># Used for attribution methods which perform integration</span>
     <span class="c1"># Sums across integration steps by reshaping tensor to</span>
     <span class="c1"># (num_steps, num_examples, (layer_size)) and summing over</span>
@@ -329,15 +471,17 @@
     <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_verify_select_column</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">target</span>
+<span class="k">def</span> <span class="nf">_verify_select_column</span><span class="p">(</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="p">(</span><span class="n">target</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">target</span><span class="p">)</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="p">),</span> <span class="s2">"Cannot choose target column with output shape </span><span class="si">%r</span><span class="s2">."</span> <span class="o">%</span> <span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">shape</span><span class="p">,)</span>
     <span class="k">return</span> <span class="n">output</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="o">*</span><span class="n">target</span><span class="p">)]</span>
 
 
-<span class="k">def</span> <span class="nf">_select_targets</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_select_targets</span><span class="p">(</span><span class="n">output</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">output</span>
 
@@ -347,7 +491,7 @@
         <span class="k">return</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_examples</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"Output must be 2D to select tensor of targets."</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
@@ -358,12 +502,15 @@
             <span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_examples</span><span class="p">,</span> <span class="s2">"Target list length does not match output!"</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">):</span>
             <span class="k">assert</span> <span class="n">dims</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"Output must be 2D to select tensor of targets."</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">output</span><span class="p">[(</span><span class="n">i</span><span class="p">,)</span> <span class="o">+</span> <span class="n">targ_elem</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">targ_elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
+                <span class="p">[</span>
+                    <span class="n">output</span><span class="p">[(</span><span class="n">i</span><span class="p">,)</span> <span class="o">+</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">targ_elem</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">targ_elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                <span class="p">]</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Target element type in list is not valid."</span><span class="p">)</span>
@@ -371,7 +518,12 @@
         <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">"Target type </span><span class="si">%r</span><span class="s2"> is not valid."</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="_run_forward"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._run_forward">[docs]</a><span class="k">def</span> <span class="nf">_run_forward</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="_run_forward"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common._run_forward">[docs]</a><span class="k">def</span> <span class="nf">_run_forward</span><span class="p">(</span>
+    <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="n">forward_func_args</span> <span class="o">=</span> <span class="n">signature</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forward_func_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">forward_func</span><span class="p">()</span>
@@ -391,11 +543,15 @@
 
 
 <span class="k">def</span> <span class="nf">_expand_additional_forward_args</span><span class="p">(</span>
-    <span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
-<span class="p">):</span>
+    <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">expansion_type</span><span class="p">:</span> <span class="n">ExpansionTypes</span> <span class="o">=</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">]:</span>
     <span class="k">def</span> <span class="nf">_expand_tensor_forward_arg</span><span class="p">(</span>
-        <span class="n">additional_forward_arg</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
-    <span class="p">):</span>
+        <span class="n">additional_forward_arg</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">expansion_type</span><span class="p">:</span> <span class="n">ExpansionTypes</span> <span class="o">=</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">additional_forward_arg</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">additional_forward_arg</span>
         <span class="k">if</span> <span class="n">expansion_type</span> <span class="o">==</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">:</span>
@@ -419,7 +575,11 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_expand_target</span><span class="p">(</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">expansion_type</span><span class="p">:</span> <span class="n">ExpansionTypes</span> <span class="o">=</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetType</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">expansion_type</span> <span class="o">==</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">target</span> <span class="o">*</span> <span class="n">n_steps</span>
@@ -427,7 +587,7 @@
             <span class="n">expanded_target</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>
                 <span class="n">expanded_target</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_steps</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">expanded_target</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">expanded_target</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">"Currently only `repeat` and `repeat_interleave`"</span>
@@ -449,8 +609,11 @@
 
 
 <span class="k">def</span> <span class="nf">_call_custom_attribution_func</span><span class="p">(</span>
-    <span class="n">custom_attribution_func</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
-<span class="p">):</span>
+    <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">multipliers</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">custom_attribution_func</span><span class="p">),</span> <span class="p">(</span>
         <span class="s2">"`custom_attribution_func`"</span>
         <span class="s2">" must be a callable function but </span><span class="si">{}</span><span class="s2"> provided"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -458,9 +621,6 @@
         <span class="p">)</span>
     <span class="p">)</span>
     <span class="n">custom_attr_func_params</span> <span class="o">=</span> <span class="n">signature</span><span class="p">(</span><span class="n">custom_attribution_func</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_attr_func_params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">"`custom_attribution_func`"</span> <span class="s2">" must take at least one and at most 3 arguments"</span>
-    <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_attr_func_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">custom_attribution_func</span><span class="p">(</span><span class="n">multipliers</span><span class="p">)</span>
@@ -468,9 +628,17 @@
         <span class="k">return</span> <span class="n">custom_attribution_func</span><span class="p">(</span><span class="n">multipliers</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_attr_func_params</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">custom_attribution_func</span><span class="p">(</span><span class="n">multipliers</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+            <span class="s2">"`custom_attribution_func` must take at least one and at most 3 arguments."</span>
+        <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_extract_device</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_extract_device</span><span class="p">(</span>
+    <span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+    <span class="n">hook_inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+    <span class="n">hook_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">device</span><span class="p">:</span>
     <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="p">(</span><span class="n">hook_inputs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">hook_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
@@ -498,8 +666,11 @@
 
 
 <span class="k">def</span> <span class="nf">_find_output_mode_and_verify</span><span class="p">(</span>
-    <span class="n">initial_eval</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
-<span class="p">):</span>
+    <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">"""</span>
 <span class="sd">    This method identifies whether the model outputs a single output for a batch</span>
 <span class="sd">    (agg_output_mode = True) or whether it outputs a single output per example</span>
@@ -531,66 +702,6 @@
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">initial_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="p">),</span> <span class="s2">"Target should identify a single element in the model output."</span>
     <span class="k">return</span> <span class="n">agg_output_mode</span>
-
-
-<div class="viewcode-block" id="MaxList"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common.MaxList">[docs]</a><span class="k">class</span> <span class="nc">MaxList</span><span class="p">:</span>
-    <span class="sd">"""Keep track of N maximal items</span>
-
-<span class="sd">    Implementation of MaxList:</span>
-<span class="sd">        for keeping track of the N top values of a large collection of items.</span>
-<span class="sd">        Maintains a sorted list of the top N items that can be fetched with</span>
-<span class="sd">        getlist().</span>
-
-<span class="sd">    Example use:</span>
-<span class="sd">        m = MaxList(2, key=lamda x: len(x))</span>
-<span class="sd">        ml.add("Hello World")</span>
-<span class="sd">        ml.add("Mermaid Man!!!!")</span>
-<span class="sd">        ml.add("Why?")</span>
-<span class="sd">        ml.getlist() -&gt; ["Mermaid Man!!!!", "Hello World"]</span>
-
-<span class="sd">    If storing values that are not comparable, please provide a key function that</span>
-<span class="sd">        that maps the values to some numeric value.</span>
-<span class="sd">    """</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="p">[]</span>
-
-<div class="viewcode-block" id="MaxList.add"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common.MaxList.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="sd">"""Add an element to the MaxList</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            item: the item that you want to add to the MaxList</span>
-<span class="sd">        """</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">value</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_insert</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="MaxList.get_list"><a class="viewcode-back" href="../../../../common.html#captum.attr._utils.common.MaxList.get_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">"""Retrive the list of N maximal items in sorted order</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            list: the sorted list of maximal items</span>
-<span class="sd">        """</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">]</span></div>
-
-    <span class="k">def</span> <span class="nf">_insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">)):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">value</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="p">))</span>
-                <span class="k">break</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">]</span></div>
 </pre></div>
 </div>
 </div>
