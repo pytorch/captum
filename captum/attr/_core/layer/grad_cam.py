@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -16,6 +16,7 @@ from ..._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
+from ..._utils.typing import TargetType
 
 
 class LayerGradCam(LayerAttribution, GradientAttribution):
@@ -23,7 +24,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args
@@ -46,9 +47,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,

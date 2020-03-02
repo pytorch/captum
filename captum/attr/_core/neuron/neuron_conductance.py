@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import torch
-from typing import Callable, List, Optional, Tuple, Union, Any
-from torch import Tensor
+from typing import Callable, List, Tuple, Union, Any
 from torch.nn import Module
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.batching import _batched_operator
 from ..._utils.common import (
+    _is_tuple,
     _reshape_and_sum,
     _format_input_baseline,
     _format_additional_forward_args,
@@ -17,7 +17,7 @@ from ..._utils.common import (
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -25,7 +25,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -58,20 +58,16 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             Computes conductance with respect to particular hidden neuron. The
             returned output is in the shape of the input, showing the attribution
@@ -222,7 +218,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inputs, baselines, n_steps, method)

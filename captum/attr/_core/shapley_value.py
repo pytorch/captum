@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, Iterable, Sequence
+from typing import Any, Callable, List, Tuple, Union, Iterable, Sequence
 
 import itertools
 import torch
@@ -12,6 +12,7 @@ from .._utils.common import (
     _format_attributions,
     _format_input,
     _format_input_baseline,
+    _is_tuple,
     _run_forward,
     _expand_additional_forward_args,
     _expand_target,
@@ -19,7 +20,7 @@ from .._utils.common import (
     _tensorize_baseline,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
@@ -73,18 +74,14 @@ class ShapleyValueSampling(PerturbationAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
@@ -257,7 +254,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
@@ -361,19 +358,12 @@ class ShapleyValueSampling(PerturbationAttribution):
         self,
         inputs: Tuple[Tensor, ...],
         additional_args: Any,
-        target: Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
+        target: TargetType,
         baselines: Tuple[Tensor, ...],
-        input_masks: TensorOrTupleOfTensors,
-        feature_permutation: Union[Tensor, Sequence[int]],
+        input_masks: TensorOrTupleOfTensorsGeneric,
+        feature_permutation: Sequence[int],
         perturbations_per_eval: int,
-    ) -> Iterable[
-        Tuple[
-            Tuple[Tensor, ...],
-            Any,
-            Optional[Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]],
-            Tuple[Tensor, ...],
-        ]
-    ]:
+    ) -> Iterable[Tuple[Tuple[Tensor, ...], Any, TargetType, Tuple[Tensor, ...]]]:
         """
         This method is a generator which yields each perturbation to be evaluated
         including inputs, additional_forward_args, targets, and mask.

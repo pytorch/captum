@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Any, Callable, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -10,7 +10,7 @@ from .._utils.common import (
     _format_and_verify_strides,
     _format_and_verify_sliding_window_shapes,
 )
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 from .feature_ablation import FeatureAblation
 
@@ -28,20 +28,16 @@ class Occlusion(FeatureAblation):
 
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        strides: Optional[
-            Union[int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]]
+        strides: Union[
+            None, int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]
         ] = None,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         perturbations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         A perturbation based approach to compute attribution, involving
         replacing each contiguous rectangular region with a given baseline /
@@ -256,7 +252,7 @@ class Occlusion(FeatureAblation):
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Optional[Tensor],
+        input_mask: Union[None, Tensor],
         baseline: Union[Tensor, int, float],
         start_feature: int,
         end_feature: int,

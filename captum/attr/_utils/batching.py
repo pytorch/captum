@@ -1,10 +1,31 @@
 #!/usr/bin/env python3
+import typing
+from typing import Any, Callable, List, Tuple, Union, Iterator, Dict
+
 import torch
+from torch import Tensor, device
 
 from .common import _format_input, _format_additional_forward_args
+from .typing import (
+    TensorOrTupleOfTensorsGeneric,
+    TupleOrTensorOrBoolGeneric,
+    TargetType,
+)
 
 
-def _tuple_splice_range(inputs, start, end):
+@typing.overload
+def _tuple_splice_range(inputs: None, start: int, end: int) -> None:
+    ...
+
+
+@typing.overload
+def _tuple_splice_range(inputs: Tuple, start: int, end: int) -> Tuple:
+    ...
+
+
+def _tuple_splice_range(
+    inputs: Union[None, Tuple], start: int, end: int
+) -> Union[None, Tuple]:
     """
     Splices each tensor element of given tuple (inputs) from range start
     (inclusive) to end (non-inclusive) on its first dimension. If element
@@ -21,7 +42,10 @@ def _tuple_splice_range(inputs, start, end):
     )
 
 
-def _reduce_list(val_list, red_func=torch.cat):
+def _reduce_list(
+    val_list: List[TupleOrTensorOrBoolGeneric],
+    red_func: Callable[[List], Any] = torch.cat,
+) -> TupleOrTensorOrBoolGeneric:
     """
     Applies reduction function to given list. If each element in the list is
     a Tensor, applies reduction function to all elements of the list, and returns
@@ -36,15 +60,23 @@ def _reduce_list(val_list, red_func=torch.cat):
         return red_func(val_list)
     elif isinstance(val_list[0], bool):
         return any(val_list)
-    assert isinstance(val_list[0], tuple), "Elements to be reduced can only be"
-    "either Tensors or tuples containing Tensors."
-    final_out = []
-    for i in range(len(val_list[0])):
-        final_out.append(_reduce_list([val_elem[i] for val_elem in val_list], red_func))
+    elif isinstance(val_list[0], tuple):
+        final_out = []
+        for i in range(len(val_list[0])):
+            final_out.append(
+                _reduce_list([val_elem[i] for val_elem in val_list], red_func)
+            )
+    else:
+        raise AssertionError(
+            "Elements to be reduced can only be"
+            "either Tensors or tuples containing Tensors."
+        )
     return tuple(final_out)
 
 
-def _sort_key_list(keys, device_ids=None):
+def _sort_key_list(
+    keys: List[device], device_ids: Union[None, List[int]] = None
+) -> List[device]:
     """
     Sorts list of torch devices (keys) by given index list, device_ids. If keys
     contains only one device, then the list is returned unchanged. If keys
@@ -54,7 +86,7 @@ def _sort_key_list(keys, device_ids=None):
     """
     if len(keys) == 1:
         return keys
-    id_dict = {}
+    id_dict: Dict[int, device] = {}
     assert device_ids is not None, "Device IDs must be provided with multiple devices."
     for key in keys:
         if key.index in id_dict:
@@ -73,8 +105,11 @@ def _sort_key_list(keys, device_ids=None):
 
 
 def _batched_generator(
-    inputs, additional_forward_args=None, target_ind=None, internal_batch_size=None
-):
+    inputs: TensorOrTupleOfTensorsGeneric,
+    additional_forward_args: Any = None,
+    target_ind: TargetType = None,
+    internal_batch_size: Union[None, int] = None,
+) -> Iterator[Tuple[Tuple[Tensor, ...], Any, TargetType]]:
     """
     Returns a generator which returns corresponding chunks of size internal_batch_size
     for both inputs and additional_forward_args. If batch size is None,
@@ -106,13 +141,13 @@ def _batched_generator(
 
 
 def _batched_operator(
-    operator,
-    inputs,
-    additional_forward_args=None,
-    target_ind=None,
-    internal_batch_size=None,
-    **kwargs
-):
+    operator: Callable[..., TupleOrTensorOrBoolGeneric],
+    inputs: TensorOrTupleOfTensorsGeneric,
+    additional_forward_args: Any = None,
+    target_ind: TargetType = None,
+    internal_batch_size: Union[None, int] = None,
+    **kwargs: Any
+) -> TupleOrTensorOrBoolGeneric:
     """
     Batches the operation of the given operator, applying the given batch size
     to inputs and additional forward arguments, and returning the concatenation

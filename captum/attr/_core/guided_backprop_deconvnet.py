@@ -2,16 +2,16 @@
 import warnings
 import torch
 import torch.nn.functional as F
-from typing import Any, List, Union, Tuple, Optional
+from typing import Any, List, Union, Tuple
 
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_input, _format_attributions
+from .._utils.common import _format_input, _format_attributions, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):
@@ -32,12 +32,10 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Computes attribution by overriding relu gradients. Based on constructor
         flag use_relu_grad_output, performs either GuidedBackpropagation if False
@@ -48,7 +46,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
@@ -108,12 +106,10 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Computes attribution using guided backpropagation. Guided backpropagation
         computes the gradient of the target output with respect to the input,
@@ -211,12 +207,10 @@ class Deconvolution(ModifiedReluGradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         Computes attribution using deconvolution. Deconvolution
         computes the gradient of the target output with respect to the input,

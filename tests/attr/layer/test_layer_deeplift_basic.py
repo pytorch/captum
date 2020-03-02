@@ -3,6 +3,8 @@
 from __future__ import print_function
 
 import torch
+from torch import Tensor
+from typing import Tuple, Union, List, cast
 
 from ..helpers.utils import (
     BaseTest,
@@ -21,7 +23,7 @@ from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLift
 
 
 class TestDeepLift(BaseTest):
-    def test_relu_layer_deeplift(self):
+    def test_relu_layer_deeplift(self) -> None:
         model = ReLULinearDeepLiftModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
@@ -35,7 +37,7 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
-    def test_relu_layer_deeplift_multiple_output(self):
+    def test_relu_layer_deeplift_multiple_output(self) -> None:
         model = BasicModel_MultiLayer(multi_input_module=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
@@ -52,7 +54,7 @@ class TestDeepLift(BaseTest):
         )
         assert_delta(self, delta)
 
-    def test_relu_layer_deeplift_add_args(self):
+    def test_relu_layer_deeplift_add_args(self) -> None:
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
@@ -67,7 +69,7 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 45.0]])
         assert_delta(self, delta)
 
-    def test_linear_layer_deeplift(self):
+    def test_linear_layer_deeplift(self) -> None:
         model = ReLULinearDeepLiftModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
@@ -81,13 +83,13 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
-    def test_relu_deeplift_with_custom_attr_func(self):
+    def test_relu_deeplift_with_custom_attr_func(self) -> None:
         model = ReLULinearDeepLiftModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         attr_method = LayerDeepLift(model, model.l3)
         self._relu_custom_attr_func_assert(attr_method, inputs, baselines, [[2.0]])
 
-    def test_linear_layer_deeplift_batch(self):
+    def test_linear_layer_deeplift_batch(self) -> None:
         model = ReLULinearDeepLiftModel(inplace=True)
         _, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         x1 = torch.tensor(
@@ -118,7 +120,7 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions, [[15.0]])
         assert_delta(self, delta)
 
-    def test_relu_layer_deepliftshap(self):
+    def test_relu_layer_deepliftshap(self) -> None:
         model = ReLULinearDeepLiftModel()
         (
             inputs,
@@ -134,7 +136,7 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
-    def test_relu_layer_deepliftshap_multiple_output(self):
+    def test_relu_layer_deepliftshap_multiple_output(self) -> None:
         model = BasicModel_MultiLayer(multi_input_module=True)
         (
             inputs,
@@ -154,7 +156,7 @@ class TestDeepLift(BaseTest):
         )
         assert_delta(self, delta)
 
-    def test_linear_layer_deepliftshap(self):
+    def test_linear_layer_deepliftshap(self) -> None:
         model = ReLULinearDeepLiftModel(inplace=True)
         (
             inputs,
@@ -178,7 +180,7 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions, [[15.0]])
         assert_delta(self, delta)
 
-    def test_relu_deepliftshap_with_custom_attr_func(self):
+    def test_relu_deepliftshap_with_custom_attr_func(self) -> None:
         model = ReLULinearDeepLiftModel()
         (
             inputs,
@@ -189,7 +191,7 @@ class TestDeepLift(BaseTest):
             attr_method, inputs, baselines, [[2.0], [2.0]]
         )
 
-    def test_lin_maxpool_lin_classification(self):
+    def test_lin_maxpool_lin_classification(self) -> None:
         inputs = torch.ones(2, 4)
         baselines = torch.tensor([[1, 2, 3, 9], [4, 8, 6, 7]]).float()
 
@@ -200,10 +202,16 @@ class TestDeepLift(BaseTest):
         )
         expected = [[[-8.0]], [[-7.0]]]
         expected_delta = [0.0, 0.0]
-        assertArraysAlmostEqual(attrs.detach().numpy(), expected)
+        assertArraysAlmostEqual(cast(Tensor, attrs).detach().numpy(), expected)
         assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
 
-    def _relu_custom_attr_func_assert(self, attr_method, inputs, baselines, expected):
+    def _relu_custom_attr_func_assert(
+        self,
+        attr_method: Union[LayerDeepLift, LayerDeepLiftShap],
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        expected: List[List[float]],
+    ) -> None:
         def custom_attr_func(multipliers, inputs, baselines):
             return tuple(multiplier * 2 for multiplier in multipliers)
 
@@ -217,7 +225,9 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attr[0], expected, 1e-19)
 
 
-def _create_inps_and_base_for_deeplift_neuron_layer_testing():
+def _create_inps_and_base_for_deeplift_neuron_layer_testing() -> Tuple[
+    Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]
+]:
     x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
     x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
@@ -230,7 +240,9 @@ def _create_inps_and_base_for_deeplift_neuron_layer_testing():
     return inputs, baselines
 
 
-def _create_inps_and_base_for_deepliftshap_neuron_layer_testing():
+def _create_inps_and_base_for_deepliftshap_neuron_layer_testing() -> Tuple[
+    Tuple[Tensor, Tensor], Tuple[Tensor, Tensor]
+]:
     x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
     x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 

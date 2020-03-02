@@ -5,7 +5,7 @@ from torch import Tensor
 from torch.nn import Module
 
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 
 import numpy as np
 
@@ -18,7 +18,11 @@ from ..._utils.common import (
     _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
 )
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    Literal,
+    TargetType,
+)
 
 from ..noise_tunnel import NoiseTunnel
 
@@ -28,7 +32,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -53,45 +57,45 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
-        stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
         additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Union[TensorOrTupleOfTensors, Callable],
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
         n_samples: int = 5,
-        stdevs: Optional[Union[float, Tuple[float, ...]]] = 0.0,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
     def attribute(
         self,
-        inputs,
-        baselines,
-        n_samples=5,
-        stdevs=0.0,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[TensorOrTupleOfTensorsGeneric, Callable],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         r"""
         Implements gradient SHAP for layer based on the implementation from SHAP's
         primary author. For reference, please, view:
@@ -306,7 +310,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ):
         r"""
         Args:
@@ -331,43 +335,39 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
         additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
+
+    def attribute(  # type: ignore
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
-    def attribute(
-        self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-    ):
+    ) -> Union[
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+    ]:
         inputs, baselines = _format_input_baseline(inputs, baselines)
         rand_coefficient = torch.tensor(
             np.random.uniform(0.0, 1.0, inputs[0].shape[0]),

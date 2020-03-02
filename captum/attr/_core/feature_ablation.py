@@ -4,20 +4,21 @@ import torch
 
 from torch import Tensor, dtype
 
-from typing import Callable, List, Optional, Tuple, Union, Any, cast
+from typing import Any, Callable, Tuple, Union, cast
 
 from .._utils.common import (
     _find_output_mode_and_verify,
     _format_attributions,
     _format_input,
     _format_input_baseline,
+    _is_tuple,
     _run_forward,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
 )
 from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -32,20 +33,15 @@ class FeatureAblation(PerturbationAttribution):
         self.use_weights = False
 
     def attribute(
-        # type:ignore
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         perturbations_per_eval: int = 1,
         **kwargs: Any
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r""""
         A perturbation based approach to computing attribution, involving
         replacing each input feature with a given baseline / reference, and
@@ -228,7 +224,7 @@ class FeatureAblation(PerturbationAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args

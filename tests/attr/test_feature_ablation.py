@@ -5,7 +5,7 @@ import unittest
 import torch
 from torch import Tensor
 from captum.attr._core.feature_ablation import FeatureAblation
-from typing import List, Tuple, Union, Optional, Any, Callable
+from typing import List, Tuple, Union, Any, Callable
 
 from .helpers.basic_models import (
     BasicModel,
@@ -15,7 +15,11 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from .helpers.utils import assertTensorAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import (
+    TensorOrTupleOfTensorsGeneric,
+    TargetType,
+    BaselineType,
+)
 
 
 class Test(BaseTest):
@@ -357,22 +361,18 @@ class Test(BaseTest):
     def _ablation_test_assert(
         self,
         model: Callable,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             List[float],
             List[List[float]],
             Tuple[List[List[float]], ...],
             Tuple[Tensor, ...],
         ],
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = 0,
+        baselines: BaselineType = None,
+        target: TargetType = 0,
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = FeatureAblation(model)

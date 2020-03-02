@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from torch.nn import Module
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Callable, List, Tuple, Union, Any
 
 from ..._utils.attribution import NeuronAttribution, GradientAttribution
 from ..._utils.common import (
+    _is_tuple,
     _format_input,
     _format_additional_forward_args,
     _format_attributions,
@@ -13,7 +14,7 @@ from ..._utils.gradient import (
     undo_gradient_requirements,
     _forward_layer_eval_with_neuron_grads,
 )
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):
@@ -21,7 +22,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -48,11 +49,11 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
             Computes the gradient of the output of a particular neuron with
             respect to the inputs of the network.
@@ -127,7 +128,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                 >>> # index (4,1,2).
                 >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
@@ -139,7 +140,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             inputs,
             self.layer,
             additional_forward_args,
-            neuron_index,
+            gradient_neuron_index=neuron_index,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
