@@ -15,6 +15,37 @@ from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class GuidedGradCam(GradientAttribution):
+    r"""
+    Computes element-wise product of guided backpropagation attributions
+    with upsampled (non-negative) GradCAM attributions.
+    GradCAM attributions are computed with respect to the layer
+    provided in the constructor, and attributions
+    are upsampled to match the input size. GradCAM is designed for
+    convolutional neural networks, and is usually applied to the last
+    convolutional layer.
+
+    Note that if multiple input tensors are provided, attributions for
+    each input tensor are computed by upsampling the GradCAM
+    attributions to match that input's dimensions. If interpolation is
+    not possible for the input tensor dimensions and interpolation mode,
+    then an empty tensor is returned in the attributions for the
+    corresponding position of that input tensor. This can occur if the
+    input tensor does not have the same number of dimensions as the chosen
+    layer's output or is not either 3D, 4D or 5D.
+
+    Note that attributions are only meaningful for input tensors
+    which are spatially alligned with the chosen layer, e.g. an input
+    image tensor for a convolutional layer.
+
+    More details regarding GuidedGradCAM can be found in the original
+    GradCAM paper here:
+    https://arxiv.org/pdf/1610.02391.pdf
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(
         self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
@@ -44,137 +75,108 @@ class GuidedGradCam(GradientAttribution):
         attribute_to_layer_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
-            Computes element-wise product of guided backpropagation attributions
-            with upsampled (non-negative) GradCAM attributions.
-            GradCAM attributions are computed with respect to the layer
-            provided in the constructor, and attributions
-            are upsampled to match the input size. GradCAM is designed for
-            convolutional neural networks, and is usually applied to the last
-            convolutional layer.
+        Args:
 
-            Note that if multiple input tensors are provided, attributions for
-            each input tensor are computed by upsampling the GradCAM
-            attributions to match that input's dimensions. If interpolation is
-            not possible for the input tensor dimensions and interpolation mode,
-            then an empty tensor is returned in the attributions for the
-            corresponding position of that input tensor. This can occur if the
-            input tensor does not have the same number of dimensions as the chosen
-            layer's output or is not either 3D, 4D or 5D.
+            inputs (tensor or tuple of tensors):  Input for which attributions
+                        are computed. If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples, and if multiple input tensors
+                        are provided, the examples must be aligned appropriately.
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
+                        If the network returns a scalar value per example,
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
 
-            Note that attributions are only meaningful for input tensors
-            which are spatially alligned with the chosen layer, e.g. an input
-            image tensor for a convolutional layer.
+                        - a single integer or a tensor containing a single
+                            integer, which is applied to all input examples
 
-            More details regarding GuidedGradCAM can be found in the original
-            GradCAM paper here:
-            https://arxiv.org/pdf/1610.02391.pdf
+                        - a list of integers or a 1D tensor, with length matching
+                            the number of examples in inputs (dim 0). Each integer
+                            is applied as the target for the corresponding example.
 
-            Warning: Ensure that all ReLU operations in the forward function of the
-            given model are performed using a module (nn.module.ReLU).
-            If nn.functional.ReLU is used, gradients are not overridden appropriately.
+                        For outputs with > 2 dimensions, targets can be either:
 
-            Args:
+                        - A single tuple, which contains #output_dims - 1
+                            elements. This target index is applied to all examples.
 
-                inputs (tensor or tuple of tensors):  Input for which attributions
-                            are computed. If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if multiple input tensors
-                            are provided, the examples must be aligned appropriately.
-                target (int, tuple, tensor or list, optional):  Output indices for
-                            which gradients are computed (for classification cases,
-                            this is usually the target class).
-                            If the network returns a scalar value per example,
-                            no target index is necessary.
-                            For general 2D outputs, targets can be either:
+                        - A list of tuples with length equal to the number of
+                            examples in inputs (dim 0), and each tuple containing
+                            #output_dims - 1 elements. Each tuple is applied as the
+                            target for the corresponding example.
 
-                            - a single integer or a tensor containing a single
-                                integer, which is applied to all input examples
+                        Default: None
+            additional_forward_args (any, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        Note that attributions are not computed with respect
+                        to these arguments.
+                        Default: None
+            interpolate_mode (str, optional): Method for interpolation, which
+                        must be a valid input interpolation mode for
+                        torch.nn.functional. These methods are
+                        "nearest", "area", "linear" (3D-only), "bilinear"
+                        (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
+                        based on the number of dimensions of the chosen layer
+                        output (which must also match the number of
+                        dimensions for the input tensor). Note that
+                        the original GradCAM paper uses "bilinear"
+                        interpolation, but we default to "nearest" for
+                        applicability to any of 3D, 4D or 5D tensors.
+                        Default: "nearest"
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attribution with respect to the layer input
+                        or output in `LayerGradCam`.
+                        If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to
+                        layer inputs, otherwise it will be computed with respect
+                        to layer outputs.
+                        Note that currently it is assumed that either the input
+                        or the output of internal layer, depending on whether we
+                        attribute to the input or output, is a single tensor.
+                        Support for multiple tensors will be added later.
+                        Default: False
 
-                            - a list of integers or a 1D tensor, with length matching
-                                the number of examples in inputs (dim 0). Each integer
-                                is applied as the target for the corresponding example.
-
-                            For outputs with > 2 dimensions, targets can be either:
-
-                            - A single tuple, which contains #output_dims - 1
-                                elements. This target index is applied to all examples.
-
-                            - A list of tuples with length equal to the number of
-                                examples in inputs (dim 0), and each tuple containing
-                                #output_dims - 1 elements. Each tuple is applied as the
-                                target for the corresponding example.
-
-                            Default: None
-                additional_forward_args (any, optional): If the forward function
-                            requires additional arguments other than the inputs for
-                            which attributions should not be computed, this argument
-                            can be provided. It must be either a single additional
-                            argument of a Tensor or arbitrary (non-tuple) type or a
-                            tuple containing multiple additional arguments including
-                            tensors or any arbitrary python types. These arguments
-                            are provided to forward_func in order following the
-                            arguments in inputs.
-                            Note that attributions are not computed with respect
-                            to these arguments.
-                            Default: None
-                interpolate_mode (str, optional): Method for interpolation, which
-                            must be a valid input interpolation mode for
-                            torch.nn.functional. These methods are
-                            "nearest", "area", "linear" (3D-only), "bilinear"
-                            (4D-only), "bicubic" (4D-only), "trilinear" (5D-only)
-                            based on the number of dimensions of the chosen layer
-                            output (which must also match the number of
-                            dimensions for the input tensor). Note that
-                            the original GradCAM paper uses "bilinear"
-                            interpolation, but we default to "nearest" for
-                            applicability to any of 3D, 4D or 5D tensors.
-                            Default: "nearest"
-                attribute_to_layer_input (bool, optional): Indicates whether to
-                            compute the attribution with respect to the layer input
-                            or output in `LayerGradCam`.
-                            If `attribute_to_layer_input` is set to True
-                            then the attributions will be computed with respect to
-                            layer inputs, otherwise it will be computed with respect
-                            to layer outputs.
-                            Note that currently it is assumed that either the input
-                            or the output of internal layer, depending on whether we
-                            attribute to the input or output, is a single tensor.
-                            Support for multiple tensors will be added later.
-                            Default: False
-
-            Returns:
-                *tensor* of **attributions**:
-                - **attributions** (*tensor*):
-                        Element-wise product of (upsampled) GradCAM
-                        and Guided Backprop attributions.
-                        If a single tensor is provided as inputs, a single tensor is
-                        returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
-                        Attributions will be the same size as the provided inputs,
-                        with each value providing the attribution of the
-                        corresponding input index.
-                        If the GradCAM attributions cannot be upsampled to the shape
-                        of a given input tensor, None is returned in the corresponding
-                        index position.
+        Returns:
+            *tensor* of **attributions**:
+            - **attributions** (*tensor*):
+                    Element-wise product of (upsampled) GradCAM
+                    and Guided Backprop attributions.
+                    If a single tensor is provided as inputs, a single tensor is
+                    returned. If a tuple is provided for inputs, a tuple of
+                    corresponding sized tensors is returned.
+                    Attributions will be the same size as the provided inputs,
+                    with each value providing the attribution of the
+                    corresponding input index.
+                    If the GradCAM attributions cannot be upsampled to the shape
+                    of a given input tensor, None is returned in the corresponding
+                    index position.
 
 
-            Examples::
+        Examples::
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> # It contains an attribute conv4, which is an instance of nn.conv2d,
-                >>> # and the output of this layer has dimensions Nx50x8x8.
-                >>> # It is the last convolution layer, which is the recommended
-                >>> # use case for GuidedGradCAM.
-                >>> net = ImageClassifier()
-                >>> guided_gc = GuidedGradCam(net, net.conv4)
-                >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-                >>> # Computes guided GradCAM attributions for class 3.
-                >>> # attribution size matches input size, Nx3x32x32
-                >>> attribution = guided_gc.attribute(input, 3)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> # It contains an attribute conv4, which is an instance of nn.conv2d,
+            >>> # and the output of this layer has dimensions Nx50x8x8.
+            >>> # It is the last convolution layer, which is the recommended
+            >>> # use case for GuidedGradCAM.
+            >>> net = ImageClassifier()
+            >>> guided_gc = GuidedGradCam(net, net.conv4)
+            >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
+            >>> # Computes guided GradCAM attributions for class 3.
+            >>> # attribution size matches input size, Nx3x32x32
+            >>> attribution = guided_gc.attribute(input, 3)
         """
         is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)

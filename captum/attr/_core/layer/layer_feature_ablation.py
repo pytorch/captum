@@ -20,6 +20,19 @@ from ..feature_ablation import FeatureAblation
 
 
 class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
+    r"""
+    A perturbation based approach to computing layer attribution, involving
+    replacing values in the input / output of a layer with a given baseline /
+    reference, and computing the difference in output. By default, each
+    neuron (scalar input / output value) within the layer is replaced
+    independently.
+    Passing a layer mask allows grouping neurons to be
+    ablated together.
+    Each neuron in the group will be given the same attribution value
+    equal to the change in target as a result of ablating the entire neuron
+    group.
+    """
+
     def __init__(
         self,
         forward_func: Callable,
@@ -59,17 +72,6 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         perturbations_per_eval: int = 1,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
-            A perturbation based approach to computing layer attribution, involving
-            replacing values in the input / output of a layer with a given baseline /
-            reference, and computing the difference in output. By default, each
-            neuron (scalar input / output value) within the layer is replaced
-            independently.
-            Passing a layer mask allows grouping neurons to be
-            ablated together.
-            Each neuron in the group will be given the same attribution value
-            equal to the change in target as a result of ablating the entire neuron
-            group.
-
             Args:
 
                 inputs (tensor or tuple of tensors):  Input for which layer

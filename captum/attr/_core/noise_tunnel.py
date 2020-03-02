@@ -33,6 +33,30 @@ SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
 class NoiseTunnel(Attribution):
+    r"""
+    Adds gaussian noise to each input in the batch `n_samples` times
+    and applies the given attribution algorithm to each of the samples.
+    The attributions of the samples are combined based on the given noise
+    tunnel type (nt_type):
+    If nt_type is `smoothgrad`, the mean of the sampled attributions is
+    returned. This approximates smoothing the given attribution method
+    with a Gaussian Kernel.
+    If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions
+    is returned.
+    If nt_type is `vargrad`, the variance of the sample attributions is
+    returned.
+
+    More details about adding noise can be found in the following papers:
+        https://arxiv.org/abs/1810.03292
+        https://arxiv.org/abs/1810.03307
+        https://arxiv.org/abs/1706.03825
+        https://arxiv.org/pdf/1806.10758
+    This method currently also supports batches of multiple examples input,
+    however it can be computationally expensive depending on the model,
+    the dimensionality of the data and execution environment.
+    It is assumed that the batch size is the first dimension of input tensors.
+    """
+
     def __init__(self, attribution_method: Attribution) -> None:
         r"""
         attribution_method (Attribution): An instance of any attribution algorithm
@@ -54,28 +78,6 @@ class NoiseTunnel(Attribution):
         **kwargs: Any
     ):
         r"""
-        Adds gaussian noise to each input in the batch `n_samples` times
-        and applies the given attribution algorithm to each of the samples.
-        The attributions of the samples are combined based on the given noise
-        tunnel type (nt_type):
-        If nt_type is `smoothgrad`, the mean of the sampled attributions is
-        returned. This approximates smoothing the given attribution method
-        with a Gaussian Kernel.
-        If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions
-        is returned.
-        If nt_type is `vargrad`, the variance of the sample attributions is
-        returned.
-
-        More details about adding noise can be found in the following papers:
-            https://arxiv.org/abs/1810.03292
-            https://arxiv.org/abs/1810.03307
-            https://arxiv.org/abs/1706.03825
-            https://arxiv.org/pdf/1806.10758
-        This method currently also supports batches of multiple examples input,
-        however it can be computationally expensive depending on the model,
-        the dimensionality of the data and execution environment.
-        It is assumed that the batch size is the first dimension of input tensors.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which integrated

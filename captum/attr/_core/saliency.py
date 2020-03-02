@@ -12,6 +12,15 @@ from .._utils.typing import TargetType
 
 
 class Saliency(GradientAttribution):
+    r"""
+    A baseline approach for computing input attribution. It returns
+    the gradients with respect to inputs. If `abs` is set to True, which is
+    the default, the absolute value of the gradients is returned.
+
+    More details about the approach can be found in the following paper:
+        https://arxiv.org/pdf/1312.6034.pdf
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -29,13 +38,6 @@ class Saliency(GradientAttribution):
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        A baseline approach for computing input attribution. It returns
-        the gradients with respect to inputs. If `abs` is set to True, which is
-        the default, the absolute value of the gradients is returned.
-
-        More details about the approach can be found in the following paper:
-            https://arxiv.org/pdf/1312.6034.pdf
-
         Args:
 
                 inputs (tensor or tuple of tensors):  Input for which integrated

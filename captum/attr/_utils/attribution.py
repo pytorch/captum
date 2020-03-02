@@ -409,13 +409,13 @@ class LayerAttribution(InternalAttribution):
 
 class NeuronAttribution(InternalAttribution):
     r"""
-        Neuron attribution provides input attribution for a given neuron, quanitfying
-        the importance of each input feature in the activation of a particular neuron.
-        Calling attribute on a NeuronAttribution object requires also providing
-        the index of the neuron in the output of the given layer for which attributions
-        are required.
-        The output attribution of calling attribute on a NeuronAttribution object
-        always matches the size of the input.
+    Neuron attribution provides input attribution for a given neuron, quanitfying
+    the importance of each input feature in the activation of a particular neuron.
+    Calling attribute on a NeuronAttribution object requires also providing
+    the index of the neuron in the output of the given layer for which attributions
+    are required.
+    The output attribution of calling attribute on a NeuronAttribution object
+    always matches the size of the input.
     """
 
     def __init__(

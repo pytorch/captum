@@ -24,6 +24,41 @@ import typing
 
 
 class GradientShap(GradientAttribution):
+    r"""
+    Implements gradient SHAP based on the implementation from SHAP's primary
+    author. For reference, please, view:
+
+    https://github.com/slundberg/shap\
+    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
+
+    A Unified Approach to Interpreting Model Predictions
+    http://papers.nips.cc/paper\
+    7062-a-unified-approach-to-interpreting-model-predictions
+
+    GradientShap approximates SHAP values by computing the expectations of
+    gradients by randomly sampling from the distribution of baselines/references.
+    It adds white noise to each input sample `n_samples` times, selects a
+    random baseline from baselines' distribution and a random point along the
+    path between the baseline and the input, and computes the gradient of outputs
+    with respect to those selected random points. The final SHAP values represent
+    the expected values of gradients * (inputs - baselines).
+
+    GradientShap makes an assumption that the input features are independent
+    and that the explanation model is linear, meaning that the explanations
+    are modeled through the additive composition of feature effects.
+    Under those assumptions, SHAP value can be approximated as the expectation
+    of gradients that are computed for randomly generated `n_samples` input
+    samples after adding gaussian noise `n_samples` times to each input for
+    different baselines/references.
+
+    In some sense it can be viewed as an approximation of integrated gradients
+    by computing the expectations of gradients for different baselines.
+
+    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    randomly draw samples from the distribution of baselines, add noise to input
+    samples and compute the expectation (smoothgrad).
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -79,39 +114,6 @@ class GradientShap(GradientAttribution):
         TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
         r"""
-        Implements gradient SHAP based on the implementation from SHAP's primary
-        author. For reference, please, view:
-
-        https://github.com/slundberg/shap\
-        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
-
-        A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper\
-        7062-a-unified-approach-to-interpreting-model-predictions
-
-        GradientShap approximates SHAP values by computing the expectations of
-        gradients by randomly sampling from the distribution of baselines/references.
-        It adds white noise to each input sample `n_samples` times, selects a
-        random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of outputs
-        with respect to those selected random points. The final SHAP values represent
-        the expected values of gradients * (inputs - baselines).
-
-        GradientShap makes an assumption that the input features are independent
-        and that the explanation model is linear, meaning that the explanations
-        are modeled through the additive composition of feature effects.
-        Under those assumptions, SHAP value can be approximated as the expectation
-        of gradients that are computed for randomly generated `n_samples` input
-        samples after adding gaussian noise `n_samples` times to each input for
-        different baselines/references.
-
-        In some sense it can be viewed as an approximation of integrated gradients
-        by computing the expectations of gradients for different baselines.
-
-        Current implementation uses Smoothgrad from `NoiseTunnel` in order to
-        randomly draw samples from the distribution of baselines, add noise to input
-        samples and compute the expectation (smoothgrad).
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which SHAP attribution
@@ -222,19 +224,19 @@ class GradientShap(GradientAttribution):
                         The deltas are ordered by each input example and `n_samples`
                         noisy samples generated for it.
 
-            Examples::
+        Examples::
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> net = ImageClassifier()
-                >>> gradient_shap = GradientShap(net)
-                >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
-                >>> # choosing baselines randomly
-                >>> baselines = torch.randn(20, 3, 32, 32)
-                >>> # Computes gradient shap for the input
-                >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = gradient_shap.attribute(input, baselines,
-                                                                 target=5)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> gradient_shap = GradientShap(net)
+            >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
+            >>> # choosing baselines randomly
+            >>> baselines = torch.randn(20, 3, 32, 32)
+            >>> # Computes gradient shap for the input
+            >>> # Attribution size matches input size: 3x3x32x32
+            >>> attribution = gradient_shap.attribute(input, baselines,
+                                                                target=5)
 
         """
         # since `baselines` is a distribution, we can generate it using a function

@@ -28,6 +28,42 @@ from ..noise_tunnel import NoiseTunnel
 
 
 class LayerGradientShap(LayerAttribution, GradientAttribution):
+    r"""
+    Implements gradient SHAP for layer based on the implementation from SHAP's
+    primary author. For reference, please, view:
+
+    https://github.com/slundberg/shap\
+    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
+
+    A Unified Approach to Interpreting Model Predictions
+    http://papers.nips.cc/paper\
+    7062-a-unified-approach-to-interpreting-model-predictions
+
+    GradientShap approximates SHAP values by computing the expectations of
+    gradients by randomly sampling from the distribution of baselines/references.
+    It adds white noise to each input sample `n_samples` times, selects a
+    random baseline from baselines' distribution and a random point along the
+    path between the baseline and the input, and computes the gradient of
+    outputs with respect to selected random points in chosen `layer`.
+    The final SHAP values represent the expected values of
+    `gradients * (layer_attr_inputs - layer_attr_baselines)`.
+
+    GradientShap makes an assumption that the input features are independent
+    and that the explanation model is linear, meaning that the explanations
+    are modeled through the additive composition of feature effects.
+    Under those assumptions, SHAP value can be approximated as the expectation
+    of gradients that are computed for randomly generated `n_samples` input
+    samples after adding gaussian noise `n_samples` times to each input for
+    different baselines/references.
+
+    In some sense it can be viewed as an approximation of integrated gradients
+    by computing the expectations of gradients for different baselines.
+
+    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    randomly draw samples from the distribution of baselines, add noise to input
+    samples and compute the expectation (smoothgrad).
+    """
+
     def __init__(
         self,
         forward_func: Callable,
@@ -97,40 +133,6 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r"""
-        Implements gradient SHAP for layer based on the implementation from SHAP's
-        primary author. For reference, please, view:
-
-        https://github.com/slundberg/shap\
-        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
-
-        A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper\
-        7062-a-unified-approach-to-interpreting-model-predictions
-
-        GradientShap approximates SHAP values by computing the expectations of
-        gradients by randomly sampling from the distribution of baselines/references.
-        It adds white noise to each input sample `n_samples` times, selects a
-        random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of
-        outputs with respect to selected random points in chosen `layer`.
-        The final SHAP values represent the expected values of
-        `gradients * (layer_attr_inputs - layer_attr_baselines)`.
-
-        GradientShap makes an assumption that the input features are independent
-        and that the explanation model is linear, meaning that the explanations
-        are modeled through the additive composition of feature effects.
-        Under those assumptions, SHAP value can be approximated as the expectation
-        of gradients that are computed for randomly generated `n_samples` input
-        samples after adding gaussian noise `n_samples` times to each input for
-        different baselines/references.
-
-        In some sense it can be viewed as an approximation of integrated gradients
-        by computing the expectations of gradients for different baselines.
-
-        Current implementation uses Smoothgrad from `NoiseTunnel` in order to
-        randomly draw samples from the distribution of baselines, add noise to input
-        samples and compute the expectation (smoothgrad).
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input which are used to compute

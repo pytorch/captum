@@ -43,6 +43,34 @@ from ..._utils.typing import (
 
 
 class LayerDeepLift(LayerAttribution, DeepLift):
+    r"""
+    Implements DeepLIFT algorithm for the layer based on the following paper:
+    Learning Important Features Through Propagating Activation Differences,
+    Avanti Shrikumar, et. al.
+    https://arxiv.org/abs/1704.02685
+
+    and the gradient formulation proposed in:
+    Towards better understanding of gradient-based attribution methods for
+    deep neural networks,  Marco Ancona, et.al.
+    https://openreview.net/pdf?id=Sy21R9JAW
+
+    This implementation supports only Rescale rule. RevealCancel rule will
+    be supported in later releases.
+    Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
+    Integrated Gradients, it runs significantly faster than Integrated
+    Gradients and is preferred for large datasets.
+
+    Currently we only support a limited number of non-linear activations
+    but the plan is to expand the list in the future.
+
+    Note: As we know, currently we cannot access the building blocks,
+    of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
+    Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
+    with performance similar to built-in ones using TorchScript.
+    More details on how to build custom RNNs can be found here:
+    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
+    """
+
     def __init__(self, model: Module, layer: Module):
         r"""
         Args:
@@ -99,32 +127,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r""""
-        Implements DeepLIFT algorithm for the layer based on the following paper:
-        Learning Important Features Through Propagating Activation Differences,
-        Avanti Shrikumar, et. al.
-        https://arxiv.org/abs/1704.02685
-
-        and the gradient formulation proposed in:
-        Towards better understanding of gradient-based attribution methods for
-        deep neural networks,  Marco Ancona, et.al.
-        https://openreview.net/pdf?id=Sy21R9JAW
-
-        This implementation supports only Rescale rule. RevealCancel rule will
-        be supported in later releases.
-        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
-        Integrated Gradients, it runs significantly faster than Integrated
-        Gradients and is preferred for large datasets.
-
-        Currently we only support a limited number of non-linear activations
-        but the plan is to expand the list in the future.
-
-        Note: As we know, currently we cannot access the building blocks,
-        of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
-        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
-        with performance similar to built-in ones using TorchScript.
-        More details on how to build custom RNNs can be found here:
-        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which layer
@@ -343,6 +345,26 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
+    r"""
+    Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
+    values for given input `layer`.
+    For each input sample - baseline pair it computes DeepLift attributions
+    with respect to inputs or outputs of given `layer` averages
+    resulting attributions across baselines. Whether to compute the attributions
+    with respect to the inputs or outputs of the layer is defined by the
+    input flag `attribute_to_layer_input`.
+    More details about the algorithm can be found here:
+
+    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+
+    Note that the explanation model:
+        1. Assumes that input features are independent of one another
+        2. Is linear, meaning that the explanations are modeled through
+            the additive composition of feature effects.
+    Although, it assumes a linear model for each explanation, the overall
+    model across multiple explanations can be complex and non-linear.
+    """
+
     def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
@@ -404,24 +426,6 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
         r"""
-        Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
-        values for given input `layer`.
-        For each input sample - baseline pair it computes DeepLift attributions
-        with respect to inputs or outputs of given `layer` averages
-        resulting attributions across baselines. Whether to compute the attributions
-        with respect to the inputs or outputs of the layer is defined by the
-        input flag `attribute_to_layer_input`.
-        More details about the algorithm can be found here:
-
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
-
-        Note that the explanation model:
-            1. Assumes that input features are independent of one another
-            2. Is linear, meaning that the explanations are modeled through
-               the additive composition of feature effects.
-        Although, it assumes a linear model for each explanation, the overall
-        model across multiple explanations can be complex and non-linear.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which layer

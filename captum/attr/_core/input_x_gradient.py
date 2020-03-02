@@ -8,6 +8,12 @@ from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class InputXGradient(GradientAttribution):
+    r"""
+    A baseline approach for computing the attribution. It multiplies input with
+    the gradient with respect to input.
+    https://arxiv.org/abs/1611.07270
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -24,10 +30,6 @@ class InputXGradient(GradientAttribution):
         additional_forward_args: Any = None,
     ) -> TensorOrTupleOfTensorsGeneric:
         r""""
-        A baseline approach for computing the attribution. It multiplies input with
-        the gradient with respect to input.
-        https://arxiv.org/abs/1611.07270
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
