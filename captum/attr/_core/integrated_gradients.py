@@ -131,14 +131,15 @@ class IntegratedGradients(GradientAttribution):
 
                         - a tuple of tensors or scalars, the baseline corresponding
                             to each tensor in the inputs' tuple can be:
+                            
                             - either a tensor with matching dimensions to
-                                corresponding tensor in the inputs' tuple
-                                or the first dimension is one and the remaining
-                                dimensions match with the corresponding
-                                input tensor.
+                            corresponding tensor in the inputs' tuple
+                            or the first dimension is one and the remaining
+                            dimensions match with the corresponding
+                            input tensor.
                             - or a scalar, corresponding to a tensor in the
-                                inputs' tuple. This scalar value is broadcasted
-                                for corresponding input tensor.
+                            inputs' tuple. This scalar value is broadcasted
+                            for corresponding input tensor.
 
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
@@ -204,9 +205,9 @@ class IntegratedGradients(GradientAttribution):
                         Default: None
             return_convergence_delta (bool, optional): Indicates whether to return
                     convergence delta or not. If `return_convergence_delta`
-                        is set to True convergence delta will be returned in
-                        a tuple following attributions.
-                        Default: False
+                    is set to True convergence delta will be returned in
+                    a tuple following attributions.
+                    Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):
