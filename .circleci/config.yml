@@ -43,11 +43,7 @@ commands:
     steps:
       - run:
           name: "Check import order with isort"
-          command: |
-            isort -v
-            isort captum/insights/example.py --diff --verbose
-            isort captum/attr/_models/pytext.py --diff --verbose
-            isort --check-only
+          command: isort --check-only
 
   mypy_check:
     description: "Static type checking with mypy"
