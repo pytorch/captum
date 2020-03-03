@@ -43,7 +43,9 @@ commands:
     steps:
       - run:
           name: "Check import order with isort"
-          command: isort --check-only
+          command: |
+            isort -v
+            isort --check-only
 
   mypy_check:
     description: "Static type checking with mypy"
