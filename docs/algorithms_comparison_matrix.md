@@ -168,15 +168,6 @@ Please, scroll to the right for more details.
     <td>Assigns an importance score to each input feature based on the magnitude changes in model output or loss when those features are permuted based on input feature mask. </td>
   </tr>
   <tr>
-    <td> Perturbation </td>
-    <td>Any traditional or neural network model. </td>
-    <td>O(#examples * #features * #perturbations_per_eval)</td>
-    <td>Forward</td>
-     <td>#examples * #features </td>
-    <td>No (Internally in our implementation permuted features for each batch are treated as baselines)</td>
-    <td>Assigns an importance score to each input feature based on the magnitude changes in model output or loss when those features are permuted based on input feature mask. </td>
-  </tr>
-  <tr>
     <td><strong>Occlusion</strong></td>
     <td> Perturbation </td>
     <td> Any traditional or neural network model. NOTE: this algorithm has been primarily used for computer vision but could theoretically also be used for other applications as well. In addition to that this algorithm also requires strides which indicates the length of the steps required for sliding k-dimensional window.</td>
