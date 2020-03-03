@@ -315,7 +315,7 @@ class DeepLift(GradientAttribution):
         wrapped_forward_func = self._construct_forward_func(
             self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
-        gradients = self.gradient_func(wrapped_forward_func, inputs)
+        gradients = self.gradient_func(wrapped_forward_func, inputs,)
         if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
@@ -780,7 +780,9 @@ class DeepLiftShap(DeepLift):
         inputs: Tuple[Tensor, ...],
         target: TargetType,
         additional_forward_args: Any,
-    ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any]:
+    ) -> Tuple[
+        Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any,
+    ]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
@@ -843,7 +845,7 @@ def nonlinear(
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
     new_grad_inp[0] = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
 
     # If the module is invalid, save the newly computed gradients
@@ -865,7 +867,7 @@ def softmax(
 
     new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
     )
     # normalizing
     n = np.prod(grad_input[0].shape)
