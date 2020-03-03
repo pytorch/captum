@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-from typing import Iterable, Union, Tuple, Any, List
-
-from enum import Enum
-import numpy as np
-from numpy import ndarray
 import warnings
+from enum import Enum
+from typing import Any, Iterable, List, Tuple, Union
 
+import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.pyplot import figure, axis
-from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.figure import Figure
+from matplotlib.pyplot import axis, figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from numpy import ndarray
 
 try:
     from IPython.core.display import display, HTML

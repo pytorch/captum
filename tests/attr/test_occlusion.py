@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-from typing import Callable, Union, Tuple, List, Any
 import unittest
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._utils.typing import (
-    TensorOrTupleOfTensorsGeneric,
-    TargetType,
     BaselineType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
 )
 
 from .helpers.basic_models import (
@@ -18,7 +18,7 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

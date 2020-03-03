@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Tuple, Union, Any
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
+import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
-import torch.nn.functional as F
 
-from ..._utils.attribution import LayerAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
-    _format_input,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input,
 )
 from ..._utils.gradient import (
-    compute_layer_gradients_and_eval,
     apply_gradient_requirements,
+    compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
 from ..._utils.typing import TargetType

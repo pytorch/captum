@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-from torch.nn import Module
-from torch import Tensor
-from typing import Any, List, Tuple, Union, cast
 import unittest
+from typing import Any, List, Tuple, Union, cast
 
 import torch
-from captum.attr._core.saliency import Saliency
+from torch import Tensor
+from torch.nn import Module
+
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
+from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import _forward_layer_eval
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
@@ -17,9 +18,9 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import (
+    BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
-    BaseTest,
 )
 
 

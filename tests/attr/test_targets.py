@@ -3,24 +3,23 @@
 import unittest
 
 import torch
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.saliency import Saliency
-from captum.attr._core.input_x_gradient import InputXGradient
-from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
-from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._core.feature_ablation import FeatureAblation
-from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.shapley_value import ShapleyValueSampling
 
+from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.input_x_gradient import InputXGradient
+from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
-from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.saliency import Saliency
+from captum.attr._core.shapley_value import ShapleyValueSampling
 
 from .helpers.basic_models import BasicModel_MultiLayer
 from .helpers.utils import BaseTest, assertTensorAlmostEqual

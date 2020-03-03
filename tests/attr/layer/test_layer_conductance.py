@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import Any, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
 from torch.nn import Module
-from typing import cast, Any, List, Tuple, Union
+
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._utils.typing import BaselineType
+
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
@@ -15,9 +17,9 @@ from ..helpers.basic_models import (
 )
 from ..helpers.conductance_reference import ConductanceReference
 from ..helpers.utils import (
+    BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
-    BaseTest,
 )
 
 

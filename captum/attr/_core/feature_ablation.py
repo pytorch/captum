@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 
-import torch
-
-from torch import Tensor, dtype
-
 from typing import Any, Callable, Tuple, Union, cast
 
+import torch
+from torch import Tensor, dtype
+
+from .._utils.attribution import PerturbationAttribution
 from .._utils.common import (
+    _expand_additional_forward_args,
+    _expand_target,
     _find_output_mode_and_verify,
+    _format_additional_forward_args,
     _format_attributions,
     _format_input,
     _format_input_baseline,
     _is_tuple,
     _run_forward,
-    _expand_additional_forward_args,
-    _expand_target,
-    _format_additional_forward_args,
 )
-from .._utils.attribution import PerturbationAttribution
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
+from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class FeatureAblation(PerturbationAttribution):

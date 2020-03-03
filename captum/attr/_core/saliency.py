@@ -3,6 +3,7 @@
 from typing import Any, Callable
 
 import torch
+
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .._utils.attribution import GradientAttribution

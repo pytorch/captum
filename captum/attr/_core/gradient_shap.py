@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-import torch
+import typing
+from typing import Any, Callable, Tuple, Union
 
 import numpy as np
+import torch
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import (
-    _is_tuple,
-    _format_input_baseline,
-    _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
+    _is_tuple,
 )
-
-from .noise_tunnel import NoiseTunnel
-from typing import Any, Callable, Tuple, Union
 from .._utils.typing import (
-    Tensor,
-    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
     Literal,
     TargetType,
-    BaselineType,
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
 )
-import typing
+from .noise_tunnel import NoiseTunnel
 
 
 class GradientShap(GradientAttribution):

@@ -1,44 +1,36 @@
 #!/usr/bin/env python3
 import typing
-from typing import (
-    Tuple,
-    Union,
-    Any,
-    Callable,
-    Sequence,
-    cast,
-)
+from typing import Any, Callable, Sequence, Tuple, Union, cast
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from ..._utils.attribution import LayerAttribution
 from ..._core.deep_lift import DeepLift, DeepLiftShap
-from ..._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
-    compute_layer_gradients_and_eval,
-)
-
+from ..._utils.attribution import LayerAttribution
 from ..._utils.common import (
-    _format_input,
-    _format_baseline,
-    _format_callable_baseline,
-    _format_additional_forward_args,
-    _validate_input,
-    _tensorize_baseline,
+    ExpansionTypes,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
     _expand_additional_forward_args,
     _expand_target,
-    ExpansionTypes,
+    _format_additional_forward_args,
+    _format_baseline,
+    _format_callable_baseline,
+    _format_input,
+    _tensorize_baseline,
+    _validate_input,
+)
+from ..._utils.gradient import (
+    apply_gradient_requirements,
+    compute_layer_gradients_and_eval,
+    undo_gradient_requirements,
 )
 from ..._utils.typing import (
-    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
     Literal,
     TargetType,
-    BaselineType,
+    TensorOrTupleOfTensorsGeneric,
 )
 
 

@@ -1,27 +1,24 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Tuple, Union, Any
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
 from torch import Tensor
-
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
-    _tensorize_baseline,
-    _validate_input,
+    _extract_device,
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
-    _extract_device,
+    _tensorize_baseline,
+    _validate_input,
 )
-
-from captum.attr._utils.gradient import _forward_layer_eval
-
-from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._utils.gradient import _run_forward
-from captum.attr._utils.typing import Literal, TargetType, BaselineType
+from captum.attr._utils.gradient import _forward_layer_eval, _run_forward
+from captum.attr._utils.typing import BaselineType, Literal, TargetType
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):

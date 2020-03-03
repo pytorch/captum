@@ -2,20 +2,19 @@
 
 from __future__ import print_function
 
-import torch
 import unittest
 
+import torch
 from torch.nn import Embedding
 
-from ..helpers.utils import assertArraysAlmostEqual
-
 from captum.attr._models.base import (
+    InterpretableEmbeddingBase,
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
-    InterpretableEmbeddingBase,
 )
 
 from ..helpers.basic_models import BasicEmbeddingModel, TextModule
+from ..helpers.utils import assertArraysAlmostEqual
 
 
 class Test(unittest.TestCase):

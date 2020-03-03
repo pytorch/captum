@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-from torch.nn import Module
-from typing import Callable, List, Tuple, Union, Any
+from typing import Any, Callable, List, Tuple, Union
 
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from torch.nn import Module
+
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.common import (
-    _is_tuple,
-    _format_input,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input,
+    _is_tuple,
 )
 from ..._utils.gradient import (
+    _forward_layer_eval_with_neuron_grads,
     apply_gradient_requirements,
     undo_gradient_requirements,
-    _forward_layer_eval_with_neuron_grads,
 )
 from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 

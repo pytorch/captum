@@ -8,7 +8,6 @@ import nbformat
 from bs4 import BeautifulSoup
 from nbconvert import HTMLExporter, ScriptExporter
 
-
 TEMPLATE = """const CWD = process.cwd();
 
 const React = require('react');

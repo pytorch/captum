@@ -4,39 +4,37 @@ import unittest
 
 import torch
 
-from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.deep_lift import DeepLift
+from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.shapley_value import ShapleyValueSampling, ShapleyValues
-
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
-from captum.attr._core.neuron.neuron_integrated_gradients import (
-    NeuronIntegratedGradients,
-)
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
-from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
+from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 
 from .helpers.basic_models import (
+    BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
-    BasicModel_ConvNet,
     ReLULinearDeepLiftModel,
 )
 from .helpers.utils import BaseGPUTest

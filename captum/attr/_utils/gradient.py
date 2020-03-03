@@ -1,23 +1,16 @@
 #!/usr/bin/env python3
 import threading
-import warnings
 import typing
-from typing import (
-    Any,
-    List,
-    Tuple,
-    Union,
-    Callable,
-    Dict,
-    cast,
-)
+import warnings
+from typing import Any, Callable, Dict, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor, device
 from torch.nn import Module
-from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+
 from .batching import _reduce_list, _sort_key_list
 from .common import _run_forward, _verify_select_column
+from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:

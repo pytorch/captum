@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
 
+import typing
+from typing import Any, Callable, List, Tuple, Union
+
+import numpy as np
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-import typing
-from typing import Callable, List, Tuple, Union, Any
-
-import numpy as np
-
-from ..._utils.attribution import LayerAttribution, GradientAttribution
-from ..._utils.gradient import compute_layer_gradients_and_eval, _forward_layer_eval
-
-from ..gradient_shap import _scale_input
+from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
-    _format_input_baseline,
-    _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
 )
-from ..._utils.typing import (
-    TensorOrTupleOfTensorsGeneric,
-    Literal,
-    TargetType,
-)
-
+from ..._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
+from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from ..gradient_shap import _scale_input
 from ..noise_tunnel import NoiseTunnel
 
 

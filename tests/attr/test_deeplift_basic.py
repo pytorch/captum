@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, List, Union, Callable
+from inspect import signature
+from typing import Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from inspect import signature
-
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
-from .helpers.utils import (
-    assertAttributionComparision,
-    assertArraysAlmostEqual,
-    assertTensorAlmostEqual,
-    BaseTest,
-)
 from .helpers.basic_models import (
-    ReLUDeepLiftModel,
-    TanhDeepLiftModel,
     BasicModelWithReusableModules,
+    Conv1dDeepLiftModel,
     LinearMaxPoolLinearModel,
+    ReLUDeepLiftModel,
+    ReLULinearDeepLiftModel,
+    TanhDeepLiftModel,
 )
-from .helpers.basic_models import ReLULinearDeepLiftModel, Conv1dDeepLiftModel
+from .helpers.utils import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertAttributionComparision,
+    assertTensorAlmostEqual,
+)
 
 
 class Test(BaseTest):

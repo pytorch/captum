@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
-from torch.nn.parallel.scatter_gather import scatter
 from torch import Tensor
 from torch.nn import Module
-
-from typing import Callable, List, Tuple, Union, Any
+from torch.nn.parallel.scatter_gather import scatter
 
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
-    _format_input,
+    _extract_device,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input,
     _run_forward,
-    _extract_device,
 )
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import TargetType, BaselineType
+from ..._utils.typing import BaselineType, TargetType
 from ..feature_ablation import FeatureAblation
 
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
-from ..._utils.gradient import construct_neuron_grad_fn
+from typing import Any, Callable, Tuple, Union, cast
 
-from ..deep_lift import DeepLift, DeepLiftShap
-
-from typing import Callable, Tuple, Union, Any, cast
 from torch import Tensor
 from torch.nn import Module
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
+
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
+from ..._utils.gradient import construct_neuron_grad_fn
+from ..._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from ..deep_lift import DeepLift, DeepLiftShap
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):

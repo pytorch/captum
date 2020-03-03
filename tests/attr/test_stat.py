@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import numpy as np
-import torch
 import random
 
-from captum.attr import Mean, Var, StdDev, Min, Max, Sum, MSE, Summarizer
-from .helpers.utils import BaseTest, assertTensorAlmostEqual, assertArraysAlmostEqual
+import numpy as np
+import torch
+
+from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
+
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 def get_values(n=100, lo=None, hi=None, integers=False):

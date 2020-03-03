@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from typing import Tuple, TypeVar, TYPE_CHECKING, Union, List
+from typing import TYPE_CHECKING, List, Tuple, TypeVar, Union
+
 from torch import Tensor
 
 if TYPE_CHECKING:

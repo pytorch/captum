@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Tuple, Union, Any
+from typing import Any, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -11,7 +11,6 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import (
@@ -20,9 +19,9 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import (
+    BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
-    BaseTest,
 )
 
 

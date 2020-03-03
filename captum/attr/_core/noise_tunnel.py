@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-from typing import Tuple, Union, Any
+from enum import Enum
+from typing import Any, Tuple, Union
 
+import numpy as np
 import torch
 from torch import Tensor
 
-import numpy as np
-from enum import Enum
-
 from .._utils.attribution import Attribution
 from .._utils.common import (
-    _is_tuple,
-    _validate_noise_tunnel_type,
-    _validate_input,
-    _format_baseline,
-    _format_input,
-    _format_attributions,
-    _format_additional_forward_args,
-    _format_tensor_into_tuples,
+    ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
-    ExpansionTypes,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_baseline,
+    _format_input,
+    _format_tensor_into_tuples,
+    _is_tuple,
+    _validate_input,
+    _validate_noise_tunnel_type,
 )
 
 

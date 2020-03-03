@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
-from typing import Callable, List, Tuple, Union, Any
 from torch.nn import Module
+
 from ..._utils.approximation_methods import approximation_parameters
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.batching import _batched_operator
 from ..._utils.common import (
-    _is_tuple,
-    _reshape_and_sum,
-    _format_input_baseline,
-    _format_additional_forward_args,
-    _validate_input,
-    _format_attributions,
     _expand_additional_forward_args,
     _expand_target,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_input_baseline,
+    _is_tuple,
+    _reshape_and_sum,
+    _validate_input,
     _verify_select_column,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
+from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):

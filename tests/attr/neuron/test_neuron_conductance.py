@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Tuple, Union, Any, cast
+from typing import Any, List, Tuple, Union, cast
+
 import torch
 from torch import Tensor
 from torch.nn import Module
+
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertArraysAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
+from ..helpers.utils import BaseTest, assertArraysAlmostEqual
 
 
 class Test(BaseTest):

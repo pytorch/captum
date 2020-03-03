@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, Union, Any, cast
+from typing import Any, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from ..helpers.utils import assertArraysAlmostEqual, assertTensorTuplesAlmostEqual
-
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
 
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
-from captum.attr._core.layer.layer_conductance import LayerConductance
-
-from ..helpers.utils import BaseTest
-from ..helpers.basic_models import (
-    BasicEmbeddingModel,
-    BasicModel_MultiLayer,
+from ..helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
+from ..helpers.utils import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
 )
 
 

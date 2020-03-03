@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, Tuple, Union
 
+import numpy as np
 import torch
 from torch import Tensor
-import numpy as np
 
 from .._utils.common import (
-    _format_input,
-    _format_and_verify_strides,
     _format_and_verify_sliding_window_shapes,
+    _format_and_verify_strides,
+    _format_input,
 )
-from .._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType, BaselineType
-
+from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .feature_ablation import FeatureAblation
 
 

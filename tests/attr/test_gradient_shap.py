@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-import torch
-import numpy as np
+from typing import Tuple, Union, cast
 
-from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
-from .helpers.classification_models import SoftmaxModel
-from .helpers.basic_models import BasicModel2, BasicLinearModel
+import numpy as np
+import torch
+from numpy import ndarray
+
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from typing import Union, Tuple, cast
 from captum.attr._utils.typing import Tensor
-from numpy import ndarray
+
+from .helpers.basic_models import BasicLinearModel, BasicModel2
+from .helpers.classification_models import SoftmaxModel
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

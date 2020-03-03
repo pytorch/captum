@@ -2,20 +2,20 @@
 
 from __future__ import print_function
 
-import torch
+from typing import Tuple, Union
 
-from ..helpers.utils import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import ReLULinearDeepLiftModel
+import torch
+from torch import Tensor
 
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+
+from ..helpers.basic_models import ReLULinearDeepLiftModel
+from ..helpers.utils import BaseTest, assertTensorAlmostEqual
 from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
-
-from typing import Tuple, Union
-from torch import Tensor
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 
 class Test(BaseTest):

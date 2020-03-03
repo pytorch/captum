@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from typing import Union, Tuple, List, Any, Callable
+from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
-from ..helpers.utils import BaseTest
-
-from ..helpers.utils import assertTensorTuplesAlmostEqual, assertTensorAlmostEqual
-from ..helpers.classification_models import SoftmaxModel
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-
-from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, TargetType
-
+from ..helpers.classification_models import SoftmaxModel
+from ..helpers.utils import (
+    BaseTest,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..test_gradient_shap import _assert_attribution_delta
 
 

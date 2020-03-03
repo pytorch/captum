@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import warnings
+from typing import Any, List, Tuple, Union
+
 import torch
 import torch.nn.functional as F
-from typing import Any, List, Union, Tuple
-
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_input, _format_attributions, _is_tuple
+from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 

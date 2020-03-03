@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from typing import Callable, Union, Tuple, Any, Type, List, cast
+from typing import Any, Callable, List, Tuple, Type, Union, cast
 
 import torch
 import torch.nn.functional as F
+from torch import Tensor
+from torch.nn import Module
 
 from .common import (
     _format_additional_forward_args,
@@ -15,9 +17,6 @@ from .common import (
 )
 from .gradient import compute_gradients
 from .typing import TargetType
-
-from torch import Tensor
-from torch.nn import Module
 
 
 class Attribution:

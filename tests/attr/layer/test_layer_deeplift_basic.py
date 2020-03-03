@@ -2,24 +2,25 @@
 
 from __future__ import print_function
 
+from typing import List, Tuple, Union, cast
+
 import torch
 from torch import Tensor
-from typing import Tuple, Union, List, cast
-
-from ..helpers.utils import (
-    BaseTest,
-    assertTensorAlmostEqual,
-    assertTensorTuplesAlmostEqual,
-    assertArraysAlmostEqual,
-    assert_delta,
-)
-from ..helpers.basic_models import (
-    ReLULinearDeepLiftModel,
-    BasicModel_MultiLayer,
-    LinearMaxPoolLinearModel,
-)
 
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
+
+from ..helpers.basic_models import (
+    BasicModel_MultiLayer,
+    LinearMaxPoolLinearModel,
+    ReLULinearDeepLiftModel,
+)
+from ..helpers.utils import (
+    BaseTest,
+    assert_delta,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 
 
 class TestDeepLift(BaseTest):

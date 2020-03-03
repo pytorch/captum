@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import typing
-from typing import Tuple, Union, Any, List, Callable, cast
-
 import warnings
+from typing import Any, Callable, List, Tuple, Union, cast
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,32 +11,30 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
-import numpy as np
-
+from .._utils.attribution import GradientAttribution
 from .._utils.common import (
-    _is_tuple,
-    _format_input,
-    _format_baseline,
-    _format_callable_baseline,
-    _format_attributions,
-    _format_tensor_into_tuples,
-    _format_additional_forward_args,
-    _run_forward,
-    _validate_input,
-    _expand_target,
-    _expand_additional_forward_args,
-    _tensorize_baseline,
+    ExpansionTypes,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    ExpansionTypes,
+    _expand_additional_forward_args,
+    _expand_target,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_baseline,
+    _format_callable_baseline,
+    _format_input,
+    _format_tensor_into_tuples,
+    _is_tuple,
+    _run_forward,
+    _tensorize_baseline,
+    _validate_input,
 )
-from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.typing import (
-    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
     Literal,
     TargetType,
-    BaselineType,
+    TensorOrTupleOfTensorsGeneric,
 )
 
 

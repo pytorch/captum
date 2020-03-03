@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from typing import Any
+
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -9,7 +10,7 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertArraysAlmostEqual
 from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 

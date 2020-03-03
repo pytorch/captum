@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Tuple, Union
-
 import unittest
+from typing import Any, Callable, Tuple, Union
 
 import torch
 
-from captum.attr._core.shapley_value import ShapleyValueSampling, ShapleyValues
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric, BaselineType
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
+from captum.attr._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 
 class Test(BaseTest):

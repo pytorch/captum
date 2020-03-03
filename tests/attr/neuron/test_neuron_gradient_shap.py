@@ -5,16 +5,14 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from ..helpers.utils import BaseTest
-
-from ..helpers.utils import assertTensorAlmostEqual
-from ..helpers.classification_models import SoftmaxModel
-from ..helpers.basic_models import BasicModel_MultiLayer
-
 from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
+
+from ..helpers.basic_models import BasicModel_MultiLayer
+from ..helpers.classification_models import SoftmaxModel
+from ..helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

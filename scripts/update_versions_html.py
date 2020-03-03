@@ -5,7 +5,6 @@ import json
 
 from bs4 import BeautifulSoup
 
-
 BASE_URL = "/"
 
 

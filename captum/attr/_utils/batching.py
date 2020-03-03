@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, List, Tuple, Union, Iterator, Dict
+from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
 
 import torch
 from torch import Tensor, device
 
-from .common import _format_input, _format_additional_forward_args
+from .common import _format_additional_forward_args, _format_input
 from .typing import (
+    TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
-    TargetType,
 )
 
 

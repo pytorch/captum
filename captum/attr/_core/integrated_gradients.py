@@ -6,23 +6,23 @@ import torch
 from torch import Tensor
 
 from .._utils.approximation_methods import approximation_parameters
+from .._utils.attribution import GradientAttribution
 from .._utils.batching import _batched_operator
 from .._utils.common import (
-    _validate_input,
+    _expand_additional_forward_args,
+    _expand_target,
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
-    _reshape_and_sum,
-    _expand_additional_forward_args,
-    _expand_target,
     _is_tuple,
+    _reshape_and_sum,
+    _validate_input,
 )
-from .._utils.attribution import GradientAttribution
 from .._utils.typing import (
-    TensorOrTupleOfTensorsGeneric,
+    BaselineType,
     Literal,
     TargetType,
-    BaselineType,
+    TensorOrTupleOfTensorsGeneric,
 )
 
 

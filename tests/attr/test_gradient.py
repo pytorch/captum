@@ -6,18 +6,18 @@ import torch
 from torch import Tensor
 
 from captum.attr._utils.gradient import (
+    apply_gradient_requirements,
     compute_gradients,
     compute_layer_gradients_and_eval,
-    apply_gradient_requirements,
     undo_gradient_requirements,
 )
 
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
 from .helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
+from .helpers.utils import BaseTest, assertArraysAlmostEqual
 
 
 class Test(BaseTest):

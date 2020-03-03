@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from typing import Union, Tuple, List, Any
-
 import unittest
+from typing import Any, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -14,7 +13,7 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import assertTensorTuplesAlmostEqual, BaseTest
+from ..helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 
 class Test(BaseTest):
