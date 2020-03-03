@@ -529,7 +529,13 @@
         <span class="n">batch_data</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataset_iter</span><span class="p">)</span>
         <span class="n">vis_outputs</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">_batched_generator</span><span class="p">(</span>
+        <span class="c1"># Type ignore for issue with passing union to function taking generic</span>
+        <span class="c1"># https://github.com/python/mypy/issues/1533</span>
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">label</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="n">_batched_generator</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">batch_data</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">batch_data</span><span class="o">.</span><span class="n">additional_args</span><span class="p">,</span>
             <span class="n">target_ind</span><span class="o">=</span><span class="n">batch_data</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>

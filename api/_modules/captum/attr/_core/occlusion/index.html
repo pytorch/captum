@@ -28,21 +28,40 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_format_input</span><span class="p">,</span>
-    <span class="n">_format_and_verify_strides</span><span class="p">,</span>
     <span class="n">_format_and_verify_sliding_window_shapes</span><span class="p">,</span>
+    <span class="n">_format_and_verify_strides</span><span class="p">,</span>
+    <span class="n">_format_input</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">BaselineType</span>
-
+<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
 
 
 <div class="viewcode-block" id="Occlusion"><a class="viewcode-back" href="../../../../occlusion.html#captum.attr.Occlusion">[docs]</a><span class="k">class</span> <span class="nc">Occlusion</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A perturbation based approach to compute attribution, involving</span>
+<span class="sd">    replacing each contiguous rectangular region with a given baseline /</span>
+<span class="sd">    reference, and computing the difference in output. For features located</span>
+<span class="sd">    in multiple regions (hyperrectangles), the corresponding output differences</span>
+<span class="sd">    are averaged to compute the attribution for that feature.</span>
+
+<span class="sd">    The first patch is applied with the corner aligned with all indices 0,</span>
+<span class="sd">    and strides are applied until the entire dimension range is covered. Note</span>
+<span class="sd">    that this may cause the final patch applied in a direction to be cut-off</span>
+<span class="sd">    and thus smaller than the target occlusion shape.</span>
+
+<span class="sd">    More details regarding the occlusion (or grey-box / sliding window)</span>
+<span class="sd">    method can be found in the original paper and in the DeepExplain</span>
+<span class="sd">    implementation.</span>
+<span class="sd">    https://arxiv.org/abs/1311.2901</span>
+<span class="sd">    https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\</span>
+<span class="sd">    /tensorflow/methods.py#L401</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -66,24 +85,6 @@
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        A perturbation based approach to compute attribution, involving</span>
-<span class="sd">        replacing each contiguous rectangular region with a given baseline /</span>
-<span class="sd">        reference, and computing the difference in output. For features located</span>
-<span class="sd">        in multiple regions (hyperrectangles), the corresponding output differences</span>
-<span class="sd">        are averaged to compute the attribution for that feature.</span>
-
-<span class="sd">        The first patch is applied with the corner aligned with all indices 0,</span>
-<span class="sd">        and strides are applied until the entire dimension range is covered. Note</span>
-<span class="sd">        that this may cause the final patch applied in a direction to be cut-off</span>
-<span class="sd">        and thus smaller than the target occlusion shape.</span>
-
-<span class="sd">        More details regarding the occlusion (or grey-box / sliding window)</span>
-<span class="sd">        method can be found in the original paper and in the DeepExplain</span>
-<span class="sd">        implementation.</span>
-<span class="sd">        https://arxiv.org/abs/1311.2901</span>
-<span class="sd">        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\</span>
-<span class="sd">        /tensorflow/methods.py#L401</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">                inputs (tensor or tuple of tensors):  Input for which occlusion</span>

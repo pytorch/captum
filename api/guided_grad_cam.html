@@ -29,25 +29,6 @@
 <dl class="class">
 <dt id="captum.attr.GuidedGradCam">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">GuidedGradCam</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GuidedGradCam" title="Permalink to this definition">¶</a></dt>
-<dd><p>Args</p>
-<blockquote>
-<div><p>model (nn.Module):  The reference to PyTorch model instance.
-layer (torch.nn.Module): Layer for which GradCAM attributions are computed.</p>
-<blockquote>
-<div><p>Currently, only layers with a single tensor output are
-supported.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
-intermediate outputs from batched results across devices.
-If forward_func is given as the DataParallel model itself,
-then it is not necessary to provide this argument.</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="method">
-<dt id="captum.attr.GuidedGradCam.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">interpolate_mode='nearest'</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GuidedGradCam.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes element-wise product of guided backpropagation attributions
 with upsampled (non-negative) GradCAM attributions.
 GradCAM attributions are computed with respect to the layer
@@ -72,7 +53,26 @@ GradCAM paper here:
 <p>Warning: Ensure that all ReLU operations in the forward function of the
 given model are performed using a module (nn.module.ReLU).
 If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
-<dl class="field-list simple">
+<p>Args</p>
+<blockquote>
+<div><p>model (nn.Module):  The reference to PyTorch model instance.
+layer (torch.nn.Module): Layer for which GradCAM attributions are computed.</p>
+<blockquote>
+<div><p>Currently, only layers with a single tensor output are
+supported.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>device_ids (list(int)): Device ID list, necessary only if forward_func</dt><dd><p>applies a DataParallel model. This allows reconstruction of
+intermediate outputs from batched results across devices.
+If forward_func is given as the DataParallel model itself,
+then it is not necessary to provide this argument.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="captum.attr.GuidedGradCam.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">interpolate_mode='nearest'</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GuidedGradCam.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which attributions

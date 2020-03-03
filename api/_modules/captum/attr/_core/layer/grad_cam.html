@@ -26,27 +26,61 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer.grad_cam</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
-<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_format_input</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_format_input</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
+    <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
     <span class="n">undo_gradient_requirements</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span>
 
 
 <div class="viewcode-block" id="LayerGradCam"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradCam">[docs]</a><span class="k">class</span> <span class="nc">LayerGradCam</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes GradCAM attribution for chosen layer. GradCAM is designed for</span>
+<span class="sd">    convolutional neural networks, and is usually applied to the last</span>
+<span class="sd">    convolutional layer.</span>
+
+<span class="sd">    GradCAM computes the gradients of the target output with respect to</span>
+<span class="sd">    the given layer, averages for each output channel (dimension 2 of</span>
+<span class="sd">    output), and multiplies the average gradient for each channel by the</span>
+<span class="sd">    layer activations. The results are summed over all channels.</span>
+
+<span class="sd">    Note that in the original GradCAM algorithm described in the paper,</span>
+<span class="sd">    ReLU is applied to the output, returning only non-negative attributions.</span>
+<span class="sd">    For providing more flexibility to the user, we choose to not perform the</span>
+<span class="sd">    ReLU internally by default and return the sign information. To match the</span>
+<span class="sd">    original GradCAM algorithm, it is necessary to pass the parameter</span>
+<span class="sd">    relu_attributions=True to apply ReLU on the final</span>
+<span class="sd">    attributions or alternatively only visualize the positive attributions.</span>
+
+<span class="sd">    Note: this procedure sums over the second dimension (# of channels),</span>
+<span class="sd">    so the output of GradCAM attributions will have a second</span>
+<span class="sd">    dimension of 1, but all other dimensions will match that of the layer</span>
+<span class="sd">    output.</span>
+
+<span class="sd">    GradCAM attributions are generally upsampled and can be viewed as a</span>
+<span class="sd">    mask to the input, since a convolutional layer output generally</span>
+<span class="sd">    matches the input image spatially. This upsampling can be performed</span>
+<span class="sd">    using LayerAttribution.interpolate, as shown in the example below.</span>
+
+<span class="sd">    More details regarding the GradCAM method can be found in the</span>
+<span class="sd">    original paper here:</span>
+<span class="sd">    https://arxiv.org/pdf/1610.02391.pdf</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -80,135 +114,104 @@
         <span class="n">relu_attributions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Computes GradCAM attribution for chosen layer. GradCAM is designed for</span>
-<span class="sd">            convolutional neural networks, and is usually applied to the last</span>
-<span class="sd">            convolutional layer.</span>
+<span class="sd">        Args:</span>
 
-<span class="sd">            GradCAM computes the gradients of the target output with respect to</span>
-<span class="sd">            the given layer, averages for each output channel (dimension 2 of</span>
-<span class="sd">            output), and multiplies the average gradient for each channel by the</span>
-<span class="sd">            layer activations. The results are summed over all channels.</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which attributions</span>
+<span class="sd">                        are computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which gradients are computed (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
 
-<span class="sd">            Note that in the original GradCAM algorithm described in the paper,</span>
-<span class="sd">            ReLU is applied to the output, returning only non-negative attributions.</span>
-<span class="sd">            For providing more flexibility to the user, we choose to not perform the</span>
-<span class="sd">            ReLU internally by default and return the sign information. To match the</span>
-<span class="sd">            original GradCAM algorithm, it is necessary to pass the parameter</span>
-<span class="sd">            relu_attributions=True to apply ReLU on the final</span>
-<span class="sd">            attributions or alternatively only visualize the positive attributions.</span>
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                            integer, which is applied to all input examples</span>
 
-<span class="sd">            Note: this procedure sums over the second dimension (# of channels),</span>
-<span class="sd">            so the output of GradCAM attributions will have a second</span>
-<span class="sd">            dimension of 1, but all other dimensions will match that of the layer</span>
-<span class="sd">            output.</span>
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                            the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                            is applied as the target for the corresponding example.</span>
 
-<span class="sd">            GradCAM attributions are generally upsampled and can be viewed as a</span>
-<span class="sd">            mask to the input, since a convolutional layer output generally</span>
-<span class="sd">            matches the input image spatially. This upsampling can be performed</span>
-<span class="sd">            using LayerAttribution.interpolate, as shown in the example below.</span>
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
-<span class="sd">            More details regarding the GradCAM method can be found in the</span>
-<span class="sd">            original paper here:</span>
-<span class="sd">            https://arxiv.org/pdf/1610.02391.pdf</span>
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                            elements. This target index is applied to all examples.</span>
 
-<span class="sd">            Args:</span>
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                            examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                            target for the corresponding example.</span>
 
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which attributions</span>
-<span class="sd">                            are computed. If forward_func takes a single</span>
-<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
-<span class="sd">                            of the input tensors should be provided. It is assumed</span>
-<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
-<span class="sd">                            to the number of examples, and if multiple input tensors</span>
-<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
-<span class="sd">                            which gradients are computed (for classification cases,</span>
-<span class="sd">                            this is usually the target class).</span>
-<span class="sd">                            If the network returns a scalar value per example,</span>
-<span class="sd">                            no target index is necessary.</span>
-<span class="sd">                            For general 2D outputs, targets can be either:</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            attribute_to_layer_input (bool, optional): Indicates whether to</span>
+<span class="sd">                        compute the attributions with respect to the layer input</span>
+<span class="sd">                        or output. If `attribute_to_layer_input` is set to True</span>
+<span class="sd">                        then the attributions will be computed with respect to the</span>
+<span class="sd">                        layer input, otherwise it will be computed with respect</span>
+<span class="sd">                        to layer output.</span>
+<span class="sd">                        Note that currently it is assumed that either the input</span>
+<span class="sd">                        or the outputs of internal layers, depending on whether we</span>
+<span class="sd">                        attribute to the input or output, are single tensors.</span>
+<span class="sd">                        Support for multiple tensors will be added later.</span>
+<span class="sd">                        Default: False</span>
+<span class="sd">            relu_attributions (bool, optional): Indicates whether to</span>
+<span class="sd">                        apply a ReLU operation on the final attribution,</span>
+<span class="sd">                        returning only non-negative attributions. Setting this</span>
+<span class="sd">                        flag to True matches the original GradCAM algorithm,</span>
+<span class="sd">                        otherwise, by default, both positive and negative</span>
+<span class="sd">                        attributions are returned.</span>
+<span class="sd">                        Default: False</span>
 
-<span class="sd">                            - a single integer or a tensor containing a single</span>
-<span class="sd">                                integer, which is applied to all input examples</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        Attributions based on GradCAM method.</span>
+<span class="sd">                        Attributions will be the same size as the</span>
+<span class="sd">                        output of the given layer, except for dimension 2,</span>
+<span class="sd">                        which will be 1 due to summing over channels.</span>
+<span class="sd">                        Attributions are returned in a tuple based on whether</span>
+<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                        outputs of a single tensor are not.</span>
+<span class="sd">        Examples::</span>
 
-<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                                the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                                is applied as the target for the corresponding example.</span>
-
-<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
-
-<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                                elements. This target index is applied to all examples.</span>
-
-<span class="sd">                            - A list of tuples with length equal to the number of</span>
-<span class="sd">                                examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                                #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                                target for the corresponding example.</span>
-
-<span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
-<span class="sd">                            requires additional arguments other than the inputs for</span>
-<span class="sd">                            which attributions should not be computed, this argument</span>
-<span class="sd">                            can be provided. It must be either a single additional</span>
-<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
-<span class="sd">                            tuple containing multiple additional arguments including</span>
-<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
-<span class="sd">                            are provided to forward_func in order following the</span>
-<span class="sd">                            arguments in inputs.</span>
-<span class="sd">                            Note that attributions are not computed with respect</span>
-<span class="sd">                            to these arguments.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                attribute_to_layer_input (bool, optional): Indicates whether to</span>
-<span class="sd">                            compute the attributions with respect to the layer input</span>
-<span class="sd">                            or output. If `attribute_to_layer_input` is set to True</span>
-<span class="sd">                            then the attributions will be computed with respect to the</span>
-<span class="sd">                            layer input, otherwise it will be computed with respect</span>
-<span class="sd">                            to layer output.</span>
-<span class="sd">                            Note that currently it is assumed that either the input</span>
-<span class="sd">                            or the outputs of internal layers, depending on whether we</span>
-<span class="sd">                            attribute to the input or output, are single tensors.</span>
-<span class="sd">                            Support for multiple tensors will be added later.</span>
-<span class="sd">                            Default: False</span>
-<span class="sd">                relu_attributions (bool, optional): Indicates whether to</span>
-<span class="sd">                            apply a ReLU operation on the final attribution,</span>
-<span class="sd">                            returning only non-negative attributions. Setting this</span>
-<span class="sd">                            flag to True matches the original GradCAM algorithm,</span>
-<span class="sd">                            otherwise, by default, both positive and negative</span>
-<span class="sd">                            attributions are returned.</span>
-<span class="sd">                            Default: False</span>
-
-<span class="sd">            Returns:</span>
-<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
-<span class="sd">                            Attributions based on GradCAM method.</span>
-<span class="sd">                            Attributions will be the same size as the</span>
-<span class="sd">                            output of the given layer, except for dimension 2,</span>
-<span class="sd">                            which will be 1 due to summing over channels.</span>
-<span class="sd">                            Attributions are returned in a tuple based on whether</span>
-<span class="sd">                            the layer inputs / outputs are contained in a tuple</span>
-<span class="sd">                            from a forward hook. For standard modules, inputs of</span>
-<span class="sd">                            a single tensor are usually wrapped in a tuple, while</span>
-<span class="sd">                            outputs of a single tensor are not.</span>
-<span class="sd">            Examples::</span>
-
-<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
-<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
-<span class="sd">                &gt;&gt;&gt; # It contains a layer conv4, which is an instance of nn.conv2d,</span>
-<span class="sd">                &gt;&gt;&gt; # and the output of this layer has dimensions Nx50x8x8.</span>
-<span class="sd">                &gt;&gt;&gt; # It is the last convolution layer, which is the recommended</span>
-<span class="sd">                &gt;&gt;&gt; # use case for GradCAM.</span>
-<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
-<span class="sd">                &gt;&gt;&gt; layer_gc = LayerGradCam(net, net.conv4)</span>
-<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
-<span class="sd">                &gt;&gt;&gt; # Computes layer GradCAM for class 3.</span>
-<span class="sd">                &gt;&gt;&gt; # attribution size matches layer output except for dimension</span>
-<span class="sd">                &gt;&gt;&gt; # 1, so dimensions of attr would be Nx1x8x8.</span>
-<span class="sd">                &gt;&gt;&gt; attr = layer_gc.attribute(input, 3)</span>
-<span class="sd">                &gt;&gt;&gt; # GradCAM attributions are often upsampled and viewed as a</span>
-<span class="sd">                &gt;&gt;&gt; # mask to the input, since the convolutional layer output</span>
-<span class="sd">                &gt;&gt;&gt; # spatially matches the original input image.</span>
-<span class="sd">                &gt;&gt;&gt; # This can be done with LayerAttribution's interpolate method.</span>
-<span class="sd">                &gt;&gt;&gt; upsampled_attr = LayerAttribution.interpolate(attr, (32, 32))</span>
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; # It contains a layer conv4, which is an instance of nn.conv2d,</span>
+<span class="sd">            &gt;&gt;&gt; # and the output of this layer has dimensions Nx50x8x8.</span>
+<span class="sd">            &gt;&gt;&gt; # It is the last convolution layer, which is the recommended</span>
+<span class="sd">            &gt;&gt;&gt; # use case for GradCAM.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; layer_gc = LayerGradCam(net, net.conv4)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes layer GradCAM for class 3.</span>
+<span class="sd">            &gt;&gt;&gt; # attribution size matches layer output except for dimension</span>
+<span class="sd">            &gt;&gt;&gt; # 1, so dimensions of attr would be Nx1x8x8.</span>
+<span class="sd">            &gt;&gt;&gt; attr = layer_gc.attribute(input, 3)</span>
+<span class="sd">            &gt;&gt;&gt; # GradCAM attributions are often upsampled and viewed as a</span>
+<span class="sd">            &gt;&gt;&gt; # mask to the input, since the convolutional layer output</span>
+<span class="sd">            &gt;&gt;&gt; # spatially matches the original input image.</span>
+<span class="sd">            &gt;&gt;&gt; # This can be done with LayerAttribution's interpolate method.</span>
+<span class="sd">            &gt;&gt;&gt; upsampled_attr = LayerAttribution.interpolate(attr, (32, 32))</span>
 <span class="sd">        """</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>

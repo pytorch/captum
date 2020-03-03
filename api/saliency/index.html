@@ -29,7 +29,14 @@
 <dl class="class">
 <dt id="captum.attr.Saliency">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Saliency</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Saliency" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>A baseline approach for computing input attribution. It returns
+the gradients with respect to inputs. If <cite>abs</cite> is set to True, which is
+the default, the absolute value of the gradients is returned.</p>
+<dl class="simple">
+<dt>More details about the approach can be found in the following paper:</dt><dd><p><a class="reference external" href="https://arxiv.org/pdf/1312.6034.pdf">https://arxiv.org/pdf/1312.6034.pdf</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
 any modification of it</p>
@@ -39,25 +46,21 @@ any modification of it</p>
 <dt id="captum.attr.Saliency.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">abs=True</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Saliency.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
-A baseline approach for computing input attribution. It returns
-the gradients with respect to inputs. If <cite>abs</cite> is set to True, which is
-the default, the absolute value of the gradients is returned.</p>
-<dl class="simple">
-<dt>More details about the approach can be found in the following paper:</dt><dd><p><a class="reference external" href="https://arxiv.org/pdf/1312.6034.pdf">https://arxiv.org/pdf/1312.6034.pdf</a></p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which integrated
-gradients are computed. If forward_func takes a single
+:type inputs: ~TensorOrTupleOfTensorsGeneric
+:param inputs: Input for which integrated</p>
+<blockquote>
+<div><p>gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
-be aligned appropriately.</p></li>
+be aligned appropriately.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).

@@ -26,20 +26,33 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.neuron.neuron_feature_ablation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span>
-
 
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_verify_select_column</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
-<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">BaselineType</span>
-
+<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">..feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
 
 
 <div class="viewcode-block" id="NeuronFeatureAblation"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronFeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">NeuronFeatureAblation</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">PerturbationAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A perturbation based approach to computing neuron attribution,</span>
+<span class="sd">    involving replacing each input feature with a given baseline /</span>
+<span class="sd">    reference, and computing the difference in the neuron's input / output.</span>
+<span class="sd">    By default, each scalar value within</span>
+<span class="sd">    each input tensor is taken as a feature and replaced independently. Passing</span>
+<span class="sd">    a feature mask, allows grouping features to be ablated together. This can</span>
+<span class="sd">    be used in cases such as images, where an entire segment or region</span>
+<span class="sd">    can be ablated, measuring the importance of the segment (feature group).</span>
+<span class="sd">    Each input scalar in the group will be given the same attribution value</span>
+<span class="sd">    equal to the change in target as a result of ablating the entire feature</span>
+<span class="sd">    group.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -78,117 +91,104 @@
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            A perturbation based approach to computing neuron attribution,</span>
-<span class="sd">            involving replacing each input feature with a given baseline /</span>
-<span class="sd">            reference, and computing the difference in the neuron's input / output.</span>
-<span class="sd">            By default, each scalar value within</span>
-<span class="sd">            each input tensor is taken as a feature and replaced independently. Passing</span>
-<span class="sd">            a feature mask, allows grouping features to be ablated together. This can</span>
-<span class="sd">            be used in cases such as images, where an entire segment or region</span>
-<span class="sd">            can be ablated, measuring the importance of the segment (feature group).</span>
-<span class="sd">            Each input scalar in the group will be given the same attribution value</span>
-<span class="sd">            equal to the change in target as a result of ablating the entire feature</span>
-<span class="sd">            group.</span>
+<span class="sd">        Args:</span>
 
-
-<span class="sd">            Args:</span>
-
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which neuron</span>
-<span class="sd">                            attributions are computed. If forward_func takes a single</span>
-<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
-<span class="sd">                            of the input tensors should be provided. It is assumed</span>
-<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
-<span class="sd">                            to the number of examples, and if multiple input tensors</span>
-<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                neuron_index (int or tuple): Index of neuron in output of given</span>
-<span class="sd">                              layer for which attribution is desired. The length of</span>
-<span class="sd">                              this tuple must be one less than the number of</span>
-<span class="sd">                              dimensions in the output of the given layer (since</span>
-<span class="sd">                              dimension 0 corresponds to number of examples).</span>
-<span class="sd">                              An integer may be provided instead of a tuple of</span>
-<span class="sd">                              length 1.</span>
-<span class="sd">                baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
-<span class="sd">                            Baselines define reference value which replaces each</span>
-<span class="sd">                            feature when ablated.</span>
-<span class="sd">                            Baselines can be provided as:</span>
-<span class="sd">                            - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which neuron</span>
+<span class="sd">                        attributions are computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            neuron_index (int or tuple): Index of neuron in output of given</span>
+<span class="sd">                            layer for which attribution is desired. The length of</span>
+<span class="sd">                            this tuple must be one less than the number of</span>
+<span class="sd">                            dimensions in the output of the given layer (since</span>
+<span class="sd">                            dimension 0 corresponds to number of examples).</span>
+<span class="sd">                            An integer may be provided instead of a tuple of</span>
+<span class="sd">                            length 1.</span>
+<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                        Baselines define reference value which replaces each</span>
+<span class="sd">                        feature when ablated.</span>
+<span class="sd">                        Baselines can be provided as:</span>
+<span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                            exactly the same dimensions as inputs or</span>
+<span class="sd">                            broadcastable to match the dimensions of inputs</span>
+<span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                            be broadcasted for each input value in input tensor.</span>
+<span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                            - either a tensor with</span>
 <span class="sd">                                exactly the same dimensions as inputs or</span>
 <span class="sd">                                broadcastable to match the dimensions of inputs</span>
-<span class="sd">                            - a single scalar, if inputs is a single tensor, which will</span>
-<span class="sd">                                be broadcasted for each input value in input tensor.</span>
-<span class="sd">                            - a tuple of tensors or scalars, the baseline corresponding</span>
-<span class="sd">                                to each tensor in the inputs' tuple can be:</span>
-<span class="sd">                                - either a tensor with</span>
-<span class="sd">                                    exactly the same dimensions as inputs or</span>
-<span class="sd">                                    broadcastable to match the dimensions of inputs</span>
-<span class="sd">                                - or a scalar, corresponding to a tensor in the</span>
-<span class="sd">                                    inputs' tuple. This scalar value is broadcasted</span>
-<span class="sd">                                    for corresponding input tensor.</span>
-<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
-<span class="sd">                            use zero scalar corresponding to each input tensor.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
-<span class="sd">                            requires additional arguments other than the inputs for</span>
-<span class="sd">                            which attributions should not be computed, this argument</span>
-<span class="sd">                            can be provided. It must be either a single additional</span>
-<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
-<span class="sd">                            tuple containing multiple additional arguments including</span>
-<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
-<span class="sd">                            are provided to forward_func in order following the</span>
-<span class="sd">                            arguments in inputs.</span>
-<span class="sd">                            Note that attributions are not computed with respect</span>
-<span class="sd">                            to these arguments.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                feature_mask (tensor or tuple of tensors, optional):</span>
-<span class="sd">                            feature_mask defines a mask for the input, grouping</span>
-<span class="sd">                            features which should be ablated together. feature_mask</span>
-<span class="sd">                            should contain the same number of tensors as inputs.</span>
-<span class="sd">                            Each tensor should</span>
-<span class="sd">                            be the same size as the corresponding input or</span>
-<span class="sd">                            broadcastable to match the input tensor. Each tensor</span>
-<span class="sd">                            should contain integers in the range 0 to num_features</span>
-<span class="sd">                            - 1, and indices corresponding to the same feature should</span>
-<span class="sd">                            have the same value.</span>
-<span class="sd">                            Note that features within each input tensor are ablated</span>
-<span class="sd">                            independently (not across tensors).</span>
-<span class="sd">                            If None, then a feature mask is constructed which assigns</span>
-<span class="sd">                            each scalar within a tensor as a separate feature, which</span>
-<span class="sd">                            is ablated independently.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                attribute_to_neuron_input (bool, optional): Indicates whether to</span>
-<span class="sd">                            compute the attributions with respect to the neuron input</span>
-<span class="sd">                            or output. If `attribute_to_neuron_input` is set to True</span>
-<span class="sd">                            then the attributions will be computed with respect to</span>
-<span class="sd">                            neuron's inputs, otherwise it will be computed with respect</span>
-<span class="sd">                            to neuron's outputs.</span>
-<span class="sd">                            Note that currently it is assumed that either the input</span>
-<span class="sd">                            or the output of internal neurons, depending on whether we</span>
-<span class="sd">                            attribute to the input or output, is a single tensor.</span>
-<span class="sd">                            Support for multiple tensors will be added later.</span>
-<span class="sd">                            Default: False</span>
-<span class="sd">                perturbations_per_eval (int, optional): Allows ablation of multiple</span>
-<span class="sd">                            features to be processed simultaneously in one call to</span>
-<span class="sd">                            forward_fn.</span>
-<span class="sd">                            Each forward pass will contain a maximum of</span>
-<span class="sd">                            perturbations_per_eval * #examples samples.</span>
-<span class="sd">                            For DataParallel models, each batch is split among the</span>
-<span class="sd">                            available devices, so evaluations on each available</span>
-<span class="sd">                            device contain at most</span>
-<span class="sd">                            (perturbations_per_eval * #examples) / num_devices</span>
-<span class="sd">                            samples.</span>
-<span class="sd">                            Default: 1</span>
+<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                for corresponding input tensor.</span>
+<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                        use zero scalar corresponding to each input tensor.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                        feature_mask defines a mask for the input, grouping</span>
+<span class="sd">                        features which should be ablated together. feature_mask</span>
+<span class="sd">                        should contain the same number of tensors as inputs.</span>
+<span class="sd">                        Each tensor should</span>
+<span class="sd">                        be the same size as the corresponding input or</span>
+<span class="sd">                        broadcastable to match the input tensor. Each tensor</span>
+<span class="sd">                        should contain integers in the range 0 to num_features</span>
+<span class="sd">                        - 1, and indices corresponding to the same feature should</span>
+<span class="sd">                        have the same value.</span>
+<span class="sd">                        Note that features within each input tensor are ablated</span>
+<span class="sd">                        independently (not across tensors).</span>
+<span class="sd">                        If None, then a feature mask is constructed which assigns</span>
+<span class="sd">                        each scalar within a tensor as a separate feature, which</span>
+<span class="sd">                        is ablated independently.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            attribute_to_neuron_input (bool, optional): Indicates whether to</span>
+<span class="sd">                        compute the attributions with respect to the neuron input</span>
+<span class="sd">                        or output. If `attribute_to_neuron_input` is set to True</span>
+<span class="sd">                        then the attributions will be computed with respect to</span>
+<span class="sd">                        neuron's inputs, otherwise it will be computed with respect</span>
+<span class="sd">                        to neuron's outputs.</span>
+<span class="sd">                        Note that currently it is assumed that either the input</span>
+<span class="sd">                        or the output of internal neurons, depending on whether we</span>
+<span class="sd">                        attribute to the input or output, is a single tensor.</span>
+<span class="sd">                        Support for multiple tensors will be added later.</span>
+<span class="sd">                        Default: False</span>
+<span class="sd">            perturbations_per_eval (int, optional): Allows ablation of multiple</span>
+<span class="sd">                        features to be processed simultaneously in one call to</span>
+<span class="sd">                        forward_fn.</span>
+<span class="sd">                        Each forward pass will contain a maximum of</span>
+<span class="sd">                        perturbations_per_eval * #examples samples.</span>
+<span class="sd">                        For DataParallel models, each batch is split among the</span>
+<span class="sd">                        available devices, so evaluations on each available</span>
+<span class="sd">                        device contain at most</span>
+<span class="sd">                        (perturbations_per_eval * #examples) / num_devices</span>
+<span class="sd">                        samples.</span>
+<span class="sd">                        Default: 1</span>
 
-<span class="sd">            Returns:</span>
-<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
-<span class="sd">                            Attributions of particular neuron with respect to each input</span>
-<span class="sd">                            feature. Attributions will always be the same size as the</span>
-<span class="sd">                            provided inputs, with each value providing the attribution</span>
-<span class="sd">                            of the corresponding input index.</span>
-<span class="sd">                            If a single tensor is provided as inputs, a single tensor is</span>
-<span class="sd">                            returned. If a tuple is provided for inputs, a tuple of</span>
-<span class="sd">                            corresponding sized tensors is returned.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        Attributions of particular neuron with respect to each input</span>
+<span class="sd">                        feature. Attributions will always be the same size as the</span>
+<span class="sd">                        provided inputs, with each value providing the attribution</span>
+<span class="sd">                        of the corresponding input index.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                        returned. If a tuple is provided for inputs, a tuple of</span>
+<span class="sd">                        corresponding sized tensors is returned.</span>
 
 <span class="sd">        Examples::</span>
 

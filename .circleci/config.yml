@@ -38,6 +38,13 @@ commands:
           name: "Lint with black"
           command: black --check --diff .
 
+  isort:
+    description: "Check import order with isort"
+    steps:
+      - run:
+          name: "Check import order with isort"
+          command: isort --check-only
+
   mypy_check:
     description: "Static type checking with mypy"
     steps:
@@ -132,6 +139,7 @@ jobs:
           args: "-n -f"
       - lint_flake8
       - lint_black
+      - isort
       - mypy_check
       - unit_tests
       - sphinx
@@ -145,6 +153,7 @@ jobs:
           args: "-f"
       - lint_flake8
       - lint_black
+      - isort
       - mypy_check
       - unit_tests
       - sphinx
@@ -176,6 +185,7 @@ jobs:
           args: "-n"
       - lint_flake8
       - lint_black
+      - isort
       - mypy_check
       - unit_tests
       - sphinx
@@ -200,6 +210,7 @@ jobs:
           args: "-n -f -d"
       - lint_flake8
       - lint_black
+      - isort
       - unit_tests
       - sphinx
       - configure_github_bot

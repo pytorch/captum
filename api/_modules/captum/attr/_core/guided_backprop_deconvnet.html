@@ -27,16 +27,16 @@
 <h1>Source code for captum.attr._core.guided_backprop_deconvnet</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
-
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
 
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_is_tuple</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_is_tuple</span>
 <span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="kn">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
 <span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 
@@ -121,6 +121,21 @@
 
 
 <div class="viewcode-block" id="GuidedBackprop"><a class="viewcode-back" href="../../../../guided_backprop.html#captum.attr.GuidedBackprop">[docs]</a><span class="k">class</span> <span class="nc">GuidedBackprop</span><span class="p">(</span><span class="n">ModifiedReluGradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes attribution using guided backpropagation. Guided backpropagation</span>
+<span class="sd">    computes the gradient of the target output with respect to the input,</span>
+<span class="sd">    but gradients of ReLU functions are overridden so that only</span>
+<span class="sd">    non-negative gradients are backpropagated.</span>
+
+<span class="sd">    More details regarding the guided backpropagation algorithm can be found</span>
+<span class="sd">    in the original paper here:</span>
+<span class="sd">    https://arxiv.org/abs/1412.6806</span>
+
+<span class="sd">    Warning: Ensure that all ReLU operations in the forward function of the</span>
+<span class="sd">    given model are performed using a module (nn.module.ReLU).</span>
+<span class="sd">    If nn.functional.ReLU is used, gradients are not overridden appropriately.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -138,19 +153,6 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        Computes attribution using guided backpropagation. Guided backpropagation</span>
-<span class="sd">        computes the gradient of the target output with respect to the input,</span>
-<span class="sd">        but gradients of ReLU functions are overridden so that only</span>
-<span class="sd">        non-negative gradients are backpropagated.</span>
-
-<span class="sd">        More details regarding the guided backpropagation algorithm can be found</span>
-<span class="sd">        in the original paper here:</span>
-<span class="sd">        https://arxiv.org/abs/1412.6806</span>
-
-<span class="sd">        Warning: Ensure that all ReLU operations in the forward function of the</span>
-<span class="sd">        given model are performed using a module (nn.module.ReLU).</span>
-<span class="sd">        If nn.functional.ReLU is used, gradients are not overridden appropriately.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
@@ -224,6 +226,24 @@
 
 
 <div class="viewcode-block" id="Deconvolution"><a class="viewcode-back" href="../../../../deconvolution.html#captum.attr.Deconvolution">[docs]</a><span class="k">class</span> <span class="nc">Deconvolution</span><span class="p">(</span><span class="n">ModifiedReluGradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes attribution using deconvolution. Deconvolution</span>
+<span class="sd">    computes the gradient of the target output with respect to the input,</span>
+<span class="sd">    but gradients of ReLU functions are overridden so that the gradient</span>
+<span class="sd">    of the ReLU input is simply computed taking ReLU of the output gradient,</span>
+<span class="sd">    essentially only propagating non-negative gradients (without</span>
+<span class="sd">    dependence on the sign of the ReLU input).</span>
+
+<span class="sd">    More details regarding the deconvolution algorithm can be found</span>
+<span class="sd">    in these papers:</span>
+<span class="sd">    https://arxiv.org/abs/1311.2901</span>
+<span class="sd">    https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8</span>
+
+<span class="sd">    Warning: Ensure that all ReLU operations in the forward function of the</span>
+<span class="sd">    given model are performed using a module (nn.module.ReLU).</span>
+<span class="sd">    If nn.functional.ReLU is used, gradients are not overridden appropriately.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -239,22 +259,6 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        Computes attribution using deconvolution. Deconvolution</span>
-<span class="sd">        computes the gradient of the target output with respect to the input,</span>
-<span class="sd">        but gradients of ReLU functions are overridden so that the gradient</span>
-<span class="sd">        of the ReLU input is simply computed taking ReLU of the output gradient,</span>
-<span class="sd">        essentially only propagating non-negative gradients (without</span>
-<span class="sd">        dependence on the sign of the ReLU input).</span>
-
-<span class="sd">        More details regarding the deconvolution algorithm can be found</span>
-<span class="sd">        in these papers:</span>
-<span class="sd">        https://arxiv.org/abs/1311.2901</span>
-<span class="sd">        https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8</span>
-
-<span class="sd">        Warning: Ensure that all ReLU operations in the forward function of the</span>
-<span class="sd">        given model are performed using a module (nn.module.ReLU).</span>
-<span class="sd">        If nn.functional.ReLU is used, gradients are not overridden appropriately.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>

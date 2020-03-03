@@ -27,9 +27,10 @@
 <h1>Source code for captum.attr._core.deep_lift</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span>
-
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
@@ -37,32 +38,30 @@
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_is_tuple</span><span class="p">,</span>
-    <span class="n">_format_input</span><span class="p">,</span>
-    <span class="n">_format_baseline</span><span class="p">,</span>
-    <span class="n">_format_callable_baseline</span><span class="p">,</span>
-    <span class="n">_format_attributions</span><span class="p">,</span>
-    <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
-    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_run_forward</span><span class="p">,</span>
-    <span class="n">_validate_input</span><span class="p">,</span>
-    <span class="n">_expand_target</span><span class="p">,</span>
-    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_tensorize_baseline</span><span class="p">,</span>
+    <span class="n">ExpansionTypes</span><span class="p">,</span>
     <span class="n">_call_custom_attribution_func</span><span class="p">,</span>
     <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
-    <span class="n">ExpansionTypes</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_attributions</span><span class="p">,</span>
+    <span class="n">_format_baseline</span><span class="p">,</span>
+    <span class="n">_format_callable_baseline</span><span class="p">,</span>
+    <span class="n">_format_input</span><span class="p">,</span>
+    <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
+    <span class="n">_is_tuple</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_tensorize_baseline</span><span class="p">,</span>
+    <span class="n">_validate_input</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.gradient</span> <span class="kn">import</span> <span class="n">apply_gradient_requirements</span><span class="p">,</span> <span class="n">undo_gradient_requirements</span>
 <span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+    <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
     <span class="n">TargetType</span><span class="p">,</span>
-    <span class="n">BaselineType</span><span class="p">,</span>
+    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -95,6 +94,37 @@
 
 
 <div class="viewcode-block" id="DeepLift"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift">[docs]</a><span class="k">class</span> <span class="nc">DeepLift</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Implements DeepLIFT algorithm based on the following paper:</span>
+<span class="sd">    Learning Important Features Through Propagating Activation Differences,</span>
+<span class="sd">    Avanti Shrikumar, et. al.</span>
+<span class="sd">    https://arxiv.org/abs/1704.02685</span>
+
+<span class="sd">    and the gradient formulation proposed in:</span>
+<span class="sd">    Towards better understanding of gradient-based attribution methods for</span>
+<span class="sd">    deep neural networks,  Marco Ancona, et.al.</span>
+<span class="sd">    https://openreview.net/pdf?id=Sy21R9JAW</span>
+
+<span class="sd">    This implementation supports only Rescale rule. RevealCancel rule will</span>
+<span class="sd">    be supported in later releases.</span>
+<span class="sd">    In addition to that, in order to keep the implementation cleaner, DeepLIFT</span>
+<span class="sd">    for internal neurons and layers extends current implementation and is</span>
+<span class="sd">    implemented separately in LayerDeepLift and NeuronDeepLift.</span>
+<span class="sd">    Although DeepLIFT's(Rescale Rule) attribution quality is comparable with</span>
+<span class="sd">    Integrated Gradients, it runs significantly faster than Integrated</span>
+<span class="sd">    Gradients and is preferred for large datasets.</span>
+
+<span class="sd">    Currently we only support a limited number of non-linear activations</span>
+<span class="sd">    but the plan is to expand the list in the future.</span>
+
+<span class="sd">    Note: As we know, currently we cannot access the building blocks,</span>
+<span class="sd">    of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.</span>
+<span class="sd">    Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs</span>
+<span class="sd">    with performance similar to built-in ones using TorchScript.</span>
+<span class="sd">    More details on how to build custom RNNs can be found here:</span>
+<span class="sd">    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -143,35 +173,6 @@
         <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        Implements DeepLIFT algorithm based on the following paper:</span>
-<span class="sd">        Learning Important Features Through Propagating Activation Differences,</span>
-<span class="sd">        Avanti Shrikumar, et. al.</span>
-<span class="sd">        https://arxiv.org/abs/1704.02685</span>
-
-<span class="sd">        and the gradient formulation proposed in:</span>
-<span class="sd">        Towards better understanding of gradient-based attribution methods for</span>
-<span class="sd">        deep neural networks,  Marco Ancona, et.al.</span>
-<span class="sd">        https://openreview.net/pdf?id=Sy21R9JAW</span>
-
-<span class="sd">        This implementation supports only Rescale rule. RevealCancel rule will</span>
-<span class="sd">        be supported in later releases.</span>
-<span class="sd">        In addition to that, in order to keep the implementation cleaner, DeepLIFT</span>
-<span class="sd">        for internal neurons and layers extends current implementation and is</span>
-<span class="sd">        implemented separately in LayerDeepLift and NeuronDeepLift.</span>
-<span class="sd">        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with</span>
-<span class="sd">        Integrated Gradients, it runs significantly faster than Integrated</span>
-<span class="sd">        Gradients and is preferred for large datasets.</span>
-
-<span class="sd">        Currently we only support a limited number of non-linear activations</span>
-<span class="sd">        but the plan is to expand the list in the future.</span>
-
-<span class="sd">        Note: As we know, currently we cannot access the building blocks,</span>
-<span class="sd">        of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.</span>
-<span class="sd">        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs</span>
-<span class="sd">        with performance similar to built-in ones using TorchScript.</span>
-<span class="sd">        More details on how to build custom RNNs can be found here:</span>
-<span class="sd">        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
@@ -547,6 +548,22 @@
 
 
 <div class="viewcode-block" id="DeepLiftShap"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr.DeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Extends DeepLift algorithm and approximates SHAP values using Deeplift.</span>
+<span class="sd">    For each input sample it computes DeepLift attribution with respect to</span>
+<span class="sd">    each baseline and averages resulting attributions.</span>
+<span class="sd">    More details about the algorithm can be found here:</span>
+
+<span class="sd">    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</span>
+
+<span class="sd">    Note that the explanation model:</span>
+<span class="sd">        1. Assumes that input features are independent of one another</span>
+<span class="sd">        2. Is linear, meaning that the explanations are modeled through</span>
+<span class="sd">            the additive composition of feature effects.</span>
+<span class="sd">    Although, it assumes a linear model for each explanation, the overall</span>
+<span class="sd">    model across multiple explanations can be complex and non-linear.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -600,20 +617,6 @@
         <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Extends DeepLift algorithm and approximates SHAP values using Deeplift.</span>
-<span class="sd">        For each input sample it computes DeepLift attribution with respect to</span>
-<span class="sd">        each baseline and averages resulting attributions.</span>
-<span class="sd">        More details about the algorithm can be found here:</span>
-
-<span class="sd">        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf</span>
-
-<span class="sd">        Note that the explanation model:</span>
-<span class="sd">            1. Assumes that input features are independent of one another</span>
-<span class="sd">            2. Is linear, meaning that the explanations are modeled through</span>
-<span class="sd">               the additive composition of feature effects.</span>
-<span class="sd">        Although, it assumes a linear model for each explanation, the overall</span>
-<span class="sd">        model across multiple explanations can be complex and non-linear.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>

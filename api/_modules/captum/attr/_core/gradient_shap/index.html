@@ -26,31 +26,65 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.gradient_shap</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_is_tuple</span><span class="p">,</span>
-    <span class="n">_format_input_baseline</span><span class="p">,</span>
-    <span class="n">_format_callable_baseline</span><span class="p">,</span>
     <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">,</span>
+    <span class="n">_format_callable_baseline</span><span class="p">,</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_is_tuple</span><span class="p">,</span>
 <span class="p">)</span>
-
-<span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="kn">import</span> <span class="n">NoiseTunnel</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+    <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
     <span class="n">TargetType</span><span class="p">,</span>
-    <span class="n">BaselineType</span><span class="p">,</span>
+    <span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">.noise_tunnel</span> <span class="kn">import</span> <span class="n">NoiseTunnel</span>
 
 
 <div class="viewcode-block" id="GradientShap"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap">[docs]</a><span class="k">class</span> <span class="nc">GradientShap</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Implements gradient SHAP based on the implementation from SHAP's primary</span>
+<span class="sd">    author. For reference, please, view:</span>
+
+<span class="sd">    https://github.com/slundberg/shap\</span>
+<span class="sd">    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
+
+<span class="sd">    A Unified Approach to Interpreting Model Predictions</span>
+<span class="sd">    http://papers.nips.cc/paper\</span>
+<span class="sd">    7062-a-unified-approach-to-interpreting-model-predictions</span>
+
+<span class="sd">    GradientShap approximates SHAP values by computing the expectations of</span>
+<span class="sd">    gradients by randomly sampling from the distribution of baselines/references.</span>
+<span class="sd">    It adds white noise to each input sample `n_samples` times, selects a</span>
+<span class="sd">    random baseline from baselines' distribution and a random point along the</span>
+<span class="sd">    path between the baseline and the input, and computes the gradient of outputs</span>
+<span class="sd">    with respect to those selected random points. The final SHAP values represent</span>
+<span class="sd">    the expected values of gradients * (inputs - baselines).</span>
+
+<span class="sd">    GradientShap makes an assumption that the input features are independent</span>
+<span class="sd">    and that the explanation model is linear, meaning that the explanations</span>
+<span class="sd">    are modeled through the additive composition of feature effects.</span>
+<span class="sd">    Under those assumptions, SHAP value can be approximated as the expectation</span>
+<span class="sd">    of gradients that are computed for randomly generated `n_samples` input</span>
+<span class="sd">    samples after adding gaussian noise `n_samples` times to each input for</span>
+<span class="sd">    different baselines/references.</span>
+
+<span class="sd">    In some sense it can be viewed as an approximation of integrated gradients</span>
+<span class="sd">    by computing the expectations of gradients for different baselines.</span>
+
+<span class="sd">    Current implementation uses Smoothgrad from `NoiseTunnel` in order to</span>
+<span class="sd">    randomly draw samples from the distribution of baselines, add noise to input</span>
+<span class="sd">    samples and compute the expectation (smoothgrad).</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -106,39 +140,6 @@
         <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Implements gradient SHAP based on the implementation from SHAP's primary</span>
-<span class="sd">        author. For reference, please, view:</span>
-
-<span class="sd">        https://github.com/slundberg/shap\</span>
-<span class="sd">        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</span>
-
-<span class="sd">        A Unified Approach to Interpreting Model Predictions</span>
-<span class="sd">        http://papers.nips.cc/paper\</span>
-<span class="sd">        7062-a-unified-approach-to-interpreting-model-predictions</span>
-
-<span class="sd">        GradientShap approximates SHAP values by computing the expectations of</span>
-<span class="sd">        gradients by randomly sampling from the distribution of baselines/references.</span>
-<span class="sd">        It adds white noise to each input sample `n_samples` times, selects a</span>
-<span class="sd">        random baseline from baselines' distribution and a random point along the</span>
-<span class="sd">        path between the baseline and the input, and computes the gradient of outputs</span>
-<span class="sd">        with respect to those selected random points. The final SHAP values represent</span>
-<span class="sd">        the expected values of gradients * (inputs - baselines).</span>
-
-<span class="sd">        GradientShap makes an assumption that the input features are independent</span>
-<span class="sd">        and that the explanation model is linear, meaning that the explanations</span>
-<span class="sd">        are modeled through the additive composition of feature effects.</span>
-<span class="sd">        Under those assumptions, SHAP value can be approximated as the expectation</span>
-<span class="sd">        of gradients that are computed for randomly generated `n_samples` input</span>
-<span class="sd">        samples after adding gaussian noise `n_samples` times to each input for</span>
-<span class="sd">        different baselines/references.</span>
-
-<span class="sd">        In some sense it can be viewed as an approximation of integrated gradients</span>
-<span class="sd">        by computing the expectations of gradients for different baselines.</span>
-
-<span class="sd">        Current implementation uses Smoothgrad from `NoiseTunnel` in order to</span>
-<span class="sd">        randomly draw samples from the distribution of baselines, add noise to input</span>
-<span class="sd">        samples and compute the expectation (smoothgrad).</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which SHAP attribution</span>
@@ -249,19 +250,19 @@
 <span class="sd">                        The deltas are ordered by each input example and `n_samples`</span>
 <span class="sd">                        noisy samples generated for it.</span>
 
-<span class="sd">            Examples::</span>
+<span class="sd">        Examples::</span>
 
-<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
-<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
-<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
-<span class="sd">                &gt;&gt;&gt; gradient_shap = GradientShap(net)</span>
-<span class="sd">                &gt;&gt;&gt; input = torch.randn(3, 3, 32, 32, requires_grad=True)</span>
-<span class="sd">                &gt;&gt;&gt; # choosing baselines randomly</span>
-<span class="sd">                &gt;&gt;&gt; baselines = torch.randn(20, 3, 32, 32)</span>
-<span class="sd">                &gt;&gt;&gt; # Computes gradient shap for the input</span>
-<span class="sd">                &gt;&gt;&gt; # Attribution size matches input size: 3x3x32x32</span>
-<span class="sd">                &gt;&gt;&gt; attribution = gradient_shap.attribute(input, baselines,</span>
-<span class="sd">                                                                 target=5)</span>
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; gradient_shap = GradientShap(net)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(3, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # choosing baselines randomly</span>
+<span class="sd">            &gt;&gt;&gt; baselines = torch.randn(20, 3, 32, 32)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes gradient shap for the input</span>
+<span class="sd">            &gt;&gt;&gt; # Attribution size matches input size: 3x3x32x32</span>
+<span class="sd">            &gt;&gt;&gt; attribution = gradient_shap.attribute(input, baselines,</span>
+<span class="sd">                                                                target=5)</span>
 
 <span class="sd">        """</span>
         <span class="c1"># since `baselines` is a distribution, we can generate it using a function</span>

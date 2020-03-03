@@ -29,14 +29,6 @@
 <dl class="class">
 <dt id="captum.attr.NoiseTunnel">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NoiseTunnel</code><span class="sig-paren">(</span><em class="sig-param">attribution_method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>attribution_method (Attribution): An instance of any attribution algorithm</dt><dd><p>of type <cite>Attribution</cite>. E.g. Integrated Gradients,
-Conductance or Saliency.</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="captum.attr.NoiseTunnel.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">nt_type='smoothgrad'</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=1.0</em>, <em class="sig-param">draw_baseline_from_distrib=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds gaussian noise to each input in the batch <cite>n_samples</cite> times
 and applies the given attribution algorithm to each of the samples.
 The attributions of the samples are combined based on the given noise
@@ -59,7 +51,15 @@ returned.</p>
 however it can be computationally expensive depending on the model,
 the dimensionality of the data and execution environment.
 It is assumed that the batch size is the first dimension of input tensors.</p>
-<dl class="field-list simple">
+<dl class="simple">
+<dt>attribution_method (Attribution): An instance of any attribution algorithm</dt><dd><p>of type <cite>Attribution</cite>. E.g. Integrated Gradients,
+Conductance or Saliency.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="captum.attr.NoiseTunnel.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">nt_type='smoothgrad'</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=1.0</em>, <em class="sig-param">draw_baseline_from_distrib=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which integrated

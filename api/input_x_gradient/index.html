@@ -29,7 +29,10 @@
 <dl class="class">
 <dt id="captum.attr.InputXGradient">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">InputXGradient</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/input_x_gradient.html#InputXGradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InputXGradient" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>A baseline approach for computing the attribution. It multiplies input with
+the gradient with respect to input.
+<a class="reference external" href="https://arxiv.org/abs/1611.07270">https://arxiv.org/abs/1611.07270</a></p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p>
@@ -39,21 +42,21 @@ modification of it</p>
 <dt id="captum.attr.InputXGradient.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/input_x_gradient.html#InputXGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InputXGradient.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
-A baseline approach for computing the attribution. It multiplies input with
-the gradient with respect to input.
-<a class="reference external" href="https://arxiv.org/abs/1611.07270">https://arxiv.org/abs/1611.07270</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
-attributions are computed. If forward_func takes a single
+:type inputs: ~TensorOrTupleOfTensorsGeneric
+:param inputs: Input for which</p>
+<blockquote>
+<div><p>attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
-be aligned appropriately.</p></li>
+be aligned appropriately.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).

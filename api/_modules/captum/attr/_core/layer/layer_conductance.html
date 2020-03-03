@@ -26,28 +26,45 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer.layer_conductance</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
-<span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">from</span> <span class="nn">..._utils.approximation_methods</span> <span class="kn">import</span> <span class="n">approximation_parameters</span>
-<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.batching</span> <span class="kn">import</span> <span class="n">_batched_operator</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_reshape_and_sum</span><span class="p">,</span>
-    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">_format_attributions</span><span class="p">,</span>
-    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_reshape_and_sum</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
-    <span class="n">_expand_target</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">compute_layer_gradients_and_eval</span>
-<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">BaselineType</span>
+<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span>
 
 
 <div class="viewcode-block" id="LayerConductance"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerConductance">[docs]</a><span class="k">class</span> <span class="nc">LayerConductance</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes conductance with respect to the given layer. The</span>
+<span class="sd">    returned output is in the shape of the layer's output, showing the total</span>
+<span class="sd">    conductance of each hidden layer neuron.</span>
+
+<span class="sd">    The details of the approach can be found here:</span>
+<span class="sd">    https://arxiv.org/abs/1805.12233</span>
+<span class="sd">    https://arxiv.org/pdf/1807.09946.pdf</span>
+
+<span class="sd">    Note that this provides the total conductance of each neuron in the</span>
+<span class="sd">    layer's output. To obtain the breakdown of a neuron's conductance by input</span>
+<span class="sd">    features, utilize NeuronConductance instead, and provide the target</span>
+<span class="sd">    neuron index.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
@@ -125,167 +142,154 @@
         <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">],</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Computes conductance with respect to the given layer. The</span>
-<span class="sd">            returned output is in the shape of the layer's output, showing the total</span>
-<span class="sd">            conductance of each hidden layer neuron.</span>
+<span class="sd">        Args:</span>
 
-<span class="sd">            The details of the approach can be found here:</span>
-<span class="sd">            https://arxiv.org/abs/1805.12233</span>
-<span class="sd">            https://arxiv.org/pdf/1807.09946.pdf</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer</span>
+<span class="sd">                        conductance is computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                        Baselines define the starting point from which integral</span>
+<span class="sd">                        is computed and can be provided as:</span>
 
-<span class="sd">            Note that this provides the total conductance of each neuron in the</span>
-<span class="sd">            layer's output. To obtain the breakdown of a neuron's conductance by input</span>
-<span class="sd">            features, utilize NeuronConductance instead, and provide the target</span>
-<span class="sd">            neuron index.</span>
+<span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                            exactly the same dimensions as inputs or the first</span>
+<span class="sd">                            dimension is one and the remaining dimensions match</span>
+<span class="sd">                            with inputs.</span>
 
-<span class="sd">            Args:</span>
+<span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                            be broadcasted for each input value in input tensor.</span>
 
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which layer</span>
-<span class="sd">                            conductance is computed. If forward_func takes a single</span>
-<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
-<span class="sd">                            of the input tensors should be provided. It is assumed</span>
-<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
-<span class="sd">                            to the number of examples, and if multiple input tensors</span>
-<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
-<span class="sd">                            Baselines define the starting point from which integral</span>
-<span class="sd">                            is computed and can be provided as:</span>
+<span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
+<span class="sd">                            - either a tensor with matching dimensions to</span>
+<span class="sd">                                corresponding tensor in the inputs' tuple</span>
+<span class="sd">                                or the first dimension is one and the remaining</span>
+<span class="sd">                                dimensions match with the corresponding</span>
+<span class="sd">                                input tensor.</span>
+<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                                for corresponding input tensor.</span>
 
-<span class="sd">                            - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                                exactly the same dimensions as inputs or the first</span>
-<span class="sd">                                dimension is one and the remaining dimensions match</span>
-<span class="sd">                                with inputs.</span>
+<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                        use zero scalar corresponding to each input tensor.</span>
 
-<span class="sd">                            - a single scalar, if inputs is a single tensor, which will</span>
-<span class="sd">                                be broadcasted for each input value in input tensor.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which gradients are computed (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
 
-<span class="sd">                            - a tuple of tensors or scalars, the baseline corresponding</span>
-<span class="sd">                                to each tensor in the inputs' tuple can be:</span>
-<span class="sd">                                - either a tensor with matching dimensions to</span>
-<span class="sd">                                    corresponding tensor in the inputs' tuple</span>
-<span class="sd">                                    or the first dimension is one and the remaining</span>
-<span class="sd">                                    dimensions match with the corresponding</span>
-<span class="sd">                                    input tensor.</span>
-<span class="sd">                                - or a scalar, corresponding to a tensor in the</span>
-<span class="sd">                                    inputs' tuple. This scalar value is broadcasted</span>
-<span class="sd">                                    for corresponding input tensor.</span>
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                            integer, which is applied to all input examples</span>
 
-<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
-<span class="sd">                            use zero scalar corresponding to each input tensor.</span>
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                            the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                            is applied as the target for the corresponding example.</span>
 
-<span class="sd">                            Default: None</span>
-<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
-<span class="sd">                            which gradients are computed (for classification cases,</span>
-<span class="sd">                            this is usually the target class).</span>
-<span class="sd">                            If the network returns a scalar value per example,</span>
-<span class="sd">                            no target index is necessary.</span>
-<span class="sd">                            For general 2D outputs, targets can be either:</span>
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
-<span class="sd">                            - a single integer or a tensor containing a single</span>
-<span class="sd">                                integer, which is applied to all input examples</span>
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                            elements. This target index is applied to all examples.</span>
 
-<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                                the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                                is applied as the target for the corresponding example.</span>
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                            examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                            target for the corresponding example.</span>
 
-<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                        correspond to the number of examples. It will be repeated</span>
+<span class="sd">                        for each of `n_steps` along the integrated path.</span>
+<span class="sd">                        For all other types, the given argument is used for</span>
+<span class="sd">                        all forward evaluations.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            n_steps (int, optional): The number of steps used by the approximation</span>
+<span class="sd">                        method. Default: 50.</span>
+<span class="sd">            method (string, optional): Method for approximating the integral,</span>
+<span class="sd">                        one of `riemann_right`, `riemann_left`, `riemann_middle`,</span>
+<span class="sd">                        `riemann_trapezoid` or `gausslegendre`.</span>
+<span class="sd">                        Default: `gausslegendre` if no method is provided.</span>
+<span class="sd">            internal_batch_size (int, optional): Divides total #steps * #examples</span>
+<span class="sd">                        data points into chunks of size internal_batch_size,</span>
+<span class="sd">                        which are computed (forward / backward passes)</span>
+<span class="sd">                        sequentially.</span>
+<span class="sd">                        For DataParallel models, each batch is split among the</span>
+<span class="sd">                        available devices, so evaluations on each available</span>
+<span class="sd">                        device contain internal_batch_size / num_devices examples.</span>
+<span class="sd">                        If internal_batch_size is None, then all evaluations are</span>
+<span class="sd">                        processed in one batch.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            return_convergence_delta (bool, optional): Indicates whether to return</span>
+<span class="sd">                        convergence delta or not. If `return_convergence_delta`</span>
+<span class="sd">                        is set to True convergence delta will be returned in</span>
+<span class="sd">                        a tuple following attributions.</span>
+<span class="sd">                        Default: False</span>
+<span class="sd">            attribute_to_layer_input (bool, optional): Indicates whether to</span>
+<span class="sd">                        compute the attribution with respect to the layer input</span>
+<span class="sd">                        or output. If `attribute_to_layer_input` is set to True</span>
+<span class="sd">                        then the attributions will be computed with respect to</span>
+<span class="sd">                        layer inputs, otherwise it will be computed with respect</span>
+<span class="sd">                        to layer outputs.</span>
+<span class="sd">                        Note that currently it is assumed that either the input</span>
+<span class="sd">                        or the output of internal layer, depending on whether we</span>
+<span class="sd">                        attribute to the input or output, is a single tensor.</span>
+<span class="sd">                        Support for multiple tensors will be added later.</span>
+<span class="sd">                        Default: False</span>
 
-<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                                elements. This target index is applied to all examples.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            **attributions** or 2-element tuple of **attributions**, **delta**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        Conductance of each neuron in given layer input or</span>
+<span class="sd">                        output. Attributions will always be the same size as</span>
+<span class="sd">                        the input or output of the given layer, depending on</span>
+<span class="sd">                        whether we attribute to the inputs or outputs</span>
+<span class="sd">                        of the layer which is decided by the input flag</span>
+<span class="sd">                        `attribute_to_layer_input`.</span>
+<span class="sd">                        Attributions are returned in a tuple based on whether</span>
+<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
+<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
+<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
+<span class="sd">                        outputs of a single tensor are not.</span>
+<span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
+<span class="sd">                        The difference between the total</span>
+<span class="sd">                        approximated and true conductance.</span>
+<span class="sd">                        This is computed using the property that the total sum of</span>
+<span class="sd">                        forward_func(inputs) - forward_func(baselines) must equal</span>
+<span class="sd">                        the total sum of the attributions.</span>
+<span class="sd">                        Delta is calculated per example, meaning that the number of</span>
+<span class="sd">                        elements in returned delta tensor is equal to the number of</span>
+<span class="sd">                        of examples in inputs.</span>
 
-<span class="sd">                            - A list of tuples with length equal to the number of</span>
-<span class="sd">                                examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                                #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                                target for the corresponding example.</span>
+<span class="sd">        Examples::</span>
 
-<span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
-<span class="sd">                            requires additional arguments other than the inputs for</span>
-<span class="sd">                            which attributions should not be computed, this argument</span>
-<span class="sd">                            can be provided. It must be either a single additional</span>
-<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
-<span class="sd">                            tuple containing multiple additional arguments including</span>
-<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
-<span class="sd">                            are provided to forward_func in order following the</span>
-<span class="sd">                            arguments in inputs.</span>
-<span class="sd">                            For a tensor, the first dimension of the tensor must</span>
-<span class="sd">                            correspond to the number of examples. It will be repeated</span>
-<span class="sd">                            for each of `n_steps` along the integrated path.</span>
-<span class="sd">                            For all other types, the given argument is used for</span>
-<span class="sd">                            all forward evaluations.</span>
-<span class="sd">                            Note that attributions are not computed with respect</span>
-<span class="sd">                            to these arguments.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                n_steps (int, optional): The number of steps used by the approximation</span>
-<span class="sd">                            method. Default: 50.</span>
-<span class="sd">                method (string, optional): Method for approximating the integral,</span>
-<span class="sd">                            one of `riemann_right`, `riemann_left`, `riemann_middle`,</span>
-<span class="sd">                            `riemann_trapezoid` or `gausslegendre`.</span>
-<span class="sd">                            Default: `gausslegendre` if no method is provided.</span>
-<span class="sd">                internal_batch_size (int, optional): Divides total #steps * #examples</span>
-<span class="sd">                            data points into chunks of size internal_batch_size,</span>
-<span class="sd">                            which are computed (forward / backward passes)</span>
-<span class="sd">                            sequentially.</span>
-<span class="sd">                            For DataParallel models, each batch is split among the</span>
-<span class="sd">                            available devices, so evaluations on each available</span>
-<span class="sd">                            device contain internal_batch_size / num_devices examples.</span>
-<span class="sd">                            If internal_batch_size is None, then all evaluations are</span>
-<span class="sd">                            processed in one batch.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                return_convergence_delta (bool, optional): Indicates whether to return</span>
-<span class="sd">                            convergence delta or not. If `return_convergence_delta`</span>
-<span class="sd">                            is set to True convergence delta will be returned in</span>
-<span class="sd">                            a tuple following attributions.</span>
-<span class="sd">                            Default: False</span>
-<span class="sd">                attribute_to_layer_input (bool, optional): Indicates whether to</span>
-<span class="sd">                            compute the attribution with respect to the layer input</span>
-<span class="sd">                            or output. If `attribute_to_layer_input` is set to True</span>
-<span class="sd">                            then the attributions will be computed with respect to</span>
-<span class="sd">                            layer inputs, otherwise it will be computed with respect</span>
-<span class="sd">                            to layer outputs.</span>
-<span class="sd">                            Note that currently it is assumed that either the input</span>
-<span class="sd">                            or the output of internal layer, depending on whether we</span>
-<span class="sd">                            attribute to the input or output, is a single tensor.</span>
-<span class="sd">                            Support for multiple tensors will be added later.</span>
-<span class="sd">                            Default: False</span>
-
-<span class="sd">            Returns:</span>
-<span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
-<span class="sd">                            Conductance of each neuron in given layer input or</span>
-<span class="sd">                            output. Attributions will always be the same size as</span>
-<span class="sd">                            the input or output of the given layer, depending on</span>
-<span class="sd">                            whether we attribute to the inputs or outputs</span>
-<span class="sd">                            of the layer which is decided by the input flag</span>
-<span class="sd">                            `attribute_to_layer_input`.</span>
-<span class="sd">                            Attributions are returned in a tuple based on whether</span>
-<span class="sd">                            the layer inputs / outputs are contained in a tuple</span>
-<span class="sd">                            from a forward hook. For standard modules, inputs of</span>
-<span class="sd">                            a single tensor are usually wrapped in a tuple, while</span>
-<span class="sd">                            outputs of a single tensor are not.</span>
-<span class="sd">                - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
-<span class="sd">                            The difference between the total</span>
-<span class="sd">                            approximated and true conductance.</span>
-<span class="sd">                            This is computed using the property that the total sum of</span>
-<span class="sd">                            forward_func(inputs) - forward_func(baselines) must equal</span>
-<span class="sd">                            the total sum of the attributions.</span>
-<span class="sd">                            Delta is calculated per example, meaning that the number of</span>
-<span class="sd">                            elements in returned delta tensor is equal to the number of</span>
-<span class="sd">                            of examples in inputs.</span>
-
-<span class="sd">            Examples::</span>
-
-<span class="sd">                &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
-<span class="sd">                &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
-<span class="sd">                &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
-<span class="sd">                &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x32x32.</span>
-<span class="sd">                &gt;&gt;&gt; net = ImageClassifier()</span>
-<span class="sd">                &gt;&gt;&gt; layer_cond = LayerConductance(net, net.conv1)</span>
-<span class="sd">                &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
-<span class="sd">                &gt;&gt;&gt; # Computes layer conductance for class 3.</span>
-<span class="sd">                &gt;&gt;&gt; # attribution size matches layer output, Nx12x32x32</span>
-<span class="sd">                &gt;&gt;&gt; attribution = layer_cond.attribute(input, target=3)</span>
+<span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx10 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="sd">            &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x32x32.</span>
+<span class="sd">            &gt;&gt;&gt; net = ImageClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; layer_cond = LayerConductance(net, net.conv1)</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes layer conductance for class 3.</span>
+<span class="sd">            &gt;&gt;&gt; # attribution size matches layer output, Nx12x32x32</span>
+<span class="sd">            &gt;&gt;&gt; attribution = layer_cond.attribute(input, target=3)</span>
 <span class="sd">        """</span>
         <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">_validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>

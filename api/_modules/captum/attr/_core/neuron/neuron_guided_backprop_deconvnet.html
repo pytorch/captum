@@ -30,13 +30,31 @@
 
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
-<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span>
+<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
-<span class="kn">from</span> <span class="nn">..guided_backprop_deconvnet</span> <span class="kn">import</span> <span class="n">GuidedBackprop</span><span class="p">,</span> <span class="n">Deconvolution</span>
+<span class="kn">from</span> <span class="nn">..guided_backprop_deconvnet</span> <span class="kn">import</span> <span class="n">Deconvolution</span><span class="p">,</span> <span class="n">GuidedBackprop</span>
 
 
 <div class="viewcode-block" id="NeuronDeconvolution"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeconvolution">[docs]</a><span class="k">class</span> <span class="nc">NeuronDeconvolution</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes attribution of the given neuron using deconvolution.</span>
+<span class="sd">    Deconvolution computes the gradient of the target output with</span>
+<span class="sd">    respect to the input, but gradients of ReLU functions are overriden so</span>
+<span class="sd">    that the gradient of the ReLU input is simply computed taking ReLU of</span>
+<span class="sd">    the output gradient, essentially only propagating non-negative gradients</span>
+<span class="sd">    (without dependence on the sign of the ReLU input).</span>
+
+<span class="sd">    More details regarding the deconvolution algorithm can be found</span>
+<span class="sd">    in these papers:</span>
+<span class="sd">    https://arxiv.org/abs/1311.2901</span>
+<span class="sd">    https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8</span>
+
+<span class="sd">    Warning: Ensure that all ReLU operations in the forward function of the</span>
+<span class="sd">    given model are performed using a module (nn.module.ReLU).</span>
+<span class="sd">    If nn.functional.ReLU is used, gradients are not overriden appropriately.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -71,22 +89,6 @@
         <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        Computes attribution of the given neuron using deconvolution.</span>
-<span class="sd">        Deconvolution computes the gradient of the target output with</span>
-<span class="sd">        respect to the input, but gradients of ReLU functions are overriden so</span>
-<span class="sd">        that the gradient of the ReLU input is simply computed taking ReLU of</span>
-<span class="sd">        the output gradient, essentially only propagating non-negative gradients</span>
-<span class="sd">        (without dependence on the sign of the ReLU input).</span>
-
-<span class="sd">        More details regarding the deconvolution algorithm can be found</span>
-<span class="sd">        in these papers:</span>
-<span class="sd">        https://arxiv.org/abs/1311.2901</span>
-<span class="sd">        https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8</span>
-
-<span class="sd">        Warning: Ensure that all ReLU operations in the forward function of the</span>
-<span class="sd">        given model are performed using a module (nn.module.ReLU).</span>
-<span class="sd">        If nn.functional.ReLU is used, gradients are not overriden appropriately.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
@@ -164,6 +166,21 @@
 
 
 <div class="viewcode-block" id="NeuronGuidedBackprop"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop">[docs]</a><span class="k">class</span> <span class="nc">NeuronGuidedBackprop</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Computes attribution of the given neuron using guided backpropagation.</span>
+<span class="sd">    Guided backpropagation computes the gradient of the target neuron</span>
+<span class="sd">    with respect to the input, but gradients of ReLU functions are overriden</span>
+<span class="sd">    so that only non-negative gradients are backpropagated.</span>
+
+<span class="sd">    More details regarding the guided backpropagation algorithm can be found</span>
+<span class="sd">    in the original paper here:</span>
+<span class="sd">    https://arxiv.org/abs/1412.6806</span>
+
+<span class="sd">    Warning: Ensure that all ReLU operations in the forward function of the</span>
+<span class="sd">    given model are performed using a module (nn.module.ReLU).</span>
+<span class="sd">    If nn.functional.ReLU is used, gradients are not overriden appropriately.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -195,19 +212,6 @@
         <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        Computes attribution of the given neuron using guided backpropagation.</span>
-<span class="sd">        Guided backpropagation computes the gradient of the target neuron</span>
-<span class="sd">        with respect to the input, but gradients of ReLU functions are overriden</span>
-<span class="sd">        so that only non-negative gradients are backpropagated.</span>
-
-<span class="sd">        More details regarding the guided backpropagation algorithm can be found</span>
-<span class="sd">        in the original paper here:</span>
-<span class="sd">        https://arxiv.org/abs/1412.6806</span>
-
-<span class="sd">        Warning: Ensure that all ReLU operations in the forward function of the</span>
-<span class="sd">        given model are performed using a module (nn.module.ReLU).</span>
-<span class="sd">        If nn.functional.ReLU is used, gradients are not overriden appropriately.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>

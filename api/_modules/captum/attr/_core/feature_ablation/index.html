@@ -27,28 +27,46 @@
 <h1>Source code for captum.attr._core.feature_ablation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">dtype</span>
-
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">dtype</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
 <span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
     <span class="n">_find_output_mode_and_verify</span><span class="p">,</span>
+    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
     <span class="n">_format_attributions</span><span class="p">,</span>
     <span class="n">_format_input</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
-    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_expand_target</span><span class="p">,</span>
-    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">BaselineType</span>
+<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 
 
 <div class="viewcode-block" id="FeatureAblation"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A perturbation based approach to computing attribution, involving</span>
+<span class="sd">    replacing each input feature with a given baseline / reference, and</span>
+<span class="sd">    computing the difference in output. By default, each scalar value within</span>
+<span class="sd">    each input tensor is taken as a feature and replaced independently. Passing</span>
+<span class="sd">    a feature mask, allows grouping features to be ablated together. This can</span>
+<span class="sd">    be used in cases such as images, where an entire segment or region</span>
+<span class="sd">    can be ablated, measuring the importance of the segment (feature group).</span>
+<span class="sd">    Each input scalar in the group will be given the same attribution value</span>
+<span class="sd">    equal to the change in target as a result of ablating the entire feature</span>
+<span class="sd">    group.</span>
+
+<span class="sd">    The forward function can either return a scalar per example, or a single</span>
+<span class="sd">    scalar for the full batch. If a single scalar is returned for the batch,</span>
+<span class="sd">    `perturbations_per_eval` must be 1, and the returned attributions will have</span>
+<span class="sd">    first dimension 1, corresponding to feature importance across all</span>
+<span class="sd">    examples in the batch.</span>
+<span class="sd">    """</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -70,23 +88,6 @@
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">""""</span>
-<span class="sd">        A perturbation based approach to computing attribution, involving</span>
-<span class="sd">        replacing each input feature with a given baseline / reference, and</span>
-<span class="sd">        computing the difference in output. By default, each scalar value within</span>
-<span class="sd">        each input tensor is taken as a feature and replaced independently. Passing</span>
-<span class="sd">        a feature mask, allows grouping features to be ablated together. This can</span>
-<span class="sd">        be used in cases such as images, where an entire segment or region</span>
-<span class="sd">        can be ablated, measuring the importance of the segment (feature group).</span>
-<span class="sd">        Each input scalar in the group will be given the same attribution value</span>
-<span class="sd">        equal to the change in target as a result of ablating the entire feature</span>
-<span class="sd">        group.</span>
-
-<span class="sd">        The forward function can either return a scalar per example, or a single</span>
-<span class="sd">        scalar for the full batch. If a single scalar is returned for the batch,</span>
-<span class="sd">        `perturbations_per_eval` must be 1, and the returned attributions will have</span>
-<span class="sd">        first dimension 1, corresponding to feature importance across all</span>
-<span class="sd">        examples in the batch.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">                inputs (tensor or tuple of tensors):  Input for which ablation</span>

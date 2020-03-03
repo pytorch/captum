@@ -29,15 +29,6 @@
 <dl class="class">
 <dt id="captum.attr.GradientShap">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">GradientShap</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/gradient_shap.html#GradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GradientShap" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>forward_func</strong> (<em>function</em>) – The forward function of the model or
-any modification of it</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="captum.attr.GradientShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=0.0</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/gradient_shap.html#GradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GradientShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements gradient SHAP based on the implementation from SHAP’s primary
 author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
@@ -63,6 +54,15 @@ by computing the expectations of gradients for different baselines.</p>
 randomly draw samples from the distribution of baselines, add noise to input
 samples and compute the expectation (smoothgrad).</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>forward_func</strong> (<em>function</em>) – The forward function of the model or
+any modification of it</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="captum.attr.GradientShap.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=0.0</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/gradient_shap.html#GradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.GradientShap.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which SHAP attribution
@@ -199,6 +199,12 @@ noisy samples generated for it.</p>
 </dl>
 </li>
 </ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
+</dd>
+</dl>
 <p>Examples:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
@@ -210,15 +216,9 @@ noisy samples generated for it.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes gradient shap for the input</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Attribution size matches input size: 3x3x32x32</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">gradient_shap</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span>
-<span class="go">                                                 target=5)</span>
+<span class="go">                                                    target=5)</span>
 </pre></div>
 </div>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><strong>attributions</strong> or 2-element tuple of <strong>attributions</strong>, <strong>delta</strong></p>
-</dd>
-</dl>
 </dd></dl>
 <dl class="method">
 <dt id="captum.attr.GradientShap.has_convergence_delta">
