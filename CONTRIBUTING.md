@@ -35,7 +35,7 @@ pip using `pip install isort`, and run locally by calling
 ```bash
 isort
 ```
-from the repository root. No additional configuration should be needed.
+from the repository root. Configuration for isort is located in .isort.cfg.
 
 We feel strongly that having a consistent code style is extremely important, so
 CircleCI will fail on your PR if it does not adhere to the black or flake8 formatting style or isort import ordering.
