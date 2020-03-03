@@ -2,7 +2,6 @@
 from collections import defaultdict
 
 import torch
-
 from pytext.models.embeddings.dict_embedding import DictEmbedding
 from pytext.models.embeddings.word_embedding import WordEmbedding
 from pytext.models.model import EmbeddingBase, EmbeddingList
