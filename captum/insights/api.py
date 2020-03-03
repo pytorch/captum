@@ -504,15 +504,19 @@ class AttributionVisualizer(object):
 
         # Type ignore for issue with passing union to function taking generic
         # https://github.com/python/mypy/issues/1533
-        for inputs, additional_args, label in _batched_generator(  # type: ignore
+        for (
+            inputs,
+            additional_forward_args,
+            label,
+        ) in _batched_generator(  # type: ignore
             inputs=batch_data.inputs,
             additional_forward_args=batch_data.additional_args,
             target_ind=batch_data.labels,
             internal_batch_size=1,  # should be 1 until we have batch label support
         ):
-            output = self._calculate_vis_output(inputs, additional_args, label)
+            output = self._calculate_vis_output(inputs, additional_forward_args, label)
             if output is not None:
-                cache = SampleCache(inputs, additional_args, label)
+                cache = SampleCache(inputs, additional_forward_args, label)
                 vis_outputs.append((output, cache))
 
         return vis_outputs
