@@ -102,11 +102,14 @@ class Occlusion(FeatureAblation):
                             Baselines define reference value which replaces each
                             feature when occluded.
                             Baselines can be provided as:
+
                             - a single tensor, if inputs is a single tensor, with
                               exactly the same dimensions as inputs or
                               broadcastable to match the dimensions of inputs
+                            
                             - a single scalar, if inputs is a single tensor, which will
                               be broadcasted for each input value in input tensor.
+                            
                             - a tuple of tensors or scalars, the baseline corresponding
                               to each tensor in the inputs' tuple can be:
                                 - either a tensor with
