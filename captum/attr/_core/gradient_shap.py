@@ -355,7 +355,7 @@ class InputBaselineXGradient(GradientAttribution):
 
 
 def _scale_input(
-    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor
+    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor,
 ) -> Tensor:
     # batch size
     bsz = input.shape[0]

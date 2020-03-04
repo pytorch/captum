@@ -109,21 +109,21 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            the first dimension equal to the number of examples
-                            in the baselines' distribution. The remaining dimensions
-                            must match with input tensor's dimension starting from
-                            the second dimension.
+                          the first dimension equal to the number of examples
+                          in the baselines' distribution. The remaining dimensions
+                          must match with input tensor's dimension starting from
+                          the second dimension.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with the first dimension of any tensor inside the tuple
-                            equal to the number of examples in the baseline's
-                            distribution. The remaining dimensions must match
-                            the dimensions of the corresponding input tensor
-                            starting from the second dimension.
+                          with the first dimension of any tensor inside the tuple
+                          equal to the number of examples in the baseline's
+                          distribution. The remaining dimensions must match
+                          the dimensions of the corresponding input tensor
+                          starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
-                            or a tuple of those.
+                          argument and either returns a single tensor
+                          or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
