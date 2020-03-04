@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.2.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "babel-loader": "^8.0.6",

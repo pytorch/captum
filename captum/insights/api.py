@@ -256,14 +256,14 @@ class AttributionVisualizer(object):
     def serve(self, blocking=False, debug=False, port=None):
         context = _get_context()
         if context == _CONTEXT_COLAB:
-            self._serve_colab(blocking=blocking, debug=debug, port=port)
+            return self._serve_colab(blocking=blocking, debug=debug, port=port)
         else:
-            self._serve(blocking=blocking, debug=debug, port=port)
+            return self._serve(blocking=blocking, debug=debug, port=port)
 
     def _serve(self, blocking=False, debug=False, port=None):
         from captum.insights.server import start_server
 
-        start_server(self, blocking=blocking, debug=debug, _port=port)
+        return start_server(self, blocking=blocking, debug=debug, _port=port)
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         from IPython.display import display, HTML
