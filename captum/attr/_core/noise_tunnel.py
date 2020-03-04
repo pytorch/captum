@@ -58,9 +58,10 @@ class NoiseTunnel(Attribution):
 
     def __init__(self, attribution_method: Attribution) -> None:
         r"""
-        attribution_method (Attribution): An instance of any attribution algorithm
-                    of type `Attribution`. E.g. Integrated Gradients,
-                    Conductance or Saliency.
+        Args:
+            attribution_method (Attribution): An instance of any attribution algorithm
+                        of type `Attribution`. E.g. Integrated Gradients,
+                        Conductance or Saliency.
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
