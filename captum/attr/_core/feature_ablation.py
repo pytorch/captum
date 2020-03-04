@@ -83,7 +83,7 @@ class FeatureAblation(PerturbationAttribution):
 
                         - a single scalar, if inputs is a single tensor, which will
                           be broadcasted for each input value in input tensor.
-                        
+
                         - a tuple of tensors or scalars, the baseline corresponding
                           to each tensor in the inputs' tuple can be:
 
@@ -92,7 +92,7 @@ class FeatureAblation(PerturbationAttribution):
                             or the first dimension is one and the remaining
                             dimensions match with the corresponding
                             input tensor.
-                          
+
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.

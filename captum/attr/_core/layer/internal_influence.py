@@ -103,7 +103,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                             or the first dimension is one and the remaining
                             dimensions match with the corresponding
                             input tensor.
-                          
+
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.

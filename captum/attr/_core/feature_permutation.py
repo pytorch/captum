@@ -25,8 +25,8 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 class FeaturePermutation(FeatureAblation):
     r"""
     A perturbation based approach to compute attribution, which
-    takes each input feature, permutes the feature values within a batch, 
-    and computes the difference in output between the original and shuffled. 
+    takes each input feature, permutes the feature values within a batch,
+    and computes the difference in output between the original and shuffled.
 
     Example pseudocode for the algorithm is as follows::
 
@@ -46,7 +46,7 @@ class FeaturePermutation(FeatureAblation):
     could simply return the logits (the model output), but this may or may
     not provide a meaningful attribution.
 
-    This method, unlike other attribution methods, requires a batch 
+    This method, unlike other attribution methods, requires a batch
     of examples to compute attributions and cannot be performed on a single example.
 
     By default, each scalar value within
@@ -61,7 +61,7 @@ class FeaturePermutation(FeatureAblation):
     `perturbations_per_eval` must be 1, and the returned attributions will have
     first dimension 1, corresponding to feature importance across all
     examples in the batch.
-    
+
     More information can be found in the permutation feature
     importance algorithm description here:
     https://christophm.github.io/interpretable-ml-book/feature-importance.html
@@ -73,8 +73,9 @@ class FeaturePermutation(FeatureAblation):
 
             forward_func (callable): The forward function of the model or
                 any modification of it
-            perm_func (callable, optional): A function that accepts a batch of inputs and
-                a feature mask, and "permutes" the feature across the batch.
+            perm_func (callable, optional): A function that accepts a batch of
+                inputs and a feature mask, and "permutes" the feature across
+                the batch.
                 NOTE: one obviously does not have to perform a permutation.
                 See `_permute_feature` as an example on how to implement
                 your own permutation function.
@@ -239,7 +240,8 @@ class FeaturePermutation(FeatureAblation):
             >>> # feature mask has dimensions 1 x 4 x 4
             >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
             >>>                             [2,2,3,3],[2,2,3,3]]])
-            >>> attr = feature_perm.attribute(input, target=1, feature_mask=feature_mask)
+            >>> attr = feature_perm.attribute(input, target=1,
+            >>>                               feature_mask=feature_mask)
         """
         return FeatureAblation.attribute(
             self,

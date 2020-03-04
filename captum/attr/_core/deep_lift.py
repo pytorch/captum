@@ -180,7 +180,7 @@ class DeepLift(GradientAttribution):
                             or the first dimension is one and the remaining
                             dimensions match with the corresponding
                             input tensor.
-                          
+
                           - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
@@ -238,7 +238,7 @@ class DeepLift(GradientAttribution):
                         - custom_attribution_func(multipliers)
                         - custom_attribution_func(multipliers, inputs)
                         - custom_attribution_func(multipliers, inputs, baselines)
-                        
+
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -679,7 +679,7 @@ class DeepLiftShap(DeepLift):
                         - custom_attribution_func(multipliers)
                         - custom_attribution_func(multipliers, inputs)
                         - custom_attribution_func(multipliers, inputs, baselines)
-                        
+
                         In case this function is not provided we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,

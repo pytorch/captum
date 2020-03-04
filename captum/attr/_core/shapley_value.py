@@ -108,10 +108,10 @@ class ShapleyValueSampling(PerturbationAttribution):
                               exactly the same dimensions as inputs or the first
                               dimension is one and the remaining dimensions match
                               with inputs.
-                            
+
                             - a single scalar, if inputs is a single tensor, which will
                               be broadcasted for each input value in input tensor.
-                            
+
                             - a tuple of tensors or scalars, the baseline corresponding
                               to each tensor in the inputs' tuple can be:
 
@@ -120,7 +120,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                                 or the first dimension is one and the remaining
                                 dimensions match with the corresponding
                                 input tensor.
-                            
+
                               - or a scalar, corresponding to a tensor in the
                                 inputs' tuple. This scalar value is broadcasted
                                 for corresponding input tensor.
@@ -543,10 +543,10 @@ class ShapleyValues(PerturbationAttribution):
                               exactly the same dimensions as inputs or the first
                               dimension is one and the remaining dimensions match
                               with inputs.
-                            
+
                             - a single scalar, if inputs is a single tensor, which will
                               be broadcasted for each input value in input tensor.
-                            
+
                             - a tuple of tensors or scalars, the baseline corresponding
                               to each tensor in the inputs' tuple can be:
 
@@ -555,7 +555,7 @@ class ShapleyValues(PerturbationAttribution):
                                 or the first dimension is one and the remaining
                                 dimensions match with the corresponding
                                 input tensor.
-                            
+
                               - or a scalar, corresponding to a tensor in the
                                 inputs' tuple. This scalar value is broadcasted
                                 for corresponding input tensor.
