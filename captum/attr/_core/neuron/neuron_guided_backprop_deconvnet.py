@@ -61,7 +61,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""""
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -184,7 +184,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""""
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which

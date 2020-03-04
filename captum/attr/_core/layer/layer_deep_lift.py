@@ -118,7 +118,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Union[
         Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
     ]:
-        r""""
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which layer
@@ -147,15 +147,16 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
                         - a tuple of tensors or scalars, the baseline corresponding
                           to each tensor in the inputs' tuple can be:
-                            - either a tensor with matching dimensions to
-                              corresponding tensor in the inputs' tuple
-                              or the first dimension is one and the remaining
-                              dimensions match with the corresponding
-                              input tensor.
-                            - or a scalar, corresponding to a tensor in the
-                              inputs' tuple. This scalar value is broadcasted
-                              for corresponding input tensor.
 
+                          - either a tensor with matching dimensions to
+                            corresponding tensor in the inputs' tuple
+                            or the first dimension is one and the remaining
+                            dimensions match with the corresponding
+                            input tensor.
+                          
+                          - or a scalar, corresponding to a tensor in the
+                            inputs' tuple. This scalar value is broadcasted
+                            for corresponding input tensor.
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
 
@@ -216,9 +217,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+                        
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+                        
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -510,9 +513,11 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+                        
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+                        
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,

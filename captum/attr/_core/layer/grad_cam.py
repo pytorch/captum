@@ -61,7 +61,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
-        Args
+        Args:
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
