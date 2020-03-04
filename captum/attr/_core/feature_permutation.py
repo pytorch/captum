@@ -75,10 +75,9 @@ class FeaturePermutation(FeatureAblation):
                 any modification of it
             perm_func (callable, optional): A function that accepts a batch of
                 inputs and a feature mask, and "permutes" the feature across
-                the batch.
-                NOTE: one obviously does not have to perform a permutation.
-                See `_permute_feature` as an example on how to implement
-                your own permutation function.
+                the batch. This defaults to a function which applies a random
+                permutation, this argument only needs to be provided if a
+                custom permutation behavior is desired.
                 Default: `_permute_feature`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
