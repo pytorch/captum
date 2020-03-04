@@ -27,7 +27,7 @@ class FeaturePermutation(FeatureAblation):
     A perturbation based approach to compute attribution, which
     takes each input feature, permutes the feature values within a batch,
     and computes the difference between original and shuffled outputs for
-    the given batch. This difference signifies the feature importance 
+    the given batch. This difference signifies the feature importance
     for the permuted feature.
 
     Example pseudocode for the algorithm is as follows::
@@ -78,7 +78,7 @@ class FeaturePermutation(FeatureAblation):
             perm_func (callable, optional): A function that accepts a batch of
                 inputs and a feature mask, and "permutes" the feature using
                 feature mask across the batch. This defaults to a function
-                which applies a random permutation, this argument only needs 
+                which applies a random permutation, this argument only needs
                 to be provided if a custom permutation behavior is desired.
                 Default: `_permute_feature`
         """
