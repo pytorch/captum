@@ -78,7 +78,7 @@ class Saliency(GradientAttribution):
             abs (bool, optional): Returns absolute value of gradients if set
                         to True, otherwise returns the (signed) gradients if
                         False.
-                        Defalut: True
+                        Default: True
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
