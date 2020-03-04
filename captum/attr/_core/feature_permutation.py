@@ -24,11 +24,11 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 
 class FeaturePermutation(FeatureAblation):
     r"""
-    This attribution method essentially implements the permutation feature
-    importance algorithm, as described here:
-    https://christophm.github.io/interpretable-ml-book/feature-importance.html
+    A perturbation based approach to compute attribution, which
+    takes each input feature, permutes the feature values within a batch, 
+    and computes the difference in output between the original and shuffled. 
 
-    A basic tl;dr of the algorithm is::
+    Example pseudocode for the algorithm is as follows::
 
         perm_feature_importance(batch):
             importance = dict()
@@ -42,9 +42,29 @@ class FeaturePermutation(FeatureAblation):
             return importance
 
     It should be noted that the `error_metric` must be called in the
-    `forward_func`. You do not need to provide an error metric, e.g. you
+    `forward_func`. You do not need to have an error metric, e.g. you
     could simply return the logits (the model output), but this may or may
     not provide a meaningful attribution.
+
+    This method, unlike other attribution methods, requires a batch 
+    of examples to compute attributions and cannot be performed on a single example.
+
+    By default, each scalar value within
+    each input tensor is taken as a feature and shuffled independently. Passing
+    a feature mask, allows grouping features to be shuffled together.
+    Each input scalar in the group will be given the same attribution value
+    equal to the change in target as a result of shuffling the entire feature
+    group.
+
+    The forward function can either return a scalar per example, or a single
+    scalar for the full batch. If a single scalar is returned for the batch,
+    `perturbations_per_eval` must be 1, and the returned attributions will have
+    first dimension 1, corresponding to feature importance across all
+    examples in the batch.
+    
+    More information can be found in the permutation feature
+    importance algorithm description here:
+    https://christophm.github.io/interpretable-ml-book/feature-importance.html
     """
 
     def __init__(self, forward_func: Callable, perm_func: Callable = _permute_feature):
@@ -53,7 +73,7 @@ class FeaturePermutation(FeatureAblation):
 
             forward_func (callable): The forward function of the model or
                 any modification of it
-            perm_func (callable): A function that accepts a batch of inputs and
+            perm_func (callable, optional): A function that accepts a batch of inputs and
                 a feature mask, and "permutes" the feature across the batch.
                 NOTE: one obviously does not have to perform a permutation.
                 See `_permute_feature` as an example on how to implement
@@ -212,7 +232,7 @@ class FeaturePermutation(FeatureAblation):
             >>> # +---+---+---+---+
             >>> # | 2 | 2 | 3 | 3 |
             >>> # +---+---+---+---+
-            >>> # With this mask, all inputs with the same value are ablated
+            >>> # With this mask, all inputs with the same value are shuffled
             >>> # simultaneously, and the attribution for each input in the same
             >>> # group (0, 1, 2, and 3) per example are the same.
             >>> # The attributions can be calculated as follows:
