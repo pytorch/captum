@@ -191,8 +191,8 @@ class FeatureAblation(PerturbationAttribution):
                         attribution tensor(s) will have first dimension 1 and
                         the remaining dimensions will match the input.
                         If a single tensor is provided as inputs, a single tensor is
-                        returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+                        returned. If a tuple of tensors is provided for inputs, a
+                        tuple of corresponding sized tensors is returned.
 
 
         Examples::

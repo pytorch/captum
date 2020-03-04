@@ -26,7 +26,9 @@ class FeaturePermutation(FeatureAblation):
     r"""
     A perturbation based approach to compute attribution, which
     takes each input feature, permutes the feature values within a batch,
-    and computes the difference in output between the original and shuffled.
+    and computes the difference between original and shuffled outputs for
+    the given batch. This difference signifies the feature importance 
+    for the permuted feature.
 
     Example pseudocode for the algorithm is as follows::
 
@@ -74,10 +76,10 @@ class FeaturePermutation(FeatureAblation):
             forward_func (callable): The forward function of the model or
                 any modification of it
             perm_func (callable, optional): A function that accepts a batch of
-                inputs and a feature mask, and "permutes" the feature across
-                the batch. This defaults to a function which applies a random
-                permutation, this argument only needs to be provided if a
-                custom permutation behavior is desired.
+                inputs and a feature mask, and "permutes" the feature using
+                feature mask across the batch. This defaults to a function
+                which applies a random permutation, this argument only needs 
+                to be provided if a custom permutation behavior is desired.
                 Default: `_permute_feature`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
@@ -202,8 +204,8 @@ class FeaturePermutation(FeatureAblation):
                         attribution tensor(s) will have first dimension 1 and
                         the remaining dimensions will match the input.
                         If a single tensor is provided as inputs, a single tensor is
-                        returned. If a tuple is provided for inputs, a tuple of
-                        corresponding sized tensors is returned.
+                        returned. If a tuple of tensors is provided for inputs,
+                        a tuple of corresponding sized tensors is returned.
 
 
         Examples::
@@ -219,7 +221,7 @@ class FeaturePermutation(FeatureAblation):
             >>> # scalar input independently.
             >>> attr = feature_perm.attribute(input, target=1)
 
-            >>> # Alternatively, we may want to ablate features in groups, e.g.
+            >>> # Alternatively, we may want to permute features in groups, e.g.
             >>> # grouping each 2x2 square of the inputs and shuffling them together.
             >>> # This can be done by creating a feature mask as follows, which
             >>> # defines the feature groups, e.g.:
