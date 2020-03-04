@@ -91,7 +91,6 @@ def start_server(
             app.logger.disabled = True
 
         port = _port or get_free_tcp_port()
-        print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
         # Start in a new thread to not block notebook execution
         t = threading.Thread(target=run_app, kwargs={"debug": debug})
         t.start()
@@ -99,4 +98,5 @@ def start_server(
         if blocking:
             t.join()
 
+    print(f"\nFetch data and view Captum Insights at http://localhost:{port}/\n")
     return port
