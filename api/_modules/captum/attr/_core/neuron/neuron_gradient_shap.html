@@ -136,21 +136,21 @@
 <span class="sd">                        is computed and can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            the first dimension equal to the number of examples</span>
-<span class="sd">                            in the baselines' distribution. The remaining dimensions</span>
-<span class="sd">                            must match with input tensor's dimension starting from</span>
-<span class="sd">                            the second dimension.</span>
+<span class="sd">                          the first dimension equal to the number of examples</span>
+<span class="sd">                          in the baselines' distribution. The remaining dimensions</span>
+<span class="sd">                          must match with input tensor's dimension starting from</span>
+<span class="sd">                          the second dimension.</span>
 
 <span class="sd">                        - a tuple of tensors, if inputs is a tuple of tensors,</span>
-<span class="sd">                            with the first dimension of any tensor inside the tuple</span>
-<span class="sd">                            equal to the number of examples in the baseline's</span>
-<span class="sd">                            distribution. The remaining dimensions must match</span>
-<span class="sd">                            the dimensions of the corresponding input tensor</span>
-<span class="sd">                            starting from the second dimension.</span>
+<span class="sd">                          with the first dimension of any tensor inside the tuple</span>
+<span class="sd">                          equal to the number of examples in the baseline's</span>
+<span class="sd">                          distribution. The remaining dimensions must match</span>
+<span class="sd">                          the dimensions of the corresponding input tensor</span>
+<span class="sd">                          starting from the second dimension.</span>
 
 <span class="sd">                        - callable function, optionally takes `inputs` as an</span>
-<span class="sd">                            argument and either returns a single tensor</span>
-<span class="sd">                            or a tuple of those.</span>
+<span class="sd">                          argument and either returns a single tensor</span>
+<span class="sd">                          or a tuple of those.</span>
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>

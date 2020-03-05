@@ -68,37 +68,24 @@ are provided, the examples must be aligned appropriately.</p></li>
 <li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define the starting point from which integral
 is computed and can be provided as:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+<li><p>a single tensor, if inputs is a single tensor, with
+exactly the same dimensions as inputs or the first
 dimension is one and the remaining dimensions match
-with inputs.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:
-- either a tensor with matching dimensions to</p>
-<blockquote>
-<div><p>corresponding tensor in the inputs’ tuple
+with inputs.</p></li>
+<li><p>a single scalar, if inputs is a single tensor, which will
+be broadcasted for each input value in input tensor.</p></li>
+<li><p>a tuple of tensors or scalars, the baseline corresponding
+to each tensor in the inputs’ tuple can be:</p>
+<ul>
+<li><p>either a tensor with matching dimensions to
+corresponding tensor in the inputs’ tuple
 or the first dimension is one and the remaining
 dimensions match with the corresponding
-input tensor.</p>
-</div></blockquote>
-<ul class="simple">
-<li><dl class="simple">
-<dt>or a scalar, corresponding to a tensor in the</dt><dd><p>inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p>
-</dd>
-</dl>
-</li>
+input tensor.</p></li>
+<li><p>or a scalar, corresponding to a tensor in the
+inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p></li>
 </ul>
-</dd>
-</dl>
 </li>
 </ul>
 <p>In the cases when <cite>baselines</cite> is not provided, we internally
@@ -112,32 +99,20 @@ If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a list of integers or a 1D tensor, with length matching</dt><dd><p>the number of examples in inputs (dim 0). Each integer
-is applied as the target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
 </ul>
 <p>For outputs with &gt; 2 dimensions, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>A single tuple, which contains #output_dims - 1</dt><dd><p>elements. This target index is applied to all examples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>A list of tuples with length equal to the number of</dt><dd><p>examples in inputs (dim 0), and each tuple containing
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
 #output_dims - 1 elements. Each tuple is applied as the
-target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
@@ -174,14 +149,11 @@ device contain internal_batch_size / num_devices examples.
 If internal_batch_size is None, then all evaluations are
 processed in one batch.
 Default: None</p></li>
-<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to return
-convergence delta or not. If <cite>return_convergence_delta</cite></p>
-<blockquote>
-<div><p>is set to True convergence delta will be returned in
+<li><p><strong>return_convergence_delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Indicates whether to return
+convergence delta or not. If <cite>return_convergence_delta</cite>
+is set to True convergence delta will be returned in
 a tuple following attributions.
-Default: False</p>
-</div></blockquote>
-</p></li>
+Default: False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -269,6 +241,8 @@ provides a convergence delta (aka approximation error) or not.</p>
 <li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occlusion.html">Occlusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_permutation.html">Feature Permutation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_value_sampling.html">Shapley Value Sampling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>

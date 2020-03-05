@@ -85,9 +85,10 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribution_method</span><span class="p">:</span> <span class="n">Attribution</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        attribution_method (Attribution): An instance of any attribution algorithm</span>
-<span class="sd">                    of type `Attribution`. E.g. Integrated Gradients,</span>
-<span class="sd">                    Conductance or Saliency.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            attribution_method (Attribution): An instance of any attribution algorithm</span>
+<span class="sd">                        of type `Attribution`. E.g. Integrated Gradients,</span>
+<span class="sd">                        Conductance or Saliency.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span> <span class="o">=</span> <span class="n">attribution_method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">has_convergence_delta</span><span class="p">()</span>

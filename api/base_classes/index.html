@@ -346,32 +346,20 @@ If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a list of integers or a 1D tensor, with length matching</dt><dd><p>the number of examples in inputs (dim 0). Each integer
-is applied as the target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
 </ul>
 <p>For outputs with &gt; 2 dimensions, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>A single tuple, which contains #output_dims - 1</dt><dd><p>elements. This target index is applied to all examples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>A list of tuples with length equal to the number of</dt><dd><p>examples in inputs (dim 0), and each tuple containing
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
 #output_dims - 1 elements. Each tuple is applied as the
-target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>

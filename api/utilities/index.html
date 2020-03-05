@@ -50,46 +50,31 @@ which utilizes the original image.
 Default: None</p></li>
 <li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – <p>Chosen method for visualizing attribution.
 Supported options are:</p>
-<blockquote>
-<div><ol class="arabic simple">
+<ol class="arabic simple">
 <li><p><cite>heat_map</cite> - Display heat map of chosen attributions</p></li>
-<li><dl class="simple">
-<dt><cite>blended_heat_map</cite> - Overlay heat map over greyscale</dt><dd><p>version of original image. Parameter alpha_overlay
-corresponds to alpha of heat map.</p>
-</dd>
-</dl>
-</li>
+<li><p><cite>blended_heat_map</cite> - Overlay heat map over greyscale
+version of original image. Parameter alpha_overlay
+corresponds to alpha of heat map.</p></li>
 <li><p><cite>original_image</cite> - Only display original image.</p></li>
-<li><dl class="simple">
-<dt><cite>masked_image</cite> - Mask image (pixel-wise multiply)</dt><dd><p>by normalized attribution values.</p>
-</dd>
-</dl>
-</li>
+<li><p><cite>masked_image</cite> - Mask image (pixel-wise multiply)
+by normalized attribution values.</p></li>
+<li><p><cite>alpha_scaling</cite> - Sets alpha channel of each pixel
+to be equal to normalized attribution value.</p></li>
 </ol>
-<p>5. <cite>alpha_scaling</cite> - Sets alpha channel of each pixel
-to be equal to normalized attribution value.</p>
-</div></blockquote>
 <p>Default: <cite>heat_map</cite></p>
 </p></li>
-<li><p><strong>sign</strong> (<em>string</em><em>, </em><em>optional</em>) – <dl>
-<dt>Chosen sign of attributions to visualize. Supported</dt><dd><p>options are:
-1. <cite>positive</cite> - Displays only positive pixel attributions.
-2. <cite>absolute_value</cite> - Displays absolute value of</p>
-<blockquote>
-<div><p>attributions.</p>
-</div></blockquote>
-<ol class="arabic simple" start="3">
+<li><p><strong>sign</strong> (<em>string</em><em>, </em><em>optional</em>) – <p>Chosen sign of attributions to visualize. Supported
+options are:</p>
+<ol class="arabic simple">
+<li><p><cite>positive</cite> - Displays only positive pixel attributions.</p></li>
+<li><p><cite>absolute_value</cite> - Displays absolute value of
+attributions.</p></li>
 <li><p><cite>negative</cite> - Displays only negative pixel attributions.</p></li>
-<li><dl class="simple">
-<dt><cite>all</cite> - Displays both positive and negative attribution</dt><dd><p>values. This is not supported for <cite>masked_image</cite> or
+<li><p><cite>all</cite> - Displays both positive and negative attribution
+values. This is not supported for <cite>masked_image</cite> or
 <cite>alpha_scaling</cite> modes, since signed information cannot
-be represented in these modes.</p>
-</dd>
-</dl>
-</li>
+be represented in these modes.</p></li>
 </ol>
-</dd>
-</dl>
 <p>Default: <cite>absolute_value</cite></p>
 </p></li>
 <li><p><strong>plt_fig_axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>optional</em>) – Tuple of matplotlib.pyplot.figure and axis

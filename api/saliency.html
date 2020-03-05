@@ -45,22 +45,18 @@ any modification of it</p>
 <dl class="method">
 <dt id="captum.attr.Saliency.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">abs=True</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/saliency.html#Saliency.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Saliency.attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>”
-:type inputs: ~TensorOrTupleOfTensorsGeneric
-:param inputs: Input for which integrated</p>
-<blockquote>
-<div><p>gradients are computed. If forward_func takes a single
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which integrated
+gradients are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
-be aligned appropriately.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+be aligned appropriately.</p></li>
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
 which gradients are computed (for classification cases,
 this is usually the target class).
@@ -68,39 +64,27 @@ If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a list of integers or a 1D tensor, with length matching</dt><dd><p>the number of examples in inputs (dim 0). Each integer
-is applied as the target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
 </ul>
 <p>For outputs with &gt; 2 dimensions, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>A single tuple, which contains #output_dims - 1</dt><dd><p>elements. This target index is applied to all examples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>A list of tuples with length equal to the number of</dt><dd><p>examples in inputs (dim 0), and each tuple containing
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
 #output_dims - 1 elements. Each tuple is applied as the
-target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
 <li><p><strong>abs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Returns absolute value of gradients if set
 to True, otherwise returns the (signed) gradients if
 False.
-Defalut: True</p></li>
+Default: True</p></li>
 <li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – If the forward function
 requires additional arguments other than the inputs for
 which attributions should not be computed, this argument
@@ -171,6 +155,8 @@ corresponding sized tensors is returned.</p>
 <li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="occlusion.html">Occlusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_permutation.html">Feature Permutation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_value_sampling.html">Shapley Value Sampling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>

@@ -1,0 +1,396 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.feature_permutation</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+
+<span class="kn">from</span> <span class="nn">.._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">.feature_ablation</span> <span class="kn">import</span> <span class="n">FeatureAblation</span>
+
+
+<span class="k">def</span> <span class="nf">_permute_feature</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"cannot permute features with batch_size = 1"</span>
+
+    <span class="n">perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">no_perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">perm</span> <span class="o">==</span> <span class="n">no_perm</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span> <span class="o">*</span> <span class="n">feature_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="n">x</span> <span class="o">*</span> <span class="n">feature_mask</span><span class="o">.</span><span class="n">bitwise_not</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="FeaturePermutation"><a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation">[docs]</a><span class="k">class</span> <span class="nc">FeaturePermutation</span><span class="p">(</span><span class="n">FeatureAblation</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A perturbation based approach to compute attribution, which</span>
+<span class="sd">    takes each input feature, permutes the feature values within a batch,</span>
+<span class="sd">    and computes the difference between original and shuffled outputs for</span>
+<span class="sd">    the given batch. This difference signifies the feature importance</span>
+<span class="sd">    for the permuted feature.</span>
+
+<span class="sd">    Example pseudocode for the algorithm is as follows::</span>
+
+<span class="sd">        perm_feature_importance(batch):</span>
+<span class="sd">            importance = dict()</span>
+<span class="sd">            baseline_error = error_metric(model(batch), batch_labels)</span>
+<span class="sd">            for each feature:</span>
+<span class="sd">                permute this feature across the batch</span>
+<span class="sd">                error = error_metric(model(permuted_batch), batch_labels)</span>
+<span class="sd">                importance[feature] = baseline_error - error</span>
+<span class="sd">                "un-permute" the feature across the batch</span>
+
+<span class="sd">            return importance</span>
+
+<span class="sd">    It should be noted that the `error_metric` must be called in the</span>
+<span class="sd">    `forward_func`. You do not need to have an error metric, e.g. you</span>
+<span class="sd">    could simply return the logits (the model output), but this may or may</span>
+<span class="sd">    not provide a meaningful attribution.</span>
+
+<span class="sd">    This method, unlike other attribution methods, requires a batch</span>
+<span class="sd">    of examples to compute attributions and cannot be performed on a single example.</span>
+
+<span class="sd">    By default, each scalar value within</span>
+<span class="sd">    each input tensor is taken as a feature and shuffled independently. Passing</span>
+<span class="sd">    a feature mask, allows grouping features to be shuffled together.</span>
+<span class="sd">    Each input scalar in the group will be given the same attribution value</span>
+<span class="sd">    equal to the change in target as a result of shuffling the entire feature</span>
+<span class="sd">    group.</span>
+
+<span class="sd">    The forward function can either return a scalar per example, or a single</span>
+<span class="sd">    scalar for the full batch. If a single scalar is returned for the batch,</span>
+<span class="sd">    `perturbations_per_eval` must be 1, and the returned attributions will have</span>
+<span class="sd">    first dimension 1, corresponding to feature importance across all</span>
+<span class="sd">    examples in the batch.</span>
+
+<span class="sd">    More information can be found in the permutation feature</span>
+<span class="sd">    importance algorithm description here:</span>
+<span class="sd">    https://christophm.github.io/interpretable-ml-book/feature-importance.html</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">perm_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_permute_feature</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            forward_func (callable): The forward function of the model or</span>
+<span class="sd">                any modification of it</span>
+<span class="sd">            perm_func (callable, optional): A function that accepts a batch of</span>
+<span class="sd">                inputs and a feature mask, and "permutes" the feature using</span>
+<span class="sd">                feature mask across the batch. This defaults to a function</span>
+<span class="sd">                which applies a random permutation, this argument only needs</span>
+<span class="sd">                to be provided if a custom permutation behavior is desired.</span>
+<span class="sd">                Default: `_permute_feature`</span>
+<span class="sd">        """</span>
+        <span class="n">FeatureAblation</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="o">=</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perm_func</span> <span class="o">=</span> <span class="n">perm_func</span>
+
+    <span class="c1"># suppressing error caused by the child class not having a matching</span>
+    <span class="c1"># signature to the parent</span>
+<div class="viewcode-block" id="FeaturePermutation.attribute"><a class="viewcode-back" href="../../../../feature_permutation.html#captum.attr.FeaturePermutation.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This function is almost equivalent to `FeatureAblation.attribute`. The</span>
+<span class="sd">        main difference is the way ablated examples are generated. Specifically</span>
+<span class="sd">        they are generated through the `perm_func`, as we set the baselines for</span>
+<span class="sd">        `FeatureAblation.attribute` to None.</span>
+
+
+<span class="sd">        Args:</span>
+<span class="sd">                inputs (tensor or tuple of tensors):  Input for which</span>
+<span class="sd">                            permutation attributions are computed. If</span>
+<span class="sd">                            forward_func takes a single tensor as input, a</span>
+<span class="sd">                            single input tensor should be provided.  If</span>
+<span class="sd">                            forward_func takes multiple tensors as input, a</span>
+<span class="sd">                            tuple of the input tensors should be provided. It is</span>
+<span class="sd">                            assumed that for all given input tensors, dimension</span>
+<span class="sd">                            0 corresponds to the number of examples (aka batch</span>
+<span class="sd">                            size), and if multiple input tensors are provided,</span>
+<span class="sd">                            the examples must be aligned appropriately.</span>
+<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                            which difference is computed (for classification cases,</span>
+<span class="sd">                            this is usually the target class).</span>
+<span class="sd">                            If the network returns a scalar value per example,</span>
+<span class="sd">                            no target index is necessary.</span>
+<span class="sd">                            For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                            - a single integer or a tensor containing a single</span>
+<span class="sd">                              integer, which is applied to all input examples</span>
+
+<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                              the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                              is applied as the target for the corresponding example.</span>
+
+<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                              elements. This target index is applied to all examples.</span>
+
+<span class="sd">                            - A list of tuples with length equal to the number of</span>
+<span class="sd">                              examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                              #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                              target for the corresponding example.</span>
+
+<span class="sd">                            Default: None</span>
+<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                            requires additional arguments other than the inputs for</span>
+<span class="sd">                            which attributions should not be computed, this argument</span>
+<span class="sd">                            can be provided. It must be either a single additional</span>
+<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                            tuple containing multiple additional arguments including</span>
+<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                            are provided to forward_func in order following the</span>
+<span class="sd">                            arguments in inputs.</span>
+<span class="sd">                            For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                            correspond to the number of examples. For all other types,</span>
+<span class="sd">                            the given argument is used for all forward evaluations.</span>
+<span class="sd">                            Note that attributions are not computed with respect</span>
+<span class="sd">                            to these arguments.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                            feature_mask defines a mask for the input, grouping</span>
+<span class="sd">                            features which should be ablated together. feature_mask</span>
+<span class="sd">                            should contain the same number of tensors as inputs.</span>
+<span class="sd">                            Each tensor should be the same size as the</span>
+<span class="sd">                            corresponding input or broadcastable to match the</span>
+<span class="sd">                            input tensor. Each tensor should contain integers in</span>
+<span class="sd">                            the range 0 to num_features - 1, and indices</span>
+<span class="sd">                            corresponding to the same feature should have the</span>
+<span class="sd">                            same value.  Note that features within each input</span>
+<span class="sd">                            tensor are ablated independently (not across</span>
+<span class="sd">                            tensors).</span>
+
+<span class="sd">                            The first dimension of each mask must be 1, as we require</span>
+<span class="sd">                            to have the same group of features for each input sample.</span>
+
+<span class="sd">                            If None, then a feature mask is constructed which assigns</span>
+<span class="sd">                            each scalar within a tensor as a separate feature, which</span>
+<span class="sd">                            is permuted independently.</span>
+<span class="sd">                            Default: None</span>
+<span class="sd">                perturbations_per_eval (int, optional): Allows permutations</span>
+<span class="sd">                            of multiple features to be processed simultaneously</span>
+<span class="sd">                            in one call to forward_fn.  Each forward pass will</span>
+<span class="sd">                            contain a maximum of perturbations_per_eval * #examples</span>
+<span class="sd">                            samples.  For DataParallel models, each batch is</span>
+<span class="sd">                            split among the available devices, so evaluations on</span>
+<span class="sd">                            each available device contain at most</span>
+<span class="sd">                            (perturbations_per_eval * #examples) / num_devices</span>
+<span class="sd">                            samples.</span>
+<span class="sd">                            If the forward function returns a single scalar per batch,</span>
+<span class="sd">                            perturbations_per_eval must be set to 1.</span>
+<span class="sd">                            Default: 1</span>
+<span class="sd">                **kwargs (Any, optional): Any additional arguments used by child</span>
+<span class="sd">                            classes of FeatureAblation (such as Occlusion) to construct</span>
+<span class="sd">                            ablations. These arguments are ignored when using</span>
+<span class="sd">                            FeatureAblation directly.</span>
+<span class="sd">                            Default: None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        The attributions with respect to each input feature.</span>
+<span class="sd">                        If the forward function returns</span>
+<span class="sd">                        a scalar value per example, attributions will be</span>
+<span class="sd">                        the same size as the provided inputs, with each value</span>
+<span class="sd">                        providing the attribution of the corresponding input index.</span>
+<span class="sd">                        If the forward function returns a scalar per batch, then</span>
+<span class="sd">                        attribution tensor(s) will have first dimension 1 and</span>
+<span class="sd">                        the remaining dimensions will match the input.</span>
+<span class="sd">                        If a single tensor is provided as inputs, a single tensor is</span>
+<span class="sd">                        returned. If a tuple of tensors is provided for inputs,</span>
+<span class="sd">                        a tuple of corresponding sized tensors is returned.</span>
+
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 10 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(10, 4, 4)</span>
+<span class="sd">            &gt;&gt;&gt; # Defining FeaturePermutation interpreter</span>
+<span class="sd">            &gt;&gt;&gt; feature_perm = FeaturePermutation(net)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes permutation attribution, shuffling each of the 16</span>
+<span class="sd">            &gt;&gt;&gt; # scalar input independently.</span>
+<span class="sd">            &gt;&gt;&gt; attr = feature_perm.attribute(input, target=1)</span>
+
+<span class="sd">            &gt;&gt;&gt; # Alternatively, we may want to permute features in groups, e.g.</span>
+<span class="sd">            &gt;&gt;&gt; # grouping each 2x2 square of the inputs and shuffling them together.</span>
+<span class="sd">            &gt;&gt;&gt; # This can be done by creating a feature mask as follows, which</span>
+<span class="sd">            &gt;&gt;&gt; # defines the feature groups, e.g.:</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # With this mask, all inputs with the same value are shuffled</span>
+<span class="sd">            &gt;&gt;&gt; # simultaneously, and the attribution for each input in the same</span>
+<span class="sd">            &gt;&gt;&gt; # group (0, 1, 2, and 3) per example are the same.</span>
+<span class="sd">            &gt;&gt;&gt; # The attributions can be calculated as follows:</span>
+<span class="sd">            &gt;&gt;&gt; # feature mask has dimensions 1 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],</span>
+<span class="sd">            &gt;&gt;&gt;                             [2,2,3,3],[2,2,3,3]]])</span>
+<span class="sd">            &gt;&gt;&gt; attr = feature_perm.attribute(input, target=1,</span>
+<span class="sd">            &gt;&gt;&gt;                               feature_mask=feature_mask)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
+            <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">expanded_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">input_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">start_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">end_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This function permutes the features of `expanded_input` with a given</span>
+<span class="sd">        feature mask and feature range. Permutation occurs via calling</span>
+<span class="sd">        `self.perm_func` across each batch within `expanded_input`. As with</span>
+<span class="sd">        `FeatureAblation._construct_ablated_input`:</span>
+<span class="sd">        - `expanded_input.shape = (num_features, num_examples, ...)`</span>
+<span class="sd">        - `num_features = end_feature - start_feature` (i.e. start and end is a</span>
+<span class="sd">          half-closed interval)</span>
+<span class="sd">        - `input_mask` is a tensor of the same shape as one input, which</span>
+<span class="sd">          describes the locations of each feature via their "index"</span>
+
+<span class="sd">        Since `baselines` is set to None for `FeatureAblation.attribute, this</span>
+<span class="sd">        will be the zero tensor, however, it is not used.</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="n">input_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+            <span class="s2">"input_mask.shape[0] != 1: pass in one mask in order to permute"</span>
+            <span class="s2">"the same features for each input"</span>
+        <span class="p">)</span>
+        <span class="n">current_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">input_mask</span> <span class="o">==</span> <span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">perm_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">expanded_input</span><span class="p">,</span> <span class="n">current_mask</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">current_mask</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>

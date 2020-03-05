@@ -13,3 +13,5 @@ Attribution
     deconvolution
     feature_ablation
     occlusion
+    feature_permutation
+    shapley_value_sampling

@@ -52,22 +52,18 @@ any modification of it</p>
 <dl class="method">
 <dt id="captum.attr.Occlusion.attribute">
 <code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sliding_window_shapes</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/occlusion.html#Occlusion.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Occlusion.attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>”
-:type inputs: ~TensorOrTupleOfTensorsGeneric
-:param inputs: Input for which occlusion</p>
-<blockquote>
-<div><p>attributions are computed. If forward_func takes a single
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which occlusion
+attributions are computed. If forward_func takes a single
 tensor as input, a single input tensor should be provided.
 If forward_func takes multiple tensors as input, a tuple
 of the input tensors should be provided. It is assumed
 that for all given input tensors, dimension 0 corresponds
 to the number of examples (aka batch size), and if
 multiple input tensors are provided, the examples must
-be aligned appropriately.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+be aligned appropriately.</p></li>
 <li><p><strong>sliding_window_shapes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)"><em>tuple</em></a><em> or </em><em>tuple of tuples</em>) – Shape of patch
 (hyperrectangle) to occlude each input. For a single
 input tensor, this must be a tuple of length equal to the
@@ -98,35 +94,25 @@ dimension of each input tensor.
 Default: None</p></li>
 <li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference value which replaces each
 feature when occluded.
-Baselines can be provided as:
-- a single tensor, if inputs is a single tensor, with</p>
-<blockquote>
-<div><p>exactly the same dimensions as inputs or
-broadcastable to match the dimensions of inputs</p>
-</div></blockquote>
+Baselines can be provided as:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:
-- either a tensor with</p>
-<blockquote>
-<div><p>exactly the same dimensions as inputs or
-broadcastable to match the dimensions of inputs</p>
-</div></blockquote>
-<ul class="simple">
-<li><dl class="simple">
-<dt>or a scalar, corresponding to a tensor in the</dt><dd><p>inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p>
-</dd>
-</dl>
-</li>
+<li><p>a single tensor, if inputs is a single tensor, with
+exactly the same dimensions as inputs or
+broadcastable to match the dimensions of inputs</p></li>
+<li><p>a single scalar, if inputs is a single tensor, which will
+be broadcasted for each input value in input tensor.</p></li>
+<li><p>a tuple of tensors or scalars, the baseline corresponding
+to each tensor in the inputs’ tuple can be:</p>
+<ul>
+<li><p>either a tensor with matching dimensions to
+corresponding tensor in the inputs’ tuple
+or the first dimension is one and the remaining
+dimensions match with the corresponding
+input tensor.</p></li>
+<li><p>or a scalar, corresponding to a tensor in the
+inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p></li>
 </ul>
-</dd>
-</dl>
 </li>
 </ul>
 <p>In the cases when <cite>baselines</cite> is not provided, we internally
@@ -140,32 +126,20 @@ If the network returns a scalar value per example,
 no target index is necessary.
 For general 2D outputs, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single integer or a tensor containing a single</dt><dd><p>integer, which is applied to all input examples</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a list of integers or a 1D tensor, with length matching</dt><dd><p>the number of examples in inputs (dim 0). Each integer
-is applied as the target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+<li><p>a single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>a list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p></li>
 </ul>
 <p>For outputs with &gt; 2 dimensions, targets can be either:</p>
 <ul>
-<li><dl class="simple">
-<dt>A single tuple, which contains #output_dims - 1</dt><dd><p>elements. This target index is applied to all examples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>A list of tuples with length equal to the number of</dt><dd><p>examples in inputs (dim 0), and each tuple containing
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
 #output_dims - 1 elements. Each tuple is applied as the
-target for the corresponding example.</p>
-</dd>
-</dl>
-</li>
+target for the corresponding example.</p></li>
 </ul>
 <p>Default: None</p>
 </p></li>
@@ -255,6 +229,8 @@ corresponding sized tensors is returned.</p>
 <li class="toctree-l2"><a class="reference internal" href="deconvolution.html">Deconvolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="feature_ablation.html">Feature Ablation</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Occlusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="feature_permutation.html">Feature Permutation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shapley_value_sampling.html">Shapley Value Sampling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
@@ -274,7 +250,7 @@ corresponding sized tensors is returned.</p>
 <li><a href="index.html">Documentation overview</a><ul>
 <li><a href="attribution.html">Attribution</a><ul>
 <li>Previous: <a href="feature_ablation.html" title="previous chapter">Feature Ablation</a></li>
-<li>Next: <a href="noise_tunnel.html" title="next chapter">NoiseTunnel</a></li>
+<li>Next: <a href="feature_permutation.html" title="next chapter">Feature Permutation</a></li>
 </ul></li>
 </ul></li>
 </ul>

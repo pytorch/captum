@@ -63,7 +63,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">""""</span>
+        <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Computes attribution by overriding relu gradients. Based on constructor</span>
 <span class="sd">        flag use_relu_grad_output, performs either GuidedBackpropagation if False</span>
 <span class="sd">        and Deconvolution if True. This class is the parent class of both these</span>
@@ -152,7 +152,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">""""</span>
+        <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
@@ -172,21 +172,21 @@
 <span class="sd">                        For general 2D outputs, targets can be either:</span>
 
 <span class="sd">                        - a single integer or a tensor containing a single</span>
-<span class="sd">                            integer, which is applied to all input examples</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
 
 <span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                            the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                            is applied as the target for the corresponding example.</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
 
 <span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
 <span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                            elements. This target index is applied to all examples.</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
 
 <span class="sd">                        - A list of tuples with length equal to the number of</span>
-<span class="sd">                            examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                            target for the corresponding example.</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
 <span class="sd">            additional_forward_args (any, optional): If the forward function</span>
@@ -258,7 +258,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">""""</span>
+        <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which</span>
@@ -278,21 +278,21 @@
 <span class="sd">                        For general 2D outputs, targets can be either:</span>
 
 <span class="sd">                        - a single integer or a tensor containing a single</span>
-<span class="sd">                            integer, which is applied to all input examples</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
 
 <span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                            the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                            is applied as the target for the corresponding example.</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
 
 <span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
 <span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                            elements. This target index is applied to all examples.</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
 
 <span class="sd">                        - A list of tuples with length equal to the number of</span>
-<span class="sd">                            examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                            target for the corresponding example.</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
 <span class="sd">            additional_forward_args (any, optional): If the forward function</span>

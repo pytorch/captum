@@ -91,7 +91,7 @@
         <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">custom_attribution_func</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
-        <span class="sa">r</span><span class="sd">""""</span>
+        <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer</span>
@@ -118,23 +118,25 @@
 <span class="sd">                        Baselines can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            exactly the same dimensions as inputs or the first</span>
-<span class="sd">                            dimension is one and the remaining dimensions match</span>
-<span class="sd">                            with inputs.</span>
+<span class="sd">                          exactly the same dimensions as inputs or the first</span>
+<span class="sd">                          dimension is one and the remaining dimensions match</span>
+<span class="sd">                          with inputs.</span>
 
 <span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
-<span class="sd">                            be broadcasted for each input value in input tensor.</span>
+<span class="sd">                          be broadcasted for each input value in input tensor.</span>
 
 <span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
-<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
-<span class="sd">                            - either a tensor with matching dimensions to</span>
-<span class="sd">                                corresponding tensor in the inputs' tuple</span>
-<span class="sd">                                or the first dimension is one and the remaining</span>
-<span class="sd">                                dimensions match with the corresponding</span>
-<span class="sd">                                input tensor.</span>
-<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
-<span class="sd">                                inputs' tuple. This scalar value is broadcasted</span>
-<span class="sd">                                for corresponding input tensor.</span>
+<span class="sd">                          to each tensor in the inputs' tuple can be:</span>
+
+<span class="sd">                          - either a tensor with matching dimensions to</span>
+<span class="sd">                            corresponding tensor in the inputs' tuple</span>
+<span class="sd">                            or the first dimension is one and the remaining</span>
+<span class="sd">                            dimensions match with the corresponding</span>
+<span class="sd">                            input tensor.</span>
+
+<span class="sd">                          - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                            inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                            for corresponding input tensor.</span>
 
 <span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
 <span class="sd">                        use zero scalar corresponding to each input tensor.</span>
@@ -166,9 +168,11 @@
 <span class="sd">                        computing final attribution scores. This function can take</span>
 <span class="sd">                        at least one and at most three arguments with the</span>
 <span class="sd">                        following signature:</span>
-<span class="sd">                            - custom_attribution_func(multipliers)</span>
-<span class="sd">                            - custom_attribution_func(multipliers, inputs)</span>
-<span class="sd">                            - custom_attribution_func(multipliers, inputs, baselines)</span>
+
+<span class="sd">                        - custom_attribution_func(multipliers)</span>
+<span class="sd">                        - custom_attribution_func(multipliers, inputs)</span>
+<span class="sd">                        - custom_attribution_func(multipliers, inputs, baselines)</span>
+
 <span class="sd">                        In case this function is not provided, we use the default</span>
 <span class="sd">                        logic defined as: multipliers * (inputs - baselines)</span>
 <span class="sd">                        It is assumed that all input arguments, `multipliers`,</span>
@@ -291,21 +295,21 @@
 <span class="sd">                        corresponding references. Baselines can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            the first dimension equal to the number of examples</span>
-<span class="sd">                            in the baselines' distribution. The remaining dimensions</span>
-<span class="sd">                            must match with input tensor's dimension starting from</span>
-<span class="sd">                            the second dimension.</span>
+<span class="sd">                          the first dimension equal to the number of examples</span>
+<span class="sd">                          in the baselines' distribution. The remaining dimensions</span>
+<span class="sd">                          must match with input tensor's dimension starting from</span>
+<span class="sd">                          the second dimension.</span>
 
 <span class="sd">                        - a tuple of tensors, if inputs is a tuple of tensors,</span>
-<span class="sd">                            with the first dimension of any tensor inside the tuple</span>
-<span class="sd">                            equal to the number of examples in the baseline's</span>
-<span class="sd">                            distribution. The remaining dimensions must match</span>
-<span class="sd">                            the dimensions of the corresponding input tensor</span>
-<span class="sd">                            starting from the second dimension.</span>
+<span class="sd">                          with the first dimension of any tensor inside the tuple</span>
+<span class="sd">                          equal to the number of examples in the baseline's</span>
+<span class="sd">                          distribution. The remaining dimensions must match</span>
+<span class="sd">                          the dimensions of the corresponding input tensor</span>
+<span class="sd">                          starting from the second dimension.</span>
 
 <span class="sd">                        - callable function, optionally takes `inputs` as an</span>
-<span class="sd">                            argument and either returns a single tensor</span>
-<span class="sd">                            or a tuple of those.</span>
+<span class="sd">                          argument and either returns a single tensor</span>
+<span class="sd">                          or a tuple of those.</span>
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>
@@ -335,9 +339,11 @@
 <span class="sd">                        computing final attribution scores. This function can take</span>
 <span class="sd">                        at least one and at most three arguments with the</span>
 <span class="sd">                        following signature:</span>
-<span class="sd">                            - custom_attribution_func(multipliers)</span>
-<span class="sd">                            - custom_attribution_func(multipliers, inputs)</span>
-<span class="sd">                            - custom_attribution_func(multipliers, inputs, baselines)</span>
+
+<span class="sd">                        - custom_attribution_func(multipliers)</span>
+<span class="sd">                        - custom_attribution_func(multipliers, inputs)</span>
+<span class="sd">                        - custom_attribution_func(multipliers, inputs, baselines)</span>
+
 <span class="sd">                        In case this function is not provided, we use the default</span>
 <span class="sd">                        logic defined as: multipliers * (inputs - baselines)</span>
 <span class="sd">                        It is assumed that all input arguments, `multipliers`,</span>

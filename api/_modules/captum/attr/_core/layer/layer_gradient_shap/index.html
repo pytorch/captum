@@ -169,21 +169,21 @@
 <span class="sd">                        is computed and can be provided as:</span>
 
 <span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
-<span class="sd">                            the first dimension equal to the number of examples</span>
-<span class="sd">                            in the baselines' distribution. The remaining dimensions</span>
-<span class="sd">                            must match with input tensor's dimension starting from</span>
-<span class="sd">                            the second dimension.</span>
+<span class="sd">                          the first dimension equal to the number of examples</span>
+<span class="sd">                          in the baselines' distribution. The remaining dimensions</span>
+<span class="sd">                          must match with input tensor's dimension starting from</span>
+<span class="sd">                          the second dimension.</span>
 
 <span class="sd">                        - a tuple of tensors, if inputs is a tuple of tensors,</span>
-<span class="sd">                            with the first dimension of any tensor inside the tuple</span>
-<span class="sd">                            equal to the number of examples in the baseline's</span>
-<span class="sd">                            distribution. The remaining dimensions must match</span>
-<span class="sd">                            the dimensions of the corresponding input tensor</span>
-<span class="sd">                            starting from the second dimension.</span>
+<span class="sd">                          with the first dimension of any tensor inside the tuple</span>
+<span class="sd">                          equal to the number of examples in the baseline's</span>
+<span class="sd">                          distribution. The remaining dimensions must match</span>
+<span class="sd">                          the dimensions of the corresponding input tensor</span>
+<span class="sd">                          starting from the second dimension.</span>
 
 <span class="sd">                        - callable function, optionally takes `inputs` as an</span>
-<span class="sd">                            argument and either returns a single tensor</span>
-<span class="sd">                            or a tuple of those.</span>
+<span class="sd">                          argument and either returns a single tensor</span>
+<span class="sd">                          or a tuple of those.</span>
 
 <span class="sd">                        It is recommended that the number of samples in the baselines'</span>
 <span class="sd">                        tensors is larger than one.</span>
@@ -208,21 +208,21 @@
 <span class="sd">                        For general 2D outputs, targets can be either:</span>
 
 <span class="sd">                        - a single integer or a tensor containing a single</span>
-<span class="sd">                            integer, which is applied to all input examples</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
 
 <span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                            the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                            is applied as the target for the corresponding example.</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
 
 <span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
 <span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                            elements. This target index is applied to all examples.</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
 
 <span class="sd">                        - A list of tuples with length equal to the number of</span>
-<span class="sd">                            examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                            #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                            target for the corresponding example.</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
 
 <span class="sd">                        Default: None</span>
 <span class="sd">            additional_forward_args (any, optional): If the forward function</span>
