@@ -24,7 +24,7 @@ class PropagationRule(ABC):
 
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
-        """Backward hook to propagate relevance over non-linear activations without manipulation."""
+        """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
     def _backward_hook_relevance(self, module, grad_input, grad_output):
@@ -124,25 +124,3 @@ class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
             if module.bias is not None:
                 module.bias.data = torch.zeros_like(module.bias.data)
 
-
-def suggested_rules(model):
-    """
-    Return a dictionary of suggested rules for specific models. These can be
-    passed to LRP(model, rules) to use instead of default rules. So far, only
-    a recommendation for vgg16 is implemented.
-
-    Args:
-        model (str): Name of the used model (vgg16)
-    """
-    if model == "vgg16":
-        # Similar to rules suggested in https://doi.org/10.1007/978-3-030-28954-6_10
-        layer0 = [EpsilonRule()]  # zB-Rule
-        layers1_16 = [GammaRule() for i in range(16)]
-        layers17_30 = [EpsilonRule() for i in range(14)]
-        layers31_38 = [EpsilonRule() for i in range(8)]
-        rules = layer0 + layers1_16 + layers17_30 + layers31_38
-        rules = dict(zip(range(len(rules)), rules))
-    else:
-        raise NotImplementedError("No suggested rules for given model")
-
-    return rules
