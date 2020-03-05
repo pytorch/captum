@@ -13,6 +13,7 @@ from ..._utils.gradient import (
 )
 from ..._core.layer_wise_relevance_propagation import LRP
 
+
 class LayerLRP(LRP, LayerAttribution):
     def __init__(self, model, layer):
         """
@@ -22,11 +23,10 @@ class LayerLRP(LRP, LayerAttribution):
                         any modification of it. Custom rules for a given layer need to be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
             rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
-                        of forward_func.
+                        of forward_func.S
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
-
 
     def attribute(
         self,
@@ -176,6 +176,6 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return _format_attributions(is_inputs_tuple, relevances)
 
-
     def _select_layer_output(self, layer):
-        return (layer.relevance)
+        return layer.relevance
+

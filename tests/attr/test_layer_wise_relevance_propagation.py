@@ -14,7 +14,6 @@ from captum.attr._utils.lrp_rules import (
     EpsilonRule,
     GammaRule,
     Alpha1_Beta0_Rule,
-    suggested_rules,
 )
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
@@ -142,7 +141,6 @@ class Test(BaseTest):
         classification = model(image)
         score, classIndex = torch.max(classification, 1)
         print(f"classindex: {classIndex}. score: {score}")
-        rules = suggested_rules("vgg16")
         lrp = LRP(model)
         itg = InputXGradient(model)
         relevance = lrp.attribute(image, classIndex.item(), verbose=True)
