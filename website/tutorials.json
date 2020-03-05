@@ -25,7 +25,11 @@
     },
     {
       "id": "Bert_SQUAD_Interpret",
-      "title": "[master only] Interpreting question answering with BERT"
+      "title": "Interpreting question answering with BERT"
+    },
+    {
+      "id": "House_Prices_Regression_Interpret",
+      "title": "Interpreting a regression model of Boston house prices"
     },
     {
       "id": "CIFAR_TorchVision_Captum_Insights",

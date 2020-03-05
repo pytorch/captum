@@ -24,27 +24,49 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
 
 class FeaturePermutation(FeatureAblation):
     r"""
-    This attribution method essentially implements the permutation feature
-    importance algorithm, as described here:
-    https://christophm.github.io/interpretable-ml-book/feature-importance.html
+    A perturbation based approach to compute attribution, which
+    takes each input feature, permutes the feature values within a batch,
+    and computes the difference between original and shuffled outputs for
+    the given batch. This difference signifies the feature importance
+    for the permuted feature.
 
-    A basic tl;dr of the algorithm is:
+    Example pseudocode for the algorithm is as follows::
 
-    perm_feature_importance(batch):
-        importance = dict()
-        baseline_error = error_metric(model(batch), batch_labels)
-        for each feature:
-            permute this feature across the batch
-            error = error_metric(model(permuted_batch), batch_labels)
-            importance[feature] = baseline_error - error
-            "un-permute" the feature across the batch
+        perm_feature_importance(batch):
+            importance = dict()
+            baseline_error = error_metric(model(batch), batch_labels)
+            for each feature:
+                permute this feature across the batch
+                error = error_metric(model(permuted_batch), batch_labels)
+                importance[feature] = baseline_error - error
+                "un-permute" the feature across the batch
 
-        return importance
+            return importance
 
     It should be noted that the `error_metric` must be called in the
-    `forward_func`. You do not need to provide an error metric, e.g. you
+    `forward_func`. You do not need to have an error metric, e.g. you
     could simply return the logits (the model output), but this may or may
     not provide a meaningful attribution.
+
+    This method, unlike other attribution methods, requires a batch
+    of examples to compute attributions and cannot be performed on a single example.
+
+    By default, each scalar value within
+    each input tensor is taken as a feature and shuffled independently. Passing
+    a feature mask, allows grouping features to be shuffled together.
+    Each input scalar in the group will be given the same attribution value
+    equal to the change in target as a result of shuffling the entire feature
+    group.
+
+    The forward function can either return a scalar per example, or a single
+    scalar for the full batch. If a single scalar is returned for the batch,
+    `perturbations_per_eval` must be 1, and the returned attributions will have
+    first dimension 1, corresponding to feature importance across all
+    examples in the batch.
+
+    More information can be found in the permutation feature
+    importance algorithm description here:
+    https://christophm.github.io/interpretable-ml-book/feature-importance.html
     """
 
     def __init__(self, forward_func: Callable, perm_func: Callable = _permute_feature):
@@ -53,11 +75,11 @@ class FeaturePermutation(FeatureAblation):
 
             forward_func (callable): The forward function of the model or
                 any modification of it
-            perm_func (callable): A function that accepts a batch of inputs and
-                a feature mask, and "permutes" the feature across the batch.
-                NOTE: one obviously does not have to perform a permutation.
-                See `_permute_feature` as an example on how to implement
-                your own permutation function.
+            perm_func (callable, optional): A function that accepts a batch of
+                inputs and a feature mask, and "permutes" the feature using
+                feature mask across the batch. This defaults to a function
+                which applies a random permutation, this argument only needs
+                to be provided if a custom permutation behavior is desired.
                 Default: `_permute_feature`
         """
         FeatureAblation.__init__(self, forward_func=forward_func)
@@ -100,21 +122,21 @@ class FeaturePermutation(FeatureAblation):
                             For general 2D outputs, targets can be either:
 
                             - a single integer or a tensor containing a single
-                                integer, which is applied to all input examples
+                              integer, which is applied to all input examples
 
                             - a list of integers or a 1D tensor, with length matching
-                                the number of examples in inputs (dim 0). Each integer
-                                is applied as the target for the corresponding example.
+                              the number of examples in inputs (dim 0). Each integer
+                              is applied as the target for the corresponding example.
 
                             For outputs with > 2 dimensions, targets can be either:
 
                             - A single tuple, which contains #output_dims - 1
-                                elements. This target index is applied to all examples.
+                              elements. This target index is applied to all examples.
 
                             - A list of tuples with length equal to the number of
-                                examples in inputs (dim 0), and each tuple containing
-                                #output_dims - 1 elements. Each tuple is applied as the
-                                target for the corresponding example.
+                              examples in inputs (dim 0), and each tuple containing
+                              #output_dims - 1 elements. Each tuple is applied as the
+                              target for the corresponding example.
 
                             Default: None
                 additional_forward_args (any, optional): If the forward function
@@ -169,6 +191,58 @@ class FeaturePermutation(FeatureAblation):
                             ablations. These arguments are ignored when using
                             FeatureAblation directly.
                             Default: None
+
+        Returns:
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        The attributions with respect to each input feature.
+                        If the forward function returns
+                        a scalar value per example, attributions will be
+                        the same size as the provided inputs, with each value
+                        providing the attribution of the corresponding input index.
+                        If the forward function returns a scalar per batch, then
+                        attribution tensor(s) will have first dimension 1 and
+                        the remaining dimensions will match the input.
+                        If a single tensor is provided as inputs, a single tensor is
+                        returned. If a tuple of tensors is provided for inputs,
+                        a tuple of corresponding sized tensors is returned.
+
+
+        Examples::
+
+            >>> # SimpleClassifier takes a single input tensor of size Nx4x4,
+            >>> # and returns an Nx3 tensor of class probabilities.
+            >>> net = SimpleClassifier()
+            >>> # Generating random input with size 10 x 4 x 4
+            >>> input = torch.randn(10, 4, 4)
+            >>> # Defining FeaturePermutation interpreter
+            >>> feature_perm = FeaturePermutation(net)
+            >>> # Computes permutation attribution, shuffling each of the 16
+            >>> # scalar input independently.
+            >>> attr = feature_perm.attribute(input, target=1)
+
+            >>> # Alternatively, we may want to permute features in groups, e.g.
+            >>> # grouping each 2x2 square of the inputs and shuffling them together.
+            >>> # This can be done by creating a feature mask as follows, which
+            >>> # defines the feature groups, e.g.:
+            >>> # +---+---+---+---+
+            >>> # | 0 | 0 | 1 | 1 |
+            >>> # +---+---+---+---+
+            >>> # | 0 | 0 | 1 | 1 |
+            >>> # +---+---+---+---+
+            >>> # | 2 | 2 | 3 | 3 |
+            >>> # +---+---+---+---+
+            >>> # | 2 | 2 | 3 | 3 |
+            >>> # +---+---+---+---+
+            >>> # With this mask, all inputs with the same value are shuffled
+            >>> # simultaneously, and the attribution for each input in the same
+            >>> # group (0, 1, 2, and 3) per example are the same.
+            >>> # The attributions can be calculated as follows:
+            >>> # feature mask has dimensions 1 x 4 x 4
+            >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
+            >>>                             [2,2,3,3],[2,2,3,3]]])
+            >>> attr = feature_perm.attribute(input, target=1,
+            >>>                               feature_mask=feature_mask)
         """
         return FeatureAblation.attribute(
             self,

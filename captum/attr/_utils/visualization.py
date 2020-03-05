@@ -117,26 +117,35 @@ def visualize_image_attr(
                         Default: None
             method (string, optional): Chosen method for visualizing attribution.
                         Supported options are:
-                            1. `heat_map` - Display heat map of chosen attributions
-                            2. `blended_heat_map` - Overlay heat map over greyscale
-                                version of original image. Parameter alpha_overlay
-                                corresponds to alpha of heat map.
-                            3. `original_image` - Only display original image.
-                            4. `masked_image` - Mask image (pixel-wise multiply)
-                                by normalized attribution values.
-                            5. `alpha_scaling` - Sets alpha channel of each pixel
-                            to be equal to normalized attribution value.
+
+                        1. `heat_map` - Display heat map of chosen attributions
+
+                        2. `blended_heat_map` - Overlay heat map over greyscale
+                           version of original image. Parameter alpha_overlay
+                           corresponds to alpha of heat map.
+
+                        3. `original_image` - Only display original image.
+
+                        4. `masked_image` - Mask image (pixel-wise multiply)
+                           by normalized attribution values.
+
+                        5. `alpha_scaling` - Sets alpha channel of each pixel
+                           to be equal to normalized attribution value.
                         Default: `heat_map`
             sign (string, optional): Chosen sign of attributions to visualize. Supported
-                            options are:
-                            1. `positive` - Displays only positive pixel attributions.
-                            2. `absolute_value` - Displays absolute value of
-                                attributions.
-                            3. `negative` - Displays only negative pixel attributions.
-                            4. `all` - Displays both positive and negative attribution
-                                values. This is not supported for `masked_image` or
-                                `alpha_scaling` modes, since signed information cannot
-                                be represented in these modes.
+                        options are:
+
+                        1. `positive` - Displays only positive pixel attributions.
+
+                        2. `absolute_value` - Displays absolute value of
+                           attributions.
+
+                        3. `negative` - Displays only negative pixel attributions.
+
+                        4. `all` - Displays both positive and negative attribution
+                           values. This is not supported for `masked_image` or
+                           `alpha_scaling` modes, since signed information cannot
+                           be represented in these modes.
                         Default: `absolute_value`
             plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
                         on which to visualize. If None is provided, then a new figure
