@@ -284,7 +284,10 @@ class LRP(Attribution):
     def _check_rules(self):
         for module in self.original_model.modules():
             if hasattr(module, "rule"):
-                if not isinstance(module.rule, PropagationRule) and module.rule is not None:
+                if (
+                    not isinstance(module.rule, PropagationRule)
+                    and module.rule is not None
+                ):
                     raise TypeError(
                         "Please select propagation rules inherited from class PropagationRule"
                     )
@@ -312,7 +315,9 @@ class LRP(Attribution):
     def _register_weight_hooks(self):
         for layer in self.layers:
             if isinstance(layer.rule, PropagationRule_ManipulateModules):
-                forward_handle = layer.register_forward_hook(layer.rule.forward_hook_weights)
+                forward_handle = layer.register_forward_hook(
+                    layer.rule.forward_hook_weights
+                )
                 self.forward_handles.append(forward_handle)
 
     def _register_pre_hooks(self):
