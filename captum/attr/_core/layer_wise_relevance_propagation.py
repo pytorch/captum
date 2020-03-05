@@ -348,8 +348,6 @@ class LRP(Attribution):
                 layer.rule._handle_input_hook.remove()
             if hasattr(layer.rule, "_handle_output_hook"):
                 layer.rule._handle_output_hook.remove()
-            if hasattr(layer.rule, "_handle_layer_hook"):
-                layer.rule._handle_layer_hook.remove()
 
     def _remove_rules(self):
         for layer in self.layers:
