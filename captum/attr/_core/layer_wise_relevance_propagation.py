@@ -21,17 +21,17 @@ from .._utils.lrp_rules import (
 
 
 class LRP(Attribution):
-    def __init__(self, model, rules=dict()):
+    def __init__(self, model):
         """
         Args:
 
             model (callable): The forward function of the model or
-                        any modification of it
+                        any modification of it. Custom rules for a given layer need to be defined as attribute
+                        `module.rule` and need to be of type PropagationRule.
             rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
                         of forward_func.
         """
         self.original_model = model
-        self.custom_rules = rules
         self._check_rules()
         super(LRP, self).__init__(model)
 
@@ -267,27 +267,25 @@ class LRP(Attribution):
                 self._get_layers(layer)
 
     def _get_rules(self):
-        for index, layer in enumerate(self.layers):
-            if type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
-                if index in self.custom_rules.keys():
-                    rule = self.custom_rules[index]
-                else:
-                    rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
+        for layer in self.layers:
+            if hasattr(layer, "rule"):
+                pass
+            elif type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
+                layer.rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                rule = None
+                layer.rule = None
             else:
                 raise TypeError(
                     f"Module type {type(layer)} is not supported. No default rule defined."
                 )
-            layer.rule = rule
 
     def _check_rules(self):
-        self.changes_weights = False
-        for rule in self.custom_rules.values():
-            if not isinstance(rule, PropagationRule) and rule is not None:
-                raise TypeError(
-                    "Please select propagation rules inherited from class PropagationRule"
-                )
+        for module in self.original_model.modules():
+            if hasattr(module, "rule"):
+                if not isinstance(module.rule, PropagationRule) and module.rule is not None:
+                    raise TypeError(
+                        "Please select propagation rules inherited from class PropagationRule"
+                    )
 
     def _check_if_weights_are_changed(self):
         self.changes_weights = False

@@ -105,7 +105,8 @@ class Test(BaseTest):
         self, model, inputs, grads, expected_activations, expected, error
     ):
         if error == "ruleType":
-            self.assertRaises(TypeError, LRP, model, rules={1: 5})
+            model.conv1.rule = 1
+            self.assertRaises(TypeError, LRP, model)
         elif error == "activationType":
             model.add_module("sigmoid", nn.Sigmoid())
             lrp = LRP(model)
@@ -115,8 +116,9 @@ class Test(BaseTest):
         model.eval()
         inputs = torch.tensor([1.0, 2.0, 3.0])
         output = model(inputs)
-        rules = {0: EpsilonRule(), 2: EpsilonRule()}
-        lrp = LRP(model, rules=rules)
+        model.linear.rule = EpsilonRule()
+        model.linear2.rule = EpsilonRule()
+        lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
             self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
