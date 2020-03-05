@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import copy
+import warnings
 import torch
 import torch.nn as nn
 
@@ -31,9 +32,18 @@ class LRP(Attribution):
             rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
                         of forward_func.
         """
-        self.original_model = model
-        self._check_rules()
         super(LRP, self).__init__(model)
+
+        if isinstance(model, nn.DataParallel):
+            warnings.warn(
+                """Although input model is of type `nn.DataParallel` it will run
+                only on one device. Support for multiple devices will be added soon."""
+            )
+            self.original_model = model.module
+        else:
+            self.original_model = model
+
+        self._check_rules()
 
     def attribute(
         self,
