@@ -41,7 +41,6 @@ class LRP(Attribution):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
-        return_for_all_layers=False,
         verbose=False,
     ):
         """
@@ -107,10 +106,6 @@ class LRP(Attribution):
                         a tuple following attributions.
                         Default: False
 
-                return_for_all_layers (bool, optional): Indicates whether to return
-                        relevance values for all layers. If False, only the relevance
-                        values for the input layer are returned.
-
                 verbose (bool, optional): Indicates whether information on application
                         of rules is printed during propagation.
 
@@ -149,7 +144,6 @@ class LRP(Attribution):
         self._get_layers(self.model)
         self._get_rules()
         self._check_if_weights_are_changed()
-        self.return_for_all_layers = return_for_all_layers
         self.backward_handles = []
         self.forward_handles = []
 
@@ -172,8 +166,6 @@ class LRP(Attribution):
         self._remove_forward_hooks()
         undo_gradient_requirements(inputs, gradient_mask)
         self._remove_rules()
-
-        relevances = self._select_layer_output(relevances)
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
@@ -306,11 +298,6 @@ class LRP(Attribution):
                 self.forward_handles.append(forward_handle)
                 if self.verbose:
                     print(f"Applied {layer.rule} on layer {layer}")
-                if self.return_for_all_layers:
-                    relevance_handle = layer.register_backward_hook(
-                        layer.rule._backward_hook_relevance
-                    )
-                    self.backward_handles.append(relevance_handle)
 
     def _register_weight_hooks(self):
         for layer in self.layers:
@@ -351,18 +338,6 @@ class LRP(Attribution):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 del layer.rule
-
-    def _select_layer_output(self, relevances):
-        if self.return_for_all_layers:
-            relevances = [*relevances]
-            for layer in self.layers:
-                if hasattr(layer, "relevance"):
-                    relevances.append(layer.relevance)
-                else:
-                    relevances.append(relevances[-1])
-            return (relevances,)
-        else:
-            return relevances
 
 
 SUPPORTED_LINEAR_LAYERS = {

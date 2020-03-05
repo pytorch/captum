@@ -145,11 +145,10 @@ class Test(BaseTest):
         rules = suggested_rules("vgg16")
         lrp = LRP(model)
         itg = InputXGradient(model)
-        relevance_all_layers = lrp.attribute(
-            image, classIndex.item(), return_for_all_layers=True, verbose=True
+        relevance = lrp.attribute(
+            image, classIndex.item(), verbose=True
         )
         relevance_itg = itg.attribute(image, classIndex.item())
-        relevance = relevance_all_layers[0]
         itg_max = torch.max(relevance_itg)
         itg_min = torch.min(relevance_itg)
         new_max = torch.max(relevance)
