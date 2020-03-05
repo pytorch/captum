@@ -370,7 +370,9 @@ class LRP(Attribution):
 
 
 SUPPORTED_LINEAR_LAYERS = {
+    torch.nn.MaxPool1d: EpsilonRule,
     torch.nn.MaxPool2d: EpsilonRule,
+    torch.nn.MaxPool3d: EpsilonRule,
     torch.nn.Conv2d: EpsilonRule,
     torch.nn.AvgPool2d: EpsilonRule,
     torch.nn.AdaptiveAvgPool2d: EpsilonRule,
