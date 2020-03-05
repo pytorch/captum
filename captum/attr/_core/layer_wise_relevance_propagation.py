@@ -39,8 +39,8 @@ class LRP(Attribution):
         self,
         inputs,
         target=None,
-        return_convergence_delta=False,
         additional_forward_args=None,
+        return_convergence_delta=False,
         return_for_all_layers=False,
         verbose=False,
     ):
