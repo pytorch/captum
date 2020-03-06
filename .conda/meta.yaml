@@ -17,6 +17,7 @@ requirements:
   run:
     - numpy
     - pytorch>=1.2
+    - matplotlib
 
 test:
   imports:
