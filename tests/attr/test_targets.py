@@ -352,7 +352,9 @@ class Test(BaseTest):
     def test_simple_target_input_x_gradient(self):
         net = BasicModel_MultiLayer()
         inp = torch.randn(4, 3)
-        self._target_batch_test_assert(InputXGradient, net, inputs=inp, targets=[0, 1, 1, 0])
+        self._target_batch_test_assert(
+            InputXGradient, net, inputs=inp, targets=[0, 1, 1, 0]
+        )
 
     def test_multi_target_input_x_gradient(self):
         net = BasicModel_MultiLayer()
@@ -568,7 +570,10 @@ class Test(BaseTest):
         for batch_size in batch_sizes:
             if batch_size:
                 attributions_orig = attr_method.attribute(
-                    inputs=inputs, target=targets, internal_batch_size=batch_size, **kwargs
+                    inputs=inputs,
+                    target=targets,
+                    internal_batch_size=batch_size,
+                    **kwargs
                 )
             else:
                 attributions_orig = attr_method.attribute(
@@ -600,6 +605,7 @@ class Test(BaseTest):
                     mode=comp_mode,
                 )
 
+
 class GPUTest(BaseGPUTest):
     def test_simple_target_saliency_gpu(self):
         net = BasicModel_MultiLayer().cuda()
@@ -611,7 +617,6 @@ class GPUTest(BaseGPUTest):
         inp = torch.randn(4, 3).cuda()
         target = torch.tensor([0, 1, 1, 0]).cuda()
         self._target_batch_test_assert(Saliency, net, inputs=inp, targets=target)
-
 
     def _target_batch_test_assert(
         self,
@@ -637,7 +642,10 @@ class GPUTest(BaseGPUTest):
         for batch_size in batch_sizes:
             if batch_size:
                 attributions_orig = attr_method.attribute(
-                    inputs=inputs, target=targets, internal_batch_size=batch_size, **kwargs
+                    inputs=inputs,
+                    target=targets,
+                    internal_batch_size=batch_size,
+                    **kwargs
                 )
             else:
                 attributions_orig = attr_method.attribute(

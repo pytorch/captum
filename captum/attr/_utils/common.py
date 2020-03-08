@@ -468,7 +468,9 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         assert len(target) == num_examples, "Target list length does not match output!"
         if isinstance(target[0], int):
             assert dims == 2, "Output must be 2D to select tensor of targets."
-            return torch.gather(output, 1, torch.tensor(target, device=device).reshape(len(output), 1))
+            return torch.gather(
+                output, 1, torch.tensor(target, device=device).reshape(len(output), 1)
+            )
         elif isinstance(target[0], tuple):
             return torch.stack(
                 [
