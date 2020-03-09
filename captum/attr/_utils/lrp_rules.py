@@ -43,11 +43,6 @@ class PropagationRule(ABC):
 
         return _backward_hook_output
 
-
-class PropagationRule_ManipulateModules(PropagationRule):
-    def __init__(self, set_bias_to_zero=False):
-        self.set_bias_to_zero = set_bias_to_zero
-
     def forward_hook_weights(self, module, inputs, outputs):
         """Save initial activations a_j before modules are changed"""
         module.activation = inputs[0].data
@@ -78,8 +73,11 @@ class EpsilonRule(PropagationRule):
     def __init__(self, epsilon=1e-9):
         self.STABILITY_FACTOR = epsilon
 
+    def _manipulate_weights(self, module, inputs, outputs):
+        pass
 
-class GammaRule(PropagationRule_ManipulateModules):
+
+class GammaRule(PropagationRule):
     """
     Gamma rule for relevance propagation, gives more importance to
     positive relevance.
@@ -91,9 +89,9 @@ class GammaRule(PropagationRule_ManipulateModules):
         the positive relevance is increased.
     """
 
-    def __init__(self, gamma=0.25):
-        super(GammaRule, self).__init__()
+    def __init__(self, gamma=0.25, set_bias_to_zero=False):
         self.gamma = gamma
+        self.set_bias_to_zero = set_bias_to_zero
 
     def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):
@@ -105,7 +103,7 @@ class GammaRule(PropagationRule_ManipulateModules):
                 module.bias.data = torch.zeros_like(module.bias.data)
 
 
-class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
+class Alpha1_Beta0_Rule(PropagationRule):
     """
     Alpha1_Beta0 rule for relevance backpropagation, also known
     as Deep-Taylor. Only positive relevance is propagated, resulting
@@ -114,8 +112,8 @@ class Alpha1_Beta0_Rule(PropagationRule_ManipulateModules):
     Use for lower layers.
     """
 
-    def __init__(self):
-        super(Alpha1_Beta0_Rule, self).__init__()
+    def __init__(self, set_bias_to_zero=False):
+        self.set_bias_to_zero = set_bias_to_zero
 
     def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):

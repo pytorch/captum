@@ -10,11 +10,7 @@ import torchvision.transforms as transforms
 from captum.attr import visualization as viz
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.lrp import LRP
-from captum.attr._utils.lrp_rules import (
-    EpsilonRule,
-    GammaRule,
-    Alpha1_Beta0_Rule,
-)
+from captum.attr._utils.lrp_rules import EpsilonRule, GammaRule, Alpha1_Beta0_Rule
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
 from .helpers.utils import BaseTest, assertTensorAlmostEqual

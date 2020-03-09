@@ -14,7 +14,6 @@ from .._utils.gradient import (
 )
 from .._utils.lrp_rules import (
     PropagationRule,
-    PropagationRule_ManipulateModules,
     Alpha1_Beta0_Rule,
     EpsilonRule,
     GammaRule,
@@ -153,7 +152,6 @@ class LRP(Attribution):
         self.layers = []
         self._get_layers(self.model)
         self._get_rules()
-        self._check_if_weights_are_changed()
         self.backward_handles = []
         self.forward_handles = []
 
@@ -272,8 +270,8 @@ class LRP(Attribution):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 pass
-            elif type(layer) in SUPPORTED_LAYERS_WITH_RULES .keys():
-                layer.rule = SUPPORTED_LAYERS_WITH_RULES [type(layer)]()
+            elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
+                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 layer.rule = None
             else:
@@ -292,12 +290,6 @@ class LRP(Attribution):
                         "Please select propagation rules inherited from class PropagationRule"
                     )
 
-    def _check_if_weights_are_changed(self):
-        self.changes_weights = False
-        for layer in self.layers:
-            if isinstance(layer.rule, PropagationRule_ManipulateModules):
-                self.changes_weights = True
-
     def _register_forward_hooks(self):
         for layer in self.layers:
             # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
@@ -314,7 +306,7 @@ class LRP(Attribution):
 
     def _register_weight_hooks(self):
         for layer in self.layers:
-            if isinstance(layer.rule, PropagationRule_ManipulateModules):
+            if layer.rule is not None:
                 forward_handle = layer.register_forward_hook(
                     layer.rule.forward_hook_weights
                 )
@@ -322,19 +314,18 @@ class LRP(Attribution):
 
     def _register_pre_hooks(self):
         for layer in self.layers:
-            if isinstance(layer.rule, PropagationRule_ManipulateModules):
+            if layer.rule is not None:
                 forward_handle = layer.register_forward_pre_hook(
                     layer.rule.forward_pre_hook_activations
                 )
                 self.forward_handles.append(forward_handle)
 
     def _change_weights(self, inputs):
-        if self.changes_weights:
-            self._register_weight_hooks()
-            _ = _run_forward(self.model, inputs)
-            self._remove_forward_hooks()
-            # pre_hooks for 2nd pass
-            self._register_pre_hooks()
+        self._register_weight_hooks()
+        _ = _run_forward(self.model, inputs)
+        self._remove_forward_hooks()
+        # pre_hooks for 2nd pass
+        self._register_pre_hooks()
 
     def _remove_forward_hooks(self):
         for forward_handle in self.forward_handles:
