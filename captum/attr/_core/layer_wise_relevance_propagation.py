@@ -272,8 +272,8 @@ class LRP(Attribution):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 pass
-            elif type(layer) in SUPPORTED_LINEAR_LAYERS.keys():
-                layer.rule = SUPPORTED_LINEAR_LAYERS[type(layer)]()
+            elif type(layer) in SUPPORTED_LAYERS_WITH_RULES .keys():
+                layer.rule = SUPPORTED_LAYERS_WITH_RULES [type(layer)]()
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 layer.rule = None
             else:
@@ -355,7 +355,7 @@ class LRP(Attribution):
                 del layer.rule
 
 
-SUPPORTED_LINEAR_LAYERS = {
+SUPPORTED_LAYERS_WITH_RULES = {
     torch.nn.MaxPool1d: EpsilonRule,
     torch.nn.MaxPool2d: EpsilonRule,
     torch.nn.MaxPool3d: EpsilonRule,
