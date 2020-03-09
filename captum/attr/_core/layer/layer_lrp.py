@@ -11,7 +11,7 @@ from ..._utils.gradient import (
     undo_gradient_requirements,
     compute_gradients,
 )
-from ..._core.layer_wise_relevance_propagation import LRP
+from ..._core.lrp import LRP
 
 
 class LayerLRP(LRP, LayerAttribution):

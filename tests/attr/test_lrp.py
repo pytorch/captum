@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 
 from captum.attr import visualization as viz
 from captum.attr._core.input_x_gradient import InputXGradient
-from captum.attr._core.layer_wise_relevance_propagation import LRP
+from captum.attr._core.lrp import LRP
 from captum.attr._utils.lrp_rules import (
     EpsilonRule,
     GammaRule,
