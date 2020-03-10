@@ -7,7 +7,7 @@ import torch.nn as nn
 from torchvision.models import vgg16, resnet18
 import torchvision.transforms as transforms
 
-from captum.attr import visualization as viz
+from captum.attr._utils import visualization as viz
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.lrp import LRP
 from captum.attr._utils.lrp_rules import EpsilonRule, GammaRule, Alpha1_Beta0_Rule
