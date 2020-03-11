@@ -391,7 +391,7 @@ function TextFeature(props) {
           style={{
             backgroundColor: calcHSLFromScore(props.data.modified[i], false)
           }}
-          className={"text-feature-word"}
+          className={styles["text-feature-word"]}
         >
           {w}
           <Tooltip label={props.data.modified[i].toFixed(3)} />
@@ -552,7 +552,7 @@ class Visualization extends React.Component {
           <div className={styles["panel__column"]}>
             <div className={styles["panel__column__title"]}>Label</div>
             <div className={styles["panel__column__body"]}>
-              <div className={styles["row row--padding"]}>
+              <div className={cx([styles.row, styles["row--padding"]])}>
                 <LabelButton
                   onTargetClick={this.onTargetClick}
                   labelIndex={data.actual.index}
