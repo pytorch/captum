@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 from torch import Tensor
-from typing import List, Any, Dict, Union, Optional
+from typing import List, Any, Dict, Union, Optional, Tuple
 from collections import defaultdict
 from captum.attr._utils.summarizer import Summarizer
 from captum.attr._utils.stat import Stat
@@ -15,17 +15,17 @@ class ClassSummarizer:
     This also keeps track of an aggregate of all class summaries.
     """
 
-    def __init__(self, stats: List[Stat] = None):
+    def __init__(self, stats: List[Stat]):
         self.stats = stats
         self.all_summary = Summarizer(stats=stats)
         self.summaries = defaultdict(lambda: Summarizer(stats=stats))
 
-    def update(self, x: Tensor, labels: Optional[Union[Any, List[Any]]] = None):
+    def update(self, x: Union[Tensor, Tuple[Tensor, ...]], labels: Optional[Union[Any, List[Any]]] = None):
         """
         Updates the stats of the summarizer, optionally associated to classes.
 
         Args:
-            x (Tensor):
+            x (Tensor or Tuple[Tensor, ...]):
                 The input tensor to be summarised. The first
                 dimension of this input must be associated to
                 the amount of `labels` specified; unless there
