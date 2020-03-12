@@ -140,14 +140,14 @@ def _reorder_stats(stats):
     return stats, summary_stat_indexs
 
 
-def CommonSummarizer():
+def CommonSummarizer(summarizer_class=Summarizer):
     r"""
     Returns a summarizer with common summary statistics, specifically with:
         Mean, Sample Variance, Sample Std Dev, Min, Max
     """
     from captum.attr._utils.stat import Mean, Var, StdDev, Min, Max
 
-    return Summarizer([Mean(), Var(order=1), StdDev(order=1), Min(), Max()])
+    return summarizer_class([Mean(), Var(order=1), StdDev(order=1), Min(), Max()])
 
 
 class SummarizerSingleTensor:

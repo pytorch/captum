@@ -9,7 +9,10 @@ from captum.attr._utils.stat import Stat
 
 class ClassSummarizer:
     """
-    TODO
+    Used to keep track of summaries for associated classes. The
+    classes/labels can be of any type that is supported by `dict`.
+
+    This also keeps track of an aggregate (all class summaries)
     """
 
     def __init__(self, stats: List[Stat] = None):
@@ -20,8 +23,17 @@ class ClassSummarizer:
     def update(self, x: Tensor, labels: Optional[Union[Any, List[Any]]] = None):
         """
         Args:
-            labels (Any or List[Any])
-                If Any, we assume x does not represent a batch of inputs.
+            x (Tensor):
+                The input tensor to be summarised. The first 
+                dimension of this input must be associated to
+                the amount of `labels` specified; unless there
+                is one labels represents one label (in that case
+                the first dimension can optionally be unsqueezed).
+            labels (Any, List[Any], optional):
+                The associated labels for `x`. If Any, we 
+                assume x does not represent a batch of inputs.
+
+                If this is None we simply aggregate the total summary.
         """
         if labels is not None:
             if not isinstance(x, tuple):
@@ -30,17 +42,15 @@ class ClassSummarizer:
             # TODO: how to check for list
             should_resqueeze = torch.zeros(len(x))
             if not isinstance(labels, list):
-                # we need to support the data having size 1x... or ...
+                # we need to support the data having 
+                # size (1, ...) or (...)
                 labels = [labels]
                 for i in range(len(x)):
                     should_resqueeze[i] = len(x[i].size()) == 0 or x[i].size(0) != 1
                 x = tuple(y.unsqueeze(0) for y in x)
 
             for i, label in enumerate(labels):
-                if should_resqueeze[i]:
-                    xx = tuple(y[i].squeeze(0) for y in x)
-                else:
-                    xx = tuple(y[i] for y in x)
+                xx = tuple(y[i].squeeze(0) if resqueeze else y[i] for y, resqueeze in zip(x, should_resqueeze))
 
                 self.summaries[label].update(xx)
                 self.all_summary.update(xx)
@@ -49,8 +59,19 @@ class ClassSummarizer:
 
     @property
     def summary(self) -> Dict[str, Tensor]:
+        """
+        This is equivalent to `Summarizer.summary`.
+
+        Returns:
+            An aggregate summary for all classes, represented 
+            as a dict.
+        """
         return self.all_summary.summary
 
     @property
     def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:
+        """
+        Returns:
+             The summaries for each class a dictionary.
+        """
         return {key: value.summary for key, value in self.summaries.items()}

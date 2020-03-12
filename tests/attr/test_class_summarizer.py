@@ -18,7 +18,6 @@ class Test(BaseTest):
         for s, size in zip(summ, x_sizes):
             self.assertIsInstance(s, dict)
             for key in s:
-                #print(size, s[key].size())
                 self.assertEqual(s[key].size(), size)
         
         self.assertIsNotNone(summarizer.class_summaries)
@@ -36,21 +35,21 @@ class Test(BaseTest):
             for s, size in zip(summ, x_sizes):
                 self.assertIsInstance(s, dict)
                 for key in s:
-                    self.assertTrue(size == s[key].size())
+                    self.assertEqual(s[key].size(), size)
 
         self.assertEqual(len(all_keys), 0)
 
     def test_classes(self):
         sizes_to_test = [
-            #((1,),),
+            ((1,),),
             ((3, 2, 10, 3), (1,)),
-            #((20,)),
+            ((20,)),
         ]
         classeses = [ 
             list(range(100)),
-            #[ '%d' % i for i in range(100) ]
+            [ '%d' % i for i in range(100) ]
         ]
-        for batch_size in [None, 1, 10, 20]:
+        for batch_size in [None, 1, 4]:
             for sizes, classes in zip(sizes_to_test, classeses):
                 def create_batch_labels(batch_idx):
                     if batch_size is None:
@@ -68,11 +67,10 @@ class Test(BaseTest):
                 if batch_size is not None:
                     num_batches //= batch_size
 
-                # TODO: sizes
                 data = [ (tuple(torch.randn(si) for si in sizes_plus_batch), create_batch_labels(batch_idx)) for batch_idx in range(num_batches) ]
 
-                #with self.subTest(batch_size=batch_size, sizes=sizes_plus_batch, classes=classes):
-                self.class_test(data, classes, sizes)
+                with self.subTest(batch_size=batch_size, sizes=sizes_plus_batch, classes=classes):
+                    self.class_test(data, classes, sizes)
 
     def test_no_class(self):
         size = (30, 20)
