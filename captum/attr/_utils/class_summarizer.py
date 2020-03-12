@@ -12,7 +12,7 @@ class ClassSummarizer:
     Used to keep track of summaries for associated classes. The
     classes/labels can be of any type that is supported by `dict`.
 
-    This also keeps track of an aggregate (all class summaries)
+    This also keeps track of an aggregate of all class summaries.
     """
 
     def __init__(self, stats: List[Stat] = None):
@@ -22,6 +22,8 @@ class ClassSummarizer:
 
     def update(self, x: Tensor, labels: Optional[Union[Any, List[Any]]] = None):
         """
+        Updates the stats of the summarizer, optionally associated to classes.
+
         Args:
             x (Tensor):
                 The input tensor to be summarised. The first 
