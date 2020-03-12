@@ -42,7 +42,7 @@ class ClassSummarizer:
             # TODO: how to check for list
             should_resqueeze = torch.zeros(len(x))
             if not isinstance(labels, list):
-                # we need to support the data having 
+                # we need to support the data having
                 # size (1, ...) or (...)
                 labels = [labels]
                 for i in range(len(x)):
@@ -50,7 +50,10 @@ class ClassSummarizer:
                 x = tuple(y.unsqueeze(0) for y in x)
 
             for i, label in enumerate(labels):
-                xx = tuple(y[i].squeeze(0) if resqueeze else y[i] for y, resqueeze in zip(x, should_resqueeze))
+                xx = tuple(
+                    y[i].squeeze(0) if resqueeze else y[i]
+                    for y, resqueeze in zip(x, should_resqueeze)
+                )
 
                 self.summaries[label].update(xx)
                 self.all_summary.update(xx)
