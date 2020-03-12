@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+from captum.attr._utils.stat import Stat
 
 class Summarizer:
-    """
+    r"""
     This class simply wraps over a given a set of SummarizerSingleTensor's in order
     to summarise multiple input tensors.
 
@@ -19,7 +20,12 @@ class Summarizer:
     >>>print(summ.summary['mean'])
     """
 
-    def __init__(self, stats=None):
+    def __init__(self, stats: List[Stat]):
+        r"""
+        Args:
+            stats (List[Stat]):
+                The list of statistics you wish to track
+        """
         self._summarizers = []
         self._is_inputs_tuple = None
         self._stats, self._summary_stats_indicies = _reorder_stats(stats)
@@ -29,9 +35,13 @@ class Summarizer:
 
         return copy.deepcopy(self._stats)
 
-    def update(self, x):
-        """
-        Calls .update on each Stat object within this object
+    def update(self, x: Tensor):
+        r"""
+        Calls `update` on each `Stat` object within the summarizer
+
+        Args:
+            x (Tensor or Tuple[Tensor, ...]):
+                The input(s) you wish to summarize
         """
         if self._is_inputs_tuple is None:
             self._is_inputs_tuple = isinstance(x, tuple)
@@ -62,12 +72,12 @@ class Summarizer:
             self._summarizers[i].update(inp)
 
     @property
-    def summary(self):
-        """
-        Effectively calls .get on each Stat object within this object for each input
+    def summary(self) -> Union[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+        r"""
+        Effectively calls `get` on each `Stat` object within this object for each input
 
         Returns:
-            A dict, mapping from the Stat object's .name to the associated value of .get
+            A dict or list of dict: mapping from the Stat object's `name` to the associated value of `get`
         """
         if len(self._summarizers) == 0:
             return None
@@ -144,15 +154,16 @@ class SummarizerSingleTensor:
     r"""
         A simple class that summarizes a single tensor. The basic functionality
         of this class is two operations .update and .summary
-
-        Args:
-            summary_stats (list of Stat): A list of Stat objects you
-                want to show in the .summary property.
-            stats (list of Stat): A list of all the Stat objects that
-                need to be updated.
     """
 
-    def __init__(self, stats=None, summary_stats_indices=None):
+    def __init__(self, stats: List[Stat], summary_stats_indices: List[int]):
+        r"""
+        Args:
+            stats (list of Stat): A list of all the Stat objects that
+                need to be updated.
+            summary_stats (list of int): A list of indicies, referencing `stats`, 
+                which are the stats you want to show in the .summary property.
+        """
         self._stats = stats
         self._stat_to_stat = {stat: stat for stat in self._stats}
         self._summary_stats = [stats[i] for i in summary_stats_indices]
@@ -161,11 +172,17 @@ class SummarizerSingleTensor:
             stat._other_stats = self
             stat.init()
 
-    def update(self, x=None):
+    def update(self, x: Tensor):
+        r"""
+        TODO
+        """
         for stat in self._stats:
             stat.update(x)
 
-    def get(self, stat):
+    def get(self, stat: str):
+        r"""
+        TODO
+        """
         if stat not in self._stat_to_stat:
             return None
 
@@ -173,4 +190,7 @@ class SummarizerSingleTensor:
 
     @property
     def summary(self):
+        """
+        TODO
+        """
         return {stat.name: stat.get() for stat in self._summary_stats}
