@@ -22,7 +22,11 @@ class ClassSummarizer:
         self.all_summary = Summarizer(stats=stats)
         self.summaries = defaultdict(lambda: Summarizer(stats=stats))
 
-    def update(self, x: Union[Tensor, Tuple[Tensor, ...]], labels: Optional[Union[Any, List[Any]]] = None):
+    def update(
+        self,
+        x: Union[Tensor, Tuple[Tensor, ...]],
+        labels: Optional[Union[Any, List[Any]]] = None,
+    ):
         """
         Updates the stats of the summarizer, optionally associated to classes.
 
