@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import torch
 from torch import Tensor
-from typing import List, Any, Dict, Union, Optional, Tuple
-from collections import defaultdict
-from captum.attr._utils.summarizer import Summarizer
+
 from captum.attr._utils.stat import Stat
+from captum.attr._utils.summarizer import Summarizer
 
 
 class ClassSummarizer:
