@@ -39,7 +39,6 @@ class ClassSummarizer:
             if not isinstance(x, tuple):
                 x = (x,)
 
-            # TODO: how to check for list
             should_resqueeze = torch.zeros(len(x))
             if not isinstance(labels, list):
                 # we need to support the data having
