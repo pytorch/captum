@@ -9,6 +9,7 @@ import numpy as np
 
 from captum.attr._utils import visualization as viz
 from captum.attr._utils.common import safe_div
+from captum.insights._utils.transforms import format_transforms
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
@@ -60,8 +61,8 @@ class BaseFeature:
                             specified in ``captum/captum/insights/frontend/App.js``.
         """
         self.name = name
-        self.baseline_transforms = baseline_transforms
-        self.input_transforms = input_transforms
+        self.baseline_transforms = format_transforms(baseline_transforms)
+        self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
     def visualization_type(self) -> str:
@@ -198,7 +199,10 @@ class TextFeature(BaseFeature):
         return "text"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
-        text = self.visualization_transform(data)
+        if self.visualization_transform:
+            text = self.visualization_transform(data)
+        else:
+            text = data
 
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)

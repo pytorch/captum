@@ -15,7 +15,6 @@ import sys
 
 from setuptools import find_packages, setup
 
-
 REQUIRED_MAJOR = 3
 REQUIRED_MINOR = 6
 
@@ -67,7 +66,7 @@ TEST_REQUIRES = ["pytest", "pytest-cov"]
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
-    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints", "mypy"]
+    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints", "mypy>=0.760", "isort"]
 )
 
 # get version string from module
@@ -150,9 +149,9 @@ if __name__ == "__main__":
             (
                 "share/jupyter/nbextensions/jupyter-captum-insights",
                 [
-                    "captum/insights/frontend/widget/static/extension.js",
-                    "captum/insights/frontend/widget/static/index.js",
-                    "captum/insights/frontend/widget/static/index.js.map",
+                    "captum/insights/widget/static/extension.js",
+                    "captum/insights/widget/static/index.js",
+                    "captum/insights/widget/static/index.js.map",
                 ],
             ),
             (

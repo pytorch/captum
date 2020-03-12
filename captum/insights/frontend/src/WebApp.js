@@ -17,14 +17,14 @@ class WebApp extends React.Component {
   }
 
   _fetchInit = () => {
-    fetch("/init")
+    fetch("init")
       .then(r => r.json())
       .then(r => this.setState({ config: r }));
   };
 
   fetchData = filter_config => {
     this.setState({ loading: true });
-    fetch("/fetch", {
+    fetch("fetch", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -36,7 +36,7 @@ class WebApp extends React.Component {
   };
 
   onTargetClick = (labelIndex, instance, callback) => {
-    fetch("/attribute", {
+    fetch("attribute", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

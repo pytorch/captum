@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 
+import unittest
+from typing import Any, Tuple, Union, cast
+
+import torch
+from torch.nn import Module
+
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.common import _zeros, _tensorize_baseline
-from captum.attr._utils.typing import Tensor, TensorOrTupleOfTensors
+from captum.attr._utils.common import _tensorize_baseline, _zeros
+from captum.attr._utils.typing import (
+    BaselineType,
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 from .helpers.basic_models import (
     BasicModel,
@@ -14,12 +24,7 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
-from .helpers.utils import assertArraysAlmostEqual, assertTensorAlmostEqual, BaseTest
-
-import unittest
-import torch
-from torch.nn import Module
-from typing import Any, cast, Optional, Tuple, Union
+from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
@@ -267,11 +272,9 @@ class Test(BaseTest):
     def _compute_attribution_and_evaluate(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[int] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: Union[None, int] = None,
         additional_forward_args: Any = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
@@ -281,7 +284,8 @@ class Test(BaseTest):
         """
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = cast(TensorOrTupleOfTensors, (inputs,))
+            inputs = (inputs,)  # type: ignore
+        inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)
@@ -365,15 +369,16 @@ class Test(BaseTest):
     def _compute_attribution_batch_helper_evaluate(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[Union[Tensor, Tuple[Tensor, ...]]] = None,
-        target: Optional[int] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        target: Union[None, int] = None,
         additional_forward_args: Any = None,
         approximation_method: str = "gausslegendre",
     ) -> None:
         ig = IntegratedGradients(model)
         if not isinstance(inputs, tuple):
-            inputs = cast(TensorOrTupleOfTensors, (inputs,))
+            inputs = (inputs,)  # type: ignore
+        inputs: Tuple[Tensor, ...]
 
         if baselines is not None and not isinstance(baselines, tuple):
             baselines = (baselines,)

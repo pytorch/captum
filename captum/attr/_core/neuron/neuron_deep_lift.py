@@ -1,16 +1,44 @@
 #!/usr/bin/env python3
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
-from ..._utils.gradient import construct_neuron_grad_fn
+from typing import Any, Callable, Tuple, Union, cast
 
-from ..deep_lift import DeepLift, DeepLiftShap
-
-from typing import Callable, Optional, Tuple, Union, Any
 from torch import Tensor
 from torch.nn import Module
-from ..._utils.typing import TensorOrTupleOfTensors
+
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
+from ..._utils.gradient import construct_neuron_grad_fn
+from ..._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from ..deep_lift import DeepLift, DeepLiftShap
 
 
 class NeuronDeepLift(NeuronAttribution, GradientAttribution):
+    r"""
+    Implements DeepLIFT algorithm for the neuron based on the following paper:
+    Learning Important Features Through Propagating Activation Differences,
+    Avanti Shrikumar, et. al.
+    https://arxiv.org/abs/1704.02685
+
+    and the gradient formulation proposed in:
+    Towards better understanding of gradient-based attribution methods for
+    deep neural networks,  Marco Ancona, et.al.
+    https://openreview.net/pdf?id=Sy21R9JAW
+
+    This implementation supports only Rescale rule. RevealCancel rule will
+    be supported in later releases.
+    Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
+    Integrated Gradients, it runs significantly faster than Integrated
+    Gradients and is preferred for large datasets.
+
+    Currently we only support a limited number of non-linear activations
+    but the plan is to expand the list in the future.
+
+    Note: As we know, currently we cannot access the building blocks,
+    of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
+    Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
+    with performance similar to built-in ones using TorchScript.
+    More details on how to build custom RNNs can be found here:
+    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
+    """
+
     def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
@@ -29,42 +57,14 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        Implements DeepLIFT algorithm for the neuron based on the following paper:
-        Learning Important Features Through Propagating Activation Differences,
-        Avanti Shrikumar, et. al.
-        https://arxiv.org/abs/1704.02685
-
-        and the gradient formulation proposed in:
-        Towards better understanding of gradient-based attribution methods for
-        deep neural networks,  Marco Ancona, et.al.
-        https://openreview.net/pdf?id=Sy21R9JAW
-
-        This implementation supports only Rescale rule. RevealCancel rule will
-        be supported in later releases.
-        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
-        Integrated Gradients, it runs significantly faster than Integrated
-        Gradients and is preferred for large datasets.
-
-        Currently we only support a limited number of non-linear activations
-        but the plan is to expand the list in the future.
-
-        Note: As we know, currently we cannot access the building blocks,
-        of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
-        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
-        with performance similar to built-in ones using TorchScript.
-        More details on how to build custom RNNs can be found here:
-        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
-
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which layer
@@ -91,23 +91,25 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                          exactly the same dimensions as inputs or the first
+                          dimension is one and the remaining dimensions match
+                          with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
-                            be broadcasted for each input value in input tensor.
+                          be broadcasted for each input value in input tensor.
 
                         - a tuple of tensors or scalars, the baseline corresponding
-                            to each tensor in the inputs' tuple can be:
-                            - either a tensor with matching dimensions to
-                                corresponding tensor in the inputs' tuple
-                                or the first dimension is one and the remaining
-                                dimensions match with the corresponding
-                                input tensor.
-                            - or a scalar, corresponding to a tensor in the
-                                inputs' tuple. This scalar value is broadcasted
-                                for corresponding input tensor.
+                          to each tensor in the inputs' tuple can be:
+
+                          - either a tensor with matching dimensions to
+                            corresponding tensor in the inputs' tuple
+                            or the first dimension is one and the remaining
+                            dimensions match with the corresponding
+                            input tensor.
+
+                          - or a scalar, corresponding to a tensor in the
+                            inputs' tuple. This scalar value is broadcasted
+                            for corresponding input tensor.
 
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
@@ -139,9 +141,11 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -176,7 +180,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLift(self.forward_func)
+        dl = DeepLift(cast(Module, self.forward_func))
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -192,6 +196,26 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
 
 
 class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
+    r"""
+    Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
+    approximates SHAP values for given input `layer` and `neuron_index`.
+    For each input sample - baseline pair it computes DeepLift attributions
+    with respect to inputs or outputs of given `layer` and `neuron_index`
+    averages resulting attributions across baselines. Whether to compute the
+    attributions with respect to the inputs or outputs of the layer is defined
+    by the input flag `attribute_to_layer_input`.
+    More details about the algorithm can be found here:
+
+    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+
+    Note that the explanation model:
+        1. Assumes that input features are independent of one another
+        2. Is linear, meaning that the explanations are modeled through
+            the additive composition of feature effects.
+    Although, it assumes a linear model for each explanation, the overall
+    model across multiple explanations can be complex and non-linear.
+    """
+
     def __init__(self, model: Module, layer: Module) -> None:
         r"""
         Args:
@@ -209,39 +233,16 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Optional[
-            Union[
-                int,
-                float,
-                Tensor,
-                Tuple[Union[Tensor, int, float], ...],
-                Callable[..., Union[Tensor, Tuple[Tensor, ...]]],
-            ]
-        ] = None,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-        custom_attribution_func: Optional[Callable[..., Tuple[Tensor, ...]]] = None,
-    ) -> TensorOrTupleOfTensors:
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
-        Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
-        approximates SHAP values for given input `layer` and `neuron_index`.
-        For each input sample - baseline pair it computes DeepLift attributions
-        with respect to inputs or outputs of given `layer` and `neuron_index`
-        averages resulting attributions across baselines. Whether to compute the
-        attributions with respect to the inputs or outputs of the layer is defined
-        by the input flag `attribute_to_layer_input`.
-        More details about the algorithm can be found here:
-
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
-
-        Note that the explanation model:
-            1. Assumes that input features are independent of one another
-            2. Is linear, meaning that the explanations are modeled through
-               the additive composition of feature effects.
-        Although, it assumes a linear model for each explanation, the overall
-        model across multiple explanations can be complex and non-linear.
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which layer
@@ -267,21 +268,21 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         corresponding references. Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            the first dimension equal to the number of examples
-                            in the baselines' distribution. The remaining dimensions
-                            must match with input tensor's dimension starting from
-                            the second dimension.
+                          the first dimension equal to the number of examples
+                          in the baselines' distribution. The remaining dimensions
+                          must match with input tensor's dimension starting from
+                          the second dimension.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with the first dimension of any tensor inside the tuple
-                            equal to the number of examples in the baseline's
-                            distribution. The remaining dimensions must match
-                            the dimensions of the corresponding input tensor
-                            starting from the second dimension.
+                          with the first dimension of any tensor inside the tuple
+                          equal to the number of examples in the baseline's
+                          distribution. The remaining dimensions must match
+                          the dimensions of the corresponding input tensor
+                          starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
-                            or a tuple of those.
+                          argument and either returns a single tensor
+                          or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
@@ -311,9 +312,11 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -348,7 +351,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLiftShap(self.forward_func)
+        dl = DeepLiftShap(cast(Module, self.forward_func))
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,

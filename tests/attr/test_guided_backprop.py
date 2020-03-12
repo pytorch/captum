@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import Any, List, Tuple, Union
 
 import torch
+from torch.nn import Module
+
 from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
-from typing import Any, Tuple, Union, List
-from torch.nn import Module
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
@@ -72,7 +73,7 @@ class Test(BaseTest):
     def _guided_backprop_test_assert(
         self,
         model: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
@@ -88,7 +89,7 @@ class Test(BaseTest):
         model: Module,
         layer: Module,
         neuron_index: Union[int, Tuple[int, ...]],
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
     ) -> None:
@@ -102,7 +103,10 @@ class Test(BaseTest):
             assertTensorAlmostEqual(self, attributions[i], expected[i], delta=0.01)
 
     def _guided_backprop_matching_assert(
-        self, model: Module, output_layer: Module, test_input: TensorOrTupleOfTensors
+        self,
+        model: Module,
+        output_layer: Module,
+        test_input: TensorOrTupleOfTensorsGeneric,
     ):
         out = model(test_input)
         attrib = GuidedBackprop(model)

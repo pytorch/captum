@@ -4,38 +4,37 @@ import unittest
 
 import torch
 
-from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.deep_lift import DeepLift
+from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.occlusion import Occlusion
-
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
-from captum.attr._core.neuron.neuron_integrated_gradients import (
-    NeuronIntegratedGradients,
-)
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
-from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
+from captum.attr._core.neuron.neuron_integrated_gradients import (
+    NeuronIntegratedGradients,
+)
+from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 
 from .helpers.basic_models import (
+    BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
-    BasicModel_ConvNet,
     ReLULinearDeepLiftModel,
 )
 from .helpers.utils import BaseGPUTest
@@ -324,7 +323,7 @@ class Test(BaseGPUTest):
             5 * torch.randn(12, 3).cuda(),
             2 * torch.randn(12, 3).cuda(),
         )
-        for ablations_per_eval in [1, 2, 3]:
+        for perturbations_per_eval in [1, 2, 3]:
             self._data_parallel_test_assert(
                 LayerFeatureAblation,
                 net,
@@ -333,7 +332,7 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 additional_forward_args=(inp3, 5),
                 target=1,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_output_layer_ablation(self):
@@ -346,7 +345,7 @@ class Test(BaseGPUTest):
                 [0.0, 0.0, 2.0],
             ]
         ).cuda()
-        for ablations_per_eval in [1, 2, 3]:
+        for perturbations_per_eval in [1, 2, 3]:
             self._data_parallel_test_assert(
                 LayerFeatureAblation,
                 net,
@@ -354,13 +353,13 @@ class Test(BaseGPUTest):
                 alt_device_ids=False,
                 inputs=inp,
                 target=1,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_dim_layer_ablation(self):
         net = BasicModel_ConvNet().cuda()
         inp = 100 * torch.randn(4, 1, 10, 10).cuda()
-        for ablations_per_eval in [1, 8, 20]:
+        for perturbations_per_eval in [1, 8, 20]:
             self._data_parallel_test_assert(
                 LayerFeatureAblation,
                 net,
@@ -368,7 +367,7 @@ class Test(BaseGPUTest):
                 alt_device_ids=True,
                 inputs=inp,
                 target=1,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_neuron_conductance(self):
@@ -702,7 +701,7 @@ class Test(BaseGPUTest):
         net = ReLULinearDeepLiftModel().cuda()
         inp1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True).cuda()
         inp2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True).cuda()
-        for ablations_per_eval in [1, 2, 3]:
+        for perturbations_per_eval in [1, 2, 3]:
             self._data_parallel_test_assert(
                 NeuronFeatureAblation,
                 net,
@@ -711,7 +710,7 @@ class Test(BaseGPUTest):
                 neuron_index=0,
                 additional_forward_args=None,
                 test_batches=False,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
                 alt_device_ids=True,
             )
 
@@ -722,7 +721,7 @@ class Test(BaseGPUTest):
 
         base1 = torch.tensor([[1.0, 0.0, 1.0]], requires_grad=True).cuda()
         base2 = torch.tensor([[0.0, 1.0, 0.0]], requires_grad=True).cuda()
-        for ablations_per_eval in [1, 8, 20]:
+        for perturbations_per_eval in [1, 8, 20]:
             self._data_parallel_test_assert(
                 NeuronFeatureAblation,
                 net,
@@ -732,26 +731,26 @@ class Test(BaseGPUTest):
                 baselines=(base1, base2),
                 additional_forward_args=None,
                 test_batches=False,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_feature_ablation(self):
         net = BasicModel_ConvNet().cuda()
         inp = torch.arange(400).view(4, 1, 10, 10).type(torch.FloatTensor).cuda()
-        for ablations_per_eval in [1, 8, 20]:
+        for perturbations_per_eval in [1, 8, 20]:
             self._data_parallel_test_assert(
                 FeatureAblation,
                 net,
                 None,
                 inputs=inp,
                 target=0,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_simple_occlusion(self):
         net = BasicModel_ConvNet().cuda()
         inp = torch.arange(400).view(4, 1, 10, 10).float().cuda()
-        for ablations_per_eval in [1, 8, 20]:
+        for perturbations_per_eval in [1, 8, 20]:
             self._data_parallel_test_assert(
                 Occlusion,
                 net,
@@ -759,14 +758,14 @@ class Test(BaseGPUTest):
                 inputs=inp,
                 sliding_window_shapes=(1, 4, 2),
                 target=0,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def test_multi_input_occlusion(self):
         net = ReLULinearDeepLiftModel().cuda()
         inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
         inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
-        for ablations_per_eval in [1, 8, 20]:
+        for perturbations_per_eval in [1, 8, 20]:
             self._data_parallel_test_assert(
                 Occlusion,
                 net,
@@ -774,7 +773,49 @@ class Test(BaseGPUTest):
                 inputs=(inp1, inp2),
                 sliding_window_shapes=((2,), (1,)),
                 test_batches=False,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
+            )
+
+    def test_simple_shapley_sampling(self):
+        net = BasicModel_ConvNet().cuda()
+        inp = torch.arange(400).view(4, 1, 10, 10).float().cuda()
+        for perturbations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValueSampling,
+                net,
+                None,
+                inputs=inp,
+                target=0,
+                perturbations_per_eval=perturbations_per_eval,
+            )
+
+    def test_multi_input_shapley_sampling(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for perturbations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValueSampling,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                test_batches=False,
+                perturbations_per_eval=perturbations_per_eval,
+                delta=0.1,
+            )
+
+    def test_multi_input_shapley_values(self):
+        net = ReLULinearDeepLiftModel().cuda()
+        inp1 = torch.tensor([[-10.0, 1.0, -5.0]]).cuda()
+        inp2 = torch.tensor([[3.0, 3.0, 1.0]]).cuda()
+        for perturbations_per_eval in [1, 8, 20]:
+            self._data_parallel_test_assert(
+                ShapleyValues,
+                net,
+                None,
+                inputs=(inp1, inp2),
+                test_batches=False,
+                perturbations_per_eval=perturbations_per_eval,
             )
 
     def _alt_device_list(self):
@@ -787,6 +828,7 @@ class Test(BaseGPUTest):
         target_layer=None,
         alt_device_ids=False,
         test_batches=False,
+        delta=0.0001,
         **kwargs
     ):
         if alt_device_ids:
@@ -836,24 +878,23 @@ class Test(BaseGPUTest):
                     )
                 else:
                     attributions_dp = attr_dp.attribute(**kwargs)
-
             if isinstance(attributions_dp, torch.Tensor):
                 self.assertAlmostEqual(
                     torch.sum(torch.abs(attributions_orig - attributions_dp)),
                     0,
-                    delta=0.0001,
+                    delta=delta,
                 )
             else:
                 for i in range(len(attributions_orig)):
                     self.assertAlmostEqual(
                         torch.sum(torch.abs(attributions_orig[i] - attributions_dp[i])),
                         0,
-                        delta=0.0001,
+                        delta=delta,
                     )
 
             if delta_dp is not None:
                 self.assertAlmostEqual(
-                    torch.sum(torch.abs(delta_orig - delta_dp)), 0, delta=0.0001
+                    torch.sum(torch.abs(delta_orig - delta_dp)), 0, delta=delta
                 )
 
 

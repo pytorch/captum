@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 
 import unittest
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
+
 from captum.attr._core.feature_ablation import FeatureAblation
-from typing import List, Tuple, Union, Optional, Any, Callable
+from captum.attr._utils.typing import (
+    BaselineType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 from .helpers.basic_models import (
     BasicModel,
-    BasicModelWithSparseInputs,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelWithSparseInputs,
 )
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
@@ -23,14 +28,14 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._ablation_test_assert(
-            net, inp, [80.0, 200.0, 120.0], ablations_per_eval=(1, 2, 3)
+            net, inp, [80.0, 200.0, 120.0], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_int_to_int(self) -> None:
         net = BasicModel()
         inp = torch.tensor([[-3, 1, 2]])
         self._ablation_test_assert(
-            net, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
+            net, inp, [-3.0, 0.0, 0.0], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_int_to_float(self) -> None:
@@ -41,7 +46,7 @@ class Test(BaseTest):
 
         inp = torch.tensor([[-3, 1, 2]])
         self._ablation_test_assert(
-            wrapper_func, inp, [-3.0, 0.0, 0.0], ablations_per_eval=(1, 2, 3)
+            wrapper_func, inp, [-3.0, 0.0, 0.0], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_with_mask(self) -> None:
@@ -52,7 +57,7 @@ class Test(BaseTest):
             inp,
             [280.0, 280.0, 120.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_simple_ablation_with_baselines(self) -> None:
@@ -64,7 +69,7 @@ class Test(BaseTest):
             [248.0, 248.0, 104.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_sample_ablation(self) -> None:
@@ -74,7 +79,7 @@ class Test(BaseTest):
             net,
             inp,
             [[8.0, 35.0, 12.0], [80.0, 200.0, 120.0]],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_sample_ablation_with_mask(self) -> None:
@@ -86,7 +91,7 @@ class Test(BaseTest):
             inp,
             [[41.0, 41.0, 12.0], [280.0, 280.0, 120.0]],
             feature_mask=mask,
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_input_ablation_with_mask(self) -> None:
@@ -115,7 +120,7 @@ class Test(BaseTest):
             expected[0:1],
             additional_input=(inp3, 1),
             feature_mask=(mask1, mask2),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
         expected_with_baseline = (
             [[468.0, 468.0, 468.0], [184.0, 192.0, 184.0]],
@@ -129,7 +134,7 @@ class Test(BaseTest):
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_multi_input_ablation(self) -> None:
@@ -150,7 +155,7 @@ class Test(BaseTest):
             ),
             additional_input=(1,),
             baselines=(baseline1, baseline2, baseline3),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
         baseline1_exp = torch.tensor([[3.0, 0.0, 0.0], [3.0, 0.0, 2.0]])
         baseline2_exp = torch.tensor([[0.0, 1.0, 0.0], [0.0, 1.0, 4.0]])
@@ -165,7 +170,7 @@ class Test(BaseTest):
             ),
             additional_input=(1,),
             baselines=(baseline1_exp, baseline2_exp, baseline3_exp),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
         )
 
     def test_simple_multi_input_conv(self) -> None:
@@ -177,7 +182,7 @@ class Test(BaseTest):
             (inp, inp2),
             (67 * torch.ones_like(inp), 13 * torch.ones_like(inp2)),
             feature_mask=(torch.tensor(0), torch.tensor(1)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
         )
         self._ablation_test_assert(
             net,
@@ -196,17 +201,17 @@ class Test(BaseTest):
                     [0.0, 0.0, 0.0, 0.0],
                 ],
             ),
-            ablations_per_eval=(1, 3, 7, 14),
+            perturbations_per_eval=(1, 3, 7, 14),
         )
 
     # Remaining tests are for cases where forward function returns a scalar
     # per batch, as either a float, integer, 0d tensor or 1d tensor.
-    def test_error_ablations_per_eval_limit_batch_scalar(self) -> None:
+    def test_error_perturbations_per_eval_limit_batch_scalar(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         ablation = FeatureAblation(lambda inp: torch.sum(net(inp)).item())
         with self.assertRaises(AssertionError):
-            _ = ablation.attribute(inp, ablations_per_eval=2)
+            _ = ablation.attribute(inp, perturbations_per_eval=2)
 
     def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
@@ -312,7 +317,7 @@ class Test(BaseTest):
             inp,
             [[82.0, 82.0, 24.0]],
             feature_mask=mask,
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
         )
 
@@ -327,7 +332,7 @@ class Test(BaseTest):
             inp,
             [[642.0, 642.0, 264.0]],
             feature_mask=mask,
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
         )
 
@@ -350,31 +355,27 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
-            ablations_per_eval=(1,),
+            perturbations_per_eval=(1,),
             target=None,
         )
 
     def _ablation_test_assert(
         self,
         model: Callable,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             List[float],
             List[List[float]],
             Tuple[List[List[float]], ...],
             Tuple[Tensor, ...],
         ],
-        feature_mask: Optional[TensorOrTupleOfTensors] = None,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
-        ablations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = 0,
+        perturbations_per_eval: Tuple[int, ...] = (1,),
+        baselines: BaselineType = None,
+        target: TargetType = 0,
     ) -> None:
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = FeatureAblation(model)
             attributions = ablation.attribute(
                 test_input,
@@ -382,7 +383,7 @@ class Test(BaseTest):
                 feature_mask=feature_mask,
                 additional_forward_args=additional_input,
                 baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
             )
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):

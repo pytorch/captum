@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-from typing import Iterable
-
-from enum import Enum
-import numpy as np
 import warnings
+from enum import Enum
+from typing import Any, Iterable, List, Tuple, Union
 
+import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.figure import Figure
+from matplotlib.pyplot import axis, figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from numpy import ndarray
 
 try:
     from IPython.core.display import display, HTML
@@ -33,11 +34,11 @@ class VisualizeSign(Enum):
     all = 4
 
 
-def _prepare_image(attr_visual):
+def _prepare_image(attr_visual: ndarray):
     return np.clip(attr_visual.astype(int), 0, 255)
 
 
-def _normalize_scale(attr, scale_factor):
+def _normalize_scale(attr: ndarray, scale_factor: float):
     if abs(scale_factor) < 1e-5:
         warnings.warn(
             "Attempting to normalize by value approximately 0, skipping normalization."
@@ -48,7 +49,7 @@ def _normalize_scale(attr, scale_factor):
     return np.clip(attr_norm, -1, 1)
 
 
-def _cumulative_sum_threshold(values, percentile):
+def _cumulative_sum_threshold(values: ndarray, percentile: Union[int, float]):
     # given values should be non-negative
     assert percentile >= 0 and percentile <= 100, (
         "Percentile for thresholding must be " "between 0 and 100 inclusive."
@@ -59,7 +60,9 @@ def _cumulative_sum_threshold(values, percentile):
     return sorted_vals[threshold_id]
 
 
-def _normalize_image_attr(attr, sign, outlier_perc=2):
+def _normalize_image_attr(
+    attr: ndarray, sign: str, outlier_perc: Union[int, float] = 2
+):
     attr_combined = np.sum(attr, axis=2)
     # Choose appropriate signed values and rescale, removing given outlier percentage.
     if VisualizeSign[sign] == VisualizeSign.all:
@@ -81,18 +84,18 @@ def _normalize_image_attr(attr, sign, outlier_perc=2):
 
 
 def visualize_image_attr(
-    attr,
-    original_image=None,
-    method="heat_map",
-    sign="absolute_value",
-    plt_fig_axis=None,
-    outlier_perc=2,
-    cmap=None,
-    alpha_overlay=0.5,
-    show_colorbar=False,
-    title=None,
-    fig_size=(6, 6),
-    use_pyplot=True,
+    attr: ndarray,
+    original_image: Union[None, ndarray] = None,
+    method: str = "heat_map",
+    sign: str = "absolute_value",
+    plt_fig_axis: Union[None, Tuple[figure, axis]] = None,
+    outlier_perc: Union[int, float] = 2,
+    cmap: Union[None, str] = None,
+    alpha_overlay: float = 0.5,
+    show_colorbar: bool = False,
+    title: Union[None, str] = None,
+    fig_size: Tuple[int, int] = (6, 6),
+    use_pyplot: bool = True,
 ):
     r"""
         Visualizes attribution for a given image by normalizing attribution values
@@ -114,36 +117,46 @@ def visualize_image_attr(
                         Default: None
             method (string, optional): Chosen method for visualizing attribution.
                         Supported options are:
-                            1. `heat_map` - Display heat map of chosen attributions
-                            2. `blended_heat_map` - Overlay heat map over greyscale
-                                version of original image. Parameter alpha_overlay
-                                corresponds to alpha of heat map.
-                            3. `original_image` - Only display original image.
-                            4. `masked_image` - Mask image (pixel-wise multiply)
-                                by normalized attribution values.
-                            5. `alpha_scaling` - Sets alpha channel of each pixel
-                            to be equal to normalized attribution value.
+
+                        1. `heat_map` - Display heat map of chosen attributions
+
+                        2. `blended_heat_map` - Overlay heat map over greyscale
+                           version of original image. Parameter alpha_overlay
+                           corresponds to alpha of heat map.
+
+                        3. `original_image` - Only display original image.
+
+                        4. `masked_image` - Mask image (pixel-wise multiply)
+                           by normalized attribution values.
+
+                        5. `alpha_scaling` - Sets alpha channel of each pixel
+                           to be equal to normalized attribution value.
                         Default: `heat_map`
             sign (string, optional): Chosen sign of attributions to visualize. Supported
-                            options are:
-                            1. `positive` - Displays only positive pixel attributions.
-                            2. `absolute_value` - Displays absolute value of
-                                attributions.
-                            3. `negative` - Displays only negative pixel attributions.
-                            4. `all` - Displays both positive and negative attribution
-                                values. This is not supported for `masked_image` or
-                                `alpha_scaling` modes, since signed information cannot
-                                be represented in these modes.
+                        options are:
+
+                        1. `positive` - Displays only positive pixel attributions.
+
+                        2. `absolute_value` - Displays absolute value of
+                           attributions.
+
+                        3. `negative` - Displays only negative pixel attributions.
+
+                        4. `all` - Displays both positive and negative attribution
+                           values. This is not supported for `masked_image` or
+                           `alpha_scaling` modes, since signed information cannot
+                           be represented in these modes.
                         Default: `absolute_value`
             plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
                         on which to visualize. If None is provided, then a new figure
                         and axis are created.
                         Default: None
-            outlier_perc (float, optional): Top attribution values which correspond
-                        to a total of outlier_perc percentage of the total attribution
-                        are set to 1 and scaling is performed using the minimum of
-                        these values. For sign=`all`, outliers and scale value are
-                        computed using absolute value of attributions.
+            outlier_perc (float or int, optional): Top attribution values which
+                        correspond to a total of outlier_perc percentage of the
+                        total attribution are set to 1 and scaling is performed
+                        using the minimum of these values. For sign=`all`, outliers a
+                        nd scale value are computed using absolute value of
+                        attributions.
                         Default: 2
             cmap (string, optional): String corresponding to desired colormap for
                         heatmap visualization. This defaults to "Reds" for negative
@@ -217,6 +230,7 @@ def visualize_image_attr(
     plt_axis.yaxis.set_ticks_position("none")
     plt_axis.set_yticklabels([])
     plt_axis.set_xticklabels([])
+    plt_axis.grid(b=None)
 
     heat_map = None
     # Show original image
@@ -302,14 +316,14 @@ def visualize_image_attr(
 
 
 def visualize_image_attr_multiple(
-    attr,
-    original_image,
-    methods,
-    signs,
-    titles=None,
-    fig_size=(8, 6),
-    use_pyplot=True,
-    **kwargs
+    attr: ndarray,
+    original_image: Union[None, ndarray],
+    methods: List[str],
+    signs: List[str],
+    titles: Union[None, List[str]] = None,
+    fig_size: Tuple[int, int] = (8, 6),
+    use_pyplot: bool = True,
+    **kwargs: Any
 ):
     r"""
         Visualizes attribution using multiple visualization methods displayed
@@ -495,7 +509,7 @@ def format_word_importances(words, importances):
     return "".join(tags)
 
 
-def visualize_text(datarecords: Iterable[VisualizationDataRecord]):
+def visualize_text(datarecords: Iterable[VisualizationDataRecord]) -> None:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."

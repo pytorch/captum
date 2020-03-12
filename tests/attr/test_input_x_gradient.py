@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 from typing import Any
+
 import torch
 from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import assertArraysAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertArraysAlmostEqual
 from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 
@@ -48,8 +49,8 @@ class Test(BaseTest):
     def _input_x_gradient_base_assert(
         self,
         model: Module,
-        inputs: TensorOrTupleOfTensors,
-        expected_grads: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        expected_grads: TensorOrTupleOfTensorsGeneric,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
     ) -> None:

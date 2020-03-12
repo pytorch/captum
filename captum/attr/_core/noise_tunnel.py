@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union, Any
+from enum import Enum
+from typing import Any, Tuple, Union
 
+import numpy as np
 import torch
 from torch import Tensor
 
-import numpy as np
-from enum import Enum
-
 from .._utils.attribution import Attribution
 from .._utils.common import (
-    _validate_noise_tunnel_type,
-    _validate_input,
-    _format_baseline,
-    _format_input,
-    _format_attributions,
-    _format_additional_forward_args,
-    _format_tensor_into_tuples,
+    ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
-    ExpansionTypes,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_baseline,
+    _format_input,
+    _format_tensor_into_tuples,
+    _is_tuple,
+    _validate_input,
+    _validate_noise_tunnel_type,
 )
 
 
@@ -32,11 +32,36 @@ SUPPORTED_NOISE_TUNNEL_TYPES = list(NoiseTunnelType.__members__.keys())
 
 
 class NoiseTunnel(Attribution):
+    r"""
+    Adds gaussian noise to each input in the batch `n_samples` times
+    and applies the given attribution algorithm to each of the samples.
+    The attributions of the samples are combined based on the given noise
+    tunnel type (nt_type):
+    If nt_type is `smoothgrad`, the mean of the sampled attributions is
+    returned. This approximates smoothing the given attribution method
+    with a Gaussian Kernel.
+    If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions
+    is returned.
+    If nt_type is `vargrad`, the variance of the sample attributions is
+    returned.
+
+    More details about adding noise can be found in the following papers:
+        https://arxiv.org/abs/1810.03292
+        https://arxiv.org/abs/1810.03307
+        https://arxiv.org/abs/1706.03825
+        https://arxiv.org/pdf/1806.10758
+    This method currently also supports batches of multiple examples input,
+    however it can be computationally expensive depending on the model,
+    the dimensionality of the data and execution environment.
+    It is assumed that the batch size is the first dimension of input tensors.
+    """
+
     def __init__(self, attribution_method: Attribution) -> None:
         r"""
-        attribution_method (Attribution): An instance of any attribution algorithm
-                    of type `Attribution`. E.g. Integrated Gradients,
-                    Conductance or Saliency.
+        Args:
+            attribution_method (Attribution): An instance of any attribution algorithm
+                        of type `Attribution`. E.g. Integrated Gradients,
+                        Conductance or Saliency.
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
@@ -53,28 +78,6 @@ class NoiseTunnel(Attribution):
         **kwargs: Any
     ):
         r"""
-        Adds gaussian noise to each input in the batch `n_samples` times
-        and applies the given attribution algorithm to each of the samples.
-        The attributions of the samples are combined based on the given noise
-        tunnel type (nt_type):
-        If nt_type is `smoothgrad`, the mean of the sampled attributions is
-        returned. This approximates smoothing the given attribution method
-        with a Gaussian Kernel.
-        If nt_type is `smoothgrad_sq`, the mean of the squared sample attributions
-        is returned.
-        If nt_type is `vargrad`, the variance of the sample attributions is
-        returned.
-
-        More details about adding noise can be found in the following papers:
-            https://arxiv.org/abs/1810.03292
-            https://arxiv.org/abs/1810.03307
-            https://arxiv.org/abs/1706.03825
-            https://arxiv.org/pdf/1806.10758
-        This method currently also supports batches of multiple examples input,
-        however it can be computationally expensive depending on the model,
-        the dimensionality of the data and execution environment.
-        It is assumed that the batch size is the first dimension of input tensors.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which integrated
@@ -288,7 +291,7 @@ class NoiseTunnel(Attribution):
         if self.is_delta_supported and return_convergence_delta:
             attributions, delta = attributions
 
-        is_attrib_tuple = isinstance(attributions, tuple)
+        is_attrib_tuple = _is_tuple(attributions)
         attributions = _format_tensor_into_tuples(attributions)
 
         expected_attributions = []
@@ -329,10 +332,10 @@ class NoiseTunnel(Attribution):
 
     def _apply_checks_and_return_attributions(
         self,
-        attributions: Union[Tensor, Tuple[Tensor, ...]],
+        attributions: Tuple[Tensor, ...],
         is_attrib_tuple: bool,
         return_convergence_delta: bool,
-        delta: Optional[Tensor],
+        delta: Union[None, Tensor],
     ):
         attributions = _format_attributions(is_attrib_tuple, attributions)
 

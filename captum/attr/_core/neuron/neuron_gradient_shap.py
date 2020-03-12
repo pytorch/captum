@@ -1,20 +1,56 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
-from torch import Tensor
+from typing import Any, Callable, List, Tuple, Union
+
 from torch.nn import Module
 
-from ..gradient_shap import GradientShap
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensors
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..gradient_shap import GradientShap
 
 
 class NeuronGradientShap(NeuronAttribution, GradientAttribution):
+    r"""
+    Implements gradient SHAP for a neuron in a hidden layer based on the
+    implementation from SHAP's primary author. For reference, please, view:
+
+    https://github.com/slundberg/shap\
+    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
+
+    A Unified Approach to Interpreting Model Predictions
+    http://papers.nips.cc/paper\
+    7062-a-unified-approach-to-interpreting-model-predictions
+
+    GradientShap approximates SHAP values by computing the expectations of
+    gradients by randomly sampling from the distribution of baselines/references.
+    It adds white noise to each input sample `n_samples` times, selects a
+    random baseline from baselines' distribution and a random point along the
+    path between the baseline and the input, and computes the gradient of the
+    neuron with index `neuron_index` with respect to those selected random
+    points. The final SHAP values represent the expected values of
+    `gradients * (inputs - baselines)`.
+
+    GradientShap makes an assumption that the input features are independent
+    and that the explanation model is linear, meaning that the explanations
+    are modeled through the additive composition of feature effects.
+    Under those assumptions, SHAP value can be approximated as the expectation
+    of gradients that are computed for randomly generated `n_samples` input
+    samples after adding gaussian noise `n_samples` times to each input for
+    different baselines/references.
+
+    In some sense it can be viewed as an approximation of integrated gradients
+    by computing the expectations of gradients for different baselines.
+
+    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    randomly draw samples from the distribution of baselines, add noise to input
+    samples and compute the expectation (smoothgrad).
+    """
+
     def __init__(
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -40,49 +76,17 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
-        baselines: Union[Tensor, Callable[..., Tensor], Tuple[Union[Tensor], ...]],
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
         n_samples: int = 5,
         stdevs: float = 0.0,
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
-        Implements gradient SHAP for a neuron in a hidden layer based on the
-        implementation from SHAP's primary author. For reference, please, view:
-
-        https://github.com/slundberg/shap\
-        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
-
-        A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper\
-        7062-a-unified-approach-to-interpreting-model-predictions
-
-        GradientShap approximates SHAP values by computing the expectations of
-        gradients by randomly sampling from the distribution of baselines/references.
-        It adds white noise to each input sample `n_samples` times, selects a
-        random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of the
-        neuron with index `neuron_index` with respect to those selected random
-        points. The final SHAP values represent the expected values of
-        `gradients * (inputs - baselines)`.
-
-        GradientShap makes an assumption that the input features are independent
-        and that the explanation model is linear, meaning that the explanations
-        are modeled through the additive composition of feature effects.
-        Under those assumptions, SHAP value can be approximated as the expectation
-        of gradients that are computed for randomly generated `n_samples` input
-        samples after adding gaussian noise `n_samples` times to each input for
-        different baselines/references.
-
-        In some sense it can be viewed as an approximation of integrated gradients
-        by computing the expectations of gradients for different baselines.
-
-        Current implementation uses Smoothgrad from `NoiseTunnel` in order to
-        randomly draw samples from the distribution of baselines, add noise to input
-        samples and compute the expectation (smoothgrad).
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which SHAP attribution
@@ -105,21 +109,21 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            the first dimension equal to the number of examples
-                            in the baselines' distribution. The remaining dimensions
-                            must match with input tensor's dimension starting from
-                            the second dimension.
+                          the first dimension equal to the number of examples
+                          in the baselines' distribution. The remaining dimensions
+                          must match with input tensor's dimension starting from
+                          the second dimension.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with the first dimension of any tensor inside the tuple
-                            equal to the number of examples in the baseline's
-                            distribution. The remaining dimensions must match
-                            the dimensions of the corresponding input tensor
-                            starting from the second dimension.
+                          with the first dimension of any tensor inside the tuple
+                          equal to the number of examples in the baseline's
+                          distribution. The remaining dimensions must match
+                          the dimensions of the corresponding input tensor
+                          starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
-                            or a tuple of those.
+                          argument and either returns a single tensor
+                          or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
@@ -171,20 +175,20 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned.
 
-            Examples::
+        Examples::
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> net = ImageClassifier()
-                >>> neuron_grad_shap = NeuronGradientShap(net, net.linear2)
-                >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
-                >>> # choosing baselines randomly
-                >>> baselines = torch.randn(20, 3, 32, 32)
-                >>> # Computes gradient SHAP of first neuron in linear2 layer
-                >>> # with respect to the input's of the network.
-                >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = neuron_grad_shap.attribute(input, neuron_ind=0
-                                                             baselines)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> neuron_grad_shap = NeuronGradientShap(net, net.linear2)
+            >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
+            >>> # choosing baselines randomly
+            >>> baselines = torch.randn(20, 3, 32, 32)
+            >>> # Computes gradient SHAP of first neuron in linear2 layer
+            >>> # with respect to the input's of the network.
+            >>> # Attribution size matches input size: 3x3x32x32
+            >>> attribution = neuron_grad_shap.attribute(input, neuron_ind=0
+                                                            baselines)
 
         """
         gs = GradientShap(self.forward_func)

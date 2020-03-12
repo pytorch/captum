@@ -1,35 +1,47 @@
 #!/usr/bin/env python3
+import typing
 import warnings
+from typing import Any, Callable, List, Tuple, Union, cast
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
-import numpy as np
-
+from .._utils.attribution import GradientAttribution
 from .._utils.common import (
-    _format_input,
-    _format_baseline,
-    _format_callable_baseline,
-    _format_attributions,
-    _format_tensor_into_tuples,
-    _format_additional_forward_args,
-    _run_forward,
-    _validate_input,
-    _expand_target,
-    _expand_additional_forward_args,
-    _tensorize_baseline,
+    ExpansionTypes,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    ExpansionTypes,
+    _expand_additional_forward_args,
+    _expand_target,
+    _format_additional_forward_args,
+    _format_attributions,
+    _format_baseline,
+    _format_callable_baseline,
+    _format_input,
+    _format_tensor_into_tuples,
+    _is_tuple,
+    _run_forward,
+    _tensorize_baseline,
+    _validate_input,
 )
-from .._utils.attribution import GradientAttribution
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 
 # Check if module backward hook can safely be used for the module that produced
 # this inputs / outputs mapping
-def _check_valid_module(inputs_grad_fn, outputs):
-    def is_output_cloned(output_fn, input_grad_fn):
+def _check_valid_module(inputs_grad_fn, outputs) -> bool:
+    def is_output_cloned(output_fn, input_grad_fn) -> bool:
         """
         Checks if the output has been cloned. This happens especially in case of
         layer deeplift.
@@ -55,7 +67,38 @@ def _check_valid_module(inputs_grad_fn, outputs):
 
 
 class DeepLift(GradientAttribution):
-    def __init__(self, model):
+    r"""
+    Implements DeepLIFT algorithm based on the following paper:
+    Learning Important Features Through Propagating Activation Differences,
+    Avanti Shrikumar, et. al.
+    https://arxiv.org/abs/1704.02685
+
+    and the gradient formulation proposed in:
+    Towards better understanding of gradient-based attribution methods for
+    deep neural networks,  Marco Ancona, et.al.
+    https://openreview.net/pdf?id=Sy21R9JAW
+
+    This implementation supports only Rescale rule. RevealCancel rule will
+    be supported in later releases.
+    In addition to that, in order to keep the implementation cleaner, DeepLIFT
+    for internal neurons and layers extends current implementation and is
+    implemented separately in LayerDeepLift and NeuronDeepLift.
+    Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
+    Integrated Gradients, it runs significantly faster than Integrated
+    Gradients and is preferred for large datasets.
+
+    Currently we only support a limited number of non-linear activations
+    but the plan is to expand the list in the future.
+
+    Note: As we know, currently we cannot access the building blocks,
+    of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
+    Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
+    with performance similar to built-in ones using TorchScript.
+    More details on how to build custom RNNs can be found here:
+    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
+    """
+
+    def __init__(self, model: Module) -> None:
         r"""
         Args:
 
@@ -63,48 +106,46 @@ class DeepLift(GradientAttribution):
         """
         GradientAttribution.__init__(self, model)
         self.model = model
-        self.forward_handles = []
-        self.backward_handles = []
+        self.forward_handles: List[RemovableHandle] = []
+        self.backward_handles: List[RemovableHandle] = []
 
+    @typing.overload
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        custom_attribution_func=None,
-    ):
-        r""""
-        Implements DeepLIFT algorithm based on the following paper:
-        Learning Important Features Through Propagating Activation Differences,
-        Avanti Shrikumar, et. al.
-        https://arxiv.org/abs/1704.02685
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
 
-        and the gradient formulation proposed in:
-        Towards better understanding of gradient-based attribution methods for
-        deep neural networks,  Marco Ancona, et.al.
-        https://openreview.net/pdf?id=Sy21R9JAW
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
 
-        This implementation supports only Rescale rule. RevealCancel rule will
-        be supported in later releases.
-        In addition to that, in order to keep the implementation cleaner, DeepLIFT
-        for internal neurons and layers extends current implementation and is
-        implemented separately in LayerDeepLift and NeuronDeepLift.
-        Although DeepLIFT's(Rescale Rule) attribution quality is comparable with
-        Integrated Gradients, it runs significantly faster than Integrated
-        Gradients and is preferred for large datasets.
-
-        Currently we only support a limited number of non-linear activations
-        but the plan is to expand the list in the future.
-
-        Note: As we know, currently we cannot access the building blocks,
-        of PyTorch's built-in LSTM, RNNs and GRUs such as Tanh and Sigmoid.
-        Nonetheless, it is possible to build custom LSTMs, RNNS and GRUs
-        with performance similar to built-in ones using TorchScript.
-        More details on how to build custom RNNs can be found here:
-        https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
-
+    def attribute(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -124,23 +165,25 @@ class DeepLift(GradientAttribution):
                         Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                          exactly the same dimensions as inputs or the first
+                          dimension is one and the remaining dimensions match
+                          with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
-                            be broadcasted for each input value in input tensor.
+                          be broadcasted for each input value in input tensor.
 
                         - a tuple of tensors or scalars, the baseline corresponding
-                            to each tensor in the inputs' tuple can be:
-                            - either a tensor with matching dimensions to
-                                corresponding tensor in the inputs' tuple
-                                or the first dimension is one and the remaining
-                                dimensions match with the corresponding
-                                input tensor.
-                            - or a scalar, corresponding to a tensor in the
-                                inputs' tuple. This scalar value is broadcasted
-                                for corresponding input tensor.
+                          to each tensor in the inputs' tuple can be:
+
+                          - either a tensor with matching dimensions to
+                            corresponding tensor in the inputs' tuple
+                            or the first dimension is one and the remaining
+                            dimensions match with the corresponding
+                            input tensor.
+
+                          - or a scalar, corresponding to a tensor in the
+                            inputs' tuple. This scalar value is broadcasted
+                            for corresponding input tensor.
 
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
@@ -154,21 +197,21 @@ class DeepLift(GradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -191,9 +234,11 @@ class DeepLift(GradientAttribution):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+
                         In case this function is not provided, we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -240,7 +285,7 @@ class DeepLift(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
@@ -301,23 +346,33 @@ class DeepLift(GradientAttribution):
         )
 
     def _construct_forward_func(
-        self, forward_func, inputs, target=None, additional_forward_args=None
-    ):
+        self,
+        forward_func: Callable,
+        inputs: Tuple,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+    ) -> Callable:
         def forward_fn():
             return _run_forward(forward_func, inputs, target, additional_forward_args)
 
         if hasattr(forward_func, "device_ids"):
-            forward_fn.device_ids = forward_func.device_ids
+            forward_fn.device_ids = forward_func.device_ids  # type: ignore
         return forward_fn
 
-    def _is_non_linear(self, module):
+    def _is_non_linear(self, module: Module) -> bool:
         return type(module) in SUPPORTED_NON_LINEAR.keys()
 
-    def _forward_pre_hook_ref(self, module, inputs):
+    def _forward_pre_hook_ref(
+        self, module: Module, inputs: Union[Tensor, Tuple[Tensor, ...]]
+    ) -> None:
         inputs = _format_tensor_into_tuples(inputs)
-        module.input_ref = tuple(input.clone().detach() for input in inputs)
+        module.input_ref = tuple(  # type: ignore
+            input.clone().detach() for input in inputs
+        )
 
-    def _forward_pre_hook(self, module, inputs):
+    def _forward_pre_hook(
+        self, module: Module, inputs: Union[Tensor, Tuple[Tensor, ...]]
+    ) -> None:
         """
         For the modules that perform in-place operations such as ReLUs, we cannot
         use inputs from forward hooks. This is because in that case inputs
@@ -326,7 +381,7 @@ class DeepLift(GradientAttribution):
         """
         inputs = _format_tensor_into_tuples(inputs)
         module.input = inputs[0].clone().detach()
-        module.input_grad_fns = inputs[0].grad_fn
+        module.input_grad_fns = inputs[0].grad_fn  # type: ignore
 
         def tensor_backward_hook(grad):
             if module.saved_grad is None:
@@ -346,7 +401,12 @@ class DeepLift(GradientAttribution):
         handle = inputs[0].register_hook(tensor_backward_hook)
         module.input_hook = handle
 
-    def _forward_hook(self, module, inputs, outputs):
+    def _forward_hook(
+        self,
+        module: Module,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        outputs: Union[Tensor, Tuple[Tensor, ...]],
+    ) -> None:
         r"""
         we need forward hook to access and detach the inputs and
         outputs of a neuron
@@ -361,17 +421,23 @@ class DeepLift(GradientAttribution):
                     module
                 )
             )
-            module.is_invalid = True
-            module.saved_grad = None
-            self.forward_handles.append(module.input_hook)
+            module.is_invalid = True  # type: ignore
+            module.saved_grad = None  # type: ignore
+            self.forward_handles.append(cast(RemovableHandle, module.input_hook))
         else:
-            module.is_invalid = False
+            module.is_invalid = False  # type: ignore
             # removing the hook if there is no failure case
-            module.input_hook.remove()
+            cast(RemovableHandle, module.input_hook).remove()
         del module.input_hook
         del module.input_grad_fns
 
-    def _backward_hook(self, module, grad_input, grad_output, eps=1e-10):
+    def _backward_hook(
+        self,
+        module: Module,
+        grad_input: Union[Tensor, Tuple[Tensor, ...]],
+        grad_output: Union[Tensor, Tuple[Tensor, ...]],
+        eps: float = 1e-10,
+    ):
         r"""
          `grad_input` is the gradient of the neuron with respect to its input
          `grad_output` is the gradient of the neuron with respect to its output
@@ -403,20 +469,20 @@ class DeepLift(GradientAttribution):
 
         return multipliers
 
-    def satisfies_attribute_criteria(self, module):
+    def satisfies_attribute_criteria(self, module: Module) -> bool:
         return hasattr(module, "input") and hasattr(module, "output")
 
-    def _can_register_hook(self, module):
+    def _can_register_hook(self, module: Module) -> bool:
         # TODO find a better way of checking if a module is a container or not
         module_fullname = str(type(module))
-        has_already_hooks = len(module._backward_hooks) > 0
+        has_already_hooks = len(module._backward_hooks) > 0  # type: ignore
         return not (
             "nn.modules.container" in module_fullname
             or has_already_hooks
             or not self._is_non_linear(module)
         )
 
-    def _register_hooks(self, module):
+    def _register_hooks(self, module: Module) -> None:
         if not self._can_register_hook(module):
             return
         # adds forward hook to leaf nodes that are non-linear
@@ -427,14 +493,14 @@ class DeepLift(GradientAttribution):
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
 
-    def _remove_hooks(self):
+    def _remove_hooks(self) -> None:
         for forward_handle in self.forward_handles:
             forward_handle.remove()
         for backward_handle in self.backward_handles:
             backward_handle.remove()
 
-    def _pre_hook_main_model(self):
-        def pre_hook(module, baseline_inputs_add_args):
+    def _pre_hook_main_model(self) -> RemovableHandle:
+        def pre_hook(module: Module, baseline_inputs_add_args: Tuple) -> Tuple:
             inputs = baseline_inputs_add_args[0]
             baselines = baseline_inputs_add_args[1]
             additional_args = None
@@ -450,16 +516,32 @@ class DeepLift(GradientAttribution):
             return baseline_input_tsr
 
         if isinstance(self.model, nn.DataParallel):
-            return self.model.module.register_forward_pre_hook(pre_hook)
+            return self.model.module.register_forward_pre_hook(pre_hook)  # type: ignore
         else:
-            return self.model.register_forward_pre_hook(pre_hook)
+            return self.model.register_forward_pre_hook(pre_hook)  # type: ignore
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
 
 class DeepLiftShap(DeepLift):
-    def __init__(self, model):
+    r"""
+    Extends DeepLift algorithm and approximates SHAP values using Deeplift.
+    For each input sample it computes DeepLift attribution with respect to
+    each baseline and averages resulting attributions.
+    More details about the algorithm can be found here:
+
+    http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
+
+    Note that the explanation model:
+        1. Assumes that input features are independent of one another
+        2. Is linear, meaning that the explanations are modeled through
+            the additive composition of feature effects.
+    Although, it assumes a linear model for each explanation, the overall
+    model across multiple explanations can be complex and non-linear.
+    """
+
+    def __init__(self, model: Module) -> None:
         r"""
         Args:
 
@@ -467,30 +549,51 @@ class DeepLiftShap(DeepLift):
         """
         DeepLift.__init__(self, model)
 
+    # There's a mismatch between the signatures of DeepLift.attribute and
+    # DeepLiftShap.attribute, so we ignore typing here
+    @typing.overload  # type: ignore
     def attribute(
         self,
-        inputs,
-        baselines,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        custom_attribution_func=None,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    def attribute(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
-        Extends DeepLift algorithm and approximates SHAP values using Deeplift.
-        For each input sample it computes DeepLift attribution with respect to
-        each baseline and averages resulting attributions.
-        More details about the algorithm can be found here:
-
-        http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions.pdf
-
-        Note that the explanation model:
-            1. Assumes that input features are independent of one another
-            2. Is linear, meaning that the explanations are modeled through
-               the additive composition of feature effects.
-        Although, it assumes a linear model for each explanation, the overall
-        model across multiple explanations can be complex and non-linear.
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -509,21 +612,21 @@ class DeepLiftShap(DeepLift):
                         corresponding references. Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            the first dimension equal to the number of examples
-                            in the baselines' distribution. The remaining dimensions
-                            must match with input tensor's dimension starting from
-                            the second dimension.
+                          the first dimension equal to the number of examples
+                          in the baselines' distribution. The remaining dimensions
+                          must match with input tensor's dimension starting from
+                          the second dimension.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with the first dimension of any tensor inside the tuple
-                            equal to the number of examples in the baseline's
-                            distribution. The remaining dimensions must match
-                            the dimensions of the corresponding input tensor
-                            starting from the second dimension.
+                          with the first dimension of any tensor inside the tuple
+                          equal to the number of examples in the baseline's
+                          distribution. The remaining dimensions must match
+                          the dimensions of the corresponding input tensor
+                          starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
-                            or a tuple of those.
+                          argument and either returns a single tensor
+                          or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
@@ -535,21 +638,21 @@ class DeepLiftShap(DeepLift):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -572,9 +675,11 @@ class DeepLiftShap(DeepLift):
                         computing final attribution scores. This function can take
                         at least one and at most three arguments with the
                         following signature:
-                            - custom_attribution_func(multipliers)
-                            - custom_attribution_func(multipliers, inputs)
-                            - custom_attribution_func(multipliers, inputs, baselines)
+
+                        - custom_attribution_func(multipliers)
+                        - custom_attribution_func(multipliers, inputs)
+                        - custom_attribution_func(multipliers, inputs, baselines)
+
                         In case this function is not provided we use the default
                         logic defined as: multipliers * (inputs - baselines)
                         It is assumed that all input arguments, `multipliers`,
@@ -634,7 +739,7 @@ class DeepLiftShap(DeepLift):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
 
@@ -655,14 +760,18 @@ class DeepLiftShap(DeepLift):
             exp_base,
             target=exp_tgt,
             additional_forward_args=exp_addit_args,
-            return_convergence_delta=return_convergence_delta,
+            return_convergence_delta=cast(
+                Literal[True, False], return_convergence_delta
+            ),
             custom_attribution_func=custom_attribution_func,
         )
         if return_convergence_delta:
-            attributions, delta = attributions
+            attributions, delta = cast(Tuple[Tuple[Tensor, ...], Tensor], attributions)
 
         attributions = tuple(
-            self._compute_mean_across_baselines(inp_bsz, base_bsz, attribution)
+            self._compute_mean_across_baselines(
+                inp_bsz, base_bsz, cast(Tensor, attribution)
+            )
             for attribution in attributions
         )
 
@@ -672,8 +781,14 @@ class DeepLiftShap(DeepLift):
             return _format_attributions(is_inputs_tuple, attributions)
 
     def _expand_inputs_baselines_targets(
-        self, baselines, inputs, target, additional_forward_args
-    ):
+        self,
+        baselines: Tuple[Tensor, ...],
+        inputs: Tuple[Tensor, ...],
+        target: TargetType,
+        additional_forward_args: Any,
+    ) -> Tuple[
+        Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any,
+    ]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
@@ -706,15 +821,24 @@ class DeepLiftShap(DeepLift):
             input_additional_args,
         )
 
-    def _compute_mean_across_baselines(self, inp_bsz, base_bsz, attribution):
+    def _compute_mean_across_baselines(
+        self, inp_bsz: int, base_bsz: int, attribution: Tensor
+    ) -> Tensor:
         # Average for multiple references
-        attr_shape = (inp_bsz, base_bsz)
+        attr_shape: Tuple = (inp_bsz, base_bsz)
         if len(attribution.shape) > 1:
             attr_shape += attribution.shape[1:]
-        return torch.mean(attribution.view(attr_shape), axis=1, keepdim=False)
+        return torch.mean(attribution.view(attr_shape), dim=1, keepdim=False)
 
 
-def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def nonlinear(
+    module: Module,
+    inputs: Tensor,
+    outputs: Tensor,
+    grad_input: Tensor,
+    grad_output: Tensor,
+    eps: float = 1e-10,
+):
     r"""
     grad_input: (dLoss / dprev_layer_out, dLoss / wij, dLoss / bij)
     grad_output: (dLoss / dlayer_out)
@@ -737,7 +861,14 @@ def nonlinear(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return new_grad_inp
 
 
-def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def softmax(
+    module: Module,
+    inputs: Tensor,
+    outputs: Tensor,
+    grad_input: Tensor,
+    grad_output: Tensor,
+    eps: float = 1e-10,
+):
     delta_in, delta_out = _compute_diffs(inputs, outputs)
 
     new_grad_inp = list(grad_input)
@@ -752,7 +883,14 @@ def softmax(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     return new_grad_inp
 
 
-def maxpool1d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def maxpool1d(
+    module: Module,
+    inputs: Tensor,
+    outputs: Tensor,
+    grad_input: Tensor,
+    grad_output: Tensor,
+    eps: float = 1e-10,
+):
     return maxpool(
         module,
         F.max_pool1d,
@@ -765,7 +903,14 @@ def maxpool1d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     )
 
 
-def maxpool2d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def maxpool2d(
+    module: Module,
+    inputs: Tensor,
+    outputs: Tensor,
+    grad_input: Tensor,
+    grad_output: Tensor,
+    eps: float = 1e-10,
+):
     return maxpool(
         module,
         F.max_pool2d,
@@ -778,7 +923,9 @@ def maxpool2d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
     )
 
 
-def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
+def maxpool3d(
+    module: Module, inputs, outputs, grad_input, grad_output, eps: float = 1e-10
+):
     return maxpool(
         module,
         F.max_pool3d,
@@ -792,7 +939,14 @@ def maxpool3d(module, inputs, outputs, grad_input, grad_output, eps=1e-10):
 
 
 def maxpool(
-    module, pool_func, unpool_func, inputs, outputs, grad_input, grad_output, eps=1e-10,
+    module: Module,
+    pool_func: Callable,
+    unpool_func: Callable,
+    inputs,
+    outputs,
+    grad_input,
+    grad_output,
+    eps: float = 1e-10,
 ):
     with torch.no_grad():
         input, input_ref = inputs.chunk(2)
@@ -824,7 +978,7 @@ def maxpool(
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input.shape),
+                list(cast(torch.Size, module.input.shape)),
             ),
             2,
         )
@@ -842,7 +996,7 @@ def maxpool(
                 module.kernel_size,
                 module.stride,
                 module.padding,
-                list(module.input.shape),
+                list(cast(torch.Size, module.input.shape)),
             ),
         )
 
@@ -858,7 +1012,7 @@ def maxpool(
         return (new_grad_inp,)
 
 
-def _compute_diffs(inputs, outputs):
+def _compute_diffs(inputs: Tensor, outputs: Tensor) -> Tuple[Tensor, Tensor]:
     input, input_ref = inputs.chunk(2)
     # if the model is a single non-linear module and we apply Rescale rule on it
     # we might not be able to perform chunk-ing because the output of the module is

@@ -83,16 +83,27 @@ class TutorialHome extends React.Component {
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
                 of the text and visual parts of the model. Find the tutorial <a href="Multimodal_VQA_Interpret">here</a>.
 
-                <h4>[master only] Interpreting question answering with BERT:</h4>
+                <h4>Interpreting question answering with BERT:</h4>
                 This tutorial demonstrates how to use Captum to interpret a BERT model for question answering.
                 We use a pre-trained model from Hugging Face fine-tuned on the SQUAD dataset and show how to use hooks to
                 examine and better understand embeddings, sub-embeddings, BERT, and attention layers.
                 Find the tutorial <a href="Bert_SQUAD_Interpret">here</a>.
 
+                <h4>Interpreting a regression model of Boston house prices:</h4>
+                To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
+                Using Captum and a variety of attribution methods, we evaluate feature importance as well as internal attribution to understand
+                the network function. Find the tutorial <a href="House_Prices_Regression_Interpret">here</a>.
+
                 <h4>Getting Started with Captum Insights:</h4>
                 This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision
                 CNN model is loaded and then used on the CIFAR dataset.  Captum Insights is then loaded to visualize the interpretation of specific examples.
                 Find the tutorial <a href="CIFAR_TorchVision_Captum_Insights">here</a>.
+
+                <h4>Using Captum Insights with multimodal models (VQA):</h4>
+                This tutorial demonstrates how to use Captum Insights for visualizing attributions of a multimodal model, particularly an open
+                source Visual Question Answer (VQA) model.
+                Find the tutorial <a href="Multimodal_VQA_Captum_Insights">here</a>.
+
               </p>
             </body>
           </div>

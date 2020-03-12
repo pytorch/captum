@@ -3,10 +3,8 @@ from typing import List, Tuple
 
 import torch
 from torch import Tensor
-from captum.attr._core.feature_permutation import (
-    FeaturePermutation,
-    _permute_feature,
-)
+
+from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
 
 from .helpers.basic_models import BasicModelWithSparseInputs
 from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
@@ -141,8 +139,8 @@ class Test(BaseTest):
         self.assertTrue((attribs[0] != 0).all())
         self.assertTrue((attribs[1][:, :, 0] != 0).all())
 
-    def test_mulitple_ablations_per_eval(self) -> None:
-        ablations_per_eval = 4
+    def test_mulitple_perturbations_per_eval(self) -> None:
+        perturbations_per_eval = 4
         batch_size = 2
         input_size = (4,)
 
@@ -155,7 +153,7 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(forward_func=forward_func)
 
         attribs = feature_importance.attribute(
-            inp, ablations_per_eval=ablations_per_eval, target=target
+            inp, perturbations_per_eval=perturbations_per_eval, target=target
         )
         self.assertTrue(attribs.size() == (batch_size,) + input_size)
 

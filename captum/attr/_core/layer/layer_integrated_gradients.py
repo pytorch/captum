@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+import typing
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
 from torch import Tensor
-
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
-    _tensorize_baseline,
-    _validate_input,
+    _extract_device,
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
-    _extract_device,
+    _tensorize_baseline,
+    _validate_input,
 )
-
-from captum.attr._utils.gradient import _forward_layer_eval
-
-from captum.attr._utils.attribution import LayerAttribution, GradientAttribution
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._utils.gradient import _run_forward
+from captum.attr._utils.gradient import _forward_layer_eval, _run_forward
+from captum.attr._utils.typing import BaselineType, Literal, TargetType
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
@@ -47,7 +46,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         self,
         forward_func: Callable,
         layer: Module,
-        device_ids: Optional[List[int]] = None,
+        device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
@@ -70,19 +69,46 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
         self.ig = IntegratedGradients(forward_func)
 
+    @typing.overload
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Union[None, int] = None,
+        *,
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
+        ...
+
+    def attribute(
+        self,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
@@ -114,23 +140,23 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                          exactly the same dimensions as inputs or the first
+                          dimension is one and the remaining dimensions match
+                          with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
-                                be broadcasted for each input value in input tensor.
+                          be broadcasted for each input value in input tensor.
 
                         - a tuple of tensors or scalars, the baseline corresponding
-                            to each tensor in the inputs' tuple can be:
+                          to each tensor in the inputs' tuple can be:
                             - either a tensor with matching dimensions to
-                                corresponding tensor in the inputs' tuple
-                                or the first dimension is one and the remaining
-                                dimensions match with the corresponding
-                                input tensor.
+                              corresponding tensor in the inputs' tuple
+                              or the first dimension is one and the remaining
+                              dimensions match with the corresponding
+                              input tensor.
                             - or a scalar, corresponding to a tensor in the
-                                inputs' tuple. This scalar value is broadcasted
-                                for corresponding input tensor.
+                              inputs' tuple. This scalar value is broadcasted
+                              for corresponding input tensor.
 
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
@@ -144,21 +170,21 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -274,9 +300,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         def gradient_func(
             forward_fn: Callable,
             inputs: Union[Tensor, Tuple[Tensor, ...]],
-            target_ind: Optional[
-                Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-            ] = None,
+            target_ind: TargetType = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
             if self.device_ids is None:
@@ -307,7 +331,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     hook = self.layer.register_forward_hook(layer_forward_hook)
 
                 output = _run_forward(
-                    self.forward_func, additional_forward_args, target_ind,
+                    self.forward_func, tuple(), target_ind, additional_forward_args
                 )
                 hook.remove()
                 assert output[0].numel() == 1, (

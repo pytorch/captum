@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import List, Optional, Tuple, Union, Any
+from typing import Any, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -11,8 +11,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
@@ -20,9 +19,9 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.utils import (
+    BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
-    BaseTest,
 )
 
 
@@ -99,7 +98,7 @@ class Test(BaseTest):
         self,
         model: Module,
         target_layer: Module,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         test_neuron: Union[int, Tuple[int, ...]],
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
@@ -123,7 +122,7 @@ class Test(BaseTest):
         model: Module,
         output_layer: Module,
         test_input: Tensor,
-        baseline: Optional[Tensor] = None,
+        baseline: Union[None, Tensor] = None,
     ) -> None:
         out = model(test_input)
         input_attrib = IntegratedGradients(model)

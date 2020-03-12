@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
+from typing import Any, Callable, List, Tuple, Union
+
 import torch
+from torch import Tensor
+from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import (
-    _format_input,
+    _extract_device,
     _format_additional_forward_args,
     _format_attributions,
+    _format_input,
     _run_forward,
-    _extract_device,
 )
 from ..._utils.gradient import _forward_layer_eval
-
+from ..._utils.typing import BaselineType, TargetType
 from ..feature_ablation import FeatureAblation
 
 
 class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
-    def __init__(self, forward_func, layer, device_ids=None):
+    r"""
+    A perturbation based approach to computing layer attribution, involving
+    replacing values in the input / output of a layer with a given baseline /
+    reference, and computing the difference in output. By default, each
+    neuron (scalar input / output value) within the layer is replaced
+    independently.
+    Passing a layer mask allows grouping neurons to be
+    ablated together.
+    Each neuron in the group will be given the same attribution value
+    equal to the change in target as a result of ablating the entire neuron
+    group.
+    """
+
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Union[None, List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -41,26 +63,15 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
     def attribute(
         self,
-        inputs,
-        layer_baselines=None,
-        target=None,
-        additional_forward_args=None,
-        layer_mask=None,
-        attribute_to_layer_input=False,
-        ablations_per_eval=1,
-    ):
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
+        layer_baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        layer_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        attribute_to_layer_input: bool = False,
+        perturbations_per_eval: int = 1,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
-            A perturbation based approach to computing layer attribution, involving
-            replacing values in the input / output of a layer with a given baseline /
-            reference, and computing the difference in output. By default, each
-            neuron (scalar input / output value) within the layer is replaced
-            independently.
-            Passing a layer mask allows grouping neurons to be
-            ablated together.
-            Each neuron in the group will be given the same attribution value
-            equal to the change in target as a result of ablating the entire neuron
-            group.
-
             Args:
 
                 inputs (tensor or tuple of tensors):  Input for which layer
@@ -83,28 +94,28 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             use zero as the baseline for each neuron.
                             Default: None
                 target (int, tuple, tensor or list, optional):  Output indices for
-                            which difference is computed (for classification cases,
+                            which gradients are computed (for classification cases,
                             this is usually the target class).
                             If the network returns a scalar value per example,
                             no target index is necessary.
                             For general 2D outputs, targets can be either:
 
                             - a single integer or a tensor containing a single
-                                integer, which is applied to all input examples
+                              integer, which is applied to all input examples
 
                             - a list of integers or a 1D tensor, with length matching
-                                the number of examples in inputs (dim 0). Each integer
-                                is applied as the target for the corresponding example.
+                              the number of examples in inputs (dim 0). Each integer
+                              is applied as the target for the corresponding example.
 
                             For outputs with > 2 dimensions, targets can be either:
 
                             - A single tuple, which contains #output_dims - 1
-                                elements. This target index is applied to all examples.
+                              elements. This target index is applied to all examples.
 
                             - A list of tuples with length equal to the number of
-                                examples in inputs (dim 0), and each tuple containing
-                                #output_dims - 1 elements. Each tuple is applied as the
-                                target for the corresponding example.
+                              examples in inputs (dim 0), and each tuple containing
+                              #output_dims - 1 elements. Each tuple is applied as the
+                              target for the corresponding example.
 
                             Default: None
                 additional_forward_args (any, optional): If the forward function
@@ -146,15 +157,15 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                             attribute to the input or output, is a single tensor.
                             Support for multiple tensors will be added later.
                             Default: False
-                ablations_per_eval (int, optional): Allows ablation of multiple neuron
-                            (groups) to be processed simultaneously in one call
-                            to forward_fn.
+                perturbations_per_eval (int, optional): Allows ablation of multiple
+                            neuron (groups) to be processed simultaneously in one
+                            call to forward_fn.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
 
@@ -270,6 +281,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,
-                ablations_per_eval=ablations_per_eval,
+                perturbations_per_eval=perturbations_per_eval,
             )
-            return _format_attributions(is_layer_tuple, layer_attribs)
+            _attr = _format_attributions(is_layer_tuple, layer_attribs)
+        return _attr

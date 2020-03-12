@@ -1,17 +1,35 @@
 #!/usr/bin/env python3
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
 
-from ..._utils.attribution import NeuronAttribution, GradientAttribution
+from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensors
-from ..guided_backprop_deconvnet import GuidedBackprop, Deconvolution
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric
+from ..guided_backprop_deconvnet import Deconvolution, GuidedBackprop
 
 
 class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
+    r"""
+    Computes attribution of the given neuron using deconvolution.
+    Deconvolution computes the gradient of the target output with
+    respect to the input, but gradients of ReLU functions are overridden so
+    that the gradient of the ReLU input is simply computed taking ReLU of
+    the output gradient, essentially only propagating non-negative gradients
+    (without dependence on the sign of the ReLU input).
+
+    More details regarding the deconvolution algorithm can be found
+    in these papers:
+    https://arxiv.org/abs/1311.2901
+    https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+        self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
         r"""
         Args:
@@ -38,28 +56,12 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        Computes attribution of the given neuron using deconvolution.
-        Deconvolution computes the gradient of the target output with
-        respect to the input, but gradients of ReLU functions are overriden so
-        that the gradient of the ReLU input is simply computed taking ReLU of
-        the output gradient, essentially only propagating non-negative gradients
-        (without dependence on the sign of the ReLU input).
-
-        More details regarding the deconvolution algorithm can be found
-        in these papers:
-        https://arxiv.org/abs/1311.2901
-        https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overriden appropriately.
-
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -137,8 +139,23 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
 
 
 class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
+    r"""
+    Computes attribution of the given neuron using guided backpropagation.
+    Guided backpropagation computes the gradient of the target neuron
+    with respect to the input, but gradients of ReLU functions are overridden
+    so that only non-negative gradients are backpropagated.
+
+    More details regarding the guided backpropagation algorithm can be found
+    in the original paper here:
+    https://arxiv.org/abs/1412.6806
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(
-        self, model: Module, layer: Module, device_ids: Optional[List[int]] = None
+        self, model: Module, layer: Module, device_ids: Union[None, List[int]] = None
     ) -> None:
         r"""
         Args:
@@ -162,25 +179,12 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         neuron_index: Union[int, Tuple[int, ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        Computes attribution of the given neuron using guided backpropagation.
-        Guided backpropagation computes the gradient of the target neuron
-        with respect to the input, but gradients of ReLU functions are overriden
-        so that only non-negative gradients are backpropagated.
-
-        More details regarding the guided backpropagation algorithm can be found
-        in the original paper here:
-        https://arxiv.org/abs/1412.6806
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overriden appropriately.
-
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which

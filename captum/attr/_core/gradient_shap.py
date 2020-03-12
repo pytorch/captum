@@ -1,20 +1,64 @@
 #!/usr/bin/env python3
-import torch
+import typing
+from typing import Any, Callable, Tuple, Union
 
 import numpy as np
+import torch
 
 from .._utils.attribution import GradientAttribution
 from .._utils.common import (
-    _format_input_baseline,
-    _format_callable_baseline,
     _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
+    _is_tuple,
 )
-
+from .._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    Tensor,
+    TensorOrTupleOfTensorsGeneric,
+)
 from .noise_tunnel import NoiseTunnel
 
 
 class GradientShap(GradientAttribution):
-    def __init__(self, forward_func):
+    r"""
+    Implements gradient SHAP based on the implementation from SHAP's primary
+    author. For reference, please, view:
+
+    https://github.com/slundberg/shap\
+    #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
+
+    A Unified Approach to Interpreting Model Predictions
+    http://papers.nips.cc/paper\
+    7062-a-unified-approach-to-interpreting-model-predictions
+
+    GradientShap approximates SHAP values by computing the expectations of
+    gradients by randomly sampling from the distribution of baselines/references.
+    It adds white noise to each input sample `n_samples` times, selects a
+    random baseline from baselines' distribution and a random point along the
+    path between the baseline and the input, and computes the gradient of outputs
+    with respect to those selected random points. The final SHAP values represent
+    the expected values of gradients * (inputs - baselines).
+
+    GradientShap makes an assumption that the input features are independent
+    and that the explanation model is linear, meaning that the explanations
+    are modeled through the additive composition of feature effects.
+    Under those assumptions, SHAP value can be approximated as the expectation
+    of gradients that are computed for randomly generated `n_samples` input
+    samples after adding gaussian noise `n_samples` times to each input for
+    different baselines/references.
+
+    In some sense it can be viewed as an approximation of integrated gradients
+    by computing the expectations of gradients for different baselines.
+
+    Current implementation uses Smoothgrad from `NoiseTunnel` in order to
+    randomly draw samples from the distribution of baselines, add noise to input
+    samples and compute the expectation (smoothgrad).
+    """
+
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -23,50 +67,52 @@ class GradientShap(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @typing.overload
     def attribute(
         self,
-        inputs,
-        baselines,
-        n_samples=5,
-        stdevs=0.0,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
+
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: Union[
+            TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
+        ],
+        n_samples: int = 5,
+        stdevs: Union[float, Tuple[float, ...]] = 0.0,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
-        Implements gradient SHAP based on the implementation from SHAP's primary
-        author. For reference, please, view:
-
-        https://github.com/slundberg/shap\
-        #deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models
-
-        A Unified Approach to Interpreting Model Predictions
-        http://papers.nips.cc/paper\
-        7062-a-unified-approach-to-interpreting-model-predictions
-
-        GradientShap approximates SHAP values by computing the expectations of
-        gradients by randomly sampling from the distribution of baselines/references.
-        It adds white noise to each input sample `n_samples` times, selects a
-        random baseline from baselines' distribution and a random point along the
-        path between the baseline and the input, and computes the gradient of outputs
-        with respect to those selected random points. The final SHAP values represent
-        the expected values of gradients * (inputs - baselines).
-
-        GradientShap makes an assumption that the input features are independent
-        and that the explanation model is linear, meaning that the explanations
-        are modeled through the additive composition of feature effects.
-        Under those assumptions, SHAP value can be approximated as the expectation
-        of gradients that are computed for randomly generated `n_samples` input
-        samples after adding gaussian noise `n_samples` times to each input for
-        different baselines/references.
-
-        In some sense it can be viewed as an approximation of integrated gradients
-        by computing the expectations of gradients for different baselines.
-
-        Current implementation uses Smoothgrad from `NoiseTunnel` in order to
-        randomly draw samples from the distribution of baselines, add noise to input
-        samples and compute the expectation (smoothgrad).
-
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which SHAP attribution
@@ -82,21 +128,21 @@ class GradientShap(GradientAttribution):
                         is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            the first dimension equal to the number of examples
-                            in the baselines' distribution. The remaining dimensions
-                            must match with input tensor's dimension starting from
-                            the second dimension.
+                          the first dimension equal to the number of examples
+                          in the baselines' distribution. The remaining dimensions
+                          must match with input tensor's dimension starting from
+                          the second dimension.
 
                         - a tuple of tensors, if inputs is a tuple of tensors,
-                            with the first dimension of any tensor inside the tuple
-                            equal to the number of examples in the baseline's
-                            distribution. The remaining dimensions must match
-                            the dimensions of the corresponding input tensor
-                            starting from the second dimension.
+                          with the first dimension of any tensor inside the tuple
+                          equal to the number of examples in the baseline's
+                          distribution. The remaining dimensions must match
+                          the dimensions of the corresponding input tensor
+                          starting from the second dimension.
 
                         - callable function, optionally takes `inputs` as an
-                            argument and either returns a single tensor
-                            or a tuple of those.
+                          argument and either returns a single tensor
+                          or a tuple of those.
 
                         It is recommended that the number of samples in the baselines'
                         tensors is larger than one.
@@ -121,21 +167,21 @@ class GradientShap(GradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -177,19 +223,19 @@ class GradientShap(GradientAttribution):
                         The deltas are ordered by each input example and `n_samples`
                         noisy samples generated for it.
 
-            Examples::
+        Examples::
 
-                >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-                >>> # and returns an Nx10 tensor of class probabilities.
-                >>> net = ImageClassifier()
-                >>> gradient_shap = GradientShap(net)
-                >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
-                >>> # choosing baselines randomly
-                >>> baselines = torch.randn(20, 3, 32, 32)
-                >>> # Computes gradient shap for the input
-                >>> # Attribution size matches input size: 3x3x32x32
-                >>> attribution = gradient_shap.attribute(input, baselines,
-                                                                 target=5)
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> net = ImageClassifier()
+            >>> gradient_shap = GradientShap(net)
+            >>> input = torch.randn(3, 3, 32, 32, requires_grad=True)
+            >>> # choosing baselines randomly
+            >>> baselines = torch.randn(20, 3, 32, 32)
+            >>> # Computes gradient shap for the input
+            >>> # Attribution size matches input size: 3x3x32x32
+            >>> attribution = gradient_shap.attribute(input, baselines,
+                                                                target=5)
 
         """
         # since `baselines` is a distribution, we can generate it using a function
@@ -219,12 +265,12 @@ class GradientShap(GradientAttribution):
 
         return attributions
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
 
 class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -233,17 +279,42 @@ class InputBaselineXGradient(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @typing.overload
     def attribute(
         self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        ...
+
+    def attribute(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs, baselines = _format_input_baseline(inputs, baselines)
 
         rand_coefficient = torch.tensor(
@@ -253,7 +324,7 @@ class InputBaselineXGradient(GradientAttribution):
         )
 
         input_baseline_scaled = tuple(
-            self._scale_input(input, baseline, rand_coefficient)
+            _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
         grads = self.gradient_func(
@@ -279,19 +350,22 @@ class InputBaselineXGradient(GradientAttribution):
             is_inputs_tuple,
         )
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
-    def _scale_input(self, input, baseline, rand_coefficient):
-        # batch size
-        bsz = input.shape[0]
-        inp_shape_wo_bsz = input.shape[1:]
-        inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
 
-        # expand and reshape the indices
-        rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+def _scale_input(
+    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor,
+) -> Tensor:
+    # batch size
+    bsz = input.shape[0]
+    inp_shape_wo_bsz = input.shape[1:]
+    inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
 
-        input_baseline_scaled = (
-            rand_coefficient * input + (1 - rand_coefficient) * baseline
-        )
-        return input_baseline_scaled
+    # expand and reshape the indices
+    rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+
+    input_baseline_scaled = (
+        rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
+    )
+    return input_baseline_scaled

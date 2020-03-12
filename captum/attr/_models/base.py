@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import torch
-
 import warnings
-
 from functools import reduce
+
+import torch
 from torch.nn import Module
 
 

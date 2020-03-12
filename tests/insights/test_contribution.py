@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Union
 
 import torch
 import torch.nn as nn
+
 from captum.insights import AttributionVisualizer, Batch, FilterConfig
 from captum.insights.features import BaseFeature, FeatureOutput, ImageFeature
 from tests.attr.helpers.utils import BaseTest
@@ -16,7 +17,7 @@ class RealFeature(BaseFeature):
         name: str,
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
-        visualization_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        visualization_transforms: Union[None, Callable, List[Callable]] = None,
     ):
         super().__init__(
             name,

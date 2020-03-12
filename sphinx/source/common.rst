@@ -10,5 +10,3 @@ Captum.Utils
 .. autofunction:: zeros
 .. autofunction:: _reshape_and_sum
 .. autofunction:: _run_forward
-.. autoclass:: MaxList
-    :members:

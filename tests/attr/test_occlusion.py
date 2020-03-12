@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-from typing import Callable, Union, Tuple, List, Optional, Any
 import unittest
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import TensorOrTupleOfTensors
+from captum.attr._utils.typing import (
+    BaselineType,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 from .helpers.basic_models import (
     BasicModel3,
@@ -14,7 +18,7 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from .helpers.utils import assertTensorAlmostEqual, BaseTest
+from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
@@ -95,7 +99,7 @@ class Test(BaseTest):
             net,
             inp,
             [80.0, 200.0, 120.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,)),
         )
 
@@ -155,7 +159,7 @@ class Test(BaseTest):
             net,
             inp,
             [200.0, 220.0, 240.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             baselines=torch.tensor([10.0, 10.0, 10.0]),
         )
@@ -167,7 +171,7 @@ class Test(BaseTest):
             net,
             inp,
             [280.0, 280.0, 120.0],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((2,)),
             strides=2,
         )
@@ -179,7 +183,7 @@ class Test(BaseTest):
             net,
             inp,
             [[8.0, 35.0, 12.0], [80.0, 200.0, 120.0]],
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((1,),),
         )
 
@@ -205,7 +209,7 @@ class Test(BaseTest):
             (inp1, inp2),
             expected[0:1],
             additional_input=(inp3, 1),
-            ablations_per_eval=(1, 2, 3),
+            perturbations_per_eval=(1, 2, 3),
             sliding_window_shapes=((3,), (1,)),
         )
 
@@ -241,7 +245,7 @@ class Test(BaseTest):
             net,
             (inp, inp2),
             (67 * torch.ones_like(inp), 13 * torch.ones_like(inp2)),
-            ablations_per_eval=(1, 2, 4, 8, 12, 16),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
             sliding_window_shapes=((1, 4, 4), (1, 4, 4)),
         )
         self._occlusion_test_assert(
@@ -261,7 +265,7 @@ class Test(BaseTest):
                     [0.0, 0.0, 0.0, 0.0],
                 ],
             ),
-            ablations_per_eval=(1, 3, 7, 14),
+            perturbations_per_eval=(1, 3, 7, 14),
             sliding_window_shapes=((1, 2, 3), (1, 1, 2)),
             strides=((1, 2, 1), (1, 1, 2)),
         )
@@ -269,7 +273,7 @@ class Test(BaseTest):
     def _occlusion_test_assert(
         self,
         model: Callable,
-        test_input: TensorOrTupleOfTensors,
+        test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
             float,
             List[float],
@@ -277,17 +281,13 @@ class Test(BaseTest):
             Tuple[Union[Tensor, List[float], List[List[float]]], ...],
         ],
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = 0,
+        target: TargetType = 0,
         additional_input: Any = None,
-        ablations_per_eval: Tuple[int, ...] = (1,),
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        strides: Optional[Union[int, Tuple[Union[int, Tuple[int, ...]], ...]]] = None,
+        perturbations_per_eval: Tuple[int, ...] = (1,),
+        baselines: BaselineType = None,
+        strides: Union[None, int, Tuple[Union[int, Tuple[int, ...]], ...]] = None,
     ) -> None:
-        for batch_size in ablations_per_eval:
+        for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)
             attributions = ablation.attribute(
                 test_input,
@@ -295,7 +295,7 @@ class Test(BaseTest):
                 target=target,
                 additional_forward_args=additional_input,
                 baselines=baselines,
-                ablations_per_eval=batch_size,
+                perturbations_per_eval=batch_size,
                 strides=strides,
             )
             if isinstance(expected_ablation, tuple):

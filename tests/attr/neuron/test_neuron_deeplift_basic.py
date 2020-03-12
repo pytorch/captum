@@ -2,20 +2,20 @@
 
 from __future__ import print_function
 
-import torch
+from typing import Tuple, Union
 
-from ..helpers.utils import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import ReLULinearDeepLiftModel
+import torch
+from torch import Tensor
 
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
+
+from ..helpers.basic_models import ReLULinearDeepLiftModel
+from ..helpers.utils import BaseTest, assertTensorAlmostEqual
 from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
-
-from typing import Optional, Tuple, Union
-from torch import Tensor
-from captum.attr._utils.typing import TensorOrTupleOfTensors
 
 
 class Test(BaseTest):
@@ -121,16 +121,14 @@ class Test(BaseTest):
     def _relu_custom_attr_func_assert(
         self,
         attr_method: Union[NeuronDeepLift, NeuronDeepLiftShap],
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ],
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines,
         expected,
     ) -> None:
         def custom_attr_func(
             multipliers: Tuple[Tensor, ...],
             inputs: Tuple[Tensor, ...],
-            baselines: Optional[Tuple[Union[Tensor, int, float], ...]] = None,
+            baselines: Union[None, Tuple[Union[Tensor, int, float], ...]] = None,
         ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 

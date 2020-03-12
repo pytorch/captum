@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from typing import Callable
+from typing import Any, Callable, List, Tuple, Type, Union, cast
 
 import torch
 import torch.nn.functional as F
+from torch import Tensor
+from torch.nn import Module
 
 from .common import (
     _format_additional_forward_args,
@@ -14,9 +16,7 @@ from .common import (
     _validate_target,
 )
 from .gradient import compute_gradients
-
-from torch import Tensor
-from typing import Union, Tuple
+from .typing import TargetType
 
 
 class Attribution:
@@ -25,7 +25,7 @@ class Attribution:
     to extend and override core `attribute` method.
     """
 
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
             forward_func (callable or torch.nn.Module): This can either be an instance
@@ -64,7 +64,7 @@ class Attribution:
 
     """
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         r"""
         This method informs the user whether the attribution algorithm provides
         a convergence delta (aka an approximation error) or not. Convergence
@@ -81,42 +81,39 @@ class Attribution:
         """
         return False
 
-    def compute_convergence_delta(self, attributions, *args):
-        r"""
-        The attribution algorithms which derive `Attribution` class and provide
-        convergence delta (aka approximation error) should implement this method.
-        Convergence delta can be computed based on certain properties of the
-        attribution alogrithms.
+    compute_convergence_delta: Callable
+    r"""
+    The attribution algorithms which derive `Attribution` class and provide
+    convergence delta (aka approximation error) should implement this method.
+    Convergence delta can be computed based on certain properties of the
+    attribution alogrithms.
 
-        Args:
+    Args:
 
-                attributions (tensor or tuple of tensors): Attribution scores that
-                            are precomputed by an attribution algorithm.
-                            Attributions can be provided in form of a single tensor
-                            or a tuple of those. It is assumed that attribution
-                            tensor's dimension 0 corresponds to the number of
-                            examples, and if multiple input tensors are provided,
-                            the examples must be aligned appropriately.
-                *args (optional): Additonal arguments that are used by the
-                            sub-classes depending on the specific implementation
-                            of `compute_convergence_delta`.
+            attributions (tensor or tuple of tensors): Attribution scores that
+                        are precomputed by an attribution algorithm.
+                        Attributions can be provided in form of a single tensor
+                        or a tuple of those. It is assumed that attribution
+                        tensor's dimension 0 corresponds to the number of
+                        examples, and if multiple input tensors are provided,
+                        the examples must be aligned appropriately.
+            *args (optional): Additonal arguments that are used by the
+                        sub-classes depending on the specific implementation
+                        of `compute_convergence_delta`.
 
-        Returns:
+    Returns:
 
-                *tensor* of **deltas**:
-                - **deltas** (*tensor*):
-                    Depending on specific implementaion of
-                    sub-classes, convergence delta can be returned per
-                    sample in form of a tensor or it can be aggregated
-                    across multuple samples and returned in form of a
-                    single floating point tensor.
-        """
-        raise NotImplementedError(
-            "Deriving sub-class should implement" " compute_convergence_delta method"
-        )
+            *tensor* of **deltas**:
+            - **deltas** (*tensor*):
+                Depending on specific implementaion of
+                sub-classes, convergence delta can be returned per
+                sample in form of a tensor or it can be aggregated
+                across multuple samples and returned in form of a
+                single floating point tensor.
+    """
 
     @classmethod
-    def get_name(cls):
+    def get_name(cls: Type["Attribution"]) -> str:
         r"""
         Create readable class name by inserting a space before any capital
         characters besides the very first.
@@ -142,7 +139,7 @@ class GradientAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -155,12 +152,14 @@ class GradientAttribution(Attribution):
 
     def compute_convergence_delta(
         self,
-        attributions,
-        start_point,
-        end_point,
-        target=None,
-        additional_forward_args=None,
-    ):
+        attributions: Union[Tensor, Tuple[Tensor, ...]],
+        start_point: Union[
+            None, int, float, Tensor, Tuple[Union[int, float, Tensor], ...]
+        ],
+        end_point: Union[Tensor, Tuple[Tensor, ...]],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+    ) -> Tensor:
         r"""
         Here we provide a specific implementation for `compute_convergence_delta`
         which is based on a common property among gradient-based attribution algorithms.
@@ -204,21 +203,21 @@ class GradientAttribution(Attribution):
                             For general 2D outputs, targets can be either:
 
                             - a single integer or a tensor containing a single
-                                integer, which is applied to all input examples
+                              integer, which is applied to all input examples
 
                             - a list of integers or a 1D tensor, with length matching
-                                the number of examples in inputs (dim 0). Each integer
-                                is applied as the target for the corresponding example.
+                              the number of examples in inputs (dim 0). Each integer
+                              is applied as the target for the corresponding example.
 
                             For outputs with > 2 dimensions, targets can be either:
 
                             - A single tuple, which contains #output_dims - 1
-                                elements. This target index is applied to all examples.
+                              elements. This target index is applied to all examples.
 
                             - A list of tuples with length equal to the number of
-                                examples in inputs (dim 0), and each tuple containing
-                                #output_dims - 1 elements. Each tuple is applied as the
-                                target for the corresponding example.
+                              examples in inputs (dim 0), and each tuple containing
+                              #output_dims - 1 elements. Each tuple is applied as the
+                              target for the corresponding example.
 
                             Default: None
                 additional_forward_args (any, optional): If the forward function
@@ -268,24 +267,27 @@ class GradientAttribution(Attribution):
         _validate_input(end_point, start_point)
         _validate_target(num_samples, target)
 
-        def _sum_rows(input):
+        def _sum_rows(input: Tensor) -> Tensor:
             return input.view(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
-            start_point = _sum_rows(
+            start_out_sum = _sum_rows(
                 _run_forward(
                     self.forward_func, start_point, target, additional_forward_args
                 )
             )
 
-            end_point = _sum_rows(
+            end_out_sum = _sum_rows(
                 _run_forward(
                     self.forward_func, end_point, target, additional_forward_args
                 )
             )
             row_sums = [_sum_rows(attribution) for attribution in attributions]
-            attr_sum = torch.stack([sum(row_sum) for row_sum in zip(*row_sums)])
-            return attr_sum - (end_point - start_point)
+            attr_sum = torch.stack(
+                [cast(Tensor, sum(row_sum)) for row_sum in zip(*row_sums)]
+            )
+            _delta = attr_sum - (end_out_sum - start_out_sum)
+        return _delta
 
 
 class PerturbationAttribution(Attribution):
@@ -295,7 +297,7 @@ class PerturbationAttribution(Attribution):
     that we want to interpret or the model itself.
     """
 
-    def __init__(self, forward_func):
+    def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
 
@@ -312,7 +314,12 @@ class InternalAttribution(Attribution):
     attribution types that require a model and a particular layer.
     """
 
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Union[None, List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -340,7 +347,12 @@ class LayerAttribution(InternalAttribution):
     the size of the layer output.
     """
 
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Union[None, List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -396,16 +408,21 @@ class LayerAttribution(InternalAttribution):
 
 class NeuronAttribution(InternalAttribution):
     r"""
-        Neuron attribution provides input attribution for a given neuron, quanitfying
-        the importance of each input feature in the activation of a particular neuron.
-        Calling attribute on a NeuronAttribution object requires also providing
-        the index of the neuron in the output of the given layer for which attributions
-        are required.
-        The output attribution of calling attribute on a NeuronAttribution object
-        always matches the size of the input.
+    Neuron attribution provides input attribution for a given neuron, quanitfying
+    the importance of each input feature in the activation of a particular neuron.
+    Calling attribute on a NeuronAttribution object requires also providing
+    the index of the neuron in the output of the given layer for which attributions
+    are required.
+    The output attribution of calling attribute on a NeuronAttribution object
+    always matches the size of the input.
     """
 
-    def __init__(self, forward_func, layer, device_ids=None):
+    def __init__(
+        self,
+        forward_func: Callable,
+        layer: Module,
+        device_ids: Union[None, List[int]] = None,
+    ) -> None:
         r"""
         Args:
 
@@ -422,29 +439,29 @@ class NeuronAttribution(InternalAttribution):
         """
         InternalAttribution.__init__(self, forward_func, layer, device_ids)
 
-        attribute: Callable
-        r"""
-        This method computes and returns the neuron attribution values for each
-        input tensor. Deriving classes are responsible for implementing
-        its logic accordingly.
+    attribute: Callable
+    r"""
+    This method computes and returns the neuron attribution values for each
+    input tensor. Deriving classes are responsible for implementing
+    its logic accordingly.
 
-        Specific attribution algorithms that extend this class take relevant
-        arguments.
+    Specific attribution algorithms that extend this class take relevant
+    arguments.
 
-        Args:
+    Args:
 
-                inputs:     A single high dimensional input tensor or a tuple of them.
-                neuron_index (int or tuple): Tuple providing index of neuron in output
-                        of given layer for which attribution is desired. Length of
-                        this tuple must be one less than the number of
-                        dimensions in the output of the given layer (since
-                        dimension 0 corresponds to number of examples).
+            inputs:     A single high dimensional input tensor or a tuple of them.
+            neuron_index (int or tuple): Tuple providing index of neuron in output
+                    of given layer for which attribution is desired. Length of
+                    this tuple must be one less than the number of
+                    dimensions in the output of the given layer (since
+                    dimension 0 corresponds to number of examples).
 
-        Returns:
+    Returns:
 
-                *tensor* or tuple of *tensors* of **attributions**:
-                - **attributions** (*tensor* or tuple of *tensors*):
-                        Attribution values for
-                        each input vector. The `attributions` have the
-                        dimensionality of inputs.
-        """
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                    Attribution values for
+                    each input vector. The `attributions` have the
+                    dimensionality of inputs.
+    """

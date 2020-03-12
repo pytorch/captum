@@ -1,21 +1,40 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Any, Callable, Tuple, Union
 
+import numpy as np
 import torch
 from torch import Tensor
-import numpy as np
 
 from .._utils.common import (
-    _format_input,
-    _format_and_verify_strides,
     _format_and_verify_sliding_window_shapes,
+    _format_and_verify_strides,
+    _format_input,
 )
-from .._utils.typing import TensorOrTupleOfTensors
-
+from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .feature_ablation import FeatureAblation
 
 
 class Occlusion(FeatureAblation):
+    r"""
+    A perturbation based approach to compute attribution, involving
+    replacing each contiguous rectangular region with a given baseline /
+    reference, and computing the difference in output. For features located
+    in multiple regions (hyperrectangles), the corresponding output differences
+    are averaged to compute the attribution for that feature.
+
+    The first patch is applied with the corner aligned with all indices 0,
+    and strides are applied until the entire dimension range is covered. Note
+    that this may cause the final patch applied in a direction to be cut-off
+    and thus smaller than the target occlusion shape.
+
+    More details regarding the occlusion (or grey-box / sliding window)
+    method can be found in the original paper and in the DeepExplain
+    implementation.
+    https://arxiv.org/abs/1311.2901
+    https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\
+    /tensorflow/methods.py#L401
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -28,39 +47,17 @@ class Occlusion(FeatureAblation):
 
     def attribute(  # type: ignore
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: TensorOrTupleOfTensorsGeneric,
         sliding_window_shapes: Union[Tuple[int, ...], Tuple[Tuple[int, ...], ...]],
-        strides: Optional[
-            Union[int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]]
+        strides: Union[
+            None, int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]
         ] = None,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-        ablations_per_eval: int = 1,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        A perturbation based approach to computing attribution, involving
-        replacing each contiguous rectangular region with a given baseline /
-        reference, and computing the difference in output. For features located
-        in multiple regions (hyperrectangles), the corresponding output differences
-        are averaged to compute the attribution for that feature.
-
-        The first patch is applied with the corner aligned with all indices 0,
-        and strides are applied until the entire dimension range is covered. Note
-        that this may cause the final patch applied in a direction to be cut-off
-        and thus smaller than the target occlusion shape.
-
-        More details regarding the occlusion (or grey-box / sliding window)
-        method can be found in the original paper and in the DeepExplain
-        implementation.
-        https://arxiv.org/abs/1311.2901
-        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain\
-        /tensorflow/methods.py#L401
-
+        perturbations_per_eval: int = 1,
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
                 inputs (tensor or tuple of tensors):  Input for which occlusion
@@ -105,19 +102,26 @@ class Occlusion(FeatureAblation):
                             Baselines define reference value which replaces each
                             feature when occluded.
                             Baselines can be provided as:
+
                             - a single tensor, if inputs is a single tensor, with
-                                exactly the same dimensions as inputs or
-                                broadcastable to match the dimensions of inputs
+                              exactly the same dimensions as inputs or
+                              broadcastable to match the dimensions of inputs
+
                             - a single scalar, if inputs is a single tensor, which will
-                                be broadcasted for each input value in input tensor.
+                              be broadcasted for each input value in input tensor.
+
                             - a tuple of tensors or scalars, the baseline corresponding
-                                to each tensor in the inputs' tuple can be:
-                                - either a tensor with
-                                    exactly the same dimensions as inputs or
-                                    broadcastable to match the dimensions of inputs
-                                - or a scalar, corresponding to a tensor in the
-                                    inputs' tuple. This scalar value is broadcasted
-                                    for corresponding input tensor.
+                              to each tensor in the inputs' tuple can be:
+
+                              - either a tensor with matching dimensions to
+                                corresponding tensor in the inputs' tuple
+                                or the first dimension is one and the remaining
+                                dimensions match with the corresponding
+                                input tensor.
+
+                              - or a scalar, corresponding to a tensor in the
+                                inputs' tuple. This scalar value is broadcasted
+                                for corresponding input tensor.
                             In the cases when `baselines` is not provided, we internally
                             use zero scalar corresponding to each input tensor.
                             Default: None
@@ -129,21 +133,21 @@ class Occlusion(FeatureAblation):
                             For general 2D outputs, targets can be either:
 
                             - a single integer or a tensor containing a single
-                                integer, which is applied to all input examples
+                              integer, which is applied to all input examples
 
                             - a list of integers or a 1D tensor, with length matching
-                                the number of examples in inputs (dim 0). Each integer
-                                is applied as the target for the corresponding example.
+                              the number of examples in inputs (dim 0). Each integer
+                              is applied as the target for the corresponding example.
 
                             For outputs with > 2 dimensions, targets can be either:
 
                             - A single tuple, which contains #output_dims - 1
-                                elements. This target index is applied to all examples.
+                              elements. This target index is applied to all examples.
 
                             - A list of tuples with length equal to the number of
-                                examples in inputs (dim 0), and each tuple containing
-                                #output_dims - 1 elements. Each tuple is applied as the
-                                target for the corresponding example.
+                              examples in inputs (dim 0), and each tuple containing
+                              #output_dims - 1 elements. Each tuple is applied as the
+                              target for the corresponding example.
 
                             Default: None
                 additional_forward_args (any, optional): If the forward function
@@ -161,16 +165,16 @@ class Occlusion(FeatureAblation):
                             Note that attributions are not computed with respect
                             to these arguments.
                             Default: None
-                ablations_per_eval (int, optional): Allows multiple occlusions
+                perturbations_per_eval (int, optional): Allows multiple occlusions
                             to be included in one batch (one call to forward_fn).
-                            By default, ablations_per_eval is 1, so each occlusion
+                            By default, perturbations_per_eval is 1, so each occlusion
                             is processed individually.
                             Each forward pass will contain a maximum of
-                            ablations_per_eval * #examples samples.
+                            perturbations_per_eval * #examples samples.
                             For DataParallel models, each batch is split among the
                             available devices, so evaluations on each available
                             device contain at most
-                            (ablations_per_eval * #examples) / num_devices
+                            (perturbations_per_eval * #examples) / num_devices
                             samples.
                             Default: 1
 
@@ -247,7 +251,7 @@ class Occlusion(FeatureAblation):
             baselines=baselines,
             target=target,
             additional_forward_args=additional_forward_args,
-            ablations_per_eval=ablations_per_eval,
+            perturbations_per_eval=perturbations_per_eval,
             sliding_window_tensors=sliding_window_tensors,
             shift_counts=tuple(shift_counts),
             strides=strides,
@@ -256,7 +260,7 @@ class Occlusion(FeatureAblation):
     def _construct_ablated_input(
         self,
         expanded_input: Tensor,
-        input_mask: Optional[Tensor],
+        input_mask: Union[None, Tensor],
         baseline: Union[Tensor, int, float],
         start_feature: int,
         end_feature: int,

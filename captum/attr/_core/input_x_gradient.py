@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-from typing import Callable, List, Optional, Tuple, Union, Any
-from torch import Tensor
+from typing import Any, Callable
 
-from .._utils.common import _format_input, _format_attributions
 from .._utils.attribution import GradientAttribution
+from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class InputXGradient(GradientAttribution):
+    r"""
+    A baseline approach for computing the attribution. It multiplies input with
+    the gradient with respect to input.
+    https://arxiv.org/abs/1611.07270
+    """
+
     def __init__(self, forward_func: Callable) -> None:
         r"""
         Args:
@@ -20,17 +25,11 @@ class InputXGradient(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        A baseline approach for computing the attribution. It multiplies input with
-        the gradient with respect to input.
-        https://arxiv.org/abs/1611.07270
-
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -50,21 +49,21 @@ class InputXGradient(GradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -105,7 +104,7 @@ class InputXGradient(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)

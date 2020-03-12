@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import Any, Callable, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from .._utils.approximation_methods import approximation_parameters
+from .._utils.attribution import GradientAttribution
 from .._utils.batching import _batched_operator
 from .._utils.common import (
-    _validate_input,
+    _expand_additional_forward_args,
+    _expand_target,
     _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
+    _is_tuple,
     _reshape_and_sum,
-    _expand_additional_forward_args,
-    _expand_target,
+    _validate_input,
 )
-from .._utils.attribution import GradientAttribution
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 
 class IntegratedGradients(GradientAttribution):
@@ -47,61 +53,51 @@ class IntegratedGradients(GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
 
     # The following overloaded method signatures correspond to the case where
-    # return_convergence_delta is not provided, then only attributions are returned,
-    # and when return_convergence_delta is provided, the return type is either
-    # just the attributions or a tuple with both attributions and deltas.
-    # Note that this doesn't explicitly type the case where return_convergence_delta
-    # is passed with the value False, the return type when return_convergence_delta is
-    # given is Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]].
-    # Supporting separate return types for True and False requires using the Literal
-    # type functionality, which is only available in Python 3.8. We plan to support
-    # this in the future.
+    # return_convergence_delta is False, then only attributions are returned,
+    # and when return_convergence_delta is True, the return type is
+    # a tuple with both attributions and deltas.
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
-    ) -> TensorOrTupleOfTensors:
+        internal_batch_size: Union[None, int] = None,
+        return_convergence_delta: Literal[False] = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        baselines: Optional[
-            Union[Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]
-        ] = None,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        internal_batch_size: Optional[int] = None,
+        internal_batch_size: Union[None, int] = None,
+        *,
+        return_convergence_delta: Literal[True],
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
+        ...
+
+    def attribute(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        internal_batch_size: Union[None, int] = None,
         return_convergence_delta: bool = False,
-    ) -> Union[TensorOrTupleOfTensors, Tuple[TensorOrTupleOfTensors, Tensor]]:
-        ...
-
-    def attribute(
-        self,
-        inputs,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-        n_steps=50,
-        method="gausslegendre",
-        internal_batch_size=None,
-        return_convergence_delta=False,
-    ):
+    ) -> Union[
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+    ]:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
@@ -126,24 +122,25 @@ class IntegratedGradients(GradientAttribution):
                         is computed and can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                          exactly the same dimensions as inputs or the first
+                          dimension is one and the remaining dimensions match
+                          with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
-                            be broadcasted for each input value in input tensor.
+                          be broadcasted for each input value in input tensor.
 
                         - a tuple of tensors or scalars, the baseline corresponding
-                            to each tensor in the inputs' tuple can be:
-                            - either a tensor with matching dimensions to
-                                corresponding tensor in the inputs' tuple
-                                or the first dimension is one and the remaining
-                                dimensions match with the corresponding
-                                input tensor.
-                            - or a scalar, corresponding to a tensor in the
-                                inputs' tuple. This scalar value is broadcasted
-                                for corresponding input tensor.
+                          to each tensor in the inputs' tuple can be:
 
+                          - either a tensor with matching dimensions to
+                            corresponding tensor in the inputs' tuple
+                            or the first dimension is one and the remaining
+                            dimensions match with the corresponding
+                            input tensor.
+
+                          - or a scalar, corresponding to a tensor in the
+                            inputs' tuple. This scalar value is broadcasted
+                            for corresponding input tensor.
                         In the cases when `baselines` is not provided, we internally
                         use zero scalar corresponding to each input tensor.
 
@@ -156,21 +153,21 @@ class IntegratedGradients(GradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -208,9 +205,9 @@ class IntegratedGradients(GradientAttribution):
                         Default: None
             return_convergence_delta (bool, optional): Indicates whether to return
                     convergence delta or not. If `return_convergence_delta`
-                        is set to True convergence delta will be returned in
-                        a tuple following attributions.
-                        Default: False
+                    is set to True convergence delta will be returned in
+                    a tuple following attributions.
+                    Default: False
         Returns:
             **attributions** or 2-element tuple of **attributions**, **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):
@@ -243,7 +240,7 @@ class IntegratedGradients(GradientAttribution):
         """
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import warnings
+from typing import Any, List, Tuple, Union
+
 import torch
 import torch.nn.functional as F
-from typing import Any, List, Union, Tuple, Optional
-
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_input, _format_attributions
+from .._utils.common import _format_attributions, _format_input, _is_tuple
 from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import TensorOrTupleOfTensors
+from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):
@@ -32,13 +32,11 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
-        r""""
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Computes attribution by overriding relu gradients. Based on constructor
         flag use_relu_grad_output, performs either GuidedBackpropagation if False
         and Deconvolution if True. This class is the parent class of both these
@@ -48,7 +46,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
 
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
@@ -96,6 +94,21 @@ class ModifiedReluGradientAttribution(GradientAttribution):
 
 
 class GuidedBackprop(ModifiedReluGradientAttribution):
+    r"""
+    Computes attribution using guided backpropagation. Guided backpropagation
+    computes the gradient of the target output with respect to the input,
+    but gradients of ReLU functions are overridden so that only
+    non-negative gradients are backpropagated.
+
+    More details regarding the guided backpropagation algorithm can be found
+    in the original paper here:
+    https://arxiv.org/abs/1412.6806
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(self, model: Module):
         r"""
         Args:
@@ -108,26 +121,11 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        Computes attribution using guided backpropagation. Guided backpropagation
-        computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overridden so that only
-        non-negative gradients are backpropagated.
-
-        More details regarding the guided backpropagation algorithm can be found
-        in the original paper here:
-        https://arxiv.org/abs/1412.6806
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overridden appropriately.
-
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -147,21 +145,21 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
@@ -201,6 +199,24 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
 
 
 class Deconvolution(ModifiedReluGradientAttribution):
+    r"""
+    Computes attribution using deconvolution. Deconvolution
+    computes the gradient of the target output with respect to the input,
+    but gradients of ReLU functions are overridden so that the gradient
+    of the ReLU input is simply computed taking ReLU of the output gradient,
+    essentially only propagating non-negative gradients (without
+    dependence on the sign of the ReLU input).
+
+    More details regarding the deconvolution algorithm can be found
+    in these papers:
+    https://arxiv.org/abs/1311.2901
+    https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
+
+    Warning: Ensure that all ReLU operations in the forward function of the
+    given model are performed using a module (nn.module.ReLU).
+    If nn.functional.ReLU is used, gradients are not overridden appropriately.
+    """
+
     def __init__(self, model: Module):
         r"""
         Args:
@@ -211,29 +227,11 @@ class Deconvolution(ModifiedReluGradientAttribution):
 
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensors,
-        target: Optional[
-            Union[int, Tuple[int, ...], Tensor, List[Tuple[int, ...]]]
-        ] = None,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
         additional_forward_args: Any = None,
-    ) -> TensorOrTupleOfTensors:
-        r""""
-        Computes attribution using deconvolution. Deconvolution
-        computes the gradient of the target output with respect to the input,
-        but gradients of ReLU functions are overridden so that the gradient
-        of the ReLU input is simply computed taking ReLU of the output gradient,
-        essentially only propagating non-negative gradients (without
-        dependence on the sign of the ReLU input).
-
-        More details regarding the deconvolution algorithm can be found
-        in these papers:
-        https://arxiv.org/abs/1311.2901
-        https://link.springer.com/chapter/10.1007/978-3-319-46466-4_8
-
-        Warning: Ensure that all ReLU operations in the forward function of the
-        given model are performed using a module (nn.module.ReLU).
-        If nn.functional.ReLU is used, gradients are not overridden appropriately.
-
+    ) -> TensorOrTupleOfTensorsGeneric:
+        r"""
         Args:
 
             inputs (tensor or tuple of tensors):  Input for which
@@ -253,21 +251,21 @@ class Deconvolution(ModifiedReluGradientAttribution):
                         For general 2D outputs, targets can be either:
 
                         - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                          integer, which is applied to all input examples
 
                         - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
                         For outputs with > 2 dimensions, targets can be either:
 
                         - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                          elements. This target index is applied to all examples.
 
                         - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
                         Default: None
             additional_forward_args (any, optional): If the forward function
