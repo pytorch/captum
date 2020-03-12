@@ -20,7 +20,7 @@ class ClassSummarizer:
     def __init__(self, stats: List[Stat]):
         self.stats = stats
         self.all_summary = Summarizer(stats=stats)
-        self.summaries = defaultdict(lambda: Summarizer(stats=stats))
+        self.summaries: Dict[Any, Summarizer] = defaultdict(lambda: Summarizer(stats=stats))
 
     def update(
         self,
