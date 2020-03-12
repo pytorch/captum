@@ -26,13 +26,13 @@ class ClassSummarizer:
 
         Args:
             x (Tensor):
-                The input tensor to be summarised. The first 
+                The input tensor to be summarised. The first
                 dimension of this input must be associated to
                 the amount of `labels` specified; unless there
                 is one labels represents one label (in that case
                 the first dimension can optionally be unsqueezed).
             labels (Any, List[Any], optional):
-                The associated labels for `x`. If Any, we 
+                The associated labels for `x`. If Any, we
                 assume x does not represent a batch of inputs.
 
                 If this is None we simply aggregate the total summary.
@@ -67,7 +67,7 @@ class ClassSummarizer:
         This is equivalent to `Summarizer.summary`.
 
         Returns:
-            An aggregate summary for all classes, represented 
+            An aggregate summary for all classes, represented
             as a dict.
         """
         return self.all_summary.summary

@@ -24,9 +24,10 @@ class Test(BaseTest):
         all_classes = torch.zeros(len(classes))
         class_summaries = summarizer.class_summaries
         all_keys = set(class_summaries.keys())
-        for clazz in classes:
+        for i, clazz in enumerate(classes):
             self.assertTrue(clazz in class_summaries)
             all_keys.remove(clazz)
+            all_classes[i] = 1
 
             summ = class_summaries[clazz]
             self.assertIsNotNone(summ)
@@ -38,6 +39,7 @@ class Test(BaseTest):
                     self.assertEqual(s[key].size(), size)
 
         self.assertEqual(len(all_keys), 0)
+        self.assertEqual(all_classes.sum(), len(classes))
 
     def test_classes(self):
         sizes_to_test = [
