@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from typing import List, Dict, Union, Optional
+
+from torch import Tensor
 from captum.attr._utils.stat import Stat
 
 class Summarizer:
@@ -26,8 +29,8 @@ class Summarizer:
             stats (List[Stat]):
                 The list of statistics you wish to track
         """
-        self._summarizers = []
-        self._is_inputs_tuple = None
+        self._summarizers: List[SummarizerSingleTensor] = []
+        self._is_inputs_tuple: Optional[bool] = None
         self._stats, self._summary_stats_indicies = _reorder_stats(stats)
 
     def _copy_stats(self):
@@ -55,7 +58,7 @@ class Summarizer:
 
         for i, inp in enumerate(x):
             if i >= len(self._summarizers):
-                # _summarizers[i] is a new SummarizerSingleTesnor, which
+                # _summarizers[i] is a new SummarizerSingleTensor, which
                 # aims to summarize input i (i.e. x[i])
                 #
                 # Thus, we must copy our stats, as otherwise
@@ -72,7 +75,7 @@ class Summarizer:
             self._summarizers[i].update(inp)
 
     @property
-    def summary(self) -> Union[Dict[str, Tensor], List[Dict[str, Tensor]]]:
+    def summary(self) -> Optional[Union[Dict[str, Optional[Tensor]], List[Optional[Dict[str, Optional[Tensor]]]]]]:
         r"""
         Effectively calls `get` on each `Stat` object within this object for each input
 
@@ -179,7 +182,7 @@ class SummarizerSingleTensor:
         for stat in self._stats:
             stat.update(x)
 
-    def get(self, stat: str):
+    def get(self, stat: Stat) -> Optional[Stat]:
         r"""
         TODO
         """
@@ -189,7 +192,7 @@ class SummarizerSingleTensor:
         return self._stat_to_stat[stat]
 
     @property
-    def summary(self):
+    def summary(self) -> Optional[Dict[str, Optional[Tensor]]]:
         """
         TODO
         """
