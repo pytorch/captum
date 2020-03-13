@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import torch
 from torch import Tensor
-from typing import Dict, Any, Optional, Callable, List
+from typing import Dict, Any, Optional, Callable, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from captum.attr._utils.summarizer import SummarizerSingleTensor
 
 
 class Stat:
@@ -20,7 +23,6 @@ class Stat:
         self.params = kwargs
         self._name = name
 
-        from captum.attr._utils.summarizer import SummarizerSingleTensor
         self._other_stats: Optional[SummarizerSingleTensor] = None
 
     def init(self):

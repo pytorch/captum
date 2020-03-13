@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-from typing import List, Dict, Union, Optional
+from typing import Dict, List, Optional, Union
 
 from torch import Tensor
+
 from captum.attr._utils.stat import Stat
+
 
 class Summarizer:
     r"""
