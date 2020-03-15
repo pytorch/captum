@@ -125,9 +125,10 @@ def _batched_generator(
         yield inputs, additional_forward_args, target_ind
     else:
         for current_total in range(0, num_examples, internal_batch_size):
-            yield _tuple_splice_range(
-                inputs, current_total, current_total + internal_batch_size
-            ), _tuple_splice_range(
+            with torch.autograd.set_grad_enabled(True):
+               inputs_splice = _tuple_splice_range(inputs, current_total,
+                                            current_total + internal_batch_size)
+            yield inputs_splice, _tuple_splice_range(
                 additional_forward_args,
                 current_total,
                 current_total + internal_batch_size,
