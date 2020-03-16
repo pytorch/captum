@@ -40,7 +40,7 @@ class PropagationRule(ABC):
 
     def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
-            return grad / (outputs + self.STABILITY_FACTOR)
+            return grad / (outputs + torch.sign(outputs) * self.STABILITY_FACTOR)
 
         return _backward_hook_output
 
