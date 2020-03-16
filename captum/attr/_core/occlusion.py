@@ -5,12 +5,12 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from ..._utils.common import _format_input
+from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.common import (
     _format_and_verify_sliding_window_shapes,
     _format_and_verify_strides,
-    _format_input,
 )
-from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .feature_ablation import FeatureAblation
 
 

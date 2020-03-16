@@ -6,9 +6,9 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.typing import TargetType
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._utils.typing import TargetType
 
 from .helpers.basic_models import (
     BasicModel_ConvNet,

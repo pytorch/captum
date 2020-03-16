@@ -6,9 +6,10 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from ..._utils.common import _format_input, _is_tuple
+from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution, LayerAttribution
-from .._utils.common import _format_attributions, _format_input, _is_tuple
-from .._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from .._utils.common import _format_attributions
 from .guided_backprop_deconvnet import GuidedBackprop
 from .layer.grad_cam import LayerGradCam
 

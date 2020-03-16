@@ -6,20 +6,22 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from ...._utils.common import (
+    _expand_additional_forward_args,
+    _expand_target,
+    _format_additional_forward_args,
+)
+from ...._utils.typing import BaselineType, Literal, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.batching import _batched_operator
 from ..._utils.common import (
-    _expand_additional_forward_args,
-    _expand_target,
-    _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
     _reshape_and_sum,
     _validate_input,
 )
 from ..._utils.gradient import compute_layer_gradients_and_eval
-from ..._utils.typing import BaselineType, Literal, TargetType
 
 
 class LayerConductance(LayerAttribution, GradientAttribution):
@@ -112,7 +114,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
         r"""
         Args:

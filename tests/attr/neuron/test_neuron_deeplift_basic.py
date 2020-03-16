@@ -7,8 +7,8 @@ from typing import Tuple, Union
 import torch
 from torch import Tensor
 
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
 from ..helpers.basic_models import ReLULinearDeepLiftModel
 from ..helpers.utils import BaseTest, assertTensorAlmostEqual

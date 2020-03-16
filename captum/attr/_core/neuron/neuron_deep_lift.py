@@ -4,9 +4,9 @@ from typing import Any, Callable, Tuple, Union, cast
 from torch import Tensor
 from torch.nn import Module
 
+from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..deep_lift import DeepLift, DeepLiftShap
 
 

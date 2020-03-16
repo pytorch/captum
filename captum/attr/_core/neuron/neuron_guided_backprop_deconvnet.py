@@ -3,9 +3,9 @@ from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
 
+from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..guided_backprop_deconvnet import Deconvolution, GuidedBackprop
 
 

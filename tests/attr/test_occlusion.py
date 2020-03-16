@@ -5,12 +5,8 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._utils.typing import (
-    BaselineType,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
 
 from .helpers.basic_models import (
     BasicModel3,

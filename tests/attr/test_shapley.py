@@ -5,8 +5,8 @@ from typing import Any, Callable, Tuple, Union
 
 import torch
 
+from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-from captum.attr._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 
 from .helpers.basic_models import (
     BasicModel_MultiLayer,
