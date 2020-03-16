@@ -348,14 +348,14 @@ class LRP(Attribution):
 
 
 SUPPORTED_LAYERS_WITH_RULES = {
-    torch.nn.MaxPool1d: EpsilonRule,
-    torch.nn.MaxPool2d: EpsilonRule,
-    torch.nn.MaxPool3d: EpsilonRule,
-    torch.nn.Conv2d: EpsilonRule,
-    torch.nn.AvgPool2d: EpsilonRule,
-    torch.nn.AdaptiveAvgPool2d: EpsilonRule,
-    torch.nn.Linear: EpsilonRule,
-    torch.nn.BatchNorm2d: EpsilonRule,
+    nn.MaxPool1d: EpsilonRule,
+    nn.MaxPool2d: EpsilonRule,
+    nn.MaxPool3d: EpsilonRule,
+    nn.Conv2d: EpsilonRule,
+    nn.AvgPool2d: EpsilonRule,
+    nn.AdaptiveAvgPool2d: EpsilonRule,
+    nn.Linear: EpsilonRule,
+    nn.BatchNorm2d: EpsilonRule,
 }
 
-SUPPORTED_NON_LINEAR_LAYERS = [torch.nn.ReLU, torch.nn.Dropout]
+SUPPORTED_NON_LINEAR_LAYERS = [nn.ReLU, nn.Dropout, nn.Tanh]
