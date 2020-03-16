@@ -26,36 +26,38 @@ def _get_rule_config():
     return relevance, layer, activations, input
 
 
-def _get_simple_model():
+def _get_simple_model(inplace=False):
     class Model(nn.Module):
-        def __init__(self):
+        def __init__(self, inplace):
             super(Model, self).__init__()
             self.linear = nn.Linear(3, 3, bias=False)
             self.linear.weight.data.fill_(2.0)
-            self.relu = torch.nn.ReLU()
+            self.relu = torch.nn.ReLU(inplace=inplace)
             self.linear2 = nn.Linear(3, 1, bias=False)
             self.linear2.weight.data.fill_(3.0)
 
         def forward(self, x):
             return self.linear2(self.relu(self.linear(x)))
 
-    model = Model()
-    return model
+    model = Model(inplace)
+    inputs = torch.tensor([1.0, 2.0, 3.0])
+
+    return model, inputs
 
 
-def _get_simple_model2():
+def _get_simple_model2(inplace=False):
     class MyModel(nn.Module):
-        def __init__(self, inplace=False):
+        def __init__(self, inplace):
             super().__init__()
             self.lin = nn.Linear(2, 2)
             self.lin.weight = nn.Parameter(torch.ones(2, 2))
-            self.relu = torch.nn.ReLU()
+            self.relu = torch.nn.ReLU(inplace=inplace)
 
         def forward(self, input):
             return self.relu(self.lin(input))[0].unsqueeze(0)
 
     input = torch.tensor([[1.0, 2.0], [1.0, 3.0]])
-    model = MyModel()
+    model = MyModel(inplace)
 
     return model, input
 
@@ -77,27 +79,173 @@ class Test(BaseTest):
         logits = model(inputs)
         score, classIndex = torch.max(logits, 1)
         lrp = LRP(model)
-        relevance, delta = lrp.attribute(inputs, classIndex.item(), return_convergence_delta=True)
+        relevance, delta = lrp.attribute(
+            inputs, classIndex.item(), return_convergence_delta=True
+        )
         self.assertEqual(delta.item(), 0)
         self.assertEqual(relevance.shape, inputs.shape)
 
     def test_lrp_simple_attributions(self):
-        model = _get_simple_model()
+        model, inputs = _get_simple_model()
         model.eval()
-        inputs = torch.tensor([1.0, 2.0, 3.0])
+        model.linear.rule = EpsilonRule()
+        model.linear2.rule = EpsilonRule()
         output = model(inputs)
-        model.linear.rule = GammaRule(gamma=0)
-        model.linear2.rule = Alpha1_Beta0_Rule(set_bias_to_zero=True)
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
             self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
         )
 
+    def test_lrp_simple_inplaceReLU(self):
+        model_default, inputs = _get_simple_model()
+        model_inplace, _ = _get_simple_model(inplace=True)
+        for model in [model_default, model_inplace]:
+            model.eval()
+            model.linear.rule = EpsilonRule()
+            model.linear2.rule = EpsilonRule()
+        lrp_default = LRP(model_default)
+        lrp_inplace = LRP(model_inplace)
+        relevance_default = lrp_default.attribute(inputs)
+        relevance_inplace = lrp_inplace.attribute(inputs)
+        assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
+
+    def test_lrp_simple_tanh(self):
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+                self.linear = nn.Linear(3, 3, bias=False)
+                self.linear.weight.data.fill_(0.1)
+                self.tanh = torch.nn.Tanh()
+                self.linear2 = nn.Linear(3, 1, bias=False)
+                self.linear2.weight.data.fill_(0.1)
+
+            def forward(self, x):
+                return self.linear2(self.tanh(self.linear(x)))
+
+        model = Model()
+        _, inputs = _get_simple_model()
+        output = model(inputs)
+        lrp = LRP(model)
+        relevance = lrp.attribute(inputs)
+        # assertTensorAlmostEqual(self, relevance, torch.Tensor([[0.1186, 0.2372, 0.3558]])) # Result if gradient is used for propagation over tanh
+        assertTensorAlmostEqual(
+            self, relevance, torch.Tensor([[1 / 6, 1 / 3, 1 / 2]])
+        )  # Result if tanh is skipped for propagation
+
+    def test_lrp_simple_attributions_GammaRule(self):
+        model, inputs = _get_simple_model()
+        with torch.no_grad():
+            model.linear.weight.data[0][0] = -2
+        model.eval()
+        model.linear.rule = GammaRule(gamma=1)
+        model.linear2.rule = GammaRule()
+        lrp = LRP(model)
+        relevance = lrp.attribute(inputs)
+        assertTensorAlmostEqual(
+            self, relevance.data, torch.tensor([21 / 216, 78 / 216, 117 / 216])
+        )
+
+    def test_lrp_simple_attributions_AlphaBeta(self):
+        model, inputs = _get_simple_model()
+        with torch.no_grad():
+            model.linear.weight.data[0][0] = -2
+        model.eval()
+        model.linear.rule = Alpha1_Beta0_Rule()
+        model.linear2.rule = Alpha1_Beta0_Rule()
+        lrp = LRP(model)
+        relevance = lrp.attribute(inputs)
+        assertTensorAlmostEqual(self, relevance, torch.tensor([0.1250, 0.3500, 0.5250]))
+
     def test_lrp_simple2_attributions(self):
         model, input = _get_simple_model2()
-        output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input, 0)
         self.assertEqual(relevance.shape, input.shape)
+
+    def test_lrp_relu_hook(self):
+        class OnlyRelu(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                return self.relu(x)
+
+        model = OnlyRelu()
+        input = torch.Tensor([-5])
+        lrp = LRP(model)
+        relevance = lrp.attribute(input)
+        assertTensorAlmostEqual(self, relevance, torch.tensor([-5]))
+
+    def test_lrp_skip_connection(self):
+        class SkipConnection(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = nn.Linear(2, 2, bias=False)
+                self.linear.weight.data.fill_(5)
+
+            def forward(self, input):
+                # TODO: Solve deviating behaviour between += input and +input
+                x = self.linear(input) + input
+                # x += input
+                return x
+
+        model = SkipConnection()
+        input = torch.Tensor([[2, 3]])
+        output = model(input)
+        lrp = LRP(model)
+        relevance = lrp.attribute(input, target=1)
+        denormalized_relevance = relevance * output[0, 1]
+        # assertTensorAlmostEqual(self, comp_relevance, torch.Tensor([[10, 18]]))
+
+    def test_lrp_maxpool1D(self):
+        class MaxPoolModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = nn.Linear(2, 2, bias=False)
+                self.linear.weight.data.fill_(2.0)
+                self.maxpool = nn.MaxPool1d(2)
+
+            def forward(self, input):
+                return self.maxpool(self.linear(input))
+
+        model = MaxPoolModel()
+        input = torch.tensor([[[1.0, 2.0], [5.0, 6.0]]])
+        output = model(input)
+        lrp = LRP(model)
+        relevance = lrp.attribute(input, target=1)
+        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[0.0, 0.0], [5/11, 6/11]]]))
+
+    def test_lrp_maxpool2D(self):
+        class MaxPoolModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.maxpool = nn.MaxPool2d(2)
+
+            def forward(self, input):
+                return self.maxpool(input)
+
+        model = MaxPoolModel()
+        input = torch.tensor([[[[1.0, 2.0], [5.0, 6.0]]]])
+        output = model(input)
+        lrp = LRP(model)
+        relevance = lrp.attribute(input)
+        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 1.0]]]]))
+
+    def test_lrp_maxpool3D(self):
+        class MaxPoolModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.maxpool = nn.MaxPool3d(2)
+
+            def forward(self, input):
+                return self.maxpool(input)
+
+        model = MaxPoolModel()
+        input = torch.tensor([[[[[1.0, 2.0], [5.0, 6.0]], [[3.0, 4.0], [7.0, 8.0]]]]])
+        output = model(input)
+        lrp = LRP(model)
+        relevance = lrp.attribute(input)
+        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]))
 
