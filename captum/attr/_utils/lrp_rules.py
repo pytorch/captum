@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from abc import ABC, abstractmethod
+
 import torch
 import torch.nn as nn
 
@@ -121,4 +122,3 @@ class Alpha1_Beta0_Rule(PropagationRule):
         if self.set_bias_to_zero and hasattr(module, "bias"):
             if module.bias is not None:
                 module.bias.data = torch.zeros_like(module.bias.data)
-

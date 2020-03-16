@@ -215,7 +215,9 @@ class Test(BaseTest):
         output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
-        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[0.0, 0.0], [5/11, 6/11]]]))
+        assertTensorAlmostEqual(
+            self, relevance, torch.Tensor([[[0.0, 0.0], [5 / 11, 6 / 11]]])
+        )
 
     def test_lrp_maxpool2D(self):
         class MaxPoolModel(nn.Module):
@@ -231,7 +233,9 @@ class Test(BaseTest):
         output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input)
-        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 1.0]]]]))
+        assertTensorAlmostEqual(
+            self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 1.0]]]])
+        )
 
     def test_lrp_maxpool3D(self):
         class MaxPoolModel(nn.Module):
@@ -247,5 +251,9 @@ class Test(BaseTest):
         output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input)
-        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]))
+        assertTensorAlmostEqual(
+            self,
+            relevance,
+            torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]),
+        )
 

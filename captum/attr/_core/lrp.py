@@ -2,21 +2,22 @@
 
 import copy
 import warnings
+
 import torch
 import torch.nn as nn
 
-from .._utils.common import _format_attributions, _format_input, _run_forward
 from .._utils.attribution import Attribution
+from .._utils.common import _format_attributions, _format_input, _run_forward
 from .._utils.gradient import (
     apply_gradient_requirements,
-    undo_gradient_requirements,
     compute_gradients,
+    undo_gradient_requirements,
 )
 from .._utils.lrp_rules import (
-    PropagationRule,
     Alpha1_Beta0_Rule,
     EpsilonRule,
     GammaRule,
+    PropagationRule,
 )
 
 
@@ -358,4 +359,3 @@ SUPPORTED_LAYERS_WITH_RULES = {
 }
 
 SUPPORTED_NON_LINEAR_LAYERS = [torch.nn.ReLU, torch.nn.Dropout]
-
