@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import torch
 
-from captum.attr import CommonSummarizer
+from captum.attr import CommonStats, Summarizer
 
 from ..helpers.basic import BaseTest
 
@@ -9,7 +9,7 @@ from ..helpers.basic import BaseTest
 class Test(BaseTest):
     def test_single_input(self):
         size = (2, 3)
-        summarizer = CommonSummarizer()
+        summarizer = Summarizer(stats=CommonStats())
         for _ in range(10):
             attrs = torch.randn(size)
             summarizer.update(attrs)
@@ -25,7 +25,7 @@ class Test(BaseTest):
         size1 = (10, 5, 5)
         size2 = (3, 5)
 
-        summarizer = CommonSummarizer()
+        summarizer = Summarizer(stats=CommonStats())
         for _ in range(10):
             a1 = torch.randn(size1)
             a2 = torch.randn(size2)
