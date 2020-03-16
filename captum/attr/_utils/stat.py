@@ -20,6 +20,14 @@ class Stat:
     """
 
     def __init__(self, name: Optional[str] = None, **kwargs: Any):
+        """
+        Args:
+            name (str, optional):
+                The name of the statistic. If not provided, 
+                the class name will be used alongside it's parameters
+            kwargs (Any):
+                Additional arguments used to construct the statistic
+        """
         self.params = kwargs
         self._name = name
 
@@ -57,6 +65,8 @@ class Stat:
         """
         The name of the statistic. i.e. it is the key in a .summary
 
+        This will be the class name or a custom name if provided.
+
         See Summarizer or SummarizerSingleTensor
         """
         default_name = self.__class__.__name__.lower()
@@ -67,6 +77,10 @@ class Stat:
 
 
 class Count(Stat):
+    """
+    Counts the number of elements, i.e. the 
+    number of `update`'s called
+    """
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.n = None
@@ -81,6 +95,9 @@ class Count(Stat):
 
 
 class Mean(Stat):
+    """
+    Calculates the average of a tensor
+    """
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.rolling_mean: Optional[Tensor] = None
@@ -103,6 +120,9 @@ class Mean(Stat):
 
 
 class MSE(Stat):
+    """
+    Calculates the mean squared error of a tensor
+    """
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.prev_mean = None
@@ -131,6 +151,12 @@ class MSE(Stat):
 
 
 class Var(Stat):
+    """
+    Calculates the variance of a tensor, with an order. e.g. 
+    if `order = 1` then it will calculate sample variance.
+
+    This is equal to mse / (n - order)
+    """
     def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
@@ -164,6 +190,9 @@ class Var(Stat):
 
 
 class StdDev(Stat):
+    """
+    The standard deviation, with an associated order.
+    """
     def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
@@ -188,6 +217,10 @@ class StdDev(Stat):
 
 
 class GeneralAccumFn(Stat):
+    """
+    Performs updaate(x): result = fn(result, x)
+    where fn is a custom function
+    """
     def __init__(self, fn: Callable, name: Optional[str] = None):
         super().__init__(name=name)
         self.result = None

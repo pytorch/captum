@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from torch import Tensor
 
-from captum.attr._utils.stat import Stat
+from captum.attr._utils.stat import Stat, Mean, Var, StdDev, Min, Max
 
 
 class Summarizer:
@@ -179,14 +179,25 @@ class SummarizerSingleTensor:
 
     def update(self, x: Tensor):
         r"""
-        TODO
+        Updates the summary of a given tensor `x`
+
+        Args:
+            x (Tensor):
+                The tensor to summarize
         """
         for stat in self._stats:
             stat.update(x)
 
     def get(self, stat: Stat) -> Optional[Stat]:
         r"""
-        TODO
+        Retrieves `stat` from cache if this summarizer contains it
+
+        Args:
+            stat (Stat):
+                The stat to retrieve
+        Returns:
+            Stat
+                The cached stat object
         """
         if stat not in self._stat_to_stat:
             return None
@@ -196,6 +207,8 @@ class SummarizerSingleTensor:
     @property
     def summary(self) -> Optional[Dict[str, Optional[Tensor]]]:
         """
-        TODO
+        Returns:
+            Optional[Dict[str, Optional[Tensor]]]
+                The cached stat object
         """
         return {stat.name: stat.get() for stat in self._summary_stats}
