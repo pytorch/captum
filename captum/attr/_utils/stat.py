@@ -23,7 +23,7 @@ class Stat:
         """
         Args:
             name (str, optional):
-                The name of the statistic. If not provided, 
+                The name of the statistic. If not provided,
                 the class name will be used alongside it's parameters
             kwargs (Any):
                 Additional arguments used to construct the statistic
@@ -36,7 +36,7 @@ class Stat:
     def init(self):
         pass
 
-    def _get_stat(self, stat: 'Stat') -> Optional['Stat']:
+    def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
         assert self._other_stats is not None
         return self._other_stats.get(stat)
 
@@ -78,7 +78,7 @@ class Stat:
 
 class Count(Stat):
     """
-    Counts the number of elements, i.e. the 
+    Counts the number of elements, i.e. the
     number of `update`'s called
     """
 
@@ -155,7 +155,7 @@ class MSE(Stat):
 
 class Var(Stat):
     """
-    Calculates the variance of a tensor, with an order. e.g. 
+    Calculates the variance of a tensor, with an order. e.g.
     if `order = 1` then it will calculate sample variance.
 
     This is equal to mse / (n - order)

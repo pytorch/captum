@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from torch import Tensor
 
-from captum.attr._utils.stat import Stat, Mean, Var, StdDev, Min, Max
+from captum.attr._utils.stat import Max, Mean, Min, Stat, StdDev, Var
 
 
 class Summarizer:
@@ -86,7 +86,8 @@ class Summarizer:
         Effectively calls `get` on each `Stat` object within this object for each input
 
         Returns:
-            A dict or list of dict: mapping from the Stat object's `name` to the associated value of `get`
+            A dict or list of dict: mapping from the Stat
+            object's `name` to the associated value of `get`
         """
         if len(self._summarizers) == 0:
             return None
@@ -170,7 +171,7 @@ class SummarizerSingleTensor:
         Args:
             stats (list of Stat): A list of all the Stat objects that
                 need to be updated.
-            summary_stats (list of int): A list of indicies, referencing `stats`, 
+            summary_stats (list of int): A list of indicies, referencing `stats`,
                 which are the stats you want to show in the .summary property.
         """
         self._stats = stats
