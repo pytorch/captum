@@ -77,7 +77,11 @@ class Summarizer:
             self._summarizers[i].update(inp)
 
     @property
-    def summary(self) -> Optional[Union[Dict[str, Optional[Tensor]], List[Optional[Dict[str, Optional[Tensor]]]]]]:
+    def summary(
+        self,
+    ) -> Optional[
+        Union[Dict[str, Optional[Tensor]], List[Optional[Dict[str, Optional[Tensor]]]]]
+    ]:
         r"""
         Effectively calls `get` on each `Stat` object within this object for each input
 

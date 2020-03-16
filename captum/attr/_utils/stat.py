@@ -81,6 +81,7 @@ class Count(Stat):
     Counts the number of elements, i.e. the 
     number of `update`'s called
     """
+
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.n = None
@@ -98,6 +99,7 @@ class Mean(Stat):
     """
     Calculates the average of a tensor
     """
+
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.rolling_mean: Optional[Tensor] = None
@@ -123,6 +125,7 @@ class MSE(Stat):
     """
     Calculates the mean squared error of a tensor
     """
+
     def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.prev_mean = None
@@ -157,6 +160,7 @@ class Var(Stat):
 
     This is equal to mse / (n - order)
     """
+
     def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
@@ -193,6 +197,7 @@ class StdDev(Stat):
     """
     The standard deviation, with an associated order.
     """
+
     def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
@@ -221,6 +226,7 @@ class GeneralAccumFn(Stat):
     Performs updaate(x): result = fn(result, x)
     where fn is a custom function
     """
+
     def __init__(self, fn: Callable, name: Optional[str] = None):
         super().__init__(name=name)
         self.result = None
