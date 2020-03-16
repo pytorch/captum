@@ -46,8 +46,8 @@ from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils.attribution import PerturbationAttribution  # noqa
 from ._utils.class_summarizer import ClassSummarizer
-from ._utils.stat import MSE, Count, Max, Mean, Min, StdDev, Sum, Var
-from ._utils.summarizer import CommonSummarizer, Summarizer
+from ._utils.stat import MSE, CommonStats, Count, Max, Mean, Min, StdDev, Sum, Var
+from ._utils.summarizer import Summarizer
 
 __all__ = [
     "Attribution",
@@ -94,7 +94,7 @@ __all__ = [
     "configure_interpretable_embedding_layer",
     "remove_interpretable_embedding_layer",
     "Summarizer",
-    "CommonSummarizer",
+    "CommonStats",
     "ClassSummarizer",
     "Mean",
     "StdDev",

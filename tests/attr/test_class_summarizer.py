@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import torch
 
-from captum.attr import ClassSummarizer, CommonSummarizer
+from captum.attr import ClassSummarizer, CommonStats
 
 from .helpers.utils import BaseTest
 
 
 class Test(BaseTest):
     def class_test(self, data, classes, x_sizes):
-        summarizer = CommonSummarizer(ClassSummarizer)
+        summarizer = ClassSummarizer(stats=CommonStats())
         for x, y in data:
             summarizer.update(x, y)
 
@@ -84,7 +84,7 @@ class Test(BaseTest):
 
     def test_no_class(self):
         size = (30, 20)
-        summarizer = CommonSummarizer(ClassSummarizer)
+        summarizer = ClassSummarizer(stats=CommonStats())
         for _ in range(10):
             x = torch.randn(size)
             summarizer.update(x)

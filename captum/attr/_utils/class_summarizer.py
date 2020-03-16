@@ -5,21 +5,21 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.attr._utils.common import _format_tensor_into_tuples
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
 
 
-class ClassSummarizer:
+class ClassSummarizer(Summarizer):
     """
     Used to keep track of summaries for associated classes. The
-    classes/labels can be of any type that is supported by `dict`.
+    classes/labels can be of any type that are supported by `dict`.
 
     This also keeps track of an aggregate of all class summaries.
     """
 
     def __init__(self, stats: List[Stat]):
-        self.stats = stats
-        self.all_summary = Summarizer(stats=stats)
+        Summarizer.__init__(self, stats)
         self.summaries: Dict[Any, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)
         )
@@ -31,6 +31,9 @@ class ClassSummarizer:
     ):
         """
         Updates the stats of the summarizer, optionally associated to classes.
+
+        This accepts either a single tensor to summarise or a batch of tensors.
+        If it is a batch of tensors, then `labels` must be a list.
 
         Args:
             x (Tensor or Tuple[Tensor, ...]):
@@ -45,40 +48,35 @@ class ClassSummarizer:
 
                 If this is None we simply aggregate the total summary.
         """
-        if labels is not None:
-            if not isinstance(x, tuple):
-                x = (x,)
+        if labels is None:
+            super().update(x)
+            return
 
-            should_resqueeze = torch.zeros(len(x))
-            if not isinstance(labels, list):
-                # we need to support the data having
-                # size (1, ...) or (...)
-                labels = [labels]
-                for i in range(len(x)):
-                    should_resqueeze[i] = len(x[i].size()) == 0 or x[i].size(0) != 1
-                x = tuple(y.unsqueeze(0) for y in x)
+        x = _format_tensor_into_tuples(x)
 
-            for i, label in enumerate(labels):
-                xx = tuple(
-                    y[i].squeeze(0) if resqueeze else y[i]
-                    for y, resqueeze in zip(x, should_resqueeze)
-                )
+        should_resqueeze = torch.zeros(len(x))
 
-                self.summaries[label].update(xx)
-                self.all_summary.update(xx)
-        else:
-            self.all_summary.update(x)
+        batched_x = x
+        if not isinstance(labels, list):
+            # for single input we need to ensure
+            # the input is (1, ...) in order to index it
+            # thus we do-so with a squeeze and after we're
+            # done we need to re-squeeze the input to
+            # where it was such that it seems like we did not
+            # touch the given tensor
+            labels = [labels]
+            for i in range(len(x)):
+                should_resqueeze[i] = len(x[i].size()) == 0 or x[i].size(0) != 1
+            batched_x = tuple(y.unsqueeze(0) for y in x)
 
-    @property
-    def summary(self) -> Dict[str, Tensor]:
-        """
-        This is equivalent to `Summarizer.summary`.
+        for i, label in enumerate(labels):
+            tensors_to_summarize = tuple(
+                tensor[i].squeeze(0) if resqueeze else tensor[i]
+                for tensor, resqueeze in zip(batched_x, should_resqueeze)
+            )
 
-        Returns:
-            An aggregate summary for all classes, represented
-            as a dict.
-        """
-        return self.all_summary.summary
+            self.summaries[label].update(tensors_to_summarize)
+            super().update(tensors_to_summarize)
 
     @property
     def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:
