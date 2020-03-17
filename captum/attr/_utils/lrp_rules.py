@@ -17,7 +17,6 @@ class PropagationRule(ABC):
     def forward_hook(self, module, inputs, outputs):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
-        module.outputs = outputs.data
         input_hook = self._create_backward_hook_input(inputs[0].data)
         output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_input_hook = inputs[0].register_hook(input_hook)
@@ -28,9 +27,15 @@ class PropagationRule(ABC):
         """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
-    def _backward_hook_relevance(self, module, grad_input, grad_output):
-        module.relevance = grad_output[0] * module.outputs
-        print(f"Intermediate relevance: {torch.sum(module.relevance)}, layer: {module}")
+    @staticmethod
+    def forward_hook_relevance(module, inputs, outputs):
+        module.inputs = inputs[0].data
+        module.outputs = outputs.data
+
+    @staticmethod
+    def backward_hook_relevance(module, grad_input, grad_output):
+        module.relevance_input = grad_input[0] * module.inputs
+        module.relevance_output = grad_output[0] * module.outputs
 
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
@@ -77,6 +82,9 @@ class EpsilonRule(PropagationRule):
     def _manipulate_weights(self, module, inputs, outputs):
         pass
 
+    def restore_layer(self, module):
+        pass
+
 
 class GammaRule(PropagationRule):
     """
@@ -96,11 +104,13 @@ class GammaRule(PropagationRule):
 
     def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):
+            module.original_weights = module.weight.clone()
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
             )
         if self.set_bias_to_zero and hasattr(module, "bias"):
             if module.bias is not None:
+                module.original_bias = module.bias
                 module.bias.data = torch.zeros_like(module.bias.data)
 
 

@@ -97,6 +97,17 @@ class Test(BaseTest):
             self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
         )
 
+    def test_lrp_simple_repeat_attributions(self):
+        model, inputs = _get_simple_model()
+        model.eval()
+        model.linear.rule = GammaRule()
+        model.linear2.rule = Alpha1_Beta0_Rule()
+        output = model(inputs)
+        lrp = LRP(model)
+        relevance = lrp.attribute(inputs)
+        output_after = model(inputs)
+        assertTensorAlmostEqual(self, output, output_after)
+
     def test_lrp_simple_inplaceReLU(self):
         model_default, inputs = _get_simple_model()
         model_inplace, _ = _get_simple_model(inplace=True)

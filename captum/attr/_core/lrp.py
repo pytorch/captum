@@ -29,19 +29,17 @@ class LRP(Attribution):
             model (callable): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
-            rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
-                        of forward_func.
         """
-        super(LRP, self).__init__(model)
+        Attribution.__init__(self, model)  # LRP, self
 
         if isinstance(model, nn.DataParallel):
             warnings.warn(
                 """Although input model is of type `nn.DataParallel` it will run
                 only on one device. Support for multiple devices will be added soon."""
             )
-            self.original_model = model.module
+            self.model = model.module
         else:
-            self.original_model = model
+            self.model = model
 
         self._check_rules()
 
@@ -149,7 +147,7 @@ class LRP(Attribution):
 
         """
         self.verbose = verbose
-        self.model = copy.deepcopy(self.original_model)
+        self._original_state_dict = self.model.state_dict()
         self.layers = []
         self._get_layers(self.model)
         self._get_rules()
@@ -171,10 +169,8 @@ class LRP(Attribution):
             relevance * input for relevance, input in zip(relevances, inputs)
         )
 
-        self._remove_backward_hooks()
-        self._remove_forward_hooks()
+        self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
-        self._remove_rules()
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
@@ -281,7 +277,7 @@ class LRP(Attribution):
                 )
 
     def _check_rules(self):
-        for module in self.original_model.modules():
+        for module in self.model.modules():
             if hasattr(module, "rule"):
                 if (
                     not isinstance(module.rule, PropagationRule)
@@ -345,6 +341,21 @@ class LRP(Attribution):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 del layer.rule
+
+    def _clear_properties(self):
+        for layer in self.layers:
+            if hasattr(layer, "activation"):
+                del layer.activation
+
+    def _restore_state(self):
+        self.model.load_state_dict(self._original_state_dict)
+
+    def _restore_model(self):
+        self._restore_state()
+        self._remove_backward_hooks()
+        self._remove_forward_hooks()
+        self._remove_rules()
+        self._clear_properties()
 
 
 SUPPORTED_LAYERS_WITH_RULES = {
