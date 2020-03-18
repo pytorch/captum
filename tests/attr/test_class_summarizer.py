@@ -45,11 +45,15 @@ class Test(BaseTest):
         sizes_to_test = [
             ((1,),),
             ((3, 2, 10, 3), (1,)),
-            ((20,)),
+            ((20,),),
         ]
-        classeses = [list(range(100)), ["%d" % i for i in range(100)]]
+        list_of_classes = [
+            list(range(100)),
+            ["%d" % i for i in range(100)],
+            list(range(300, 400)),
+        ]
         for batch_size in [None, 1, 4]:
-            for sizes, classes in zip(sizes_to_test, classeses):
+            for sizes, classes in zip(sizes_to_test, list_of_classes):
 
                 def create_batch_labels(batch_idx):
                     if batch_size is None:
@@ -60,9 +64,9 @@ class Test(BaseTest):
                         batch_idx * batch_size : (batch_idx + 1) * batch_size
                     ]
 
-                sizes_plus_batch = sizes
-                if batch_size is not None:
-                    sizes_plus_batch = tuple((batch_size,) + si for si in sizes)
+                bs = 1 if batch_size is None else batch_size
+
+                sizes_plus_batch = tuple((bs,) + si for si in sizes)
 
                 # we want to test each possible element
                 num_batches = len(classes)
