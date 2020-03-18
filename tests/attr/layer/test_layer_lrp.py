@@ -188,3 +188,11 @@ class Test(BaseTest):
         denormalized_relevance = relevance * output[0, 1]
         # assertTensorAlmostEqual(self, comp_relevance, torch.Tensor([[10, 18]]))
 
+    def test_lrp_simple_attributions_all_layers(self):
+        model, inputs = _get_simple_model(inplace=False)
+        model.eval()
+        model.linear.rule = EpsilonRule()
+        model.linear2.rule = EpsilonRule()
+        lrp = LayerLRP(model, None)
+        relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
+        self.assertEqual(len(relevance), 2)

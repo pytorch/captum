@@ -22,11 +22,11 @@ class LayerLRP(LRP, LayerAttribution):
             model (callable): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
-            layer (torch.nn.Module): Layer for which attributions are computed.
+            layer (torch.nn.Module, None): Layer for which attributions are computed.
                           The size and dimensionality of the attributions
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
-                          inputs or outputs of the layer.
+                          inputs or outputs of the layer. If value is None, the relevance for all layers is returned in attribution.
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
@@ -152,10 +152,11 @@ class LayerLRP(LRP, LayerAttribution):
         self._change_weights(inputs)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        input_relevance = compute_gradients(
+        relevance_input_layer = compute_gradients(
             self.model, inputs, target, additional_forward_args
         )
-        relevances = self._get_layer_relevance()
+        self.layers[0].rule.relevance_input = relevance_input_layer[0]
+        relevances = self._get_output_relevance()
 
         self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
@@ -168,9 +169,22 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return _format_attributions(is_inputs_tuple, relevances)
 
-    def _get_layer_relevance(self):
-        if self.attribute_to_layer_input:
-            relevance = self.layer.rule.relevance_input
+    def _get_output_relevance(self):
+        if self.layer is None:
+            relevances = []
+            relevance_layers = [
+                layer for layer in self.layers if layer.rule is not None
+            ]
+            for layer in relevance_layers:
+                if self.attribute_to_layer_input:
+                    relevance = layer.rule.relevance_input
+                else:
+                    relevance = layer.rule.relevance_output
+                relevances.append(relevance)
         else:
-            relevance = self.layer.rule.relevance_output
-        return (relevance,)
+            if self.attribute_to_layer_input:
+                relevances = self.layer.rule.relevance_input
+            else:
+                relevances = self.layer.rule.relevance_output
+
+        return (relevances,)
