@@ -66,6 +66,6 @@ class ClassSummarizer(Summarizer):
     def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:
         r"""
         Returns:
-             The summaries for each class a dictionary.
+             The summaries for each class.
         """
         return {key: value.summary for key, value in self.summaries.items()}
