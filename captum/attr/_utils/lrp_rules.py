@@ -27,25 +27,19 @@ class PropagationRule(ABC):
         """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
-    @staticmethod
-    def forward_hook_relevance(module, inputs, outputs):
-        module.inputs = inputs[0].data
-        module.outputs = outputs.data
-
-    @staticmethod
-    def backward_hook_relevance(module, grad_input, grad_output):
-        module.relevance_input = grad_input[0] * module.inputs
-        module.relevance_output = grad_output[0] * module.outputs
-
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
-            return grad * inputs
+            relevance = grad * inputs
+            self.relevance_input = relevance.data
+            return relevance
 
         return _backward_hook_input
 
     def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
-            return grad / (outputs + torch.sign(outputs) * self.STABILITY_FACTOR)
+            relevance = grad / (outputs + torch.sign(outputs) * self.STABILITY_FACTOR)
+            self.relevance_output = grad.data
+            return relevance
 
         return _backward_hook_output
 

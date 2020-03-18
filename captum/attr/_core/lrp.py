@@ -59,9 +59,6 @@ class LRP(Attribution):
             can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
             and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
 
-            Attention: The implementation is only tested for ReLU activation layers, linear and conv2D layers. An error
-            is raised if other activation functions (sigmoid, tanh) are used.
-
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
                             If forward_func takes a single

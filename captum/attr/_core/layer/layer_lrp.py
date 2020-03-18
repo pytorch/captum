@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import warnings
+
 import torch
 import torch.nn as nn
-import copy
 
+from ..._core.lrp import LRP
 from ..._utils.attribution import LayerAttribution
-from ..._utils.common import _format_attributions, _format_input, _run_forward
+from ..._utils.common import _format_attributions, _format_input
 from ..._utils.gradient import (
     apply_gradient_requirements,
-    undo_gradient_requirements,
     compute_gradients,
+    undo_gradient_requirements,
 )
-from ..._core.lrp import LRP
 
 
 class LayerLRP(LRP, LayerAttribution):
@@ -22,11 +22,16 @@ class LayerLRP(LRP, LayerAttribution):
             model (callable): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
-            rules (dictionary(int, PropagationRule)): Dictionary of layer index and Rules for specific layers
-                        of forward_func.S
+            layer (torch.nn.Module): Layer for which attributions are computed.
+                          The size and dimensionality of the attributions
+                          corresponds to the size and dimensionality of the layer's
+                          input or output depending on whether we attribute to the
+                          inputs or outputs of the layer.
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
+
+        self._check_rules()
 
     def attribute(
         self,
@@ -34,7 +39,7 @@ class LayerLRP(LRP, LayerAttribution):
         target=None,
         additional_forward_args=None,
         return_convergence_delta=False,
-        return_for_all_layers=False,
+        attribute_to_layer_input=False,
         verbose=False,
     ):
         """
@@ -45,8 +50,7 @@ class LayerLRP(LRP, LayerAttribution):
             can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
             and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
 
-            Attention: The implementation is only tested for ReLU activation layers, linear and conv2D layers. An error
-            is raised if other activation functions (sigmoid, tanh) are used.
+            Attention: In-place relus lead to unexptected failures in layer LRP.
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -100,10 +104,6 @@ class LayerLRP(LRP, LayerAttribution):
                         a tuple following attributions.
                         Default: False
 
-                return_for_all_layers (bool, optional): Indicates whether to return
-                        relevance values for all layers. If False, only the relevance
-                        values for the input layer are returned.
-
                 verbose (bool, optional): Indicates whether information on application
                         of rules is printed during propagation.
 
@@ -130,19 +130,18 @@ class LayerLRP(LRP, LayerAttribution):
                 >>> # and returns an Nx10 tensor of class probabilities. It has one
                 >>> # Conv2D and a ReLU layer.
                 >>> net = ImageClassifier()
-                >>> lrp = LRP(net)
+                >>> lrp = LRP(net, net.conv1)
                 >>> input = torch.randn(3, 3, 32, 32)
                 >>> # Attribution size matches input size: 3x3x32x32
                 >>> attribution = lrp.attribute(input, target=5)
 
         """
         self.verbose = verbose
-        self.model = copy.deepcopy(self.original_model)
+        self._original_state_dict = self.model.state_dict()
         self.layers = []
         self._get_layers(self.model)
         self._get_rules()
-        self._check_if_weights_are_changed()
-        self.return_for_all_layers = return_for_all_layers
+        self.attribute_to_layer_input = attribute_to_layer_input
         self.backward_handles = []
         self.forward_handles = []
 
@@ -153,20 +152,13 @@ class LayerLRP(LRP, LayerAttribution):
         self._change_weights(inputs)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        relevances = compute_gradients(
+        input_relevance = compute_gradients(
             self.model, inputs, target, additional_forward_args
         )
+        relevances = self._get_layer_relevance()
 
-        relevances = tuple(
-            relevance * input for relevance, input in zip(relevances, inputs)
-        )
-
-        self._remove_backward_hooks()
-        self._remove_forward_hooks()
+        self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
-        self._remove_rules()
-
-        relevances = self._select_layer_output(self.layer)
 
         if return_convergence_delta:
             delta = self.compute_convergence_delta(
@@ -176,6 +168,9 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return _format_attributions(is_inputs_tuple, relevances)
 
-    def _select_layer_output(self, layer):
-        return layer.relevance
-
+    def _get_layer_relevance(self):
+        if self.attribute_to_layer_input:
+            relevance = self.layer.rule.relevance_input
+        else:
+            relevance = self.layer.rule.relevance_output
+        return (relevance,)
