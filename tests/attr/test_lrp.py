@@ -77,7 +77,7 @@ class Test(BaseTest):
     def test_lrp_basic_attributions(self):
         model, inputs = _get_basic_config()
         logits = model(inputs)
-        score, classIndex = torch.max(logits, 1)
+        _, classIndex = torch.max(logits, 1)
         lrp = LRP(model)
         relevance, delta = lrp.attribute(
             inputs, classIndex.item(), return_convergence_delta=True
@@ -90,7 +90,6 @@ class Test(BaseTest):
         model.eval()
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
-        output = model(inputs)
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
@@ -104,7 +103,7 @@ class Test(BaseTest):
         model.linear2.rule = Alpha1_Beta0_Rule()
         output = model(inputs)
         lrp = LRP(model)
-        relevance = lrp.attribute(inputs)
+        _ = lrp.attribute(inputs)
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
 
@@ -136,7 +135,7 @@ class Test(BaseTest):
 
         model = Model()
         _, inputs = _get_simple_model()
-        output = model(inputs)
+        _ = model(inputs)
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         # assertTensorAlmostEqual(self, relevance, torch.Tensor([[0.1186, 0.2372, 0.3558]])) # Result if gradient is used for propagation over tanh
@@ -223,7 +222,6 @@ class Test(BaseTest):
 
         model = MaxPoolModel()
         input = torch.tensor([[[1.0, 2.0], [5.0, 6.0]]])
-        output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
         assertTensorAlmostEqual(
@@ -241,7 +239,6 @@ class Test(BaseTest):
 
         model = MaxPoolModel()
         input = torch.tensor([[[[1.0, 2.0], [5.0, 6.0]]]])
-        output = model(input)
         lrp = LRP(model)
         relevance = lrp.attribute(input)
         assertTensorAlmostEqual(
