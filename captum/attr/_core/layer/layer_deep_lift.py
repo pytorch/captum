@@ -276,14 +276,12 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         baselines = _tensorize_baseline(inputs, baselines)
 
         main_model_pre_hook = self._pre_hook_main_model()
+        dp_model_hooks = self._hook_data_parallel_model()
 
         self.model.apply(self._register_hooks)
 
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
-        )
-        input_base_additional_args = _expand_additional_forward_args(
-            additional_forward_args, 2, ExpansionTypes.repeat
         )
         expanded_target = _expand_target(
             target, 2, expansion_type=ExpansionTypes.repeat
@@ -292,7 +290,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             self.model,
             (inputs, baselines),
             expanded_target,
-            input_base_additional_args,
+            additional_forward_args,
         )
 
         def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
@@ -326,6 +324,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         # remove hooks from all activations
         main_model_pre_hook.remove()
         self._remove_hooks()
+        for hook in dp_model_hooks:
+            hook.remove()
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(

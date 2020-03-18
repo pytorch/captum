@@ -289,7 +289,7 @@ class DeepLift(GradientAttribution):
 
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
-
+        
         gradient_mask = apply_gradient_requirements(inputs)
 
         _validate_input(inputs, baselines)
@@ -303,23 +303,22 @@ class DeepLift(GradientAttribution):
 
         baselines = _tensorize_baseline(inputs, baselines)
         main_model_pre_hook = self._pre_hook_main_model()
+        dp_model_hooks = self._hook_data_parallel_model()
 
         self.model.apply(self._register_hooks)
 
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        input_base_additional_args = _expand_additional_forward_args(
-            additional_forward_args, 2, ExpansionTypes.repeat
-        )
+        
         expanded_target = _expand_target(
             target, 2, expansion_type=ExpansionTypes.repeat
         )
 
         wrapped_forward_func = self._construct_forward_func(
-            self.model, (inputs, baselines), expanded_target, input_base_additional_args
+            self.model, (inputs, baselines), expanded_target, additional_forward_args
         )
-        gradients = self.gradient_func(wrapped_forward_func, inputs,)
+        gradients = self.gradient_func(wrapped_forward_func, inputs)
         if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
@@ -331,6 +330,9 @@ class DeepLift(GradientAttribution):
             )
         # remove hooks from all activations
         main_model_pre_hook.remove()
+        for hook in dp_model_hooks:
+            hook.remove()
+            
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -466,7 +468,6 @@ class DeepLift(GradientAttribution):
         # remove all the properies that we set for the inputs and output
         del module.input
         del module.output
-
         return multipliers
 
     def satisfies_attribute_criteria(self, module: Module) -> bool:
@@ -512,13 +513,27 @@ class DeepLift(GradientAttribution):
                 for input, baseline in zip(inputs, baselines)
             )
             if additional_args is not None:
-                return (*baseline_input_tsr, *additional_args)
+                expanded_additional_args = _expand_additional_forward_args(
+                    additional_args, 2, ExpansionTypes.repeat
+                )
+                return (*baseline_input_tsr, *expanded_additional_args)
             return baseline_input_tsr
 
         if isinstance(self.model, nn.DataParallel):
             return self.model.module.register_forward_pre_hook(pre_hook)  # type: ignore
         else:
             return self.model.register_forward_pre_hook(pre_hook)  # type: ignore
+
+    def _hook_data_parallel_model(self):
+        if isinstance(self.model, nn.DataParallel):
+            def _dp_hook(module, inputs, outputs):
+                return outputs.reshape((outputs.shape[0] // 2, 2) + outputs.shape[1:])
+            def _final_hook(module, inputs, outputs):
+                return torch.cat((outputs[:,0], outputs[:,1]))
+            forward_dp_hook = self.model.module.register_forward_hook(_dp_hook)
+            forward_full_hook = self.model.register_forward_hook(_final_hook)
+            return [forward_dp_hook, forward_full_hook]
+        return []
 
     def has_convergence_delta(self) -> bool:
         return True
@@ -810,7 +825,7 @@ class DeepLiftShap(DeepLift):
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
         input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, base_bsz)
+            _expand_additional_forward_args(additional_forward_args, base_bsz, expansion_type=ExpansionTypes.repeat_interleave)
             if additional_forward_args is not None
             else None
         )

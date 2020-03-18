@@ -209,7 +209,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                 layer_grad,
                 dim=tuple(x for x in range(2, len(layer_grad.shape))),
                 keepdim=True,
-            )
+            ) if len(layer_grad.shape) > 2 else layer_grad
             for layer_grad in layer_gradients
         )
 
