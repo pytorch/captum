@@ -18,8 +18,8 @@ from .helpers.test_config import config
 from .helpers.utils import (
     BaseGPUTest,
     assertTensorTuplesAlmostEqual,
-    get_nested_attr,
     deep_copy_args,
+    get_nested_attr,
 )
 
 
