@@ -22,7 +22,7 @@ class Test(BaseTest):
     def test_simple_multi_input_non_conv(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]], requires_grad=True)
-        self._grad_cam_test_assert(net, net.relu, inp, ([21.0], [21.0]))
+        self._grad_cam_test_assert(net, net.multi_relu, inp, ([21.0], [21.0]))
 
     def test_simple_input_conv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()

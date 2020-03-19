@@ -67,7 +67,7 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._assert_compare_with_expected(
             net,
-            net.relu,
+            net.multi_relu,
             inp,
             ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]]),
         )

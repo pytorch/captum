@@ -42,7 +42,7 @@ class TestDeepLift(BaseTest):
         model = BasicModel_MultiLayer(multi_input_module=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
-        layer_dl = LayerDeepLift(model, model.relu)
+        layer_dl = LayerDeepLift(model, model.multi_relu)
         attributions, delta = layer_dl.attribute(
             inputs[0],
             baselines[0],
@@ -144,7 +144,7 @@ class TestDeepLift(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
-        layer_dl = LayerDeepLiftShap(model, model.relu)
+        layer_dl = LayerDeepLiftShap(model, model.multi_relu)
         attributions, delta = layer_dl.attribute(
             inputs[0],
             baselines[0],

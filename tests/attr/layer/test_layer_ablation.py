@@ -123,7 +123,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._ablation_test_assert(
-            net, net.relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+            net, net.multi_relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
         )
 
     def test_simple_multi_output_input_ablation(self) -> None:
@@ -131,7 +131,7 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._ablation_test_assert(
             net,
-            net.relu,
+            net.multi_relu,
             inp,
             ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0]),
             attribute_to_layer_input=True,

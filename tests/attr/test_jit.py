@@ -18,7 +18,7 @@ from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.common import _format_additional_forward_args, _format_input
 
 from .helpers.test_config import config
-from .helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
+from .helpers.utils import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 
 JIT_SUPPORTED = [
     IntegratedGradients,
@@ -99,6 +99,7 @@ class JITMeta(type):
         return super(JITMeta, cls).__new__(cls, name, bases, attrs)
 
     @classmethod
+    @deep_copy_args
     def make_single_jit_test(
         cls, algorithm, model, args, target_delta, noise_tunnel, baseline_distr, mode
     ):

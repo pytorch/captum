@@ -42,28 +42,36 @@ from .basic_models import (
     ReLULinearDeepLiftModel,
 )
 
+"""
+This file defines a test configuration for attribution methods, particularly
+defining valid input parameters for attribution methods. These test cases are
+utilized for DataParallel tests, JIT tests, and target tests. Generally, these
+tests follow a consistent structure of running the identified algorithm(s) in
+two different way, e.g. with a DataParallel or JIT wrapped model versus a standard
+model and verifying that the results match. New tests for additional model variants
+or features can be built using this config.
+
+The current schema for each test cases (each element in the list config) includes
+the following information:
+* "name": String defining name for test config
+* "algorithms": List of algorithms (Attribution classes) which are applicable for
+    the given test case
+* "model": nn.Module model for given test
+* "attribute_args": Arguments to be passed to attribute call of algorithm
+* "layer": nn.Module corresponding to layer for Layer or Neuron attribution
+* "noise_tunnel": True or False, based on whether to apply NoiseTunnel to the algorithm.
+    If True, "attribute_args" corresponds to arguments for NoiseTunnel.attribute.
+* "baseline_distr": True or False based on whether baselines in "attribute_args" are
+    provided as a distribution or per-example.
+"""
+
+# Set random seeds to ensure deterministic behavior
 random.seed(1234)
 np.random.seed(1234)
 torch.manual_seed(1234)
 torch.cuda.manual_seed_all(1234)
 torch.backends.cudnn.deterministic = True
-tconfig = [
-    {
-        "name": "basic_multiple_tuple_target_with_single_baseline_grad_shap",
-        "algorithms": [GradientShap],
-        "model": BasicModel_MultiLayer(),
-        "attribute_args": {
-            "inputs": torch.randn(4, 3),
-            "baselines": 0.15 * torch.randn(1, 3),
-            "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
-            "additional_forward_args": (None, True),
-            "n_samples": 2000,
-            "stdevs": 0.0,
-        },
-        "target_delta": 0.6,
-        "baseline_distr": True,
-    }
-]
+
 config = [
     # Attribution Method Configs
     # Primary Methods (Generic Configs)
@@ -581,7 +589,7 @@ config = [
             LayerGradCam,
         ],
         "model": BasicModel_MultiLayer(multi_input_module=True),
-        "layer": "relu",
+        "layer": "multi_relu",
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
     },
     {
@@ -683,7 +691,7 @@ config = [
         "name": "basic_layer_multi_output_with_internal_batching",
         "algorithms": [LayerConductance, InternalInfluence, LayerIntegratedGradients],
         "model": BasicModel_MultiLayer(multi_input_module=True),
-        "layer": "relu",
+        "layer": "multi_relu",
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": 0,
@@ -707,7 +715,7 @@ config = [
         "name": "basic_layer_multi_output_perturbations_per_eval",
         "algorithms": [LayerFeatureAblation],
         "model": BasicModel_MultiLayer(multi_input_module=True),
-        "layer": "relu",
+        "layer": "multi_relu",
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": 0,
@@ -741,7 +749,7 @@ config = [
         "name": "basic_layer_multi_output_dl_shap",
         "algorithms": [LayerDeepLiftShap],
         "model": BasicModel_MultiLayer(multi_input_module=True),
-        "layer": "relu",
+        "layer": "multi_relu",
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": torch.randn(2, 3),
@@ -790,7 +798,7 @@ config = [
         "name": "basic_layer_multi_output_grad_shap",
         "algorithms": [LayerGradientShap],
         "model": BasicModel_MultiLayer(multi_input_module=True),
-        "layer": "relu",
+        "layer": "multi_relu",
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": torch.randn(2, 3),

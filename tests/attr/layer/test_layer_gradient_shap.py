@@ -41,7 +41,7 @@ class Test(BaseTest):
         expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
         self._assert_attributions(
             model,
-            model.relu,
+            model.multi_relu,
             inputs,
             torch.zeros_like(inputs),
             0,
