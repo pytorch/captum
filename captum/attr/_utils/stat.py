@@ -38,6 +38,13 @@ class Stat:
 
     def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
         assert self._other_stats is not None
+        self._other_stats: Optional[SummarizerSingleTensor] = None
+
+    def init(self):
+        pass
+
+    def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
+        assert self._other_stats is not None
         return self._other_stats.get(stat)
 
     def update(self, x: Tensor):
@@ -223,7 +230,7 @@ class StdDev(Stat):
 
 class GeneralAccumFn(Stat):
     """
-    Performs updaate(x): result = fn(result, x)
+    Performs update(x): result = fn(result, x)
     where fn is a custom function
     """
 
