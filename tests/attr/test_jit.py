@@ -4,41 +4,22 @@ import copy
 import torch
 from enum import Enum
 from torch import Tensor
-from functools import reduce
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.input_x_gradient import InputXGradient
-from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
-from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.layer.internal_influence import InternalInfluence
-from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
-from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
-from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
-from captum.attr._core.neuron.neuron_conductance import NeuronConductance
-from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
-    NeuronDeconvolution,
-    NeuronGuidedBackprop,
-)
-from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+
 from captum.attr._utils.common import _format_input, _format_additional_forward_args
-from .helpers.basic_models import BasicModel_MultiLayer
 
 from .helpers.utils import (
     BaseTest,
-    BaseGPUTest,
-    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
-    get_nested_attr,
 )
 from .helpers.test_config import config
 
@@ -56,10 +37,17 @@ JIT_SUPPORTED = [
 
 class JITCompareMode(Enum):
     """
-    Defines modes for DataParallel tests:
-    cpu_cuda - Compares results when running attribution method on CPU vs GPU / CUDA
-    data_parallel_default - Compares results when running attribution method on GPU with DataParallel
-    data_parallel_alt_dev_ids - Compares results when running attribution method on GPU with DataParallel, but with an alternate device ID ordering (not default)
+    Defines modes for JIT tests:
+    cpu_jit_trace - Compares results of running the test case with a standard model on
+    CPU with the result of JIT tracing the model and computing attributions
+    cpu_jit_script - Compares results of running the test case with a standard model on
+    CPU with the result of JIT scripting the model and computing attributions
+    data_parallel_jit_trace - Compares results of running the test case with a standard
+    model on CPU with the result of JIT tracing the model wrapped in DataParallel and
+    computing attributions
+    data_parallel_jit_script - Compares results of running the test case with a standard
+    model on CPU with the result of JIT scripting the model wrapped in DataParallel and
+    computing attributions
     """
 
     cpu_jit_trace = 1
@@ -89,7 +77,8 @@ class JITMeta(type):
             for algorithm in algorithms:
                 if algorithm in JIT_SUPPORTED:
                     for mode in JITCompareMode:
-                        # Creates test case corresponding to each algorithm and DataParallelCompareMode
+                        # Creates test case corresponding to each algorithm and
+                        # JITCompareMode
                         test_method = cls.make_single_jit_test(
                             algorithm,
                             model,
@@ -117,7 +106,7 @@ class JITMeta(type):
         cls, algorithm, model, args, target_delta, noise_tunnel, baseline_distr, mode
     ):
         """
-        This method creates a single Data Parallel / GPU test for the given algorithm and parameters.
+        This method creates a single JIT test for the given algorithm and parameters.
         """
         model_1 = model
         # Construct cuda_args, moving all tensor inputs in args to CUDA device

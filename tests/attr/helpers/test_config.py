@@ -1,5 +1,4 @@
 import torch
-from torch import Tensor
 import random
 import numpy as np
 from captum.attr._core.integrated_gradients import IntegratedGradients
@@ -7,7 +6,6 @@ from captum.attr._core.saliency import Saliency
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.gradient_shap import GradientShap
-from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop, Deconvolution
@@ -175,7 +173,7 @@ config = [
             FeaturePermutation,
         ],
         "model": BasicModel_MultiLayer(),
-        "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0]),},
+        "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
     },
     {
         "name": "basic_tensor_multi_target",

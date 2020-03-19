@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 import torch
 from torch import Tensor
 import torch.nn as nn

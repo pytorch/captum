@@ -1,39 +1,21 @@
 #!/usr/bin/env python3
-import unittest
 import copy
 import torch
 from enum import Enum
 from torch import Tensor
-from functools import reduce
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.saliency import Saliency
-from captum.attr._core.input_x_gradient import InputXGradient
-from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
-from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._core.feature_ablation import FeatureAblation
-from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 
-from captum.attr._core.layer.internal_influence import InternalInfluence
-from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
-from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
-from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 
-from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
-from .helpers.basic_models import BasicModel_MultiLayer
 
 from .helpers.utils import (
-    BaseTest,
     BaseGPUTest,
-    assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
     get_nested_attr,
 )
@@ -44,8 +26,10 @@ class DataParallelCompareMode(Enum):
     """
     Defines modes for DataParallel tests:
     cpu_cuda - Compares results when running attribution method on CPU vs GPU / CUDA
-    data_parallel_default - Compares results when running attribution method on GPU with DataParallel
-    data_parallel_alt_dev_ids - Compares results when running attribution method on GPU with DataParallel, but with an alternate device ID ordering (not default)
+    data_parallel_default - Compares results when running attribution method on GPU with
+    DataParallel
+    data_parallel_alt_dev_ids - Compares results when running attribution method on GPU
+    with DataParallel, but with an alternate device ID ordering (not default)
     """
 
     cpu_cuda = 1
@@ -74,7 +58,8 @@ class DataParallelMeta(type):
 
             for algorithm in algorithms:
                 for mode in DataParallelCompareMode:
-                    # Creates test case corresponding to each algorithm and DataParallelCompareMode
+                    # Creates test case corresponding to each algorithm and
+                    # DataParallelCompareMode
                     test_method = cls.make_single_dp_test(
                         algorithm,
                         model,
@@ -111,7 +96,8 @@ class DataParallelMeta(type):
         mode,
     ):
         """
-        This method creates a single Data Parallel / GPU test for the given algorithm and parameters.
+        This method creates a single Data Parallel / GPU test for the given
+        algorithm and parameters.
         """
         # Construct cuda_args, moving all tensor inputs in args to CUDA device
         cuda_args = {}
@@ -152,17 +138,19 @@ class DataParallelMeta(type):
                 attr_method_1 = algorithm(
                     model_1, get_nested_attr(model_1, target_layer)
                 )
-                # cuda_model is used to obtain target_layer since DataParallel adds additional wrapper
+                # cuda_model is used to obtain target_layer since DataParallel
+                # adds additional wrapper.
                 # model_2 is always either the CUDA model itself or DataParallel
                 if alt_device_ids is None:
                     attr_method_2 = algorithm(
                         model_2, get_nested_attr(cuda_model, target_layer)
                     )
                 else:
-                    # LayerDeepLift and LayerDeepLiftShap do not take device ids as a parameter,
-                    # since they must always have the DataParallel model object directly
-                    # NeuronDeconvolution and NeuronGuidedBackprop also require the model
-                    # and cannot take a forward function.
+                    # LayerDeepLift and LayerDeepLiftShap do not take device ids
+                    # as a parameter, since they must always have the DataParallel
+                    # model object directly.
+                    # NeuronDeconvolution and NeuronGuidedBackprop also require the
+                    # model and cannot take a forward function.
                     if issubclass(
                         algorithm,
                         (

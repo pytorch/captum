@@ -12,7 +12,6 @@ from ..._utils.common import (
     ExpansionTypes,
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_baseline,
