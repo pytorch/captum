@@ -1,27 +1,24 @@
 #!/usr/bin/env python3
-import unittest
 import copy
-import torch
+import unittest
 from enum import Enum
+
+import torch
 from torch import Tensor
-from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.saliency import Saliency
-from captum.attr._core.input_x_gradient import InputXGradient
-from captum.attr._core.noise_tunnel import NoiseTunnel
+
 from captum.attr._core.feature_ablation import FeatureAblation
-from captum.attr._core.occlusion import Occlusion
-from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
+from captum.attr._core.input_x_gradient import InputXGradient
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._core.occlusion import Occlusion
+from captum.attr._core.saliency import Saliency
+from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.common import _format_additional_forward_args, _format_input
 
-
-from captum.attr._utils.common import _format_input, _format_additional_forward_args
-
-from .helpers.utils import (
-    BaseTest,
-    assertTensorTuplesAlmostEqual,
-)
 from .helpers.test_config import config
+from .helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 JIT_SUPPORTED = [
     IntegratedGradients,

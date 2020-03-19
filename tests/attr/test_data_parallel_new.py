@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
 import copy
-import torch
 from enum import Enum
+
+import torch
 from torch import Tensor
-from captum.attr._core.noise_tunnel import NoiseTunnel
+
 from captum.attr._core.guided_grad_cam import GuidedGradCam
-
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
+from captum.attr._core.noise_tunnel import NoiseTunnel
 
-from .helpers.utils import (
-    BaseGPUTest,
-    assertTensorTuplesAlmostEqual,
-    get_nested_attr,
-)
 from .helpers.test_config import config
+from .helpers.utils import BaseGPUTest, assertTensorTuplesAlmostEqual, get_nested_attr
 
 
 class DataParallelCompareMode(Enum):

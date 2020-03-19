@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import random
 import copy
+import random
 import unittest
 from functools import reduce
 

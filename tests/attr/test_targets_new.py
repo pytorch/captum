@@ -3,19 +3,19 @@
 
 import torch
 from torch import Tensor
+
+from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._core.feature_permutation import FeaturePermutation
-
-
 from captum.attr._utils.common import _format_additional_forward_args
+
 from .helpers.basic_models import BasicModel_MultiLayer
 from .helpers.test_config import config
 from .helpers.utils import (
     BaseTest,
     assertTensorTuplesAlmostEqual,
-    get_nested_attr,
     deep_copy_args,
+    get_nested_attr,
 )
 
 
