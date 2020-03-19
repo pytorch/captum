@@ -293,6 +293,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
             return_convergence_delta=return_convergence_delta,
             attribute_to_layer_input=attribute_to_layer_input,
         )
+        print(attributions)
 
         return attributions
 

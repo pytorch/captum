@@ -262,7 +262,7 @@ class GradientShap(GradientAttribution):
             additional_forward_args=additional_forward_args,
             return_convergence_delta=return_convergence_delta,
         )
-
+        print(attributions)
         return attributions
 
     def has_convergence_delta(self) -> bool:

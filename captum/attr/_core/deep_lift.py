@@ -289,7 +289,7 @@ class DeepLift(GradientAttribution):
 
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
-        
+
         gradient_mask = apply_gradient_requirements(inputs)
 
         _validate_input(inputs, baselines)
@@ -310,7 +310,7 @@ class DeepLift(GradientAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        
+
         expanded_target = _expand_target(
             target, 2, expansion_type=ExpansionTypes.repeat
         )
@@ -332,7 +332,7 @@ class DeepLift(GradientAttribution):
         main_model_pre_hook.remove()
         for hook in dp_model_hooks:
             hook.remove()
-            
+
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -526,10 +526,13 @@ class DeepLift(GradientAttribution):
 
     def _hook_data_parallel_model(self):
         if isinstance(self.model, nn.DataParallel):
+
             def _dp_hook(module, inputs, outputs):
                 return outputs.reshape((outputs.shape[0] // 2, 2) + outputs.shape[1:])
+
             def _final_hook(module, inputs, outputs):
-                return torch.cat((outputs[:,0], outputs[:,1]))
+                return torch.cat((outputs[:, 0], outputs[:, 1]))
+
             forward_dp_hook = self.model.module.register_forward_hook(_dp_hook)
             forward_full_hook = self.model.register_forward_hook(_final_hook)
             return [forward_dp_hook, forward_full_hook]
@@ -825,7 +828,11 @@ class DeepLiftShap(DeepLift):
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
         input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, base_bsz, expansion_type=ExpansionTypes.repeat_interleave)
+            _expand_additional_forward_args(
+                additional_forward_args,
+                base_bsz,
+                expansion_type=ExpansionTypes.repeat_interleave,
+            )
             if additional_forward_args is not None
             else None
         )

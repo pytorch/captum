@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+from typing import Optional, Tuple, Union
 import torch
+from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -173,7 +175,7 @@ class ReLULinearDeepLiftModel(nn.Module):
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self, inplace=False):
+    def __init__(self, inplace: bool = False):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
@@ -183,8 +185,8 @@ class ReLULinearDeepLiftModel(nn.Module):
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
 
-    def forward(self, x1, x2, x3=1):
-        return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], axis=1)))
+    def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:
+        return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
 class Conv1dDeepLiftModel(nn.Module):
@@ -262,12 +264,12 @@ class BasicEmbeddingModel(nn.Module):
 
 
 class MultiRelu(nn.Module):
-    def __init__(self, inplace=False):
+    def __init__(self, inplace: bool = False):
         super().__init__()
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, arg1, arg2):
+    def forward(self, arg1: Tensor, arg2: Tensor) -> Tuple[Tensor, Tensor]:
         return (self.relu1(arg1), self.relu2(arg2))
 
 
@@ -282,23 +284,28 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear1 = nn.Linear(3, 4)
         self.linear1.weight = nn.Parameter(torch.ones(4, 3))
         self.linear1.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
-        if multi_input_module:
-            self.linear1_alt = nn.Linear(3, 4)
-            self.linear1_alt.weight = nn.Parameter(torch.ones(4, 3))
-            self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
-            self.relu = MultiRelu(inplace=inplace)
-        else:
-            self.relu = nn.ReLU(inplace=inplace)
+
+        self.linear1_alt = nn.Linear(3, 4)
+        self.linear1_alt.weight = nn.Parameter(torch.ones(4, 3))
+        self.linear1_alt.bias = nn.Parameter(torch.tensor([-10.0, 1.0, 1.0, 1.0]))
+        self.multi_relu = MultiRelu(inplace=inplace)
+        self.relu = nn.ReLU(inplace=inplace)
+
         self.linear2 = nn.Linear(4, 2)
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
-    def forward(self, x, add_input=None, multidim_output=False):
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        multidim_output: bool = False,
+    ):
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
         if self.multi_input_module:
-            relu_out1, relu_out2 = self.relu(lin1_out, self.linear1_alt(input))
+            relu_out1, relu_out2 = self.multi_relu(lin1_out, self.linear1_alt(input))
             relu_out = relu_out1 + relu_out2
         else:
             relu_out = self.relu(lin1_out)
@@ -315,12 +322,12 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         super().__init__()
         self.model = BasicModel_MultiLayer()
 
-    def forward(self, x1, x2, x3, scale):
+    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):
         return self.model(scale * (x1 + x2 + x3))
 
 
 class BasicModel_ConvNet_One_Conv(nn.Module):
-    def __init__(self, inplace=False):
+    def __init__(self, inplace: bool = False):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU(inplace=inplace)
@@ -333,7 +340,7 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         self.fc1.bias = nn.Parameter(torch.zeros(4))
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, x, x2=None):
+    def forward(self, x: Tensor, x2: Optional[Tensor] = None):
         if x2 is not None:
             x = x + x2
         x = self.relu1(self.conv1(x))
@@ -358,7 +365,7 @@ class BasicModel_ConvNet(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))
@@ -392,7 +399,7 @@ class BasicModel_ConvNet_MaxPool1d(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))

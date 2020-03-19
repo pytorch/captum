@@ -7,14 +7,20 @@ from functools import reduce
 import numpy as np
 import torch
 
+
 def get_nested_attr(obj, layer_name):
     return reduce(getattr, layer_name.split("."), obj)
 
+
 def deep_copy_args(func):
     def copy_args(*args, **kwargs):
-        return func(*(copy.deepcopy(x) for x in args),
-                       **{k: copy.deepcopy(v) for k, v in kwargs.items()})
+        return func(
+            *(copy.deepcopy(x) for x in args),
+            **{k: copy.deepcopy(v) for k, v in kwargs.items()}
+        )
+
     return copy_args
+
 
 def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
     for index, (input, ref) in enumerate(zip(inputArr, refArr)):
