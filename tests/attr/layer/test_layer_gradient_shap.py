@@ -9,16 +9,16 @@ from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 
+from ...helpers.basic import (
+    BaseTest,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.classification_models import SoftmaxModel
-from ..helpers.utils import (
-    BaseTest,
-    assertTensorAlmostEqual,
-    assertTensorTuplesAlmostEqual,
-)
 from ..test_gradient_shap import _assert_attribution_delta
 
 

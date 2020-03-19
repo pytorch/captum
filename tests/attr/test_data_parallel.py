@@ -31,13 +31,13 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 
+from ..helpers.basic import BaseGPUTest
 from .helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     ReLULinearDeepLiftModel,
 )
-from .helpers.utils import BaseGPUTest
 
 
 class Test(BaseGPUTest):

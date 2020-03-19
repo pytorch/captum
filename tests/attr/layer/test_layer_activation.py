@@ -10,14 +10,14 @@ from torch.nn import Module
 
 from captum.attr._core.layer.layer_activation import LayerActivation
 
-from ..helpers.basic_models import (
-    BasicModel_MultiLayer,
-    BasicModel_MultiLayer_MultiInput,
-)
-from ..helpers.utils import (
+from ...helpers.basic import (
     BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
+)
+from ..helpers.basic_models import (
+    BasicModel_MultiLayer,
+    BasicModel_MultiLayer_MultiInput,
 )
 
 

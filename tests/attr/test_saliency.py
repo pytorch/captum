@@ -10,9 +10,9 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual
 from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import BaseTest, assertArraysAlmostEqual
 
 
 def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:

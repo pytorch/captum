@@ -14,8 +14,8 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronDeconvolution,
 )
 
+from ..helpers.basic import BaseTest, assertTensorAlmostEqual
 from .helpers.basic_models import BasicModel_ConvNet_One_Conv
-from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

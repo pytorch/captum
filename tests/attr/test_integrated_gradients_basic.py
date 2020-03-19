@@ -11,6 +11,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline, _zeros
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 from .helpers.basic_models import (
     BasicModel,
     BasicModel2,
@@ -20,7 +21,6 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

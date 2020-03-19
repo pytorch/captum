@@ -12,15 +12,15 @@ from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import _forward_layer_eval
 
+from ...helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
-)
-from ..helpers.utils import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorTuplesAlmostEqual,
 )
 
 

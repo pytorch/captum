@@ -6,7 +6,7 @@ import torch
 
 from captum.attr import MSE, Max, Mean, Min, StdDev, Sum, Summarizer, Var
 
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 def get_values(n=100, lo=None, hi=None, integers=False):

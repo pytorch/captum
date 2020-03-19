@@ -10,13 +10,13 @@ from captum._utils.typing import TargetType
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
+from ..helpers.basic import BaseTest, assertAttributionComparision
 from .helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool1d,
     BasicModel_ConvNet_MaxPool3d,
 )
 from .helpers.classification_models import SigmoidDeepLiftModel, SoftmaxDeepLiftModel
-from .helpers.utils import BaseTest, assertAttributionComparision
 
 
 class Test(BaseTest):

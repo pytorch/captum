@@ -9,11 +9,11 @@ from torch.nn import Module
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.internal_influence import InternalInfluence
 
+from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.utils import BaseTest, assertTensorTuplesAlmostEqual
 
 
 class Test(BaseTest):

@@ -9,6 +9,7 @@ from torch import Tensor
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.feature_ablation import FeatureAblation
 
+from ..helpers.basic import BaseTest, assertTensorAlmostEqual
 from .helpers.basic_models import (
     BasicModel,
     BasicModel_ConvNet_One_Conv,
@@ -16,7 +17,6 @@ from .helpers.basic_models import (
     BasicModel_MultiLayer_MultiInput,
     BasicModelWithSparseInputs,
 )
-from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

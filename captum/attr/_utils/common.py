@@ -4,8 +4,7 @@ from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
 import torch
-from torch import Tensor, device
-from torch.nn import Module
+from torch import Tensor
 
 from ..._utils.common import _format_input
 from ..._utils.typing import (
@@ -18,14 +17,6 @@ from .approximation_methods import SUPPORTED_METHODS
 
 if TYPE_CHECKING:
     from .attribution import GradientAttribution
-
-
-def safe_div(denom: Tensor, quotient: float, default_value: Tensor) -> Tensor:
-    r"""
-        A simple utility function to perform `denom / quotient`
-        if the statement is undefined => result will be `default_value`
-    """
-    return denom / quotient if quotient != 0.0 else default_value
 
 
 def _validate_target(num_samples: int, target: TargetType) -> None:
@@ -407,37 +398,6 @@ def _call_custom_attribution_func(
         raise AssertionError(
             "`custom_attribution_func` must take at least one and at most 3 arguments."
         )
-
-
-def _extract_device(
-    module: Module,
-    hook_inputs: Union[None, Tensor, Tuple[Tensor, ...]],
-    hook_outputs: Union[None, Tensor, Tuple[Tensor, ...]],
-) -> device:
-    params = list(module.parameters())
-    if (
-        (hook_inputs is None or len(hook_inputs) == 0)
-        and (hook_outputs is None or len(hook_outputs) == 0)
-        and len(params) == 0
-    ):
-        raise RuntimeError(
-            """Unable to extract device information for the module
-            {}. Both inputs and outputs to the forward hook and
-            `module.parameters()` are empty.
-            The reason that the inputs to the forward hook are empty
-            could be due to the fact that the arguments to that
-            module {} are all named and are passed as named
-            variables to its forward function.
-            """.format(
-                module, module
-            )
-        )
-    if hook_inputs is not None and len(hook_inputs) > 0:
-        return hook_inputs[0].device
-    if hook_outputs is not None and len(hook_outputs) > 0:
-        return hook_outputs[0].device
-
-    return params[0].device
 
 
 def _find_output_mode_and_verify(
