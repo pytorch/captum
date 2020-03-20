@@ -38,16 +38,16 @@ JIT_SUPPORTED = [
 class JITCompareMode(Enum):
     """
     Defines modes for JIT tests:
-    cpu_jit_trace - Compares results of running the test case with a standard model on
-    CPU with the result of JIT tracing the model and computing attributions
-    cpu_jit_script - Compares results of running the test case with a standard model on
-    CPU with the result of JIT scripting the model and computing attributions
-    data_parallel_jit_trace - Compares results of running the test case with a standard
-    model on CPU with the result of JIT tracing the model wrapped in DataParallel and
-    computing attributions
-    data_parallel_jit_script - Compares results of running the test case with a standard
-    model on CPU with the result of JIT scripting the model wrapped in DataParallel and
-    computing attributions
+    `cpu_jit_trace` - Compares results of running the test case with a standard model
+        on CPU with the result of JIT tracing the model and computing attributions
+    `cpu_jit_script` - Compares results of running the test case with a standard model
+        on CPU with the result of JIT scripting the model and computing attributions
+    `data_parallel_jit_trace` - Compares results of running the test case with a
+        standard model on CPU with the result of JIT tracing the model wrapped in
+        DataParallel and computing attributions
+    `data_parallel_jit_script` - Compares results of running the test case with a
+        standard model on CPU with the result of JIT scripting the model wrapped
+        in DataParallel and computing attributions
     """
 
     cpu_jit_trace = 1
@@ -88,6 +88,11 @@ class JITMeta(type):
                             + algorithm.__name__
                             + ("NoiseTunnel" if noise_tunnel else "")
                         )
+                        if test_name in attrs:
+                            raise AssertionError(
+                                "Trying to overwrite existing test with name: %r"
+                                % test_name
+                            )
                         attrs[test_name] = test_method
 
         return super(JITMeta, cls).__new__(cls, name, bases, attrs)
@@ -107,14 +112,13 @@ class JITMeta(type):
         This method creates a single JIT test for the given algorithm and parameters.
         """
         model_1 = model
-        # Construct cuda_args, moving all tensor inputs in args to CUDA device
         if (
             mode is JITCompareMode.data_parallel_jit_trace
             or JITCompareMode.data_parallel_jit_script
         ):
             if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
                 raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
-
+            # Construct cuda_args, moving all tensor inputs in args to CUDA device
             cuda_args = {}
             for key in args:
                 if isinstance(args[key], Tensor):
@@ -129,7 +133,7 @@ class JITMeta(type):
             args = cuda_args
             model_1 = copy.deepcopy(model).cuda()
 
-        # Initialize models based on DataParallelCompareMode
+        # Initialize models based on JITCompareMode
         if (
             mode is JITCompareMode.cpu_jit_script
             or JITCompareMode.data_parallel_jit_script

@@ -63,6 +63,8 @@ the following information:
     If True, "attribute_args" corresponds to arguments for NoiseTunnel.attribute.
 * "baseline_distr": True or False based on whether baselines in "attribute_args" are
     provided as a distribution or per-example.
+* "target_delta": Delta for comparison in test_targets
+* "dp_delta": Delta for comparison in test_data_parallel
 """
 
 # Set random seeds to ensure deterministic behavior
@@ -432,6 +434,7 @@ config = [
             "n_samples": 2000,
         },
         "target_delta": 1.0,
+        "dp_delta": 0.005,
         "baseline_distr": True,
     },
     {
@@ -461,6 +464,7 @@ config = [
             "stdevs": 0.0,
         },
         "target_delta": 0.6,
+        "dp_delta": 0.003,
         "baseline_distr": True,
     },
     {

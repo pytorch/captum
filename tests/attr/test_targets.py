@@ -24,6 +24,14 @@ from .helpers.utils import (
 
 
 class TargetsMeta(type):
+    """
+    Target tests created in TargetsMeta apply to any test case with targets being a
+    list or tensor.
+    Attribution of each example is computed independently with the appropriate target
+    and compared to the corresponding result of attributing to a batch with a tensor
+    / list of targets.
+    """
+
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
             algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
@@ -46,6 +54,8 @@ class TargetsMeta(type):
                 continue
 
             for algorithm in algorithms:
+                # FeaturePermutation requires a batch of inputs
+                # so skipping tests
                 if issubclass(algorithm, FeaturePermutation):
                     continue
                 test_method = cls.make_single_target_test(
@@ -64,6 +74,10 @@ class TargetsMeta(type):
                     + algorithm.__name__
                     + ("NoiseTunnel" if noise_tunnel else "")
                 )
+                if test_name in attrs:
+                    raise AssertionError(
+                        "Trying to overwrite existing test with name: %r" % test_name
+                    )
                 attrs[test_name] = test_method
         return super(TargetsMeta, cls).__new__(cls, name, bases, attrs)
 
@@ -101,9 +115,10 @@ class TargetsMeta(type):
             original_baselines = args["baselines"]
 
         def target_test_assert(self) -> None:
+            attr_method: Attribution
             if target_layer:
                 internal_algorithm = cast(Type[InternalAttribution], algorithm)
-                attr_method: Attribution = internal_algorithm(model, target_layer)
+                attr_method = internal_algorithm(model, target_layer)
             else:
                 attr_method = algorithm(model)
 
@@ -157,6 +172,9 @@ class TargetsMeta(type):
                     mode="max",
                 )
                 if len(original_targets) == num_examples:
+                    # If original_targets contained multiple elements, then
+                    # we also compare with setting targets to a list with
+                    # a single element.
                     args["target"] = original_targets[i : i + 1]
                     self.setUp()
                     single_attr_target_list = attr_method.attribute(**args)

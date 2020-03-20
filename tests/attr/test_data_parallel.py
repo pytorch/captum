@@ -29,11 +29,11 @@ from .helpers.utils import (
 class DataParallelCompareMode(Enum):
     """
     Defines modes for DataParallel tests:
-    cpu_cuda - Compares results when running attribution method on CPU vs GPU / CUDA
-    data_parallel_default - Compares results when running attribution method on GPU with
-    DataParallel
-    data_parallel_alt_dev_ids - Compares results when running attribution method on GPU
-    with DataParallel, but with an alternate device ID ordering (not default)
+    `cpu_cuda` - Compares results when running attribution method on CPU vs GPU / CUDA
+    `data_parallel_default` - Compares results when running attribution method on GPU
+        with DataParallel
+    `data_parallel_alt_dev_ids` - Compares results when running attribution method on
+        GPU with DataParallel, but with an alternate device ID ordering (not default)
     """
 
     cpu_cuda = 1
@@ -48,9 +48,7 @@ class DataParallelMeta(type):
             model = test_config["model"]
             args = test_config["attribute_args"]
             target_layer = test_config["layer"] if "layer" in test_config else None
-            target_delta = (
-                test_config["target_delta"] if "target_delta" in test_config else 0.0002
-            )
+            dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
             noise_tunnel = (
                 test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
             )
@@ -69,7 +67,7 @@ class DataParallelMeta(type):
                         model,
                         target_layer,
                         args,
-                        target_delta,
+                        dp_delta,
                         noise_tunnel,
                         baseline_distr,
                         mode,
@@ -83,6 +81,11 @@ class DataParallelMeta(type):
                         + algorithm.__name__
                         + ("NoiseTunnel" if noise_tunnel else "")
                     )
+                    if test_name in attrs:
+                        raise AssertionError(
+                            "Trying to overwrite existing test with name: %r"
+                            % test_name
+                        )
                     attrs[test_name] = test_method
 
         return super(DataParallelMeta, cls).__new__(cls, name, bases, attrs)
@@ -95,7 +98,7 @@ class DataParallelMeta(type):
         model: Module,
         target_layer: Module,
         args: Dict[str, Any],
-        target_delta: float,
+        dp_delta: float,
         noise_tunnel: bool,
         baseline_distr: bool,
         mode: DataParallelCompareMode,
@@ -158,7 +161,7 @@ class DataParallelMeta(type):
                     # LayerDeepLift and LayerDeepLiftShap do not take device ids
                     # as a parameter, since they must always have the DataParallel
                     # model object directly.
-                    # NeuronDeconvolution and NeuronGuidedBackprop also require the
+                    # Some neuron methods and GuidedGradCAM also require the
                     # model and cannot take a forward function.
                     if issubclass(
                         internal_algorithm,
@@ -197,17 +200,17 @@ class DataParallelMeta(type):
                     return_convergence_delta=True, **args_2
                 )
                 assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, delta=target_delta, mode="max"
+                    self, attributions_1, attributions_2, mode="max", delta=dp_delta
                 )
                 assertTensorTuplesAlmostEqual(
-                    self, delta_1, delta_2, delta=target_delta, mode="max"
+                    self, delta_1, delta_2, mode="max", delta=dp_delta
                 )
             else:
                 attributions_1 = attr_method_1.attribute(**args_1)
                 self.setUp()
                 attributions_2 = attr_method_2.attribute(**args_2)
                 assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, delta=target_delta, mode="max"
+                    self, attributions_1, attributions_2, mode="max", delta=dp_delta
                 )
 
         return data_parallel_test_assert
