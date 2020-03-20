@@ -48,7 +48,7 @@ class DataParallelMeta(type):
             model = test_config["model"]
             args = test_config["attribute_args"]
             target_layer = test_config["layer"] if "layer" in test_config else None
-            dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
+            dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0002
             noise_tunnel = (
                 test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
             )
@@ -108,41 +108,41 @@ class DataParallelMeta(type):
         This method creates a single Data Parallel / GPU test for the given
         algorithm and parameters.
         """
-        # Construct cuda_args, moving all tensor inputs in args to CUDA device
-        cuda_args = {}
-        for key in args:
-            if isinstance(args[key], Tensor):
-                cuda_args[key] = args[key].cuda()
-            elif isinstance(args[key], tuple):
-                cuda_args[key] = tuple(
-                    elem.cuda() if isinstance(elem, Tensor) else elem
-                    for elem in args[key]
-                )
-            else:
-                cuda_args[key] = args[key]
-
-        alt_device_ids = None
-        cuda_model = copy.deepcopy(model).cuda()
-        # Initialize models based on DataParallelCompareMode
-        if mode is DataParallelCompareMode.cpu_cuda:
-            model_1, model_2 = model, cuda_model
-            args_1, args_2 = args, cuda_args
-        elif mode is DataParallelCompareMode.data_parallel_default:
-            model_1, model_2 = cuda_model, torch.nn.parallel.DataParallel(cuda_model)
-            args_1, args_2 = cuda_args, cuda_args
-        elif mode is DataParallelCompareMode.data_parallel_alt_dev_ids:
-            alt_device_ids = [0] + [
-                x for x in range(torch.cuda.device_count() - 1, 0, -1)
-            ]
-            model_1, model_2 = (
-                cuda_model,
-                torch.nn.parallel.DataParallel(cuda_model, device_ids=alt_device_ids),
-            )
-            args_1, args_2 = cuda_args, cuda_args
-        else:
-            raise AssertionError("DataParallel compare mode type is not valid.")
-
         def data_parallel_test_assert(self) -> None:
+            # Construct cuda_args, moving all tensor inputs in args to CUDA device
+            cuda_args = {}
+            for key in args:
+                if isinstance(args[key], Tensor):
+                    cuda_args[key] = args[key].cuda()
+                elif isinstance(args[key], tuple):
+                    cuda_args[key] = tuple(
+                        elem.cuda() if isinstance(elem, Tensor) else elem
+                        for elem in args[key]
+                    )
+                else:
+                    cuda_args[key] = args[key]
+
+            alt_device_ids = None
+            cuda_model = copy.deepcopy(model).cuda()
+            # Initialize models based on DataParallelCompareMode
+            if mode is DataParallelCompareMode.cpu_cuda:
+                model_1, model_2 = model, cuda_model
+                args_1, args_2 = args, cuda_args
+            elif mode is DataParallelCompareMode.data_parallel_default:
+                model_1, model_2 = cuda_model, torch.nn.parallel.DataParallel(cuda_model)
+                args_1, args_2 = cuda_args, cuda_args
+            elif mode is DataParallelCompareMode.data_parallel_alt_dev_ids:
+                alt_device_ids = [0] + [
+                    x for x in range(torch.cuda.device_count() - 1, 0, -1)
+                ]
+                model_1, model_2 = (
+                    cuda_model,
+                    torch.nn.parallel.DataParallel(cuda_model, device_ids=alt_device_ids),
+                )
+                args_1, args_2 = cuda_args, cuda_args
+            else:
+                raise AssertionError("DataParallel compare mode type is not valid.")
+
             attr_method_1: Attribution
             attr_method_2: Attribution
             if target_layer:
