@@ -468,6 +468,7 @@ class DeepLift(GradientAttribution):
         # remove all the properies that we set for the inputs and output
         del module.input
         del module.output
+        
         return multipliers
 
     def satisfies_attribute_criteria(self, module: Module) -> bool:

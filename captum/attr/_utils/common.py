@@ -148,7 +148,7 @@ def _format_additional_forward_args(additional_forward_args: None) -> None:
 
 @overload
 def _format_additional_forward_args(
-    additional_forward_args: Union[Tensor, Tuple[Tensor, ...]]
+    additional_forward_args: Union[Tensor, Tuple]
 ) -> Tuple:
     ...
 
