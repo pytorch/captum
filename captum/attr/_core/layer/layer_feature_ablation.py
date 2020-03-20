@@ -6,16 +6,16 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
-from ..._utils.attribution import LayerAttribution, PerturbationAttribution
-from ..._utils.common import (
+from ...._utils.common import (
     _extract_device,
     _format_additional_forward_args,
-    _format_attributions,
     _format_input,
     _run_forward,
 )
+from ...._utils.typing import BaselineType, TargetType
+from ..._utils.attribution import LayerAttribution, PerturbationAttribution
+from ..._utils.common import _format_attributions
 from ..._utils.gradient import _forward_layer_eval
-from ..._utils.typing import BaselineType, TargetType
 from ..feature_ablation import FeatureAblation
 
 

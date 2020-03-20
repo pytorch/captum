@@ -6,13 +6,13 @@ import numpy as np
 import torch
 from numpy import ndarray
 
+from captum._utils.typing import Tensor
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._utils.typing import Tensor
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 from .helpers.basic_models import BasicLinearModel, BasicModel2
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):
@@ -72,7 +72,7 @@ class Test(BaseTest):
 
         def generate_baselines_with_inputs(inputs: Tensor) -> Tensor:
             inp_shape = cast(Tuple[int, ...], inputs.shape)
-            return torch.arange(0.0, inp_shape[1] * 2.0,).reshape(2, inp_shape[1])
+            return torch.arange(0.0, inp_shape[1] * 2.0).reshape(2, inp_shape[1])
 
         def generate_baselines_returns_array() -> ndarray:
             return np.arange(0.0, num_in * 4.0).reshape(4, num_in)
@@ -186,7 +186,7 @@ class Test(BaseTest):
         self._assert_shap_ig_comparision(attributions, attributions_ig)
 
     def _assert_shap_ig_comparision(
-        self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...],
+        self, attributions1: Tuple[Tensor, ...], attributions2: Tuple[Tensor, ...]
     ) -> None:
         for attribution1, attribution2 in zip(attributions1, attributions2):
             for attr_row1, attr_row2 in zip(

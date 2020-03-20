@@ -5,19 +5,19 @@ from typing import Any, Callable, Tuple, Union
 import numpy as np
 import torch
 
-from .._utils.attribution import GradientAttribution
-from .._utils.common import (
-    _compute_conv_delta_and_format_attrs,
-    _format_callable_baseline,
-    _format_input_baseline,
-    _is_tuple,
-)
-from .._utils.typing import (
+from ..._utils.common import _is_tuple
+from ..._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     Tensor,
     TensorOrTupleOfTensorsGeneric,
+)
+from .._utils.attribution import GradientAttribution
+from .._utils.common import (
+    _compute_conv_delta_and_format_attrs,
+    _format_callable_baseline,
+    _format_input_baseline,
 )
 from .noise_tunnel import NoiseTunnel
 
@@ -355,7 +355,7 @@ class InputBaselineXGradient(GradientAttribution):
 
 
 def _scale_input(
-    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor,
+    input: Tensor, baseline: Union[Tensor, int, float], rand_coefficient: Tensor
 ) -> Tensor:
     # batch size
     bsz = input.shape[0]

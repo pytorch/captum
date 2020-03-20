@@ -7,20 +7,20 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
-from captum.attr._utils.typing import BaselineType
 
+from ...helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
 from ..helpers.conductance_reference import ConductanceReference
-from ..helpers.utils import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorTuplesAlmostEqual,
-)
 
 
 class Test(BaseTest):
@@ -162,7 +162,7 @@ class Test(BaseTest):
             )
 
             assertTensorTuplesAlmostEqual(
-                self, attributions, expected_conductance, delta=0.1,
+                self, attributions, expected_conductance, delta=0.1
             )
 
     def _conductance_reference_test_assert(

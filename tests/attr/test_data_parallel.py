@@ -31,13 +31,13 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
 
+from ..helpers.basic import BaseGPUTest
 from .helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     ReLULinearDeepLiftModel,
 )
-from .helpers.utils import BaseGPUTest
 
 
 class Test(BaseGPUTest):
@@ -656,15 +656,11 @@ class Test(BaseGPUTest):
 
     def test_basic_layer_gradient_shap(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1,
-        )
+        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1)
 
     def test_basic_layer_gradient_shap_with_alt_devices(self):
         net = BasicModel_MultiLayer(inplace=True).cuda()
-        self._basic_gradient_shap_helper(
-            net, LayerGradientShap, net.linear1, True,
-        )
+        self._basic_gradient_shap_helper(net, LayerGradientShap, net.linear1, True)
 
     def _basic_gradient_shap_helper(
         self, net, attr_method_class, layer, alt_device_ids=False

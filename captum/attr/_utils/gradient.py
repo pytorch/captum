@@ -8,9 +8,9 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
+from ..._utils.common import _run_forward, _verify_select_column
+from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from .batching import _reduce_list, _sort_key_list
-from .common import _run_forward, _verify_select_column
-from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
@@ -394,7 +394,7 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
 ) -> Tuple[
-    Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False],
+    Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]
 ]:
     ...
 
@@ -410,9 +410,7 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[
-    Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False],
-]:
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
     ...
 
 

@@ -3,7 +3,7 @@ import torch
 
 from captum.attr import CommonSummarizer
 
-from .helpers.utils import BaseTest
+from ..helpers.basic import BaseTest
 
 
 class Test(BaseTest):

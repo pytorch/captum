@@ -6,18 +6,26 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from ..._core.deep_lift import DeepLift, DeepLiftShap
-from ..._utils.attribution import LayerAttribution
-from ..._utils.common import (
+from ...._utils.common import (
     ExpansionTypes,
-    _call_custom_attribution_func,
-    _compute_conv_delta_and_format_attrs,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_input,
+)
+from ...._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
+from ..._core.deep_lift import DeepLift, DeepLiftShap
+from ..._utils.attribution import LayerAttribution
+from ..._utils.common import (
+    _call_custom_attribution_func,
+    _compute_conv_delta_and_format_attrs,
     _format_baseline,
     _format_callable_baseline,
-    _format_input,
     _tensorize_baseline,
     _validate_input,
 )
@@ -25,12 +33,6 @@ from ..._utils.gradient import (
     apply_gradient_requirements,
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
-)
-from ..._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
 )
 
 
@@ -116,7 +118,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
         r"""
         Args:
@@ -289,10 +291,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             target, 2, expansion_type=ExpansionTypes.repeat
         )
         wrapped_forward_func = self._construct_forward_func(
-            self.model,
-            (inputs, baselines),
-            expanded_target,
-            input_base_additional_args,
+            self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
 
         def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
@@ -419,7 +418,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         attribute_to_layer_input: bool = False,
         custom_attribution_func: Union[None, Callable[..., Tuple[Tensor, ...]]] = None,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
         r"""
         Args:

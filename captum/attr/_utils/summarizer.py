@@ -39,7 +39,7 @@ class Summarizer:
             # we want input to be consistently a single input or a tuple
             assert not (self._is_inputs_tuple ^ isinstance(x, tuple))
 
-        from .common import _format_tensor_into_tuples
+        from ..._utils.common import _format_tensor_into_tuples
 
         x = _format_tensor_into_tuples(x)
 

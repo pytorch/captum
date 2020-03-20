@@ -12,12 +12,12 @@ from captum.attr._utils.gradient import (
     undo_gradient_requirements,
 )
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual
 from .helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
-from .helpers.utils import BaseTest, assertArraysAlmostEqual
 
 
 class Test(BaseTest):

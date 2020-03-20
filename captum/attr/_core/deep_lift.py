@@ -11,31 +11,33 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
-from .._utils.attribution import GradientAttribution
-from .._utils.common import (
+from ..._utils.common import (
     ExpansionTypes,
-    _call_custom_attribution_func,
-    _compute_conv_delta_and_format_attrs,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
-    _format_attributions,
-    _format_baseline,
-    _format_callable_baseline,
     _format_input,
     _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
-    _tensorize_baseline,
-    _validate_input,
 )
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from .._utils.typing import (
+from ..._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
+from .._utils.attribution import GradientAttribution
+from .._utils.common import (
+    _call_custom_attribution_func,
+    _compute_conv_delta_and_format_attrs,
+    _format_attributions,
+    _format_baseline,
+    _format_callable_baseline,
+    _tensorize_baseline,
+    _validate_input,
+)
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -319,7 +321,7 @@ class DeepLift(GradientAttribution):
         wrapped_forward_func = self._construct_forward_func(
             self.model, (inputs, baselines), expanded_target, input_base_additional_args
         )
-        gradients = self.gradient_func(wrapped_forward_func, inputs,)
+        gradients = self.gradient_func(wrapped_forward_func, inputs)
         if custom_attribution_func is None:
             attributions = tuple(
                 (input - baseline) * gradient
@@ -786,9 +788,7 @@ class DeepLiftShap(DeepLift):
         inputs: Tuple[Tensor, ...],
         target: TargetType,
         additional_forward_args: Any,
-    ) -> Tuple[
-        Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any,
-    ]:
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], TargetType, Any]:
         inp_bsz = inputs[0].shape[0]
         base_bsz = baselines[0].shape[0]
 
@@ -851,7 +851,7 @@ def nonlinear(
     # supported non-linear modules take only single tensor as input hence accessing
     # only the first element in `grad_input` and `grad_output`
     new_grad_inp[0] = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
 
     # If the module is invalid, save the newly computed gradients
@@ -873,7 +873,7 @@ def softmax(
 
     new_grad_inp = list(grad_input)
     grad_input_unnorm = torch.where(
-        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in,
+        abs(delta_in) < eps, new_grad_inp[0], grad_output[0] * delta_out / delta_in
     )
     # normalizing
     n = np.prod(grad_input[0].shape)

@@ -18,9 +18,9 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.common import _run_forward, safe_div
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.attr._utils.common import _run_forward, safe_div
 from captum.insights.config import (
     ATTRIBUTION_METHOD_CONFIG,
     ATTRIBUTION_NAMES_TO_METHODS,

@@ -7,21 +7,21 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
+from ...helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
-)
-from ..helpers.utils import (
-    BaseTest,
-    assertArraysAlmostEqual,
-    assertTensorTuplesAlmostEqual,
 )
 
 

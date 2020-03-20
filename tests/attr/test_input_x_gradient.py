@@ -5,12 +5,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._utils.typing import TensorOrTupleOfTensorsGeneric
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual
 from .helpers.classification_models import SoftmaxModel
-from .helpers.utils import BaseTest, assertArraysAlmostEqual
 from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 
@@ -87,9 +87,7 @@ class Test(BaseTest):
                 )
             self.assertEqual(inputs.shape, attributions.shape)
 
-    def _input_x_gradient_classification_assert(
-        self, nt_type: str = "vanilla",
-    ) -> None:
+    def _input_x_gradient_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5
         input = torch.tensor([[0.0, 1.0, 2.0, 3.0, 4.0]], requires_grad=True)
         target = torch.tensor(5)

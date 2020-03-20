@@ -10,15 +10,15 @@ from torch.nn.parallel.scatter_gather import scatter
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
-    _extract_device,
-    _format_additional_forward_args,
     _format_attributions,
     _format_input_baseline,
     _tensorize_baseline,
     _validate_input,
 )
 from captum.attr._utils.gradient import _forward_layer_eval, _run_forward
-from captum.attr._utils.typing import BaselineType, Literal, TargetType
+
+from ...._utils.common import _extract_device, _format_additional_forward_args
+from ...._utils.typing import BaselineType, Literal, TargetType
 
 
 class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
