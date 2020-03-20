@@ -69,8 +69,8 @@ the following information:
 random.seed(1234)
 np.random.seed(1234)
 torch.manual_seed(1234)
-torch.cuda.manual_seed_all(1234)
-torch.backends.cudnn.deterministic = True
+torch.cuda.manual_seed_all(1234)  # type: ignore
+torch.backends.cudnn.deterministic = True  # type: ignore
 
 config = [
     # Attribution Method Configs

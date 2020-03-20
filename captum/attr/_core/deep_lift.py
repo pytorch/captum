@@ -513,8 +513,11 @@ class DeepLift(GradientAttribution):
                 for input, baseline in zip(inputs, baselines)
             )
             if additional_args is not None:
-                expanded_additional_args = _expand_additional_forward_args(
-                    additional_args, 2, ExpansionTypes.repeat
+                expanded_additional_args = cast(
+                    Tuple,
+                    _expand_additional_forward_args(
+                        additional_args, 2, ExpansionTypes.repeat
+                    ),
                 )
                 return (*baseline_input_tsr, *expanded_additional_args)
             return baseline_input_tsr
@@ -524,7 +527,7 @@ class DeepLift(GradientAttribution):
         else:
             return self.model.register_forward_pre_hook(pre_hook)  # type: ignore
 
-    def _hook_data_parallel_model(self):
+    def _hook_data_parallel_model(self) -> List[RemovableHandle]:
         if isinstance(self.model, nn.DataParallel):
 
             def _dp_hook(module, inputs, outputs):

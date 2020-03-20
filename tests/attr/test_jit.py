@@ -2,9 +2,11 @@
 import copy
 import unittest
 from enum import Enum
+from typing import Any, Callable, Dict, List, Tuple, Type, cast
 
 import torch
 from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
@@ -15,6 +17,7 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.attribution import Attribution
 from captum.attr._utils.common import _format_additional_forward_args, _format_input
 
 from .helpers.test_config import config
@@ -54,14 +57,11 @@ class JITCompareMode(Enum):
 
 
 class JITMeta(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
-            algorithms = test_config["algorithms"]
+            algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
             model = test_config["model"]
             args = test_config["attribute_args"]
-            target_delta = (
-                test_config["target_delta"] if "target_delta" in test_config else 0.0002
-            )
             noise_tunnel = (
                 test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
             )
@@ -77,17 +77,11 @@ class JITMeta(type):
                         # Creates test case corresponding to each algorithm and
                         # JITCompareMode
                         test_method = cls.make_single_jit_test(
-                            algorithm,
-                            model,
-                            args,
-                            target_delta,
-                            noise_tunnel,
-                            baseline_distr,
-                            mode,
+                            algorithm, model, args, noise_tunnel, baseline_distr, mode,
                         )
                         test_name = (
                             "test_"
-                            + test_config["name"]
+                            + cast(str, test_config["name"])
                             + "_"
                             + mode.name
                             + "_"
@@ -101,8 +95,14 @@ class JITMeta(type):
     @classmethod
     @deep_copy_args
     def make_single_jit_test(
-        cls, algorithm, model, args, target_delta, noise_tunnel, baseline_distr, mode
-    ):
+        cls,
+        algorithm: Type[Attribution],
+        model: Module,
+        args: Dict[str, Any],
+        noise_tunnel: bool,
+        baseline_distr: bool,
+        mode: JITCompareMode,
+    ) -> Callable:
         """
         This method creates a single JIT test for the given algorithm and parameters.
         """
@@ -149,7 +149,7 @@ class JITMeta(type):
         else:
             raise AssertionError("JIT compare mode type is not valid.")
 
-        def jit_test_assert(self):
+        def jit_test_assert(self) -> None:
             attr_method_1 = algorithm(model_1)
             attr_method_2 = algorithm(model_2)
 
@@ -165,17 +165,15 @@ class JITMeta(type):
                     return_convergence_delta=True, **args
                 )
                 assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, delta=target_delta, mode="max"
+                    self, attributions_1, attributions_2, mode="max"
                 )
-                assertTensorTuplesAlmostEqual(
-                    self, delta_1, delta_2, delta=target_delta, mode="max"
-                )
+                assertTensorTuplesAlmostEqual(self, delta_1, delta_2, mode="max")
             else:
                 attributions_1 = attr_method_1.attribute(**args)
                 self.setUp()
                 attributions_2 = attr_method_2.attribute(**args)
                 assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, delta=target_delta, mode="max"
+                    self, attributions_1, attributions_2, mode="max"
                 )
 
         return jit_test_assert

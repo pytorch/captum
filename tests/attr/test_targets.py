@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
 
+from typing import Any, Callable, Dict, List, Tuple, Type, cast
+
 import torch
 from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.attribution import Attribution, InternalAttribution
 from captum.attr._utils.common import _format_additional_forward_args
 
 from .helpers.basic_models import BasicModel_MultiLayer
@@ -20,11 +24,11 @@ from .helpers.utils import (
 
 
 class TargetsMeta(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
-            algorithms = test_config["algorithms"]
+            algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
             model = test_config["model"]
-            args = test_config["attribute_args"]
+            args = cast(Dict[str, Any], test_config["attribute_args"])
             layer = test_config["layer"] if "layer" in test_config else None
             target_delta = (
                 test_config["target_delta"] if "target_delta" in test_config else 0.0001
@@ -55,7 +59,7 @@ class TargetsMeta(type):
                 )
                 test_name = (
                     "test_target_"
-                    + test_config["name"]
+                    + cast(str, test_config["name"])
                     + "_"
                     + algorithm.__name__
                     + ("NoiseTunnel" if noise_tunnel else "")
@@ -66,8 +70,15 @@ class TargetsMeta(type):
     @classmethod
     @deep_copy_args
     def make_single_target_test(
-        cls, algorithm, model, layer, args, target_delta, noise_tunnel, baseline_distr
-    ):
+        cls,
+        algorithm: Type[Attribution],
+        model: Module,
+        layer: Module,
+        args: Dict[str, Any],
+        target_delta: float,
+        noise_tunnel: bool,
+        baseline_distr: bool,
+    ) -> Callable:
         """
         This method creates a single target test for the given algorithm and parameters.
         """
@@ -89,9 +100,10 @@ class TargetsMeta(type):
         if replace_baselines:
             original_baselines = args["baselines"]
 
-        def target_test_assert(self):
+        def target_test_assert(self) -> None:
             if target_layer:
-                attr_method = algorithm(model, target_layer)
+                internal_algorithm = cast(Type[InternalAttribution], algorithm)
+                attr_method: Attribution = internal_algorithm(model, target_layer)
             else:
                 attr_method = algorithm(model)
 
@@ -160,14 +172,14 @@ class TargetsMeta(type):
 
 
 class TestTargets(BaseTest, metaclass=TargetsMeta):
-    def test_simple_target_missing_error(self):
+    def test_simple_target_missing_error(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.zeros((1, 3))
         with self.assertRaises(AssertionError):
             attr = IntegratedGradients(net)
             attr.attribute(inp)
 
-    def test_multi_target_error(self):
+    def test_multi_target_error(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.zeros((1, 3))
         with self.assertRaises(AssertionError):

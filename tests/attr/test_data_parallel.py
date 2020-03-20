@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import copy
 from enum import Enum
+from typing import Any, Callable, Dict, List, Tuple, Type, cast
 
 import torch
 from torch import Tensor
+from torch.nn import Module
 
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
@@ -13,6 +15,7 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from .helpers.test_config import config
 from .helpers.utils import (
@@ -39,9 +42,9 @@ class DataParallelCompareMode(Enum):
 
 
 class DataParallelMeta(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
-            algorithms = test_config["algorithms"]
+            algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
             model = test_config["model"]
             args = test_config["attribute_args"]
             target_layer = test_config["layer"] if "layer" in test_config else None
@@ -73,7 +76,7 @@ class DataParallelMeta(type):
                     )
                     test_name = (
                         "test_"
-                        + test_config["name"]
+                        + cast(str, test_config["name"])
                         + "_"
                         + mode.name
                         + "_"
@@ -88,15 +91,16 @@ class DataParallelMeta(type):
     @deep_copy_args
     def make_single_dp_test(
         cls,
-        algorithm,
-        model,
-        target_layer,
-        args,
-        target_delta,
-        noise_tunnel,
-        baseline_distr,
-        mode,
-    ):
+        algorithm: Type[Attribution],
+        model: Module,
+        target_layer: Module,
+        args: Dict[str, Any],
+        target_delta: float,
+        noise_tunnel: bool,
+        baseline_distr: bool,
+        mode: DataParallelCompareMode,
+    ) -> Callable:
+
         """
         This method creates a single Data Parallel / GPU test for the given
         algorithm and parameters.
@@ -135,16 +139,19 @@ class DataParallelMeta(type):
         else:
             raise AssertionError("DataParallel compare mode type is not valid.")
 
-        def data_parallel_test_assert(self):
+        def data_parallel_test_assert(self) -> None:
+            attr_method_1: Attribution
+            attr_method_2: Attribution
             if target_layer:
-                attr_method_1 = algorithm(
+                internal_algorithm = cast(Type[InternalAttribution], algorithm)
+                attr_method_1 = internal_algorithm(
                     model_1, get_nested_attr(model_1, target_layer)
                 )
                 # cuda_model is used to obtain target_layer since DataParallel
                 # adds additional wrapper.
                 # model_2 is always either the CUDA model itself or DataParallel
                 if alt_device_ids is None:
-                    attr_method_2 = algorithm(
+                    attr_method_2 = internal_algorithm(
                         model_2, get_nested_attr(cuda_model, target_layer)
                     )
                 else:
@@ -154,7 +161,7 @@ class DataParallelMeta(type):
                     # NeuronDeconvolution and NeuronGuidedBackprop also require the
                     # model and cannot take a forward function.
                     if issubclass(
-                        algorithm,
+                        internal_algorithm,
                         (
                             LayerDeepLift,
                             LayerDeepLiftShap,
@@ -165,11 +172,11 @@ class DataParallelMeta(type):
                             GuidedGradCam,
                         ),
                     ):
-                        attr_method_2 = algorithm(
+                        attr_method_2 = internal_algorithm(
                             model_2, get_nested_attr(cuda_model, target_layer)
                         )
                     else:
-                        attr_method_2 = algorithm(
+                        attr_method_2 = internal_algorithm(
                             model_2.forward,
                             get_nested_attr(cuda_model, target_layer),
                             device_ids=alt_device_ids,
