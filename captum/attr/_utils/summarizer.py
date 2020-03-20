@@ -170,7 +170,7 @@ class SummarizerSingleTensor:
         r"""
         Args:
             stats (list of Stat): A list of all the Stat objects that
-                need to be updated. This must be in the appropriate order for 
+                need to be updated. This must be in the appropriate order for
                 updates (see `_reorder_stats`)
             summary_stats (list of int): A list of indicies, referencing `stats`,
                 which are the stats you want to show in the .summary property. This
@@ -199,8 +199,8 @@ class SummarizerSingleTensor:
         r"""
         Retrieves `stat` from cache if this summarizer contains it.
 
-        Note that `Stat` has it's hash/equality method overridden, such 
-        that an object with the same class and parameters will have the 
+        Note that `Stat` has it's hash/equality method overridden, such
+        that an object with the same class and parameters will have the
         same hash. Thus, if you call `get` with a `Stat`, an associated
         `Stat` with the same class and parameters belonging to this object
         will be retrieved if it exists.
