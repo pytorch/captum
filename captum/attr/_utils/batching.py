@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 import typing
 from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
 
@@ -121,6 +122,13 @@ def _batched_generator(
     inputs = _format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     num_examples = inputs[0].shape[0]
+    # TODO Reconsider this check if _batched_generator is used for non gradient-based
+    # attribution algorithms
+    if not (inputs[0] * 1).requires_grad:
+        warnings.warn(
+            """It looks like that the attribution for gradient methods is calleds in
+            a `torch.no_grad` block or perhaps the inputs has no requires_grad."""
+        )
     if internal_batch_size is None:
         yield inputs, additional_forward_args, target_ind
     else:
