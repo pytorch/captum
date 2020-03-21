@@ -108,6 +108,7 @@ class DataParallelMeta(type):
         This method creates a single Data Parallel / GPU test for the given
         algorithm and parameters.
         """
+
         def data_parallel_test_assert(self) -> None:
             # Construct cuda_args, moving all tensor inputs in args to CUDA device
             cuda_args = {}
@@ -129,7 +130,10 @@ class DataParallelMeta(type):
                 model_1, model_2 = model, cuda_model
                 args_1, args_2 = args, cuda_args
             elif mode is DataParallelCompareMode.data_parallel_default:
-                model_1, model_2 = cuda_model, torch.nn.parallel.DataParallel(cuda_model)
+                model_1, model_2 = (
+                    cuda_model,
+                    torch.nn.parallel.DataParallel(cuda_model),
+                )
                 args_1, args_2 = cuda_args, cuda_args
             elif mode is DataParallelCompareMode.data_parallel_alt_dev_ids:
                 alt_device_ids = [0] + [
@@ -137,7 +141,9 @@ class DataParallelMeta(type):
                 ]
                 model_1, model_2 = (
                     cuda_model,
-                    torch.nn.parallel.DataParallel(cuda_model, device_ids=alt_device_ids),
+                    torch.nn.parallel.DataParallel(
+                        cuda_model, device_ids=alt_device_ids
+                    ),
                 )
                 args_1, args_2 = cuda_args, cuda_args
             else:
