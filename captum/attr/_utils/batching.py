@@ -126,8 +126,8 @@ def _batched_generator(
     # attribution algorithms
     if not (inputs[0] * 1).requires_grad:
         warnings.warn(
-            """It looks like that the attribution for a gradient-based method is called
-            in a `torch.no_grad` block or perhaps the inputs has no requires_grad."""
+            """It looks like that the attribution for a gradient-based method is computed
+            in a `torch.no_grad` block or perhaps the inputs have no requires_grad."""
         )
     if internal_batch_size is None:
         yield inputs, additional_forward_args, target_ind
