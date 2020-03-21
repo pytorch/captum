@@ -48,7 +48,7 @@ class DataParallelMeta(type):
             model = test_config["model"]
             args = test_config["attribute_args"]
             target_layer = test_config["layer"] if "layer" in test_config else None
-            dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0002
+            dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
             noise_tunnel = (
                 test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
             )
