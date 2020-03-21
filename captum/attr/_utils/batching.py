@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import warnings
 import typing
+import warnings
 from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
 
 import torch
