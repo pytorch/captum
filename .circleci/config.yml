@@ -140,7 +140,6 @@ jobs:
       - lint_flake8
       - lint_black
       - isort
-      - mypy_check
       - unit_tests
       - sphinx
 
@@ -186,7 +185,6 @@ jobs:
       - lint_flake8
       - lint_black
       - isort
-      - mypy_check
       - unit_tests
       - sphinx
 
