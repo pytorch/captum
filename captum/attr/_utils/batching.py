@@ -11,6 +11,56 @@ from ..._utils.typing import (
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
+from .approximation_methods import approximation_parameters
+
+
+def _batched_attribution(
+    attr_method,
+    num_examples,
+    internal_batch_size,
+    n_steps,
+    include_endpoint=False,
+    **kwargs
+):
+    step_count = internal_batch_size // num_examples
+    assert (
+        step_count > 0
+    ), "Internal batch size must be at least equal to the number of input examples."
+    if include_endpoint:
+        assert (
+            step_count > 1
+        ), "Internal batch size must be at least twice the number of input examples."
+    total_attr = None
+    cumulative_steps = 0
+    step_sizes_func, alphas_func = approximation_parameters(kwargs["method"])
+    full_step_sizes = step_sizes_func(n_steps)
+    full_alphas = alphas_func(n_steps)
+    while cumulative_steps < n_steps:
+        start_step = cumulative_steps
+        end_step = min(start_step + step_count, n_steps)
+        batch_steps = end_step - start_step
+        if include_endpoint:
+            batch_steps -= 1
+        step_sizes = full_step_sizes[start_step:end_step]
+        alphas = full_alphas[start_step:end_step]
+        attr_method.predefined_step_size_alphas = (step_sizes, alphas)
+        current_attr = attr_method.attribute(**kwargs, n_steps=batch_steps)
+        if total_attr is None:
+            total_attr = current_attr
+        else:
+            if isinstance(total_attr, Tensor):
+                total_attr = total_attr + current_attr
+            else:
+                total_attr = tuple(
+                    current + prev_total
+                    for current, prev_total in zip(current_attr, total_attr)
+                )
+        if include_endpoint and end_step < n_steps:
+            cumulative_steps = end_step - 1
+        else:
+            cumulative_steps = end_step
+    attr_method.predefined_step_size_alphas = None
+    return total_attr
 
 
 @typing.overload

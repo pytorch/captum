@@ -14,7 +14,7 @@ from ...._utils.common import (
 from ...._utils.typing import BaselineType, Literal, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.batching import _batched_operator
+from ..._utils.batching import _batched_attribution
 from ..._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -65,6 +65,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self.predefined_step_size_alphas = None  # used for internal batching
 
     def has_convergence_delta(self) -> bool:
         return True
@@ -204,9 +205,10 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        2 * #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -271,70 +273,90 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
-
-        # Retrieve scaling factors for specified approximation method
-        step_sizes_func, alphas_func = approximation_parameters(method)
-        alphas = alphas_func(n_steps + 1)
-
-        # Compute scaled inputs from baseline to final input.
-        scaled_features_tpl = tuple(
-            torch.cat(
-                [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
-            ).requires_grad_()
-            for input, baseline in zip(inputs, baselines)
-        )
-
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-        # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguments
-        # that are nd-tensors. It is assumed that the first dimension is
-        # the number of batches.
-        # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
-        input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, n_steps + 1)
-            if additional_forward_args is not None
-            else None
-        )
-        expanded_target = _expand_target(target, n_steps + 1)
-
-        # Conductance Gradients - Returns gradient of output with respect to
-        # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals, is_layer_tuple = _batched_operator(
-            compute_layer_gradients_and_eval,
-            scaled_features_tpl,
-            input_additional_args,
-            internal_batch_size=internal_batch_size,
-            forward_fn=self.forward_func,
-            layer=self.layer,
-            target_ind=expanded_target,
-            device_ids=self.device_ids,
-            attribute_to_layer_input=attribute_to_layer_input,
-        )
-
-        # Compute differences between consecutive evaluations of layer_eval.
-        # This approximates the total input gradient of each step multiplied
-        # by the step size.
-        grad_diffs = tuple(
-            layer_eval[num_examples:] - layer_eval[:-num_examples]
-            for layer_eval in layer_evals
-        )
-
-        # Element-wise multiply gradient of output with respect to hidden layer
-        # and summed gradients with respect to input (chain rule) and sum
-        # across stepped inputs.
-        attributions = tuple(
-            _reshape_and_sum(
-                grad_diff * layer_gradient[:-num_examples],
-                n_steps,
+        if internal_batch_size is not None:
+            attrs = _batched_attribution(
+                self,
                 num_examples,
-                layer_eval.shape[1:],
+                internal_batch_size,
+                n_steps + 1,
+                include_endpoint=True,
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
             )
-            for layer_gradient, layer_eval, grad_diff in zip(
-                layer_gradients, layer_evals, grad_diffs
+            is_layer_tuple = isinstance(attrs, tuple)
+            attributions = attrs if is_layer_tuple else (attrs,)
+        else:
+            if self.predefined_step_size_alphas is None:
+                # Retrieve scaling factors for specified approximation method
+                step_sizes_func, alphas_func = approximation_parameters(method)
+                alphas = alphas_func(n_steps + 1)
+            else:
+                _, alphas = self.predefined_step_size_alphas
+            # Compute scaled inputs from baseline to final input.
+            scaled_features_tpl = tuple(
+                torch.cat(
+                    [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
+                ).requires_grad_()
+                for input, baseline in zip(inputs, baselines)
             )
-        )
+
+            additional_forward_args = _format_additional_forward_args(
+                additional_forward_args
+            )
+            # apply number of steps to additional forward args
+            # currently, number of steps is applied only to additional forward arguments
+            # that are nd-tensors. It is assumed that the first dimension is
+            # the number of batches.
+            # dim -> (#examples * #steps x additional_forward_args[0].shape[1:], ...)
+            input_additional_args = (
+                _expand_additional_forward_args(additional_forward_args, n_steps + 1)
+                if additional_forward_args is not None
+                else None
+            )
+            expanded_target = _expand_target(target, n_steps + 1)
+
+            # Conductance Gradients - Returns gradient of output with respect to
+            # hidden layer and hidden layer evaluated at each input.
+            (
+                layer_gradients,
+                layer_evals,
+                is_layer_tuple,
+            ) = compute_layer_gradients_and_eval(
+                forward_fn=self.forward_func,
+                layer=self.layer,
+                inputs=scaled_features_tpl,
+                additional_forward_args=input_additional_args,
+                target_ind=expanded_target,
+                device_ids=self.device_ids,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
+
+            # Compute differences between consecutive evaluations of layer_eval.
+            # This approximates the total input gradient of each step multiplied
+            # by the step size.
+            grad_diffs = tuple(
+                layer_eval[num_examples:] - layer_eval[:-num_examples]
+                for layer_eval in layer_evals
+            )
+
+            # Element-wise multiply gradient of output with respect to hidden layer
+            # and summed gradients with respect to input (chain rule) and sum
+            # across stepped inputs.
+            attributions = tuple(
+                _reshape_and_sum(
+                    grad_diff * layer_gradient[:-num_examples],
+                    n_steps,
+                    num_examples,
+                    layer_eval.shape[1:],
+                )
+                for layer_gradient, layer_eval, grad_diff in zip(
+                    layer_gradients, layer_evals, grad_diffs
+                )
+            )
 
         if return_convergence_delta:
             start_point, end_point = baselines, inputs

@@ -103,7 +103,7 @@ class Test(BaseTest):
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
     ) -> None:
-        for internal_batch_size in [None, 1, 20]:
+        for internal_batch_size in [None, 5, 20]:
             grad = NeuronIntegratedGradients(model, target_layer)
             attributions = grad.attribute(
                 test_input,

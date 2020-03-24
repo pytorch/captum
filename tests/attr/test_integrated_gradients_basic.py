@@ -382,7 +382,7 @@ class Test(BaseTest):
         if baselines is None:
             baselines = _tensorize_baseline(inputs, _zeros(inputs))
 
-        for internal_batch_size in [None, 1, 20]:
+        for internal_batch_size in [None, 10, 20]:
             attributions, delta = ig.attribute(
                 inputs,
                 baselines,

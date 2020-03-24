@@ -19,7 +19,7 @@ from ..._utils.typing import (
 )
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import GradientAttribution
-from .._utils.batching import _batched_operator
+from .._utils.batching import _batched_attribution
 from .._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -53,6 +53,7 @@ class IntegratedGradients(GradientAttribution):
                           modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+        self.predefined_step_size_alphas = None  # used for internal batching
 
     # The following overloaded method signatures correspond to the case where
     # return_convergence_delta is False, then only attributions are returned,
@@ -196,9 +197,10 @@ class IntegratedGradients(GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -248,67 +250,83 @@ class IntegratedGradients(GradientAttribution):
 
         _validate_input(inputs, baselines, n_steps, method)
 
-        # retrieve step size and scaling factor for specified approximation method
-        step_sizes_func, alphas_func = approximation_parameters(method)
-        step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
-
-        # scale features and compute gradients. (batch size is abbreviated as bsz)
-        # scaled_features' dim -> (bsz * #steps x inputs[0].shape[1:], ...)
-        scaled_features_tpl = tuple(
-            torch.cat(
-                [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
-            ).requires_grad_()
-            for input, baseline in zip(inputs, baselines)
-        )
-
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-        # apply number of steps to additional forward args
-        # currently, number of steps is applied only to additional forward arguments
-        # that are nd-tensors. It is assumed that the first dimension is
-        # the number of batches.
-        # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
-        input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, n_steps)
-            if additional_forward_args is not None
-            else None
-        )
-        expanded_target = _expand_target(target, n_steps)
-
-        # grads: dim -> (bsz * #steps x inputs[0].shape[1:], ...)
-        grads = _batched_operator(
-            self.gradient_func,
-            scaled_features_tpl,
-            input_additional_args,
-            internal_batch_size=internal_batch_size,
-            forward_fn=self.forward_func,
-            target_ind=expanded_target,
-        )
-
-        # flattening grads so that we can multilpy it with step-size
-        # calling contiguous to avoid `memory whole` problems
-        scaled_grads = [
-            grad.contiguous().view(n_steps, -1)
-            * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
-            for grad in grads
-        ]
-
-        # aggregates across all steps for each tensor in the input tuple
-        # total_grads has the same dimensionality as inputs
-        total_grads = [
-            _reshape_and_sum(
-                scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
+        if internal_batch_size is not None:
+            num_examples = inputs[0].shape[0]
+            attributions = _batched_attribution(
+                self,
+                num_examples,
+                internal_batch_size,
+                n_steps,
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=method,
             )
-            for (scaled_grad, grad) in zip(scaled_grads, grads)
-        ]
+        else:
+            if self.predefined_step_size_alphas is None:
+                # retrieve step size and scaling factor for specified
+                # approximation method
+                step_sizes_func, alphas_func = approximation_parameters(method)
+                step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
+            else:
+                step_sizes, alphas = self.predefined_step_size_alphas
 
-        # computes attribution for each tensor in input tuple
-        # attributions has the same dimensionality as inputs
-        attributions = tuple(
-            total_grad * (input - baseline)
-            for total_grad, input, baseline in zip(total_grads, inputs, baselines)
-        )
+            # scale features and compute gradients. (batch size is abbreviated as bsz)
+            # scaled_features' dim -> (bsz * #steps x inputs[0].shape[1:], ...)
+            scaled_features_tpl = tuple(
+                torch.cat(
+                    [baseline + alpha * (input - baseline) for alpha in alphas], dim=0
+                ).requires_grad_()
+                for input, baseline in zip(inputs, baselines)
+            )
+
+            additional_forward_args = _format_additional_forward_args(
+                additional_forward_args
+            )
+            # apply number of steps to additional forward args
+            # currently, number of steps is applied only to additional forward arguments
+            # that are nd-tensors. It is assumed that the first dimension is
+            # the number of batches.
+            # dim -> (bsz * #steps x additional_forward_args[0].shape[1:], ...)
+            input_additional_args = (
+                _expand_additional_forward_args(additional_forward_args, n_steps)
+                if additional_forward_args is not None
+                else None
+            )
+            expanded_target = _expand_target(target, n_steps)
+
+            # grads: dim -> (bsz * #steps x inputs[0].shape[1:], ...)
+            grads = self.gradient_func(
+                forward_fn=self.forward_func,
+                inputs=scaled_features_tpl,
+                target_ind=expanded_target,
+                additional_forward_args=input_additional_args,
+            )
+
+            # flattening grads so that we can multilpy it with step-size
+            # calling contiguous to avoid `memory whole` problems
+            scaled_grads = [
+                grad.contiguous().view(n_steps, -1)
+                * torch.tensor(step_sizes).view(n_steps, 1).to(grad.device)
+                for grad in grads
+            ]
+
+            # aggregates across all steps for each tensor in the input tuple
+            # total_grads has the same dimensionality as inputs
+            total_grads = [
+                _reshape_and_sum(
+                    scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
+                )
+                for (scaled_grad, grad) in zip(scaled_grads, grads)
+            ]
+
+            # computes attribution for each tensor in input tuple
+            # attributions has the same dimensionality as inputs
+            attributions = tuple(
+                total_grad * (input - baseline)
+                for total_grad, input, baseline in zip(total_grads, inputs, baselines)
+            )
         if return_convergence_delta:
             start_point, end_point = baselines, inputs
             # computes approximation error based on the completeness axiom

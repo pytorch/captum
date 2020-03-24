@@ -14,7 +14,7 @@ from ...._utils.common import (
 from ...._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.batching import _batched_operator
+from ..._utils.batching import _batched_attribution
 from ..._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -67,6 +67,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self.predefined_step_size_alphas = None  # used for internal batching
 
     def attribute(
         self,
@@ -176,9 +177,10 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -232,11 +234,31 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
+
+        if internal_batch_size is not None:
+            attrs = _batched_attribution(
+                self,
+                num_examples,
+                internal_batch_size,
+                n_steps,
+                inputs=inputs,
+                baselines=baselines,
+                neuron_index=neuron_index,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=method,
+                attribute_to_neuron_input=attribute_to_neuron_input,
+            )
+            return _format_attributions(is_inputs_tuple, attrs)
+
         total_batch = num_examples * n_steps
 
-        # Retrieve scaling factors for specified approximation method
-        step_sizes_func, alphas_func = approximation_parameters(method)
-        step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
+        if self.predefined_step_size_alphas is None:
+            # retrieve step size and scaling factor for specified approximation method
+            step_sizes_func, alphas_func = approximation_parameters(method)
+            step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
+        else:
+            step_sizes, alphas = self.predefined_step_size_alphas
 
         # Compute scaled inputs from baseline to final input.
         scaled_features_tpl = tuple(
@@ -263,14 +285,12 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval, input_grads, _ = _batched_operator(
-            compute_layer_gradients_and_eval,
-            scaled_features_tpl,
-            input_additional_args,
-            internal_batch_size=internal_batch_size,
+        layer_gradients, layer_eval, input_grads, _ = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
+            inputs=scaled_features_tpl,
             target_ind=expanded_target,
+            additional_forward_args=input_additional_args,
             gradient_neuron_index=neuron_index,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,

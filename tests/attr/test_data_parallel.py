@@ -319,10 +319,13 @@ class Test(BaseGPUTest):
     def test_multi_input_layer_ablation(self):
         net = BasicModel_MultiLayer_MultiInput().cuda()
         inp1, inp2, inp3 = (
-            10 * torch.randn(12, 3).cuda(),
-            5 * torch.randn(12, 3).cuda(),
-            2 * torch.randn(12, 3).cuda(),
+            10 * torch.randn(4, 3).cuda(),
+            5 * torch.randn(4, 3).cuda(),
+            2 * torch.randn(4, 3).cuda(),
         )
+        print(inp1)
+        print(inp2)
+        print(inp3)
         for perturbations_per_eval in [1, 2, 3]:
             self._data_parallel_test_assert(
                 LayerFeatureAblation,
