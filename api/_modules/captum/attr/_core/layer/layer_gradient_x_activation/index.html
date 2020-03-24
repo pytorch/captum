@@ -31,18 +31,15 @@
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
+<span class="kn">from</span> <span class="nn">...._utils.common</span> <span class="kn">import</span> <span class="n">_format_additional_forward_args</span><span class="p">,</span> <span class="n">_format_input</span>
+<span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
-<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_format_attributions</span><span class="p">,</span>
-    <span class="n">_format_input</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_gradient_requirements</span><span class="p">,</span>
     <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
     <span class="n">undo_gradient_requirements</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span>
 
 
 <div class="viewcode-block" id="LayerGradientXActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerGradientXActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>

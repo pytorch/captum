@@ -34,8 +34,8 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">safe_div</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils</span> <span class="kn">import</span> <span class="n">visualization</span> <span class="k">as</span> <span class="n">viz</span>
-<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">safe_div</span>
 <span class="kn">from</span> <span class="nn">captum.insights._utils.transforms</span> <span class="kn">import</span> <span class="n">format_transforms</span>
 
 <span class="n">FeatureOutput</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">"FeatureOutput"</span><span class="p">,</span> <span class="s2">"name base modified type contribution"</span><span class="p">)</span>

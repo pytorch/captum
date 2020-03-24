@@ -45,9 +45,9 @@
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_run_forward</span><span class="p">,</span> <span class="n">safe_div</span>
 <span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.batching</span> <span class="kn">import</span> <span class="n">_batched_generator</span>
-<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_run_forward</span><span class="p">,</span> <span class="n">safe_div</span>
 <span class="kn">from</span> <span class="nn">captum.insights.config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ATTRIBUTION_METHOD_CONFIG</span><span class="p">,</span>
     <span class="n">ATTRIBUTION_NAMES_TO_METHODS</span><span class="p">,</span>
