@@ -4,10 +4,10 @@ from typing import Any, Dict, List, Union
 
 from torch import Tensor
 
-from captum.attr._utils.common import _format_tensor_into_tuples
+from captum._utils.common import _format_tensor_into_tuples
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
-from captum.attr._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class ClassSummarizer(Summarizer):
