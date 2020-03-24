@@ -13,6 +13,7 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 from captum.attr._utils.common import _format_additional_forward_args
 
+from ..helpers.basic import BaseGPUTest, BaseTest, assertTensorAlmostEqual
 from .helpers.basic_models import BasicModel_MultiLayer
 from .helpers.test_config import config
 from .helpers.utils import (

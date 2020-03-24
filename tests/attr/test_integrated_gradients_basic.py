@@ -6,15 +6,12 @@ from typing import Any, Tuple, Union, cast
 import torch
 from torch.nn import Module
 
+from captum._utils.typing import BaselineType, Tensor, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline, _zeros
-from captum.attr._utils.typing import (
-    BaselineType,
-    Tensor,
-    TensorOrTupleOfTensorsGeneric,
-)
 
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 from .helpers.basic_models import (
     BasicModel,
     BasicModel2,
@@ -24,7 +21,6 @@ from .helpers.basic_models import (
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
-from .helpers.utils import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from ...._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
     _compute_conv_delta_and_format_attrs,
@@ -15,7 +16,6 @@ from ..._utils.common import (
     _format_input_baseline,
 )
 from ..._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
-from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from ..gradient_shap import _scale_input
 from ..noise_tunnel import NoiseTunnel
 
@@ -123,7 +123,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
         r"""
         Args:
@@ -361,7 +361,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         return_convergence_delta: bool = False,
         attribute_to_layer_input: bool = False,
     ) -> Union[
-        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor],
+        Tensor, Tuple[Tensor, ...], Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]
     ]:
         inputs, baselines = _format_input_baseline(inputs, baselines)
         rand_coefficient = torch.tensor(

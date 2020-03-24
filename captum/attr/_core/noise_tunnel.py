@@ -6,17 +6,19 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from .._utils.attribution import Attribution
-from .._utils.common import (
+from ..._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
-    _format_attributions,
-    _format_baseline,
     _format_input,
     _format_tensor_into_tuples,
     _is_tuple,
+)
+from .._utils.attribution import Attribution
+from .._utils.common import (
+    _format_attributions,
+    _format_baseline,
     _validate_input,
     _validate_noise_tunnel_type,
 )

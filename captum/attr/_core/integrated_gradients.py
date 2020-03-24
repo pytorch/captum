@@ -5,24 +5,26 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
-from .._utils.approximation_methods import approximation_parameters
-from .._utils.attribution import GradientAttribution
-from .._utils.batching import _batched_operator
-from .._utils.common import (
+from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
-    _format_attributions,
-    _format_input_baseline,
     _is_tuple,
-    _reshape_and_sum,
-    _validate_input,
 )
-from .._utils.typing import (
+from ..._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
+)
+from .._utils.approximation_methods import approximation_parameters
+from .._utils.attribution import GradientAttribution
+from .._utils.batching import _batched_operator
+from .._utils.common import (
+    _format_attributions,
+    _format_input_baseline,
+    _reshape_and_sum,
+    _validate_input,
 )
 
 

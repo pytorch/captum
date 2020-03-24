@@ -5,19 +5,21 @@ from typing import Any, Callable, Tuple, Union, cast
 import torch
 from torch import Tensor, dtype
 
-from .._utils.attribution import PerturbationAttribution
-from .._utils.common import (
+from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
-    _find_output_mode_and_verify,
     _format_additional_forward_args,
-    _format_attributions,
     _format_input,
-    _format_input_baseline,
     _is_tuple,
     _run_forward,
 )
-from .._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from .._utils.attribution import PerturbationAttribution
+from .._utils.common import (
+    _find_output_mode_and_verify,
+    _format_attributions,
+    _format_input_baseline,
+)
 
 
 class FeatureAblation(PerturbationAttribution):

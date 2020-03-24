@@ -4,18 +4,15 @@ from typing import Any, Callable, List, Tuple, Union
 from torch import Tensor
 from torch.nn import Module
 
+from ...._utils.common import _format_additional_forward_args, _format_input
+from ...._utils.typing import TargetType
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.common import (
-    _format_additional_forward_args,
-    _format_attributions,
-    _format_input,
-)
+from ..._utils.common import _format_attributions
 from ..._utils.gradient import (
     apply_gradient_requirements,
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-from ..._utils.typing import TargetType
 
 
 class LayerGradientXActivation(LayerAttribution, GradientAttribution):
