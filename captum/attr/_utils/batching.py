@@ -22,6 +22,22 @@ def _batched_attribution(
     include_endpoint=False,
     **kwargs
 ):
+    """
+    This method applies internal batching to given attribution method, dividing
+    the total steps into batches and running each independently and sequentially,
+    adding each result to compute the total attribution.
+
+    Step sizes and alphas are spliced for each batch and set using the attribute
+    attr_method.predefined_step_size_alphas, which override any provided method or
+    num_steps.
+
+    kwargs include all argument necessary to pass to each attribute call, except
+    for n_steps, which is computed based on the number of steps for the batch.
+
+    include_endpoint ensures that one step overlaps between each batch, which
+    is necessary for some methods, particularly LayerConductance.
+    """
+    # Number of steps for each batch
     step_count = internal_batch_size // num_examples
     assert (
         step_count > 0
@@ -30,21 +46,26 @@ def _batched_attribution(
         assert (
             step_count > 1
         ), "Internal batch size must be at least twice the number of input examples."
+
     total_attr = None
     cumulative_steps = 0
     step_sizes_func, alphas_func = approximation_parameters(kwargs["method"])
     full_step_sizes = step_sizes_func(n_steps)
     full_alphas = alphas_func(n_steps)
+
     while cumulative_steps < n_steps:
         start_step = cumulative_steps
         end_step = min(start_step + step_count, n_steps)
         batch_steps = end_step - start_step
+
         if include_endpoint:
             batch_steps -= 1
+
         step_sizes = full_step_sizes[start_step:end_step]
         alphas = full_alphas[start_step:end_step]
         attr_method.predefined_step_size_alphas = (step_sizes, alphas)
         current_attr = attr_method.attribute(**kwargs, n_steps=batch_steps)
+
         if total_attr is None:
             total_attr = current_attr
         else:
