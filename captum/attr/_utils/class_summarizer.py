@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Union
 
 from torch import Tensor
 
 from captum.attr._utils.common import _format_tensor_into_tuples
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
+from captum.attr._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class ClassSummarizer(Summarizer):
@@ -24,9 +25,7 @@ class ClassSummarizer(Summarizer):
         )
 
     def update(
-        self,
-        x: Union[Tensor, Tuple[Tensor, ...]],
-        labels: Optional[Union[Any, List[Any]]] = None,
+        self, x: TensorOrTupleOfTensorsGeneric, labels: TargetType = None,
     ):
         r"""
         Updates the stats of the summarizer, optionally associated to classes.
@@ -38,7 +37,7 @@ class ClassSummarizer(Summarizer):
                 The input tensor to be summarised. The first
                 dimension of this input must be associated to
                 the batch size of the inputs.
-            labels (Any, List[Any], optional):
+            labels (int, tuple, tensor or list, optional):
                 The associated labels for `x`. If Any, we
                 assume `labels` represents the label for all inputs in `x`.
 
@@ -50,17 +49,32 @@ class ClassSummarizer(Summarizer):
 
         x = _format_tensor_into_tuples(x)
 
-        if not isinstance(labels, list):
-            labels = [labels]
+        num_labels = 1
 
-        for tensor in x:
-            assert tensor.size(0) == len(labels)
+        labels_typed: Union[List[Any], Tensor]
+        if isinstance(labels, list) or isinstance(labels, Tensor):
+            labels_typed = labels
+            num_labels = len(labels)  # = labels.size(0) if tensor
+        else:
+            labels_typed = [labels]
 
-        for i, label in enumerate(labels):
+        # mypy doesn't realise I have made the int a list
+        if len(labels_typed) > 1:
+            for x_i in x:
+                assert x_i.size(0) == num_labels, (
+                    "batch size does not equal amount of labels; "
+                    "please ensure length of labels is equal to 1 or the number"
+                )
+
+        batch_size = x[0].size(0)
+
+        for i in range(batch_size):
             tensors_to_summarize = tuple(tensor[i] for tensor in x)
+            tensors_to_summarize_copy = tuple(tensor[i].clone() for tensor in x)
+            label = labels_typed[0] if len(labels_typed) == 1 else labels_typed[i]
 
             self.summaries[label].update(tensors_to_summarize)
-            super().update(tensors_to_summarize)
+            super().update(tensors_to_summarize_copy)
 
     @property
     def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:

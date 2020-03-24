@@ -43,9 +43,9 @@ class Test(BaseTest):
 
     def test_classes(self):
         sizes_to_test = [
-            ((1,),),
+            # ((1,),),
             ((3, 2, 10, 3), (1,)),
-            ((20,),),
+            # ((20,),),
         ]
         list_of_classes = [
             list(range(100)),
@@ -65,13 +65,8 @@ class Test(BaseTest):
                     ]
 
                 bs = 1 if batch_size is None else batch_size
-
+                num_batches = len(classes) // bs
                 sizes_plus_batch = tuple((bs,) + si for si in sizes)
-
-                # we want to test each possible element
-                num_batches = len(classes)
-                if batch_size is not None:
-                    num_batches //= batch_size
 
                 data = [
                     (
@@ -80,7 +75,6 @@ class Test(BaseTest):
                     )
                     for batch_idx in range(num_batches)
                 ]
-
                 with self.subTest(
                     batch_size=batch_size, sizes=sizes_plus_batch, classes=classes
                 ):
@@ -102,3 +96,26 @@ class Test(BaseTest):
         self.assertIsNotNone(summarizer.class_summaries)
         self.assertIsInstance(summarizer.class_summaries, dict)
         self.assertEqual(len(summarizer.class_summaries), 0)
+
+    def test_single_label(self):
+        size = (4, 3, 2, 1)
+        data = torch.randn((100,) + size)
+
+        single_labels = [1, "apple"]
+
+        for label in single_labels:
+            summarizer = ClassSummarizer(stats=CommonStats())
+            summarizer.update(data, label)
+            summ1 = summarizer.summary
+            summ2 = summarizer.class_summaries
+            self.assertIsNotNone(summ1)
+            self.assertIsNotNone(summ2)
+
+            self.assertIsInstance(summ1, list)
+            self.assertTrue(len(summ1) == 1)
+
+            self.assertIsInstance(summ2, dict)
+            self.assertTrue(label in summ2)
+            self.assertTrue(len(summ1) == len(summ2[label]))
+            for key in summ1[0].keys():
+                self.assertTrue((summ1[0][key] == summ2[label][0][key]).all())
