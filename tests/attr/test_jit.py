@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.common import _format_additional_forward_args, _format_input
 from captum.attr._core.feature_ablation import FeatureAblation
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
@@ -18,10 +19,9 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
-from captum.attr._utils.common import _format_additional_forward_args, _format_input
 
+from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 from .helpers.test_config import config
-from .helpers.utils import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 
 JIT_SUPPORTED = [
     IntegratedGradients,
@@ -138,7 +138,7 @@ class JITMeta(type):
             mode is JITCompareMode.cpu_jit_script
             or JITCompareMode.data_parallel_jit_script
         ):
-            model_2 = torch.jit.script(model_1)
+            model_2 = torch.jit.script(model_1)  # type: ignore
         elif (
             mode is JITCompareMode.cpu_jit_trace
             or JITCompareMode.data_parallel_jit_trace
@@ -149,7 +149,7 @@ class JITMeta(type):
                 and args["additional_forward_args"] is not None
                 else tuple()
             )
-            model_2 = torch.jit.trace(model_1, all_inps)
+            model_2 = torch.jit.trace(model_1, all_inps)  # type: ignore
         else:
             raise AssertionError("JIT compare mode type is not valid.")
 

@@ -7,21 +7,20 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
-from captum.attr._utils.common import _format_additional_forward_args
 
-from ..helpers.basic import BaseGPUTest, BaseTest, assertTensorAlmostEqual
-from .helpers.basic_models import BasicModel_MultiLayer
-from .helpers.test_config import config
-from .helpers.utils import (
+from ..helpers.basic import (
     BaseTest,
     assertTensorTuplesAlmostEqual,
     deep_copy_args,
     get_nested_attr,
 )
+from .helpers.basic_models import BasicModel_MultiLayer
+from .helpers.test_config import config
 
 
 class TargetsMeta(type):

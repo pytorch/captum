@@ -8,7 +8,6 @@ from torch.nn import Module
 
 from ...._utils.common import (
     ExpansionTypes,
-    _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_input,
@@ -289,11 +288,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             target, 2, expansion_type=ExpansionTypes.repeat
         )
         wrapped_forward_func = self._construct_forward_func(
-<<<<<<< HEAD
             self.model, (inputs, baselines), expanded_target, additional_forward_args,
-=======
-            self.model, (inputs, baselines), expanded_target, input_base_additional_args
->>>>>>> 56ee3c47a021e4cac6ffb71cb8a45cef444f3df3
         )
 
         def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:

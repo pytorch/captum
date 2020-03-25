@@ -17,13 +17,13 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
-from .helpers.test_config import config
-from .helpers.utils import (
+from ..helpers.basic import (
     BaseGPUTest,
     assertTensorTuplesAlmostEqual,
     deep_copy_args,
     get_nested_attr,
 )
+from .helpers.test_config import config
 
 
 class DataParallelCompareMode(Enum):

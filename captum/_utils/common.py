@@ -79,6 +79,23 @@ def _format_input(inputs: Union[Tensor, Tuple[Tensor, ...]]) -> Tuple[Tensor, ..
     return _format_tensor_into_tuples(inputs)
 
 
+@overload
+def _format_additional_forward_args(additional_forward_args: None) -> None:
+    ...
+
+
+@overload
+def _format_additional_forward_args(
+    additional_forward_args: Union[Tensor, Tuple]
+) -> Tuple:
+    ...
+
+
+@overload
+def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
+    ...
+
+
 def _format_additional_forward_args(additional_forward_args: Any) -> Union[None, Tuple]:
     if additional_forward_args is not None and not isinstance(
         additional_forward_args, tuple
