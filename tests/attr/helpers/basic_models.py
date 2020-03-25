@@ -180,13 +180,13 @@ class ReLULinearDeepLiftModel(nn.Module):
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
-        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))
-        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))
+        self.l1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 0.0]]))  # type: ignore
+        self.l2.weight = nn.Parameter(torch.tensor([[2.0, 3.0, 0.0]]))  # type: ignore
         self.relu = nn.ReLU(inplace=inplace)
         self.l3 = nn.Linear(2, 1, bias=False)
-        self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))
+        self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))  # type: ignore
 
-    def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:
+    def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:  # type: ignore
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
@@ -270,7 +270,9 @@ class MultiRelu(nn.Module):
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, arg1: Tensor, arg2: Tensor) -> Tuple[Tensor, Tensor]:
+    def forward(  # type: ignore
+        self, arg1: Tensor, arg2: Tensor
+    ) -> Tuple[Tensor, Tensor]:
         return (self.relu1(arg1), self.relu2(arg2))
 
 
@@ -296,7 +298,7 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
-    def forward(
+    def forward(  # type: ignore
         self,
         x: Tensor,
         add_input: Optional[Tensor] = None,
@@ -323,7 +325,7 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         super().__init__()
         self.model = BasicModel_MultiLayer()
 
-    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):
+    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):  # type: ignore
         return self.model(scale * (x1 + x2 + x3))
 
 
@@ -333,15 +335,15 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU(inplace=inplace)
         self.fc1 = nn.Linear(8, 4)
-        self.conv1.weight = nn.Parameter(torch.ones(2, 1, 3, 3))
-        self.conv1.bias = nn.Parameter(torch.tensor([-50.0, -75.0]))
-        self.fc1.weight = nn.Parameter(
+        self.conv1.weight = nn.Parameter(torch.ones(2, 1, 3, 3))  # type: ignore
+        self.conv1.bias = nn.Parameter(torch.tensor([-50.0, -75.0]))  # type: ignore
+        self.fc1.weight = nn.Parameter(  # type: ignore
             torch.cat([torch.ones(4, 5), -1 * torch.ones(4, 3)], dim=1)
         )
-        self.fc1.bias = nn.Parameter(torch.zeros(4))
+        self.fc1.bias = nn.Parameter(torch.zeros(4))  # type: ignore
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, x: Tensor, x2: Optional[Tensor] = None):
+    def forward(self, x: Tensor, x2: Optional[Tensor] = None):  # type: ignore
         if x2 is not None:
             x = x + x2
         x = self.relu1(self.conv1(x))
@@ -366,7 +368,7 @@ class BasicModel_ConvNet(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:  # type: ignore
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))
@@ -400,7 +402,7 @@ class BasicModel_ConvNet_MaxPool1d(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:  # type: ignore
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))
