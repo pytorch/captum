@@ -13,7 +13,7 @@ from captum.attr._utils.gradient import (
 )
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel,
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,

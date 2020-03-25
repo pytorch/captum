@@ -9,7 +9,7 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._core.occlusion import Occlusion
 
 from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel3,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

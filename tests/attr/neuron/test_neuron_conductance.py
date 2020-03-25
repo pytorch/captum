@@ -12,7 +12,7 @@ from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 
 from ...helpers.basic import BaseTest, assertArraysAlmostEqual
-from ..helpers.basic_models import (
+from ...helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

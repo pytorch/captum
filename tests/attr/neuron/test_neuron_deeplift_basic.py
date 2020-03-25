@@ -11,7 +11,7 @@ from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import ReLULinearDeepLiftModel
+from ...helpers.basic_models import ReLULinearDeepLiftModel
 from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
