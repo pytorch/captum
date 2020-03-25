@@ -243,7 +243,7 @@ class FeatureAblation(PerturbationAttribution):
         feature_mask = _format_input(feature_mask) if feature_mask is not None else None
         assert (
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
-        ), "Ablations per evaluation must be at least 1."
+        ), "Perturbations per evaluation must be an integer and at least 1."
         with torch.no_grad():
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
