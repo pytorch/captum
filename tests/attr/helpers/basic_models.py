@@ -270,9 +270,7 @@ class MultiRelu(nn.Module):
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(  # type: ignore
-        self, arg1: Tensor, arg2: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+    def forward(self, arg1: Tensor, arg2: Tensor) -> Tuple[Tensor, Tensor]:  # type: ignore # noqa: E501
         return (self.relu1(arg1), self.relu2(arg2))
 
 
