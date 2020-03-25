@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from typing import Optional, Tuple
+
+from typing import Optional, Tuple, no_type_check
 
 import torch
 import torch.nn as nn
@@ -186,7 +187,8 @@ class ReLULinearDeepLiftModel(nn.Module):
         self.l3 = nn.Linear(2, 1, bias=False)
         self.l3.weight = nn.Parameter(torch.tensor([[1.0, 1.0]]))  # type: ignore
 
-    def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:  # type: ignore
+    @no_type_check
+    def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
@@ -270,7 +272,8 @@ class MultiRelu(nn.Module):
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, arg1: Tensor, arg2: Tensor) -> Tuple[Tensor, Tensor]:  # type: ignore # noqa: E501
+    @no_type_check
+    def forward(self, arg1: Tensor, arg2: Tensor) -> Tuple[Tensor, Tensor]:
         return (self.relu1(arg1), self.relu2(arg2))
 
 
@@ -296,7 +299,8 @@ class BasicModel_MultiLayer(nn.Module):
         self.linear2.weight = nn.Parameter(torch.ones(2, 4))
         self.linear2.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
-    def forward(  # type: ignore
+    @no_type_check
+    def forward(
         self,
         x: Tensor,
         add_input: Optional[Tensor] = None,
@@ -323,7 +327,8 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         super().__init__()
         self.model = BasicModel_MultiLayer()
 
-    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):  # type: ignore
+    @no_type_check
+    def forward(self, x1: Tensor, x2: Tensor, x3: Tensor, scale: int):
         return self.model(scale * (x1 + x2 + x3))
 
 
@@ -366,7 +371,8 @@ class BasicModel_ConvNet(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x: Tensor) -> Tensor:  # type: ignore
+    @no_type_check
+    def forward(self, x: Tensor) -> Tensor:
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))
