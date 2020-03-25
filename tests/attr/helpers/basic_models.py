@@ -8,6 +8,14 @@ import torch.nn.functional as F
 from torch import Tensor
 
 
+"""
+@no_type_check annotation is applied to type-hinted models to avoid errors
+related to mismatch with parent (nn.Module) signature. # type_ignore is not
+possible here, since it causes errors in JIT scripting code which parses
+the relevant type hints.
+"""
+
+
 class BasicModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -346,7 +354,8 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
         self.fc1.bias = nn.Parameter(torch.zeros(4))  # type: ignore
         self.relu2 = nn.ReLU(inplace=inplace)
 
-    def forward(self, x: Tensor, x2: Optional[Tensor] = None):  # type: ignore
+    @no_type_check
+    def forward(self, x: Tensor, x2: Optional[Tensor] = None):
         if x2 is not None:
             x = x + x2
         x = self.relu1(self.conv1(x))
@@ -406,7 +415,8 @@ class BasicModel_ConvNet_MaxPool1d(nn.Module):
         self.fc1.weight = nn.Parameter(torch.ones(8, 4))
         self.fc2.weight = nn.Parameter(torch.ones(10, 8))
 
-    def forward(self, x: Tensor) -> Tensor:  # type: ignore
+    @no_type_check
+    def forward(self, x: Tensor) -> Tensor:
         x = self.relu1(self.conv1(x))
         x = self.pool1(x)
         x = self.relu2(self.conv2(x))
