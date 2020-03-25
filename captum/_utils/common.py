@@ -168,6 +168,7 @@ def _run_forward(
     # using if-statements
     inputs = _format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
+
     output = forward_func(
         *(*inputs, *additional_forward_args)
         if additional_forward_args is not None
