@@ -23,10 +23,10 @@ def infidelity_attr(
     max_examples_per_batch=None,
 ):
     r"""
-    Attribution infidelity represents the expected mean-squared error
-    of the explanation multiplied by a meaningful input perturbation
-    and the differences between the predictor function at its inputs
-    and perturbed inputs.
+    Explanation infidelity represents the expected mean-squared error
+    between the explanation multiplied by a meaningful input perturbation
+    and the differences between the predictor function at its input
+    and perturbed input.
     More details about the measure can be found in the following paper:
     https://arxiv.org/pdf/1901.09392.pdf
 
@@ -52,7 +52,7 @@ def infidelity_attr(
         perturb_func (callable):
                 The perturbation function of model inputs. This function takes
                 model inputs as an argument and returns a tuple of perturbations
-                and permuted inputs. If there are more than one inputs,
+                and perturbeded inputs. If there is more than one input,
                 corresponding perturbations must be computed and returned as tuples
                 in the following format:
                     (perturb1, perturb2, ... perturbN), (input1, input2, ... inputN)
@@ -197,13 +197,16 @@ def infidelity_attr(
         if not is_input_tpl:
             perturbations = _format_tensor_into_tuples(perturbations)
             inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
-        # assert the shape and sizes of the perturbations and inputs
+
+        # asserts the sizes of the perturbations and inputs
         assert len(perturbations) == len(inputs_perturbed), (
             """The number of perturbed
             inputs and corresponding perturbations must have the same number of
              elements. Found number of inputs is: {} and perturbations:
              {}"""
         ).format(len(perturbations), len(inputs_partition))
+
+        # asserts the shapes of the perturbations and perturbed inputs
         for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
             assert perturb.shape == input_perturbed.shape, (
                 """Perturbed input
