@@ -11,8 +11,8 @@ from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.integrated_gradients import IntegratedGradients
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from .helpers.basic_models import BasicLinearModel, BasicModel2
-from .helpers.classification_models import SoftmaxModel
+from ..helpers.basic_models import BasicLinearModel, BasicModel2
+from ..helpers.classification_models import SoftmaxModel
 
 
 class Test(BaseTest):

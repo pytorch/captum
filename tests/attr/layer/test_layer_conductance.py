@@ -15,7 +15,7 @@ from ...helpers.basic import (
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ..helpers.basic_models import (
+from ...helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

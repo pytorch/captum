@@ -22,7 +22,7 @@ from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 
 from ..helpers.basic import BaseGPUTest, BaseTest, assertTensorAlmostEqual
-from .helpers.basic_models import BasicModel_MultiLayer
+from ..helpers.basic_models import BasicModel_MultiLayer
 
 
 class Test(BaseTest):
