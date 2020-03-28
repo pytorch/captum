@@ -2,17 +2,13 @@
 import copy
 import random
 import unittest
-from functools import reduce
+from typing import Callable
 
 import numpy as np
 import torch
 
 
-def get_nested_attr(obj, layer_name):
-    return reduce(getattr, layer_name.split("."), obj)
-
-
-def deep_copy_args(func):
+def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
         return func(
             *(copy.deepcopy(x) for x in args),
@@ -84,6 +80,14 @@ def assert_delta(test, delta):
     )
 
 
+def set_all_random_seeds(seed):
+    random.seed(1234)
+    np.random.seed(1234)
+    torch.manual_seed(1234)
+    torch.cuda.manual_seed_all(1234)
+    torch.backends.cudnn.deterministic = True
+
+
 class BaseTest(unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
@@ -92,11 +96,7 @@ class BaseTest(unittest.TestCase):
     """
 
     def setUp(self):
-        random.seed(1234)
-        np.random.seed(1234)
-        torch.manual_seed(1234)
-        torch.cuda.manual_seed_all(1234)
-        torch.backends.cudnn.deterministic = True
+        set_all_random_seeds(1234)
 
 
 class BaseGPUTest(BaseTest):

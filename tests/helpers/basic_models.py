@@ -179,7 +179,7 @@ class TanhDeepLiftModel(nn.Module):
         return 2 * self.tanh1(x1) + 2 * self.tanh2(x2 - 1.5)
 
 
-class ReLULinearDeepLiftModel(nn.Module):
+class ReLULinearModel(nn.Module):
     r"""
         Simple architecture similar to:
         https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65

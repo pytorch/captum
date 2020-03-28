@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import copy
 from enum import Enum
-from typing import Any, Callable, Dict, List, Tuple, Type, cast
+from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
 import torch
 from torch import Tensor
@@ -15,15 +15,20 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
-from ..helpers.basic import (
-    BaseGPUTest,
-    assertTensorTuplesAlmostEqual,
-    deep_copy_args,
-    get_nested_attr,
-)
+from ..helpers.basic import BaseGPUTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
+
+
+"""
+Tests in this file are dynamically generated based on the config
+defined in tests/attr/helpers/test_config.py. To add new test cases,
+read the documentation in test_config.py and add cases based on the
+schema described there.
+"""
 
 
 class DataParallelCompareMode(Enum):
@@ -44,19 +49,15 @@ class DataParallelCompareMode(Enum):
 class DataParallelMeta(type):
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
-            algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
-            model = test_config["model"]
-            args = test_config["attribute_args"]
-            target_layer = test_config["layer"] if "layer" in test_config else None
+            (
+                algorithms,
+                model,
+                args,
+                layer,
+                noise_tunnel,
+                baseline_distr,
+            ) = parse_test_config(test_config)
             dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
-            noise_tunnel = (
-                test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
-            )
-            baseline_distr = (
-                test_config["baseline_distr"]
-                if "baseline_distr" in test_config
-                else False
-            )
 
             for algorithm in algorithms:
                 for mode in DataParallelCompareMode:
@@ -65,21 +66,18 @@ class DataParallelMeta(type):
                     test_method = cls.make_single_dp_test(
                         algorithm,
                         model,
-                        target_layer,
+                        layer,
                         args,
                         dp_delta,
                         noise_tunnel,
                         baseline_distr,
                         mode,
                     )
-                    test_name = (
-                        "test_"
-                        + cast(str, test_config["name"])
-                        + "_"
-                        + mode.name
-                        + "_"
-                        + algorithm.__name__
-                        + ("NoiseTunnel" if noise_tunnel else "")
+                    test_name = gen_test_name(
+                        "test_dp_" + mode.name,
+                        cast(str, test_config["name"]),
+                        algorithm,
+                        noise_tunnel,
                     )
                     if test_name in attrs:
                         raise AssertionError(
@@ -90,13 +88,15 @@ class DataParallelMeta(type):
 
         return super(DataParallelMeta, cls).__new__(cls, name, bases, attrs)
 
+    # Arguments are deep copied to ensure tests are independent and are not affected
+    # by any modifications within a previous test.
     @classmethod
     @deep_copy_args
     def make_single_dp_test(
         cls,
         algorithm: Type[Attribution],
         model: Module,
-        target_layer: Module,
+        target_layer: Optional[str],
         args: Dict[str, Any],
         dp_delta: float,
         noise_tunnel: bool,
@@ -154,14 +154,14 @@ class DataParallelMeta(type):
             if target_layer:
                 internal_algorithm = cast(Type[InternalAttribution], algorithm)
                 attr_method_1 = internal_algorithm(
-                    model_1, get_nested_attr(model_1, target_layer)
+                    model_1, _get_deep_layer_name(model_1, target_layer)
                 )
                 # cuda_model is used to obtain target_layer since DataParallel
                 # adds additional wrapper.
                 # model_2 is always either the CUDA model itself or DataParallel
                 if alt_device_ids is None:
                     attr_method_2 = internal_algorithm(
-                        model_2, get_nested_attr(cuda_model, target_layer)
+                        model_2, _get_deep_layer_name(cuda_model, target_layer)
                     )
                 else:
                     # LayerDeepLift and LayerDeepLiftShap do not take device ids
@@ -182,12 +182,12 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, get_nested_attr(cuda_model, target_layer)
+                            model_2, _get_deep_layer_name(cuda_model, target_layer)
                         )
                     else:
                         attr_method_2 = internal_algorithm(
                             model_2.forward,
-                            get_nested_attr(cuda_model, target_layer),
+                            _get_deep_layer_name(cuda_model, target_layer),
                             device_ids=alt_device_ids,
                         )
             else:
@@ -222,5 +222,5 @@ class DataParallelMeta(type):
         return data_parallel_test_assert
 
 
-class DataParallelTest(BaseGPUTest, metaclass=DataParallelMeta):
+class DataParallelTest(BaseGPUTest):
     pass

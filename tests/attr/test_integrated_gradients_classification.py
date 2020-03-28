@@ -10,7 +10,7 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
 from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from .helpers.classification_models import SigmoidModel, SoftmaxModel
+from ..helpers.classification_models import SigmoidModel, SoftmaxModel
 
 
 class Test(BaseTest):

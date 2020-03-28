@@ -1,6 +1,5 @@
-import random
+#!/usr/bin/env python3
 
-import numpy as np
 import torch
 
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap
@@ -35,11 +34,12 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 
-from .basic_models import (
+from ...helpers.basic import set_all_random_seeds
+from ...helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
-    ReLULinearDeepLiftModel,
+    ReLULinearModel,
 )
 
 """
@@ -65,14 +65,22 @@ the following information:
     provided as a distribution or per-example.
 * "target_delta": Delta for comparison in test_targets
 * "dp_delta": Delta for comparison in test_data_parallel
+
+To add tests for a new algorithm, simply add the algorithm to any existing test
+case with applicable parameters by adding the algorithm to the corresponding
+algorithms list. If the algorithm has particular arguments not covered by existing
+test cases, add a new test case following the config schema described above. For
+targets tests, ensure that the new test cases includes cases with tensor or list
+targets. If the new algorithm works with JIT models, make sure to also
+add the method to the whitelist in test_jit.
+
+To create new tests for all methods, follow the same structure as test_jit,
+test_targets, or test_data_parallel. Each of these iterates through the test
+config and creates relevant test cases based on the config.
 """
 
 # Set random seeds to ensure deterministic behavior
-random.seed(1234)
-np.random.seed(1234)
-torch.manual_seed(1234)
-torch.cuda.manual_seed_all(1234)  # type: ignore
-torch.backends.cudnn.deterministic = True  # type: ignore
+set_all_random_seeds(1234)
 
 config = [
     # Attribution Method Configs
@@ -532,7 +540,7 @@ config = [
     {
         "name": "basic_multi_input_with_perturbations_per_eval_occlusion",
         "algorithms": [Occlusion],
-        "model": ReLULinearDeepLiftModel(),
+        "model": ReLULinearModel(),
         "attribute_args": {
             "inputs": (torch.randn(4, 3), torch.randn(4, 3)),
             "perturbations_per_eval": 2,
@@ -742,7 +750,7 @@ config = [
     {
         "name": "relu_layer_multi_inp_dl_shap",
         "algorithms": [LayerDeepLiftShap],
-        "model": ReLULinearDeepLiftModel(),
+        "model": ReLULinearModel(),
         "layer": "l3",
         "attribute_args": {
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
@@ -791,7 +799,7 @@ config = [
     {
         "name": "relu_layer_multi_inp_grad_shap",
         "algorithms": [LayerGradientShap],
-        "model": ReLULinearDeepLiftModel(),
+        "model": ReLULinearModel(),
         "layer": "l3",
         "attribute_args": {
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),

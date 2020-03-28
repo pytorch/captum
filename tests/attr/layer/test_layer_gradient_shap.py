@@ -14,11 +14,11 @@ from ...helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ..helpers.basic_models import (
+from ...helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.classification_models import SoftmaxModel
+from ...helpers.classification_models import SoftmaxModel
 from ..test_gradient_shap import _assert_attribution_delta
 
 

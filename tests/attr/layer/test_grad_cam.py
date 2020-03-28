@@ -10,7 +10,7 @@ from torch.nn import Module
 from captum.attr._core.layer.grad_cam import LayerGradCam
 
 from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv, BasicModel_MultiLayer
+from ...helpers.basic_models import BasicModel_ConvNet_One_Conv, BasicModel_MultiLayer
 
 
 class Test(BaseTest):

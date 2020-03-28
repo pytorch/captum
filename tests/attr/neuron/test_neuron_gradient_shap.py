@@ -11,8 +11,8 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 )
 
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModel_MultiLayer
-from ..helpers.classification_models import SoftmaxModel
+from ...helpers.basic_models import BasicModel_MultiLayer
+from ...helpers.classification_models import SoftmaxModel
 
 
 class Test(BaseTest):

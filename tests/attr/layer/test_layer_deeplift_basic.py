@@ -16,16 +16,16 @@ from ...helpers.basic import (
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ..helpers.basic_models import (
+from ...helpers.basic_models import (
     BasicModel_MultiLayer,
     LinearMaxPoolLinearModel,
-    ReLULinearDeepLiftModel,
+    ReLULinearModel,
 )
 
 
 class TestDeepLift(BaseTest):
     def test_relu_layer_deeplift(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         layer_dl = LayerDeepLift(model, model.relu)
@@ -56,7 +56,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_layer_deeplift_add_args(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         layer_dl = LayerDeepLift(model, model.relu)
@@ -71,7 +71,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_linear_layer_deeplift(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         layer_dl = LayerDeepLift(model, model.l3)
@@ -85,13 +85,13 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_deeplift_with_custom_attr_func(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         attr_method = LayerDeepLift(model, model.l3)
         self._relu_custom_attr_func_assert(attr_method, inputs, baselines, [[2.0]])
 
     def test_linear_layer_deeplift_batch(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         _, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         x1 = torch.tensor(
             [[-10.0, 1.0, -5.0], [-10.0, 1.0, -5.0], [-10.0, 1.0, -5.0]],
@@ -122,7 +122,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_layer_deepliftshap(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         (
             inputs,
             baselines,
@@ -158,7 +158,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_linear_layer_deepliftshap(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         (
             inputs,
             baselines,
@@ -182,7 +182,7 @@ class TestDeepLift(BaseTest):
         assert_delta(self, delta)
 
     def test_relu_deepliftshap_with_custom_attr_func(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         (
             inputs,
             baselines,

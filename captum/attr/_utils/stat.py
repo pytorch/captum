@@ -207,3 +207,11 @@ class Max(GeneralAccumFn):
 class Sum(GeneralAccumFn):
     def __init__(self, name=None):
         super().__init__(name=name, fn=torch.add)
+
+
+def CommonStats():
+    r"""
+    Returns common summary statistics, specifically:
+        Mean, Sample Variance, Sample Std Dev, Min, Max
+    """
+    return [Mean(), Var(order=1), StdDev(order=1), Min(), Max()]

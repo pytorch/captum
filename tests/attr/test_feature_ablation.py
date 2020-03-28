@@ -10,7 +10,7 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._core.feature_ablation import FeatureAblation
 
 from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

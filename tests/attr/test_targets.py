@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from typing import Any, Callable, Dict, List, Tuple, Type, cast
+from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
 import torch
 from torch import Tensor
@@ -11,16 +11,21 @@ from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
-from ..helpers.basic import (
-    BaseTest,
-    assertTensorTuplesAlmostEqual,
-    deep_copy_args,
-    get_nested_attr,
-)
-from .helpers.basic_models import BasicModel_MultiLayer
+from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from ..helpers.basic_models import BasicModel_MultiLayer
+from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
+
+
+"""
+Tests in this file are dynamically generated based on the config
+defined in tests/attr/helpers/test_config.py. To add new test cases,
+read the documentation in test_config.py and add cases based on the
+schema described there.
+"""
 
 
 class TargetsMeta(type):
@@ -34,20 +39,16 @@ class TargetsMeta(type):
 
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         for test_config in config:
-            algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
-            model = test_config["model"]
-            args = cast(Dict[str, Any], test_config["attribute_args"])
-            layer = test_config["layer"] if "layer" in test_config else None
+            (
+                algorithms,
+                model,
+                args,
+                layer,
+                noise_tunnel,
+                baseline_distr,
+            ) = parse_test_config(test_config)
             target_delta = (
                 test_config["target_delta"] if "target_delta" in test_config else 0.0001
-            )
-            noise_tunnel = (
-                test_config["noise_tunnel"] if "noise_tunnel" in test_config else False
-            )
-            baseline_distr = (
-                test_config["baseline_distr"]
-                if "baseline_distr" in test_config
-                else False
             )
 
             if "target" not in args or not isinstance(args["target"], (list, Tensor)):
@@ -67,13 +68,13 @@ class TargetsMeta(type):
                     noise_tunnel,
                     baseline_distr,
                 )
-                test_name = (
-                    "test_target_"
-                    + cast(str, test_config["name"])
-                    + "_"
-                    + algorithm.__name__
-                    + ("NoiseTunnel" if noise_tunnel else "")
+                test_name = gen_test_name(
+                    "test_target",
+                    cast(str, test_config["name"]),
+                    algorithm,
+                    noise_tunnel,
                 )
+
                 if test_name in attrs:
                     raise AssertionError(
                         "Trying to overwrite existing test with name: %r" % test_name
@@ -81,13 +82,15 @@ class TargetsMeta(type):
                 attrs[test_name] = test_method
         return super(TargetsMeta, cls).__new__(cls, name, bases, attrs)
 
+    # Arguments are deep copied to ensure tests are independent and are not affected
+    # by any modifications within a previous test.
     @classmethod
     @deep_copy_args
     def make_single_target_test(
         cls,
         algorithm: Type[Attribution],
         model: Module,
-        layer: Module,
+        layer: Optional[str],
         args: Dict[str, Any],
         target_delta: float,
         noise_tunnel: bool,
@@ -97,7 +100,9 @@ class TargetsMeta(type):
         This method creates a single target test for the given algorithm and parameters.
         """
 
-        target_layer = get_nested_attr(model, layer) if layer is not None else None
+        target_layer = _get_deep_layer_name(model, layer) if layer is not None else None
+        # Obtains initial arguments to replace with each example
+        # individually.
         original_inputs = args["inputs"]
         original_targets = args["target"]
         original_additional_forward_args = (

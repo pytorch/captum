@@ -19,7 +19,7 @@ from ...helpers.basic import (
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ..helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
+from ...helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
 
 
 class Test(BaseTest):
