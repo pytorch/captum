@@ -16,7 +16,7 @@ from ..helpers.basic import (
     assertAttributionComparision,
     assertTensorAlmostEqual,
 )
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModelWithReusableModules,
     Conv1dDeepLiftModel,
     LinearMaxPoolLinearModel,

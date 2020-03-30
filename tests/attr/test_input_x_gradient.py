@@ -10,7 +10,7 @@ from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.noise_tunnel import NoiseTunnel
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual
-from .helpers.classification_models import SoftmaxModel
+from ..helpers.classification_models import SoftmaxModel
 from .test_saliency import _get_basic_config, _get_multiargs_basic_config
 
 

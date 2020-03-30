@@ -14,7 +14,7 @@ from captum.attr._models.base import (
 )
 
 from ...helpers.basic import assertArraysAlmostEqual
-from ..helpers.basic_models import BasicEmbeddingModel, TextModule
+from ...helpers.basic_models import BasicEmbeddingModel, TextModule
 
 
 class Test(unittest.TestCase):

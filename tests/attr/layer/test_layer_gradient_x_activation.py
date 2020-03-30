@@ -9,7 +9,7 @@ from torch.nn import Module
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 
 from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ..helpers.basic_models import (
+from ...helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )

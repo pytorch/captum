@@ -11,8 +11,8 @@ from captum.attr._core.saliency import Saliency
 from captum.attr._utils.gradient import compute_gradients
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual
-from .helpers.basic_models import BasicModel, BasicModel5_MultiArgs
-from .helpers.classification_models import SoftmaxModel
+from ..helpers.basic_models import BasicModel, BasicModel5_MultiArgs
+from ..helpers.classification_models import SoftmaxModel
 
 
 def _get_basic_config() -> Tuple[Module, Tensor, Tensor, Any]:

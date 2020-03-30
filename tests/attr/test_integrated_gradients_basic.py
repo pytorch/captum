@@ -12,7 +12,7 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.common import _tensorize_baseline, _zeros
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from .helpers.basic_models import (
+from ..helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel3,
