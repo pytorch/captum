@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, Tuple, Union, List
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
