@@ -63,7 +63,8 @@ class ClassSummarizer(Summarizer):
             for x_i in x:
                 assert x_i.size(0) == num_labels, (
                     "batch size does not equal amount of labels; "
-                    "please ensure length of labels is equal to 1 or the number"
+                    "please ensure length of labels is equal to 1 "
+                    "or the `batch_size` corresponding to the input(s)"
                 )
 
         batch_size = x[0].size(0)
