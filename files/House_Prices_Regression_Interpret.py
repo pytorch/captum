@@ -197,6 +197,8 @@ def train(model_inp, num_epochs = num_epochs):
 
 
 # If the model was previously trained and stored, we load that pre-trained model, otherwise, we train a new model and store it for future uses.
+# 
+# Models can found here: https://github.com/pytorch/captum/tree/master/tutorials/models
 
 # In[12]:
 

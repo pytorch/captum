@@ -81,7 +81,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # 
 # Let's load the VQA model (again, please refer to the [model interpretation tutorial on VQA](https://captum.ai/tutorials/Multimodal_VQA_Interpret) if you want details)
 
-# In[ ]:
+# In[4]:
 
 
 saved_state = torch.load(VQA_MODEL_PATH, map_location=device)
@@ -352,9 +352,9 @@ visualizer = AttributionVisualizer(
 
 # And now we can visualize the outputs produced by the model.
 # 
-# As of writing this tutorial, the `AttributionVisualizer` class utilizes captum's implementation of [integrated gradients](https://captum.ai/docs/algorithms#integrated-gradients) ([`IntegratedGradients`](https://captum.ai/api/integrated_gradients.html)).
+# Insights allows [different attribution methods](https://captum.ai/docs/algorithms) to be chosen. By default, [integrated gradients](https://captum.ai/api/integrated_gradients) is selected.
 
-# In[ ]:
+# In[17]:
 
 
 visualizer.render()
@@ -364,14 +364,14 @@ visualizer.render()
 
 
 # show a screenshot if using notebook non-interactively
-from IPython.display import Image
-Image(filename='img/captum_insights_vqa.png')
+import IPython.display
+IPython.display.Image(filename='img/captum_insights_vqa.png')
 
 
-# Finally, since we are done with visualization, we will revert the change to the model we made with `configure_interpretable_embedding_layer`. To do this, we will invoke the `remove_interpretable_embedding_layer` function.
+# Finally, since we are done with visualization, we will revert the change to the model we made with `configure_interpretable_embedding_layer`. To do this, we will invoke the `remove_interpretable_embedding_layer` function. Uncomment the line below to execute the cell.
 
 # In[19]:
 
 
-remove_interpretable_embedding_layer(vqa_resnet, interpretable_embedding)
+# remove_interpretable_embedding_layer(vqa_resnet, interpretable_embedding)
 

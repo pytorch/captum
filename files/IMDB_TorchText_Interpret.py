@@ -91,7 +91,9 @@ class CNN(nn.Module):
         return self.fc(cat)
 
 
-# Loads pretrained model and sets the model to eval mode
+# Loads pretrained model and sets the model to eval mode.
+# 
+# The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn.pt
 
 # In[ ]:
 

@@ -105,7 +105,7 @@ optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 
 # Trains `Net` model for a very small number of epochs. The training code snippet is copied from the tutorial mentioned above. 
-# In order to avoid training the model every time from scratch, we save a pretrained version of the model in `models` folder and load it from there.
+# In order to avoid training the model every time from scratch, we save a pretrained version of the model in `models` folder and load it from there. https://github.com/pytorch/captum/blob/master/tutorials/models/cifar_torchvision.pt
 
 # In[5]:
 
