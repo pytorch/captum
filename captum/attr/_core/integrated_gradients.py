@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Tuple, Union, List
 
 import torch
 from torch import Tensor
@@ -293,7 +293,7 @@ class IntegratedGradients(GradientAttribution):
         additional_forward_args: Any = None,
         n_steps: int = 50,
         method: str = "gausslegendre",
-        step_sizes_and_alphas: Union[None, Tuple] = None,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
     ) -> Tuple[Tensor, ...]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified

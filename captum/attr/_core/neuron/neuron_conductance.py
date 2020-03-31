@@ -273,7 +273,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "riemann_trapezoid",
         attribute_to_neuron_input: bool = False,
-        step_sizes_and_alphas: Union[None, Tuple] = None,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
     ) -> Tuple[Tensor, ...]:
 
         num_examples = inputs[0].shape[0]

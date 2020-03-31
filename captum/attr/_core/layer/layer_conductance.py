@@ -323,7 +323,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
-        step_sizes_and_alphas: Union[None, Tuple] = None,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         num_examples = inputs[0].shape[0]
         if step_sizes_and_alphas is None:

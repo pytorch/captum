@@ -250,7 +250,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         n_steps: int = 50,
         method: str = "gausslegendre",
         attribute_to_layer_input: bool = False,
-        step_sizes_and_alphas: Union[None, Tuple] = None,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified approximation method
