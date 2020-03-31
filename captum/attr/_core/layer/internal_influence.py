@@ -62,7 +62,6 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
-        self.predefined_step_size_alphas = None  # used for internal batching
 
     def attribute(
         self,
@@ -229,14 +228,36 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                 method=method,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            return attrs
+        else:
+            attrs = self._attribute(
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                n_steps=n_steps,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
 
-        if self.predefined_step_size_alphas is None:
+        return attrs
+
+    def _attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Tuple[Union[Tensor, int, float], ...],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        attribute_to_layer_input: bool = False,
+        step_sizes_and_alphas: Union[None, Tuple] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        if step_sizes_and_alphas is None:
             # retrieve step size and scaling factor for specified approximation method
             step_sizes_func, alphas_func = approximation_parameters(method)
             step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
         else:
-            step_sizes, alphas = self.predefined_step_size_alphas
+            step_sizes, alphas = step_sizes_and_alphas
 
         # Compute scaled inputs from baseline to final input.
         scaled_features_tpl = tuple(

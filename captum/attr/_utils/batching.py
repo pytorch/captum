@@ -28,9 +28,8 @@ def _batched_attribution(
     the total steps into batches and running each independently and sequentially,
     adding each result to compute the total attribution.
 
-    Step sizes and alphas are spliced for each batch and set using the attribute
-    attr_method.predefined_step_size_alphas, which override any provided method or
-    num_steps.
+    Step sizes and alphas are spliced for each batch and passed explicitly for each
+    call to _attribute.
 
     kwargs include all argument necessary to pass to each attribute call, except
     for n_steps, which is computed based on the number of steps for the batch.
@@ -64,8 +63,9 @@ def _batched_attribution(
 
         step_sizes = full_step_sizes[start_step:end_step]
         alphas = full_alphas[start_step:end_step]
-        attr_method.predefined_step_size_alphas = (step_sizes, alphas)
-        current_attr = attr_method.attribute(**kwargs, n_steps=batch_steps)
+        current_attr = attr_method._attribute(
+            **kwargs, n_steps=batch_steps, step_sizes_and_alphas=(step_sizes, alphas)
+        )
 
         if total_attr is None:
             total_attr = current_attr
@@ -81,7 +81,6 @@ def _batched_attribution(
             cumulative_steps = end_step - 1
         else:
             cumulative_steps = end_step
-    attr_method.predefined_step_size_alphas = None
     return total_attr
 
 
