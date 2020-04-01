@@ -226,6 +226,7 @@ def _forward_layer_distributed_eval(
                 saved_layer[eval_tsrs[0].device] = tuple(
                     eval_tsr.clone() for eval_tsr in eval_tsrs
                 )
+
     hook = None
     try:
         if attribute_to_layer_input:
@@ -238,7 +239,7 @@ def _forward_layer_distributed_eval(
             target=target_ind,
             additional_forward_args=additional_forward_args,
         )
-    except:
+    except Exception:
         if hook is not None:
             hook.remove()
         raise

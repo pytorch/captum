@@ -275,7 +275,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         _validate_input(inputs, baselines)
 
         baselines = _tensorize_baseline(inputs, baselines)
-        
+
         main_model_hooks = []
         try:
             main_model_hooks = self._hook_main_model()
@@ -289,7 +289,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 target, 2, expansion_type=ExpansionTypes.repeat
             )
             wrapped_forward_func = self._construct_forward_func(
-                self.model, (inputs, baselines), expanded_target, additional_forward_args,
+                self.model,
+                (inputs, baselines),
+                expanded_target,
+                additional_forward_args,
             )
 
             def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
@@ -320,7 +323,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, attr_inputs, attr_baselines
                 )
-        except: 
+        except Exception:
             self._remove_hooks(main_model_hooks)
             raise
         # remove hooks from all activations

@@ -3,19 +3,13 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
-import torch
-from torch import Tensor
 from torch.nn import Module
 
-from captum._utils.common import _format_additional_forward_args
-from captum.attr._core.feature_permutation import FeaturePermutation
-from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _get_deep_layer_name, _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from ..helpers.basic_models import BasicModel_MultiLayer
+from ..helpers.basic import BaseTest, deep_copy_args
 from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
 
@@ -26,6 +20,7 @@ defined in tests/attr/helpers/test_config.py. To add new test cases,
 read the documentation in test_config.py and add cases based on the
 schema described there.
 """
+
 
 class HookRemovalMode(Enum):
     """
@@ -38,13 +33,16 @@ class HookRemovalMode(Enum):
     `invalid_module` - Verifies no hooks remain after an invalid module
     is executed, which causes an assertion error in model execution.
     """
+
     normal = 1
     incorrect_target_or_neuron = 2
     invalid_module = 3
 
+
 class ErrorModule(Module):
     def forward(*args, **kwargs):
         raise AssertionError("Raising error on execution")
+
 
 class HookRemovalMeta(type):
     """
@@ -54,14 +52,9 @@ class HookRemovalMeta(type):
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         created_tests = {}
         for test_config in config:
-            (
-                algorithms,
-                model,
-                args,
-                layer,
-                noise_tunnel,
-                _,
-            ) = parse_test_config(test_config)
+            (algorithms, model, args, layer, noise_tunnel, _,) = parse_test_config(
+                test_config
+            )
 
             for algorithm in algorithms:
                 for mode in HookRemovalMode:
@@ -72,12 +65,7 @@ class HookRemovalMeta(type):
                         continue
 
                     test_method = cls.make_single_hook_removal_test(
-                        algorithm,
-                        model,
-                        layer,
-                        args,
-                        noise_tunnel,
-                        mode,
+                        algorithm, model, layer, args, noise_tunnel, mode,
                     )
                     test_name = gen_test_name(
                         "test_hook_removal_" + mode.name,
@@ -88,7 +76,8 @@ class HookRemovalMeta(type):
 
                     if test_name in attrs:
                         raise AssertionError(
-                            "Trying to overwrite existing test with name: %r" % test_name
+                            "Trying to overwrite existing test with name: %r"
+                            % test_name
                         )
                     attrs[test_name] = test_method
                     created_tests[(algorithm, mode)] = True
@@ -108,7 +97,8 @@ class HookRemovalMeta(type):
         mode: HookRemovalMode,
     ) -> Callable:
         """
-        This method creates a single hook removal test for the given algorithm and parameters.
+        This method creates a single hook removal test for the given
+        algorithm and parameters.
         """
 
         def hook_removal_test_assert(self) -> None:
@@ -127,14 +117,13 @@ class HookRemovalMeta(type):
             if noise_tunnel:
                 attr_method = NoiseTunnel(attr_method)
 
-            
             if mode is HookRemovalMode.incorrect_target_or_neuron:
                 # Deleting necessary arguments will cause error in attribution
                 if "target" in args:
-                    args["target"] = (9999,)*20
+                    args["target"] = (9999,) * 20
                     expect_error = True
                 if "neuron_index" in args:
-                    args["neuron_index"] = (9999,)*20
+                    args["neuron_index"] = (9999,) * 20
                     expect_error = True
 
             if expect_error:
@@ -147,7 +136,9 @@ class HookRemovalMeta(type):
                 self.assertEqual(len(module._forward_hooks), 0)
                 self.assertEqual(len(module._backward_hooks), 0)
                 self.assertEqual(len(module._forward_pre_hooks), 0)
+
             model.apply(check_leftover_hooks)
+
         return hook_removal_test_assert
 
 

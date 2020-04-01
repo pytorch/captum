@@ -63,10 +63,10 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             gradients = self.gradient_func(
                 self.forward_func, inputs, target, additional_forward_args
             )
-        except:
+        except Exception:
             self._remove_hooks()
             raise
-            
+
         # remove set hooks
         self._remove_hooks()
 

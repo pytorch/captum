@@ -320,7 +320,10 @@ class DeepLift(GradientAttribution):
             )
 
             wrapped_forward_func = self._construct_forward_func(
-                self.model, (inputs, baselines), expanded_target, additional_forward_args
+                self.model,
+                (inputs, baselines),
+                expanded_target,
+                additional_forward_args,
             )
             gradients = self.gradient_func(wrapped_forward_func, inputs)
             if custom_attribution_func is None:
@@ -332,8 +335,8 @@ class DeepLift(GradientAttribution):
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, inputs, baselines
                 )
-        except:
-            # If any error is raised, remove 
+        except Exception:
+            # If any error is raised, remove
             # all hooks before raising
             self._remove_hooks(main_model_hooks)
             raise

@@ -324,6 +324,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     if is_layer_tuple:
                         return scattered_inputs_dict[device]
                     return scattered_inputs_dict[device][0]
+
                 hook = None
                 try:
                     if attribute_to_layer_input:
@@ -334,7 +335,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     output = _run_forward(
                         self.forward_func, tuple(), target_ind, additional_forward_args
                     )
-                except:
+                except Exception:
                     if hook is not None:
                         hook.remove()
                     raise
