@@ -20,6 +20,7 @@ from ..._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
+    _select_targets,
 )
 from ..._utils.typing import (
     BaselineType,
@@ -304,8 +305,7 @@ class DeepLift(GradientAttribution):
         )
 
         baselines = _tensorize_baseline(inputs, baselines)
-        main_model_pre_hook = self._pre_hook_main_model()
-        dp_model_hooks = self._hook_data_parallel_model()
+        main_model_pre_hooks = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
 
@@ -331,8 +331,7 @@ class DeepLift(GradientAttribution):
                 custom_attribution_func, gradients, inputs, baselines
             )
         # remove hooks from all activations
-        main_model_pre_hook.remove()
-        for hook in dp_model_hooks:
+        for hook in main_model_pre_hooks:
             hook.remove()
 
         self._remove_hooks()
@@ -357,7 +356,12 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
     ) -> Callable:
         def forward_fn():
-            return _run_forward(forward_func, inputs, target, additional_forward_args)
+            model_out = _run_forward(
+                forward_func, inputs, None, additional_forward_args
+            )
+            return _select_targets(
+                torch.cat((model_out[:, 0], model_out[:, 1])), target
+            )
 
         if hasattr(forward_func, "device_ids"):
             forward_fn.device_ids = forward_func.device_ids  # type: ignore
@@ -503,7 +507,7 @@ class DeepLift(GradientAttribution):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
 
-    def _pre_hook_main_model(self) -> RemovableHandle:
+    def _hook_main_model(self) -> List[RemovableHandle]:
         def pre_hook(module: Module, baseline_inputs_add_args: Tuple) -> Tuple:
             inputs = baseline_inputs_add_args[0]
             baselines = baseline_inputs_add_args[1]
@@ -525,10 +529,19 @@ class DeepLift(GradientAttribution):
                 return (*baseline_input_tsr, *expanded_additional_args)
             return baseline_input_tsr
 
+        def forward_hook(module: Module, inputs: Tuple, outputs: Tensor):
+            return torch.stack(torch.chunk(outputs, 2), dim=1)
+
         if isinstance(self.model, nn.DataParallel):
-            return self.model.module.register_forward_pre_hook(pre_hook)  # type: ignore
+            return [
+                self.model.module.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.model.module.register_forward_hook(forward_hook),
+            ]  # type: ignore
         else:
-            return self.model.register_forward_pre_hook(pre_hook)  # type: ignore
+            return [
+                self.model.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.model.register_forward_hook(forward_hook),
+            ]  # type: ignore
 
     def _hook_data_parallel_model(self) -> List[RemovableHandle]:
         if isinstance(self.model, nn.DataParallel):

@@ -276,8 +276,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         baselines = _tensorize_baseline(inputs, baselines)
 
-        main_model_pre_hook = self._pre_hook_main_model()
-        dp_model_hooks = self._hook_data_parallel_model()
+        main_model_hooks = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
 
@@ -320,9 +319,8 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 custom_attribution_func, gradients, attr_inputs, attr_baselines
             )
         # remove hooks from all activations
-        main_model_pre_hook.remove()
         self._remove_hooks()
-        for hook in dp_model_hooks:
+        for hook in main_model_hooks:
             hook.remove()
 
         undo_gradient_requirements(inputs, gradient_mask)
