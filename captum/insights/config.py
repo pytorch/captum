@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, NamedTuple, Optional, Tuple, Dict
 
 from captum.attr import (
     Deconvolution,
     DeepLift,
+    FeatureAblation,
     GuidedBackprop,
     InputXGradient,
     IntegratedGradients,
@@ -31,6 +32,7 @@ SUPPORTED_ATTRIBUTION_METHODS = [
     InputXGradient,
     IntegratedGradients,
     Saliency,
+    FeatureAblation,
 ]
 
 ATTRIBUTION_NAMES_TO_METHODS = {
@@ -39,9 +41,12 @@ ATTRIBUTION_NAMES_TO_METHODS = {
     for cls in SUPPORTED_ATTRIBUTION_METHODS
 }
 
-ATTRIBUTION_METHOD_CONFIG = {
+ATTRIBUTION_METHOD_CONFIG: Dict[str, Dict[str, tuple]] = {
     IntegratedGradients.get_name(): {
         "n_steps": NumberConfig(value=25, limit=(2, None)),
         "method": StrEnumConfig(limit=SUPPORTED_METHODS, value="gausslegendre"),
-    }
+    },
+    FeatureAblation.get_name(): {
+        "perturbations_per_eval": NumberConfig(value=1, limit=(1, 100)),
+    },
 }
