@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import List, NamedTuple, Optional, Tuple, Dict
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 from captum.attr import (
     Deconvolution,

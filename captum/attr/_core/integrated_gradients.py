@@ -19,7 +19,7 @@ from ..._utils.typing import (
 )
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import GradientAttribution
-from .._utils.batching import _batched_attribution
+from .._utils.batching import _batch_attribution
 from .._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -251,7 +251,7 @@ class IntegratedGradients(GradientAttribution):
 
         if internal_batch_size is not None:
             num_examples = inputs[0].shape[0]
-            attributions = _batched_attribution(
+            attributions = _batch_attribution(
                 self,
                 num_examples,
                 internal_batch_size,

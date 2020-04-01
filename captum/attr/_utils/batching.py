@@ -15,7 +15,7 @@ from ..._utils.typing import (
 from .approximation_methods import approximation_parameters
 
 
-def _batched_attribution(
+def _batch_attribution(
     attr_method,
     num_examples,
     internal_batch_size,
@@ -37,15 +37,23 @@ def _batched_attribution(
     include_endpoint ensures that one step overlaps between each batch, which
     is necessary for some methods, particularly LayerConductance.
     """
+    if internal_batch_size < num_examples:
+        warnings.warn(
+            "Internal batch size cannot be less than the number of input examples."
+            "Defaulting to internal batch size of %d equal to the number of examples."
+            % num_examples
+        )
     # Number of steps for each batch
-    step_count = internal_batch_size // num_examples
-    assert (
-        step_count > 0
-    ), "Internal batch size must be at least equal to the number of input examples."
+    step_count = max(1, internal_batch_size // num_examples)
     if include_endpoint:
-        assert (
-            step_count > 1
-        ), "Internal batch size must be at least twice the number of input examples."
+        if step_count < 2:
+            step_count = 2
+            warnings.warn(
+                "This method computes finite differences between evaluations at"
+                "consecutive steps, so internal batch size must be at least twice"
+                "the number of examples. Defaulting to internal batch size of %d"
+                " equal to twice the number of examples." % (2 * num_examples)
+            )
 
     total_attr = None
     cumulative_steps = 0
