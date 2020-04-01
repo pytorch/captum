@@ -11,6 +11,7 @@ from ..._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
+    _forward_layer_eval
 )
 
 
@@ -145,11 +146,11 @@ class LayerLRP(LRP, LayerAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
         # 1. Forward pass
-        self._change_weights(inputs)
+        self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
         relevance_input_layer = compute_gradients(
@@ -165,9 +166,23 @@ class LayerLRP(LRP, LayerAttribution):
             delta = self.compute_convergence_delta(
                 relevances[0], inputs, additional_forward_args, target
             )
-            return _format_attributions(is_inputs_tuple, relevances), delta
+            return _format_attributions(is_layer_tuple, relevances), delta
         else:
-            return _format_attributions(is_inputs_tuple, relevances)
+            return _format_attributions(is_layer_tuple, relevances)
+
+    def _is_layer_tuple(self, inputs, additional_forward_args):
+        if self.layer is None:
+            is_layer_tuple = isinstance(inputs, tuple)
+        else:
+            with torch.no_grad():
+                _, is_layer_tuple = _forward_layer_eval(
+                    self.model,
+                    inputs,
+                    self.layer,
+                    additional_forward_args,
+                    attribute_to_layer_input=self.attribute_to_layer_input,
+                )
+        return is_layer_tuple
 
     def _get_output_relevance(self):
         if self.layer is None:

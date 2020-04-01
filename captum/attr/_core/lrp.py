@@ -155,7 +155,7 @@ class LRP(Attribution):
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
         # 1. Forward pass
-        self._change_weights(inputs)
+        self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
         relevances = compute_gradients(
@@ -209,7 +209,6 @@ class LRP(Attribution):
                             to the number of examples, and if multiple input tensors
                             are provided, the examples must be aligned appropriately.
 
-        Keyword Arguments:
                 additional_forward_args (tuple, optional): If the forward function
                             requires additional arguments other than the inputs for
                             which attributions should not be computed, this argument
@@ -255,7 +254,7 @@ class LRP(Attribution):
 
     def _get_layers(self, model):
         for layer in model.children():
-            if list(layer.children()) == []:
+            if len(list(layer.children())) == 0:
                 self.layers.append(layer)
             else:
                 self._get_layers(layer)
@@ -314,9 +313,9 @@ class LRP(Attribution):
                 )
                 self.forward_handles.append(forward_handle)
 
-    def _change_weights(self, inputs):
+    def _change_weights(self, inputs, additional_forward_args):
         self._register_weight_hooks()
-        _ = _run_forward(self.model, inputs)
+        _ = _run_forward(self.model, inputs, None, additional_forward_args)
         self._remove_forward_hooks()
         # pre_hooks for 2nd pass
         self._register_pre_hooks()

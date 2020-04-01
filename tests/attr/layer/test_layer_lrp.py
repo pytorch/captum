@@ -95,7 +95,7 @@ class Test(BaseTest):
         relevance_upper = lrp_upper.attribute(inputs, attribute_to_layer_input=True)
         lrp_lower = LayerLRP(model, model.linear)
         relevance_lower = lrp_lower.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance_lower, relevance_upper)
+        assertTensorAlmostEqual(self, relevance_lower, relevance_upper[0])
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()

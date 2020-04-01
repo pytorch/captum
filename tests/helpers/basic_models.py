@@ -199,6 +199,17 @@ class ReLULinearModel(nn.Module):
     def forward(self, x1: Tensor, x2: Tensor, x3: int = 1) -> Tensor:
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
+class SimpleLRPModel(nn.Module):
+    def __init__(self, inplace):
+        super().__init__()
+        self.linear = nn.Linear(3, 3, bias=False)
+        self.linear.weight.data.fill_(2.0)
+        self.relu = torch.nn.ReLU(inplace=inplace)
+        self.linear2 = nn.Linear(3, 1, bias=False)
+        self.linear2.weight.data.fill_(3.0)
+
+    def forward(self, x):
+        return self.linear2(self.relu(self.linear(x)))
 
 class Conv1dDeepLiftModel(nn.Module):
     def __init__(self):

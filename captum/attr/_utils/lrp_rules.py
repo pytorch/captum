@@ -98,13 +98,11 @@ class GammaRule(PropagationRule):
 
     def _manipulate_weights(self, module, inputs, outputs):
         if hasattr(module, "weight"):
-            module.original_weights = module.weight.clone()
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
             )
         if self.set_bias_to_zero and hasattr(module, "bias"):
             if module.bias is not None:
-                module.original_bias = module.bias
                 module.bias.data = torch.zeros_like(module.bias.data)
 
 
