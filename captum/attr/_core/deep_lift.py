@@ -543,20 +543,6 @@ class DeepLift(GradientAttribution):
                 self.model.register_forward_hook(forward_hook),
             ]  # type: ignore
 
-    def _hook_data_parallel_model(self) -> List[RemovableHandle]:
-        if isinstance(self.model, nn.DataParallel):
-
-            def _dp_hook(module, inputs, outputs):
-                return outputs.reshape((outputs.shape[0] // 2, 2) + outputs.shape[1:])
-
-            def _final_hook(module, inputs, outputs):
-                return torch.cat((outputs[:, 0], outputs[:, 1]))
-
-            forward_dp_hook = self.model.module.register_forward_hook(_dp_hook)
-            forward_full_hook = self.model.register_forward_hook(_final_hook)
-            return [forward_dp_hook, forward_full_hook]
-        return []
-
     def has_convergence_delta(self) -> bool:
         return True
 
