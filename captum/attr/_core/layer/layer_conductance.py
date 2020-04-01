@@ -14,7 +14,7 @@ from ...._utils.common import (
 from ...._utils.typing import BaselineType, Literal, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.batching import _batched_operator
+from ..._utils.batching import _batch_attribution
 from ..._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -204,9 +204,10 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        2 * #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -271,11 +272,66 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         _validate_input(inputs, baselines, n_steps, method)
 
         num_examples = inputs[0].shape[0]
+        if internal_batch_size is not None:
+            num_examples = inputs[0].shape[0]
+            attrs = _batch_attribution(
+                self,
+                num_examples,
+                internal_batch_size,
+                n_steps + 1,
+                include_endpoint=True,
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
 
-        # Retrieve scaling factors for specified approximation method
-        step_sizes_func, alphas_func = approximation_parameters(method)
-        alphas = alphas_func(n_steps + 1)
+        else:
+            attrs = self._attribute(
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                n_steps=n_steps,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
 
+        is_layer_tuple = isinstance(attrs, tuple)
+        attributions = attrs if is_layer_tuple else (attrs,)
+
+        if return_convergence_delta:
+            start_point, end_point = baselines, inputs
+            delta = self.compute_convergence_delta(
+                attributions,
+                start_point,
+                end_point,
+                target=target,
+                additional_forward_args=additional_forward_args,
+            )
+            return _format_attributions(is_layer_tuple, attributions), delta
+        return _format_attributions(is_layer_tuple, attributions)
+
+    def _attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Tuple[Union[Tensor, int, float], ...],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        attribute_to_layer_input: bool = False,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        num_examples = inputs[0].shape[0]
+        if step_sizes_and_alphas is None:
+            # Retrieve scaling factors for specified approximation method
+            step_sizes_func, alphas_func = approximation_parameters(method)
+            alphas = alphas_func(n_steps + 1)
+        else:
+            _, alphas = step_sizes_and_alphas
         # Compute scaled inputs from baseline to final input.
         scaled_features_tpl = tuple(
             torch.cat(
@@ -301,13 +357,15 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals, is_layer_tuple = _batched_operator(
-            compute_layer_gradients_and_eval,
-            scaled_features_tpl,
-            input_additional_args,
-            internal_batch_size=internal_batch_size,
+        (
+            layer_gradients,
+            layer_evals,
+            is_layer_tuple,
+        ) = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
+            inputs=scaled_features_tpl,
+            additional_forward_args=input_additional_args,
             target_ind=expanded_target,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
@@ -335,15 +393,4 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 layer_gradients, layer_evals, grad_diffs
             )
         )
-
-        if return_convergence_delta:
-            start_point, end_point = baselines, inputs
-            delta = self.compute_convergence_delta(
-                attributions,
-                start_point,
-                end_point,
-                target=target,
-                additional_forward_args=additional_forward_args,
-            )
-            return _format_attributions(is_layer_tuple, attributions), delta
         return _format_attributions(is_layer_tuple, attributions)

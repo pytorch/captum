@@ -116,7 +116,7 @@ class Test(BaseTest):
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
     ) -> None:
-        for internal_batch_size in (None, 1, 20):
+        for internal_batch_size in (None, 5, 20):
             cond = NeuronConductance(model, target_layer)
             attributions = cond.attribute(
                 test_input,

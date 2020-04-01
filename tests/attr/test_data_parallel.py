@@ -849,7 +849,7 @@ class Test(BaseGPUTest):
         delta_orig = None
         delta_dp = None
         if test_batches:
-            batch_sizes = [None, 1, 8]
+            batch_sizes = [None, 24, 40]
         for batch_size in batch_sizes:
             if batch_size:
                 attributions_orig = attr_orig.attribute(

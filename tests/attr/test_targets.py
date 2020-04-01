@@ -624,10 +624,12 @@ def _target_batch_test_assert(
         attr_method = algorithm(model, target_layer)
     else:
         attr_method = algorithm(model)
-
     batch_sizes = [None]
     if test_batches:
-        batch_sizes = [None, 2, 4]
+        if isinstance(attr_method, NoiseTunnel):
+            batch_sizes = [None, 40, 100]
+        else:
+            batch_sizes = [None, 10, 20]
     for batch_size in batch_sizes:
         if batch_size:
             attributions_orig = attr_method.attribute(
