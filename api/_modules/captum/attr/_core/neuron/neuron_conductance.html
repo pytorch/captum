@@ -29,6 +29,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
 <span class="kn">from</span> <span class="nn">...._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -41,7 +42,7 @@
 <span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">..._utils.approximation_methods</span> <span class="kn">import</span> <span class="n">approximation_parameters</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
-<span class="kn">from</span> <span class="nn">..._utils.batching</span> <span class="kn">import</span> <span class="n">_batched_operator</span>
+<span class="kn">from</span> <span class="nn">..._utils.batching</span> <span class="kn">import</span> <span class="n">_batch_attribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_format_attributions</span><span class="p">,</span>
     <span class="n">_format_input_baseline</span><span class="p">,</span>
@@ -203,9 +204,10 @@
 <span class="sd">                        `riemann_trapezoid` or `gausslegendre`.</span>
 <span class="sd">                        Default: `gausslegendre` if no method is provided.</span>
 <span class="sd">            internal_batch_size (int, optional): Divides total #steps * #examples</span>
-<span class="sd">                        data points into chunks of size internal_batch_size,</span>
+<span class="sd">                        data points into chunks of size at most internal_batch_size,</span>
 <span class="sd">                        which are computed (forward / backward passes)</span>
-<span class="sd">                        sequentially.</span>
+<span class="sd">                        sequentially. internal_batch_size must be at least equal to</span>
+<span class="sd">                        #examples.</span>
 <span class="sd">                        For DataParallel models, each batch is split among the</span>
 <span class="sd">                        available devices, so evaluations on each available</span>
 <span class="sd">                        device contain internal_batch_size / num_devices examples.</span>
@@ -259,11 +261,57 @@
         <span class="n">_validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
 
         <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">internal_batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">_batch_attribution</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span>
+                <span class="n">num_examples</span><span class="p">,</span>
+                <span class="n">internal_batch_size</span><span class="p">,</span>
+                <span class="n">n_steps</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+                <span class="n">neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                <span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="n">attribute_to_neuron_input</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                <span class="n">neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
+                <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+                <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">n_steps</span><span class="o">=</span><span class="n">n_steps</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                <span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="n">attribute_to_neuron_input</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"riemann_trapezoid"</span><span class="p">,</span>
+        <span class="n">attribute_to_neuron_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">step_sizes_and_alphas</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+
+        <span class="n">num_examples</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">total_batch</span> <span class="o">=</span> <span class="n">num_examples</span> <span class="o">*</span> <span class="n">n_steps</span>
 
-        <span class="c1"># Retrieve scaling factors for specified approximation method</span>
-        <span class="n">step_sizes_func</span><span class="p">,</span> <span class="n">alphas_func</span> <span class="o">=</span> <span class="n">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
-        <span class="n">step_sizes</span><span class="p">,</span> <span class="n">alphas</span> <span class="o">=</span> <span class="n">step_sizes_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">),</span> <span class="n">alphas_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">step_sizes_and_alphas</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># retrieve step size and scaling factor for specified approximation method</span>
+            <span class="n">step_sizes_func</span><span class="p">,</span> <span class="n">alphas_func</span> <span class="o">=</span> <span class="n">approximation_parameters</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+            <span class="n">step_sizes</span><span class="p">,</span> <span class="n">alphas</span> <span class="o">=</span> <span class="n">step_sizes_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">),</span> <span class="n">alphas_func</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">step_sizes</span><span class="p">,</span> <span class="n">alphas</span> <span class="o">=</span> <span class="n">step_sizes_and_alphas</span>
 
         <span class="c1"># Compute scaled inputs from baseline to final input.</span>
         <span class="n">scaled_features_tpl</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -290,14 +338,12 @@
 
         <span class="c1"># Conductance Gradients - Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_batched_operator</span><span class="p">(</span>
-            <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
-            <span class="n">scaled_features_tpl</span><span class="p">,</span>
-            <span class="n">input_additional_args</span><span class="p">,</span>
-            <span class="n">internal_batch_size</span><span class="o">=</span><span class="n">internal_batch_size</span><span class="p">,</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="n">forward_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">layer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">target_ind</span><span class="o">=</span><span class="n">expanded_target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">input_additional_args</span><span class="p">,</span>
             <span class="n">gradient_neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_neuron_input</span><span class="p">,</span>
@@ -340,7 +386,7 @@
             <span class="n">total_grad</span> <span class="o">*</span> <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">total_grad</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">total_grads</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">attributions</span></div>
 </pre></div>
 </div>
 </div>

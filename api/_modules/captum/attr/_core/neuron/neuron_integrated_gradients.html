@@ -162,9 +162,10 @@
 <span class="sd">                        `riemann_trapezoid` or `gausslegendre`.</span>
 <span class="sd">                        Default: `gausslegendre` if no method is provided.</span>
 <span class="sd">            internal_batch_size (int, optional): Divides total #steps * #examples</span>
-<span class="sd">                        data points into chunks of size internal_batch_size,</span>
+<span class="sd">                        data points into chunks of size at most internal_batch_size,</span>
 <span class="sd">                        which are computed (forward / backward passes)</span>
-<span class="sd">                        sequentially.</span>
+<span class="sd">                        sequentially. internal_batch_size must be at least equal to</span>
+<span class="sd">                        #examples.</span>
 <span class="sd">                        For DataParallel models, each batch is split among the</span>
 <span class="sd">                        available devices, so evaluations on each available</span>
 <span class="sd">                        device contain internal_batch_size / num_devices examples.</span>
