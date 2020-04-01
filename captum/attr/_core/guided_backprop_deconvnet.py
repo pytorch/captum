@@ -57,13 +57,16 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             "Setting backward hooks on ReLU activations."
             "The hooks will be removed after the attribution is finished"
         )
+        try:
+            self.model.apply(self._register_hooks)
 
-        self.model.apply(self._register_hooks)
-
-        gradients = self.gradient_func(
-            self.forward_func, inputs, target, additional_forward_args
-        )
-
+            gradients = self.gradient_func(
+                self.forward_func, inputs, target, additional_forward_args
+            )
+        except:
+            self._remove_hooks()
+            raise
+            
         # remove set hooks
         self._remove_hooks()
 

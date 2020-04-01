@@ -245,12 +245,17 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 if not is_layer_tuple:
                     return all_layer_inputs[device][0]
                 return all_layer_inputs[device]
-
-            if attribute_to_layer_input:
-                hook = self.layer.register_forward_pre_hook(forward_hook)
-            else:
-                hook = self.layer.register_forward_hook(forward_hook)
-            eval = _run_forward(self.forward_func, original_inputs, target=target)
+            hook = None
+            try:
+                if attribute_to_layer_input:
+                    hook = self.layer.register_forward_pre_hook(forward_hook)
+                else:
+                    hook = self.layer.register_forward_hook(forward_hook)
+                eval = _run_forward(self.forward_func, original_inputs, target=target)
+            except:
+                if hook is not None:
+                    hook.remove()
+                raise
             hook.remove()
             return eval
 
