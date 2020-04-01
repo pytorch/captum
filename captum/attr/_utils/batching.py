@@ -39,7 +39,7 @@ def _batch_attribution(
     """
     if internal_batch_size < num_examples:
         warnings.warn(
-            "Internal batch size cannot be less than the number of input examples."
+            "Internal batch size cannot be less than the number of input examples. "
             "Defaulting to internal batch size of %d equal to the number of examples."
             % num_examples
         )
@@ -49,8 +49,8 @@ def _batch_attribution(
         if step_count < 2:
             step_count = 2
             warnings.warn(
-                "This method computes finite differences between evaluations at"
-                "consecutive steps, so internal batch size must be at least twice"
+                "This method computes finite differences between evaluations at "
+                "consecutive steps, so internal batch size must be at least twice "
                 "the number of examples. Defaulting to internal batch size of %d"
                 " equal to twice the number of examples." % (2 * num_examples)
             )
