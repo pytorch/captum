@@ -5,10 +5,14 @@ import unittest
 import torch
 import torch.nn as nn
 
-from captum.attr._core.lrp import LRP
+from captum.attr import LRP, InputXGradient
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from .helpers.basic_models import BasicModel_ConvNet_One_Conv
+from .helpers.basic_models import (
+    BasicModel_ConvNet_One_Conv,
+    BasicModel_MultiLayer,
+    SimpleLRPModel,
+)
 from .helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -27,19 +31,7 @@ def _get_rule_config():
 
 
 def _get_simple_model(inplace=False):
-    class Model(nn.Module):
-        def __init__(self, inplace):
-            super(Model, self).__init__()
-            self.linear = nn.Linear(3, 3, bias=False)
-            self.linear.weight.data.fill_(2.0)
-            self.relu = torch.nn.ReLU(inplace=inplace)
-            self.linear2 = nn.Linear(3, 1, bias=False)
-            self.linear2.weight.data.fill_(3.0)
-
-        def forward(self, x):
-            return self.linear2(self.relu(self.linear(x)))
-
-    model = Model(inplace)
+    model = SimpleLRPModel(inplace)
     inputs = torch.tensor([1.0, 2.0, 3.0])
 
     return model, inputs
@@ -265,3 +257,29 @@ class Test(BaseTest):
             torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]),
         )
 
+    def test_lrp_multi(self):
+        model = BasicModel_MultiLayer()
+        input = torch.Tensor([1, 2, 3])
+        input.requires_grad = True
+
+        add_input = 0
+        output = model(input)
+        output_add = model(input, add_input=add_input)
+        self.assertTrue(torch.equal(output, output_add))
+        lrp = LRP(model)
+        attributions = lrp.attribute(input)
+        attributions_add_input = lrp.attribute(
+            input, additional_forward_args=(add_input,)
+        )
+        # due to problem with grad() function the results do not match (https://github.com/pytorch/pytorch/issues/35802)
+        # self.assertTrue(torch.equal(attributions, attributions_add_input))
+
+    def test_lrp_ixg_equivalency(self):
+        model, inputs = _get_simple_model()
+        lrp = LRP(model)
+        attributions_lrp = lrp.attribute(inputs)
+        ixg = InputXGradient(model)
+        attributions_ixg = ixg.attribute(inputs)
+        assertTensorAlmostEqual(
+            self, attributions_lrp, attributions_ixg / 108
+        )  # Divide by score because LRP relevance is normalized.
