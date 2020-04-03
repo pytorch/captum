@@ -10,9 +10,10 @@ from ..._utils.common import (
     _is_tuple,
     _run_forward,
 )
+from .._utils.batching import _devide_and_aggregate_metrics
 
 
-def infidelity_attr(
+def infidelity(
     forward_func,
     perturb_func,
     inputs,
@@ -31,10 +32,11 @@ def infidelity_attr(
     https://arxiv.org/pdf/1901.09392.pdf
 
     It is derived from the completeness property of well-known attribution
-    algorithms and is an optimal and generalized notion of Sensitivy-n.
-    The latter measures correlations between the sum of the attributions
-    and the differences of the predictor function at its input and
-    fixed baseline. More details about the Sensitivity-n can be found here:
+    algorithms and is a computationally more efficient and generalized
+    notion of Sensitivy-n. The latter measures correlations between the sum
+    of the attributions and the differences of the predictor function at
+    its input and fixed baseline. More details about the Sensitivity-n can
+    be found here:
     https://arxiv.org/pdf/1711.06104.pdfs
 
     The users can perturb the inputs any desired way by providing any
@@ -60,6 +62,11 @@ def infidelity_attr(
                 of perturbations and inputs such as:
                     perturb, inputs
 
+                It is important to note that for performance reasons `perturb_func`
+                isn't called for each example individually but on a batch of
+                input examples that are repeated `max_examples_per_batch` times
+                within the batch.
+
         inputs (tensor or tuple of tensors):  Input for which
                 attributions are computed. If forward_func takes a single
                 tensor as input, a single input tensor should be provided.
@@ -72,8 +79,27 @@ def infidelity_attr(
 
         attributions (tensor or tuple of tensors):
                 Attribution scores computed based on an attribution algorithm.
-                Attributions will always be
-                the same size as the provided inputs, with each value
+                This attributions can be computed using the implementations
+                in the `captum.attr` package however those attributions are
+                so called global attributions as described in:
+                https://arxiv.org/pdf/1711.06104.pdf
+                In order to estimate the infidelity of the local attributions
+                using real valued perturbations as descibed in the:
+                https://arxiv.org/pdf/1901.09392.pdf
+                we will need to devide those attributions by inputs
+                or (inputs - baselines) depending on the type of the algorithm
+                that we use. Later, we'll add an option to
+                compute both local and global attributions without a need to
+                perform that division after retrieving the attributions.
+
+                If we want to compute the infidelity of global attributions we
+                can use a binary perturbation matrix that will allow us to select
+                a subset of features from `inputs` or `inputs - baselines` space.
+                This will allow us to approximate sensitivity-n for a global
+                attribution algorithm.
+
+                Attributions will always be max_examples_per_batch
+                x inputs, with each value
                 providing the attribution of the corresponding input index.
                 If a single tensor is provided as inputs, a single tensor is
                 returned. If a tuple is provided for inputs, a tuple of
@@ -142,125 +168,80 @@ def infidelity_attr(
         >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
         >>> # and returns an Nx10 tensor of class probabilities.
         >>> net = ImageClassifier()
-        >>> dl = DeepLift(net)
+        >>> saliency = Saliency(net)
         >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-        >>> # Computes deeplift attribution scores for class 3.
-        >>> attribution = dl.attribute(input, target=3)
+        >>> # Computes saliency maps for class 3.
+        >>> attribution = saliency.attribute(input, target=3)
         >>> # define a perturbation function for the input
         >>> def perturb_fn(inputs):
         >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
         >>>    return noise, inputs - noise
-        >>> # Computes infidelity score for deeplift attribution method
+        >>> # Computes infidelity score for saliency maps
         >>> infidelity = infidelity_attr(net, perturb_fn, input, attribution)
     """
 
-    def _generate_perturbations(inputs):
+    def _generate_perturbations(current_n_samples):
+        r"""
+        The perturbations are generated for each example `current_n_samples` times.
+
+        For perfomance reasons we are not calling `perturb_func` on each example but
+        on a batch that contains `current_n_samples` repeated instances per example.
+        """
         inputs_expanded = tuple(
-            torch.repeat_interleave(input, n_samples, dim=0) for input in inputs
+            torch.repeat_interleave(input, current_n_samples, dim=0) for input in inputs
         )
         return perturb_func(*inputs_expanded)
 
-    def _partition_additional_forward_argument(start, end, additional_arg):
-        if additional_arg is None:
-            return None
-        if not isinstance(additional_arg, torch.Tensor):
-            return additional_arg
-        assert bsz == additional_arg.size(0), (
-            "If `additional_forward_arg` is a "
-            "tensor, its first dimension must match with the input batch size"
-        )
-
-        return additional_arg[start:end]
-
-    def _partition_target(start, end, target):
-        if (
-            not isinstance(target, (list, torch.Tensor))
-            or (isinstance(target, torch.Tensor) and target.numel() == 1)
-            or (bsz != len(target) and len(target) == 1)
-        ):
-            return target
-
-        assert bsz == len(target), (
-            "If `target` is a list or tensor of multiple elements, "
-            "its length must match with the batch size"
-        )
-
-        return target[start:end]
-
-    def _next_infidelity(start, end):
-        if end <= start:
-            return None
-
-        inputs_partition = tuple(input[start:end] for input in inputs)
-        perturbations, inputs_perturbed = _generate_perturbations(inputs_partition)
+    def _next_infidelity(current_n_samples):
+        perturbations, inputs_perturbed = _generate_perturbations(current_n_samples)
 
         if not is_input_tpl:
             perturbations = _format_tensor_into_tuples(perturbations)
             inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
 
         # asserts the sizes of the perturbations and inputs
-        assert len(perturbations) == len(inputs_perturbed), (
+        assert len(perturbations) == len(inputs), (
             """The number of perturbed
             inputs and corresponding perturbations must have the same number of
              elements. Found number of inputs is: {} and perturbations:
              {}"""
-        ).format(len(perturbations), len(inputs_partition))
+        ).format(len(perturbations), len(inputs))
 
         # asserts the shapes of the perturbations and perturbed inputs
         for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
-            assert perturb.shape == input_perturbed.shape, (
+            assert perturb[0].shape == input_perturbed[0].shape, (
                 """Perturbed input
-            and corresponding perturnbation must have the same shape and
+            and corresponding perturbation must have the same shape and
             dimensionality. Found perturbation shape is: {} and the input shape
             is: {}"""
-            ).format(perturb.shape, input_perturbed.shape)
-
-        # partitions additional forward args before expanding
-        additional_forward_args_partition = (
-            None
-            if additional_forward_args is None
-            else tuple(
-                _partition_additional_forward_argument(
-                    start, end, additional_forward_arg
-                )
-                for additional_forward_arg in additional_forward_args
-            )
-        )
-        # partitions target before expanding
-        target_partition = _partition_target(start, end, target)
-        inputs_fwd = _run_forward(
-            forward_func,
-            inputs_partition,
-            target_partition,
-            additional_forward_args_partition,
-        )
+            ).format(perturb[0].shape, input_perturbed[0].shape)
 
         targets_expanded = _expand_target(
-            target_partition, n_samples, expansion_type=ExpansionTypes.repeat_interleave
+            target, current_n_samples, expansion_type=ExpansionTypes.repeat_interleave
         )
         additional_forward_args_expanded = _expand_additional_forward_args(
-            additional_forward_args_partition,
-            n_samples,
+            additional_forward_args,
+            current_n_samples,
             expansion_type=ExpansionTypes.repeat_interleave,
         )
+
         inputs_perturbed_fwd = _run_forward(
             forward_func,
             inputs_perturbed,
             targets_expanded,
             additional_forward_args_expanded,
         )
-        inputs_fwd = torch.repeat_interleave(inputs_fwd, n_samples, dim=0)
+        inputs_fwd = _run_forward(forward_func, inputs, target, additional_forward_args)
+        inputs_fwd = torch.repeat_interleave(inputs_fwd, current_n_samples, dim=0)
         inputs_minus_perturb = inputs_fwd - inputs_perturbed_fwd
-        attributions_partition = tuple(
-            torch.repeat_interleave(attribution[start:end], n_samples, dim=0)
+        attributions_expanded = tuple(
+            torch.repeat_interleave(attribution, current_n_samples, dim=0)
             for attribution in attributions
         )
         attributions_times_perturb = tuple(
-            (attribution_partition * perturbation).view(
-                attribution_partition.size(0), -1
-            )
-            for attribution_partition, perturbation in zip(
-                attributions_partition, perturbations
+            (attribution_expanded * perturbation).view(attribution_expanded.size(0), -1)
+            for attribution_expanded, perturbation in zip(
+                attributions_expanded, perturbations
             )
         )
         attribution_times_perturb_sums = sum(
@@ -269,14 +250,16 @@ def infidelity_attr(
                 for attribution_times_perturb in attributions_times_perturb
             ]
         )
-        return torch.mean(
-            torch.pow(attribution_times_perturb_sums - inputs_minus_perturb, 2).view(
-                end - start, -1
-            ),
+        return torch.sum(
+            torch.pow(
+                attribution_times_perturb_sums - inputs_minus_perturb.view(-1), 2
+            ).view(bsz, -1),
             dim=1,
         )
 
     is_input_tpl = _is_tuple(inputs)
+
+    # perform argument fromattings
     inputs = _format_input(inputs)
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
     attributions = _format_tensor_into_tuples(attributions)
@@ -295,20 +278,11 @@ def infidelity_attr(
         ).format(inp.shape, attr.shape)
 
     bsz = inputs[0].size(0)
-    max_inps_per_batch = (
-        bsz if max_examples_per_batch is None else min(max_examples_per_batch, bsz)
-    )
-
     with torch.no_grad():
-        start = 0
-        end = max_inps_per_batch
-
-        infidelities = []
-        infidelity = _next_infidelity(start, end)
-
-        while infidelity is not None:
-            infidelities.append(infidelity)
-            start = end
-            end = min(end + max_inps_per_batch, bsz)
-            infidelity = _next_infidelity(start, end)
-    return torch.cat(infidelities, dim=0)
+        metrics_sum = _devide_and_aggregate_metrics(
+            inputs,
+            n_samples,
+            _next_infidelity,
+            max_examples_per_batch=max_examples_per_batch,
+        )
+    return metrics_sum * 1 / n_samples
