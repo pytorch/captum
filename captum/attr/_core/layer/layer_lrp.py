@@ -11,7 +11,7 @@ from ..._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
-    _forward_layer_eval
+    _forward_layer_eval,
 )
 
 
@@ -51,7 +51,7 @@ class LayerLRP(LRP, LayerAttribution):
             can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
             and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
 
-            Attention: In-place relus lead to unexptected failures in layer LRP.
+            Warning: In-place relus lead to unexptected failures in layer LRP.
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -120,11 +120,13 @@ class LayerLRP(LRP, LayerAttribution):
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
                         implementations.
-            - **delta** (*tensor*, returned if return_convergence_delta=True):
+            - **delta** (*tensor* or list of *tensors* returned if return_convergence_delta=True):
 
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
+                        If attributions for all layers are returned (layer=None) a list
+                        of tensors is returned with entries for each layer.
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -163,9 +165,12 @@ class LayerLRP(LRP, LayerAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = self.compute_convergence_delta(
-                relevances[0], inputs, additional_forward_args, target
-            )
+            if self.layer is None:
+                delta = []
+                for relevance in relevances[0]:
+                    delta.append(self.compute_convergence_delta(relevance))
+            else:
+                delta = self.compute_convergence_delta(relevances[0])
             return _format_attributions(is_layer_tuple, relevances), delta
         else:
             return _format_attributions(is_layer_tuple, relevances)

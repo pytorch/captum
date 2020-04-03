@@ -196,3 +196,15 @@ class Test(BaseTest):
         lrp = LayerLRP(model, None)
         relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
         self.assertEqual(len(relevance), 2)
+
+    def test_lrp_simple_attributions_all_layers_delta(self):
+        model, inputs = _get_simple_model(inplace=False)
+        model.eval()
+        model.linear.rule = EpsilonRule()
+        model.linear2.rule = EpsilonRule()
+        lrp = LayerLRP(model, None)
+        inputs = torch.stack((inputs, 2 * inputs))
+        relevance, delta = lrp.attribute(
+            inputs, attribute_to_layer_input=True, return_convergence_delta=True
+        )
+        self.assertEqual(len(relevance), len(delta))

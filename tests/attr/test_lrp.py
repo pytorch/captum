@@ -32,7 +32,7 @@ def _get_rule_config():
 
 def _get_simple_model(inplace=False):
     model = SimpleLRPModel(inplace)
-    inputs = torch.tensor([1.0, 2.0, 3.0])
+    inputs = torch.tensor([[1.0, 2.0, 3.0]])
 
     return model, inputs
 
@@ -87,6 +87,18 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
         )
+
+    def test_lrp_simple_attributions_batch(self):
+        model, inputs = _get_simple_model()
+        model.eval()
+        model.linear.rule = EpsilonRule()
+        model.linear2.rule = EpsilonRule()
+        lrp = LRP(model)
+        inputs = torch.stack((inputs, 3*inputs))
+        relevance, delta = lrp.attribute(inputs, return_convergence_delta=True)
+        self.assertEqual(relevance.shape, inputs.shape)
+        self.assertEqual(delta.shape[0], inputs.shape[0])
+
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()

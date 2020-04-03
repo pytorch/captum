@@ -56,8 +56,9 @@ class LRP(Attribution):
             to all layers of the model. Here, the model output score represents the initial relevance which is
             decomposed into values for each neuron of the underlying layers. The decomposition is defined
             by rules that are chosen for each layer, involving its weights and activations. Details on the model
-            can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
-            and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
+            can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140]. The implementation
+            is inspired by the tutorial of the same group [https://doi.org/10.1016/j.dsp.2017.10.011] and the
+            publication by Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
 
             Args:
                 inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
@@ -118,7 +119,10 @@ class LRP(Attribution):
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
             - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
-                        input feature. Attributions will always
+                        input feature. The values are normalized by the output score
+                        value (sum(relevance)=1). To obtain values comparable to other
+                        methods or implementations these values need to be multiplied
+                        by the output score. Attributions will always
                         be the same size as the provided inputs, with each value
                         providing the attribution of the corresponding input index.
                         If a single tensor is provided as inputs, a single tensor is
@@ -170,9 +174,7 @@ class LRP(Attribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = self.compute_convergence_delta(
-                relevances[0], inputs, additional_forward_args, target
-            )
+            delta = self.compute_convergence_delta(relevances[0])
             return _format_attributions(is_inputs_tuple, relevances), delta
         else:
             return _format_attributions(is_inputs_tuple, relevances)
@@ -180,77 +182,33 @@ class LRP(Attribution):
     def has_convergence_delta(self):
         return True
 
-    def compute_convergence_delta(
-        self, attributions, inputs, additional_forward_args=None, target=None
-    ):
+    def compute_convergence_delta(self, attributions):
         """
         Here, we use the completeness property of LRP: The relevance is conserved
         during the propagation through the models' layers. Therefore, the difference
         between the sum of attribution (relevance) values and model output is taken as
-        the convergence delta. It should be zero for functional attribution. However,
-        when rules with an epsilon value are used for stability reasons, relevance is
-        absorbed during propagation and the convergence delta is non-zero.
+        the convergence delta. In this implementation the values are normalized by the
+        output score. Therefore, the convergence delta is 1 - sum(relevance). It should
+        be zero for functional attribution. However, when rules with an epsilon value
+        are used for stability reasons, relevance is absorbed during propagation and
+        the convergence delta is non-zero.
 
         Args:
 
-                attributions (tensor or tuple of tensors): Attribution scores that
-                            are precomputed by an attribution algorithm.
-                            Attributions can be provided in form of a single tensor
-                            or a tuple of those. It is assumed that attribution
-                            tensor's dimension 0 corresponds to the number of
-                            examples, and if multiple input tensors are provided,
-                            the examples must be aligned appropriately.
-                inputs (tensor or tuple of tensors). Input for which relevance is propagated.
-                            If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if multiple input tensors
-                            are provided, the examples must be aligned appropriately.
-
-                additional_forward_args (tuple, optional): If the forward function
-                            requires additional arguments other than the inputs for
-                            which attributions should not be computed, this argument
-                            can be provided. It must be either a single additional
-                            argument of a Tensor or arbitrary (non-tuple) type or a tuple
-                            containing multiple additional arguments including tensors
-                            or any arbitrary python types. These arguments are provided to
-                            forward_func in order, following the arguments in inputs.
-                            Note that attributions are not computed with respect
-                            to these arguments.
-                            Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
-                            which gradients are computed (for classification cases,
-                            this is usually the target class).
-                            If the network returns a scalar value per example,
-                            no target index is necessary.
-                            For general 2D outputs, targets can be either:
-
-                        - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
-
-                        - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
-
-                        For outputs with > 2 dimensions, targets can be either:
-
-                        - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
-
-                        - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
-
-                        Default: None
+            attributions (tensor or tuple of tensors): Attribution scores that
+                        are precomputed by an attribution algorithm.
+                        Attributions can be provided in form of a single tensor
+                        or a tuple of those. It is assumed that attribution
+                        tensor's dimension 0 corresponds to the number of
+                        examples, and if multiple input tensors are provided,
+                        the examples must be aligned appropriately.
 
         Returns:
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-        return 1 - torch.sum(attributions)
+        remaining_dims = tuple(range(1, len(attributions.shape)))
+        return 1 - torch.sum(attributions, remaining_dims)
 
     def _get_layers(self, model):
         for layer in model.children():
