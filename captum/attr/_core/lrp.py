@@ -174,8 +174,13 @@ class LRP(Attribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = self.compute_convergence_delta(relevances[0])
-            return _format_attributions(is_inputs_tuple, relevances), delta
+            delta = []
+            for relevance in relevances:
+                delta.append(self.compute_convergence_delta(relevance))
+            return (
+                _format_attributions(is_inputs_tuple, relevances),
+                _format_attributions(is_inputs_tuple, tuple(delta)),
+            )
         else:
             return _format_attributions(is_inputs_tuple, relevances)
 

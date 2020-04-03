@@ -94,11 +94,10 @@ class Test(BaseTest):
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
         lrp = LRP(model)
-        inputs = torch.stack((inputs, 3*inputs))
+        inputs = torch.stack((inputs, 3 * inputs))
         relevance, delta = lrp.attribute(inputs, return_convergence_delta=True)
         self.assertEqual(relevance.shape, inputs.shape)
         self.assertEqual(delta.shape[0], inputs.shape[0])
-
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()
@@ -272,8 +271,6 @@ class Test(BaseTest):
     def test_lrp_multi(self):
         model = BasicModel_MultiLayer()
         input = torch.Tensor([1, 2, 3])
-        input.requires_grad = True
-
         add_input = 0
         output = model(input)
         output_add = model(input, add_input=add_input)
@@ -285,6 +282,14 @@ class Test(BaseTest):
         )
         # due to problem with grad() function the results do not match (https://github.com/pytorch/pytorch/issues/35802)
         # self.assertTrue(torch.equal(attributions, attributions_add_input))
+
+    def test_lrp_multi_inputs(self):
+        model = BasicModel_MultiLayer()
+        input = torch.Tensor([1, 2, 3])
+        input = (input, 3 * input)
+        lrp = LRP(model)
+        attributions, delta = lrp.attribute(input, return_convergence_delta=True)
+        self.assertEqual(len(input), len(delta))
 
     def test_lrp_ixg_equivalency(self):
         model, inputs = _get_simple_model()

@@ -158,6 +158,7 @@ class LayerLRP(LRP, LayerAttribution):
         relevance_input_layer = compute_gradients(
             self.model, inputs, target, additional_forward_args
         )
+        # backward hook on input tensor is not called (https://github.com/pytorch/pytorch/issues/35802) 
         self.layers[0].rule.relevance_input = relevance_input_layer[0]
         relevances = self._get_output_relevance()
 
@@ -167,8 +168,8 @@ class LayerLRP(LRP, LayerAttribution):
         if return_convergence_delta:
             if self.layer is None:
                 delta = []
-                for relevance in relevances[0]:
-                    delta.append(self.compute_convergence_delta(relevance))
+                for relevance_layer in relevances[0]:
+                    delta.append(self.compute_convergence_delta(relevance_layer))
             else:
                 delta = self.compute_convergence_delta(relevances[0])
             return _format_attributions(is_layer_tuple, relevances), delta

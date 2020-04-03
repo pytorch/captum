@@ -8,7 +8,11 @@ import torch.nn as nn
 from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv
+from ..helpers.basic_models import (
+    BasicModel_ConvNet_One_Conv,
+    BasicModel_MultiLayer,
+    SimpleLRPModel,
+)
 from ..helpers.utils import BaseTest, assertTensorAlmostEqual
 
 
@@ -27,19 +31,7 @@ def _get_rule_config():
 
 
 def _get_simple_model(inplace=False):
-    class Model(nn.Module):
-        def __init__(self, inplace):
-            super(Model, self).__init__()
-            self.linear = nn.Linear(3, 3, bias=False)
-            self.linear.weight.data.fill_(2.0)
-            self.relu = torch.nn.ReLU(inplace=inplace)
-            self.linear2 = nn.Linear(3, 1, bias=False)
-            self.linear2.weight.data.fill_(3.0)
-
-        def forward(self, x):
-            return self.linear2(self.relu(self.linear(x)))
-
-    model = Model(inplace)
+    model = SimpleLRPModel(inplace)
     inputs = torch.tensor([1.0, 2.0, 3.0])
 
     return model, inputs
