@@ -20,6 +20,7 @@ from ..._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
+    _select_targets,
 )
 from ..._utils.typing import (
     BaselineType,
@@ -304,22 +305,20 @@ class DeepLift(GradientAttribution):
         )
 
         baselines = _tensorize_baseline(inputs, baselines)
-        main_model_pre_hook = self._pre_hook_main_model()
+        main_model_pre_hooks = self._hook_main_model()
 
         self.model.apply(self._register_hooks)
 
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        input_base_additional_args = _expand_additional_forward_args(
-            additional_forward_args, 2, ExpansionTypes.repeat
-        )
+
         expanded_target = _expand_target(
             target, 2, expansion_type=ExpansionTypes.repeat
         )
 
         wrapped_forward_func = self._construct_forward_func(
-            self.model, (inputs, baselines), expanded_target, input_base_additional_args
+            self.model, (inputs, baselines), expanded_target, additional_forward_args
         )
         gradients = self.gradient_func(wrapped_forward_func, inputs)
         if custom_attribution_func is None:
@@ -332,7 +331,9 @@ class DeepLift(GradientAttribution):
                 custom_attribution_func, gradients, inputs, baselines
             )
         # remove hooks from all activations
-        main_model_pre_hook.remove()
+        for hook in main_model_pre_hooks:
+            hook.remove()
+
         self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
@@ -355,7 +356,12 @@ class DeepLift(GradientAttribution):
         additional_forward_args: Any = None,
     ) -> Callable:
         def forward_fn():
-            return _run_forward(forward_func, inputs, target, additional_forward_args)
+            model_out = _run_forward(
+                forward_func, inputs, None, additional_forward_args
+            )
+            return _select_targets(
+                torch.cat((model_out[:, 0], model_out[:, 1])), target
+            )
 
         if hasattr(forward_func, "device_ids"):
             forward_fn.device_ids = forward_func.device_ids  # type: ignore
@@ -501,7 +507,7 @@ class DeepLift(GradientAttribution):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
 
-    def _pre_hook_main_model(self) -> RemovableHandle:
+    def _hook_main_model(self) -> List[RemovableHandle]:
         def pre_hook(module: Module, baseline_inputs_add_args: Tuple) -> Tuple:
             inputs = baseline_inputs_add_args[0]
             baselines = baseline_inputs_add_args[1]
@@ -514,13 +520,28 @@ class DeepLift(GradientAttribution):
                 for input, baseline in zip(inputs, baselines)
             )
             if additional_args is not None:
-                return (*baseline_input_tsr, *additional_args)
+                expanded_additional_args = cast(
+                    Tuple,
+                    _expand_additional_forward_args(
+                        additional_args, 2, ExpansionTypes.repeat
+                    ),
+                )
+                return (*baseline_input_tsr, *expanded_additional_args)
             return baseline_input_tsr
 
+        def forward_hook(module: Module, inputs: Tuple, outputs: Tensor):
+            return torch.stack(torch.chunk(outputs, 2), dim=1)
+
         if isinstance(self.model, nn.DataParallel):
-            return self.model.module.register_forward_pre_hook(pre_hook)  # type: ignore
+            return [
+                self.model.module.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.model.module.register_forward_hook(forward_hook),
+            ]  # type: ignore
         else:
-            return self.model.register_forward_pre_hook(pre_hook)  # type: ignore
+            return [
+                self.model.register_forward_pre_hook(pre_hook),  # type: ignore
+                self.model.register_forward_hook(forward_hook),
+            ]  # type: ignore
 
     def has_convergence_delta(self) -> bool:
         return True
@@ -810,7 +831,11 @@ class DeepLiftShap(DeepLift):
             target, base_bsz, expansion_type=ExpansionTypes.repeat_interleave
         )
         input_additional_args = (
-            _expand_additional_forward_args(additional_forward_args, base_bsz)
+            _expand_additional_forward_args(
+                additional_forward_args,
+                base_bsz,
+                expansion_type=ExpansionTypes.repeat_interleave,
+            )
             if additional_forward_args is not None
             else None
         )
