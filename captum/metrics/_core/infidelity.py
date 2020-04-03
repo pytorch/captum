@@ -64,8 +64,8 @@ def infidelity(
 
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
-                input examples that are repeated `max_examples_per_batch` times
-                within the batch.
+                input examples that are repeated `max_examples_per_batch / batch_size`
+                times within the batch.
 
         inputs (tensor or tuple of tensors):  Input for which
                 attributions are computed. If forward_func takes a single
