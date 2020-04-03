@@ -7,7 +7,8 @@ import torch
 import torch.nn as nn
 
 from .._utils.attribution import Attribution
-from .._utils.common import _format_attributions, _format_input, _run_forward
+from .._utils.common import _format_attributions, _format_input
+from ..._utils.common import _run_forward
 from .._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
