@@ -34,11 +34,13 @@ def _global_perturb_func1(input1, input2):
     return (pert1, pert2), (torch.zeros(input1.shape), torch.zeros(input2.shape))
 
 
+"""
 def _global_perturb_func2(input1, input2):
     pert1 = torch.tensor(np.random.choice(2, input1.shape))
     pert2 = torch.tensor(np.random.choice(2, input2.shape))
 
     return (pert1, pert2), ((1 - pert1) * input1, (1 - pert2) * input2)
+"""
 
 
 class Test(BaseTest):
@@ -92,8 +94,8 @@ class Test(BaseTest):
             (input1, input2),
             [0.0],
             additional_args=args,
-            n_perturb_samples=4,
-            max_batch_size=10,
+            n_perturb_samples=1,
+            max_batch_size=1,
             perturb_func=_global_perturb_func1,
         )
 
@@ -104,7 +106,7 @@ class Test(BaseTest):
             additional_args=args,
             n_perturb_samples=5,
             max_batch_size=2,
-            perturb_func=_global_perturb_func2,
+            perturb_func=_global_perturb_func1,
         )
 
     def basic_model_local_assert(
@@ -131,7 +133,7 @@ class Test(BaseTest):
         additional_args=None,
         n_perturb_samples=10,
         max_batch_size=None,
-        perturb_func=_global_perturb_func2,
+        perturb_func=_global_perturb_func1,
     ):
         ig = IntegratedGradients(model)
         attrs, delta = ig.attribute(
