@@ -20,10 +20,6 @@ while getopts 'nf' flag; do
 # required to use conda develop
 conda install -y conda-build
 
-# install node/yarn for insights build
-conda install -y -c conda-forge yarn
-conda install -y -c conda-forge nodejs
-
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
   pip install pytext-nlp
@@ -40,6 +36,12 @@ fi
 # install other deps
 conda install -y numpy sphinx pytest flake8 ipywidgets ipython
 conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints mypy flask isort
+
+# install node/yarn for insights build
+conda install -y -c conda-forge yarn
+# nodejs should be last, otherwise other conda packages will downgrade node
+conda update -y --no-channel-priority -c conda-forge nodejs
+
 
 # build insights and install captum
 # TODO: remove CI=false when we want React warnings treated as errors
