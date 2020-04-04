@@ -170,12 +170,12 @@ class Test(BaseTest):
     def basic_multilayer_sensitivity_n(self, attr_algo, model):
         # sensitivity-2
         def _global_perturb_func2(input):
-            pert = torch.tensor([[0, 1, 1], [1, 1, 0], [1, 0, 1]])
+            pert = torch.tensor([[0, 1, 1], [1, 1, 0], [1, 0, 1]]).float()
             return pert, (1 - pert) * input
 
         # sensitivity-1
         def _global_perturb_func3(input):
-            pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
+            pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]]).float()
             return pert, (1 - pert) * input
 
         input = torch.tensor([[1.0, 2.5, 3.3]])
