@@ -156,7 +156,7 @@ class Test(BaseTest):
         additional_args: Any = None,
         attribute_to_layer_input: bool = False,
     ):
-        for internal_batch_size in [None, 1, 20]:
+        for internal_batch_size in [None, 5, 20]:
             int_inf = InternalInfluence(model, target_layer)
             attributions = int_inf.attribute(
                 test_input,

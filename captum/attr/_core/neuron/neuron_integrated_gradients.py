@@ -135,9 +135,10 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.

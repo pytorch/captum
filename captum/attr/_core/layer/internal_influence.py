@@ -13,7 +13,7 @@ from ...._utils.common import (
 from ...._utils.typing import BaselineType, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.batching import _batched_operator
+from ..._utils.batching import _batch_attribution
 from ..._utils.common import (
     _format_attributions,
     _format_input_baseline,
@@ -163,9 +163,10 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         `riemann_trapezoid` or `gausslegendre`.
                         Default: `gausslegendre` if no method is provided.
             internal_batch_size (int, optional): Divides total #steps * #examples
-                        data points into chunks of size internal_batch_size,
+                        data points into chunks of size at most internal_batch_size,
                         which are computed (forward / backward passes)
-                        sequentially.
+                        sequentially. internal_batch_size must be at least equal to
+                        #examples.
                         For DataParallel models, each batch is split among the
                         available devices, so evaluations on each available
                         device contain internal_batch_size / num_devices examples.
@@ -213,10 +214,50 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         """
         inputs, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inputs, baselines, n_steps, method)
+        if internal_batch_size is not None:
+            num_examples = inputs[0].shape[0]
+            attrs = _batch_attribution(
+                self,
+                num_examples,
+                internal_batch_size,
+                n_steps,
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
+        else:
+            attrs = self._attribute(
+                inputs=inputs,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                n_steps=n_steps,
+                method=method,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
 
-        # Retrieve step size and scaling factor for specified approximation method
-        step_sizes_func, alphas_func = approximation_parameters(method)
-        step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
+        return attrs
+
+    def _attribute(
+        self,
+        inputs: Tuple[Tensor, ...],
+        baselines: Tuple[Union[Tensor, int, float], ...],
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        n_steps: int = 50,
+        method: str = "gausslegendre",
+        attribute_to_layer_input: bool = False,
+        step_sizes_and_alphas: Union[None, Tuple[List[float], List[float]]] = None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        if step_sizes_and_alphas is None:
+            # retrieve step size and scaling factor for specified approximation method
+            step_sizes_func, alphas_func = approximation_parameters(method)
+            step_sizes, alphas = step_sizes_func(n_steps), alphas_func(n_steps)
+        else:
+            step_sizes, alphas = step_sizes_and_alphas
 
         # Compute scaled inputs from baseline to final input.
         scaled_features_tpl = tuple(
@@ -242,14 +283,12 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         expanded_target = _expand_target(target, n_steps)
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _, is_layer_tuple = _batched_operator(
-            compute_layer_gradients_and_eval,
-            scaled_features_tpl,
-            input_additional_args,
-            internal_batch_size=internal_batch_size,
+        layer_gradients, _, is_layer_tuple = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
+            inputs=scaled_features_tpl,
             target_ind=expanded_target,
+            additional_forward_args=input_additional_args,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
