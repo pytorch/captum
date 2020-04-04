@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 
-from captum.attr import DeepLift, IntegratedGradients, Saliency
+from captum.attr import DeepLift, FeatureAblation, IntegratedGradients, Saliency
 from captum.metrics import infidelity
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual
@@ -19,28 +19,23 @@ def _local_perturb_func(input1, input2=None):
     perturb1 = torch.stack(
         [torch.Tensor([0.0009])] * np.prod(list(input1.shape)), dim=-1
     ).view(input1.shape)
-    if input2 is not None:
-        perturb2 = torch.stack(
-            [torch.Tensor([0.0121])] * np.prod(list(input2.shape)), dim=-1
-        ).view(input2.shape)
-        return (perturb1, perturb2), (input1 - perturb1, input2 - perturb2)
-    return perturb1, input1 - perturb1
+    if input2 is None:
+        return perturb1, input1 - perturb1
+
+    perturb2 = torch.stack(
+        [torch.Tensor([0.0121])] * np.prod(list(input2.shape)), dim=-1
+    ).view(input2.shape)
+    return (perturb1, perturb2), (input1 - perturb1, input2 - perturb2)
 
 
-def _global_perturb_func1(input1, input2):
+# sensitivity-N, N = #input features
+def _global_perturb_func1(input1, input2=None):
     pert1 = torch.ones(input1.shape)
+    if input2 is None:
+        return pert1, torch.zeros(input1.shape)
+
     pert2 = torch.ones(input2.shape)
-
     return (pert1, pert2), (torch.zeros(input1.shape), torch.zeros(input2.shape))
-
-
-"""
-def _global_perturb_func2(input1, input2):
-    pert1 = torch.tensor(np.random.choice(2, input1.shape))
-    pert2 = torch.tensor(np.random.choice(2, input2.shape))
-
-    return (pert1, pert2), ((1 - pert1) * input1, (1 - pert2) * input2)
-"""
 
 
 class Test(BaseTest):
@@ -88,8 +83,10 @@ class Test(BaseTest):
         input2 = torch.tensor([[3.0, 3.5, 2.2]])
 
         args = torch.tensor([[1.0, 3.0, 4.0]])
+        ig = IntegratedGradients(model)
 
         self.basic_model_global_assert(
+            ig,
             model,
             (input1, input2),
             [0.0],
@@ -100,6 +97,7 @@ class Test(BaseTest):
         )
 
         self.basic_model_global_assert(
+            ig,
             model,
             (input1, input2),
             [0.0],
@@ -108,51 +106,6 @@ class Test(BaseTest):
             max_batch_size=2,
             perturb_func=_global_perturb_func1,
         )
-
-    def basic_model_local_assert(
-        self, model, inputs, expected, n_perturb_samples=10, max_batch_size=None
-    ):
-        ig = IntegratedGradients(model)
-
-        attrs = tuple(attr / input for input, attr in zip(inputs, ig.attribute(inputs)))
-
-        return self.infidelity_assert(
-            model,
-            attrs,
-            inputs,
-            expected,
-            n_perturb_samples=n_perturb_samples,
-            max_batch_size=max_batch_size,
-        )
-
-    def basic_model_global_assert(
-        self,
-        model,
-        inputs,
-        expected,
-        additional_args=None,
-        n_perturb_samples=10,
-        max_batch_size=None,
-        perturb_func=_global_perturb_func1,
-    ):
-        ig = IntegratedGradients(model)
-        attrs, delta = ig.attribute(
-            inputs,
-            additional_forward_args=additional_args,
-            return_convergence_delta=True,
-        )
-
-        infid = self.infidelity_assert(
-            model,
-            attrs,
-            inputs,
-            expected,
-            additional_args=additional_args,
-            perturb_func=perturb_func,
-            n_perturb_samples=n_perturb_samples,
-            max_batch_size=max_batch_size,
-        )
-        return infid
 
     def test_classification_infidelity_convnet_multi_targets(self):
         model = BasicModel_ConvNet_One_Conv()
@@ -203,6 +156,112 @@ class Test(BaseTest):
             multi_input=False,
         )
         assertArraysAlmostEqual(infid1, infid2, 1e-05)
+
+    def test_sensitivity_n_ig(self):
+        model = BasicModel_MultiLayer()
+        ig = IntegratedGradients(model)
+        self.basic_multilayer_sensitivity_n(ig, model)
+
+    def test_sensitivity_n_fa(self):
+        model = BasicModel_MultiLayer()
+        fa = FeatureAblation(model)
+        self.basic_multilayer_sensitivity_n(fa, model)
+
+    def basic_multilayer_sensitivity_n(self, attr_algo, model):
+        # sensitivity-2
+        def _global_perturb_func2(input):
+            pert = torch.tensor([[0, 1, 1], [1, 1, 0], [1, 0, 1]])
+            return pert, (1 - pert) * input
+
+        # sensitivity-1
+        def _global_perturb_func3(input):
+            pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]])
+            return pert, (1 - pert) * input
+
+        input = torch.tensor([[1.0, 2.5, 3.3]])
+
+        # infidelity for sensitivity-1
+        self.basic_model_global_assert(
+            attr_algo,
+            model,
+            input,
+            [0.0],
+            additional_args=None,
+            target=0,
+            n_perturb_samples=3,
+            max_batch_size=None,
+            perturb_func=_global_perturb_func3,
+        )
+
+        # infidelity for sensitivity-2
+        self.basic_model_global_assert(
+            attr_algo,
+            model,
+            input,
+            [0.0],
+            additional_args=None,
+            target=0,
+            n_perturb_samples=3,
+            max_batch_size=None,
+            perturb_func=_global_perturb_func2,
+        )
+
+        # infidelity for sensitivity-3
+        self.basic_model_global_assert(
+            attr_algo,
+            model,
+            input,
+            [0.0],
+            additional_args=None,
+            target=0,
+            n_perturb_samples=3,
+            max_batch_size=None,
+            perturb_func=_global_perturb_func1,
+        )
+
+    def basic_model_local_assert(
+        self, model, inputs, expected, n_perturb_samples=10, max_batch_size=None
+    ):
+        ig = IntegratedGradients(model)
+
+        attrs = tuple(attr / input for input, attr in zip(inputs, ig.attribute(inputs)))
+
+        return self.infidelity_assert(
+            model,
+            attrs,
+            inputs,
+            expected,
+            n_perturb_samples=n_perturb_samples,
+            max_batch_size=max_batch_size,
+        )
+
+    def basic_model_global_assert(
+        self,
+        attr_algo,
+        model,
+        inputs,
+        expected,
+        additional_args=None,
+        target=None,
+        n_perturb_samples=10,
+        max_batch_size=None,
+        perturb_func=_global_perturb_func1,
+    ):
+        attrs = attr_algo.attribute(
+            inputs, additional_forward_args=additional_args, target=target
+        )
+        infid = self.infidelity_assert(
+            model,
+            attrs,
+            inputs,
+            expected,
+            additional_args=additional_args,
+            perturb_func=perturb_func,
+            target=target,
+            n_perturb_samples=n_perturb_samples,
+            max_batch_size=max_batch_size,
+        )
+        return infid
 
     def infidelity_assert(
         self,
