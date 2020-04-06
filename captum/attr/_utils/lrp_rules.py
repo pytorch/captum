@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-import torch.nn as nn
 
 
 class PropagationRule(ABC):
@@ -74,9 +73,6 @@ class EpsilonRule(PropagationRule):
         self.STABILITY_FACTOR = epsilon
 
     def _manipulate_weights(self, module, inputs, outputs):
-        pass
-
-    def restore_layer(self, module):
         pass
 
 

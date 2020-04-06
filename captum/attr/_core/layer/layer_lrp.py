@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-import warnings
-
 import torch
-import torch.nn as nn
 
 from ..._core.lrp import LRP
 from ..._utils.attribution import LayerAttribution
@@ -21,13 +18,15 @@ class LayerLRP(LRP, LayerAttribution):
         Args:
 
             model (callable): The forward function of the model or
-                        any modification of it. Custom rules for a given layer need to be defined as attribute
+                        any modification of it. Custom rules for a given layer need to
+                        be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
             layer (torch.nn.Module, None): Layer for which attributions are computed.
                           The size and dimensionality of the attributions
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
-                          inputs or outputs of the layer. If value is None, the relevance for all layers is returned in attribution.
+                          inputs or outputs of the layer. If value is None, the
+                          relevance for all layers is returned in attribution.
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
@@ -44,17 +43,20 @@ class LayerLRP(LRP, LayerAttribution):
         verbose=False,
     ):
         """
-            Layer-wise relevance propagation is based on a backward propagation mechanism applied sequentially
-            to all layers of the model. Here, the model output score represents the initial relevance which is
-            decomposed into values for each neuron of the underlying layers. The decomposition is defined
-            by rules that are chosen for each layer, involving its weights and activations. Details on the model
-            can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
+            Layer-wise relevance propagation is based on a backward propagation
+            mechanism applied sequentially to all layers of the model. Here, the model
+            output score represents the initial relevance which is decomposed into
+            values for each neuron of the underlying layers. The decomposition is
+            defined by rules that are chosen for each layer, involving its weights
+            and activations. Details on the model can be found in the original paper
+            [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
             and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
 
             Warning: In-place relus lead to unexptected failures in layer LRP.
 
             Args:
-                inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
+                inputs (tensor or tuple of tensors):  Input for which relevance is
+                            propagated.
                             If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
@@ -109,7 +111,8 @@ class LayerLRP(LRP, LayerAttribution):
                         of rules is printed during propagation.
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
+            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
+                **attributions**, **delta**::
             - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
@@ -120,7 +123,8 @@ class LayerLRP(LRP, LayerAttribution):
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
                         implementations.
-            - **delta** (*tensor* or list of *tensors* returned if return_convergence_delta=True):
+            - **delta** (*tensor* or list of *tensors* returned if
+                return_convergence_delta=True):
 
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
@@ -158,7 +162,8 @@ class LayerLRP(LRP, LayerAttribution):
         relevance_input_layer = compute_gradients(
             self.model, inputs, target, additional_forward_args
         )
-        # backward hook on input tensor is not called (https://github.com/pytorch/pytorch/issues/35802) 
+        # backward hook on input tensor is not called
+        # (https://github.com/pytorch/pytorch/issues/35802)
         self.layers[0].rule.relevance_input = relevance_input_layer[0]
         relevances = self._get_output_relevance()
 

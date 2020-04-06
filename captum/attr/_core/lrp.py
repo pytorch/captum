@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
 import warnings
 
 import torch
@@ -14,12 +13,7 @@ from .._utils.gradient import (
     compute_gradients,
     undo_gradient_requirements,
 )
-from .._utils.lrp_rules import (
-    Alpha1_Beta0_Rule,
-    EpsilonRule,
-    GammaRule,
-    PropagationRule,
-)
+from .._utils.lrp_rules import EpsilonRule, PropagationRule
 
 
 class LRP(Attribution):
@@ -27,11 +21,13 @@ class LRP(Attribution):
         """
         Args:
 
-            model (callable): The forward function of the model or
-                        any modification of it. Custom rules for a given layer need to be defined as attribute
-                        `module.rule` and need to be of type PropagationRule.
+            model (callable): The forward function of the model or any modification of
+                it. Custom rules for a given layer need to be defined as attribute
+                `module.rule` and need to be of type PropagationRule. If no rule is
+                specified for a layer, a pre-defined default rule for the module type
+                is used.
         """
-        Attribution.__init__(self, model)  # LRP, self
+        Attribution.__init__(self, model)
 
         if isinstance(model, nn.DataParallel):
             warnings.warn(
@@ -53,17 +49,20 @@ class LRP(Attribution):
         verbose=False,
     ):
         """
-            Layer-wise relevance propagation is based on a backward propagation mechanism applied sequentially
-            to all layers of the model. Here, the model output score represents the initial relevance which is
-            decomposed into values for each neuron of the underlying layers. The decomposition is defined
-            by rules that are chosen for each layer, involving its weights and activations. Details on the model
-            can be found in the original paper [https://doi.org/10.1371/journal.pone.0130140]. The implementation
-            is inspired by the tutorial of the same group [https://doi.org/10.1016/j.dsp.2017.10.011] and the
-            publication by Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
+            Layer-wise relevance propagation is based on a backward propagation
+            mechanism applied sequentially to all layers of the model. Here, the
+            model output score represents the initial relevance which is decomposed
+            into values for each neuron of the underlying layers. The decomposition
+            is defined by rules that are chosen for each layer, involving its weights
+            and activations. Details on the model can be found in the original paper
+            [https://doi.org/10.1371/journal.pone.0130140]. The implementation is
+            inspired by the tutorial of the same group
+            [https://doi.org/10.1016/j.dsp.2017.10.011] and the publication by
+            Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
 
             Args:
-                inputs (tensor or tuple of tensors):  Input for which relevance is propagated.
-                            If forward_func takes a single
+                inputs (tensor or tuple of tensors):  Input for which relevance is
+                            propagated. If forward_func takes a single
                             tensor as input, a single input tensor should be provided.
                             If forward_func takes multiple tensors as input, a tuple
                             of the input tensors should be provided. It is assumed
@@ -117,7 +116,8 @@ class LRP(Attribution):
                         of rules is printed during propagation.
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of **attributions**, **delta**::
+            *tensor* or tuple of *tensors* of **attributions**
+            or 2-element tuple of **attributions**, **delta**::
             - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
                         input feature. The values are normalized by the output score
@@ -233,7 +233,10 @@ class LRP(Attribution):
                 layer.rule = None
             else:
                 raise TypeError(
-                    f"Module type {type(layer)} is not supported. No default rule defined."
+                    (
+                        f"Module type {type(layer)} is not supported."
+                        "No default rule defined."
+                    )
                 )
 
     def _check_rules(self):
@@ -244,12 +247,14 @@ class LRP(Attribution):
                     and module.rule is not None
                 ):
                     raise TypeError(
-                        "Please select propagation rules inherited from class PropagationRule"
+                        (
+                            "Please select propagation rules inherited from class "
+                            "PropagationRule"
+                        )
                     )
 
     def _register_forward_hooks(self):
         for layer in self.layers:
-            # TODO: Adapt for max pooling layers, layer in model is not changed for backward pass.
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handle = layer.register_backward_hook(
                     PropagationRule.backward_hook_activation
