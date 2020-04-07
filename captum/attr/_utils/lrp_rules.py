@@ -16,9 +16,11 @@ class PropagationRule(ABC):
     def forward_hook(self, module, inputs, outputs):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
-        input_hook = self._create_backward_hook_input(inputs[0].data)
+        self._handle_input_hooks = []
+        for input in inputs:
+            input_hook = self._create_backward_hook_input(input.data)
+            self._handle_input_hooks.append(input.register_hook(input_hook))
         output_hook = self._create_backward_hook_output(outputs.data)
-        self._handle_input_hook = inputs[0].register_hook(input_hook)
         self._handle_output_hook = outputs.register_hook(output_hook)
 
     @staticmethod

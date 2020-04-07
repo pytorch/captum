@@ -297,8 +297,9 @@ class LRP(Attribution):
         for backward_handle in self.backward_handles:
             backward_handle.remove()
         for layer in self.layers:
-            if hasattr(layer.rule, "_handle_input_hook"):
-                layer.rule._handle_input_hook.remove()
+            if hasattr(layer.rule, "_handle_input_hooks"):
+                for handle in layer.rule._handle_input_hooks:
+                    handle.remove()
             if hasattr(layer.rule, "_handle_output_hook"):
                 layer.rule._handle_output_hook.remove()
 

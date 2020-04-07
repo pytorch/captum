@@ -192,28 +192,36 @@ class Test(BaseTest):
         relevance = lrp.attribute(input)
         assertTensorAlmostEqual(self, relevance, torch.tensor([-5]))
 
-    """
     def test_lrp_skip_connection(self):
+        # A custom addition module needs to be used so that relevance is
+        # propagated correctly.
+        class Addition_Module(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x1, x2):
+                return x1 + x2
+
         class SkipConnection(nn.Module):
             def __init__(self):
                 super().__init__()
                 self.linear = nn.Linear(2, 2, bias=False)
                 self.linear.weight.data.fill_(5)
+                self.add = Addition_Module()
 
             def forward(self, input):
-                # TODO: Solve deviating behaviour between += input and +input
-                x = self.linear(input) + input
-                # x += input
+                x = self.add(self.linear(input), input)
                 return x
 
         model = SkipConnection()
         input = torch.Tensor([[2, 3]])
         output = model(input)
+        model.add.rule = EpsilonRule()
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
-        denormalized_relevance = relevance * output[0, 1]
-        assertTensorAlmostEqual(self, comp_relevance, torch.Tensor([[10, 18]]))
-    """
+        assertTensorAlmostEqual(
+            self, relevance, torch.Tensor([[10, 18]]) / output[0, 1]
+        )
 
     def test_lrp_maxpool1D(self):
         class MaxPoolModel(nn.Module):

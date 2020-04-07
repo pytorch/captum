@@ -153,29 +153,6 @@ class Test(BaseTest):
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([0.2500, 0.3750, 0.3750]))
 
-    """
-    def test_lrp_skip_connection(self):
-        class SkipConnection(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.linear = nn.Linear(2, 2, bias=False)
-                self.linear.weight.data.fill_(5)
-
-            def forward(self, input):
-                # TODO: Solve deviating behaviour between += input and +input
-                x = self.linear(input) + input
-                # x += input
-                return x
-
-        model = SkipConnection()
-        input = torch.Tensor([[2, 3]])
-        output = model(input)
-        lrp = LayerLRP(model, model.linear)
-        relevance = lrp.attribute(input, target=1)
-        denormalized_relevance = relevance * output[0, 1]
-        assertTensorAlmostEqual(self, denormalized_relevance, torch.Tensor([[10, 18]]))
-    """
-
     def test_lrp_simple_attributions_all_layers(self):
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
