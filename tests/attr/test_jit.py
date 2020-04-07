@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import copy
 import unittest
 from enum import Enum
 from typing import Any, Callable, Dict, Tuple, Type, cast
@@ -117,6 +116,7 @@ class JITMeta(type):
 
         def jit_test_assert(self) -> None:
             model_1 = model
+            attr_args = args
             if (
                 mode is JITCompareMode.data_parallel_jit_trace
                 or JITCompareMode.data_parallel_jit_script
@@ -137,7 +137,7 @@ class JITMeta(type):
                         )
                     else:
                         cuda_args[key] = args[key]
-                args = cuda_args
+                attr_args = cuda_args
                 model_1 = model_1.cuda()
 
             # Initialize models based on JITCompareMode
@@ -168,20 +168,20 @@ class JITMeta(type):
                 attr_method_2 = NoiseTunnel(attr_method_2)
             if attr_method_1.has_convergence_delta():
                 attributions_1, delta_1 = attr_method_1.attribute(
-                    return_convergence_delta=True, **args
+                    return_convergence_delta=True, **attr_args
                 )
                 self.setUp()
                 attributions_2, delta_2 = attr_method_2.attribute(
-                    return_convergence_delta=True, **args
+                    return_convergence_delta=True, **attr_args
                 )
                 assertTensorTuplesAlmostEqual(
                     self, attributions_1, attributions_2, mode="max"
                 )
                 assertTensorTuplesAlmostEqual(self, delta_1, delta_2, mode="max")
             else:
-                attributions_1 = attr_method_1.attribute(**args)
+                attributions_1 = attr_method_1.attribute(**attr_args)
                 self.setUp()
-                attributions_2 = attr_method_2.attribute(**args)
+                attributions_2 = attr_method_2.attribute(**attr_args)
                 assertTensorTuplesAlmostEqual(
                     self, attributions_1, attributions_2, mode="max"
                 )
