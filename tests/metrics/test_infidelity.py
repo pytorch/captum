@@ -6,7 +6,7 @@ import torch
 from captum.attr import DeepLift, FeatureAblation, IntegratedGradients, Saliency
 from captum.metrics import infidelity
 
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual
+from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 from ..helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
@@ -85,7 +85,7 @@ class Test(BaseTest):
         args = torch.tensor([[1.0, 3.0, 4.0]])
         ig = IntegratedGradients(model)
 
-        self.basic_model_global_assert(
+        infidelity1 = self.basic_model_global_assert(
             ig,
             model,
             (input1, input2),
@@ -96,7 +96,7 @@ class Test(BaseTest):
             perturb_func=_global_perturb_func1,
         )
 
-        self.basic_model_global_assert(
+        infidelity2 = self.basic_model_global_assert(
             ig,
             model,
             (input1, input2),
@@ -106,6 +106,7 @@ class Test(BaseTest):
             max_batch_size=2,
             perturb_func=_global_perturb_func1,
         )
+        assertTensorAlmostEqual(self, infidelity1, infidelity2, 0.0)
 
     def test_classification_infidelity_convnet_multi_targets(self):
         model = BasicModel_ConvNet_One_Conv()
@@ -127,7 +128,7 @@ class Test(BaseTest):
     def test_classification_infidelity_tpl_target(self):
         model = BasicModel_MultiLayer()
         input = torch.arange(1.0, 13.0).view(4, 3)
-        additional_forward_args = (None, True)
+        additional_forward_args = (torch.arange(1, 13).view(4, 3), True)
         targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         sa = Saliency(model)
 

@@ -53,16 +53,21 @@ def infidelity(
 
         forward_func (callable):
                 The forward function of our model or any modification of it.
+
         perturb_func (callable):
                 The perturbation function of model inputs. This function takes
                 model inputs as an argument and returns a tuple of perturbations
-                and perturbeded inputs. If there is more than one input,
+                and perturbeded inputs. If there are more than one inputs passed to
+                `perturb_func`, those inputs will be passed in an unpacked form
+                in the same order that they are passed to infidelity function.
+
+                In case inputs is a single tensor, the function needs return a tuple
+                of perturbations and inputs such as:
+                    perturb, inputs
+                If there are more than one input,
                 corresponding perturbations must be computed and returned as tuples
                 in the following format:
                     (perturb1, perturb2, ... perturbN), (input1, input2, ... inputN)
-                In case inputs is a single tensor, the function can return a tuple
-                of perturbations and inputs such as:
-                    perturb, inputs
 
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
@@ -86,7 +91,7 @@ def infidelity(
                 so called global attributions as described in:
                 https://arxiv.org/pdf/1711.06104.pdf
                 In order to estimate the infidelity of the local attributions
-                using real valued perturbations as descibed in the:
+                using real-valued perturbations as descibed in the:
                 https://arxiv.org/pdf/1901.09392.pdf
                 we will need to devide those attributions by inputs
                 or (inputs - baselines) depending on the type of the algorithm
@@ -194,6 +199,24 @@ def infidelity(
         )
         return perturb_func(*inputs_expanded)
 
+    def _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations):
+        # asserts the sizes of the perturbations and inputs
+        assert len(perturbations) == len(inputs), (
+            """The number of perturbed
+            inputs and corresponding perturbations must have the same number of
+            elements. Found number of inputs is: {} and perturbations:
+            {}"""
+        ).format(len(perturbations), len(inputs))
+
+        # asserts the shapes of the perturbations and perturbed inputs
+        for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
+            assert perturb[0].shape == input_perturbed[0].shape, (
+                """Perturbed input
+                and corresponding perturbation must have the same shape and
+                dimensionality. Found perturbation shape is: {} and the input shape
+                is: {}"""
+            ).format(perturb[0].shape, input_perturbed[0].shape)
+
     def _next_infidelity(current_n_samples):
         perturbations, inputs_perturbed = _generate_perturbations(current_n_samples)
 
@@ -201,22 +224,7 @@ def infidelity(
             perturbations = _format_tensor_into_tuples(perturbations)
             inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
 
-        # asserts the sizes of the perturbations and inputs
-        assert len(perturbations) == len(inputs), (
-            """The number of perturbed
-            inputs and corresponding perturbations must have the same number of
-             elements. Found number of inputs is: {} and perturbations:
-             {}"""
-        ).format(len(perturbations), len(inputs))
-
-        # asserts the shapes of the perturbations and perturbed inputs
-        for perturb, input_perturbed in zip(perturbations, inputs_perturbed):
-            assert perturb[0].shape == input_perturbed[0].shape, (
-                """Perturbed input
-            and corresponding perturbation must have the same shape and
-            dimensionality. Found perturbation shape is: {} and the input shape
-            is: {}"""
-            ).format(perturb[0].shape, input_perturbed[0].shape)
+        _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations)
 
         targets_expanded = _expand_target(
             target, current_n_samples, expansion_type=ExpansionTypes.repeat_interleave
