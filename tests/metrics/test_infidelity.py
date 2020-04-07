@@ -128,7 +128,7 @@ class Test(BaseTest):
     def test_classification_infidelity_tpl_target(self):
         model = BasicModel_MultiLayer()
         input = torch.arange(1.0, 13.0).view(4, 3)
-        additional_forward_args = (torch.arange(1, 13).view(4, 3), True)
+        additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
         targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         sa = Saliency(model)
 
