@@ -6,10 +6,7 @@ import torch.nn as nn
 from captum.attr import LayerLRP
 from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
 
-from ...helpers.basic_models import (
-    BasicModel_ConvNet_One_Conv,
-    SimpleLRPModel,
-)
+from ...helpers.basic_models import BasicModel_ConvNet_One_Conv, SimpleLRPModel
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -95,7 +92,8 @@ class Test(BaseTest):
         _ = lrp.attribute(inputs)
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
-    '''
+
+    """
     def test_lrp_simple_inplaceReLU(self):
         model_default, inputs = _get_simple_model()
         model_inplace, _ = _get_simple_model(inplace=True)
@@ -108,7 +106,7 @@ class Test(BaseTest):
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
         relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
         assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
-    '''
+    """
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
@@ -154,7 +152,8 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([0.2500, 0.3750, 0.3750]))
-    '''
+
+    """
     def test_lrp_skip_connection(self):
         class SkipConnection(nn.Module):
             def __init__(self):
@@ -175,7 +174,7 @@ class Test(BaseTest):
         relevance = lrp.attribute(input, target=1)
         denormalized_relevance = relevance * output[0, 1]
         assertTensorAlmostEqual(self, denormalized_relevance, torch.Tensor([[10, 18]]))
-    '''
+    """
 
     def test_lrp_simple_attributions_all_layers(self):
         model, inputs = _get_simple_model(inplace=False)
