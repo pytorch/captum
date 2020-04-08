@@ -336,8 +336,7 @@ class DeepLift(GradientAttribution):
                     custom_attribution_func, gradients, inputs, baselines
                 )
         except Exception:
-            # If any error is raised, remove
-            # all hooks before raising
+            # If any error is raised, remove all hooks before raising
             self._remove_hooks(main_model_hooks)
             raise
 
@@ -509,7 +508,7 @@ class DeepLift(GradientAttribution):
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
 
-    def _remove_hooks(self, extra_hooks_to_remove) -> None:
+    def _remove_hooks(self, extra_hooks_to_remove: List[RemovableHandle]) -> None:
         for handle in extra_hooks_to_remove:
             handle.remove()
         for forward_handle in self.forward_handles:

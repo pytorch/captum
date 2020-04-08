@@ -46,7 +46,9 @@ class ErrorModule(Module):
 
 class HookRemovalMeta(type):
     """
-    Attribution is computed either using the original targets or with
+    Attribution is computed either normally or with the changes based on the
+    mode, which cause an error. Once attribution is calculated, test verifies
+    that no forward, backward or forward pre hooks remain on any modules.
     """
 
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
@@ -118,7 +120,8 @@ class HookRemovalMeta(type):
                 attr_method = NoiseTunnel(attr_method)
 
             if mode is HookRemovalMode.incorrect_target_or_neuron:
-                # Deleting necessary arguments will cause error in attribution
+                # Overwriting target and neuron index arguments to
+                # incorrect values.
                 if "target" in args:
                     args["target"] = (9999,) * 20
                     expect_error = True
