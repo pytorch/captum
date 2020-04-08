@@ -139,6 +139,6 @@ class Test(BaseTest):
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
-            test_input, target=0, additional_forward_args=additional_input
+            test_input, target=0, additional_forward_args=additional_input,
         )
         assertTensorTuplesAlmostEqual(self, attributions, expected_ig, delta=0.01)

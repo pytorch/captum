@@ -43,6 +43,7 @@
 
 .filter-panel {
   background-color: white;
+  padding: 0 24px;
 }
 
 .filter-panel,
@@ -54,7 +55,7 @@
 
 .filter-panel__column {
   width: 33%;
-  padding: 12px 16px;
+  padding: 12px 8px;
 }
 
 .filter-panel__column__title,
@@ -179,11 +180,12 @@
 }
 
 .panel__column {
-  padding: 0 30px;
+  padding: 0 8px;
+  flex: 1;
 }
 
 .panel__column--stretch {
-  flex-grow: 2;
+  flex-grow: 3;
 }
 
 .gallery {
