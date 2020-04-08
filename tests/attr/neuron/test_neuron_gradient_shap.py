@@ -23,7 +23,7 @@ class Test(BaseTest):
         inputs = torch.tensor([[1.0, 20.0, 10.0]])
         baselines = torch.randn(2, 3)
 
-        self._assert_attributions(model, model.linear1, inputs, baselines, 0)
+        self._assert_attributions(model, model.linear1, inputs, baselines, 0, 60)
 
     def test_classification(self) -> None:
         def custom_baseline_fn(inputs: Tensor) -> Tensor:

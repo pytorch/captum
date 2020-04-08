@@ -21,7 +21,7 @@ from ..helpers.basic_models import (
     Conv1dDeepLiftModel,
     LinearMaxPoolLinearModel,
     ReLUDeepLiftModel,
-    ReLULinearDeepLiftModel,
+    ReLULinearModel,
     TanhDeepLiftModel,
 )
 
@@ -85,7 +85,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
     def test_relu_linear_deeplift(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
 
@@ -96,19 +96,19 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
     def test_relu_linear_deeplift_compare_inplace(self) -> None:
-        model1 = ReLULinearDeepLiftModel(inplace=True)
+        model1 = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
         inputs = (x1, x2)
         attributions1 = DeepLift(model1).attribute(inputs)
 
-        model2 = ReLULinearDeepLiftModel()
+        model2 = ReLULinearModel()
         attributions2 = DeepLift(model2).attribute(inputs)
         assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
         assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
 
     def test_relu_linear_deepliftshap_compare_inplace(self) -> None:
-        model1 = ReLULinearDeepLiftModel(inplace=True)
+        model1 = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
         inputs = (x1, x2)
@@ -118,13 +118,13 @@ class Test(BaseTest):
 
         attributions1 = DeepLiftShap(model1).attribute(inputs, baselines)
 
-        model2 = ReLULinearDeepLiftModel()
+        model2 = ReLULinearModel()
         attributions2 = DeepLiftShap(model2).attribute(inputs, baselines)
         assertTensorAlmostEqual(self, attributions1[0], attributions2[0])
         assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
 
     def test_relu_linear_deeplift_batch(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0], [2.0, 3.0, 4.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0], [2.3, 5.0, 4.0]], requires_grad=True)
 
@@ -173,7 +173,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
     def test_relu_deepliftshap_baselines_as_func(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
 
@@ -221,7 +221,7 @@ class Test(BaseTest):
         ) -> Tuple[Tensor, ...]:
             return tuple(multiplier * 0.0 for multiplier in multipliers)
 
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
         x1 = torch.tensor([[-10.0, 1.0, -5.0]])
         x2 = torch.tensor([[3.0, 3.0, 1.0]])
         b1 = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])

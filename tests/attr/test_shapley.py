@@ -250,7 +250,7 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             perturbations_per_eval=(1,),
             target=None,
-            n_samples=700,
+            n_samples=800,
         )
 
     def _shapley_test_assert(

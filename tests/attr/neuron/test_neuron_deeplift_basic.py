@@ -11,7 +11,7 @@ from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ...helpers.basic_models import ReLULinearDeepLiftModel
+from ...helpers.basic_models import ReLULinearModel
 from ..layer.test_layer_deeplift_basic import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
@@ -20,7 +20,7 @@ from ..layer.test_layer_deeplift_basic import (
 
 class Test(BaseTest):
     def test_relu_neuron_deeplift(self) -> None:
-        model = ReLULinearDeepLiftModel(inplace=True)
+        model = ReLULinearModel(inplace=True)
 
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
@@ -33,8 +33,8 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
 
     def test_deeplift_compare_with_and_without_inplace(self) -> None:
-        model1 = ReLULinearDeepLiftModel(inplace=True)
-        model2 = ReLULinearDeepLiftModel()
+        model1 = ReLULinearModel(inplace=True)
+        model2 = ReLULinearModel()
         x1 = torch.tensor([[-10.0, 1.0, -5.0]], requires_grad=True)
         x2 = torch.tensor([[3.0, 3.0, 1.0]], requires_grad=True)
         inputs = (x1, x2)
@@ -48,7 +48,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions1[1], attributions2[1])
 
     def test_linear_neuron_deeplift(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
         neuron_dl = NeuronDeepLift(model, model.l3)
@@ -66,14 +66,14 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[1], [[6.0, 9.0, 0.0]])
 
     def test_relu_deeplift_with_custom_attr_func(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         neuron_dl = NeuronDeepLift(model, model.l3)
         expected = ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
         self._relu_custom_attr_func_assert(neuron_dl, inputs, baselines, expected)
 
     def test_relu_neuron_deeplift_shap(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         (
             inputs,
             baselines,
@@ -88,7 +88,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[1], [[0.0, 0.0, 0.0]])
 
     def test_linear_neuron_deeplift_shap(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         (
             inputs,
             baselines,
@@ -109,7 +109,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[1], [[6.0, 9.0, 0.0]])
 
     def test_relu_deepliftshap_with_custom_attr_func(self) -> None:
-        model = ReLULinearDeepLiftModel()
+        model = ReLULinearModel()
         (
             inputs,
             baselines,

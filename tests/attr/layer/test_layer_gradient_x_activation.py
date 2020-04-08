@@ -45,7 +45,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[3.0, 4.0, 0.0]])
         self._layer_activation_test_assert(
-            net, net.relu, inp, ([0.0, 8.0, 8.0, 8.0], [0.0, 8.0, 8.0, 8.0])
+            net, net.multi_relu, inp, ([0.0, 8.0, 8.0, 8.0], [0.0, 8.0, 8.0, 8.0])
         )
 
     def test_simple_relu_gradient_activation(self) -> None:

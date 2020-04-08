@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
+import copy
 import random
 import unittest
+from typing import Callable
 
 import numpy as np
 import torch
+
+
+def deep_copy_args(func: Callable):
+    def copy_args(*args, **kwargs):
+        return func(
+            *(copy.deepcopy(x) for x in args),
+            **{k: copy.deepcopy(v) for k, v in kwargs.items()}
+        )
+
+    return copy_args
 
 
 def assertArraysAlmostEqual(inputArr, refArr, delta=0.05):
@@ -23,9 +35,10 @@ def assertTensorAlmostEqual(test, actual, expected, delta=0.0001, mode="sum"):
     assert isinstance(actual, torch.Tensor), (
         "Actual parameter given for " "comparison must be a tensor."
     )
-    actual = actual.squeeze()
+    actual = actual.squeeze().cpu()
     if not isinstance(expected, torch.Tensor):
         expected = torch.tensor(expected, dtype=actual.dtype)
+    expected = expected.squeeze().cpu()
     if mode == "sum":
         test.assertAlmostEqual(
             torch.sum(torch.abs(actual - expected)).item(), 0.0, delta=delta
@@ -67,6 +80,14 @@ def assert_delta(test, delta):
     )
 
 
+def set_all_random_seeds(seed):
+    random.seed(1234)
+    np.random.seed(1234)
+    torch.manual_seed(1234)
+    torch.cuda.manual_seed_all(1234)
+    torch.backends.cudnn.deterministic = True
+
+
 class BaseTest(unittest.TestCase):
     """
     This class provides a basic framework for all Captum tests by providing
@@ -75,11 +96,7 @@ class BaseTest(unittest.TestCase):
     """
 
     def setUp(self):
-        random.seed(1234)
-        np.random.seed(1234)
-        torch.manual_seed(1234)
-        torch.cuda.manual_seed_all(1234)
-        torch.backends.cudnn.deterministic = True
+        set_all_random_seeds(1234)
 
 
 class BaseGPUTest(BaseTest):

@@ -27,7 +27,7 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._internal_influence_test_assert(
             net,
-            net.relu,
+            net.multi_relu,
             inp,
             ([[0.9, 1.0, 1.0, 1.0]], [[0.9, 1.0, 1.0, 1.0]]),
             attribute_to_layer_input=True,

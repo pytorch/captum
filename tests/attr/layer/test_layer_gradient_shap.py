@@ -41,7 +41,7 @@ class Test(BaseTest):
         expected = ([90.0, 100.0, 100.0, 100.0], [90.0, 100.0, 100.0, 100.0])
         self._assert_attributions(
             model,
-            model.relu,
+            model.multi_relu,
             inputs,
             torch.zeros_like(inputs),
             0,
@@ -56,7 +56,7 @@ class Test(BaseTest):
         inputs = torch.tensor([[1.0, -20.0, 10.0]])
         add_args = torch.ones(1, 3)
         baselines = torch.randn(30, 3)
-        expected = [[-10.4661, 0.0]]
+        expected = [[-13.9510, 0.0]]
 
         self._assert_attributions(
             model, model.linear2, inputs, baselines, 0, expected, add_args=add_args
@@ -111,7 +111,7 @@ class Test(BaseTest):
         inputs = (torch.tensor([[10.0, 20.0, 10.0]]), torch.tensor([[1.0, 2.0, 1.0]]))
         add_args = (torch.tensor([[1.0, 2.0, 3.0]]), 1.0)
         baselines = (torch.randn(30, 3), torch.randn(30, 3))
-        expected = torch.tensor([[172.603, 0.0]])
+        expected = torch.tensor([[171.6841, 0.0]])
         self._assert_attributions(
             net, net.model.linear2, inputs, baselines, 0, expected, add_args=add_args
         )
