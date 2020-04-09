@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
+
 import torch
 from torch import Tensor
-from typing import Dict, Any, Optional, Callable, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from captum.attr._utils.summarizer import SummarizerSingleTensor
@@ -31,13 +32,6 @@ class Stat:
         self.params = kwargs
         self._name = name
 
-        self._other_stats: Optional[SummarizerSingleTensor] = None
-
-    def init(self):
-        pass
-
-    def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
-        assert self._other_stats is not None
         self._other_stats: Optional[SummarizerSingleTensor] = None
 
     def init(self):
@@ -262,6 +256,7 @@ class Max(GeneralAccumFn):
 class Sum(GeneralAccumFn):
     def __init__(self, name: Optional[str] = None, add_fn: Callable = torch.add):
         super().__init__(name=name, fn=add_fn)
+
 
 def CommonStats() -> List[Stat]:
     r"""
