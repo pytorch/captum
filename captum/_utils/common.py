@@ -194,9 +194,13 @@ def _run_forward(
     return _select_targets(output, target)
 
 
-def _select_targets(output: Tensor, target: TargetType) -> Tensor:
+def _select_targets(output: Union[Tensor, Tuple[Tensor]], target: TargetType) -> Tensor:
     if target is None:
         return output
+
+    if isinstance(output, Tuple):
+        output = output[target[0]]
+        target = target[2:]
 
     num_examples = output.shape[0]
     dims = len(output.shape)
