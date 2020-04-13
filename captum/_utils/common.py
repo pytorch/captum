@@ -16,12 +16,18 @@ class ExpansionTypes(Enum):
     repeat_interleave = 2
 
 
-def safe_div(denom: Tensor, quotient: float, default_value: Tensor) -> Tensor:
+def safe_div(
+    denom: Tensor, quotient: Union[Tensor, float], default_value: Tensor
+) -> Tensor:
     r"""
         A simple utility function to perform `denom / quotient`
         if the statement is undefined => result will be `default_value`
     """
-    return denom / quotient if quotient != 0.0 else default_value
+    if isinstance(quotient, float):
+        return denom / quotient if quotient != 0.0 else default_value
+
+    # if quotient is a tensor
+    return denom / torch.where(quotient != 0.0, quotient, default_value)
 
 
 @typing.overload

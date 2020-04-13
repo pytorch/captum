@@ -5,7 +5,7 @@ import warnings
 import torch
 
 
-def _devide_and_aggregate_metrics(
+def _divide_and_aggregate_metrics(
     inputs, n_samples, metric_func, agg_func=torch.add, max_examples_per_batch=None
 ):
     r"""
@@ -34,15 +34,13 @@ def _devide_and_aggregate_metrics(
     device = inputs[0].device
     bsz = inputs[0].size(0)
 
-    if (
-        max_examples_per_batch is not None
-        and max_examples_per_batch // bsz < 1
-        and max_examples_per_batch // bsz > n_samples
+    if max_examples_per_batch is not None and (
+        max_examples_per_batch // bsz < 1 or max_examples_per_batch // bsz > n_samples
     ):
         warnings.warn(
             (
                 "`max_examples_per_batch` must be at least equal to the"
-                " input batch size and at most to `n_samples`."
+                " input batch size and at most to `input batch size` * `n_samples`."
                 "`max_examples_per_batch` is: {} and the input batch size is: {}."
                 "This is necessary because we require that each sub-batch that is used "
                 "to compute the metrics, contains at least an instance of "
