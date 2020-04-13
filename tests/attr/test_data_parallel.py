@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os
 import copy
+import os
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
@@ -24,7 +24,6 @@ from ..helpers.basic import BaseGPUTest, assertTensorTuplesAlmostEqual, deep_cop
 from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
 
-
 """
 Tests in this file are dynamically generated based on the config
 defined in tests/attr/helpers/test_config.py. To add new test cases,
@@ -33,8 +32,8 @@ schema described there.
 """
 
 # Distributed Data Parallel env setup
-os.environ['MASTER_ADDR'] = '127.0.0.1'
-os.environ['MASTER_PORT'] = '29500'
+os.environ["MASTER_ADDR"] = "127.0.0.1"
+os.environ["MASTER_PORT"] = "29500"
 dist.init_process_group(backend="gloo", rank=0, world_size=1)
 
 
