@@ -72,7 +72,7 @@ def infidelity(
                 will be passed to `perturb_func` as tuples in the same order as they
                 are passed to infidelity function.
 
-                In case `perturb_func_custom=False` if inputs
+                In case `perturb_func_custom=False` and if inputs
                  - is a single tensor, the function needs to return a tuple
                     of perturbations and perturbed input such as:
                       perturb, perturbed_input
@@ -82,7 +82,7 @@ def infidelity(
                         (perturb1, perturb2, ... perturbN), (perturbed_input1,
                          perturbed_input2, ... perturbed_inputN)
 
-                In case `perturb_func_custom=True` if inputs
+                In case `perturb_func_custom=True` and if inputs
                  - is a single tensor, the function needs to return
                      only perturbed input
                        perturbed_input
@@ -164,10 +164,9 @@ def infidelity(
                 tensor as well. If inputs is provided as a tuple of tensors
                 then attributions will be tuples of tensors as well.
 
-                If `perturb_func_custom=True` then in order to obtain infidelity
-                for local attribution using global attribution methods we do not
-                need to divide them by
-                (inputs - baselines) that will be done by internal logic.
+                If `perturb_func_custom=True` then we internally divide global
+                attribution values by (input - baselines) and the user needs to
+                only return perturbed inputs in `perturb_func`.
 
         additional_forward_args (any, optional): If the forward function
                 requires additional arguments other than the inputs for
