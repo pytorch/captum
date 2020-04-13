@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import os
 import copy
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
 import torch
+import torch.distributed as dist
 from torch import Tensor
 from torch.nn import Module
 
@@ -30,6 +32,11 @@ read the documentation in test_config.py and add cases based on the
 schema described there.
 """
 
+# Distributed Data Parallel env setup
+os.environ['MASTER_ADDR'] = '127.0.0.1'
+os.environ['MASTER_PORT'] = '29500'
+dist.init_process_group(backend="gloo", rank=0, world_size=1)
+
 
 class DataParallelCompareMode(Enum):
     """
@@ -44,6 +51,7 @@ class DataParallelCompareMode(Enum):
     cpu_cuda = 1
     data_parallel_default = 2
     data_parallel_alt_dev_ids = 3
+    dist_data_parallel = 4
 
 
 class DataParallelMeta(type):
@@ -146,6 +154,12 @@ class DataParallelMeta(type):
                     ),
                 )
                 args_1, args_2 = cuda_args, cuda_args
+            elif mode is DataParallelCompareMode.dist_data_parallel:
+                model_1, model_2 = (
+                    cuda_model,
+                    torch.nn.parallel.DistributedDataParallel(cuda_model),
+                )
+                args_1, args_2 = cuda_args, cuda_args
             else:
                 raise AssertionError("DataParallel compare mode type is not valid.")
 
@@ -222,5 +236,5 @@ class DataParallelMeta(type):
         return data_parallel_test_assert
 
 
-class DataParallelTest(BaseGPUTest):
+class DataParallelTest(BaseGPUTest, metaclass=DataParallelMeta):
     pass
