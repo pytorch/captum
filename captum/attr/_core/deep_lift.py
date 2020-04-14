@@ -335,13 +335,9 @@ class DeepLift(GradientAttribution):
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, inputs, baselines
                 )
-        except Exception:
-            # If any error is raised, remove all hooks before raising
+        finally:
+            # Even if any error is raised, remove all hooks before raising
             self._remove_hooks(main_model_hooks)
-            raise
-
-        # remove hooks from all activations
-        self._remove_hooks(main_model_hooks)
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(

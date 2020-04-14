@@ -336,11 +336,10 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                     output = _run_forward(
                         self.forward_func, tuple(), target_ind, additional_forward_args
                     )
-                except Exception:
+                finally:
                     if hook is not None:
                         hook.remove()
-                    raise
-                hook.remove()
+
                 assert output[0].numel() == 1, (
                     "Target not provided when necessary, cannot"
                     " take gradient with respect to multiple outputs."

@@ -253,11 +253,9 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 else:
                     hook = self.layer.register_forward_hook(forward_hook)
                 eval = _run_forward(self.forward_func, original_inputs, target=target)
-            except Exception:
+            finally:
                 if hook is not None:
                     hook.remove()
-                raise
-            hook.remove()
             return eval
 
         with torch.no_grad():

@@ -239,11 +239,9 @@ def _forward_layer_distributed_eval(
             target=target_ind,
             additional_forward_args=additional_forward_args,
         )
-    except Exception:
+    finally:
         if hook is not None:
             hook.remove()
-        raise
-    hook.remove()
 
     if len(saved_layer) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")

@@ -323,11 +323,9 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, attr_inputs, attr_baselines
                 )
-        except Exception:
+        finally:
+            # remove hooks from all activations
             self._remove_hooks(main_model_hooks)
-            raise
-        # remove hooks from all activations
-        self._remove_hooks(main_model_hooks)
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(
