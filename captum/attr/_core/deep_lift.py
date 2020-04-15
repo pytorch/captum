@@ -305,36 +305,39 @@ class DeepLift(GradientAttribution):
         )
 
         baselines = _tensorize_baseline(inputs, baselines)
-        main_model_pre_hooks = self._hook_main_model()
+        main_model_hooks = []
+        try:
+            main_model_hooks = self._hook_main_model()
 
-        self.model.apply(self._register_hooks)
+            self.model.apply(self._register_hooks)
 
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-
-        expanded_target = _expand_target(
-            target, 2, expansion_type=ExpansionTypes.repeat
-        )
-
-        wrapped_forward_func = self._construct_forward_func(
-            self.model, (inputs, baselines), expanded_target, additional_forward_args
-        )
-        gradients = self.gradient_func(wrapped_forward_func, inputs)
-        if custom_attribution_func is None:
-            attributions = tuple(
-                (input - baseline) * gradient
-                for input, baseline, gradient in zip(inputs, baselines, gradients)
+            additional_forward_args = _format_additional_forward_args(
+                additional_forward_args
             )
-        else:
-            attributions = _call_custom_attribution_func(
-                custom_attribution_func, gradients, inputs, baselines
-            )
-        # remove hooks from all activations
-        for hook in main_model_pre_hooks:
-            hook.remove()
 
-        self._remove_hooks()
+            expanded_target = _expand_target(
+                target, 2, expansion_type=ExpansionTypes.repeat
+            )
+
+            wrapped_forward_func = self._construct_forward_func(
+                self.model,
+                (inputs, baselines),
+                expanded_target,
+                additional_forward_args,
+            )
+            gradients = self.gradient_func(wrapped_forward_func, inputs)
+            if custom_attribution_func is None:
+                attributions = tuple(
+                    (input - baseline) * gradient
+                    for input, baseline, gradient in zip(inputs, baselines, gradients)
+                )
+            else:
+                attributions = _call_custom_attribution_func(
+                    custom_attribution_func, gradients, inputs, baselines
+                )
+        finally:
+            # Even if any error is raised, remove all hooks before raising
+            self._remove_hooks(main_model_hooks)
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(
@@ -501,7 +504,9 @@ class DeepLift(GradientAttribution):
         self.forward_handles.append(pre_forward_handle)
         self.backward_handles.append(backward_handle)
 
-    def _remove_hooks(self) -> None:
+    def _remove_hooks(self, extra_hooks_to_remove: List[RemovableHandle]) -> None:
+        for handle in extra_hooks_to_remove:
+            handle.remove()
         for forward_handle in self.forward_handles:
             forward_handle.remove()
         for backward_handle in self.backward_handles:

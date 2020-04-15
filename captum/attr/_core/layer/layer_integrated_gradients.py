@@ -326,15 +326,20 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         return scattered_inputs_dict[device]
                     return scattered_inputs_dict[device][0]
 
-                if attribute_to_layer_input:
-                    hook = self.layer.register_forward_pre_hook(layer_forward_hook)
-                else:
-                    hook = self.layer.register_forward_hook(layer_forward_hook)
+                hook = None
+                try:
+                    if attribute_to_layer_input:
+                        hook = self.layer.register_forward_pre_hook(layer_forward_hook)
+                    else:
+                        hook = self.layer.register_forward_hook(layer_forward_hook)
 
-                output = _run_forward(
-                    self.forward_func, tuple(), target_ind, additional_forward_args
-                )
-                hook.remove()
+                    output = _run_forward(
+                        self.forward_func, tuple(), target_ind, additional_forward_args
+                    )
+                finally:
+                    if hook is not None:
+                        hook.remove()
+
                 assert output[0].numel() == 1, (
                     "Target not provided when necessary, cannot"
                     " take gradient with respect to multiple outputs."

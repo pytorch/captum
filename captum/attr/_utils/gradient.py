@@ -227,17 +227,21 @@ def _forward_layer_distributed_eval(
                     eval_tsr.clone() for eval_tsr in eval_tsrs
                 )
 
-    if attribute_to_layer_input:
-        hook = layer.register_forward_pre_hook(forward_hook)
-    else:
-        hook = layer.register_forward_hook(forward_hook)
-    output = _run_forward(
-        forward_fn,
-        inputs,
-        target=target_ind,
-        additional_forward_args=additional_forward_args,
-    )
-    hook.remove()
+    hook = None
+    try:
+        if attribute_to_layer_input:
+            hook = layer.register_forward_pre_hook(forward_hook)
+        else:
+            hook = layer.register_forward_hook(forward_hook)
+        output = _run_forward(
+            forward_fn,
+            inputs,
+            target=target_ind,
+            additional_forward_args=additional_forward_args,
+        )
+    finally:
+        if hook is not None:
+            hook.remove()
 
     if len(saved_layer) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")

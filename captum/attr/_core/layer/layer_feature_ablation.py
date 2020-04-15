@@ -246,12 +246,16 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                     return all_layer_inputs[device][0]
                 return all_layer_inputs[device]
 
-            if attribute_to_layer_input:
-                hook = self.layer.register_forward_pre_hook(forward_hook)
-            else:
-                hook = self.layer.register_forward_hook(forward_hook)
-            eval = _run_forward(self.forward_func, original_inputs, target=target)
-            hook.remove()
+            hook = None
+            try:
+                if attribute_to_layer_input:
+                    hook = self.layer.register_forward_pre_hook(forward_hook)
+                else:
+                    hook = self.layer.register_forward_hook(forward_hook)
+                eval = _run_forward(self.forward_func, original_inputs, target=target)
+            finally:
+                if hook is not None:
+                    hook.remove()
             return eval
 
         with torch.no_grad():

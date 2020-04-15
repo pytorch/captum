@@ -276,52 +276,56 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
         baselines = _tensorize_baseline(inputs, baselines)
 
-        main_model_hooks = self._hook_main_model()
+        main_model_hooks = []
+        try:
+            main_model_hooks = self._hook_main_model()
 
-        self.model.apply(self._register_hooks)
+            self.model.apply(self._register_hooks)
 
-        additional_forward_args = _format_additional_forward_args(
-            additional_forward_args
-        )
-        expanded_target = _expand_target(
-            target, 2, expansion_type=ExpansionTypes.repeat
-        )
-        wrapped_forward_func = self._construct_forward_func(
-            self.model, (inputs, baselines), expanded_target, additional_forward_args,
-        )
+            additional_forward_args = _format_additional_forward_args(
+                additional_forward_args
+            )
+            expanded_target = _expand_target(
+                target, 2, expansion_type=ExpansionTypes.repeat
+            )
+            wrapped_forward_func = self._construct_forward_func(
+                self.model,
+                (inputs, baselines),
+                expanded_target,
+                additional_forward_args,
+            )
 
-        def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
-            if isinstance(out, Tensor):
-                return out.chunk(2)
-            return tuple(out_sub.chunk(2) for out_sub in out)
+            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
+                if isinstance(out, Tensor):
+                    return out.chunk(2)
+                return tuple(out_sub.chunk(2) for out_sub in out)
 
-        (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
-            wrapped_forward_func,
-            self.layer,
-            inputs,
-            attribute_to_layer_input=attribute_to_layer_input,
-            output_fn=lambda out: chunk_output_fn(out),
-        )
+            (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
+                wrapped_forward_func,
+                self.layer,
+                inputs,
+                attribute_to_layer_input=attribute_to_layer_input,
+                output_fn=lambda out: chunk_output_fn(out),
+            )
 
-        attr_inputs = tuple(map(lambda attr: attr[0], attrs))
-        attr_baselines = tuple(map(lambda attr: attr[1], attrs))
-        gradients = tuple(map(lambda grad: grad[0], gradients))
+            attr_inputs = tuple(map(lambda attr: attr[0], attrs))
+            attr_baselines = tuple(map(lambda attr: attr[1], attrs))
+            gradients = tuple(map(lambda grad: grad[0], gradients))
 
-        if custom_attribution_func is None:
-            attributions = tuple(
-                (input - baseline) * gradient
-                for input, baseline, gradient in zip(
-                    attr_inputs, attr_baselines, gradients
+            if custom_attribution_func is None:
+                attributions = tuple(
+                    (input - baseline) * gradient
+                    for input, baseline, gradient in zip(
+                        attr_inputs, attr_baselines, gradients
+                    )
                 )
-            )
-        else:
-            attributions = _call_custom_attribution_func(
-                custom_attribution_func, gradients, attr_inputs, attr_baselines
-            )
-        # remove hooks from all activations
-        self._remove_hooks()
-        for hook in main_model_hooks:
-            hook.remove()
+            else:
+                attributions = _call_custom_attribution_func(
+                    custom_attribution_func, gradients, attr_inputs, attr_baselines
+                )
+        finally:
+            # remove hooks from all activations
+            self._remove_hooks(main_model_hooks)
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _compute_conv_delta_and_format_attrs(
