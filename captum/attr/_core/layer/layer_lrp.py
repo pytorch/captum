@@ -1,18 +1,32 @@
 #!/usr/bin/env python3
 import torch
 
-from ..._core.lrp import LRP
+from ..._core.lrp import LRP, compute_gradients_with_adjusted_inputs
 from ..._utils.attribution import LayerAttribution
 from ..._utils.common import _format_attributions, _format_input
 from ..._utils.gradient import (
     apply_gradient_requirements,
-    compute_gradients,
     undo_gradient_requirements,
     _forward_layer_eval,
 )
 
 
 class LayerLRP(LRP, LayerAttribution):
+    r"""
+    Layer-wise relevance propagation is based on a backward propagation
+    mechanism applied sequentially to all layers of the model. Here, the
+    model output score represents the initial relevance which is decomposed
+    into values for each neuron of the underlying layers. The decomposition
+    is defined by rules that are chosen for each layer, involving its weights
+    and activations. Details on the model can be found in the original paper
+    [https://doi.org/10.1371/journal.pone.0130140]. The implementation is
+    inspired by the tutorial of the same group
+    [https://doi.org/10.1016/j.dsp.2017.10.011] and the publication by
+    Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
+
+    Warning: In-place relus lead to unexptected failures in layer LRP.
+    """
+
     def __init__(self, model, layer):
         """
         Args:
@@ -42,73 +56,63 @@ class LayerLRP(LRP, LayerAttribution):
         attribute_to_layer_input=False,
         verbose=False,
     ):
-        """
-            Layer-wise relevance propagation is based on a backward propagation
-            mechanism applied sequentially to all layers of the model. Here, the model
-            output score represents the initial relevance which is decomposed into
-            values for each neuron of the underlying layers. The decomposition is
-            defined by rules that are chosen for each layer, involving its weights
-            and activations. Details on the model can be found in the original paper
-            [https://doi.org/10.1371/journal.pone.0130140] and on the implementation
-            and rules in the tutorial paper [https://doi.org/10.1016/j.dsp.2017.10.011].
+        r"""
 
-            Warning: In-place relus lead to unexptected failures in layer LRP.
+        Args:
+            inputs (tensor or tuple of tensors):  Input for which relevance is
+                        propagated.
+                        If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples, and if multiple input tensors
+                        are provided, the examples must be aligned appropriately.
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
+                        If the network returns a scalar value per example,
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
 
-            Args:
-                inputs (tensor or tuple of tensors):  Input for which relevance is
-                            propagated.
-                            If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if multiple input tensors
-                            are provided, the examples must be aligned appropriately.
-                target (int, tuple, tensor or list, optional):  Output indices for
-                            which gradients are computed (for classification cases,
-                            this is usually the target class).
-                            If the network returns a scalar value per example,
-                            no target index is necessary.
-                            For general 2D outputs, targets can be either:
+                    - a single integer or a tensor containing a single
+                        integer, which is applied to all input examples
 
-                        - a single integer or a tensor containing a single
-                            integer, which is applied to all input examples
+                    - a list of integers or a 1D tensor, with length matching
+                        the number of examples in inputs (dim 0). Each integer
+                        is applied as the target for the corresponding example.
 
-                        - a list of integers or a 1D tensor, with length matching
-                            the number of examples in inputs (dim 0). Each integer
-                            is applied as the target for the corresponding example.
+                    For outputs with > 2 dimensions, targets can be either:
 
-                        For outputs with > 2 dimensions, targets can be either:
+                    - A single tuple, which contains #output_dims - 1
+                        elements. This target index is applied to all examples.
 
-                        - A single tuple, which contains #output_dims - 1
-                            elements. This target index is applied to all examples.
+                    - A list of tuples with length equal to the number of
+                        examples in inputs (dim 0), and each tuple containing
+                        #output_dims - 1 elements. Each tuple is applied as the
+                        target for the corresponding example.
 
-                        - A list of tuples with length equal to the number of
-                            examples in inputs (dim 0), and each tuple containing
-                            #output_dims - 1 elements. Each tuple is applied as the
-                            target for the corresponding example.
+                    Default: None
+            additional_forward_args (tuple, optional): If the forward function
+                    requires additional arguments other than the inputs for
+                    which attributions should not be computed, this argument
+                    can be provided. It must be either a single additional
+                    argument of a Tensor or arbitrary (non-tuple) type or a tuple
+                    containing multiple additional arguments including tensors
+                    or any arbitrary python types. These arguments are provided to
+                    forward_func in order, following the arguments in inputs.
+                    Note that attributions are not computed with respect
+                    to these arguments.
+                    Default: None
 
-                        Default: None
-                additional_forward_args (tuple, optional): If the forward function
-                        requires additional arguments other than the inputs for
-                        which attributions should not be computed, this argument
-                        can be provided. It must be either a single additional
-                        argument of a Tensor or arbitrary (non-tuple) type or a tuple
-                        containing multiple additional arguments including tensors
-                        or any arbitrary python types. These arguments are provided to
-                        forward_func in order, following the arguments in inputs.
-                        Note that attributions are not computed with respect
-                        to these arguments.
-                        Default: None
+            return_convergence_delta (bool, optional): Indicates whether to return
+                    convergence delta or not. If `return_convergence_delta`
+                    is set to True convergence delta will be returned in
+                    a tuple following attributions.
+                    Default: False
 
-                return_convergence_delta (bool, optional): Indicates whether to return
-                        convergence delta or not. If `return_convergence_delta`
-                        is set to True convergence delta will be returned in
-                        a tuple following attributions.
-                        Default: False
-
-                verbose (bool, optional): Indicates whether information on application
-                        of rules is printed during propagation.
+            verbose (bool, optional): Indicates whether information on application
+                    of rules is printed during propagation.
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
@@ -159,12 +163,9 @@ class LayerLRP(LRP, LayerAttribution):
         self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        relevance_input_layer = compute_gradients(
+        _ = compute_gradients_with_adjusted_inputs(
             self.model, inputs, target, additional_forward_args
         )
-        # backward hook on input tensor is not called
-        # (https://github.com/pytorch/pytorch/issues/35802)
-        self.layers[0].rule.relevance_input = relevance_input_layer[0]
         relevances = self._get_output_relevance()
 
         self._restore_model()

@@ -177,21 +177,6 @@ class Test(BaseTest):
         relevance = lrp.attribute(input, 0)
         self.assertEqual(relevance.shape, input.shape)
 
-    def test_lrp_relu_hook(self):
-        class OnlyRelu(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.relu = nn.ReLU()
-
-            def forward(self, x):
-                return self.relu(x)
-
-        model = OnlyRelu()
-        input = torch.Tensor([-5])
-        lrp = LRP(model)
-        relevance = lrp.attribute(input)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([-5]))
-
     def test_lrp_skip_connection(self):
         # A custom addition module needs to be used so that relevance is
         # propagated correctly.
@@ -278,7 +263,6 @@ class Test(BaseTest):
             torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]),
         )
 
-    """
     def test_lrp_multi(self):
         model = BasicModel_MultiLayer()
         input = torch.Tensor([1, 2, 3])
@@ -294,7 +278,6 @@ class Test(BaseTest):
         # due to problem with grad() function the results do not match
         # (https://github.com/pytorch/pytorch/issues/35802)
         self.assertTrue(torch.equal(attributions, attributions_add_input))
-    """
 
     def test_lrp_multi_inputs(self):
         model = BasicModel_MultiLayer()

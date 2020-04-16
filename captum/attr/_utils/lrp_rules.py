@@ -18,9 +18,11 @@ class PropagationRule(ABC):
         tensors of linear layers in the model."""
         self._handle_input_hooks = []
         for input in inputs:
-            input_hook = self._create_backward_hook_input(input.data)
-            self._handle_input_hooks.append(input.register_hook(input_hook))
-        output_hook = self._create_backward_hook_output(outputs.data)
+            if not hasattr(input, "hook_registered"):
+                input_hook = self._create_backward_hook_input(input.data, module)
+                self._handle_input_hooks.append(input.register_hook(input_hook))
+                input.hook_registered = True
+        output_hook = self._create_backward_hook_output(outputs.data, module)
         self._handle_output_hook = outputs.register_hook(output_hook)
 
     @staticmethod
@@ -28,7 +30,7 @@ class PropagationRule(ABC):
         """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
-    def _create_backward_hook_input(self, inputs):
+    def _create_backward_hook_input(self, inputs, module):
         def _backward_hook_input(grad):
             relevance = grad * inputs
             self.relevance_input = relevance.data
@@ -36,9 +38,11 @@ class PropagationRule(ABC):
 
         return _backward_hook_input
 
-    def _create_backward_hook_output(self, outputs):
+    def _create_backward_hook_output(self, outputs, module):
         def _backward_hook_output(grad):
-            relevance = grad / (outputs + torch.sign(outputs) * self.STABILITY_FACTOR)
+            relevance = grad / (
+                outputs + self.STABILITY_FACTOR
+            )  # torch.sign(outputs) * # resulted in errors
             self.relevance_output = grad.data
             return relevance
 
@@ -46,7 +50,7 @@ class PropagationRule(ABC):
 
     def forward_hook_weights(self, module, inputs, outputs):
         """Save initial activations a_j before modules are changed"""
-        module.activation = inputs[0].data
+        module.activations = tuple(input.data for input in inputs)
         self._manipulate_weights(module, inputs, outputs)
 
     @abstractmethod
@@ -55,7 +59,8 @@ class PropagationRule(ABC):
 
     def forward_pre_hook_activations(self, module, inputs):
         """Pass initial activations to graph generation pass"""
-        inputs[0].data = module.activation.data
+        for input, activation in zip(inputs, module.activations):
+            input.data = activation
         return inputs
 
 
