@@ -8,6 +8,7 @@ import torch.nn as nn
 from ..._utils.common import _run_forward
 from .._utils.attribution import Attribution
 from .._utils.common import _format_attributions, _format_input
+from .._utils.custom_modules import Addition_Module
 from .._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
@@ -331,18 +332,6 @@ class LRP(Attribution):
         """
         adjusted_inputs = tuple(input + 0 for input in inputs)
         return self.model(*adjusted_inputs)
-
-
-class Addition_Module(nn.Module):
-    """Custom addition module that uses multiple inputs to assure correct relevance
-    propagation. Any addition in a forward function needs to be replaced with the
-    module before using LRP."""
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x1, x2):
-        return x1 + x2
 
 
 SUPPORTED_LAYERS_WITH_RULES = {
