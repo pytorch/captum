@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import torch
 
-from ..._core.lrp import LRP, compute_gradients_with_adjusted_inputs
+from ..._core.lrp import LRP
 from ..._utils.attribution import LayerAttribution
 from ..._utils.common import _format_attributions, _format_input
 from ..._utils.gradient import (
-    apply_gradient_requirements,
-    undo_gradient_requirements,
     _forward_layer_eval,
+    apply_gradient_requirements,
+    compute_gradients,
+    undo_gradient_requirements,
 )
 
 
@@ -163,8 +164,8 @@ class LayerLRP(LRP, LayerAttribution):
         self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        _ = compute_gradients_with_adjusted_inputs(
-            self.model, inputs, target, additional_forward_args
+        _ = compute_gradients(
+            self._forward_fn_wrapper, inputs, target, additional_forward_args
         )
         relevances = self._get_output_relevance()
 

@@ -5,14 +5,15 @@ import warnings
 import torch
 import torch.nn as nn
 
+from ..._utils.common import _run_forward
 from .._utils.attribution import Attribution
 from .._utils.common import _format_attributions, _format_input
-from ..._utils.common import _run_forward
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from .._utils.gradient import (
+    apply_gradient_requirements,
+    compute_gradients,
+    undo_gradient_requirements,
+)
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
-
-from typing import Any, Callable, Tuple, Union
-from ..._utils.typing import TargetType
 
 
 class LRP(Attribution):
@@ -164,8 +165,8 @@ class LRP(Attribution):
         self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        relevances = compute_gradients_with_adjusted_inputs(
-            self.model, inputs, target, additional_forward_args
+        relevances = compute_gradients(
+            self._forward_fn_wrapper, inputs, target, additional_forward_args
         )
 
         self._restore_model()
@@ -320,46 +321,16 @@ class LRP(Attribution):
         self._remove_rules()
         self._clear_properties()
 
-
-def compute_gradients_with_adjusted_inputs(
-    forward_fn: Callable,
-    inputs: Union[torch.Tensor, Tuple[torch.Tensor, ...]],
-    target_ind: TargetType = None,
-    additional_forward_args: Any = None,
-) -> Tuple[torch.Tensor, ...]:
-    r"""
-        Computes gradients of the output with respect to inputs for an
-        arbitrary forward function. Copy of function from .._utils.gradient,
-        with addition of 0 to input tensor as a workaround to
+    def _forward_fn_wrapper(self, *inputs):
+        """
+        Wraps a forward function with addition of zero as a workaround to
         https://github.com/pytorch/pytorch/issues/35802 discussed in
         https://github.com/pytorch/captum/issues/143#issuecomment-611750044
 
-        Args:
-
-            forward_fn: forward function. This can be for example model's
-                        forward function.
-            input:      Input at which gradients are evaluated,
-                        will be passed to forward_fn.
-            target_ind: Index of the target class for which gradients
-                        must be computed (classification only).
-            additional_forward_args: Additional input arguments that forward
-                        function requires. It takes an empty tuple (no additional
-                        arguments) if no additional arguments are required
-    """
-    with torch.autograd.set_grad_enabled(True):
-        # runs forward pass
+        #TODO: Remove when bugs are fixed
+        """
         adjusted_inputs = tuple(input + 0 for input in inputs)
-        outputs = _run_forward(
-            forward_fn, adjusted_inputs, target_ind, additional_forward_args
-        )
-        assert outputs[0].numel() == 1, (
-            "Target not provided when necessary, cannot"
-            " take gradient with respect to multiple outputs."
-        )
-        # torch.unbind(forward_out) is a list of scalar tensor tuples and
-        # contains batch_size * #steps elements
-        grads = torch.autograd.grad(torch.unbind(outputs), inputs)
-    return grads
+        return self.model(*adjusted_inputs)
 
 
 class Addition_Module(nn.Module):

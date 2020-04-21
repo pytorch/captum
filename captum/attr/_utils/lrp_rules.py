@@ -19,10 +19,10 @@ class PropagationRule(ABC):
         self._handle_input_hooks = []
         for input in inputs:
             if not hasattr(input, "hook_registered"):
-                input_hook = self._create_backward_hook_input(input.data, module)
+                input_hook = self._create_backward_hook_input(input.data)
                 self._handle_input_hooks.append(input.register_hook(input_hook))
                 input.hook_registered = True
-        output_hook = self._create_backward_hook_output(outputs.data, module)
+        output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_output_hook = outputs.register_hook(output_hook)
 
     @staticmethod
@@ -30,7 +30,7 @@ class PropagationRule(ABC):
         """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
-    def _create_backward_hook_input(self, inputs, module):
+    def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
             relevance = grad * inputs
             self.relevance_input = relevance.data
@@ -38,11 +38,11 @@ class PropagationRule(ABC):
 
         return _backward_hook_input
 
-    def _create_backward_hook_output(self, outputs, module):
+    def _create_backward_hook_output(self, outputs):
         def _backward_hook_output(grad):
-            relevance = grad / (
-                outputs + self.STABILITY_FACTOR
-            )  # torch.sign(outputs) * # resulted in errors
+            sign = torch.sign(outputs)
+            sign[sign == 0] = 1
+            relevance = grad / (outputs + sign * self.STABILITY_FACTOR)
             self.relevance_output = grad.data
             return relevance
 
@@ -91,7 +91,7 @@ class GammaRule(PropagationRule):
     Use for lower layers.
 
     Args:
-        gamma (int): The gamma parameter determines by how much
+        gamma (float): The gamma parameter determines by how much
         the positive relevance is increased.
     """
 
