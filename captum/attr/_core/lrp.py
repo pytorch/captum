@@ -6,18 +6,14 @@ import torch
 import torch.nn as nn
 
 from ..._utils.common import _run_forward
-from .._utils.attribution import Attribution
+from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions, _format_input
 from .._utils.custom_modules import Addition_Module
-from .._utils.gradient import (
-    apply_gradient_requirements,
-    compute_gradients,
-    undo_gradient_requirements,
-)
+from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
 
 
-class LRP(Attribution):
+class LRP(GradientAttribution):
     r"""
     Layer-wise relevance propagation is based on a backward propagation
     mechanism applied sequentially to all layers of the model. Here, the
@@ -41,7 +37,7 @@ class LRP(Attribution):
                 specified for a layer, a pre-defined default rule for the module type
                 is used.
         """
-        Attribution.__init__(self, model)
+        GradientAttribution.__init__(self, model)
 
         if isinstance(model, nn.DataParallel):
             warnings.warn(
@@ -166,7 +162,7 @@ class LRP(Attribution):
         self._change_weights(inputs, additional_forward_args)
         self._register_forward_hooks()
         # 2. Forward pass + backward pass
-        relevances = compute_gradients(
+        relevances = self.gradient_func(
             self._forward_fn_wrapper, inputs, target, additional_forward_args
         )
 
