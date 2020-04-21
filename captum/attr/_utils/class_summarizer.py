@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from collections import defaultdict
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 from torch import Tensor
 
@@ -24,7 +24,7 @@ class ClassSummarizer(Summarizer):
             lambda: Summarizer(stats=stats)
         )
 
-    def update(
+    def update(  # type: ignore
         self, x: TensorOrTupleOfTensorsGeneric, labels: TargetType = None,
     ):
         r"""
@@ -79,7 +79,11 @@ class ClassSummarizer(Summarizer):
             super().update(tensors_to_summarize_copy)
 
     @property
-    def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:
+    def class_summaries(
+        self,
+    ) -> Dict[
+        Any, Union[None, Dict[str, Optional[Tensor]], List[Dict[str, Optional[Tensor]]]]
+    ]:
         r"""
         Returns:
              The summaries for each class.

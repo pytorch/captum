@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
+from typing import TYPE_CHECKING, Any, Callable, List, Optional
+
 import torch
+from torch import Tensor
+
+if TYPE_CHECKING:
+    from captum.attr._utils.summarizer import SummarizerSingleTensor
 
 
 class Stat:
@@ -14,39 +20,53 @@ class Stat:
     3. The name of the statistic that is used for the user to refer to
     """
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name: Optional[str] = None, **kwargs: Any):
+        """
+        Args:
+            name (str, optional):
+                The name of the statistic. If not provided,
+                the class name will be used alongside it's parameters
+            kwargs (Any):
+                Additional arguments used to construct the statistic
+        """
         self.params = kwargs
         self._name = name
 
-        self._other_stats = None
+        self._other_stats: Optional[SummarizerSingleTensor] = None
 
     def init(self):
         pass
 
-    def _get_stat(self, stat):
+    def _get_stat(self, stat: "Stat") -> Optional["Stat"]:
+        assert self._other_stats is not None
         return self._other_stats.get(stat)
 
-    def update(self, x):
+    def update(self, x: Tensor):
         raise NotImplementedError()
 
-    def get(self):
+    def get(self) -> Optional[Tensor]:
         raise NotImplementedError()
 
     def __hash__(self):
         return hash((self.__class__, frozenset(self.params.items())))
 
-    def __eq__(self, other):
-        return self.__class__ == other.__class__ and frozenset(
-            self.params.items()
-        ) == frozenset(other.params.items())
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Stat):
+            return self.__class__ == other.__class__ and frozenset(
+                self.params.items()
+            ) == frozenset(other.params.items())
+        else:
+            return False
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     @property
     def name(self):
         """
         The name of the statistic. i.e. it is the key in a .summary
+
+        This will be the class name or a custom name if provided.
 
         See Summarizer or SummarizerSingleTensor
         """
@@ -58,7 +78,12 @@ class Stat:
 
 
 class Count(Stat):
-    def __init__(self, name=None):
+    """
+    Counts the number of elements, i.e. the
+    number of `update`'s called
+    """
+
+    def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.n = None
 
@@ -72,12 +97,16 @@ class Count(Stat):
 
 
 class Mean(Stat):
-    def __init__(self, name=None):
-        super().__init__(name=name)
-        self.rolling_mean = None
-        self.n = None
+    """
+    Calculates the average of a tensor
+    """
 
-    def get(self):
+    def __init__(self, name: Optional[str] = None):
+        super().__init__(name=name)
+        self.rolling_mean: Optional[Tensor] = None
+        self.n: Optional[Count] = None
+
+    def get(self) -> Optional[Tensor]:
         return self.rolling_mean
 
     def init(self):
@@ -94,7 +123,11 @@ class Mean(Stat):
 
 
 class MSE(Stat):
-    def __init__(self, name=None):
+    """
+    Calculates the mean squared error of a tensor
+    """
+
+    def __init__(self, name: Optional[str] = None):
         super().__init__(name=name)
         self.prev_mean = None
         self.mse = None
@@ -102,12 +135,12 @@ class MSE(Stat):
     def init(self):
         self.mean = self._get_stat(Mean())
 
-    def get(self):
+    def get(self) -> Optional[Tensor]:
         if self.mse is None and self.prev_mean is not None:
             return torch.zeros_like(self.prev_mean)
         return self.mse
 
-    def update(self, x):
+    def update(self, x: Tensor):
         mean = self.mean.get()
 
         if mean is not None and self.prev_mean is not None:
@@ -122,7 +155,14 @@ class MSE(Stat):
 
 
 class Var(Stat):
-    def __init__(self, name=None, order=0):
+    """
+    Calculates the variance of a tensor, with an order. e.g.
+    if `order = 1` then it will calculate sample variance.
+
+    This is equal to mse / (n - order)
+    """
+
+    def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
                 name = "variance"
@@ -138,10 +178,10 @@ class Var(Stat):
         self.mse = self._get_stat(MSE())
         self.n = self._get_stat(Count())
 
-    def update(self, x):
+    def update(self, x: Tensor):
         pass
 
-    def get(self):
+    def get(self) -> Optional[Tensor]:
         mse = self.mse.get()
         n = self.n.get()
 
@@ -155,7 +195,11 @@ class Var(Stat):
 
 
 class StdDev(Stat):
-    def __init__(self, name=None, order=0):
+    """
+    The standard deviation, with an associated order.
+    """
+
+    def __init__(self, name: Optional[str] = None, order: int = 0):
         if name is None:
             if order == 0:
                 name = "std_dev"
@@ -170,21 +214,26 @@ class StdDev(Stat):
     def init(self):
         self.var = self._get_stat(Var(order=self.order))
 
-    def update(self, x):
+    def update(self, x: Tensor):
         pass
 
-    def get(self):
+    def get(self) -> Optional[Tensor]:
         var = self.var.get()
         return var ** 0.5 if var is not None else None
 
 
 class GeneralAccumFn(Stat):
-    def __init__(self, fn, name=None):
+    """
+    Performs update(x): result = fn(result, x)
+    where fn is a custom function
+    """
+
+    def __init__(self, fn: Callable, name: Optional[str] = None):
         super().__init__(name=name)
         self.result = None
         self.fn = fn
 
-    def get(self):
+    def get(self) -> Optional[Tensor]:
         return self.result
 
     def update(self, x):
@@ -195,21 +244,21 @@ class GeneralAccumFn(Stat):
 
 
 class Min(GeneralAccumFn):
-    def __init__(self, name=None, min_fn=torch.min):
+    def __init__(self, name: Optional[str] = None, min_fn: Callable = torch.min):
         super().__init__(name=name, fn=min_fn)
 
 
 class Max(GeneralAccumFn):
-    def __init__(self, name=None, max_fn=torch.max):
+    def __init__(self, name: Optional[str] = None, max_fn: Callable = torch.max):
         super().__init__(name=name, fn=max_fn)
 
 
 class Sum(GeneralAccumFn):
-    def __init__(self, name=None):
-        super().__init__(name=name, fn=torch.add)
+    def __init__(self, name: Optional[str] = None, add_fn: Callable = torch.add):
+        super().__init__(name=name, fn=add_fn)
 
 
-def CommonStats():
+def CommonStats() -> List[Stat]:
     r"""
     Returns common summary statistics, specifically:
         Mean, Sample Variance, Sample Std Dev, Min, Max
