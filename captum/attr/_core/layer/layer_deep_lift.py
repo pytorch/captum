@@ -12,6 +12,7 @@ from ...._utils.common import (
     ExpansionTypes,
     _expand_target,
     _format_additional_forward_args,
+    _format_baseline,
     _format_input,
 )
 from ...._utils.typing import (
@@ -25,7 +26,6 @@ from ..._utils.attribution import LayerAttribution
 from ..._utils.common import (
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _format_baseline,
     _format_callable_baseline,
     _tensorize_baseline,
     _validate_input,
