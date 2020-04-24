@@ -226,7 +226,11 @@ def sensitivity_max(
         ).repeat_interleave(current_n_samples, dim=0)
         expl_inputs_norm_expanded = torch.where(
             expl_inputs_norm_expanded == 0.0,
-            torch.tensor(1.0, device=expl_inputs_norm_expanded.device),
+            torch.tensor(
+                1.0,
+                device=expl_inputs_norm_expanded.device,
+                dtype=expl_inputs_norm_expanded.dtype,
+            ),
             expl_inputs_norm_expanded,
         )
 
