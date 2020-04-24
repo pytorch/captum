@@ -55,8 +55,13 @@ def _divide_and_aggregate_metrics(
         else min(max(max_examples_per_batch // bsz, 1), n_samples)
     )
 
-    current_n_steps = 0
-    metrics_sum = torch.zeros(bsz, device=device, dtype=inputs[0].dtype)
+    current_n_steps = max_inps_per_batch
+
+    metrics_sum = metric_func(
+        max_inps_per_batch
+        if current_n_steps <= n_samples
+        else max_inps_per_batch - (current_n_steps - n_samples)
+    )
 
     while current_n_steps < n_samples:
         current_n_steps += max_inps_per_batch
