@@ -4,7 +4,12 @@ import torch
 import torch.nn as nn
 
 from captum.attr import LRP, InputXGradient
-from captum.attr._utils.lrp_rules import Alpha1_Beta0_Rule, EpsilonRule, GammaRule
+from captum.attr._utils.lrp_rules import (
+    Alpha1_Beta0_Rule,
+    EpsilonRule,
+    GammaRule,
+    IdentityRule,
+)
 
 from ..helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
@@ -170,6 +175,17 @@ class Test(BaseTest):
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([0.1250, 0.3500, 0.5250]))
+
+    def test_lrp_Identity(self):
+        model, inputs = _get_simple_model()
+        with torch.no_grad():
+            model.linear.weight.data[0][0] = -2
+        model.eval()
+        model.linear.rule = IdentityRule()
+        model.linear2.rule = EpsilonRule()
+        lrp = LRP(model)
+        relevance = lrp.attribute(inputs)
+        assertTensorAlmostEqual(self, relevance, torch.tensor([0.2500, 0.3750, 0.3750]))
 
     def test_lrp_simple2_attributions(self):
         model, input = _get_simple_model2()

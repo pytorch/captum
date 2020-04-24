@@ -115,6 +115,9 @@ class Alpha1_Beta0_Rule(PropagationRule):
     as Deep-Taylor. Only positive relevance is propagated, resulting
     in stable results, therefore recommended as the initial choice.
 
+    Warning: Does not work for BatchNorm modules because weight and bias
+    are defined differently.
+
     Use for lower layers.
     """
 
@@ -127,3 +130,19 @@ class Alpha1_Beta0_Rule(PropagationRule):
         if self.set_bias_to_zero and hasattr(module, "bias"):
             if module.bias is not None:
                 module.bias.data = torch.zeros_like(module.bias.data)
+
+
+class IdentityRule(EpsilonRule):
+    """
+    Identity rule for skipping layer manipulation and propagating the
+    relevance over a layer. Only valid for modules with same dimensions for
+    inputs and outputs.
+
+    Can be used for BatchNorm2D.
+    """
+
+    def _create_backward_hook_input(self, inputs):
+        def _backward_hook_input(grad):
+            return self.relevance_output
+
+        return _backward_hook_input
