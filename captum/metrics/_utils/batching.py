@@ -31,7 +31,6 @@ def _divide_and_aggregate_metrics(
                         per batch.
 
     """
-    device = inputs[0].device
     bsz = inputs[0].size(0)
 
     if max_examples_per_batch is not None and (
