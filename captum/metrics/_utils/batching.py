@@ -56,7 +56,7 @@ def _divide_and_aggregate_metrics(
     )
 
     current_n_steps = 0
-    metrics_sum = torch.zeros(bsz, device=device)
+    metrics_sum = torch.zeros(bsz, device=device, dtype=inputs[0].dtype)
 
     while current_n_steps < n_samples:
         current_n_steps += max_inps_per_batch
