@@ -311,9 +311,9 @@ def infidelity(
     Returns:
 
         infidelities (tensor): A tensor of scalar infidelity scores per
-                        input example. The first dimension is equal to the
-                        number of examples in the input batch and the second
-                        dimension is one.
+                input example. The first dimension is equal to the
+                number of examples in the input batch and the second
+                dimension is one.
 
     Examples::
         >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -328,7 +328,7 @@ def infidelity(
         >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
         >>>    return noise, inputs - noise
         >>> # Computes infidelity score for saliency maps
-        >>> infidelity = infidelity_attr(net, perturb_fn, input, attribution)
+        >>> infid = infidelity(net, perturb_fn, input, attribution)
     """
 
     def _generate_perturbations(current_n_samples):

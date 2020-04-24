@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
-from ..._utils.common import _format_input
+from ..._utils.common import _format_baseline, _format_input
+from ..._utils.common import _validate_input as _validate_input_basic
 from ..._utils.typing import (
     BaselineType,
     Literal,
@@ -38,38 +39,7 @@ def _validate_input(
     method: str = "riemann_trapezoid",
     draw_baseline_from_distrib: bool = False,
 ) -> None:
-    assert len(inputs) == len(baselines), (
-        "Input and baseline must have the same "
-        "dimensions, baseline has {} features whereas input has {}.".format(
-            len(baselines), len(inputs)
-        )
-    )
-
-    for input, baseline in zip(inputs, baselines):
-        if draw_baseline_from_distrib:
-            assert (
-                isinstance(baseline, (int, float))
-                or input.shape[1:] == baseline.shape[1:]
-            ), (
-                "The samples in input and baseline batches must have"
-                " the same shape or the baseline corresponding to the"
-                " input tensor must be a scalar."
-                " Found baseline: {} and input: {} ".format(baseline, input)
-            )
-        else:
-            assert (
-                isinstance(baseline, (int, float))
-                or input.shape == baseline.shape
-                or baseline.shape[0] == 1
-            ), (
-                "Baseline can be provided as a tensor for just one input and"
-                " broadcasted to the batch or input and baseline must have the"
-                " same shape or the baseline corresponding to each input tensor"
-                " must be a scalar. Found baseline: {} and input: {}".format(
-                    baseline, input
-                )
-            )
-
+    _validate_input_basic(inputs, baselines, draw_baseline_from_distrib)
     assert (
         n_steps >= 0
     ), "The number of steps must be a positive integer. " "Given: {}".format(n_steps)
@@ -87,26 +57,6 @@ def _validate_noise_tunnel_type(
         "Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "
         "Given {}".format(nt_type)
     )
-
-
-def _format_baseline(
-    baselines: BaselineType, inputs: Tuple[Tensor, ...]
-) -> Tuple[Union[Tensor, int, float], ...]:
-    if baselines is None:
-        return _zeros(inputs)
-
-    if not isinstance(baselines, tuple):
-        baselines = (baselines,)
-
-    for baseline in baselines:
-        assert isinstance(
-            baseline, (torch.Tensor, int, float)
-        ), "baseline input argument must be either a torch.Tensor or a number \
-            however {} detected".format(
-            type(baseline)
-        )
-
-    return baselines
 
 
 @typing.overload
@@ -330,14 +280,6 @@ def _compute_conv_delta_and_format_attrs(
         return _format_attributions(is_inputs_tuple, attributions), delta
     else:
         return _format_attributions(is_inputs_tuple, attributions)
-
-
-def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
-    r"""
-    Takes a tuple of tensors as input and returns a tuple that has the same
-    length as `inputs` with each element as the integer 0.
-    """
-    return tuple(0 for input in inputs)
 
 
 def _tensorize_baseline(

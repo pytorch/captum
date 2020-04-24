@@ -2,28 +2,21 @@
 from enum import Enum
 from typing import Any, Tuple, Union
 
-import numpy as np
 import torch
 from torch import Tensor
 
 from captum.log import log_usage
 
 from ..._utils.common import (
-    ExpansionTypes,
-    _expand_additional_forward_args,
-    _expand_target,
-    _format_additional_forward_args,
+    _expand_and_update_additional_forward_args,
+    _expand_and_update_baselines,
+    _expand_and_update_target,
     _format_input,
     _format_tensor_into_tuples,
     _is_tuple,
 )
 from .._utils.attribution import Attribution
-from .._utils.common import (
-    _format_attributions,
-    _format_baseline,
-    _validate_input,
-    _validate_noise_tunnel_type,
-)
+from .._utils.common import _format_attributions, _validate_noise_tunnel_type
 
 
 class NoiseTunnelType(Enum):
@@ -194,69 +187,6 @@ class NoiseTunnel(Attribution):
             noise = torch.normal(0, stdev_expanded)
             return input.repeat_interleave(n_samples, dim=0) + noise
 
-        def expand_and_update_baselines():
-            def get_random_baseline_indices(bsz, baseline):
-                num_ref_samples = baseline.shape[0]
-                return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
-
-            # TODO allow to add noise to baselines as well
-            # expand baselines to match the sizes of input
-            if "baselines" not in kwargs:
-                return
-
-            baselines = kwargs["baselines"]
-            baselines = _format_baseline(baselines, inputs)
-            _validate_input(
-                inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
-            )
-
-            if draw_baseline_from_distrib:
-                bsz = inputs[0].shape[0]
-                baselines = tuple(
-                    baseline[get_random_baseline_indices(bsz, baseline)]
-                    if isinstance(baseline, torch.Tensor)
-                    else baseline
-                    for baseline in baselines
-                )
-            else:
-                baselines = tuple(
-                    baseline.repeat_interleave(n_samples, dim=0)
-                    if isinstance(baseline, torch.Tensor)
-                    and baseline.shape[0] == input.shape[0]
-                    and baseline.shape[0] > 1
-                    else baseline
-                    for input, baseline in zip(inputs, baselines)
-                )
-            # update kwargs with expanded baseline
-            kwargs["baselines"] = baselines
-
-        def expand_and_update_additional_forward_args():
-            if "additional_forward_args" not in kwargs:
-                return
-            additional_forward_args = kwargs["additional_forward_args"]
-            additional_forward_args = _format_additional_forward_args(
-                additional_forward_args
-            )
-            if additional_forward_args is None:
-                return
-            additional_forward_args = _expand_additional_forward_args(
-                additional_forward_args,
-                n_samples,
-                expansion_type=ExpansionTypes.repeat_interleave,
-            )
-            # update kwargs with expanded baseline
-            kwargs["additional_forward_args"] = additional_forward_args
-
-        def expand_and_update_target():
-            if "target" not in kwargs:
-                return
-            target = kwargs["target"]
-            target = _expand_target(
-                target, n_samples, expansion_type=ExpansionTypes.repeat_interleave
-            )
-            # update kwargs with expanded baseline
-            kwargs["target"] = target
-
         def compute_expected_attribution_and_sq(attribution):
             bsz = attribution.shape[0] // n_samples
             attribution_shape = (bsz, n_samples)
@@ -281,9 +211,15 @@ class NoiseTunnel(Attribution):
         # if the algorithm supports targets, baselines and/or additional_forward_args
         # they will be expanded based on the n_steps and corresponding kwargs
         # variables will be updated accordingly
-        expand_and_update_baselines()
-        expand_and_update_additional_forward_args()
-        expand_and_update_target()
+        _expand_and_update_additional_forward_args(n_samples, kwargs)
+        _expand_and_update_target(n_samples, kwargs)
+        _expand_and_update_baselines(
+            inputs,
+            n_samples,
+            kwargs,
+            draw_baseline_from_distrib=draw_baseline_from_distrib,
+        )
+
         # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
         # NOTE: using __wrapped__ such that it does not log the inner logs
         attributions = self.attribution_method.attribute.__wrapped__(  # type: ignore
