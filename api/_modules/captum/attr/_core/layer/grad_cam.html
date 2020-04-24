@@ -234,6 +234,8 @@
                 <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_grad</span><span class="o">.</span><span class="n">shape</span><span class="p">))),</span>
                 <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_grad</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span>
+            <span class="k">else</span> <span class="n">layer_grad</span>
             <span class="k">for</span> <span class="n">layer_grad</span> <span class="ow">in</span> <span class="n">layer_gradients</span>
         <span class="p">)</span>
 

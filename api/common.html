@@ -26,24 +26,24 @@
 <div class="body" role="main">
 <div class="section" id="module-captum.attr._utils.common">
 <span id="captum-utils"></span><h1>Captum.Utils<a class="headerlink" href="#module-captum.attr._utils.common" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="captum.attr._utils.common._format_attributions">
-<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_format_attributions</code><span class="sig-paren">(</span><em class="sig-param">is_inputs_tuple</em>, <em class="sig-param">attributions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_format_attributions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._format_attributions" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_format_attributions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">is_inputs_tuple</span></em>, <em class="sig-param"><span class="n">attributions</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_format_attributions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._format_attributions" title="Permalink to this definition">¶</a></dt>
 <dd><p>In case input is a tensor and the attributions is returned in form of a
 tensor we take the first element of the attributions’ tuple to match the
 same shape signatues of the inputs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.8)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, …]]</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="function">
+<dl class="py function">
 <dt id="captum.attr._utils.common._reshape_and_sum">
-<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_reshape_and_sum</code><span class="sig-paren">(</span><em class="sig-param">tensor_input</em>, <em class="sig-param">num_steps</em>, <em class="sig-param">num_examples</em>, <em class="sig-param">layer_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_reshape_and_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._reshape_and_sum" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">captum.attr._utils.common.</code><code class="sig-name descname">_reshape_and_sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_input</span></em>, <em class="sig-param"><span class="n">num_steps</span></em>, <em class="sig-param"><span class="n">num_examples</span></em>, <em class="sig-param"><span class="n">layer_size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/common.html#_reshape_and_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._utils.common._reshape_and_sum" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>

@@ -28,9 +28,9 @@
 <h1>Neuron Attribution<a class="headerlink" href="#neuron-attribution" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="neuron-gradient">
 <h2>Neuron Gradient<a class="headerlink" href="#neuron-gradient" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronGradient">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradient</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradient" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the gradient of the output of a particular neuron with
 respect to the inputs of the network.</p>
 <dl class="field-list simple">
@@ -38,7 +38,7 @@ respect to the inputs of the network.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -55,9 +55,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronGradient.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient.html#NeuronGradient.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradient.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -144,9 +144,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-integrated-gradients">
 <h2>Neuron Integrated Gradients<a class="headerlink" href="#neuron-integrated-gradients" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronIntegratedGradients">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronIntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronIntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximates the integral of gradients for a particular neuron
 along the path from a baseline input to the given input.
 If no baseline is provided, the default baseline is the zero tensor.
@@ -160,7 +160,7 @@ where the output is the output of the identified neuron.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -177,9 +177,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronIntegratedGradients.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_steps</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'gausslegendre'</span></em>, <em class="sig-param"><span class="n">internal_batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -317,9 +317,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-conductance">
 <h2>Neuron Conductance<a class="headerlink" href="#neuron-conductance" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronConductance">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronConductance</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronConductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to particular hidden neuron. The
 returned output is in the shape of the input, showing the attribution
 / conductance of each input feature to the selected hidden layer neuron.
@@ -330,7 +330,7 @@ The details of the approach can be found here:
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -353,9 +353,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronConductance.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='riemann_trapezoid'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_steps</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'riemann_trapezoid'</span></em>, <em class="sig-param"><span class="n">internal_batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -515,9 +515,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-deeplift">
 <h2>Neuron DeepLift<a class="headerlink" href="#neuron-deeplift" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronDeepLift">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLift</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements DeepLIFT algorithm for the neuron based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
 Avanti Shrikumar, et. al.
@@ -542,8 +542,8 @@ More details on how to build custom RNNs can be found here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -553,9 +553,9 @@ attribution, can only be a single tensor.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronDeepLift.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_attribution_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -686,9 +686,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-deepliftshap">
 <h2>Neuron DeepLiftShap<a class="headerlink" href="#neuron-deepliftshap" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronDeepLiftShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
 approximates SHAP values for given input <cite>layer</cite> and <cite>neuron_index</cite>.
 For each input sample - baseline pair it computes DeepLift attributions
@@ -714,8 +714,8 @@ model across multiple explanations can be complex and non-linear.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -724,9 +724,9 @@ are supported.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronDeepLiftShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_attribution_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -850,9 +850,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-gradientshap">
 <h2>Neuron GradientShap<a class="headerlink" href="#neuron-gradientshap" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronGradientShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradientShap</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradientShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements gradient SHAP for a neuron in a hidden layer based on the
 implementation from SHAP’s primary author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
@@ -883,7 +883,7 @@ samples and compute the expectation (smoothgrad).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 The output size of the attribute method matches the
 dimensions of the inputs or ouputs of the neuron with
 index <cite>neuron_index</cite> in this layer, depending on whether
@@ -899,9 +899,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronGradientShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=0.0</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">stdevs</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1019,9 +1019,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-guided-backprop">
 <h2>Neuron Guided Backprop<a class="headerlink" href="#neuron-guided-backprop" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronGuidedBackprop">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGuidedBackprop</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGuidedBackprop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes attribution of the given neuron using guided backpropagation.
 Guided backpropagation computes the gradient of the target neuron
 with respect to the input, but gradients of ReLU functions are overridden
@@ -1050,9 +1050,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronGuidedBackprop.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronGuidedBackprop.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGuidedBackprop.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1140,9 +1140,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-deconvolution">
 <h2>Neuron Deconvolution<a class="headerlink" href="#neuron-deconvolution" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronDeconvolution">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeconvolution</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes attribution of the given neuron using deconvolution.
 Deconvolution computes the gradient of the target output with
 respect to the input, but gradients of ReLU functions are overridden so
@@ -1177,9 +1177,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronDeconvolution.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_guided_backprop_deconvnet.html#NeuronDeconvolution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeconvolution.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1267,9 +1267,9 @@ corresponding sized tensors is returned.</p>
 </div>
 <div class="section" id="neuron-feature-ablation">
 <h2>Neuron Feature Ablation<a class="headerlink" href="#neuron-feature-ablation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NeuronFeatureAblation">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronFeatureAblation</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronFeatureAblation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to computing neuron attribution,
 involving replacing each input feature with a given baseline /
 reference, and computing the difference in the neuron’s input / output.
@@ -1286,7 +1286,7 @@ group.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -1301,9 +1301,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NeuronFeatureAblation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">neuron_index</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">attribute_to_neuron_input=False</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">neuron_index</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_neuron_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_feature_ablation.html#NeuronFeatureAblation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronFeatureAblation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

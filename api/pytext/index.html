@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="module-captum.attr._models.pytext">
 <span id="captum-models"></span><h1>Captum.Models<a class="headerlink" href="#module-captum.attr._models.pytext" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">PyTextInterpretableEmbedding</code><span class="sig-paren">(</span><em class="sig-param">embeddings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">PyTextInterpretableEmbedding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">embeddings</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding" title="Permalink to this definition">¶</a></dt>
 <dd><p>In PyText DocNN models we need a way to access word embedding layers,
 generate the embeddings and subtract the baseline.
 To do so, we separate embedding layers from the model, compute the embeddings
@@ -36,9 +36,9 @@ separately and do all operations needed outside of the model.
 The original embedding layer is being replaced by <cite>PyTextInterpretableEmbedding</cite>
 layer which passes precomputed embedding vectors to lower layers.</p>
 <p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>The forward pass of embedding layer. This can be for the text or any
 type of embedding.</p>
 <p>Args</p>
@@ -54,9 +54,9 @@ modifications</p>
 </dl>
 </div></blockquote>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map">
-<code class="sig-name descname">get_attribution_map</code><span class="sig-paren">(</span><em class="sig-param">attributions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.get_attribution_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_attribution_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributions</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#PyTextInterpretableEmbedding.get_attribution_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.PyTextInterpretableEmbedding.get_attribution_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>After attribution scores are computed for an input embedding vector
 we need to split it up into attribution sub tensors for each
 feature type: word, dict and other types</p>
@@ -76,14 +76,14 @@ tensor</p>
 </div></blockquote>
 </dd></dl>
 </dd></dl>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr._models.pytext.BaselineGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">BaselineGenerator</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">data_handler</em>, <em class="sig-param">device</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr._models.pytext.</code><code class="sig-name descname">BaselineGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">data_handler</span></em>, <em class="sig-param"><span class="n">device</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is an example input baseline generator for DocNN model which uses
 word and dict features.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr._models.pytext.BaselineGenerator.generate_baseline">
-<code class="sig-name descname">generate_baseline</code><span class="sig-paren">(</span><em class="sig-param">integ_grads_embeddings</em>, <em class="sig-param">seq_length</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator.generate_baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator.generate_baseline" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">generate_baseline</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">integ_grads_embeddings</span></em>, <em class="sig-param"><span class="n">seq_length</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/pytext.html#BaselineGenerator.generate_baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._models.pytext.BaselineGenerator.generate_baseline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates baseline for input word and dict features. In the future we
 will extend it to support char and other features as well.
 This baseline is entirely based on the <cite>&lt;pad&gt;</cite> token.</p>

@@ -47,6 +47,7 @@
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
+    <span class="n">_select_targets</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaselineType</span><span class="p">,</span>
@@ -331,36 +332,39 @@
         <span class="p">)</span>
 
         <span class="n">baselines</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-        <span class="n">main_model_pre_hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pre_hook_main_model</span><span class="p">()</span>
+        <span class="n">main_model_hooks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">main_model_hooks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hook_main_model</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_register_hooks</span><span class="p">)</span>
 
-        <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
-            <span class="n">additional_forward_args</span>
-        <span class="p">)</span>
-        <span class="n">input_base_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
-            <span class="n">additional_forward_args</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
-        <span class="p">)</span>
-        <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
-            <span class="n">target</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
-        <span class="p">)</span>
-
-        <span class="n">wrapped_forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_forward_func</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">),</span> <span class="n">expanded_target</span><span class="p">,</span> <span class="n">input_base_additional_args</span>
-        <span class="p">)</span>
-        <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span><span class="n">wrapped_forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">custom_attribution_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="o">*</span> <span class="n">gradient</span>
-                <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)</span>
+            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
+                <span class="n">additional_forward_args</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">attributions</span> <span class="o">=</span> <span class="n">_call_custom_attribution_func</span><span class="p">(</span>
-                <span class="n">custom_attribution_func</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
+
+            <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
+                <span class="n">target</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
             <span class="p">)</span>
-        <span class="c1"># remove hooks from all activations</span>
-        <span class="n">main_model_pre_hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_hooks</span><span class="p">()</span>
+
+            <span class="n">wrapped_forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_forward_func</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">),</span>
+                <span class="n">expanded_target</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span><span class="n">wrapped_forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">custom_attribution_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="o">*</span> <span class="n">gradient</span>
+                    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">attributions</span> <span class="o">=</span> <span class="n">_call_custom_attribution_func</span><span class="p">(</span>
+                    <span class="n">custom_attribution_func</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
+                <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Even if any error is raised, remove all hooks before raising</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_hooks</span><span class="p">(</span><span class="n">main_model_hooks</span><span class="p">)</span>
 
         <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
@@ -382,7 +386,12 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
         <span class="k">def</span> <span class="nf">forward_fn</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_run_forward</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span>
+            <span class="n">model_out</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                <span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_select_targets</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">model_out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">model_out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])),</span> <span class="n">target</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="s2">"device_ids"</span><span class="p">):</span>
             <span class="n">forward_fn</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">forward_func</span><span class="o">.</span><span class="n">device_ids</span>  <span class="c1"># type: ignore</span>
@@ -522,13 +531,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pre_forward_handle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">backward_handle</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_remove_hooks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_hooks_to_remove</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">extra_hooks_to_remove</span><span class="p">:</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">forward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span>
             <span class="n">forward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">backward_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span>
             <span class="n">backward_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_pre_hook_main_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RemovableHandle</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_hook_main_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]:</span>
         <span class="k">def</span> <span class="nf">pre_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">baseline_inputs_add_args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">baseline_inputs_add_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">baselines</span> <span class="o">=</span> <span class="n">baseline_inputs_add_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -541,13 +552,28 @@
                 <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">additional_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">baseline_input_tsr</span><span class="p">,</span> <span class="o">*</span><span class="n">additional_args</span><span class="p">)</span>
+                <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                    <span class="n">Tuple</span><span class="p">,</span>
+                    <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                        <span class="n">additional_args</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">baseline_input_tsr</span><span class="p">,</span> <span class="o">*</span><span class="n">expanded_additional_args</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">baseline_input_tsr</span>
 
+        <span class="k">def</span> <span class="nf">forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">pre_hook</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">pre_hook</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">),</span>
+            <span class="p">]</span>  <span class="c1"># type: ignore</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">pre_hook</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">pre_hook</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">),</span>
+            <span class="p">]</span>  <span class="c1"># type: ignore</span>
 
 <div class="viewcode-block" id="DeepLift.has_convergence_delta"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
@@ -837,7 +863,11 @@
             <span class="n">target</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span>
         <span class="p">)</span>
         <span class="n">input_additional_args</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">_expand_additional_forward_args</span><span class="p">(</span><span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">base_bsz</span><span class="p">)</span>
+            <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                <span class="n">additional_forward_args</span><span class="p">,</span>
+                <span class="n">base_bsz</span><span class="p">,</span>
+                <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>

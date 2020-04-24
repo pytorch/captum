@@ -28,9 +28,9 @@
 <h1>Insights<a class="headerlink" href="#insights" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="batch">
 <h2>Batch<a class="headerlink" href="#batch" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.api.Batch">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.api.</code><code class="sig-name descname">Batch</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">labels</em>, <em class="sig-param">additional_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/api.html#Batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.api.Batch" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.api.</code><code class="sig-name descname">Batch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">labels</span></em>, <em class="sig-param"><span class="n">additional_args</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/api.html#Batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.api.Batch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs batch of inputs to be attributed and visualized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -64,9 +64,9 @@ correspond to the number of examples.</p></li>
 </div>
 <div class="section" id="attributionvisualizer">
 <h2>AttributionVisualizer<a class="headerlink" href="#attributionvisualizer" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.api.AttributionVisualizer">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.api.</code><code class="sig-name descname">AttributionVisualizer</code><span class="sig-paren">(</span><em class="sig-param">models</em>, <em class="sig-param">classes</em>, <em class="sig-param">features</em>, <em class="sig-param">dataset</em>, <em class="sig-param">score_func=None</em>, <em class="sig-param">use_label_for_attr=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/api.html#AttributionVisualizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.api.AttributionVisualizer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.api.</code><code class="sig-name descname">AttributionVisualizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">models</span></em>, <em class="sig-param"><span class="n">classes</span></em>, <em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">dataset</span></em>, <em class="sig-param"><span class="n">score_func</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_label_for_attr</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/api.html#AttributionVisualizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.api.AttributionVisualizer" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -116,9 +116,9 @@ Default: True</p></li>
 <h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="basefeature">
 <h2>BaseFeature<a class="headerlink" href="#basefeature" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.features.BaseFeature">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">BaseFeature</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">baseline_transforms</em>, <em class="sig-param">input_transforms</em>, <em class="sig-param">visualization_transform</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#BaseFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.BaseFeature" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">BaseFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">baseline_transforms</span></em>, <em class="sig-param"><span class="n">input_transforms</span></em>, <em class="sig-param"><span class="n">visualization_transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#BaseFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.BaseFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>All Feature classes extend this class to implement custom visualizations in
 Insights.</p>
 <p>It enforces child classes to implement <code class="docutils literal notranslate"><span class="pre">visualization_type</span></code> and <code class="docutils literal notranslate"><span class="pre">visualize</span></code>
@@ -149,9 +149,9 @@ specified in <code class="docutils literal notranslate"><span class="pre">captum
 </div>
 <div class="section" id="generalfeature">
 <h2>GeneralFeature<a class="headerlink" href="#generalfeature" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.features.GeneralFeature">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">GeneralFeature</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">categories</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#GeneralFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.GeneralFeature" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">GeneralFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">categories</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#GeneralFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.GeneralFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>GeneralFeature is used for non-specified feature visualization in Insights.
 It can be used for dense or sparse features.</p>
 <p>Currently general features are only supported for 2-d tensors, in the format (N, C)
@@ -171,9 +171,9 @@ order and size should match the second dimension of the
 </div>
 <div class="section" id="textfeature">
 <h2>TextFeature<a class="headerlink" href="#textfeature" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.features.TextFeature">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">TextFeature</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">baseline_transforms</em>, <em class="sig-param">input_transforms</em>, <em class="sig-param">visualization_transform</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#TextFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.TextFeature" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">TextFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">baseline_transforms</span></em>, <em class="sig-param"><span class="n">input_transforms</span></em>, <em class="sig-param"><span class="n">visualization_transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#TextFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.TextFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>TextFeature is used to visualize text (e.g. sentences) in Insights.
 It expects the visualization transform to convert the input data (e.g. index to
 string) to the raw text.</p>
@@ -213,9 +213,9 @@ corresponding (sub)words.</p></li>
 </div>
 <div class="section" id="imagefeature">
 <h2>ImageFeature<a class="headerlink" href="#imagefeature" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.insights.features.ImageFeature">
-<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">ImageFeature</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">baseline_transforms</em>, <em class="sig-param">input_transforms</em>, <em class="sig-param">visualization_transform=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#ImageFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.ImageFeature" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.insights.features.</code><code class="sig-name descname">ImageFeature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">baseline_transforms</span></em>, <em class="sig-param"><span class="n">input_transforms</span></em>, <em class="sig-param"><span class="n">visualization_transform</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/insights/features.html#ImageFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.insights.features.ImageFeature" title="Permalink to this definition">¶</a></dt>
 <dd><p>ImageFeature is used to visualize image features in Insights. It expects an image in
 NCHW format. If C has a dimension of 1, its assumed to be a greyscale image.
 If it has a dimension of 3, its expected to be in RGB format.</p>

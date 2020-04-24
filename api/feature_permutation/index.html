@@ -26,7 +26,7 @@
 <div class="body" role="main">
 <div class="section" id="feature-permutation">
 <h1>Feature Permutation<a class="headerlink" href="#feature-permutation" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.FeaturePermutation">
 <em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">FeaturePermutation</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">perm_func=&lt;function _permute_feature&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, which
@@ -81,9 +81,9 @@ Default: <cite>_permute_feature</cite></p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.FeaturePermutation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">perturbations_per_eval=1</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is almost equivalent to <cite>FeatureAblation.attribute</cite>. The
 main difference is the way ablated examples are generated. Specifically
 they are generated through the <cite>perm_func</cite>, as we set the baselines for

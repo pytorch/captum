@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="shapley-value-sampling">
 <h1>Shapley Value Sampling<a class="headerlink" href="#shapley-value-sampling" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.ShapleyValueSampling">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">ShapleyValueSampling</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValueSampling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValueSampling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">ShapleyValueSampling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValueSampling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValueSampling" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, based on the concept
 of Shapley Values from cooperative game theory. This method involves taking
 a random permutation of the input features and adding them one-by-one to the
@@ -58,9 +58,9 @@ attributions will have first dimension 1, corresponding to
 feature importance across all examples in the batch.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.ShapleyValueSampling.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">n_samples=25</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValueSampling.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValueSampling.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">25</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValueSampling.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValueSampling.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
 NOTE: The feature_mask argument differs from other perturbation based
 methods, since feature indices can overlap across tensors. See the
@@ -245,9 +245,9 @@ corresponding sized tensors is returned.</p>
 </div>
 </dd></dl>
 </dd></dl>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.ShapleyValues">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">ShapleyValues</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValues" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">ShapleyValues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, based on the concept
 of Shapley Values from cooperative game theory. This method involves taking
 each permutation of the input features and adding them one-by-one to the
@@ -283,9 +283,9 @@ attributions will have first dimension 1, corresponding to
 feature importance across all examples in the batch.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.ShapleyValues.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">feature_mask=None</em>, <em class="sig-param">perturbations_per_eval=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValues.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValues.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValues.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.ShapleyValues.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>”
 NOTE: The feature_mask argument differs from other perturbation based
 methods, since feature indices can overlap across tensors. See the

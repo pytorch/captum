@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="deeplift">
 <h1>DeepLift<a class="headerlink" href="#deeplift" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.DeepLift">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">DeepLift</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLift" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">DeepLift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements DeepLIFT algorithm based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
 Avanti Shrikumar, et. al.
@@ -58,9 +58,9 @@ More details on how to build custom RNNs can be found here:
 <dd class="field-odd"><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.DeepLift.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLift.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_attribution_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLift.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -209,7 +209,7 @@ depends on the specifics of the <cite>custom_attribution_func</cite>.</p>
 </pre></div>
 </div>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.DeepLift.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/deep_lift.html#DeepLift.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.DeepLift.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides

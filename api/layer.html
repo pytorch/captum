@@ -28,9 +28,9 @@
 <h1>Layer Attribution<a class="headerlink" href="#layer-attribution" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="layer-conductance">
 <h2>Layer Conductance<a class="headerlink" href="#layer-conductance" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerConductance">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerConductance</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_conductance.html#LayerConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerConductance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerConductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_conductance.html#LayerConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerConductance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to the given layer. The
 returned output is in the shape of the layer’s output, showing the total
 conductance of each hidden layer neuron.</p>
@@ -46,7 +46,7 @@ neuron index.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -60,9 +60,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerConductance.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_conductance.html#LayerConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerConductance.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_steps</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'gausslegendre'</span></em>, <em class="sig-param"><span class="n">internal_batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_conductance.html#LayerConductance.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerConductance.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -227,7 +227,7 @@ of examples in inputs.</p>
 </pre></div>
 </div>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerConductance.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_conductance.html#LayerConductance.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerConductance.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides
@@ -250,16 +250,16 @@ provides a convergence delta (aka approximation error) or not.</p>
 </div>
 <div class="section" id="layer-activation">
 <h2>Layer Activation<a class="headerlink" href="#layer-activation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerActivation">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerActivation</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_activation.html#LayerActivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerActivation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerActivation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_activation.html#LayerActivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerActivation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes activation of selected layer for given input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -273,9 +273,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerActivation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_activation.html#LayerActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerActivation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_activation.html#LayerActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerActivation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -351,9 +351,9 @@ outputs of a single tensor are not.</p>
 </div>
 <div class="section" id="internal-influence">
 <h2>Internal Influence<a class="headerlink" href="#internal-influence" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.InternalInfluence">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">InternalInfluence</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/internal_influence.html#InternalInfluence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InternalInfluence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">InternalInfluence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/internal_influence.html#InternalInfluence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InternalInfluence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes internal influence by approximating the integral of gradients
 for a particular layer along the path from a baseline input to the
 given input.
@@ -368,7 +368,7 @@ respect to the output.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -382,9 +382,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.InternalInfluence.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/internal_influence.html#InternalInfluence.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InternalInfluence.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_steps</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'gausslegendre'</span></em>, <em class="sig-param"><span class="n">internal_batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/internal_influence.html#InternalInfluence.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.InternalInfluence.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -535,9 +535,9 @@ outputs of a single tensor are not.</p>
 </div>
 <div class="section" id="layer-gradient-x-activation">
 <h2>Layer Gradient X Activation<a class="headerlink" href="#layer-gradient-x-activation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerGradientXActivation">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradientXActivation</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_x_activation.html#LayerGradientXActivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientXActivation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradientXActivation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_x_activation.html#LayerGradientXActivation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientXActivation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes element-wise product of gradient and activation for selected
 layer on given inputs.</p>
 <dl class="field-list simple">
@@ -545,7 +545,7 @@ layer on given inputs.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -559,9 +559,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerGradientXActivation.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_x_activation.html#LayerGradientXActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientXActivation.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_x_activation.html#LayerGradientXActivation.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientXActivation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -658,9 +658,9 @@ outputs of a single tensor are not.</p>
 </div>
 <div class="section" id="gradcam">
 <h2>GradCAM<a class="headerlink" href="#gradcam" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerGradCam">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradCam</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/grad_cam.html#LayerGradCam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradCam" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradCam</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/grad_cam.html#LayerGradCam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradCam" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes GradCAM attribution for chosen layer. GradCAM is designed for
 convolutional neural networks, and is usually applied to the last
 convolutional layer.</p>
@@ -691,7 +691,7 @@ original paper here:
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s output
 dimensions, except for dimension 2, which will be 1,
 since GradCAM sums over channels.</p></li>
@@ -703,9 +703,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerGradCam.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">attribute_to_layer_input=False</em>, <em class="sig-param">relu_attributions=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/grad_cam.html#LayerGradCam.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradCam.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">relu_attributions</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/grad_cam.html#LayerGradCam.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradCam.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -821,9 +821,9 @@ outputs of a single tensor are not.</p>
 </div>
 <div class="section" id="layer-deeplift">
 <h2>Layer DeepLift<a class="headerlink" href="#layer-deeplift" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerDeepLift">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerDeepLift</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLift" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerDeepLift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements DeepLIFT algorithm for the layer based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
 Avanti Shrikumar, et. al.
@@ -848,8 +848,8 @@ More details on how to build custom RNNs can be found here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
 input or output depending on whether we attribute to the
@@ -857,9 +857,9 @@ inputs or outputs of the layer.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerDeepLift.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">attribute_to_layer_input=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLift.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_attribution_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLift.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLift.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1026,9 +1026,9 @@ it is not guaranteed and depends on the specifics of the
 </div>
 <div class="section" id="layer-deepliftshap">
 <h2>Layer DeepLiftShap<a class="headerlink" href="#layer-deepliftshap" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerDeepLiftShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLiftShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends LayerDeepLift and DeepLiftShap algorithms and approximates SHAP
 values for given input <cite>layer</cite>.
 For each input sample - baseline pair it computes DeepLift attributions
@@ -1054,8 +1054,8 @@ model across multiple explanations can be complex and non-linear.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 The size and dimensionality of the attributions
 corresponds to the size and dimensionality of the layer’s
 input or output depending on whether we attribute to the
@@ -1063,9 +1063,9 @@ inputs or outputs of the layer.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerDeepLiftShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">attribute_to_layer_input=False</em>, <em class="sig-param">custom_attribution_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">custom_attribution_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_deep_lift.html#LayerDeepLiftShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerDeepLiftShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1231,9 +1231,9 @@ it is not guaranteed and depends on the specifics of the
 </div>
 <div class="section" id="layer-gradientshap">
 <h2>Layer GradientShap<a class="headerlink" href="#layer-gradientshap" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.LayerGradientShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradientShap</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">layer</em>, <em class="sig-param">device_ids=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_shap.html#LayerGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LayerGradientShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_shap.html#LayerGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements gradient SHAP for layer based on the implementation from SHAP’s
 primary author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
@@ -1264,7 +1264,7 @@ samples and compute the expectation (smoothgrad).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.4.0a0+919fcbb ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+2a01d34 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -1278,9 +1278,9 @@ then it is not necessary to provide this argument.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerGradientShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=0.0</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">return_convergence_delta=False</em>, <em class="sig-param">attribute_to_layer_input=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_shap.html#LayerGradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientShap.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">stdevs</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_shap.html#LayerGradientShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1434,7 +1434,7 @@ noisy samples generated for it.</p>
 </dd>
 </dl>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.LayerGradientShap.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/layer/layer_gradient_shap.html#LayerGradientShap.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LayerGradientShap.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides

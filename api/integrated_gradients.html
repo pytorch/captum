@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="integrated-gradients">
 <h1>Integrated Gradients<a class="headerlink" href="#integrated-gradients" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.IntegratedGradients">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">IntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">IntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integrated Gradients is an axiomatic model interpretability algorithm that
 assigns an importance score to each input feature by approximating the
 integral of gradients of the model’s output with respect to the inputs
@@ -45,9 +45,9 @@ original paper:
 modification of it</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.IntegratedGradients.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">baselines=None</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em>, <em class="sig-param">n_steps=50</em>, <em class="sig-param">method='gausslegendre'</em>, <em class="sig-param">internal_batch_size=None</em>, <em class="sig-param">return_convergence_delta=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_steps</span><span class="o">=</span><span class="default_value">50</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'gausslegendre'</span></em>, <em class="sig-param"><span class="n">internal_batch_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_convergence_delta</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method attributes the output of the model with given target index
 (in case it is provided, otherwise it assumes that output is a
 scalar) to the inputs of the model using the approach described above.</p>
@@ -200,7 +200,7 @@ of examples in inputs.</p>
 </pre></div>
 </div>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.IntegratedGradients.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/integrated_gradients.html#IntegratedGradients.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.IntegratedGradients.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides

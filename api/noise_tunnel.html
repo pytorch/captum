@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="noisetunnel">
 <h1>NoiseTunnel<a class="headerlink" href="#noisetunnel" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.NoiseTunnel">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NoiseTunnel</code><span class="sig-paren">(</span><em class="sig-param">attribution_method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NoiseTunnel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attribution_method</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds gaussian noise to each input in the batch <cite>n_samples</cite> times
 and applies the given attribution algorithm to each of the samples.
 The attributions of the samples are combined based on the given noise
@@ -58,9 +58,9 @@ of type <cite>Attribution</cite>. E.g. Integrated Gradients,
 Conductance or Saliency.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NoiseTunnel.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">nt_type='smoothgrad'</em>, <em class="sig-param">n_samples=5</em>, <em class="sig-param">stdevs=1.0</em>, <em class="sig-param">draw_baseline_from_distrib=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">nt_type</span><span class="o">=</span><span class="default_value">'smoothgrad'</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">stdevs</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -148,7 +148,7 @@ across all <cite>n_sample</cite> perturbed tensors for that input.</p>
 </pre></div>
 </div>
 </dd></dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.NoiseTunnel.has_convergence_delta">
 <code class="sig-name descname">has_convergence_delta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides

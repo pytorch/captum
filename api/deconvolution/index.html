@@ -26,9 +26,9 @@
 <div class="body" role="main">
 <div class="section" id="deconvolution">
 <h1>Deconvolution<a class="headerlink" href="#deconvolution" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="captum.attr.Deconvolution">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Deconvolution</code><span class="sig-paren">(</span><em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_backprop_deconvnet.html#Deconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Deconvolution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_backprop_deconvnet.html#Deconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Deconvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes attribution using deconvolution. Deconvolution
 computes the gradient of the target output with respect to the input,
 but gradients of ReLU functions are overridden so that the gradient
@@ -47,9 +47,9 @@ If nn.functional.ReLU is used, gradients are not overridden appropriately.</p>
 <dd class="field-odd"><p><strong>model</strong> (<em>nn.Module</em>) – The reference to PyTorch model instance.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="captum.attr.Deconvolution.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">target=None</em>, <em class="sig-param">additional_forward_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_backprop_deconvnet.html#Deconvolution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Deconvolution.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_backprop_deconvnet.html#Deconvolution.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Deconvolution.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
