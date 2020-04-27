@@ -3,6 +3,8 @@ from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
@@ -54,6 +56,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, model)
         self.deconv = Deconvolution(model)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -135,7 +138,11 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
         self.deconv.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
         )
-        return self.deconv.attribute(inputs, None, additional_forward_args)
+
+        # NOTE: using __wrapped__ to not log
+        return self.deconv.attribute.__wrapped__(
+            self.deconv, inputs, None, additional_forward_args
+        )
 
 
 class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
@@ -177,6 +184,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, model)
         self.guided_backprop = GuidedBackprop(model)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -258,4 +266,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         self.guided_backprop.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
         )
-        return self.guided_backprop.attribute(inputs, None, additional_forward_args)
+        # NOTE: using __wrapped__ to not log
+        return self.guided_backprop.attribute.__wrapped__(
+            self.guided_backprop, inputs, None, additional_forward_args
+        )

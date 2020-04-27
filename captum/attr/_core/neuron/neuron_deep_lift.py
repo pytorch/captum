@@ -4,6 +4,8 @@ from typing import Any, Callable, Tuple, Union, cast
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
@@ -55,6 +57,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -187,7 +190,9 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             attribute_to_neuron_input=attribute_to_neuron_input,
         )
 
-        return dl.attribute(
+        # NOTE: using __wrapped__ to not log
+        return dl.attribute.__wrapped__(  # type: ignore
+            dl,  # self
             inputs,
             baselines,
             additional_forward_args=additional_forward_args,
@@ -231,6 +236,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -358,7 +364,9 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             attribute_to_neuron_input=attribute_to_neuron_input,
         )
 
-        return dl.attribute(
+        # NOTE: using __wrapped__ to not log
+        return dl.attribute.__wrapped__(  # type: ignore
+            dl,  # self
             inputs,
             baselines,
             additional_forward_args=additional_forward_args,

@@ -5,6 +5,8 @@ from typing import Any, Callable, Tuple, Union
 import numpy as np
 import torch
 
+from captum.log import log_usage
+
 from ..._utils.common import _is_tuple
 from ..._utils.typing import (
     BaselineType,
@@ -98,6 +100,7 @@ class GradientShap(GradientAttribution):
     ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -251,7 +254,9 @@ class GradientShap(GradientAttribution):
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
 
-        attributions = nt.attribute(
+        # NOTE: using attribute.__wrapped__ to not log
+        attributions = nt.attribute.__wrapped__(
+            nt,  # self
             inputs,
             nt_type="smoothgrad",
             n_samples=n_samples,
@@ -302,6 +307,7 @@ class InputBaselineXGradient(GradientAttribution):
     ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

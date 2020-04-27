@@ -6,6 +6,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _extract_device,
     _format_additional_forward_args,
@@ -61,6 +63,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         PerturbationAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -280,7 +283,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             ablator = FeatureAblation(layer_forward_func)
 
-            layer_attribs = ablator.attribute(
+            layer_attribs = ablator.attribute.__wrapped__(
+                ablator,  # self
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,

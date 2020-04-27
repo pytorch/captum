@@ -6,6 +6,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
@@ -70,6 +72,7 @@ class NoiseTunnel(Attribution):
 
         Attribution.__init__(self, self.attribution_method.forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -77,7 +80,7 @@ class NoiseTunnel(Attribution):
         n_samples: int = 5,
         stdevs: Union[float, Tuple[float, ...]] = 1.0,
         draw_baseline_from_distrib: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         r"""
         Args:
@@ -282,8 +285,11 @@ class NoiseTunnel(Attribution):
         expand_and_update_additional_forward_args()
         expand_and_update_target()
         # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
-        attributions = self.attribution_method.attribute(
-            inputs_with_noise if is_inputs_tuple else inputs_with_noise[0], **kwargs
+        # NOTE: using __wrapped__ such that it does not log the inner logs
+        attributions = self.attribution_method.attribute.__wrapped__(  # type: ignore
+            self.attribution_method,  # self
+            inputs_with_noise if is_inputs_tuple else inputs_with_noise[0],
+            **kwargs,
         )
 
         return_convergence_delta = (
