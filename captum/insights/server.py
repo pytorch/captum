@@ -9,6 +9,8 @@ from typing import Optional
 from flask import Flask, jsonify, render_template, request
 from torch import Tensor
 
+from captum.log import log_usage
+
 app = Flask(
     __name__, static_folder="frontend/build/static", template_folder="frontend/build"
 )
@@ -76,6 +78,7 @@ def run_app(debug: bool = True):
     app.run(port=port, use_reloader=False, debug=debug)
 
 
+@log_usage()
 def start_server(
     _viz, blocking: bool = False, debug: bool = False, _port: Optional[int] = None
 ):
