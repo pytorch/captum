@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import _format_input
 from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.common import (
@@ -45,6 +47,7 @@ class Occlusion(FeatureAblation):
         FeatureAblation.__init__(self, forward_func)
         self.use_weights = True
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -246,7 +249,8 @@ class Occlusion(FeatureAblation):
             )
 
         # Use ablation attribute method
-        return super().attribute(
+        return super().attribute.__wrapped__(
+            self,
             inputs,
             baselines=baselines,
             target=target,

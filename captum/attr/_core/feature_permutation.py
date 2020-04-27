@@ -4,6 +4,8 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .feature_ablation import FeatureAblation
 
@@ -87,6 +89,7 @@ class FeaturePermutation(FeatureAblation):
 
     # suppressing error caused by the child class not having a matching
     # signature to the parent
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -244,7 +247,7 @@ class FeaturePermutation(FeatureAblation):
             >>> attr = feature_perm.attribute(input, target=1,
             >>>                               feature_mask=feature_mask)
         """
-        return FeatureAblation.attribute(
+        return FeatureAblation.attribute.__wrapped__(
             self,
             inputs,
             baselines=None,

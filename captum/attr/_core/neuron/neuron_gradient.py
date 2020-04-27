@@ -3,6 +3,8 @@ from typing import Any, Callable, List, Tuple, Union
 
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import _format_additional_forward_args, _format_input, _is_tuple
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
@@ -49,6 +51,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

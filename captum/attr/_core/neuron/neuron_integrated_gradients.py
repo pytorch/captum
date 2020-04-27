@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Tuple, Union
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.gradient import construct_neuron_grad_fn
@@ -52,6 +54,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -191,8 +194,10 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         ig.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
         )
+        # NOTE: using __wrapped__ to not log
         # Return only attributions and not delta
-        return ig.attribute(
+        return ig.attribute.__wrapped__(  # type: ignore
+            ig,  # self
             inputs,
             baselines,
             additional_forward_args=additional_forward_args,

@@ -229,7 +229,8 @@ class AttributionVisualizer(object):
         )
         if "baselines" in inspect.signature(attribution_method.attribute).parameters:
             args["baselines"] = baseline
-        attr = attribution_method.attribute(
+        attr = attribution_method.attribute.__wrapped__(
+            attribution_method,  # self
             data, additional_forward_args=additional_forward_args, target=label, **args
         )
 

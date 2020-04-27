@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _format_additional_forward_args,
     _format_tensor_into_tuples,
@@ -148,6 +150,7 @@ class GradientAttribution(Attribution):
         Attribution.__init__(self, forward_func)
         self.gradient_func = compute_gradients
 
+    @log_usage()
     def compute_convergence_delta(
         self,
         attributions: Union[Tensor, Tuple[Tensor, ...]],

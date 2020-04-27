@@ -11,6 +11,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
@@ -137,6 +139,7 @@ class DeepLift(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -608,6 +611,7 @@ class DeepLiftShap(DeepLift):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -783,7 +787,8 @@ class DeepLiftShap(DeepLift):
         ) = self._expand_inputs_baselines_targets(
             baselines, inputs, target, additional_forward_args
         )
-        attributions = super().attribute(
+        attributions = super().attribute.__wrapped__(  # type: ignore
+            self,
             exp_inp,
             exp_base,
             target=exp_tgt,

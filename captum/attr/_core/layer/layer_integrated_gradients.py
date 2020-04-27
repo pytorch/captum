@@ -16,6 +16,7 @@ from captum.attr._utils.common import (
     _validate_input,
 )
 from captum.attr._utils.gradient import _forward_layer_eval, _run_forward
+from captum.log import log_usage
 
 from ...._utils.common import _extract_device, _format_additional_forward_args
 from ...._utils.typing import BaselineType, Literal, TargetType
@@ -100,6 +101,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -355,7 +357,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             if additional_forward_args is not None
             else inps
         )
-        attributions = self.ig.attribute(
+        attributions = self.ig.attribute.__wrapped__(  # type: ignore
+            self.ig,  # self
             inputs_layer,
             baselines=baselines_layer,
             target=target,
