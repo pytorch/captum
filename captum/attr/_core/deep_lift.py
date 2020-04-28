@@ -532,8 +532,8 @@ class DeepLift(GradientAttribution):
         def forward_hook(module: Module, inputs: Tuple, outputs: Tensor):
             return torch.stack(torch.chunk(outputs, 2), dim=1)
 
-        if isinstance(self.model, nn.DataParallel) or isinstance(
-            self.model, nn.parallel.DistributedDataParallel
+        if isinstance(
+            self.model, (nn.DataParallel, nn.parallel.DistributedDataParallel)
         ):
             return [
                 self.model.module.register_forward_pre_hook(pre_hook),  # type: ignore
