@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import _verify_select_column
 from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
@@ -53,6 +55,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         PerturbationAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -233,7 +236,9 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
         ablator = FeatureAblation(neuron_forward_func)
 
-        return ablator.attribute(
+        # NOTE: using __wrapped__ to not log
+        return ablator.attribute.__wrapped__(
+            ablator,  # self
             inputs,
             baselines=baselines,
             additional_forward_args=additional_forward_args,

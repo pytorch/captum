@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import _format_additional_forward_args, _format_input
 from ...._utils.typing import TargetType
 from ..._utils.attribution import GradientAttribution, LayerAttribution
@@ -75,6 +77,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

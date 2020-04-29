@@ -5,6 +5,8 @@ from typing import Any, Callable, Tuple, Union, cast
 import torch
 from torch import Tensor, dtype
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -52,6 +54,7 @@ class FeatureAblation(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

@@ -7,6 +7,8 @@ from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -74,6 +76,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.permutation_generator = _perm_generator
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -510,6 +513,7 @@ class ShapleyValues(PerturbationAttribution):
         self.shapley_sampling = ShapleyValueSampling(forward_func)
         self.shapley_sampling.permutation_generator = _all_perm_generator
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -704,7 +708,8 @@ class ShapleyValues(PerturbationAttribution):
                 "Consider using Shapley Value Sampling instead."
             )
 
-        return self.shapley_sampling.attribute(
+        return self.shapley_sampling.attribute.__wrapped__(
+            self.shapley_sampling,  # self
             inputs=inputs,
             baselines=baselines,
             target=target,

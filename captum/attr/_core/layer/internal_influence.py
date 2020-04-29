@@ -5,6 +5,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -63,6 +65,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

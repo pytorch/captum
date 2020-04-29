@@ -8,6 +8,7 @@ from captum._utils.common import _format_tensor_into_tuples
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
+from captum.log import log_usage
 
 
 class ClassSummarizer(Summarizer):
@@ -18,8 +19,9 @@ class ClassSummarizer(Summarizer):
     This also keeps track of an aggregate of all class summaries.
     """
 
+    @log_usage()
     def __init__(self, stats: List[Stat]):
-        Summarizer.__init__(self, stats)
+        Summarizer.__init__.__wrapped__(self, stats)
         self.summaries: Dict[Any, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)
         )

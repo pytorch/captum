@@ -6,6 +6,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     ExpansionTypes,
     _expand_target,
@@ -107,6 +109,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -407,6 +410,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -592,7 +596,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         ) = DeepLiftShap._expand_inputs_baselines_targets(
             self, baselines, inputs, target, additional_forward_args
         )
-        attributions = LayerDeepLift.attribute(
+        attributions = LayerDeepLift.attribute.__wrapped__(  # type: ignore
             self,
             exp_inp,
             exp_base,

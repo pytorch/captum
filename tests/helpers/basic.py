@@ -7,6 +7,8 @@ from typing import Callable
 import numpy as np
 import torch
 
+from captum.log import set_environment
+
 
 def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
@@ -97,6 +99,7 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         set_all_random_seeds(1234)
+        set_environment("test")
 
 
 class BaseGPUTest(BaseTest):

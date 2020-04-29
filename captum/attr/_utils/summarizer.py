@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple, Type, Union
 from torch import Tensor
 
 from captum.attr._utils.stat import MSE, Count, Max, Mean, Min, Stat, StdDev, Sum, Var
+from captum.log import log_usage
 
 
 class Summarizer:
@@ -25,6 +26,7 @@ class Summarizer:
     >>>print(summ.summary['mean'])
     """
 
+    @log_usage()
     def __init__(self, stats: List[Stat]):
         r"""
         Args:
