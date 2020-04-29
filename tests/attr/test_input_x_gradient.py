@@ -55,6 +55,7 @@ class Test(BaseTest):
         nt_type: str = "vanilla",
     ) -> None:
         input_x_grad = InputXGradient(model)
+        attributions: TensorOrTupleOfTensorsGeneric
         if nt_type == "vanilla":
             attributions = input_x_grad.attribute(
                 inputs, additional_forward_args=additional_forward_args
