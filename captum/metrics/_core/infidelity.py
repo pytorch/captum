@@ -21,7 +21,8 @@ def infidelity_perturb_func_decorator(pertub_func):
     An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
     when `pertub_func` returns only perturbed inputs and we
-    internally compute the perturbations as input - perturbed_inputs.
+    internally compute the perturbations as
+    (input - perturbed_input) / (input - baseline).
 
     If users decorate their `pertub_func` with
     `@infidelity_perturb_func_decorator` function then their `pertub_func`
