@@ -1,12 +1,16 @@
 import React from "react";
 import ReactTags from "react-tag-autocomplete";
 import styles from "./App.module.css";
+import createPlotlyComponent from "react-plotly.js/factory";
+import Plotly from "plotly.js-basic-dist";
 import "./App.css";
 
 const ConfigType = Object.freeze({
   Number: "number",
-  Enum: "enum"
+  Enum: "enum",
 });
+
+const Plot = createPlotlyComponent(Plotly);
 
 // helper method to convert an array or object into a valid classname
 function cx(obj) {
@@ -14,7 +18,7 @@ function cx(obj) {
     return obj.join(" ");
   }
   return Object.keys(obj)
-    .filter(k => !!obj[k])
+    .filter((k) => !!obj[k])
     .join(" ");
 }
 
@@ -39,7 +43,7 @@ class Header extends React.Component {
             <li
               className={cx([
                 styles.header__nav__item,
-                styles["header__nav__item--active"]
+                styles["header__nav__item--active"],
               ])}
             >
               Instance Attribution
@@ -64,18 +68,18 @@ class FilterContainer extends React.Component {
     super(props);
     const suggested_classes = props.config.classes.map((c, i) => ({
       id: i,
-      name: c
+      name: c,
     }));
     this.state = {
       prediction: "all",
       classes: [],
       suggested_classes: suggested_classes,
       selected_method: props.config.selected_method,
-      method_arguments: props.config.method_arguments
+      method_arguments: props.config.method_arguments,
     };
   }
 
-  handleClassDelete = i => {
+  handleClassDelete = (i) => {
     const classes = this.state.classes.slice(0);
     const removed_class = classes.splice(i, 1);
     const suggested_classes = [].concat(
@@ -85,24 +89,24 @@ class FilterContainer extends React.Component {
     this.setState({ classes, suggested_classes });
   };
 
-  handleClassAdd = added_class => {
+  handleClassAdd = (added_class) => {
     const classes = [].concat(this.state.classes, added_class);
     const suggested_classes = this.state.suggested_classes.filter(
-      t => t.id !== added_class.id
+      (t) => t.id !== added_class.id
     );
     this.setState({ classes, suggested_classes });
   };
 
-  handleInputChange = event => {
+  handleInputChange = (event) => {
     const target = event.target;
     const value = parseEventTargetValue(event.target);
     const name = target.name;
     this.setState({
-      [name]: value
+      [name]: value,
     });
   };
 
-  handleArgumentChange = event => {
+  handleArgumentChange = (event) => {
     const target = event.target;
     const name = target.name;
     const value = parseEventTargetValue(target);
@@ -111,20 +115,20 @@ class FilterContainer extends React.Component {
     this.setState({ method_arguments });
   };
 
-  handleSubmit = event => {
+  handleSubmit = (event) => {
     const method = this.state.selected_method;
     const method_arguments = this.state.method_arguments;
     const argument_config =
       method in method_arguments ? method_arguments[method] : {};
     const args = {};
-    Object.keys(argument_config).forEach(function(key) {
+    Object.keys(argument_config).forEach(function (key) {
       args[key] = argument_config[key].value;
     });
     const data = {
       prediction: this.state.prediction,
-      classes: this.state.classes.map(i => i["name"]),
+      classes: this.state.classes.map((i) => i["name"]),
       attribution_method: method,
-      arguments: args
+      arguments: args,
     };
     this.props.fetchData(data);
     event.preventDefault();
@@ -307,14 +311,14 @@ class Filter extends React.Component {
           <div
             className={cx([
               styles["filter-panel__column"],
-              styles["filter-panel__column--end"]
+              styles["filter-panel__column--end"],
             ])}
           >
             <button
               className={cx([
                 styles.btn,
                 styles["btn--outline"],
-                styles["btn--large"]
+                styles["btn--large"],
               ])}
             >
               Fetch
@@ -350,7 +354,7 @@ function calcHSLFromScore(percentage, zeroDefault = false) {
   const color = [
     target_hsl[0],
     (target_hsl[1] - default_hsl[1]) * abs_percent + default_hsl[1],
-    (target_hsl[2] - default_hsl[2]) * abs_percent + default_hsl[2]
+    (target_hsl[2] - default_hsl[2]) * abs_percent + default_hsl[2],
   ];
   return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`;
 }
@@ -389,7 +393,7 @@ function TextFeature(props) {
       <>
         <span
           style={{
-            backgroundColor: calcHSLFromScore(props.data.modified[i], false)
+            backgroundColor: calcHSLFromScore(props.data.modified[i], false),
           }}
           className={styles["text-feature-word"]}
         >
@@ -410,33 +414,39 @@ function TextFeature(props) {
 }
 
 function GeneralFeature(props) {
-  const bars = props.data.base.map((w, i) => {
-    const percent = props.data.modified[i].toFixed(3);
-    const color =
-      "general-feature__bar__" + (percent > 0 ? "positive" : "negative");
-    const width_percent = Math.abs(percent) + "%";
-    return (
-      <div className={styles["general-feature"]}>
-        <span className={styles["general-feature__label-container"]}>
-          <span className={styles["general-feature__label"]}>{w}</span>
-          <span className={styles["general-feature__percent"]}>{percent}</span>
-        </span>
-        <div className={styles["general-feature__bar-container"]}>
-          <span
-            className={cx([styles["general-feature__bar"], color])}
-            style={{ width: width_percent }}
-          ></span>
-        </div>
-      </div>
-    );
-  });
   return (
-    <>
-      <div className={styles["panel__column__title"]}>
-        {props.data.name} (General)
-      </div>
-      <div className={styles["panel__column__body"]}>{bars}</div>
-    </>
+    <Plot
+      data={[
+        {
+          x: props.data.base,
+          y: props.data.modified,
+          type: "bar",
+          marker: {
+            color: props.data.modified.map(
+              (v) => (v < 0 ? "#d45c43" : "#80aaff") // red if negative, else blue
+            ),
+          },
+        },
+      ]}
+      config={{
+        displayModeBar: false,
+      }}
+      layout={{
+        height: 300,
+        margin: {
+          t: 20,
+          pad: 0,
+          title: false,
+        },
+        yaxis: {
+          fixedrange: true,
+          showgrid: false,
+        },
+        xaxis: {
+          fixedrange: false,
+        },
+      }}
+    />
   );
 }
 
@@ -456,7 +466,7 @@ function Feature(props) {
 
 class Contributions extends React.Component {
   render() {
-    return this.props.feature_outputs.map(f => {
+    return this.props.feature_outputs.map((f) => {
       // pad bar height so features with 0 contribution can still be seen
       // in graph
       const contribution = f.contribution * 100;
@@ -467,7 +477,7 @@ class Contributions extends React.Component {
             className={styles["bar-chart__group__bar"]}
             style={{
               height: bar_height + "px",
-              backgroundColor: calcHSLFromScore(contribution)
+              backgroundColor: calcHSLFromScore(contribution),
             }}
           />
           <div className={styles["bar-chart__group__title"]}>{f.name}</div>
@@ -478,7 +488,7 @@ class Contributions extends React.Component {
 }
 
 class LabelButton extends React.Component {
-  onClick = e => {
+  onClick = (e) => {
     e.preventDefault();
     this.props.onTargetClick(this.props.labelIndex, this.props.instance);
   };
@@ -490,7 +500,7 @@ class LabelButton extends React.Component {
         className={cx({
           [styles.btn]: true,
           [styles["btn--solid"]]: this.props.active,
-          [styles["btn--outline"]]: !this.props.active
+          [styles["btn--outline"]]: !this.props.active,
         })}
       >
         {this.props.children}
@@ -503,7 +513,7 @@ class Visualization extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: false
+      loading: false,
     };
   }
 
@@ -516,7 +526,7 @@ class Visualization extends React.Component {
 
   render() {
     const data = this.props.data;
-    const features = data.feature_outputs.map(f => <Feature data={f} />);
+    const features = data.feature_outputs.map((f) => <Feature data={f} />);
 
     return (
       <>
@@ -529,13 +539,13 @@ class Visualization extends React.Component {
           className={cx({
             [styles.panel]: true,
             [styles["panel--long"]]: true,
-            [styles["panel--loading"]]: this.state.loading
+            [styles["panel--loading"]]: this.state.loading,
           })}
         >
           <div className={styles["panel__column"]}>
             <div className={styles["panel__column__title"]}>Predicted</div>
             <div className={styles["panel__column__body"]}>
-              {data.predicted.map(p => (
+              {data.predicted.map((p) => (
                 <div className={cx([styles.row, styles["row--padding"]])}>
                   <LabelButton
                     onTargetClick={this.onTargetClick}
@@ -575,7 +585,7 @@ class Visualization extends React.Component {
           <div
             className={cx([
               styles["panel__column"],
-              styles["panel__column--stretch"]
+              styles["panel__column--stretch"],
             ])}
           >
             {features}
