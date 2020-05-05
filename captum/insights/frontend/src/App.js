@@ -8,6 +8,7 @@ import "./App.css";
 const ConfigType = Object.freeze({
   Number: "number",
   Enum: "enum",
+  String: "string",
 });
 
 const Plot = createPlotlyComponent(Plotly);
@@ -153,62 +154,71 @@ class FilterContainer extends React.Component {
   }
 }
 
-class ClassFilter extends React.Component {
-  render() {
-    return (
-      <ReactTags
-        tags={this.props.classes}
-        autofocus={false}
-        suggestions={this.props.suggestedClasses}
-        handleDelete={this.props.handleClassDelete}
-        handleAddition={this.props.handleClassAdd}
-        minQueryLength={0}
-        placeholder="add new class..."
+function ClassFilter(props) {
+  return (
+    <ReactTags
+      tags={props.classes}
+      autofocus={false}
+      suggestions={props.suggestedClasses}
+      handleDelete={props.handleClassDelete}
+      handleAddition={props.handleClassAdd}
+      minQueryLength={0}
+      placeholder="add new class..."
+    />
+  );
+}
+
+function NumberArgument(props) {
+  var min = props.limit[0];
+  var max = props.limit[1];
+  return (
+    <div>
+      {props.name}:
+      <input
+        className={cx([styles.input, styles["input--narrow"]])}
+        name={props.name}
+        type="number"
+        value={props.value}
+        min={min}
+        max={max}
+        onChange={props.handleInputChange}
       />
-    );
-  }
+    </div>
+  );
 }
 
-class NumberArgument extends React.Component {
-  render() {
-    var min = this.props.limit[0];
-    var max = this.props.limit[1];
-    return (
-      <div>
-        {this.props.name + ": "}
-        <input
-          className={cx([styles.input, styles["input--narrow"]])}
-          name={this.props.name}
-          type="number"
-          value={this.props.value}
-          min={min}
-          max={max}
-          onChange={this.props.handleInputChange}
-        />
-      </div>
-    );
-  }
+function EnumArgument(props) {
+  const options = props.limit.map((item, key) => (
+    <option value={item}>{item}</option>
+  ));
+  return (
+    <div>
+      {props.name}:
+      <select
+        className={styles.select}
+        name={props.name}
+        value={props.value}
+        onChange={props.handleInputChange}
+      >
+        {options}
+      </select>
+    </div>
+  );
 }
 
-class EnumArgument extends React.Component {
-  render() {
-    const options = this.props.limit.map((item, key) => (
-      <option value={item}>{item}</option>
-    ));
-    return (
-      <div>
-        {this.props.name + ": "}
-        <select
-          className={styles.select}
-          name={this.props.name}
-          value={this.props.value}
-          onChange={this.props.handleInputChange}
-        >
-          {options}
-        </select>
-      </div>
-    );
-  }
+function StringArgument(props) {
+  return (
+    <div>
+      {props.name}:
+      <input
+        className={cx([styles.input, styles["input--narrow"]])}
+        name={props.name}
+        type="text"
+        value={props.value}
+        onChange={props.handleInputChange}
+      />
+    </div>
+  );
 }
 
 class Filter extends React.Component {
@@ -228,6 +238,14 @@ class Filter extends React.Component {
           <EnumArgument
             name={name}
             limit={config.limit}
+            value={config.value}
+            handleInputChange={this.props.handleArgumentChange}
+          />
+        );
+      case ConfigType.String:
+        return (
+          <StringArgument
+            name={name}
             value={config.value}
             handleInputChange={this.props.handleArgumentChange}
           />
