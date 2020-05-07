@@ -214,4 +214,4 @@ Please, scroll to the right for more details.
 
 **˚ Including Neuron Variant**
 
-<a href="https://raw.githubusercontent.com/pytorch/captum/master/website/static/img/algorithms_comparison_matrix.png">Algorithm Comparison Matrix.png</a>
+<a href="/img/algorithms_comparison_matrix.png">Algorithm Comparison Matrix.png</a>
