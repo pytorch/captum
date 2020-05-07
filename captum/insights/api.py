@@ -27,6 +27,7 @@ from captum.insights.config import (
 )
 from captum.insights.features import BaseFeature
 from captum.insights.server import namedtuple_to_dict
+from captum.log import log_usage
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -229,8 +230,12 @@ class AttributionVisualizer(object):
         )
         if "baselines" in inspect.signature(attribution_method.attribute).parameters:
             args["baselines"] = baseline
-        attr = attribution_method.attribute(
-            data, additional_forward_args=additional_forward_args, target=label, **args
+        attr = attribution_method.attribute.__wrapped__(
+            attribution_method,  # self
+            data,
+            additional_forward_args=additional_forward_args,
+            target=label,
+            **args,
         )
 
         return attr
@@ -244,6 +249,7 @@ class AttributionVisualizer(object):
             num_examples=4,
         )
 
+    @log_usage()
     def render(self, debug=True):
         from IPython.display import display
         from captum.insights.widget import CaptumInsights
@@ -253,6 +259,7 @@ class AttributionVisualizer(object):
         if debug:
             display(widget.out)
 
+    @log_usage()
     def serve(self, blocking=False, debug=False, port=None):
         context = _get_context()
         if context == _CONTEXT_COLAB:
@@ -521,6 +528,7 @@ class AttributionVisualizer(object):
 
         return vis_outputs
 
+    @log_usage()
     def visualize(self):
         self._outputs = []
         while len(self._outputs) < self._config.num_examples:

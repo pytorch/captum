@@ -5,6 +5,8 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -87,6 +89,7 @@ class IntegratedGradients(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

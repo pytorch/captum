@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from typing import Any, Callable
 
+from captum.log import log_usage
+
 from ..._utils.common import _format_input, _is_tuple
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
@@ -24,6 +26,7 @@ class InputXGradient(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

@@ -6,6 +6,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ..._utils.common import _format_input, _is_tuple
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution, LayerAttribution
@@ -66,6 +68,7 @@ class GuidedGradCam(GradientAttribution):
         self.grad_cam = LayerGradCam(model, layer, device_ids)
         self.guided_backprop = GuidedBackprop(model)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -180,7 +183,8 @@ class GuidedGradCam(GradientAttribution):
         """
         is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
-        grad_cam_attr = self.grad_cam.attribute(
+        grad_cam_attr = self.grad_cam.attribute.__wrapped__(
+            self.grad_cam,  # self
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,
@@ -193,7 +197,8 @@ class GuidedGradCam(GradientAttribution):
                 "outputs is not supported."
             )
             grad_cam_attr = grad_cam_attr[0]
-        guided_backprop_attr = self.guided_backprop.attribute(
+        guided_backprop_attr = self.guided_backprop.attribute.__wrapped__(
+            self.guided_backprop,  # self
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,

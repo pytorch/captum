@@ -6,6 +6,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -100,6 +102,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

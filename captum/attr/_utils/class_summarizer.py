@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from collections import defaultdict
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 from torch import Tensor
 
@@ -8,6 +8,7 @@ from captum._utils.common import _format_tensor_into_tuples
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.stat import Stat
 from captum.attr._utils.summarizer import Summarizer
+from captum.log import log_usage
 
 
 class ClassSummarizer(Summarizer):
@@ -18,13 +19,14 @@ class ClassSummarizer(Summarizer):
     This also keeps track of an aggregate of all class summaries.
     """
 
+    @log_usage()
     def __init__(self, stats: List[Stat]):
-        Summarizer.__init__(self, stats)
+        Summarizer.__init__.__wrapped__(self, stats)
         self.summaries: Dict[Any, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)
         )
 
-    def update(
+    def update(  # type: ignore
         self, x: TensorOrTupleOfTensorsGeneric, labels: TargetType = None,
     ):
         r"""
@@ -63,7 +65,9 @@ class ClassSummarizer(Summarizer):
             for x_i in x:
                 assert x_i.size(0) == num_labels, (
                     "batch size does not equal amount of labels; "
-                    "please ensure length of labels is equal to 1 or the number"
+                    "please ensure length of labels is equal to 1 "
+                    "or to the `batch_size` corresponding to the "
+                    "number of examples in the input(s)"
                 )
 
         batch_size = x[0].size(0)
@@ -77,7 +81,11 @@ class ClassSummarizer(Summarizer):
             super().update(tensors_to_summarize_copy)
 
     @property
-    def class_summaries(self) -> Dict[Any, Dict[str, Tensor]]:
+    def class_summaries(
+        self,
+    ) -> Dict[
+        Any, Union[None, Dict[str, Optional[Tensor]], List[Dict[str, Optional[Tensor]]]]
+    ]:
         r"""
         Returns:
              The summaries for each class.

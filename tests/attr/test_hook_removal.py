@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+
+from enum import Enum
+from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
+
+from torch.nn import Module
+
+from captum.attr._core.noise_tunnel import NoiseTunnel
+from captum.attr._models.base import _get_deep_layer_name, _set_deep_layer_value
+from captum.attr._utils.attribution import Attribution, InternalAttribution
+
+from ..helpers.basic import BaseTest, deep_copy_args
+from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.test_config import config
+
+
+"""
+Tests in this file are dynamically generated based on the config
+defined in tests/attr/helpers/test_config.py. To add new test cases,
+read the documentation in test_config.py and add cases based on the
+schema described there.
+"""
+
+
+class HookRemovalMode(Enum):
+    """
+    Defines modes for hook removal tests:
+    `normal` - Verifies no hooks remain after running an attribution method
+    normally
+    `incorrect_target_or_neuron` - Verifies no hooks remain after an incorrect
+    target and neuron_index are provided, which causes an assertion error
+    in the algorithm.
+    `invalid_module` - Verifies no hooks remain after an invalid module
+    is executed, which causes an assertion error in model execution.
+    """
+
+    normal = 1
+    incorrect_target_or_neuron = 2
+    invalid_module = 3
+
+
+class ErrorModule(Module):
+    def forward(*args, **kwargs):
+        raise AssertionError("Raising error on execution")
+
+
+class HookRemovalMeta(type):
+    """
+    Attribution is computed either normally or with the changes based on the
+    mode, which cause an error. Once attribution is calculated, test verifies
+    that no forward, backward or forward pre hooks remain on any modules.
+    """
+
+    def __new__(cls, name: str, bases: Tuple, attrs: Dict):
+        created_tests: Dict[Tuple[Type[Attribution], HookRemovalMode], bool] = {}
+        for test_config in config:
+            (algorithms, model, args, layer, noise_tunnel, _,) = parse_test_config(
+                test_config
+            )
+
+            for algorithm in algorithms:
+                for mode in HookRemovalMode:
+                    if mode is HookRemovalMode.invalid_module and layer is None:
+                        continue
+                    # Only one test per algorithm and mode is necessary
+                    if (algorithm, mode) in created_tests:
+                        continue
+
+                    test_method = cls.make_single_hook_removal_test(
+                        algorithm, model, layer, args, noise_tunnel, mode,
+                    )
+                    test_name = gen_test_name(
+                        "test_hook_removal_" + mode.name,
+                        cast(str, test_config["name"]),
+                        algorithm,
+                        noise_tunnel,
+                    )
+
+                    if test_name in attrs:
+                        raise AssertionError(
+                            "Trying to overwrite existing test with name: %r"
+                            % test_name
+                        )
+                    attrs[test_name] = test_method
+                    created_tests[(algorithm, mode)] = True
+        return super(HookRemovalMeta, cls).__new__(cls, name, bases, attrs)
+
+    # Arguments are deep copied to ensure tests are independent and are not affected
+    # by any modifications within a previous test.
+    @classmethod
+    @deep_copy_args
+    def make_single_hook_removal_test(
+        cls,
+        algorithm: Type[Attribution],
+        model: Module,
+        layer: Optional[str],
+        args: Dict[str, Any],
+        noise_tunnel: bool,
+        mode: HookRemovalMode,
+    ) -> Callable:
+        """
+        This method creates a single hook removal test for the given
+        algorithm and parameters.
+        """
+
+        def hook_removal_test_assert(self) -> None:
+            attr_method: Attribution
+            expect_error = False
+            if layer is not None:
+                if mode is HookRemovalMode.invalid_module:
+                    expect_error = True
+                    _set_deep_layer_value(model, layer, ErrorModule())
+                target_layer = _get_deep_layer_name(model, layer)
+                internal_algorithm = cast(Type[InternalAttribution], algorithm)
+                attr_method = internal_algorithm(model, target_layer)
+            else:
+                attr_method = algorithm(model)
+
+            if noise_tunnel:
+                attr_method = NoiseTunnel(attr_method)
+
+            if mode is HookRemovalMode.incorrect_target_or_neuron:
+                # Overwriting target and neuron index arguments to
+                # incorrect values.
+                if "target" in args:
+                    args["target"] = (9999,) * 20
+                    expect_error = True
+                if "neuron_index" in args:
+                    args["neuron_index"] = (9999,) * 20
+                    expect_error = True
+
+            if expect_error:
+                with self.assertRaises(AssertionError):
+                    attr_method.attribute(**args)
+            else:
+                attr_method.attribute(**args)
+
+            def check_leftover_hooks(module):
+                self.assertEqual(len(module._forward_hooks), 0)
+                self.assertEqual(len(module._backward_hooks), 0)
+                self.assertEqual(len(module._forward_pre_hooks), 0)
+
+            model.apply(check_leftover_hooks)
+
+        return hook_removal_test_assert
+
+
+class TestHookRemoval(BaseTest, metaclass=HookRemovalMeta):
+    pass

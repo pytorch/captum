@@ -8,6 +8,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
+from captum.log import log_usage
+
 from ..._utils.common import _format_input, _is_tuple
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
@@ -31,6 +33,7 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             " ReLU layers."
         )
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -57,15 +60,14 @@ class ModifiedReluGradientAttribution(GradientAttribution):
             "Setting backward hooks on ReLU activations."
             "The hooks will be removed after the attribution is finished"
         )
+        try:
+            self.model.apply(self._register_hooks)
 
-        self.model.apply(self._register_hooks)
-
-        gradients = self.gradient_func(
-            self.forward_func, inputs, target, additional_forward_args
-        )
-
-        # remove set hooks
-        self._remove_hooks()
+            gradients = self.gradient_func(
+                self.forward_func, inputs, target, additional_forward_args
+            )
+        finally:
+            self._remove_hooks()
 
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_attributions(is_inputs_tuple, gradients)
@@ -120,6 +122,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
             self, model, use_relu_grad_output=False
         )
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -196,7 +199,9 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
             >>> # Computes Guided Backprop attribution scores for class 3.
             >>> attribution = gbp.attribute(input, target=3)
         """
-        return super().attribute(inputs, target, additional_forward_args)
+        return super().attribute.__wrapped__(
+            self, inputs, target, additional_forward_args
+        )
 
 
 class Deconvolution(ModifiedReluGradientAttribution):
@@ -226,6 +231,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
         """
         ModifiedReluGradientAttribution.__init__(self, model, use_relu_grad_output=True)
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -302,4 +308,6 @@ class Deconvolution(ModifiedReluGradientAttribution):
             >>> # Computes Deconvolution attribution scores for class 3.
             >>> attribution = deconv.attribute(input, target=3)
         """
-        return super().attribute(inputs, target, additional_forward_args)
+        return super().attribute.__wrapped__(
+            self, inputs, target, additional_forward_args
+        )

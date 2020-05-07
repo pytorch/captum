@@ -6,6 +6,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _extract_device,
     _format_additional_forward_args,
@@ -61,6 +63,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         PerturbationAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -246,12 +249,16 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                     return all_layer_inputs[device][0]
                 return all_layer_inputs[device]
 
-            if attribute_to_layer_input:
-                hook = self.layer.register_forward_pre_hook(forward_hook)
-            else:
-                hook = self.layer.register_forward_hook(forward_hook)
-            eval = _run_forward(self.forward_func, original_inputs, target=target)
-            hook.remove()
+            hook = None
+            try:
+                if attribute_to_layer_input:
+                    hook = self.layer.register_forward_pre_hook(forward_hook)
+                else:
+                    hook = self.layer.register_forward_hook(forward_hook)
+                eval = _run_forward(self.forward_func, original_inputs, target=target)
+            finally:
+                if hook is not None:
+                    hook.remove()
             return eval
 
         with torch.no_grad():
@@ -276,7 +283,8 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             ablator = FeatureAblation(layer_forward_func)
 
-            layer_attribs = ablator.attribute(
+            layer_attribs = ablator.attribute.__wrapped__(
+                ablator,  # self
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
