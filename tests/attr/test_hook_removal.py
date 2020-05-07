@@ -52,7 +52,7 @@ class HookRemovalMeta(type):
     """
 
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
-        created_tests = {}
+        created_tests: Dict[Tuple[Type[Attribution], HookRemovalMode], bool] = {}
         for test_config in config:
             (algorithms, model, args, layer, noise_tunnel, _,) = parse_test_config(
                 test_config
