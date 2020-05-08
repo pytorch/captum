@@ -30,6 +30,8 @@
 
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+
 <span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
@@ -81,7 +83,8 @@
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deconv</span> <span class="o">=</span> <span class="n">Deconvolution</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NeuronDeconvolution.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeconvolution.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="NeuronDeconvolution.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeconvolution.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -162,7 +165,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">deconv</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="n">attribute_to_neuron_input</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deconv</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span></div></div>
+
+        <span class="c1"># NOTE: using __wrapped__ to not log</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deconv</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deconv</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+        <span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="NeuronGuidedBackprop"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop">[docs]</a><span class="k">class</span> <span class="nc">NeuronGuidedBackprop</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
@@ -204,7 +211,8 @@
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span> <span class="o">=</span> <span class="n">GuidedBackprop</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-<div class="viewcode-block" id="NeuronGuidedBackprop.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop.attribute">[docs]</a>    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<div class="viewcode-block" id="NeuronGuidedBackprop.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGuidedBackprop.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
         <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -285,7 +293,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="n">attribute_to_neuron_input</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="p">)</span></div></div>
+        <span class="c1"># NOTE: using __wrapped__ to not log</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">guided_backprop</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+        <span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>

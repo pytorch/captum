@@ -54,6 +54,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum.insights.features</span> <span class="kn">import</span> <span class="n">BaseFeature</span>
 <span class="kn">from</span> <span class="nn">captum.insights.server</span> <span class="kn">import</span> <span class="n">namedtuple_to_dict</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
 <span class="n">_CONTEXT_COLAB</span> <span class="o">=</span> <span class="s2">"_CONTEXT_COLAB"</span>
 <span class="n">_CONTEXT_IPYTHON</span> <span class="o">=</span> <span class="s2">"_CONTEXT_IPYTHON"</span>
@@ -256,8 +257,12 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="s2">"baselines"</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
             <span class="n">args</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline</span>
-        <span class="n">attr</span> <span class="o">=</span> <span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+            <span class="n">attribution_method</span><span class="p">,</span>  <span class="c1"># self</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">args</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">attr</span>
@@ -271,6 +276,7 @@
             <span class="n">num_examples</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
         <span class="p">)</span>
 
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
         <span class="kn">from</span> <span class="nn">captum.insights.widget</span> <span class="kn">import</span> <span class="n">CaptumInsights</span>
@@ -280,6 +286,7 @@
         <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
             <span class="n">display</span><span class="p">(</span><span class="n">widget</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
 
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">serve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">context</span> <span class="o">=</span> <span class="n">_get_context</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="n">_CONTEXT_COLAB</span><span class="p">:</span>
@@ -424,7 +431,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predictions_matches_labels</span><span class="p">(</span><span class="n">predicted_scores</span><span class="p">,</span> <span class="n">label_name</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid prediction config: </span><span class="si">{self._config.prediction}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid prediction config: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">prediction</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span>
 
@@ -548,6 +555,7 @@
 
         <span class="k">return</span> <span class="n">vis_outputs</span>
 
+    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_outputs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">num_examples</span><span class="p">:</span>
