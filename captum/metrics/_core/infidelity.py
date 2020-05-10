@@ -150,6 +150,16 @@ def infidelity(
                     <MY-LOGIC-HERE>
                     return perturbed_inputs
 
+                In this case we compute perturbations by dividing
+                (input - perturbed_input) by (input - baselines) and the user needs to
+                only return perturbed inputs in `perturb_func` as described above.
+
+                `infidelity_perturb_func_decorator` makes sense to use only for global
+                attribution algorithms such as integrated gradients, deeplift, etc.
+                In case user has a local attribution algorithm or decides to compute
+                perturbations and perturbed inputs in `perturb_func` then they must not
+                use `infidelity_perturb_func_decorator`.
+
                 If there are more than one inputs passed to infidelity function those
                 will be passed to `perturb_func` as tuples in the same order as they
                 are passed to infidelity function.
@@ -167,13 +177,23 @@ def infidelity(
                     and returned as tuples in the following format:
                         (perturb1, perturb2, ... perturbN), (perturbed_input1,
                          perturbed_input2, ... perturbed_inputN)
-                    Similar to pervious case here as well we need to return only
+                    Similar to previous case here as well we need to return only
                     perturbed inputs in case `infidelity_perturb_func_decorator`
                     decorates out perturb_func
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
                 input examples that are repeated `max_examples_per_batch / batch_size`
                 times within the batch.
+
+                In case `infidelity_perturb_func_decorator` is used as a decorator of
+                `perturb_func` then we compute perturbations by dividing
+                (input - perturbed_input) by (input - baselines) and the user needs to
+                only return perturbed inputs in `perturb_func`.
+                `infidelity_perturb_func_decorator` makes sense to use only for global
+                attribution algorithms such as integrated gradients, deeplift, etc.
+                In case user has a local attribution algorithm or decides to compute
+                perturbations and perturbed inputs in `perturb_func` then they must not
+                use `infidelity_perturb_func_decorator`.
 
         inputs (tensor or tuple of tensors):  Input for which
                 attributions are computed. If forward_func takes a single
@@ -243,10 +263,8 @@ def infidelity(
                 tensor as well. If inputs is provided as a tuple of tensors
                 then attributions will be tuples of tensors as well.
 
-                In case `infidelity_perturb_func_decorator` is used as a decorator of
-                `perturb_func` then we internally divide global
-                attribution values by (input - baselines) and the user needs to
-                only return perturbed inputs in `perturb_func`.
+                For more details on when to use `infidelity_perturb_func_decorator`,
+                please, read the documentation about `perturb_func`
 
         additional_forward_args (any, optional): If the forward function
                 requires additional arguments other than the inputs for
