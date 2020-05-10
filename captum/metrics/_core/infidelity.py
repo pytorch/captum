@@ -185,16 +185,6 @@ def infidelity(
                 input examples that are repeated `max_examples_per_batch / batch_size`
                 times within the batch.
 
-                In case `infidelity_perturb_func_decorator` is used as a decorator of
-                `perturb_func` then we compute perturbations by dividing
-                (input - perturbed_input) by (input - baselines) and the user needs to
-                only return perturbed inputs in `perturb_func`.
-                `infidelity_perturb_func_decorator` makes sense to use only for global
-                attribution algorithms such as integrated gradients, deeplift, etc.
-                In case user has a local attribution algorithm or decides to compute
-                perturbations and perturbed inputs in `perturb_func` then they must not
-                use `infidelity_perturb_func_decorator`.
-
         inputs (tensor or tuple of tensors):  Input for which
                 attributions are computed. If forward_func takes a single
                 tensor as input, a single input tensor should be provided.
