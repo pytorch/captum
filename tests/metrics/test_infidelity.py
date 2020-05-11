@@ -3,7 +3,7 @@
 import torch
 
 from captum.attr import DeepLift, FeatureAblation, IntegratedGradients, Saliency
-from captum.metrics import infidelity
+from captum.metrics import infidelity, infidelity_perturb_func_decorator
 
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
 from ..helpers.basic_models import (
@@ -14,6 +14,7 @@ from ..helpers.basic_models import (
 )
 
 
+@infidelity_perturb_func_decorator
 def _local_perturb_func_default(inputs):
     return _local_perturb_func(inputs)[1]
 
@@ -34,6 +35,7 @@ def _local_perturb_func(inputs):
     return (perturb1, perturb2), (input1 - perturb1, input2 - perturb2)
 
 
+@infidelity_perturb_func_decorator
 def _global_perturb_func1_default(inputs):
     return _global_perturb_func1(inputs)[1]
 
@@ -75,7 +77,6 @@ class Test(BaseTest):
             inputs,
             expected,
             perturb_func=_local_perturb_func_default,
-            perturb_func_custom=True,
             local=False,
         )
         assertTensorAlmostEqual(self, infid, infid_w_common_func)
@@ -141,7 +142,6 @@ class Test(BaseTest):
             n_perturb_samples=5,
             max_batch_size=2,
             perturb_func=_global_perturb_func1_default,
-            perturb_func_custom=True,
         )
         assertTensorAlmostEqual(self, infidelity1, infidelity2, 0.0)
         assertTensorAlmostEqual(self, infidelity2_w_custom_pert_func, infidelity2, 0.0)
@@ -207,6 +207,7 @@ class Test(BaseTest):
         def perturbed_func2(inputs, baselines):
             return torch.ones(baselines.shape), baselines
 
+        @infidelity_perturb_func_decorator
         def perturbed_func3(inputs, baselines):
             return baselines
 
@@ -229,7 +230,6 @@ class Test(BaseTest):
             multi_input=False,
             n_perturb_samples=3,
             perturb_func=perturbed_func3,
-            perturb_func_custom=True,
         )
         infid2 = self.infidelity_assert(
             model,
@@ -242,7 +242,6 @@ class Test(BaseTest):
             multi_input=False,
             n_perturb_samples=3,
             perturb_func=perturbed_func2,
-            perturb_func_custom=False,
         )
 
         assertTensorAlmostEqual(self, infid, delta * delta)
@@ -269,6 +268,7 @@ class Test(BaseTest):
             pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]]).float()
             return pert, (1 - pert) * input
 
+        @infidelity_perturb_func_decorator
         def _global_perturb_func3_custom(input):
             return _global_perturb_func3(input)[1]
 
@@ -297,7 +297,6 @@ class Test(BaseTest):
             n_perturb_samples=3,
             max_batch_size=None,
             perturb_func=_global_perturb_func3_custom,
-            perturb_func_custom=True,
         )
         assertTensorAlmostEqual(self, infid, infid_w_default)
 
@@ -335,7 +334,6 @@ class Test(BaseTest):
         n_perturb_samples=10,
         max_batch_size=None,
         perturb_func=_local_perturb_func,
-        perturb_func_custom=False,
         local=True,
     ):
         ig = IntegratedGradients(model)
@@ -353,7 +351,6 @@ class Test(BaseTest):
             n_perturb_samples=n_perturb_samples,
             max_batch_size=max_batch_size,
             perturb_func=perturb_func,
-            perturb_func_custom=perturb_func_custom,
         )
 
     def basic_model_global_assert(
@@ -367,7 +364,6 @@ class Test(BaseTest):
         n_perturb_samples=10,
         max_batch_size=None,
         perturb_func=_global_perturb_func1,
-        perturb_func_custom=False,
     ):
         attrs = attr_algo.attribute(
             inputs, additional_forward_args=additional_args, target=target
@@ -382,7 +378,6 @@ class Test(BaseTest):
             target=target,
             n_perturb_samples=n_perturb_samples,
             max_batch_size=max_batch_size,
-            perturb_func_custom=perturb_func_custom,
         )
         return infid
 
@@ -399,7 +394,6 @@ class Test(BaseTest):
         max_batch_size=None,
         multi_input=True,
         perturb_func=_local_perturb_func,
-        perturb_func_custom=False,
         **kwargs
     ):
         infid = infidelity(
@@ -412,7 +406,6 @@ class Test(BaseTest):
             baselines=baselines,
             n_samples=n_perturb_samples,
             max_examples_per_batch=max_batch_size,
-            perturb_func_custom=perturb_func_custom,
         )
         assertArraysAlmostEqual(infid.numpy(), expected, 0.0001)
         return infid
