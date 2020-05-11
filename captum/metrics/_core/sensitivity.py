@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from copy import deepcopy
+from inspect import signature
 
 import torch
 
@@ -17,6 +18,8 @@ from .._utils.batching import _divide_and_aggregate_metrics
 def default_perturb_func(inputs, perturb_radius=0.02):
     r"""A default function for generating perturbations of `inputs`
     within perturbation radius of `perturb_radius`.
+    This function samples uniformly random from the L_Infinity ball
+    with `perturb_radius` radius.
     The users can override this function if they prefer to use a
     different perturbation function.
     """
@@ -36,7 +39,7 @@ def sensitivity_max(
     inputs,
     perturb_func=default_perturb_func,
     perturb_radius=0.02,
-    n_samples=10,
+    n_perturb_samples=10,
     norm_ord="fro",
     max_examples_per_batch=None,
     **kwargs,
@@ -49,19 +52,18 @@ def sensitivity_max(
     https://www.aaai.org/ojs/index.php/AAAI/article/view/4252
 
     `sensitivity_max` metric measures maximum sensitivity of an explanation
-    using Monte Carlo sampling-based approximation. In order to do so it
-    samples multiple data points from a sub-space of an L-Infinity
-    ball that has a `perturb_radius` radius. The latter can be provided by
-    users as an input argument. This functionality is provided by
-    `default_perturb_func` function.
-    If users prefer different sampling techniques they can provide
-    `perturb_func` input argument that performs the sampling different way.
+    using Monte Carlo sampling-based approximation. By default in order to
+    do so it samples multiple data points from a sub-space of an L-Infinity
+    ball that has a `perturb_radius` radius using `default_perturb_func`
+    default perturrbation function. In a general case users can
+    use any L_p ball or any other custom sampling technique that they
+    prefer to by providing a custom `perturb_func`.
 
-    Note that max sensitivity it similar to Lipschitz Continuity metric
+    Note that max sensitivity is similar to Lipschitz Continuity metric
     however it is more robust and easier to estimate.
-    Since the explanation, that among others can be the attribution
-    function, isn't always continues can lead to unbounded Lipschitz continuity.
-    Therefore the latter isn't always appropriate.
+    Since the explanation, for instance an attribution function,
+    may not always be continuous, can lead to unbounded
+    Lipschitz continuity. Therefore the latter isn't always appropriate.
 
     More about the Lipschitz Continuity Metric can also be found here
     `On the Robustness of Interpretability Methods`
@@ -97,7 +99,7 @@ def sensitivity_max(
         perturb_func (callable):
                 The perturbation function of model inputs. This function takes
                 model inputs and optionally `perturb_radius` if
-                `default_perturb_func` is used and returns
+                the function takes more than one argument and returns
                 perturbed inputs.
 
                 If there are more than one inputs passed to sensitivity function those
@@ -110,30 +112,35 @@ def sensitivity_max(
                 times within the batch.
 
             Default: default_perturb_func
-        perturb_radius (float, optional): The epsilon radius of L-Infinity
-            ball that is used for uniform random sampling which ultimately
-            serve as input perturbations.
-            This argument is passed to `perturb_func` if it is set to default
-            `default_perturb_func`.
+        perturb_radius (float, optional): The epsilon radius used for sampling.
+            In the `default_perturb_func` it is used as the radius of
+            the L-Infinity ball. In a general case it can serve as a radius of
+            any L_p nom.
+            This argument is passed to `perturb_func` if it takes more than
+            one argument.
 
             Default: 0.02
-        n_samples (int, optional): The number of times input tensors are perturbed.
-                Each input example in the inputs tensor is expanded `n_samples`
-                times before calling `perturb_func` function.
+        n_perturb_samples (int, optional): The number of times input tensors
+                are perturbed. Each input example in the inputs tensor is
+                expanded `n_perturb_samples` times before calling
+                `perturb_func` function.
 
                 Default: 10
-        norm_ord (str, optional): The type of norm that is used to compute the
+        norm_ord (int, float, inf, -inf, 'fro', 'nuc', optional): The type of norm
+                that is used to compute the
                 norm of the sensitivity matrix which is defined as the difference
                 between the explanation function at its input and perturbed input.
 
-                Default: "fro"
+                Default: 'fro'
         max_examples_per_batch (int, optional): The number of maximum input
                 examples that are processed together. In case the number of
-                examples (`input batch size * n_samples`) exceeds
+                examples (`input batch size * n_perturb_samples`) exceeds
                 `max_examples_per_batch`, they will be sliced
                 into batches of `max_examples_per_batch` examples and processed
                 in a sequential order. If `max_examples_per_batch` is None, all
-                examples are processed together.
+                examples are processed together. `max_examples_per_batch` should
+                at least be equal `input batch size` and at most
+                `input batch size * n_perturb_samples`.
 
                 Default: None
          **kwargs (Any, optional): Contains a list of arguments that are passed
@@ -149,7 +156,8 @@ def sensitivity_max(
         sensitivities (tensor): A tensor of scalar sensitivity scores per
                input example. The first dimension is equal to the
                number of examples in the input batch and the second
-               dimension is one.
+               dimension is one. Returned sernsitivities are normalized by
+               the magnitudes of the input explanations.
 
     Examples::
         >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -162,38 +170,51 @@ def sensitivity_max(
 
     """
 
-    def _generate_perturbations(current_n_samples):
+    def _generate_perturbations(current_n_perturb_samples):
         r"""
-        The perturbations are generated for each example `current_n_samples` times.
+        The perturbations are generated for each example
+        `current_n_perturb_samples` times.
 
         For perfomance reasons we are not calling `perturb_func` on each example but
-        on a batch that contains `current_n_samples` repeated instances per example.
+        on a batch that contains `current_n_perturb_samples` repeated instances
+        per example.
         """
         inputs_expanded = tuple(
-            torch.repeat_interleave(input, current_n_samples, dim=0) for input in inputs
+            torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
+            for input in inputs
         )
         if len(inputs_expanded) == 1:
             inputs_expanded = inputs_expanded[0]
 
         return (
             perturb_func(inputs_expanded, perturb_radius)
-            if perturb_func == default_perturb_func
+            if len(signature(perturb_func).parameters) > 1
             else perturb_func(inputs_expanded)
         )
 
     def max_values(input_tnsr):
         return torch.max(input_tnsr, dim=1).values
 
-    def _next_sensitivity_max(current_n_samples):
-        expl_inputs = explanation_func(inputs, **kwargs)
+    kwarg_expanded_for = None
+    kwargs_copy = None
 
-        inputs_perturbed = _generate_perturbations(current_n_samples)
+    def _next_sensitivity_max(current_n_perturb_samples):
+        inputs_perturbed = _generate_perturbations(current_n_perturb_samples)
 
         # copy kwargs and update some of the arguments that need to be expanded
-        kwargs_copy = deepcopy(kwargs)
-        _expand_and_update_additional_forward_args(current_n_samples, kwargs_copy)
-        _expand_and_update_target(current_n_samples, kwargs_copy)
-        _expand_and_update_baselines(inputs, current_n_samples, kwargs_copy)
+        nonlocal kwarg_expanded_for
+        nonlocal kwargs_copy
+        if (
+            kwarg_expanded_for is None
+            or kwarg_expanded_for != current_n_perturb_samples
+        ):
+            kwarg_expanded_for = current_n_perturb_samples
+            kwargs_copy = deepcopy(kwargs)
+            _expand_and_update_additional_forward_args(
+                current_n_perturb_samples, kwargs_copy
+            )
+            _expand_and_update_target(current_n_perturb_samples, kwargs_copy)
+            _expand_and_update_baselines(inputs, current_n_perturb_samples, kwargs_copy)
 
         expl_perturbed_inputs = explanation_func(inputs_perturbed, **kwargs_copy)
 
@@ -201,7 +222,7 @@ def sensitivity_max(
         expl_perturbed_inputs = _format_tensor_into_tuples(expl_perturbed_inputs)
 
         expl_inputs_expanded = tuple(
-            expl_input.repeat_interleave(current_n_samples, dim=0)
+            expl_input.repeat_interleave(current_n_perturb_samples, dim=0)
             for expl_input in expl_inputs
         )
 
@@ -223,7 +244,7 @@ def sensitivity_max(
             p=norm_ord,
             dim=1,
             keepdim=True,
-        ).repeat_interleave(current_n_samples, dim=0)
+        ).repeat_interleave(current_n_perturb_samples, dim=0)
         expl_inputs_norm_expanded = torch.where(
             expl_inputs_norm_expanded == 0.0,
             torch.tensor(
@@ -246,11 +267,12 @@ def sensitivity_max(
     bsz = inputs[0].size(0)
 
     with torch.no_grad():
-        metrics_sum = _divide_and_aggregate_metrics(
+        expl_inputs = explanation_func(inputs, **kwargs)
+        metrics_max = _divide_and_aggregate_metrics(
             inputs,
-            n_samples,
+            n_perturb_samples,
             _next_sensitivity_max,
             max_examples_per_batch=max_examples_per_batch,
             agg_func=torch.max,
         )
-    return metrics_sum
+    return metrics_max

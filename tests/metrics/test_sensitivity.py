@@ -59,6 +59,9 @@ class Test(BaseTest):
         self.sensitivity_max_assert(
             sa.attribute, (input1, input2), [0.0] * 20, max_examples_per_batch=21
         )
+        self.sensitivity_max_assert(
+            sa.attribute, (input1, input2), [0.0] * 20, max_examples_per_batch=60
+        )
 
     def test_convnet_multi_target(self):
         r"""
@@ -119,10 +122,10 @@ class Test(BaseTest):
         targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
 
         ig = IntegratedGradients(model)
-        self.sensitivity_max_assert(
+        sens = self.sensitivity_max_assert(
             ig.attribute,
             input,
-            [0.0] * 4,
+            [0.006, 0.01, 0.001, 0.008],
             n_perturb_samples=1,
             max_examples_per_batch=4,
             perturb_func=_perturb_func,
@@ -203,7 +206,7 @@ class Test(BaseTest):
         sens1 = self.sensitivity_max_assert(
             dl.attribute,
             input,
-            [0.0, 0.0, 0.0, 0.0],
+            [0.01, 0.003, 0.001, 0.001],
             additional_forward_args=additional_forward_args,
             baselines=baseline,
             target=targets,
@@ -221,7 +224,6 @@ class Test(BaseTest):
             perturb_func=_perturb_func,
             max_examples_per_batch=30,
         )
-
         assertTensorAlmostEqual(self, sens1, sens2)
 
     def sensitivity_max_assert(
@@ -243,6 +245,7 @@ class Test(BaseTest):
                 perturb_func=perturb_func,
                 target=target,
                 additional_forward_args=additional_forward_args,
+                n_perturb_samples=n_perturb_samples,
                 max_examples_per_batch=max_examples_per_batch,
             )
         else:
@@ -253,6 +256,7 @@ class Test(BaseTest):
                 baselines=baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
+                n_perturb_samples=n_perturb_samples,
                 max_examples_per_batch=max_examples_per_batch,
             )
         assertArraysAlmostEqual(sens, expected_sensitivity)
