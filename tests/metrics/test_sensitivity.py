@@ -122,7 +122,7 @@ class Test(BaseTest):
         targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
 
         ig = IntegratedGradients(model)
-        sens = self.sensitivity_max_assert(
+        self.sensitivity_max_assert(
             ig.attribute,
             input,
             [0.006, 0.01, 0.001, 0.008],
