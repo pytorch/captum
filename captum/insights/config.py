@@ -73,16 +73,18 @@ ATTRIBUTION_METHOD_CONFIG: Dict[str, ConfigParameters] = {
         post_process={"n_steps": int},
     ),
     FeatureAblation.get_name(): ConfigParameters(
-        params={"perturbations_per_eval": NumberConfig(value=1, limit=(1, 100))}
+        params={"perturbations_per_eval": NumberConfig(value=1, limit=(1, 100))},
     ),
     Occlusion.get_name(): ConfigParameters(
         params={
             "sliding_window_shapes": StrConfig(value=""),
             "strides": StrConfig(value=""),
+            "perturbations_per_eval": NumberConfig(value=1, limit=(1, 100)),
         },
         post_process={
             "sliding_window_shapes": _str_to_tuple,
             "strides": _str_to_tuple,
+            "perturbations_per_eval": int,
         },
     ),
 }

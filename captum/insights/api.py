@@ -335,7 +335,7 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[OutputScore]:
-        pred_scores = []
+        pred_scores: List[OutputScore] = []
         if indices.nelement() < 2:
             return pred_scores
         for i in range(len(indices)):
