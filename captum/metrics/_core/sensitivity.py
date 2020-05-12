@@ -55,9 +55,9 @@ def sensitivity_max(
     using Monte Carlo sampling-based approximation. By default in order to
     do so it samples multiple data points from a sub-space of an L-Infinity
     ball that has a `perturb_radius` radius using `default_perturb_func`
-    default perturrbation function. In a general case users can
+    default perturbation function. In a general case users can
     use any L_p ball or any other custom sampling technique that they
-    prefer to by providing a custom `perturb_func`.
+    prefer by providing a custom `perturb_func`.
 
     Note that max sensitivity is similar to Lipschitz Continuity metric
     however it is more robust and easier to estimate.
@@ -156,7 +156,7 @@ def sensitivity_max(
         sensitivities (tensor): A tensor of scalar sensitivity scores per
                input example. The first dimension is equal to the
                number of examples in the input batch and the second
-               dimension is one. Returned sernsitivities are normalized by
+               dimension is one. Returned sensitivities are normalized by
                the magnitudes of the input explanations.
 
     Examples::
