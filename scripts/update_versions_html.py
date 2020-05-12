@@ -35,8 +35,8 @@ def updateVersionHTML(base_path, base_url=BASE_URL):
 
         # nav
         nav_links = soup.find("nav").findAll("a")
-        for l in nav_links:
-            l.attrs["href"] = prepend_url(l, base_url, v)
+        for link in nav_links:
+            link.attrs["href"] = prepend_url(link, base_url, v)
 
         # version link
         t = soup.find("h2", {"class": "headerTitleWithLogo"}).find_next("a")
