@@ -89,7 +89,7 @@ class FilterConfig(NamedTuple):
         arg: config.value  # type: ignore
         for arg, config in ATTRIBUTION_METHOD_CONFIG[
             IntegratedGradients.get_name()
-        ].items()
+        ].params.items()
     }
     prediction: str = "all"
     classes: List[str] = []
@@ -221,6 +221,12 @@ class AttributionVisualizer(object):
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[self._config.attribution_method]
         attribution_method = attribution_cls(net)
         args = self._config.attribution_arguments
+        param_config = ATTRIBUTION_METHOD_CONFIG[self._config.attribution_method]
+        if param_config.post_process:
+            for k, v in args.items():
+                if k in param_config.post_process:
+                    args[k] = param_config.post_process[k](v)
+
         # TODO support multiple baselines
         baseline = baselines[0] if baselines and len(baselines) > 0 else None
         label = (
@@ -329,7 +335,9 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[OutputScore]:
-        pred_scores = []
+        pred_scores: List[OutputScore] = []
+        if indices.nelement() < 2:
+            return pred_scores
         for i in range(len(indices)):
             score = scores[i]
             pred_scores.append(
@@ -542,6 +550,8 @@ class AttributionVisualizer(object):
         return {
             "classes": self.classes,
             "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),
-            "method_arguments": namedtuple_to_dict(ATTRIBUTION_METHOD_CONFIG),
+            "method_arguments": namedtuple_to_dict(
+                {k: v.params for (k, v) in ATTRIBUTION_METHOD_CONFIG.items()}
+            ),
             "selected_method": self._config.attribution_method,
         }
