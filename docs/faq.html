@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>FAQ · Captum</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="* [How do I set the target parameter to an attribution method?](#how-do-i-set-the-target-parameter-to-an-attribution-method)"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="FAQ · Captum"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="* [How do I set the target parameter to an attribution method?](#how-do-i-set-the-target-parameter-to-an-attribution-method)"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-139570076-2', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>General</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">About</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/introduction">Introduction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">General</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/getting_started">Getting Started</a></li><li class="navListItem"><a class="navItem" href="/docs/captum_insights">Captum Insights</a></li><li class="navListItem"><a class="navItem" href="/docs/algorithms">Algorithm Descriptions</a></li><li class="navListItem"><a class="navItem" href="/docs/algorithms_comparison_matrix">Algorithm Comparison Matrix</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/faq">FAQ</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Usage</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/extension/integrated_gradients">Integrated Gradients</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/pytorch/captum/edit/master/docs/faq.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 class="postHeaderTitle">FAQ</h1></header><article><div><span><ul>
+<li><a href="#how-do-i-set-the-target-parameter-to-an-attribution-method">How do I set the target parameter to an attribution method?</a></li>
+<li><a href="#i-am-facing-out-of-memory-oom-errors-when-using-captum-how-do-i-resolve-this">I am facing Out-Of-Memory (OOM) errors when using Captum. How do I resolve this?</a></li>
+<li><a href="#i-am-using-a-perturbation-based-method-and-attributions-are-taking-too-long-to-compute-how-can-i-speed-it-up">I am using a perturbation based method, and attributions are taking too long to compute. How can I speed it up?</a></li>
+<li><a href="#are-smoothgrad-or-vargrad-supported-in-captum">Are SmoothGrad or VarGrad supported in Captum?</a></li>
+<li><a href="#how-do-i-use-captum-with-bert-models">How do I use Captum with BERT models?</a></li>
+<li><a href="#my-model-inputs-or-outputs-token-indices-and-when-using-captum-i-see-errors-relating-to-gradients-how-do-i-resolve-this">My model inputs or outputs token indices, and when using Captum I see errors relating to gradients, how do I resolve this?</a></li>
+<li><a href="#can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum">Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?</a></li>
+<li><a href="#do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum">Do JIT models, DataParallel models, or DistributedDataParallel models work with Captum?</a></li>
+<li><a href="#i-am-working-on-a-new-interpretability-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed">I am working on a new interpretability / attribution method and would like to add it to Captum. How do I proceed?</a></li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="how-do-i-set-the-target-parameter-to-an-attribution-method"></a><a href="#how-do-i-set-the-target-parameter-to-an-attribution-method" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>How do I set the target parameter to an attribution method?</strong></h3>
+<p>The purpose of target is to select a single (scalar) value for each example in the output of your model to compute attributions based on the given target parameter. Each attribution method answers the question of how important each input value is towards a particular output scalar value.</p>
+<p>If the model only returns a scalar value per example, which is common in either a regression case or binary classification, then you don’t need to pass the target argument or simply set it None.</p>
+<p>If the model has a 2D output, which is common with classification cases, then you must pass a target to identify which output value to compute attributions for. Consider an output with the shape N x 3, with N being the number of examples and 3 being the number of classes. The purpose of targets is to select one of the 3 values for each example. You could then pass targets as just a single integer 0 or 1 or 2, which corresponds to attributing to the output for class 0, 1, or 2 respectively for all examples. If you are passing a batch of multiple examples (e.g. N = 4), you can also pass a different target for each example, by providing targets as a list or tensor, e.g. [0, 1, 0, 0] or torch.tensor([0, 1, 0, 0]), which would return attributions for class 0 for the first, third and fourth input examples (how important each input value was for the prediction of class 0), and class 1 for the second one (how important each input value was for the prediction of class 1).</p>
+<p>If your model has &gt; 2D output, then you can pass a tuple containing the indices of the particular scalar value in the output tensor for which attributions are desired. For instance, with an output shape of N x 3 x 4 x 5, target should be a tuple such as (2, 3, 2), corresponding to the index for each dimension other than the first. Like the 2D case, a list of tuples can be provided for a batch of input examples. Note that in some cases with &gt; 2D output it may be beneficial to attribute with respect to the sum of particular output values rather than each value independently. The attribution methods would then answer the question of how important each input value is to the sum of the chosen values. To accomplish this, it is necessary to wrap your function in a function which sums the desired output values and provide the wrapper as the forward_func for the attribution method.</p>
+<h3><a class="anchor" aria-hidden="true" id="i-am-facing-out-of-memory-oom-errors-when-using-captum-how-do-i-resolve-this"></a><a href="#i-am-facing-out-of-memory-oom-errors-when-using-captum-how-do-i-resolve-this" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>I am facing Out-Of-Memory (OOM) errors when using Captum. How do I resolve this?</strong></h3>
+<p>When using methods such as Integrated Gradients, Conductance, Internal Influence or other algorithms with n_steps argument, the input is expanded n_steps times, which often becomes too large to fit in memory. To address this issue, you can either reduce n_steps, which may lead to lower-quality approximations, or use the internal_batch_size argument, which allows dividing the expanded input into batches which are processed sequentially. Note that using internal_batch_size will increase runtime since it runs multiple evaluations, so it is best to utilize the largest feasible batch size within memory constraints.</p>
+<p>If you are using a perturbation-based attribution algorithm, try reducing perturbations_per_eval if it is set to a value greater than 1. This will limit the number of perturbations processed in one batch.</p>
+<p>For other algorithms, it might be necessary to try a smaller input batch size.</p>
+<h3><a class="anchor" aria-hidden="true" id="i-am-using-a-perturbation-based-method-and-attributions-are-taking-too-long-to-compute-how-can-i-speed-it-up"></a><a href="#i-am-using-a-perturbation-based-method-and-attributions-are-taking-too-long-to-compute-how-can-i-speed-it-up" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>I am using a perturbation based method, and attributions are taking too long to compute. How can I speed it up?</strong></h3>
+<p>For perturbation based methods, including Feature Ablation and Occlusion, each perturbation of the input batch is processed sequentially by default. If enough memory is available or the input batch size is small, it is often possible to process multiple perturbations in one batch, which can substantially speed up the performance of these algorithms. To enable this, simply set the perturbations_per_eval argument to the desired value.</p>
+<p>If you have multiple GPUs machines available, you can also wrap your model with DataParallel or look into torch.distributed / DistributedDataParallel, these PyTorch features work with all Captum methods.</p>
+<h3><a class="anchor" aria-hidden="true" id="are-smoothgrad-or-vargrad-supported-in-captum"></a><a href="#are-smoothgrad-or-vargrad-supported-in-captum" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>Are SmoothGrad or VarGrad supported in Captum?</strong></h3>
+<p>Yes! SmoothGrad and VarGrad are available through NoiseTunnel in Captum, which can be used with any attribution algorithm in Captum. More details on Noise Tunnel can be found in the documentation <a href="https://captum.ai/api/noise_tunnel.html">here</a>.</p>
+<h3><a class="anchor" aria-hidden="true" id="how-do-i-use-captum-with-bert-models"></a><a href="#how-do-i-use-captum-with-bert-models" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>How do I use Captum with BERT models?</strong></h3>
+<p>We have a tutorial demonstrating usage of Integrated Gradients on BERT <a href="https://captum.ai/tutorials/Bert_SQUAD_Interpret">here</a>.</p>
+<h3><a class="anchor" aria-hidden="true" id="my-model-inputs-or-outputs-token-indices-and-when-using-captum-i-see-errors-relating-to-gradients-how-do-i-resolve-this"></a><a href="#my-model-inputs-or-outputs-token-indices-and-when-using-captum-i-see-errors-relating-to-gradients-how-do-i-resolve-this" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>My model inputs or outputs token indices, and when using Captum I see errors relating to gradients, how do I resolve this?</strong></h3>
+<p>For NLP models that take token indices as inputs, we cannot take gradients with respect to indices. To apply gradient-based attribution methods, it is necessary to replace the embedding layer with an InterpretableEmbedding layer or use LayerIntegratedGradients to compute attribution with respect to the embedding output. Attribution can then be summed for all dimensions of the embedding to evaluate importance of each token / index. For examples of this process, take a look at the <a href="https://captum.ai/tutorials/IMDB_TorchText_Interpret">IMDB</a> or <a href="https://captum.ai/tutorials/Bert_SQUAD_Interpret">BERT</a> tutorials.</p>
+<p>If the output of the model is a token index, such as an image captioning cases, it is necessary to attribute with respect to the token score or probability rather than the index. Make sure that the model returns this and use target to choose the appropriate scalar score to attribute with respect to.</p>
+<h3><a class="anchor" aria-hidden="true" id="can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum"></a><a href="#can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?</strong></h3>
+<p>Most methods will work fine with functional non-linearities and arbitrary operations. Some methods, which require placing hooks during back-propagation, including DeepLift, DeepLiftShap, Guided Backpropagation, and Deconvolution will not work appropriately with functional non-linearities and must use the corresponding module activation (e.g. torch.nn.ReLU) which should be initialized in the module constructor. For DeepLift, it is important to also not reuse modules in the forward function, since this can cause issues in the propagation of multipliers. Computing layer or neuron attribution with layer modules that are used multiple times generally computes attributions for the last execution of the module. For more information regarding these restrictions, refer to the API documentation for the specific method, including DeepLift, DeepLiftShap, Guided Backpropagation, and Deconvolution.</p>
+<h3><a class="anchor" aria-hidden="true" id="do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum"></a><a href="#do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>Do JIT models, DataParallel models, or DistributedDataParallel models work with Captum?</strong></h3>
+<p>Yes, we have support for all these model types. Note that JIT models do not yet support hooks, so any methods using hooks including layer and neuron attribution methods, DeepLift, Guided Backprop, and Deconvolution are not supported. DataParallel and DistributedDataParallel are supported with all model types.</p>
+<h3><a class="anchor" aria-hidden="true" id="i-am-working-on-a-new-interpretability-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed"></a><a href="#i-am-working-on-a-new-interpretability-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><strong>I am working on a new interpretability / attribution method and would like to add it to Captum. How do I proceed?</strong></h3>
+<p>For interpretability methods created by the community, we have two methods of involvement:</p>
+<ol>
+<li>Awesome List - We maintain a list of interesting external projects that focus on interpretability that may be useful for users looking for functionality beyond what’s available in Captum.</li>
+<li>Inclusion in Captum - New attribution algorithms that fit the structure of Captum can be considered for contribution to the contrib package of algorithms in Captum.  We review proposals for new additions to the contrib package on a case-by-case basis and consider factors such as publication history, quantitative and qualitative evaluation, citations, etc.</li>
+</ol>
+<p>We are still working out the logistics of setting these up and will update this with more information once it’s available.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/algorithms_comparison_matrix"><span class="arrow-prev">← </span><span>Algorithm Comparison Matrix</span></a><a class="docs-next button" href="/docs/extension/integrated_gradients"><span>Integrated Gradients</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
