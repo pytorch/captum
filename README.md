@@ -403,6 +403,8 @@ conda install -c conda-forge yarn
 BUILD_INSIGHTS=1 python setup.py develop
 ```
 
+## FAQ
+If you have questions about using Captum methods, please check this [FAQ](docs/faq.md), which addresses many common issues.
 
 ## Contributing
 See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
