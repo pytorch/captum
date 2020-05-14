@@ -4,11 +4,12 @@ from enum import Enum
 from inspect import signature
 from typing import Any, Callable, List, Tuple, Union, cast, overload
 
+import numpy as np
 import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .._utils.typing import Literal, TargetType
+from .._utils.typing import BaselineType, Literal, TargetType
 
 
 class ExpansionTypes(Enum):
@@ -54,6 +55,72 @@ def _validate_target(num_samples: int, target: TargetType) -> None:
                 num_samples, len(target)
             )
         )
+
+
+def _validate_input(
+    inputs: Tuple[Tensor, ...],
+    baselines: Tuple[Union[Tensor, int, float], ...],
+    draw_baseline_from_distrib: bool = False,
+) -> None:
+    assert len(inputs) == len(baselines), (
+        "Input and baseline must have the same "
+        "dimensions, baseline has {} features whereas input has {}.".format(
+            len(baselines), len(inputs)
+        )
+    )
+
+    for input, baseline in zip(inputs, baselines):
+        if draw_baseline_from_distrib:
+            assert (
+                isinstance(baseline, (int, float))
+                or input.shape[1:] == baseline.shape[1:]
+            ), (
+                "The samples in input and baseline batches must have"
+                " the same shape or the baseline corresponding to the"
+                " input tensor must be a scalar."
+                " Found baseline: {} and input: {} ".format(baseline, input)
+            )
+        else:
+            assert (
+                isinstance(baseline, (int, float))
+                or input.shape == baseline.shape
+                or baseline.shape[0] == 1
+            ), (
+                "Baseline can be provided as a tensor for just one input and"
+                " broadcasted to the batch or input and baseline must have the"
+                " same shape or the baseline corresponding to each input tensor"
+                " must be a scalar. Found baseline: {} and input: {}".format(
+                    baseline, input
+                )
+            )
+
+
+def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
+    r"""
+    Takes a tuple of tensors as input and returns a tuple that has the same
+    length as `inputs` with each element as the integer 0.
+    """
+    return tuple(0 for input in inputs)
+
+
+def _format_baseline(
+    baselines: BaselineType, inputs: Tuple[Tensor, ...]
+) -> Tuple[Union[Tensor, int, float], ...]:
+    if baselines is None:
+        return _zeros(inputs)
+
+    if not isinstance(baselines, tuple):
+        baselines = (baselines,)
+
+    for baseline in baselines:
+        assert isinstance(
+            baseline, (torch.Tensor, int, float)
+        ), "baseline input argument must be either a torch.Tensor or a number \
+            however {} detected".format(
+            type(baseline)
+        )
+
+    return baselines
 
 
 @overload
@@ -174,6 +241,74 @@ def _expand_target(
             )
 
     return target
+
+
+def _expand_and_update_baselines(
+    inputs: Tuple[Tensor, ...],
+    n_samples: int,
+    kwargs: dict,
+    draw_baseline_from_distrib: bool = False,
+):
+    def get_random_baseline_indices(bsz, baseline):
+        num_ref_samples = baseline.shape[0]
+        return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
+
+    # expand baselines to match the sizes of input
+    if "baselines" not in kwargs:
+        return
+
+    baselines = kwargs["baselines"]
+    baselines = _format_baseline(baselines, inputs)
+    _validate_input(
+        inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
+    )
+
+    if draw_baseline_from_distrib:
+        bsz = inputs[0].shape[0]
+        baselines = tuple(
+            baseline[get_random_baseline_indices(bsz, baseline)]
+            if isinstance(baseline, torch.Tensor)
+            else baseline
+            for baseline in baselines
+        )
+    else:
+        baselines = tuple(
+            baseline.repeat_interleave(n_samples, dim=0)
+            if isinstance(baseline, torch.Tensor)
+            and baseline.shape[0] == input.shape[0]
+            and baseline.shape[0] > 1
+            else baseline
+            for input, baseline in zip(inputs, baselines)
+        )
+    # update kwargs with expanded baseline
+    kwargs["baselines"] = baselines
+
+
+def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
+    if "additional_forward_args" not in kwargs:
+        return
+    additional_forward_args = kwargs["additional_forward_args"]
+    additional_forward_args = _format_additional_forward_args(additional_forward_args)
+    if additional_forward_args is None:
+        return
+    additional_forward_args = _expand_additional_forward_args(
+        additional_forward_args,
+        n_samples,
+        expansion_type=ExpansionTypes.repeat_interleave,
+    )
+    # update kwargs with expanded baseline
+    kwargs["additional_forward_args"] = additional_forward_args
+
+
+def _expand_and_update_target(n_samples: int, kwargs: dict):
+    if "target" not in kwargs:
+        return
+    target = kwargs["target"]
+    target = _expand_target(
+        target, n_samples, expansion_type=ExpansionTypes.repeat_interleave
+    )
+    # update kwargs with expanded baseline
+    kwargs["target"] = target
 
 
 def _run_forward(
