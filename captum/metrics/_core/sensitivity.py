@@ -61,8 +61,8 @@ def sensitivity_max(
 
     Note that max sensitivity is similar to Lipschitz Continuity metric
     however it is more robust and easier to estimate.
-    Since the explanation, for instance an attribution function,
-    may not always be continuous, can lead to unbounded
+    Since the explanation function, for instance an attribution function,
+    may not always be continuous and it can lead to unbounded
     Lipschitz continuity. Therefore the latter isn't always appropriate.
 
     More about the Lipschitz Continuity Metric can also be found here
