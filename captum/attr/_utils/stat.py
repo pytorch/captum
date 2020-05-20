@@ -191,7 +191,7 @@ class Var(Stat):
         if n <= self.order:
             return torch.zeros_like(mse)
 
-        return mse / (n - self.order)
+        return torch.true_divide(mse, n - self.order)
 
 
 class StdDev(Stat):
