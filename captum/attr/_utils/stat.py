@@ -191,7 +191,10 @@ class Var(Stat):
         if n <= self.order:
             return torch.zeros_like(mse)
 
-        return mse / (n - self.order)
+        # NOTE: The following ensures mse is a float tensor.
+        #   torch.true_divide is available in PyTorch 1.5 and later.
+        #   This is for compatibility with 1.4.
+        return mse.to(torch.float64) / (n - self.order)
 
 
 class StdDev(Stat):
