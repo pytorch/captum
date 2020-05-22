@@ -116,7 +116,11 @@ class Mean(Stat):
         n = self.n.get()
 
         if self.rolling_mean is None:
-            self.rolling_mean = x
+            # Ensures rolling_mean is a float tensor
+            if x.is_floating_point():
+                self.rolling_mean = x
+            else:
+                self.rolling_mean = x.to(torch.float64)
         else:
             delta = x - self.rolling_mean
             self.rolling_mean += delta / n
