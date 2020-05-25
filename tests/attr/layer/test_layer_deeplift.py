@@ -218,7 +218,7 @@ class TestDeepLift(BaseTest):
         except Exception as err:
             # checking that it is the actual error that we raised in the backward_hook
             self.assertTrue(
-                "A problem occurred during maxpool modul's backward pass" in repr(err)
+                "A problem occurred during maxpool modul\'s backward pass" in repr(err)
             )
 
     def test_convnet_maxpool3d_classification(self) -> None:
@@ -233,7 +233,7 @@ class TestDeepLift(BaseTest):
         except Exception as err:
             # checking that it is the actual error that we raised in the backward_hook
             self.assertTrue(
-                "A problem occurred during maxpool modul's backward pass" in repr(err)
+                "A problem occurred during maxpool modul\'s backward pass" in repr(err)
             )
 
     def _relu_custom_attr_func_assert(
