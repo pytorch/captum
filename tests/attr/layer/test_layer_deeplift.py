@@ -17,11 +17,11 @@ from ...helpers.basic import (
     assertTensorTuplesAlmostEqual,
 )
 from ...helpers.basic_models import (
+    BasicModel_ConvNet,
+    BasicModel_ConvNet_MaxPool3d,
     BasicModel_MultiLayer,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
-    BasicModel_ConvNet,
-    BasicModel_ConvNet_MaxPool3d,
 )
 
 

@@ -1037,16 +1037,16 @@ def maxpool(
             ),
         )
     assert grad_input[0].shape == inputs.shape, (
-        'A problem occurred during maxpool modul\'s backward pass. '
-        'The gradients with respect to inputs include only a '
-        'subset of inputs. More details about this issue can '
-        'be found here: '
-        'https://pytorch.org/docs/stable/'
-        'nn.html#torch.nn.Module.register_backward_hook '
-        'This can happen for example if you attribute to the outputs of a '
-        'MaxPool. As a workaround, please, attribute to the inputs of '
-        'the following layer.'
-        )
+        "A problem occurred during maxpool modul's backward pass. "
+        "The gradients with respect to inputs include only a "
+        "subset of inputs. More details about this issue can "
+        "be found here: "
+        "https://pytorch.org/docs/stable/"
+        "nn.html#torch.nn.Module.register_backward_hook "
+        "This can happen for example if you attribute to the outputs of a "
+        "MaxPool. As a workaround, please, attribute to the inputs of "
+        "the following layer."
+    )
 
     new_grad_inp = torch.where(
         abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in
@@ -1055,10 +1055,9 @@ def maxpool(
     # The original_grad_input will be overridden later in the Tensor hook
     if module.is_invalid:
         module.saved_grad = new_grad_inp
-        return_grad_inp = original_grad_input
+        return original_grad_input
     else:
-        return_grad_inp = (new_grad_inp,)
-    return return_grad_inp
+        return (new_grad_inp,)
 
 
 def _compute_diffs(inputs: Tensor, outputs: Tensor) -> Tuple[Tensor, Tensor]:
