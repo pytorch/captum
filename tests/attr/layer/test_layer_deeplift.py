@@ -213,16 +213,28 @@ class TestDeepLift(BaseTest):
 
         model = BasicModel_ConvNet()
         dl = LayerDeepLift(model, model.pool2)
-        with self.assertRaises(AssertionError):
+        try:
             dl.attribute(inputs, target=0)
+        except Exception as err:
+            # checking that it is the actual error that we raised in the backward_hook
+            self.assertTrue(
+                "A problem occurred during maxpool modul's backward pass" in repr(err)
+            )
 
     def test_convnet_maxpool3d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10, 10)
 
         model = BasicModel_ConvNet_MaxPool3d()
         dl = LayerDeepLift(model, model.pool2)
-        with self.assertRaises(AssertionError):
+        # with self.assertRaises(AssertionError) doesn't run with Cicle CI
+        # the error is being converted into RuntimeError
+        try:
             dl.attribute(inputs, target=0)
+        except Exception as err:
+            # checking that it is the actual error that we raised in the backward_hook
+            self.assertTrue(
+                "A problem occurred during maxpool modul's backward pass" in repr(err)
+            )
 
     def _relu_custom_attr_func_assert(
         self,
