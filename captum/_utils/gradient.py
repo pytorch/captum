@@ -155,10 +155,10 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
-    forward_hook_with_return: Literal[False] = False,
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
+    forward_hook_with_return: Literal[False] = False,
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Literal[True, False]]:
     ...
 
@@ -171,11 +171,11 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
-    *,
-    forward_hook_with_return: Literal[True],
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
+    *,
+    forward_hook_with_return: Literal[True],
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, Literal[True, False]]:
     ...
 
@@ -187,10 +187,10 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
-    forward_hook_with_return: bool = False,
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
+    forward_hook_with_return: bool = False,
 ) -> Union[
     Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, bool],
     Tuple[Dict[device, Tuple[Tensor, ...]], bool],
@@ -410,7 +410,6 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    forward_hook_with_return: bool = True,
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
@@ -431,7 +430,6 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    forward_hook_with_return: bool = True,
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
@@ -449,7 +447,6 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-    forward_hook_with_return: bool = True,
     forward_hook_with_return_excl_modules: Union[
         None, List[typing.Type[Module]]
     ] = None,
@@ -515,8 +512,8 @@ def compute_layer_gradients_and_eval(
             target_ind=target_ind,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
-            forward_hook_with_return=forward_hook_with_return,
             forward_hook_with_return_excl_modules=forward_hook_with_return_excl_modules,
+            forward_hook_with_return=True,
         )
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"

@@ -309,7 +309,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 inputs,
                 attribute_to_layer_input=attribute_to_layer_input,
                 output_fn=lambda out: chunk_output_fn(out),
-                forward_hook_with_return=True,
                 forward_hook_with_return_excl_modules=[
                     torch.nn.MaxPool1d,
                     torch.nn.MaxPool2d,
