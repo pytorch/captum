@@ -156,7 +156,9 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Literal[True, False]]:
     ...
 
@@ -171,7 +173,9 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: Literal[True],
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, Literal[True, False]]:
     ...
 
@@ -184,7 +188,9 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Union[
     Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, bool],
     Tuple[Dict[device, Tuple[Tensor, ...]], bool],
@@ -405,7 +411,9 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
     forward_hook_with_return: bool = True,
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[
     Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]
 ]:
@@ -424,7 +432,9 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
     forward_hook_with_return: bool = True,
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
     ...
 
@@ -440,7 +450,9 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
     forward_hook_with_return: bool = True,
-    forward_hook_with_return_excl_modules: Union[None, List[typing.Type[Module]]] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
