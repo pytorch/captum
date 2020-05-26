@@ -14,9 +14,9 @@ from ..._utils.common import (
     _run_forward,
     _validate_target,
 )
+from ..._utils.gradient import compute_gradients
 from ..._utils.typing import TargetType
 from .common import _format_input_baseline, _tensorize_baseline, _validate_input
-from .gradient import compute_gradients
 
 
 class Attribution:

@@ -7,9 +7,9 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
+from ...._utils.gradient import _forward_layer_eval
 from ..._utils.attribution import LayerAttribution
 from ..._utils.common import _format_attributions
-from ..._utils.gradient import _forward_layer_eval
 
 
 class LayerActivation(LayerAttribution):

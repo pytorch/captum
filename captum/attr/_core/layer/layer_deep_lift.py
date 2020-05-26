@@ -15,6 +15,11 @@ from ...._utils.common import (
     _format_baseline,
     _format_input,
 )
+from ...._utils.gradient import (
+    apply_gradient_requirements,
+    compute_layer_gradients_and_eval,
+    undo_gradient_requirements,
+)
 from ...._utils.typing import (
     BaselineType,
     Literal,
@@ -29,11 +34,6 @@ from ..._utils.common import (
     _format_callable_baseline,
     _tensorize_baseline,
     _validate_input,
-)
-from ..._utils.gradient import (
-    apply_gradient_requirements,
-    compute_layer_gradients_and_eval,
-    undo_gradient_requirements,
 )
 
 

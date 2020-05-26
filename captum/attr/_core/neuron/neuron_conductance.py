@@ -14,6 +14,7 @@ from ...._utils.common import (
     _is_tuple,
     _verify_select_column,
 )
+from ...._utils.gradient import compute_layer_gradients_and_eval
 from ...._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
@@ -24,7 +25,6 @@ from ..._utils.common import (
     _reshape_and_sum,
     _validate_input,
 )
-from ..._utils.gradient import compute_layer_gradients_and_eval
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
