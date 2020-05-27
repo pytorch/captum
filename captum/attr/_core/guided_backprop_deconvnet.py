@@ -11,10 +11,10 @@ from torch.utils.hooks import RemovableHandle
 from captum.log import log_usage
 
 from ..._utils.common import _format_input, _is_tuple
+from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
 from .._utils.common import _format_attributions
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):

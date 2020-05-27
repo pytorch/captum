@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Dict, List, NamedTuple, Optional, Tuple, Callable, Any, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from captum.attr import (
     Deconvolution,
@@ -8,8 +8,8 @@ from captum.attr import (
     GuidedBackprop,
     InputXGradient,
     IntegratedGradients,
-    Saliency,
     Occlusion,
+    Saliency,
 )
 from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 

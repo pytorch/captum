@@ -14,10 +14,10 @@ from ...._utils.common import (
     _format_input,
     _run_forward,
 )
+from ...._utils.gradient import _forward_layer_eval
 from ...._utils.typing import BaselineType, TargetType
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
 from ..._utils.common import _format_attributions
-from ..._utils.gradient import _forward_layer_eval
 from ..feature_ablation import FeatureAblation
 
 

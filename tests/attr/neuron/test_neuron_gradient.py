@@ -7,10 +7,10 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.gradient import _forward_layer_eval
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_gradient import NeuronGradient
 from captum.attr._core.saliency import Saliency
-from captum.attr._utils.gradient import _forward_layer_eval
 
 from ...helpers.basic import (
     BaseTest,

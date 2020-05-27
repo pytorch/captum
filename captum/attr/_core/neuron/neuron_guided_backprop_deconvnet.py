@@ -5,9 +5,9 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
+from ...._utils.gradient import construct_neuron_grad_fn
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.gradient import construct_neuron_grad_fn
 from ..guided_backprop_deconvnet import Deconvolution, GuidedBackprop
 
 

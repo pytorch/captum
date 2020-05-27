@@ -5,7 +5,7 @@ from typing import cast
 import torch
 from torch import Tensor
 
-from captum.attr._utils.gradient import (
+from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
     compute_layer_gradients_and_eval,

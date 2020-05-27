@@ -8,9 +8,8 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from ..._utils.common import _run_forward, _verify_select_column
-from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
-from .batching import _reduce_list, _sort_key_list
+from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_column
+from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:

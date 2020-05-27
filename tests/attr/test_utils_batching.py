@@ -5,8 +5,6 @@ import torch
 from captum.attr._utils.batching import (
     _batched_generator,
     _batched_operator,
-    _reduce_list,
-    _sort_key_list,
     _tuple_splice_range,
 )
 
@@ -33,39 +31,6 @@ class Test(BaseTest):
         spliced_tuple = _tuple_splice_range(test_tuple, 1, 2)
         assertTensorAlmostEqual(self, spliced_tuple[0], [[[6, 7, 8], [6, 7, 8]]])
         self.assertEqual(spliced_tuple[1], "test")
-
-    def test_reduce_list_tensors(self):
-        tensors = [torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])]
-        reduced = _reduce_list(tensors)
-        assertTensorAlmostEqual(self, reduced, [[3, 4, 5], [0, 1, 2]])
-
-    def test_reduce_list_tuples(self):
-        tensors = [
-            (torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])),
-            (torch.tensor([[3, 4, 5]]), torch.tensor([[0, 1, 2]])),
-        ]
-        reduced = _reduce_list(tensors)
-        assertTensorAlmostEqual(self, reduced[0], [[3, 4, 5], [3, 4, 5]])
-        assertTensorAlmostEqual(self, reduced[1], [[0, 1, 2], [0, 1, 2]])
-
-    def test_sort_key_list(self):
-        key_list = [
-            torch.device("cuda:13"),
-            torch.device("cuda:17"),
-            torch.device("cuda:10"),
-            torch.device("cuda:0"),
-        ]
-        device_index_list = [0, 10, 13, 17]
-        sorted_keys = _sort_key_list(key_list, device_index_list)
-        for i in range(len(key_list)):
-            self.assertEqual(sorted_keys[i].index, device_index_list[i])
-
-    def test_sort_key_list_incomplete(self):
-        key_list = [torch.device("cuda:10"), torch.device("cuda:0")]
-        device_index_list = [0, 10, 13, 17]
-        sorted_keys = _sort_key_list(key_list, device_index_list)
-        for i in range(len(key_list)):
-            self.assertEqual(sorted_keys[i].index, device_index_list[i])
 
     def test_batched_generator(self):
         def sample_operator(inputs, additional_forward_args, target_ind, scale):

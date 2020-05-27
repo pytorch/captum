@@ -25,6 +25,7 @@ from ..._utils.common import (
     _run_forward,
     _select_targets,
 )
+from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from ..._utils.typing import (
     BaselineType,
     Literal,
@@ -40,7 +41,6 @@ from .._utils.common import (
     _tensorize_baseline,
     _validate_input,
 )
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 # Check if module backward hook can safely be used for the module that produced
