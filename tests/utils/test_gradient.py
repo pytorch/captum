@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import cast
+from typing import List, Tuple, cast
 
 import torch
 from torch import Tensor
@@ -15,6 +15,9 @@ from captum._utils.gradient import (
 from ..helpers.basic import BaseTest, assertArraysAlmostEqual
 from ..helpers.basic_models import (
     BasicModel,
+    BasicModel2,
+    BasicModel4_MultiArgs,
+    BasicModel5_MultiArgs,
     BasicModel6_MultiTensor,
     BasicModel_MultiLayer,
 )
@@ -71,6 +74,78 @@ class Test(BaseTest):
         grads = compute_gradients(model, (input1, input2))
         assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
         assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [0.0, 1.0], delta=0.01)
+
+    def test_gradient_additional_args(self) -> None:
+        model = BasicModel4_MultiArgs()
+        input1 = torch.tensor([[10.0]], requires_grad=True)
+        input2 = torch.tensor([[8.0]], requires_grad=True)
+        grads = compute_gradients(model, (input1, input2), additional_forward_args=(2,))
+        assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [1.0], delta=0.01)
+        assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [-0.5], delta=0.01)
+
+    def test_gradient_additional_args_2(self) -> None:
+        model = BasicModel5_MultiArgs()
+        input1 = torch.tensor([[-10.0]], requires_grad=True)
+        input2 = torch.tensor([[6.0]], requires_grad=True)
+        grads = compute_gradients(
+            model, (input1, input2), additional_forward_args=([3, -4],)
+        )
+        assertArraysAlmostEqual(grads[0].squeeze(0).tolist(), [0.0], delta=0.01)
+        assertArraysAlmostEqual(grads[1].squeeze(0).tolist(), [4.0], delta=0.01)
+
+    def test_gradient_target_int(self) -> None:
+        model = BasicModel2()
+        input1 = torch.tensor([[4.0, -1.0]], requires_grad=True)
+        input2 = torch.tensor([[2.0, 5.0]], requires_grad=True)
+        grads0 = compute_gradients(model, (input1, input2), target_ind=0)
+        grads1 = compute_gradients(model, (input1, input2), target_ind=1)
+        assertArraysAlmostEqual(grads0[0].squeeze(0).tolist(), [1.0, 0.0], delta=0.01)
+        assertArraysAlmostEqual(grads0[1].squeeze(0).tolist(), [-1.0, 0.0], delta=0.01)
+        assertArraysAlmostEqual(grads1[0].squeeze(0).tolist(), [0.0, 0.0], delta=0.01)
+        assertArraysAlmostEqual(grads1[1].squeeze(0).tolist(), [0.0, 0.0], delta=0.01)
+
+    def test_gradient_target_list(self) -> None:
+        model = BasicModel2()
+        input1 = torch.tensor([[4.0, -1.0], [3.0, 10.0]], requires_grad=True)
+        input2 = torch.tensor([[2.0, -5.0], [-2.0, 1.0]], requires_grad=True)
+        grads = compute_gradients(model, (input1, input2), target_ind=[0, 1])
+        assertArraysAlmostEqual(
+            torch.flatten(grads[0]).tolist(), [1.0, 0.0, 0.0, 1.0], delta=0.01
+        )
+        assertArraysAlmostEqual(
+            torch.flatten(grads[1]).tolist(), [-1.0, 0.0, 0.0, -1.0], delta=0.01
+        )
+
+    def test_gradient_target_tuple(self) -> None:
+        model = BasicModel()
+        input = torch.tensor(
+            [[[4.0, 2.0], [-1.0, -2.0]], [[3.0, -4.0], [10.0, 5.0]]], requires_grad=True
+        )
+        grads = compute_gradients(model, input, target_ind=(0, 1))[0]
+        assertArraysAlmostEqual(
+            torch.flatten(grads).tolist(),
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            delta=0.01,
+        )
+
+    def test_gradient_target_listtuple(self) -> None:
+        model = BasicModel()
+        input = torch.tensor(
+            [[[4.0, 2.0], [-1.0, -2.0]], [[3.0, -4.0], [10.0, 5.0]]], requires_grad=True
+        )
+        target: List[Tuple[int, ...]] = [(1, 1), (0, 1)]
+        grads = compute_gradients(model, input, target_ind=target)[0]
+        assertArraysAlmostEqual(
+            torch.flatten(grads).tolist(),
+            [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0],
+            delta=0.01,
+        )
+
+    def test_gradient_inplace(self) -> None:
+        model = BasicModel_MultiLayer(inplace=True)
+        input = torch.tensor([[1.0, 6.0, -3.0]], requires_grad=True)
+        grads = compute_gradients(model, input, target_ind=0)[0]
+        assertArraysAlmostEqual(grads.squeeze(0).tolist(), [3.0, 3.0, 3.0], delta=0.01)
 
     def test_layer_gradient_linear0(self) -> None:
         model = BasicModel_MultiLayer()
