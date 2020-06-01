@@ -9,6 +9,7 @@ TorchRay focuses on attribution, namely the problem of determining which part of
 
 
 #### Score Cam: A gradient-free CAM extension
+Score-CAM is a gradient-free visualization method extended from Grad-CAM and Grad-CAM++.  It provides score-weighted visual explanations for CNNs.
   - [Paper](https://arxiv.org/abs/1910.01279)
   - [https://github.com/haofanwang/Score-CAM](https://github.com/haofanwang/Score-CAM)
 
