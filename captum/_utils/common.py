@@ -316,6 +316,43 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
+@typing.overload
+def _format_output(
+    is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _format_output(
+    is_inputs_tuple: Literal[False], output: Tuple[Tensor, ...]
+) -> Tensor:
+    ...
+
+
+@typing.overload
+def _format_output(
+    is_inputs_tuple: bool, output: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+def _format_output(
+    is_inputs_tuple: bool, output: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    r"""
+    In case input is a tensor and the output is returned in form of a
+    tuple we take the first element of the output's tuple to match the
+    same shape signatues of the inputs
+    """
+    assert isinstance(output, tuple), "Output must be in shape of a tuple"
+    assert is_inputs_tuple or len(output) == 1, (
+        "The input is a single tensor however the output isn't."
+        "The number of output tensors is: {}".format(len(output))
+    )
+    return output if is_inputs_tuple else output[0]
+
+
 def _run_forward(
     forward_func: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],

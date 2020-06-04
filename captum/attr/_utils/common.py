@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
-from ..._utils.common import _format_baseline, _format_input
+from ..._utils.common import _format_baseline, _format_input, _format_output
 from ..._utils.common import _validate_input as _validate_input_basic
 from ..._utils.typing import (
     BaselineType,
@@ -136,43 +136,6 @@ def _format_callable_baseline(
     return _format_baseline(baselines, _format_input(inputs))
 
 
-@typing.overload
-def _format_attributions(
-    is_inputs_tuple: Literal[True], attributions: Tuple[Tensor, ...]
-) -> Tuple[Tensor, ...]:
-    ...
-
-
-@typing.overload
-def _format_attributions(
-    is_inputs_tuple: Literal[False], attributions: Tuple[Tensor, ...]
-) -> Tensor:
-    ...
-
-
-@typing.overload
-def _format_attributions(
-    is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    ...
-
-
-def _format_attributions(
-    is_inputs_tuple: bool, attributions: Tuple[Tensor, ...]
-) -> Union[Tensor, Tuple[Tensor, ...]]:
-    r"""
-    In case input is a tensor and the attributions is returned in form of a
-    tensor we take the first element of the attributions' tuple to match the
-    same shape signatues of the inputs
-    """
-    assert isinstance(attributions, tuple), "Attributions must be in shape of a tuple"
-    assert is_inputs_tuple or len(attributions) == 1, (
-        "The input is a single tensor however the attributions aren't."
-        "The number of attributed tensors is: {}".format(len(attributions))
-    )
-    return attributions if is_inputs_tuple else attributions[0]
-
-
 def _format_and_verify_strides(
     strides: Union[None, int, Tuple[int, ...], Tuple[Union[int, Tuple[int, ...]], ...]],
     inputs: Tuple[Tensor, ...],
@@ -277,9 +240,9 @@ def _compute_conv_delta_and_format_attrs(
             additional_forward_args=additional_forward_args,
             target=target,
         )
-        return _format_attributions(is_inputs_tuple, attributions), delta
+        return _format_output(is_inputs_tuple, attributions), delta
     else:
-        return _format_attributions(is_inputs_tuple, attributions)
+        return _format_output(is_inputs_tuple, attributions)
 
 
 def _tensorize_baseline(

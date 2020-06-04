@@ -5,7 +5,12 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
-from ...._utils.common import _format_additional_forward_args, _format_input, _is_tuple
+from ...._utils.common import (
+    _format_additional_forward_args,
+    _format_input,
+    _format_output,
+    _is_tuple,
+)
 from ...._utils.gradient import (
     _forward_layer_eval_with_neuron_grads,
     apply_gradient_requirements,
@@ -13,7 +18,6 @@ from ...._utils.gradient import (
 )
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.common import _format_attributions
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):
@@ -148,4 +152,4 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         )
 
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_attributions(is_inputs_tuple, input_grads)
+        return _format_output(is_inputs_tuple, input_grads)

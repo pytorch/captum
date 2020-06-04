@@ -12,12 +12,12 @@ from ...._utils.common import (
     _extract_device,
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _run_forward,
 )
 from ...._utils.gradient import _forward_layer_eval
 from ...._utils.typing import BaselineType, TargetType
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
-from ..._utils.common import _format_attributions
 from ..feature_ablation import FeatureAblation
 
 
@@ -291,5 +291,5 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 feature_mask=layer_mask,
                 perturbations_per_eval=perturbations_per_eval,
             )
-            _attr = _format_attributions(is_layer_tuple, layer_attribs)
+            _attr = _format_output(is_layer_tuple, layer_attribs)
         return _attr

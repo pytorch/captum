@@ -8,7 +8,11 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
-from ...._utils.common import _format_additional_forward_args, _format_input
+from ...._utils.common import (
+    _format_additional_forward_args,
+    _format_input,
+    _format_output,
+)
 from ...._utils.gradient import (
     apply_gradient_requirements,
     compute_layer_gradients_and_eval,
@@ -16,7 +20,6 @@ from ...._utils.gradient import (
 )
 from ...._utils.typing import TargetType
 from ..._utils.attribution import GradientAttribution, LayerAttribution
-from ..._utils.common import _format_attributions
 
 
 class LayerGradCam(LayerAttribution, GradientAttribution):
@@ -221,4 +224,4 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         )
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
-        return _format_attributions(is_layer_tuple, scaled_acts)
+        return _format_output(is_layer_tuple, scaled_acts)

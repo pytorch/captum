@@ -11,18 +11,14 @@ from ...._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_output,
 )
 from ...._utils.gradient import compute_layer_gradients_and_eval
 from ...._utils.typing import BaselineType, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.batching import _batch_attribution
-from ..._utils.common import (
-    _format_attributions,
-    _format_input_baseline,
-    _reshape_and_sum,
-    _validate_input,
-)
+from ..._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
 
 
 class InternalInfluence(LayerAttribution, GradientAttribution):
@@ -310,4 +306,4 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )
-        return _format_attributions(is_layer_tuple, attrs)
+        return _format_output(is_layer_tuple, attrs)

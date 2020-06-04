@@ -12,11 +12,12 @@ from ..._utils.common import (
     _expand_and_update_baselines,
     _expand_and_update_target,
     _format_input,
+    _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
 )
 from .._utils.attribution import Attribution
-from .._utils.common import _format_attributions, _validate_noise_tunnel_type
+from .._utils.common import _validate_noise_tunnel_type
 
 
 class NoiseTunnelType(Enum):
@@ -281,7 +282,7 @@ class NoiseTunnel(Attribution):
         return_convergence_delta: bool,
         delta: Union[None, Tensor],
     ):
-        attributions = _format_attributions(is_attrib_tuple, attributions)
+        attributions = _format_output(is_attrib_tuple, attributions)
 
         return (
             (attributions, delta)

@@ -20,6 +20,7 @@ from ..._utils.common import (
     _format_additional_forward_args,
     _format_baseline,
     _format_input,
+    _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
@@ -36,7 +37,6 @@ from .._utils.attribution import GradientAttribution
 from .._utils.common import (
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _format_attributions,
     _format_callable_baseline,
     _tensorize_baseline,
     _validate_input,
@@ -811,9 +811,9 @@ class DeepLiftShap(DeepLift):
         )
 
         if return_convergence_delta:
-            return _format_attributions(is_inputs_tuple, attributions), delta
+            return _format_output(is_inputs_tuple, attributions), delta
         else:
-            return _format_attributions(is_inputs_tuple, attributions)
+            return _format_output(is_inputs_tuple, attributions)
 
     def _expand_inputs_baselines_targets(
         self,
