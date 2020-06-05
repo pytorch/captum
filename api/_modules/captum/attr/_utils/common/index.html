@@ -33,7 +33,8 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
-<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_baseline</span><span class="p">,</span> <span class="n">_format_input</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_validate_input</span> <span class="k">as</span> <span class="n">_validate_input_basic</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
@@ -65,38 +66,7 @@
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"riemann_trapezoid"</span><span class="p">,</span>
     <span class="n">draw_baseline_from_distrib</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">baselines</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">"Input and baseline must have the same "</span>
-        <span class="s2">"dimensions, baseline has </span><span class="si">{}</span><span class="s2"> features whereas input has </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="n">baselines</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">draw_baseline_from_distrib</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
-                <span class="ow">or</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="p">),</span> <span class="p">(</span>
-                <span class="s2">"The samples in input and baseline batches must have"</span>
-                <span class="s2">" the same shape or the baseline corresponding to the"</span>
-                <span class="s2">" input tensor must be a scalar."</span>
-                <span class="s2">" Found baseline: </span><span class="si">{}</span><span class="s2"> and input: </span><span class="si">{}</span><span class="s2"> "</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
-                <span class="ow">or</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span>
-                <span class="ow">or</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
-            <span class="p">),</span> <span class="p">(</span>
-                <span class="s2">"Baseline can be provided as a tensor for just one input and"</span>
-                <span class="s2">" broadcasted to the batch or input and baseline must have the"</span>
-                <span class="s2">" same shape or the baseline corresponding to each input tensor"</span>
-                <span class="s2">" must be a scalar. Found baseline: </span><span class="si">{}</span><span class="s2"> and input: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">baseline</span><span class="p">,</span> <span class="nb">input</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
+    <span class="n">_validate_input_basic</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">draw_baseline_from_distrib</span><span class="p">)</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">n_steps</span> <span class="o">&gt;=</span> <span class="mi">0</span>
     <span class="p">),</span> <span class="s2">"The number of steps must be a positive integer. "</span> <span class="s2">"Given: </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_steps</span><span class="p">)</span>
@@ -114,26 +84,6 @@
         <span class="s2">"Noise types must be either `smoothgrad`, `smoothgrad_sq` or `vargrad`. "</span>
         <span class="s2">"Given </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nt_type</span><span class="p">)</span>
     <span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_format_baseline</span><span class="p">(</span>
-    <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-        <span class="n">baselines</span> <span class="o">=</span> <span class="p">(</span><span class="n">baselines</span><span class="p">,)</span>
-
-    <span class="k">for</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="n">baselines</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">baseline</span><span class="p">,</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-        <span class="p">),</span> <span class="s2">"baseline input argument must be either a torch.Tensor or a number </span><span class="se">\</span>
-<span class="s2">            however </span><span class="si">{}</span><span class="s2"> detected"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="nb">type</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">baselines</span>
 
 
 <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
@@ -357,14 +307,6 @@
         <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_zeros</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Takes a tuple of tensors as input and returns a tuple that has the same</span>
-<span class="sd">    length as `inputs` with each element as the integer 0.</span>
-<span class="sd">    """</span>
-    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="mi">0</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_tensorize_baseline</span><span class="p">(</span>

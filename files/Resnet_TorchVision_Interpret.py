@@ -210,7 +210,7 @@ _ = viz.visualize_image_attr_multiple(np.transpose(attributions_occ.squeeze().cp
                                      )
 
 
-# The upper part of the goose, espectially the beak, seems to be the most critical for the model to predict this class.
+# The upper part of the goose, especially the beak, seems to be the most critical for the model to predict this class.
 # 
 # We can verify this further by occluding the image using a larger sliding window:
 

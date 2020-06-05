@@ -41,6 +41,7 @@
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_verify_select_column</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">...._utils.gradient</span> <span class="kn">import</span> <span class="n">compute_layer_gradients_and_eval</span>
 <span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">..._utils.approximation_methods</span> <span class="kn">import</span> <span class="n">approximation_parameters</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
@@ -51,7 +52,6 @@
     <span class="n">_reshape_and_sum</span><span class="p">,</span>
     <span class="n">_validate_input</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..._utils.gradient</span> <span class="kn">import</span> <span class="n">compute_layer_gradients_and_eval</span>
 
 
 <div class="viewcode-block" id="NeuronConductance"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronConductance">[docs]</a><span class="k">class</span> <span class="nc">NeuronConductance</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>

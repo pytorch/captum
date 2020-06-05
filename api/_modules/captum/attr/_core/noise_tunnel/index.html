@@ -29,28 +29,21 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ExpansionTypes</span><span class="p">,</span>
-    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_expand_target</span><span class="p">,</span>
-    <span class="n">_format_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_and_update_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_and_update_baselines</span><span class="p">,</span>
+    <span class="n">_expand_and_update_target</span><span class="p">,</span>
     <span class="n">_format_input</span><span class="p">,</span>
     <span class="n">_format_tensor_into_tuples</span><span class="p">,</span>
     <span class="n">_is_tuple</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">Attribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_format_attributions</span><span class="p">,</span>
-    <span class="n">_format_baseline</span><span class="p">,</span>
-    <span class="n">_validate_input</span><span class="p">,</span>
-    <span class="n">_validate_noise_tunnel_type</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span><span class="p">,</span> <span class="n">_validate_noise_tunnel_type</span>
 
 
 <span class="k">class</span> <span class="nc">NoiseTunnelType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -221,69 +214,6 @@
             <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdev_expanded</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
 
-        <span class="k">def</span> <span class="nf">expand_and_update_baselines</span><span class="p">():</span>
-            <span class="k">def</span> <span class="nf">get_random_baseline_indices</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">baseline</span><span class="p">):</span>
-                <span class="n">num_ref_samples</span> <span class="o">=</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">num_ref_samples</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">*</span> <span class="n">bsz</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-
-            <span class="c1"># TODO allow to add noise to baselines as well</span>
-            <span class="c1"># expand baselines to match the sizes of input</span>
-            <span class="k">if</span> <span class="s2">"baselines"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-                <span class="k">return</span>
-
-            <span class="n">baselines</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span>
-            <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-            <span class="n">_validate_input</span><span class="p">(</span>
-                <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="n">draw_baseline_from_distrib</span>
-            <span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">draw_baseline_from_distrib</span><span class="p">:</span>
-                <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">baselines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">baseline</span><span class="p">[</span><span class="n">get_random_baseline_indices</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">baseline</span><span class="p">)]</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                    <span class="k">else</span> <span class="n">baseline</span>
-                    <span class="k">for</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="n">baselines</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">baselines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">baseline</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-                    <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="ow">and</span> <span class="n">baseline</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
-                    <span class="k">else</span> <span class="n">baseline</span>
-                    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="c1"># update kwargs with expanded baseline</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span> <span class="o">=</span> <span class="n">baselines</span>
-
-        <span class="k">def</span> <span class="nf">expand_and_update_additional_forward_args</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s2">"additional_forward_args"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-                <span class="k">return</span>
-            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"additional_forward_args"</span><span class="p">]</span>
-            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_format_additional_forward_args</span><span class="p">(</span>
-                <span class="n">additional_forward_args</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span>
-            <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
-                <span class="n">additional_forward_args</span><span class="p">,</span>
-                <span class="n">n_samples</span><span class="p">,</span>
-                <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="c1"># update kwargs with expanded baseline</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"additional_forward_args"</span><span class="p">]</span> <span class="o">=</span> <span class="n">additional_forward_args</span>
-
-        <span class="k">def</span> <span class="nf">expand_and_update_target</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s2">"target"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-                <span class="k">return</span>
-            <span class="n">target</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span>
-            <span class="n">target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span>
-                <span class="n">target</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">expansion_type</span><span class="o">=</span><span class="n">ExpansionTypes</span><span class="o">.</span><span class="n">repeat_interleave</span>
-            <span class="p">)</span>
-            <span class="c1"># update kwargs with expanded baseline</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
-
         <span class="k">def</span> <span class="nf">compute_expected_attribution_and_sq</span><span class="p">(</span><span class="n">attribution</span><span class="p">):</span>
             <span class="n">bsz</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">n_samples</span>
             <span class="n">attribution_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
@@ -308,9 +238,15 @@
         <span class="c1"># if the algorithm supports targets, baselines and/or additional_forward_args</span>
         <span class="c1"># they will be expanded based on the n_steps and corresponding kwargs</span>
         <span class="c1"># variables will be updated accordingly</span>
-        <span class="n">expand_and_update_baselines</span><span class="p">()</span>
-        <span class="n">expand_and_update_additional_forward_args</span><span class="p">()</span>
-        <span class="n">expand_and_update_target</span><span class="p">()</span>
+        <span class="n">_expand_and_update_additional_forward_args</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_expand_and_update_target</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">_expand_and_update_baselines</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="p">,</span>
+            <span class="n">draw_baseline_from_distrib</span><span class="o">=</span><span class="n">draw_baseline_from_distrib</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="c1"># smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))</span>
         <span class="c1"># NOTE: using __wrapped__ such that it does not log the inner logs</span>
         <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
