@@ -6,11 +6,10 @@ import torch
 
 from captum.log import log_usage
 
-from ..._utils.common import _format_input, _is_tuple
+from ..._utils.common import _format_input, _format_output, _is_tuple
 from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
-from .._utils.common import _format_attributions
 
 
 class Saliency(GradientAttribution):
@@ -135,4 +134,4 @@ class Saliency(GradientAttribution):
         else:
             attributions = gradients
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_attributions(is_inputs_tuple, attributions)
+        return _format_output(is_inputs_tuple, attributions)

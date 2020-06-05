@@ -11,14 +11,17 @@ from captum._utils.gradient import _forward_layer_eval, _run_forward
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.attr._utils.common import (
-    _format_attributions,
     _format_input_baseline,
     _tensorize_baseline,
     _validate_input,
 )
 from captum.log import log_usage
 
-from ...._utils.common import _extract_device, _format_additional_forward_args
+from ...._utils.common import (
+    _extract_device,
+    _format_additional_forward_args,
+    _format_output,
+)
 from ...._utils.typing import BaselineType, Literal, TargetType
 
 
@@ -379,8 +382,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            return _format_attributions(is_layer_tuple, attributions), delta
-        return _format_attributions(is_layer_tuple, attributions)
+            return _format_output(is_layer_tuple, attributions), delta
+        return _format_output(is_layer_tuple, attributions)
 
     def has_convergence_delta(self) -> bool:
         return True

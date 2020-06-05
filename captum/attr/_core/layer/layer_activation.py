@@ -7,9 +7,9 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
+from ...._utils.common import _format_output
 from ...._utils.gradient import _forward_layer_eval
 from ..._utils.attribution import LayerAttribution
-from ..._utils.common import _format_attributions
 
 
 class LayerActivation(LayerAttribution):
@@ -120,4 +120,4 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return _format_attributions(is_layer_tuple, layer_eval)
+        return _format_output(is_layer_tuple, layer_eval)

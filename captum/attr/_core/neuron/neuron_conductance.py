@@ -11,6 +11,7 @@ from ...._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_output,
     _is_tuple,
     _verify_select_column,
 )
@@ -19,12 +20,7 @@ from ...._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGe
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.batching import _batch_attribution
-from ..._utils.common import (
-    _format_attributions,
-    _format_input_baseline,
-    _reshape_and_sum,
-    _validate_input,
-)
+from ..._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -264,7 +260,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 method=method,
                 attribute_to_neuron_input=attribute_to_neuron_input,
             )
-        return _format_attributions(is_inputs_tuple, attrs)
+        return _format_output(is_inputs_tuple, attrs)
 
     def _attribute(
         self,
