@@ -34,9 +34,9 @@
 
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
+<span class="kn">from</span> <span class="nn">...._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span>
 <span class="kn">from</span> <span class="nn">...._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
-<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span>
 
 
 <div class="viewcode-block" id="LayerActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
@@ -147,7 +147,7 @@
                 <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
                 <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>

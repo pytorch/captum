@@ -35,10 +35,9 @@
 
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
-<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_is_tuple</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_input</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">,</span> <span class="n">_is_tuple</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_attributions</span>
 <span class="kn">from</span> <span class="nn">.guided_backprop_deconvnet</span> <span class="kn">import</span> <span class="n">GuidedBackprop</span>
 <span class="kn">from</span> <span class="nn">.layer.grad_cam</span> <span class="kn">import</span> <span class="n">LayerGradCam</span>
 
@@ -249,7 +248,7 @@
                 <span class="p">)</span>
                 <span class="n">output_attr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">_format_attributions</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_attr</span><span class="p">))</span></div></div>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_attr</span><span class="p">))</span></div></div>
 </pre></div>
 </div>
 </div>
