@@ -189,5 +189,7 @@ class JITMeta(type):
         return jit_test_assert
 
 
-class JITTest(BaseTest, metaclass=JITMeta):
-    pass
+if torch.cuda.is_available() and torch.cuda.device_count() != 0:
+
+    class JITTest(BaseTest, metaclass=JITMeta):
+        pass
