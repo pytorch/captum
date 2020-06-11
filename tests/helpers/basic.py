@@ -100,16 +100,3 @@ class BaseTest(unittest.TestCase):
     def setUp(self):
         set_all_random_seeds(1234)
         set_environment("test")
-
-
-class BaseGPUTest(BaseTest):
-    """
-    This class provides a basic framework for all Captum tests requiring
-    CUDA and available GPUs to run appropriately, such as tests for
-    DataParallel models. If CUDA is not available, these tests are skipped.
-    """
-
-    def setUp(self):
-        super().setUp()
-        if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
-            raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
