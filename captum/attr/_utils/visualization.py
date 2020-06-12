@@ -552,9 +552,7 @@ def visualize_text(
       )
       dom.append('<b>Legend: </b>')
 
-      for value, label in zip(
-          [-1, 0, 1], ["Negative", "Neutral", "Positive Attribution"]
-        ):
+      for value, label in zip([-1, 0, 1], ["Negative", "Neutral", "Positive"]):
         dom.append(
             '<span style="display: inline-block; width: 10px; height: 10px; \
             border: 1px solid; background-color: \
