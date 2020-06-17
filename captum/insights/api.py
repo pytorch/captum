@@ -422,27 +422,27 @@ class AttributionVisualizer(object):
         net = self.models[0]  # TODO process multiple models
 
         # initialize baselines
-        baseline_transforms_len = len(self.features[0].baseline_transforms)
+        baseline_transforms_len = 1  # todo support multiple baselines
         baselines: List[List[Optional[Tensor]]] = [
             [None] * len(self.features) for _ in range(baseline_transforms_len)
         ]
         transformed_inputs = list(inputs)
 
-        # transformed_inputs = list([i.clone() for i in inputs])
         for feature_i, feature in enumerate(self.features):
             transformed_inputs[feature_i] = self._transform(
                 feature.input_transforms, transformed_inputs[feature_i], True
             )
-            assert baseline_transforms_len == len(
-                feature.baseline_transforms
-            ), "Must have same number of baselines across all features"
-
-            for baseline_i, baseline_transform in enumerate(
-                feature.baseline_transforms
-            ):
-                baselines[baseline_i][feature_i] = self._transform(
-                    [baseline_transform], transformed_inputs[feature_i], True
-                )
+            for baseline_i in range(baseline_transforms_len):
+                if baseline_i > len(feature.baseline_transforms) - 1:
+                    baselines[baseline_i][feature_i] = torch.zeros_like(
+                        transformed_inputs[feature_i]
+                    )
+                else:
+                    baselines[baseline_i][feature_i] = self._transform(
+                        [feature.baseline_transforms[baseline_i]],
+                        transformed_inputs[feature_i],
+                        True,
+                    )
         baselines = cast(List[List[Tensor]], baselines)
 
         outputs = _run_forward(
@@ -465,8 +465,9 @@ class AttributionVisualizer(object):
 
         actual_label_output = None
         if label is not None and len(label) > 0:
+            label_index = int(label[0])
             actual_label_output = OutputScore(
-                score=100, index=label[0], label=self.classes[label[0]]
+                score=100, index=label_index, label=self.classes[label_index]
             )
 
         predicted_scores = self._get_labels_from_scores(scores, predicted)
