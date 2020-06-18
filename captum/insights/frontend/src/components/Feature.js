@@ -49,7 +49,7 @@ function TextFeature(props) {
           className={styles["text-feature-word"]}
         >
           {w}
-          <Tooltip label={props.data.modified[i].toFixed(3)} />
+          <Tooltip label={props.data.modified[i]?.toFixed(3)} />
         </span>{" "}
       </>
     );
@@ -110,6 +110,8 @@ function Feature(props) {
       return <TextFeature data={data} />;
     case "general":
       return <GeneralFeature data={data} />;
+    case "empty":
+      return <></>;
     default:
       throw new Error("Unsupported feature visualization type: " + data.type);
   }
