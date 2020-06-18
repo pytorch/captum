@@ -206,7 +206,8 @@ class TextFeature(BaseFeature):
 
         attribution = attribution.squeeze(0)
         data = data.squeeze(0)
-        attribution = attribution.sum(dim=1)
+        if len(attribution.shape) > 1:
+            attribution = attribution.sum(dim=1)
 
         # L-Infinity norm
         attr_max = abs(attribution).max()
@@ -215,7 +216,6 @@ class TextFeature(BaseFeature):
         )
 
         modified = [x * 100 for x in normalized_attribution.tolist()]
-
         return FeatureOutput(
             name=self.name,
             base=text,
@@ -271,6 +271,34 @@ class GeneralFeature(BaseFeature):
             name=self.name,
             base=base,
             modified=modified,
+            type=self.visualization_type(),
+            contribution=contribution_frac,
+        )
+
+
+class EmptyFeature(BaseFeature):
+    def __init__(
+        self,
+        name: str = "empty",
+        baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        input_transforms: Optional[Union[Callable, List[Callable]]] = None,
+        visualization_transform: Optional[Callable] = None,
+    ):
+        super().__init__(
+            name,
+            baseline_transforms=baseline_transforms,
+            input_transforms=input_transforms,
+            visualization_transform=visualization_transform,
+        )
+
+    def visualization_type(self) -> str:
+        return "empty"
+
+    def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:
+        return FeatureOutput(
+            name=self.name,
+            base=None,
+            modified=None,
             type=self.visualization_type(),
             contribution=contribution_frac,
         )
