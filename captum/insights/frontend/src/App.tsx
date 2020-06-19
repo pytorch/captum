@@ -6,8 +6,16 @@ import Spinner from "./components/Spinner";
 import FilterContainer from "./components/FilterContainer";
 import Visualization from "./components/Visualization";
 import "./App.css";
+import { VisualizationOutput } from "./models/visualizationOutput";
+import { FilterConfig } from "./models/filter";
 
-function Visualizations(props) {
+interface VisualizationsProps {
+  loading: boolean;
+  data: VisualizationOutput[];
+  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+}
+
+function Visualizations(props: VisualizationsProps) {
   if (props.loading) {
     return (
       <div className="viz">
@@ -45,7 +53,16 @@ function Visualizations(props) {
   );
 }
 
-class AppBase extends React.Component {
+interface AppBaseProps {
+  fetchInit: () => void;
+  fetchData: (filter_config: FilterConfig) => void;
+  config: any;
+  data: VisualizationOutput[];
+  loading: boolean;
+  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+}
+
+class AppBase extends React.Component<AppBaseProps> {
   componentDidMount() {
     this.props.fetchInit();
   }

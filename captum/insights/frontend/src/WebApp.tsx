@@ -1,6 +1,6 @@
 import React from "react";
 import AppBase from "./App";
-import { FilterConfig } from './models/filterConfig';
+import { FilterConfig } from './models/filter';
 import { VisualizationOutput } from "./models/visualizationOutput";
 import { InsightsConfig } from "./models/insightsConfig";
 

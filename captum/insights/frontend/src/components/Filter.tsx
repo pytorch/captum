@@ -3,19 +3,31 @@ import { StringArgument, EnumArgument, NumberArgument } from "./Arguments";
 import cx from "../utils/cx";
 import styles from "../App.module.css";
 import ClassFilter from "./ClassFilter";
+import { MethodsArguments, ArgumentConfig, ConfigType } from "../models/insightsConfig";
+import { TagClass } from "../models/filter";
 
-const ConfigType = Object.freeze({
-  Number: "number",
-  Enum: "enum",
-  String: "string",
-});
 
-function Filter(props) {
-  const createComponentFromConfig = (name, config) => {
+interface FilterProps {
+  prediction: string;
+  selectedMethod: string;
+  methodArguments: MethodsArguments;
+  suggestedClasses: TagClass[];
+  classes: TagClass[];
+  methods: string[];
+  handleInputChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
+  handleArgumentChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
+  handleSubmit: React.FormEventHandler<HTMLFormElement>;
+  handleClassAdd: (newClass: TagClass) => void;
+  handleClassDelete: (id: number) => void;
+}
+
+function Filter(props: FilterProps) {
+  const createComponentFromConfig = (name: string, config: ArgumentConfig) => {
     switch (config.type) {
       case ConfigType.Number:
         return (
           <NumberArgument
+            key={name}
             name={name}
             limit={config.limit}
             value={config.value}
@@ -25,6 +37,7 @@ function Filter(props) {
       case ConfigType.Enum:
         return (
           <EnumArgument
+            key={name}
             name={name}
             limit={config.limit}
             value={config.value}
@@ -34,6 +47,7 @@ function Filter(props) {
       case ConfigType.String:
         return (
           <StringArgument
+            key={name}
             name={name}
             value={config.value}
             handleInputChange={props.handleArgumentChange}

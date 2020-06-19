@@ -4,3 +4,8 @@ export interface FilterConfig {
     prediction: string;
     classes: string[];
 }
+
+export interface TagClass {
+    id: number;
+    name: string;
+}
