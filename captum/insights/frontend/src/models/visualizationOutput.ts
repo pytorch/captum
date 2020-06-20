@@ -7,7 +7,8 @@ interface OutputScore {
 export enum FeatureType {
     TEXT = "text",
     IMAGE = "image",
-    GENERAL = "general"
+    GENERAL = "general",
+    EMPTY = "empty"
 }
 
 type GenericFeatureOutput<F extends FeatureType, T> = {
@@ -19,6 +20,7 @@ type GenericFeatureOutput<F extends FeatureType, T> = {
 export type FeatureOutput = GenericFeatureOutput<FeatureType.TEXT, { base: number[], modified: number[] }>
     | GenericFeatureOutput<FeatureType.IMAGE, { base: string, modified: string }>
     | GenericFeatureOutput<FeatureType.GENERAL, { base: number[], modified: number[]}>
+    | GenericFeatureOutput<FeatureType.EMPTY, {}>
 
 export interface VisualizationOutput {
     feature_outputs: FeatureOutput[];
