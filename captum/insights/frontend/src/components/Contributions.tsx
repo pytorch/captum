@@ -1,9 +1,14 @@
 import React from "react";
 import styles from "../App.module.css";
 import { calcHSLFromScore } from "../utils/color";
+import { FeatureOutput } from "../models/visualizationOutput";
 
-function Contributions(props) {
-  return props.feature_outputs.map((f) => {
+interface ContributionsProps {
+  feature_outputs: FeatureOutput[];
+}
+
+function Contributions(props: ContributionsProps) {
+  return <>{props.feature_outputs.map((f) => {
     // pad bar height so features with 0 contribution can still be seen
     // in graph
     const contribution = f.contribution * 100;
@@ -20,7 +25,7 @@ function Contributions(props) {
         <div className={styles["bar-chart__group__title"]}>{f.name}</div>
       </div>
     );
-  });
+  })}</>
 }
 
 export default Contributions;

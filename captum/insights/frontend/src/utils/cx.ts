@@ -1,5 +1,5 @@
 // helper method to convert an array or object into a valid classname
-function cx(obj) {
+function cx(obj: any) {
   if (Array.isArray(obj)) {
     return obj.join(" ");
   }
