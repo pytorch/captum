@@ -64,7 +64,7 @@ class FilterContainer extends React.Component<FilterContainerProps, FilterContai
     const name = target.name;
     this.setState({
       [name]: value,
-    } as any); //TODO: Figure out a way to Type this
+    } as any);
   };
 
   handleArgumentChange = (event: React.ChangeEvent<HTMLInputElement>) => {

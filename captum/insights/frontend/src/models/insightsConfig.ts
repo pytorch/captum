@@ -1,5 +1,4 @@
-//TODO: should be renamed to ArgumentType
-export enum ConfigType {
+export enum ArgumentType {
     Number = "number",
     Enum = "enum",
     String = "string",
@@ -12,10 +11,10 @@ export type GenericArgumentConfig<T> = {
 }
 
 export type ArgumentConfig =
-    { type: ConfigType.Number } & GenericArgumentConfig<number> |
-    { type: ConfigType.Enum } & GenericArgumentConfig<string> |
-    { type: ConfigType.String } & { value: string } |
-    { type: ConfigType.Boolean } & { value: boolean }
+    { type: ArgumentType.Number } & GenericArgumentConfig<number> |
+    { type: ArgumentType.Enum } & GenericArgumentConfig<string> |
+    { type: ArgumentType.String } & { value: string } |
+    { type: ArgumentType.Boolean } & { value: boolean }
 
 export interface MethodsArguments {
     [method_name: string]: {

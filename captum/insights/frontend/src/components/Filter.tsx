@@ -3,7 +3,7 @@ import { StringArgument, EnumArgument, NumberArgument } from "./Arguments";
 import cx from "../utils/cx";
 import styles from "../App.module.css";
 import ClassFilter from "./ClassFilter";
-import { MethodsArguments, ArgumentConfig, ConfigType } from "../models/insightsConfig";
+import { MethodsArguments, ArgumentConfig, ArgumentType } from "../models/insightsConfig";
 import { TagClass } from "../models/filter";
 
 
@@ -24,7 +24,7 @@ interface FilterProps {
 function Filter(props: FilterProps) {
   const createComponentFromConfig = (name: string, config: ArgumentConfig) => {
     switch (config.type) {
-      case ConfigType.Number:
+      case ArgumentType.Number:
         return (
           <NumberArgument
             key={name}
@@ -34,7 +34,7 @@ function Filter(props: FilterProps) {
             handleInputChange={props.handleArgumentChange}
           />
         );
-      case ConfigType.Enum:
+      case ArgumentType.Enum:
         return (
           <EnumArgument
             key={name}
@@ -44,7 +44,7 @@ function Filter(props: FilterProps) {
             handleInputChange={props.handleArgumentChange}
           />
         );
-      case ConfigType.String:
+      case ArgumentType.String:
         return (
           <StringArgument
             key={name}
