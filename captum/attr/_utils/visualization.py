@@ -510,9 +510,8 @@ def format_word_importances(words, importances):
 
 
 def visualize_text(
-        datarecords: Iterable[VisualizationDataRecord],
-        legend: bool = True
-    ) -> None:
+    datarecords: Iterable[VisualizationDataRecord], legend: bool = True
+) -> None:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -547,20 +546,21 @@ def visualize_text(
         )
 
     if legend:
-      dom.append('<div style="border-top: 1px solid; margin-top: 5px; \
-        padding-top: 5px; display: inline-block">'
-      )
-      dom.append('<b>Legend: </b>')
-
-      for value, label in zip([-1, 0, 1], ["Negative", "Neutral", "Positive"]):
         dom.append(
-            '<span style="display: inline-block; width: 10px; height: 10px; \
-            border: 1px solid; background-color: \
-            {value}"></span> {label}  '.format(
-                value=visualization._get_color(value), label=label
-            )
+            '<div style="border-top: 1px solid; margin-top: 5px; \
+            padding-top: 5px; display: inline-block">'
         )
-      dom.append('</div>')
+        dom.append("<b>Legend: </b>")
+
+        for value, label in zip([-1, 0, 1], ["Negative", "Neutral", "Positive"]):
+            dom.append(
+                '<span style="display: inline-block; width: 10px; height: 10px; \
+                border: 1px solid; background-color: \
+                {value}"></span> {label}  '.format(
+                    value=_get_color(value), label=label
+                )
+            )
+        dom.append("</div>")
 
     dom.append("".join(rows))
     dom.append("</table>")
