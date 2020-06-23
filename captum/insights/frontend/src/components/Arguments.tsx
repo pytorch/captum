@@ -2,10 +2,11 @@ import React from "react";
 import styles from "../App.module.css";
 import cx from "../utils/cx";
 import { GenericArgumentConfig } from "../models/insightsConfig";
+import { UserInputField } from "../models/typeHelpers";
 
 interface ArgumentProps {
   name: string;
-  handleInputChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
+  handleInputChange: React.ChangeEventHandler<UserInputField>;
 }
 
 function NumberArgument(props: ArgumentProps & GenericArgumentConfig<number>) {

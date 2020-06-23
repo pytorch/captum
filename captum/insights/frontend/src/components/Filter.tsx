@@ -5,6 +5,7 @@ import styles from "../App.module.css";
 import ClassFilter from "./ClassFilter";
 import { MethodsArguments, ArgumentConfig, ArgumentType } from "../models/insightsConfig";
 import { TagClass } from "../models/filter";
+import { UserInputField } from "../models/typeHelpers";
 
 
 interface FilterProps {
@@ -14,8 +15,8 @@ interface FilterProps {
   suggestedClasses: TagClass[];
   classes: TagClass[];
   methods: string[];
-  handleInputChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
-  handleArgumentChange: React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>;
+  handleInputChange: React.ChangeEventHandler<UserInputField>;
+  handleArgumentChange: React.ChangeEventHandler<UserInputField>;
   handleSubmit: React.FormEventHandler<HTMLFormElement>;
   handleClassAdd: (newClass: TagClass) => void;
   handleClassDelete: (id: number) => void;

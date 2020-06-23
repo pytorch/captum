@@ -12,7 +12,7 @@ function calcHSLFromScore(percentage: number, zeroDefault = false) {
   const default_hsl = [0, 40, zeroDefault ? 100 : 90];
   const abs_percent = Math.abs(percentage * 0.01);
   if (abs_percent < 0.02) {
-    return `hsl(${default_hsl[0]}, ${default_hsl[1]}, ${default_hsl[2]})`;
+    return `hsl(${default_hsl[0]}, ${default_hsl[1]}%, ${default_hsl[2]}%)`;
   }
 
   const color = [

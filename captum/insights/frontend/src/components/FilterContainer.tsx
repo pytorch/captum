@@ -2,11 +2,12 @@ import React from "react";
 import Filter from "./Filter";
 import { InsightsConfig, MethodsArguments } from "../models/insightsConfig";
 import { TagClass, FilterConfig } from "../models/filter";
+import { UserInputField } from "../models/typeHelpers";
 
-function parseEventTargetValue(target: HTMLInputElement) {
+function parseEventTargetValue(target: UserInputField) {
   switch (target.type) {
     case "checkbox":
-      return target.checked;
+      return (target as HTMLInputElement).checked;
     case "number":
       return parseInt(target.value);
     default:
@@ -58,7 +59,7 @@ class FilterContainer extends React.Component<FilterContainerProps, FilterContai
     this.setState({ classes, suggested_classes });
   };
 
-  handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleInputChange = (event: React.ChangeEvent<UserInputField>) => {
     const target = event.target;
     const value = parseEventTargetValue(event.target);
     const name = target.name;
@@ -67,7 +68,7 @@ class FilterContainer extends React.Component<FilterContainerProps, FilterContai
     } as any);
   };
 
-  handleArgumentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  handleArgumentChange = (event: React.ChangeEvent<UserInputField>) => {
     const target = event.target;
     const name = target.name;
     const value = parseEventTargetValue(target);
@@ -81,7 +82,7 @@ class FilterContainer extends React.Component<FilterContainerProps, FilterContai
     const method_arguments = this.state.method_arguments;
     const argument_config =
       method in method_arguments ? method_arguments[method] : {};
-    const args: any = {};
+    const args: { [key: string]: string | boolean | number } = {};
     Object.keys(argument_config).forEach(function (key) {
       args[key] = argument_config[key].value;
     });
