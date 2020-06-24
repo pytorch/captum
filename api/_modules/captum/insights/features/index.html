@@ -233,7 +233,8 @@
 
         <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">attribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">attribution</span> <span class="o">=</span> <span class="n">attribution</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># L-Infinity norm</span>
         <span class="n">attr_max</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">attribution</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
@@ -242,7 +243,6 @@
         <span class="p">)</span>
 
         <span class="n">modified</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">normalized_attribution</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
-
         <span class="k">return</span> <span class="n">FeatureOutput</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">base</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
@@ -301,6 +301,34 @@
             <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visualization_type</span><span class="p">(),</span>
             <span class="n">contribution</span><span class="o">=</span><span class="n">contribution_frac</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">EmptyFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"empty"</span><span class="p">,</span>
+        <span class="n">baseline_transforms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">input_transforms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">visualization_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">baseline_transforms</span><span class="o">=</span><span class="n">baseline_transforms</span><span class="p">,</span>
+            <span class="n">input_transforms</span><span class="o">=</span><span class="n">input_transforms</span><span class="p">,</span>
+            <span class="n">visualization_transform</span><span class="o">=</span><span class="n">visualization_transform</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">visualization_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"empty"</span>
+
+    <span class="k">def</span> <span class="nf">visualize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_attribution</span><span class="p">,</span> <span class="n">_data</span><span class="p">,</span> <span class="n">contribution_frac</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureOutput</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FeatureOutput</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">modified</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visualization_type</span><span class="p">(),</span>
+            <span class="n">contribution</span><span class="o">=</span><span class="n">contribution_frac</span><span class="p">,</span>
+        <span class="p">)</span>
 </pre></div>
 </div>
 </div>

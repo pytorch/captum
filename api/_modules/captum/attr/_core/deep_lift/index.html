@@ -1063,6 +1063,18 @@
                 <span class="nb">list</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)),</span>
             <span class="p">),</span>
         <span class="p">)</span>
+    <span class="k">if</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+            <span class="s2">"A problem occurred during maxpool modul's backward pass. "</span>
+            <span class="s2">"The gradients with respect to inputs include only a "</span>
+            <span class="s2">"subset of inputs. More details about this issue can "</span>
+            <span class="s2">"be found here: "</span>
+            <span class="s2">"https://pytorch.org/docs/stable/"</span>
+            <span class="s2">"nn.html#torch.nn.Module.register_backward_hook "</span>
+            <span class="s2">"This can happen for example if you attribute to the outputs of a "</span>
+            <span class="s2">"MaxPool. As a workaround, please, attribute to the inputs of "</span>
+            <span class="s2">"the following layer."</span>
+        <span class="p">)</span>
 
     <span class="n">new_grad_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
         <span class="nb">abs</span><span class="p">(</span><span class="n">delta_in</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">,</span> <span class="n">grad_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">unpool_grad_out_delta</span> <span class="o">/</span> <span class="n">delta_in</span>

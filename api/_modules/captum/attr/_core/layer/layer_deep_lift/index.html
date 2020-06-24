@@ -53,7 +53,7 @@
     <span class="n">TargetType</span><span class="p">,</span>
     <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..._core.deep_lift</span> <span class="kn">import</span> <span class="n">DeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span>
+<span class="kn">from</span> <span class="nn">..._core.deep_lift</span> <span class="kn">import</span> <span class="n">SUPPORTED_NON_LINEAR</span><span class="p">,</span> <span class="n">DeepLift</span><span class="p">,</span> <span class="n">DeepLiftShap</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_call_custom_attribution_func</span><span class="p">,</span>
@@ -336,6 +336,7 @@
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
                 <span class="n">output_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">out</span><span class="p">:</span> <span class="n">chunk_output_fn</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                <span class="n">forward_hook_with_return_excl_modules</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">SUPPORTED_NON_LINEAR</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
             <span class="p">)</span>
 
             <span class="n">attr_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">attr</span><span class="p">:</span> <span class="n">attr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">attrs</span><span class="p">))</span>
