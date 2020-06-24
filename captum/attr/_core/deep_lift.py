@@ -1036,6 +1036,18 @@ def maxpool(
                 list(cast(torch.Size, module.input.shape)),
             ),
         )
+    if grad_input[0].shape != inputs.shape:
+        raise AssertionError(
+            "A problem occurred during maxpool modul's backward pass. "
+            "The gradients with respect to inputs include only a "
+            "subset of inputs. More details about this issue can "
+            "be found here: "
+            "https://pytorch.org/docs/stable/"
+            "nn.html#torch.nn.Module.register_backward_hook "
+            "This can happen for example if you attribute to the outputs of a "
+            "MaxPool. As a workaround, please, attribute to the inputs of "
+            "the following layer."
+        )
 
     new_grad_inp = torch.where(
         abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in

@@ -11,8 +11,13 @@ from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 
 from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ...helpers.basic_models import ReLULinearModel
-from ..layer.test_layer_deeplift_basic import (
+from ...helpers.basic_models import (
+    BasicModel_ConvNet,
+    BasicModel_ConvNet_MaxPool3d,
+    LinearMaxPoolLinearModel,
+    ReLULinearModel,
+)
+from ..layer.test_layer_deeplift import (
     _create_inps_and_base_for_deeplift_neuron_layer_testing,
     _create_inps_and_base_for_deepliftshap_neuron_layer_testing,
 )
@@ -137,3 +142,48 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, attr[0], expected[0], 0.0)
         assertTensorAlmostEqual(self, attr[1], expected[1], 0.0)
+
+    def test_lin_maxpool_lin_classification(self) -> None:
+        inputs = torch.ones(2, 4)
+        baselines = torch.tensor([[1, 2, 3, 9], [4, 8, 6, 7]]).float()
+
+        model = LinearMaxPoolLinearModel()
+        ndl = NeuronDeepLift(model, model.pool1)
+        attr = ndl.attribute(inputs, neuron_index=(0), baselines=baselines)
+
+        ndl2 = NeuronDeepLift(model, model.lin2)
+        attr2 = ndl2.attribute(
+            inputs,
+            neuron_index=(0),
+            baselines=baselines,
+            attribute_to_neuron_input=True,
+        )
+        assertTensorAlmostEqual(self, attr, attr2)
+
+    def test_convnet_maxpool2d_classification(self) -> None:
+        inputs = 100 * torch.randn(2, 1, 10, 10)
+        model = BasicModel_ConvNet()
+
+        ndl = NeuronDeepLift(model, model.pool1)
+        attr = ndl.attribute(inputs, neuron_index=(0, 0, 0))
+
+        ndl2 = NeuronDeepLift(model, model.conv2)
+        attr2 = ndl2.attribute(
+            inputs, neuron_index=(0, 0, 0), attribute_to_neuron_input=True
+        )
+
+        assertTensorAlmostEqual(self, attr.sum(), attr2.sum())
+
+    def test_convnet_maxpool3d_classification(self) -> None:
+        inputs = 100 * torch.randn(2, 1, 10, 10, 10)
+        model = BasicModel_ConvNet_MaxPool3d()
+
+        ndl = NeuronDeepLift(model, model.pool1)
+        attr = ndl.attribute(inputs, neuron_index=(0, 0, 0, 0))
+
+        ndl2 = NeuronDeepLift(model, model.conv2)
+        attr2 = ndl2.attribute(
+            inputs, neuron_index=(0, 0, 0, 0), attribute_to_neuron_input=True
+        )
+
+        assertTensorAlmostEqual(self, attr.sum(), attr2.sum())
