@@ -89,7 +89,7 @@ class FilterConfig(NamedTuple):
         arg: config.value  # type: ignore
         for arg, config in ATTRIBUTION_METHOD_CONFIG[
             IntegratedGradients.get_name()
-        ].items()
+        ].params.items()
     }
     prediction: str = "all"
     classes: List[str] = []
@@ -221,6 +221,12 @@ class AttributionVisualizer(object):
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[self._config.attribution_method]
         attribution_method = attribution_cls(net)
         args = self._config.attribution_arguments
+        param_config = ATTRIBUTION_METHOD_CONFIG[self._config.attribution_method]
+        if param_config.post_process:
+            for k, v in args.items():
+                if k in param_config.post_process:
+                    args[k] = param_config.post_process[k](v)
+
         # TODO support multiple baselines
         baseline = baselines[0] if baselines and len(baselines) > 0 else None
         label = (
@@ -329,7 +335,9 @@ class AttributionVisualizer(object):
     def _get_labels_from_scores(
         self, scores: Tensor, indices: Tensor
     ) -> List[OutputScore]:
-        pred_scores = []
+        pred_scores: List[OutputScore] = []
+        if indices.nelement() < 2:
+            return pred_scores
         for i in range(len(indices)):
             score = scores[i]
             pred_scores.append(
@@ -414,27 +422,27 @@ class AttributionVisualizer(object):
         net = self.models[0]  # TODO process multiple models
 
         # initialize baselines
-        baseline_transforms_len = len(self.features[0].baseline_transforms)
+        baseline_transforms_len = 1  # todo support multiple baselines
         baselines: List[List[Optional[Tensor]]] = [
             [None] * len(self.features) for _ in range(baseline_transforms_len)
         ]
         transformed_inputs = list(inputs)
 
-        # transformed_inputs = list([i.clone() for i in inputs])
         for feature_i, feature in enumerate(self.features):
             transformed_inputs[feature_i] = self._transform(
                 feature.input_transforms, transformed_inputs[feature_i], True
             )
-            assert baseline_transforms_len == len(
-                feature.baseline_transforms
-            ), "Must have same number of baselines across all features"
-
-            for baseline_i, baseline_transform in enumerate(
-                feature.baseline_transforms
-            ):
-                baselines[baseline_i][feature_i] = self._transform(
-                    [baseline_transform], transformed_inputs[feature_i], True
-                )
+            for baseline_i in range(baseline_transforms_len):
+                if baseline_i > len(feature.baseline_transforms) - 1:
+                    baselines[baseline_i][feature_i] = torch.zeros_like(
+                        transformed_inputs[feature_i]
+                    )
+                else:
+                    baselines[baseline_i][feature_i] = self._transform(
+                        [feature.baseline_transforms[baseline_i]],
+                        transformed_inputs[feature_i],
+                        True,
+                    )
         baselines = cast(List[List[Tensor]], baselines)
 
         outputs = _run_forward(
@@ -457,8 +465,9 @@ class AttributionVisualizer(object):
 
         actual_label_output = None
         if label is not None and len(label) > 0:
+            label_index = int(label[0])
             actual_label_output = OutputScore(
-                score=100, index=label[0], label=self.classes[label[0]]
+                score=100, index=label_index, label=self.classes[label_index]
             )
 
         predicted_scores = self._get_labels_from_scores(scores, predicted)
@@ -542,6 +551,8 @@ class AttributionVisualizer(object):
         return {
             "classes": self.classes,
             "methods": list(ATTRIBUTION_NAMES_TO_METHODS.keys()),
-            "method_arguments": namedtuple_to_dict(ATTRIBUTION_METHOD_CONFIG),
+            "method_arguments": namedtuple_to_dict(
+                {k: v.params for (k, v) in ATTRIBUTION_METHOD_CONFIG.items()}
+            ),
             "selected_method": self._config.attribution_method,
         }

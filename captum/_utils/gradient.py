@@ -8,9 +8,8 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from ..._utils.common import _run_forward, _verify_select_column
-from ..._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
-from .batching import _reduce_list, _sort_key_list
+from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_column
+from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 
 
 def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
@@ -156,6 +155,9 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
     forward_hook_with_return: Literal[False] = False,
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Literal[True, False]]:
     ...
@@ -169,6 +171,9 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
     *,
     forward_hook_with_return: Literal[True],
 ) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, Literal[True, False]]:
@@ -182,6 +187,9 @@ def _forward_layer_distributed_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
     forward_hook_with_return: bool = False,
 ) -> Union[
     Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, bool],
@@ -209,6 +217,7 @@ def _forward_layer_distributed_eval(
         nonlocal is_eval_tuple
         eval_tsrs = inp if attribute_to_layer_input else out
         is_eval_tuple = isinstance(eval_tsrs, tuple)
+
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
         with lock:
@@ -221,7 +230,11 @@ def _forward_layer_distributed_eval(
                 eval_tsrs_to_return = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
                 if not is_eval_tuple:
                     eval_tsrs_to_return = eval_tsrs_to_return[0]
-                return eval_tsrs_to_return
+                if (
+                    forward_hook_with_return_excl_modules is None
+                    or type(module) not in forward_hook_with_return_excl_modules
+                ):
+                    return eval_tsrs_to_return
             else:
                 saved_layer[eval_tsrs[0].device] = tuple(
                     eval_tsr.clone() for eval_tsr in eval_tsrs
@@ -397,6 +410,9 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[
     Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]
 ]:
@@ -414,6 +430,9 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
     ...
 
@@ -428,6 +447,9 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
+    forward_hook_with_return_excl_modules: Union[
+        None, List[typing.Type[Module]]
+    ] = None,
 ) -> Union[
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
@@ -490,6 +512,7 @@ def compute_layer_gradients_and_eval(
             target_ind=target_ind,
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
+            forward_hook_with_return_excl_modules=forward_hook_with_return_excl_modules,
             forward_hook_with_return=True,
         )
         assert output[0].numel() == 1, (

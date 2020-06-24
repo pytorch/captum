@@ -20,7 +20,7 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
-from ..helpers.basic import BaseGPUTest, assertTensorTuplesAlmostEqual, deep_copy_args
+from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
 
@@ -238,5 +238,7 @@ class DataParallelMeta(type):
         return data_parallel_test_assert
 
 
-class DataParallelTest(BaseGPUTest, metaclass=DataParallelMeta):
-    pass
+if torch.cuda.is_available() and torch.cuda.device_count() != 0:
+
+    class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
+        pass

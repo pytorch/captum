@@ -2,13 +2,19 @@
 import typing
 from enum import Enum
 from inspect import signature
-from typing import Any, Callable, List, Tuple, Union, cast, overload
+from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
 
+import numpy as np
 import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .._utils.typing import Literal, TargetType
+from .._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    TupleOrTensorOrBoolGeneric,
+)
 
 
 class ExpansionTypes(Enum):
@@ -54,6 +60,72 @@ def _validate_target(num_samples: int, target: TargetType) -> None:
                 num_samples, len(target)
             )
         )
+
+
+def _validate_input(
+    inputs: Tuple[Tensor, ...],
+    baselines: Tuple[Union[Tensor, int, float], ...],
+    draw_baseline_from_distrib: bool = False,
+) -> None:
+    assert len(inputs) == len(baselines), (
+        "Input and baseline must have the same "
+        "dimensions, baseline has {} features whereas input has {}.".format(
+            len(baselines), len(inputs)
+        )
+    )
+
+    for input, baseline in zip(inputs, baselines):
+        if draw_baseline_from_distrib:
+            assert (
+                isinstance(baseline, (int, float))
+                or input.shape[1:] == baseline.shape[1:]
+            ), (
+                "The samples in input and baseline batches must have"
+                " the same shape or the baseline corresponding to the"
+                " input tensor must be a scalar."
+                " Found baseline: {} and input: {} ".format(baseline, input)
+            )
+        else:
+            assert (
+                isinstance(baseline, (int, float))
+                or input.shape == baseline.shape
+                or baseline.shape[0] == 1
+            ), (
+                "Baseline can be provided as a tensor for just one input and"
+                " broadcasted to the batch or input and baseline must have the"
+                " same shape or the baseline corresponding to each input tensor"
+                " must be a scalar. Found baseline: {} and input: {}".format(
+                    baseline, input
+                )
+            )
+
+
+def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
+    r"""
+    Takes a tuple of tensors as input and returns a tuple that has the same
+    length as `inputs` with each element as the integer 0.
+    """
+    return tuple(0 for input in inputs)
+
+
+def _format_baseline(
+    baselines: BaselineType, inputs: Tuple[Tensor, ...]
+) -> Tuple[Union[Tensor, int, float], ...]:
+    if baselines is None:
+        return _zeros(inputs)
+
+    if not isinstance(baselines, tuple):
+        baselines = (baselines,)
+
+    for baseline in baselines:
+        assert isinstance(
+            baseline, (torch.Tensor, int, float)
+        ), "baseline input argument must be either a torch.Tensor or a number \
+            however {} detected".format(
+            type(baseline)
+        )
+
+    return baselines
 
 
 @overload
@@ -176,6 +248,111 @@ def _expand_target(
     return target
 
 
+def _expand_and_update_baselines(
+    inputs: Tuple[Tensor, ...],
+    n_samples: int,
+    kwargs: dict,
+    draw_baseline_from_distrib: bool = False,
+):
+    def get_random_baseline_indices(bsz, baseline):
+        num_ref_samples = baseline.shape[0]
+        return np.random.choice(num_ref_samples, n_samples * bsz).tolist()
+
+    # expand baselines to match the sizes of input
+    if "baselines" not in kwargs:
+        return
+
+    baselines = kwargs["baselines"]
+    baselines = _format_baseline(baselines, inputs)
+    _validate_input(
+        inputs, baselines, draw_baseline_from_distrib=draw_baseline_from_distrib
+    )
+
+    if draw_baseline_from_distrib:
+        bsz = inputs[0].shape[0]
+        baselines = tuple(
+            baseline[get_random_baseline_indices(bsz, baseline)]
+            if isinstance(baseline, torch.Tensor)
+            else baseline
+            for baseline in baselines
+        )
+    else:
+        baselines = tuple(
+            baseline.repeat_interleave(n_samples, dim=0)
+            if isinstance(baseline, torch.Tensor)
+            and baseline.shape[0] == input.shape[0]
+            and baseline.shape[0] > 1
+            else baseline
+            for input, baseline in zip(inputs, baselines)
+        )
+    # update kwargs with expanded baseline
+    kwargs["baselines"] = baselines
+
+
+def _expand_and_update_additional_forward_args(n_samples: int, kwargs: dict):
+    if "additional_forward_args" not in kwargs:
+        return
+    additional_forward_args = kwargs["additional_forward_args"]
+    additional_forward_args = _format_additional_forward_args(additional_forward_args)
+    if additional_forward_args is None:
+        return
+    additional_forward_args = _expand_additional_forward_args(
+        additional_forward_args,
+        n_samples,
+        expansion_type=ExpansionTypes.repeat_interleave,
+    )
+    # update kwargs with expanded baseline
+    kwargs["additional_forward_args"] = additional_forward_args
+
+
+def _expand_and_update_target(n_samples: int, kwargs: dict):
+    if "target" not in kwargs:
+        return
+    target = kwargs["target"]
+    target = _expand_target(
+        target, n_samples, expansion_type=ExpansionTypes.repeat_interleave
+    )
+    # update kwargs with expanded baseline
+    kwargs["target"] = target
+
+
+@typing.overload
+def _format_output(
+    is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _format_output(
+    is_inputs_tuple: Literal[False], output: Tuple[Tensor, ...]
+) -> Tensor:
+    ...
+
+
+@typing.overload
+def _format_output(
+    is_inputs_tuple: bool, output: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+def _format_output(
+    is_inputs_tuple: bool, output: Tuple[Tensor, ...]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    r"""
+    In case input is a tensor and the output is returned in form of a
+    tuple we take the first element of the output's tuple to match the
+    same shape signatues of the inputs
+    """
+    assert isinstance(output, tuple), "Output must be in shape of a tuple"
+    assert is_inputs_tuple or len(output) == 1, (
+        "The input is a single tensor however the output isn't."
+        "The number of output tensors is: {}".format(len(output))
+    )
+    return output if is_inputs_tuple else output[0]
+
+
 def _run_forward(
     forward_func: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -279,3 +456,65 @@ def _extract_device(
         return hook_outputs[0].device
 
     return params[0].device
+
+
+def _reduce_list(
+    val_list: List[TupleOrTensorOrBoolGeneric],
+    red_func: Callable[[List], Any] = torch.cat,
+) -> TupleOrTensorOrBoolGeneric:
+    """
+    Applies reduction function to given list. If each element in the list is
+    a Tensor, applies reduction function to all elements of the list, and returns
+    the output Tensor / value. If each element is a boolean, apply any method (or).
+    If each element is a tuple, applies reduction
+    function to corresponding elements of each tuple in the list, and returns
+    tuple of reduction function outputs with length matching the length of tuple
+    val_list[0]. It is assumed that all tuples in the list have the same length
+    and red_func can be applied to all elements in each corresponding position.
+    """
+    if isinstance(val_list[0], torch.Tensor):
+        return red_func(val_list)
+    elif isinstance(val_list[0], bool):
+        return any(val_list)
+    elif isinstance(val_list[0], tuple):
+        final_out = []
+        for i in range(len(val_list[0])):
+            final_out.append(
+                _reduce_list([val_elem[i] for val_elem in val_list], red_func)
+            )
+    else:
+        raise AssertionError(
+            "Elements to be reduced can only be"
+            "either Tensors or tuples containing Tensors."
+        )
+    return tuple(final_out)
+
+
+def _sort_key_list(
+    keys: List[device], device_ids: Union[None, List[int]] = None
+) -> List[device]:
+    """
+    Sorts list of torch devices (keys) by given index list, device_ids. If keys
+    contains only one device, then the list is returned unchanged. If keys
+    contains a device for which the id is not contained in device_ids, then
+    an error is returned. This method is used to identify the order of DataParallel
+    batched devices, given the device ID ordering.
+    """
+    if len(keys) == 1:
+        return keys
+    id_dict: Dict[int, device] = {}
+    assert device_ids is not None, "Device IDs must be provided with multiple devices."
+    for key in keys:
+        if key.index in id_dict:
+            raise AssertionError("Duplicate CUDA Device ID identified in device list.")
+        id_dict[key.index] = key
+
+    out_list = [
+        id_dict[device_id]
+        for device_id in filter(lambda device_id: device_id in id_dict, device_ids)
+    ]
+
+    assert len(out_list) == len(keys), "Given Device ID List does not match"
+    "devices with computed tensors."
+
+    return out_list

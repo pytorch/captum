@@ -97,7 +97,7 @@ def infidelity(
     baselines=None,
     additional_forward_args=None,
     target=None,
-    n_samples=10,
+    n_perturb_samples=10,
     max_examples_per_batch=None,
 ):
     r"""
@@ -294,26 +294,29 @@ def infidelity(
                   target for the corresponding example.
 
                 Default: None
-        n_samples (int, optional): The number of times input tensors are perturbed.
-                Each input example in the inputs tensor is expanded `n_samples`
+        n_perturb_samples (int, optional): The number of times input tensors
+                are perturbed. Each input example in the inputs tensor is expanded
+                `n_perturb_samples`
                 times before calling `perturb_func` function.
 
                 Default: 10
         max_examples_per_batch (int, optional): The number of maximum input
                 examples that are processed together. In case the number of
-                examples (`input batch size * n_samples`) exceeds
+                examples (`input batch size * n_perturb_samples`) exceeds
                 `max_examples_per_batch`, they will be sliced
                 into batches of `max_examples_per_batch` examples and processed
                 in a sequential order. If `max_examples_per_batch` is None, all
-                examples are processed together.
+                examples are processed together. `max_examples_per_batch` should
+                at least be equal `input batch size` and at most
+                `input batch size * n_perturb_samples`.
 
                 Default: None
     Returns:
 
         infidelities (tensor): A tensor of scalar infidelity scores per
-                        input example. The first dimension is equal to the
-                        number of examples in the input batch and the second
-                        dimension is one.
+                input example. The first dimension is equal to the
+                number of examples in the input batch and the second
+                dimension is one.
 
     Examples::
         >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -328,15 +331,17 @@ def infidelity(
         >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
         >>>    return noise, inputs - noise
         >>> # Computes infidelity score for saliency maps
-        >>> infidelity = infidelity_attr(net, perturb_fn, input, attribution)
+        >>> infid = infidelity(net, perturb_fn, input, attribution)
     """
 
-    def _generate_perturbations(current_n_samples):
+    def _generate_perturbations(current_n_perturb_samples):
         r"""
-        The perturbations are generated for each example `current_n_samples` times.
+        The perturbations are generated for each example
+        `current_n_perturb_samples` times.
 
         For performance reasons we are not calling `perturb_func` on each example but
-        on a batch that contains `current_n_samples` repeated instances per example.
+        on a batch that contains `current_n_perturb_samples`
+        repeated instances per example.
         """
 
         def call_perturb_func():
@@ -358,12 +363,13 @@ def infidelity(
             )
 
         inputs_expanded = tuple(
-            torch.repeat_interleave(input, current_n_samples, dim=0) for input in inputs
+            torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
+            for input in inputs
         )
 
         if baselines is not None:
             baselines_expanded = tuple(
-                baseline.repeat_interleave(current_n_samples, dim=0)
+                baseline.repeat_interleave(current_n_perturb_samples, dim=0)
                 if isinstance(baseline, torch.Tensor)
                 and baseline.shape[0] == input.shape[0]
                 and baseline.shape[0] > 1
@@ -393,8 +399,10 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
-    def _next_infidelity(current_n_samples):
-        perturbations, inputs_perturbed = _generate_perturbations(current_n_samples)
+    def _next_infidelity(current_n_perturb_samples):
+        perturbations, inputs_perturbed = _generate_perturbations(
+            current_n_perturb_samples
+        )
 
         if not is_input_tpl:
             perturbations = _format_tensor_into_tuples(perturbations)
@@ -403,11 +411,13 @@ def infidelity(
         _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations)
 
         targets_expanded = _expand_target(
-            target, current_n_samples, expansion_type=ExpansionTypes.repeat_interleave
+            target,
+            current_n_perturb_samples,
+            expansion_type=ExpansionTypes.repeat_interleave,
         )
         additional_forward_args_expanded = _expand_additional_forward_args(
             additional_forward_args,
-            current_n_samples,
+            current_n_perturb_samples,
             expansion_type=ExpansionTypes.repeat_interleave,
         )
 
@@ -418,10 +428,12 @@ def infidelity(
             additional_forward_args_expanded,
         )
         inputs_fwd = _run_forward(forward_func, inputs, target, additional_forward_args)
-        inputs_fwd = torch.repeat_interleave(inputs_fwd, current_n_samples, dim=0)
+        inputs_fwd = torch.repeat_interleave(
+            inputs_fwd, current_n_perturb_samples, dim=0
+        )
         inputs_minus_perturb = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
-            torch.repeat_interleave(attribution, current_n_samples, dim=0)
+            torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)
             for attribution in attributions
         )
         attributions_times_perturb = tuple(
@@ -471,8 +483,8 @@ def infidelity(
     with torch.no_grad():
         metrics_sum = _divide_and_aggregate_metrics(
             inputs,
-            n_samples,
+            n_perturb_samples,
             _next_infidelity,
             max_examples_per_batch=max_examples_per_batch,
         )
-    return metrics_sum * 1 / n_samples
+    return metrics_sum * 1 / n_perturb_samples

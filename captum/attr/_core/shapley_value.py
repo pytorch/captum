@@ -14,6 +14,7 @@ from ..._utils.common import (
     _expand_target,
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _is_tuple,
     _run_forward,
 )
@@ -21,7 +22,6 @@ from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGen
 from .._utils.attribution import PerturbationAttribution
 from .._utils.common import (
     _find_output_mode_and_verify,
-    _format_attributions,
     _format_input_baseline,
     _tensorize_baseline,
 )
@@ -361,7 +361,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             attrib = tuple(
                 tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
             )
-            formatted_attr = _format_attributions(is_inputs_tuple, attrib)
+            formatted_attr = _format_output(is_inputs_tuple, attrib)
         return formatted_attr
 
     def _perturbation_generator(

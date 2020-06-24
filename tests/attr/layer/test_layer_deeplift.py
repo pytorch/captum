@@ -17,6 +17,8 @@ from ...helpers.basic import (
     assertTensorTuplesAlmostEqual,
 )
 from ...helpers.basic_models import (
+    BasicModel_ConvNet,
+    BasicModel_ConvNet_MaxPool3d,
     BasicModel_MultiLayer,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
@@ -205,6 +207,35 @@ class TestDeepLift(BaseTest):
         expected_delta = [0.0, 0.0]
         assertArraysAlmostEqual(cast(Tensor, attrs).detach().numpy(), expected)
         assertArraysAlmostEqual(delta.detach().numpy(), expected_delta)
+
+    def test_convnet_maxpool2d_classification(self) -> None:
+        inputs = 100 * torch.randn(2, 1, 10, 10)
+
+        model = BasicModel_ConvNet()
+        model.eval()
+
+        dl = LayerDeepLift(model, model.pool1)
+        dl2 = LayerDeepLift(model, model.conv2)
+
+        attr = dl.attribute(inputs, target=0)
+        attr2 = dl2.attribute(inputs, target=0, attribute_to_layer_input=True)
+
+        self.assertTrue(cast(Tensor, attr).sum() == cast(Tuple, attr2)[0].sum())
+
+    def test_convnet_maxpool3d_classification(self) -> None:
+        inputs = 100 * torch.randn(2, 1, 10, 10, 10)
+
+        model = BasicModel_ConvNet_MaxPool3d()
+        model.eval()
+
+        dl = LayerDeepLift(model, model.pool1)
+        dl2 = LayerDeepLift(model, model.conv2)
+        # with self.assertRaises(AssertionError) doesn't run with Cicle CI
+        # the error is being converted into RuntimeError
+
+        attr = dl.attribute(inputs, target=0, attribute_to_layer_input=False)
+        attr2 = dl2.attribute(inputs, target=0, attribute_to_layer_input=True)
+        self.assertTrue(cast(Tensor, attr).sum() == cast(Tuple, attr2)[0].sum())
 
     def _relu_custom_attr_func_assert(
         self,

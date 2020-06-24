@@ -7,9 +7,9 @@ from torch.nn import Module
 from captum.log import log_usage
 
 from ...._utils.common import _verify_select_column
+from ...._utils.gradient import _forward_layer_eval
 from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
-from ..._utils.gradient import _forward_layer_eval
 from ..feature_ablation import FeatureAblation
 
 

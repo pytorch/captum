@@ -10,6 +10,7 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
+from ...._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from ...._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
@@ -17,7 +18,6 @@ from ..._utils.common import (
     _format_callable_baseline,
     _format_input_baseline,
 )
-from ..._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from ..gradient_shap import _scale_input
 from ..noise_tunnel import NoiseTunnel
 

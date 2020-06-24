@@ -1,15 +1,26 @@
 import React from "react";
 import AppBase from "./App";
+import { FilterConfig } from './models/filter';
+import { VisualizationOutput } from "./models/visualizationOutput";
+import { InsightsConfig } from "./models/insightsConfig";
 
-class WebApp extends React.Component {
-  constructor(props) {
+
+interface WebAppState {
+  data: VisualizationOutput[];
+  config: InsightsConfig;
+  loading: boolean;
+}
+
+class WebApp extends React.Component<{}, WebAppState> {
+  constructor(props: {}) {
     super(props);
     this.state = {
       data: [],
       config: {
         classes: [],
         methods: [],
-        method_arguments: {}
+        method_arguments: {},
+        selected_method: ""
       },
       loading: false
     };
@@ -22,7 +33,7 @@ class WebApp extends React.Component {
       .then(r => this.setState({ config: r }));
   };
 
-  fetchData = filter_config => {
+  fetchData = (filter_config: FilterConfig) => {
     this.setState({ loading: true });
     fetch("fetch", {
       method: "POST",
@@ -35,7 +46,7 @@ class WebApp extends React.Component {
       .then(response => this.setState({ data: response, loading: false }));
   };
 
-  onTargetClick = (labelIndex, instance, callback) => {
+  onTargetClick = (labelIndex: number, instance: number, callback: () => void) => {
     fetch("attribute", {
       method: "POST",
       headers: {
@@ -45,7 +56,7 @@ class WebApp extends React.Component {
     })
       .then(response => response.json())
       .then(response => {
-        const data = Object.assign([], this.state.data);
+        const data = this.state.data ?? [];
         data[instance] = response;
         this.setState({ data });
         callback();

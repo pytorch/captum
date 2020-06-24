@@ -404,7 +404,7 @@ class Test(BaseTest):
             additional_forward_args=additional_args,
             target=target,
             baselines=baselines,
-            n_samples=n_perturb_samples,
+            n_perturb_samples=n_perturb_samples,
             max_examples_per_batch=max_batch_size,
         )
         assertArraysAlmostEqual(infid.numpy(), expected, 0.0001)

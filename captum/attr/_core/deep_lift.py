@@ -18,12 +18,15 @@ from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_baseline,
     _format_input,
+    _format_output,
     _format_tensor_into_tuples,
     _is_tuple,
     _run_forward,
     _select_targets,
 )
+from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from ..._utils.typing import (
     BaselineType,
     Literal,
@@ -34,13 +37,10 @@ from .._utils.attribution import GradientAttribution
 from .._utils.common import (
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _format_attributions,
-    _format_baseline,
     _format_callable_baseline,
     _tensorize_baseline,
     _validate_input,
 )
-from .._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 
 
 # Check if module backward hook can safely be used for the module that produced
@@ -811,9 +811,9 @@ class DeepLiftShap(DeepLift):
         )
 
         if return_convergence_delta:
-            return _format_attributions(is_inputs_tuple, attributions), delta
+            return _format_output(is_inputs_tuple, attributions), delta
         else:
-            return _format_attributions(is_inputs_tuple, attributions)
+            return _format_output(is_inputs_tuple, attributions)
 
     def _expand_inputs_baselines_targets(
         self,
@@ -1035,6 +1035,18 @@ def maxpool(
                 module.padding,
                 list(cast(torch.Size, module.input.shape)),
             ),
+        )
+    if grad_input[0].shape != inputs.shape:
+        raise AssertionError(
+            "A problem occurred during maxpool modul's backward pass. "
+            "The gradients with respect to inputs include only a "
+            "subset of inputs. More details about this issue can "
+            "be found here: "
+            "https://pytorch.org/docs/stable/"
+            "nn.html#torch.nn.Module.register_backward_hook "
+            "This can happen for example if you attribute to the outputs of a "
+            "MaxPool. As a workaround, please, attribute to the inputs of "
+            "the following layer."
         )
 
     new_grad_inp = torch.where(

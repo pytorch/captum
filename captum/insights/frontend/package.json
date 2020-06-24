@@ -6,6 +6,13 @@
   "dependencies": {
     "@babel/helper-call-delegate": "^7.8.7",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-typescript": "^7.10.1",
+    "@types/jest": "^26.0.0",
+    "@types/node": "^14.0.13",
+    "@types/react": "^16.9.38",
+    "@types/react-dom": "^16.9.8",
+    "@types/react-plotly.js": "^2.2.4",
+    "@types/react-tag-autocomplete": "^5.12.0",
     "babel-loader": "^8.0.6",
     "css-loader": "3.3.0",
     "js-levenshtein": "^1.1.6",
@@ -15,6 +22,7 @@
     "react-plotly.js": "^2.4.0",
     "react-scripts": "3.4.1",
     "react-tag-autocomplete": "^5.11.1",
+    "typescript": "^3.9.5",
     "webpack-cli": "^3.3.9"
   },
   "scripts": {
