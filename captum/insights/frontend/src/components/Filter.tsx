@@ -3,37 +3,52 @@ import { StringArgument, EnumArgument, NumberArgument } from "./Arguments";
 import cx from "../utils/cx";
 import styles from "../App.module.css";
 import ClassFilter from "./ClassFilter";
+import { MethodsArguments, ArgumentConfig, ArgumentType } from "../models/insightsConfig";
+import { TagClass } from "../models/filter";
+import { UserInputField } from "../models/typeHelpers";
 
-const ConfigType = Object.freeze({
-  Number: "number",
-  Enum: "enum",
-  String: "string",
-});
 
-function Filter(props) {
-  const createComponentFromConfig = (name, config) => {
+interface FilterProps {
+  prediction: string;
+  selectedMethod: string;
+  methodArguments: MethodsArguments;
+  suggestedClasses: TagClass[];
+  classes: TagClass[];
+  methods: string[];
+  handleInputChange: React.ChangeEventHandler<UserInputField>;
+  handleArgumentChange: React.ChangeEventHandler<UserInputField>;
+  handleSubmit: React.FormEventHandler<HTMLFormElement>;
+  handleClassAdd: (newClass: TagClass) => void;
+  handleClassDelete: (id: number) => void;
+}
+
+function Filter(props: FilterProps) {
+  const createComponentFromConfig = (name: string, config: ArgumentConfig) => {
     switch (config.type) {
-      case ConfigType.Number:
+      case ArgumentType.Number:
         return (
           <NumberArgument
+            key={name}
             name={name}
             limit={config.limit}
             value={config.value}
             handleInputChange={props.handleArgumentChange}
           />
         );
-      case ConfigType.Enum:
+      case ArgumentType.Enum:
         return (
           <EnumArgument
+            key={name}
             name={name}
             limit={config.limit}
             value={config.value}
             handleInputChange={props.handleArgumentChange}
           />
         );
-      case ConfigType.String:
+      case ArgumentType.String:
         return (
           <StringArgument
+            key={name}
             name={name}
             value={config.value}
             handleInputChange={props.handleArgumentChange}

@@ -2,7 +2,7 @@ import React from "react";
 import styles from "../App.module.css";
 import cx from "../utils/cx";
 
-function Header(props) {
+function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.header__name}>Captum Insights</div>

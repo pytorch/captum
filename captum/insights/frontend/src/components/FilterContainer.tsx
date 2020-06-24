@@ -1,10 +1,13 @@
 import React from "react";
 import Filter from "./Filter";
+import { InsightsConfig, MethodsArguments } from "../models/insightsConfig";
+import { TagClass, FilterConfig } from "../models/filter";
+import { UserInputField } from "../models/typeHelpers";
 
-function parseEventTargetValue(target) {
+function parseEventTargetValue(target: UserInputField) {
   switch (target.type) {
     case "checkbox":
-      return target.checked;
+      return (target as HTMLInputElement).checked;
     case "number":
       return parseInt(target.value);
     default:
@@ -12,11 +15,24 @@ function parseEventTargetValue(target) {
   }
 }
 
-class FilterContainer extends React.Component {
-  constructor(props) {
+interface FilterContainerProps {
+  config: InsightsConfig;
+  fetchData: (filter_config: FilterConfig) => void;
+}
+
+interface FilterContainerState {
+  prediction: string;
+  classes: TagClass[];
+  suggested_classes: TagClass[];
+  selected_method: string;
+  method_arguments: MethodsArguments;
+}
+
+class FilterContainer extends React.Component<FilterContainerProps, FilterContainerState> {
+  constructor(props: FilterContainerProps) {
     super(props);
-    const suggested_classes = props.config.classes.map((c, i) => ({
-      id: i,
+    const suggested_classes = props.config.classes.map((c, classId) => ({
+      id: classId,
       name: c,
     }));
     this.state = {
@@ -28,34 +44,31 @@ class FilterContainer extends React.Component {
     };
   }
 
-  handleClassDelete = (i) => {
+  handleClassDelete = (classId: number) => {
     const classes = this.state.classes.slice(0);
-    const removed_class = classes.splice(i, 1);
-    const suggested_classes = [].concat(
-      this.state.suggested_classes,
-      removed_class
-    );
+    const removed_class = classes.splice(classId, 1);
+    const suggested_classes = [...this.state.suggested_classes, ...removed_class];
     this.setState({ classes, suggested_classes });
   };
 
-  handleClassAdd = (added_class) => {
-    const classes = [].concat(this.state.classes, added_class);
+  handleClassAdd = (added_class: TagClass) => {
+    const classes = [...this.state.classes, added_class];
     const suggested_classes = this.state.suggested_classes.filter(
       (t) => t.id !== added_class.id
     );
     this.setState({ classes, suggested_classes });
   };
 
-  handleInputChange = (event) => {
+  handleInputChange = (event: React.ChangeEvent<UserInputField>) => {
     const target = event.target;
     const value = parseEventTargetValue(event.target);
     const name = target.name;
     this.setState({
       [name]: value,
-    });
+    } as any);
   };
 
-  handleArgumentChange = (event) => {
+  handleArgumentChange = (event: React.ChangeEvent<UserInputField>) => {
     const target = event.target;
     const name = target.name;
     const value = parseEventTargetValue(target);
@@ -64,18 +77,18 @@ class FilterContainer extends React.Component {
     this.setState({ method_arguments });
   };
 
-  handleSubmit = (event) => {
+  handleSubmit = (event: React.FormEvent) => {
     const method = this.state.selected_method;
     const method_arguments = this.state.method_arguments;
     const argument_config =
       method in method_arguments ? method_arguments[method] : {};
-    const args = {};
+    const args: { [key: string]: string | boolean | number } = {};
     Object.keys(argument_config).forEach(function (key) {
       args[key] = argument_config[key].value;
     });
     const data = {
       prediction: this.state.prediction,
-      classes: this.state.classes.map((i) => i["name"]),
+      classes: this.state.classes.map((classId) => classId["name"]),
       attribution_method: method,
       arguments: args,
     };

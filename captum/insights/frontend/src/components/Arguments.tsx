@@ -1,8 +1,15 @@
 import React from "react";
 import styles from "../App.module.css";
 import cx from "../utils/cx";
+import { GenericArgumentConfig } from "../models/insightsConfig";
+import { UserInputField } from "../models/typeHelpers";
 
-function NumberArgument(props) {
+interface ArgumentProps {
+  name: string;
+  handleInputChange: React.ChangeEventHandler<UserInputField>;
+}
+
+function NumberArgument(props: ArgumentProps & GenericArgumentConfig<number>) {
   var min = props.limit[0];
   var max = props.limit[1];
   return (
@@ -21,7 +28,7 @@ function NumberArgument(props) {
   );
 }
 
-function EnumArgument(props) {
+function EnumArgument(props: ArgumentProps & GenericArgumentConfig<string>) {
   const options = props.limit.map((item, key) => (
     <option value={item}>{item}</option>
   ));
@@ -40,7 +47,7 @@ function EnumArgument(props) {
   );
 }
 
-function StringArgument(props) {
+function StringArgument(props: ArgumentProps & { value: string }) {
   return (
     <div>
       {props.name}:

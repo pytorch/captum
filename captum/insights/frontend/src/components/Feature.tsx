@@ -3,8 +3,19 @@ import React from "react";
 import styles from "../App.module.css";
 import Tooltip from "./Tooltip";
 import Plot from "./Plot";
+import { FeatureOutput } from "../models/visualizationOutput";
 
-function ImageFeature(props) {
+interface FeatureProps<T> {
+  data: T;
+}
+
+type ImageFeatureProps = FeatureProps<{
+  base: string;
+  modified: string;
+  name: string;
+}>;
+
+function ImageFeature(props: ImageFeatureProps) {
   return (
     <>
       <div className={styles["panel__column__title"]}>
@@ -38,7 +49,13 @@ function ImageFeature(props) {
   );
 }
 
-function TextFeature(props) {
+type TextFeatureProps = FeatureProps<{
+  base: number[];
+  name: string;
+  modified: number[];
+}>;
+
+function TextFeature(props: TextFeatureProps) {
   const color_words = props.data.base.map((w, i) => {
     return (
       <>
@@ -64,7 +81,13 @@ function TextFeature(props) {
   );
 }
 
-function GeneralFeature(props) {
+type GeneralFeatureProps = FeatureProps<{
+  base: number[];
+  modified: number[];
+  name: string;
+}>;
+
+function GeneralFeature(props: GeneralFeatureProps) {
   return (
     <Plot
       data={[
@@ -87,7 +110,6 @@ function GeneralFeature(props) {
         margin: {
           t: 20,
           pad: 0,
-          title: false,
         },
         yaxis: {
           fixedrange: true,
@@ -101,7 +123,7 @@ function GeneralFeature(props) {
   );
 }
 
-function Feature(props) {
+function Feature(props: {data: FeatureOutput}) {
   const data = props.data;
   switch (data.type) {
     case "image":

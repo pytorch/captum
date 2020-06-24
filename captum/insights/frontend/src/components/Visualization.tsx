@@ -5,16 +5,27 @@ import Feature from "./Feature";
 import Spinner from "./Spinner";
 import LabelButton from "./LabelButton";
 import Contributions from "./Contributions";
+import { VisualizationOutput } from "../models/visualizationOutput";
 
-class Visualization extends React.Component {
-  constructor(props) {
+interface VisualizationProps {
+  data: VisualizationOutput;
+  instance: number;
+  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+}
+
+interface VisualizationState {
+  loading: boolean;
+}
+
+class Visualization extends React.Component<VisualizationProps, VisualizationState> {
+  constructor(props: VisualizationProps) {
     super(props);
     this.state = {
       loading: false,
     };
   }
 
-  onTargetClick = (labelIndex, instance) => {
+  onTargetClick = (labelIndex: number, instance: number) => {
     this.setState({ loading: true });
     this.props.onTargetClick(labelIndex, instance, () =>
       this.setState({ loading: false })
