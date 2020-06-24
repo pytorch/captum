@@ -4,7 +4,7 @@ from captum.insights.features import (
     EmptyFeature,
     ImageFeature,
     GeneralFeature,
-    _convert_figure_base64
+    _convert_figure_base64,
 )
 
 from tests.helpers.basic import BaseTest
@@ -142,7 +142,7 @@ class TestImageFeature(BaseTest):
                 base=_convert_figure_base64(orig_fig),
                 modified=_convert_figure_base64(attr_fig),
                 type="image",
-                contribution=contribution
+                contribution=contribution,
             )
 
             self.assertEqual(expected_feature_output, feature_output)
@@ -168,9 +168,7 @@ class TestGeneralFeature(BaseTest):
         feature = GeneralFeature(name, categories)
 
         feature_output = feature.visualize(
-            attribution=attribution,
-            data=data,
-            contribution_frac=contribution
+            attribution=attribution, data=data, contribution_frac=contribution
         )
 
         expected_feature_output = FeatureOutput(
@@ -178,7 +176,7 @@ class TestGeneralFeature(BaseTest):
             base=expected_base,
             modified=expected_modified,
             type="general",
-            contribution=contribution
+            contribution=contribution,
         )
 
         self.assertEqual(expected_feature_output, feature_output)
