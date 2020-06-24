@@ -7,11 +7,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
-
-from captum.log import log_usage
 
 from ..._utils.common import (
     ExpansionTypes,
@@ -496,8 +495,10 @@ class DeepLift(GradientAttribution):
             or not self._is_non_linear(module)
         )
 
-    def _register_hooks(self, module: Module) -> None:
-        if not self._can_register_hook(module):
+    def _register_hooks(self, module: Module, skip_target_layer: bool = False) -> None:
+        if not self._can_register_hook(module) or (
+            skip_target_layer and module is self.layer
+        ):
             return
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)

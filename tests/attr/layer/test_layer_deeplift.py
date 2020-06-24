@@ -19,6 +19,7 @@ from ...helpers.basic import (
 from ...helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,
+    BasicModel_MaxPool_ReLU,
     BasicModel_MultiLayer,
     LinearMaxPoolLinearModel,
     ReLULinearModel,
@@ -91,6 +92,19 @@ class TestDeepLift(BaseTest):
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
         attr_method = LayerDeepLift(model, model.l3)
         self._relu_custom_attr_func_assert(attr_method, inputs, baselines, [[2.0]])
+
+    def test_inplace_maxpool_relu_with_custom_attr_func(self) -> None:
+        model = BasicModel_MaxPool_ReLU(inplace=True)
+        inp = torch.tensor([[[1.0, 2.0, -4.0], [-3.0, -2.0, -1.0]]])
+        dl = LayerDeepLift(model, model.maxpool)
+
+        def custom_att_func(mult, inp, baseline):
+            assertTensorAlmostEqual(self, mult[0], [[1.0, 0.0]])
+            assertTensorAlmostEqual(self, inp[0], [[2.0, -1.0]])
+            assertTensorAlmostEqual(self, baseline[0], [[0.0, 0.0]])
+            return mult
+
+        dl.attribute(inp, custom_attribution_func=custom_att_func)
 
     def test_linear_layer_deeplift_batch(self) -> None:
         model = ReLULinearModel(inplace=True)
