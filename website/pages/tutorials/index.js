@@ -95,9 +95,9 @@ class TutorialHome extends React.Component {
                 the network function. Find the tutorial <a href="House_Prices_Regression_Interpret">here</a>.
 
                 <h4>Interpreting a semantic segmentation model:</h4>
-                In this tutorial, we demonstrate applying Captum to semantic segmentation task, to understand what pixels
+                In this tutorial, we demonstrate applying Captum to a semantic segmentation task to understand what pixels
                 and regions contribute to the labeling of a particular class. We explore applying GradCAM as well as Feature Ablation
-                to a pretrained Fully-Convolutional Network model with a ResNet-101 backbone.. Find the tutorial <a href="Segmentation_Interpret">here</a>.
+                to a pretrained Fully-Convolutional Network model with a ResNet-101 backbone. Find the tutorial <a href="Segmentation_Interpret">here</a>.
 
                 <h4>Using Captum with torch.distributed:</h4>
                 This tutorial provides examples of using Captum with the torch.distributed package and DataParallel,
