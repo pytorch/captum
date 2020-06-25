@@ -79,23 +79,24 @@ class Test(BaseTest):
 
     def test_single_input(self) -> None:
         batch_size = 2
-        input_size = (3,)
+        input_size = (6,)
+        constant_value = 10000
 
         def forward_func(x: Tensor) -> Tensor:
-            return x.sum()
+            return x.sum(dim=-1)
 
         feature_importance = FeaturePermutation(forward_func=forward_func)
 
-        inp = torch.randn((batch_size,) + input_size) * 10
+        inp = torch.randn((batch_size,) + input_size)
 
-        inp[:, 0] = 5
-        for _ in range(10):
-            attribs = feature_importance.attribute(inp)
+        inp[:, 0] = constant_value
+        zeros = torch.zeros_like(inp[:, 0])
 
-            self.assertTrue(attribs.squeeze(0).size() == input_size)
-            self.assertTrue((attribs[:, 0] == 0).all())
-            self.assertTrue((attribs[:, 1] != 0).all())
-            self.assertTrue((attribs[:, 2] != 0).all())
+        attribs = feature_importance.attribute(inp)
+
+        self.assertTrue(attribs.squeeze(0).size() == (batch_size,) + input_size)
+        assertArraysAlmostEqual(attribs[:, 0], zeros)
+        self.assertTrue((attribs[:, 1 : input_size[0]].abs() > 0).all())
 
     def test_multi_input(self) -> None:
         batch_size = 20
