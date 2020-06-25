@@ -496,9 +496,11 @@ class DeepLift(GradientAttribution):
             or not self._is_non_linear(module)
         )
 
-    def _register_hooks(self, module: Module, skip_target_layer: bool = False) -> None:
+    def _register_hooks(
+        self, module: Module, attribute_to_layer_input: bool = True
+    ) -> None:
         if not self._can_register_hook(module) or (
-            skip_target_layer and module is self.layer  # type: ignore
+            not attribute_to_layer_input and module is self.layer  # type: ignore
         ):
             return
         # adds forward hook to leaf nodes that are non-linear

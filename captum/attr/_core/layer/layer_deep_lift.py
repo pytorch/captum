@@ -285,7 +285,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
 
             self.model.apply(
                 lambda mod: self._register_hooks(
-                    mod, skip_target_layer=not attribute_to_layer_input
+                    mod, attribute_to_layer_input=attribute_to_layer_input
                 )
             )
 
