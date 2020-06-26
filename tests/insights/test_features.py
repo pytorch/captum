@@ -20,21 +20,6 @@ class TestTextFeature(BaseTest):
         feature = TextFeature(self.FEATURE_NAME, None, None, None)
         self.assertEqual(feature.visualization_type(), "text")
 
-    def test_text_feature_does_not_use_baseline_and_input_transform(self):
-        def mock_transform(*args, **kwargs):
-            raise AssertionError("baseline transform should not have been used")
-
-        feature = TextFeature(
-            name=self.FEATURE_NAME,
-            baseline_transforms=mock_transform,
-            input_transforms=mock_transform,
-            visualization_transform=None,
-        )
-
-        feature.visualize(
-            attribution=torch.rand(1, 1), data=torch.rand(1, 1), contribution_frac=1.0
-        )
-
     def test_text_feature_uses_visualization_transform_if_provided(self):
         input_data = torch.rand(2, 2)
         transformed_data = torch.rand(1, 1)
@@ -70,7 +55,7 @@ class TestTextFeature(BaseTest):
         # has original data
         self.assertIs(feature_output.base, input_data)
 
-    def test_text_feature_generates_correct_viualization_output(self):
+    def test_text_feature_generates_correct_visualization_output(self):
         attribution = torch.tensor([0.1, 0.2, 0.3, 0.4])
         input_data = torch.rand(1, 2)
         expected_modified = [100 * x for x in (attribution / attribution.max())]
