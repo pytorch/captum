@@ -7,11 +7,14 @@ from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _is_tuple,
     _run_forward,
 )
@@ -19,7 +22,6 @@ from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGen
 from .._utils.attribution import PerturbationAttribution
 from .._utils.common import (
     _find_output_mode_and_verify,
-    _format_attributions,
     _format_input_baseline,
     _tensorize_baseline,
 )
@@ -74,6 +76,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.permutation_generator = _perm_generator
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -358,7 +361,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             attrib = tuple(
                 tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
             )
-            formatted_attr = _format_attributions(is_inputs_tuple, attrib)
+            formatted_attr = _format_output(is_inputs_tuple, attrib)
         return formatted_attr
 
     def _perturbation_generator(
@@ -510,6 +513,7 @@ class ShapleyValues(PerturbationAttribution):
         self.shapley_sampling = ShapleyValueSampling(forward_func)
         self.shapley_sampling.permutation_generator = _all_perm_generator
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -704,7 +708,8 @@ class ShapleyValues(PerturbationAttribution):
                 "Consider using Shapley Value Sampling instead."
             )
 
-        return self.shapley_sampling.attribute(
+        return self.shapley_sampling.attribute.__wrapped__(
+            self.shapley_sampling,  # self
             inputs=inputs,
             baselines=baselines,
             target=target,

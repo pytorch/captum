@@ -7,6 +7,8 @@ from typing import Callable
 import numpy as np
 import torch
 
+from captum.log import set_environment
+
 
 def deep_copy_args(func: Callable):
     def copy_args(*args, **kwargs):
@@ -97,16 +99,4 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         set_all_random_seeds(1234)
-
-
-class BaseGPUTest(BaseTest):
-    """
-    This class provides a basic framework for all Captum tests requiring
-    CUDA and available GPUs to run appropriately, such as tests for
-    DataParallel models. If CUDA is not available, these tests are skipped.
-    """
-
-    def setUp(self):
-        super().setUp()
-        if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
-            raise unittest.SkipTest("Skipping GPU test since CUDA not available.")
+        set_environment("test")

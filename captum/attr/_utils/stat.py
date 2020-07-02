@@ -116,7 +116,11 @@ class Mean(Stat):
         n = self.n.get()
 
         if self.rolling_mean is None:
-            self.rolling_mean = x
+            # Ensures rolling_mean is a float tensor
+            if x.is_floating_point():
+                self.rolling_mean = x
+            else:
+                self.rolling_mean = x.to(torch.float64)
         else:
             delta = x - self.rolling_mean
             self.rolling_mean += delta / n
@@ -191,7 +195,10 @@ class Var(Stat):
         if n <= self.order:
             return torch.zeros_like(mse)
 
-        return mse / (n - self.order)
+        # NOTE: The following ensures mse is a float tensor.
+        #   torch.true_divide is available in PyTorch 1.5 and later.
+        #   This is for compatibility with 1.4.
+        return mse.to(torch.float64) / (n - self.order)
 
 
 class StdDev(Stat):

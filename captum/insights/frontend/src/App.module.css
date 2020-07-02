@@ -113,6 +113,7 @@
 
 .btn {
   border: solid 1px #ee4c2c;
+  background: white;
   text-align: center;
   font-weight: 600;
   font-size: 1em;
@@ -166,6 +167,7 @@
   display: flex;
   box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.18);
   transition: opacity 0.2s; /* for loading */
+  overflow-y: scroll;
 }
 
 .panel--loading {

@@ -6,22 +6,20 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_output,
 )
+from ...._utils.gradient import compute_layer_gradients_and_eval
 from ...._utils.typing import BaselineType, Literal, TargetType
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.batching import _batch_attribution
-from ..._utils.common import (
-    _format_attributions,
-    _format_input_baseline,
-    _reshape_and_sum,
-    _validate_input,
-)
-from ..._utils.gradient import compute_layer_gradients_and_eval
+from ..._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
 
 
 class LayerConductance(LayerAttribution, GradientAttribution):
@@ -100,6 +98,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -311,8 +310,8 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 target=target,
                 additional_forward_args=additional_forward_args,
             )
-            return _format_attributions(is_layer_tuple, attributions), delta
-        return _format_attributions(is_layer_tuple, attributions)
+            return _format_output(is_layer_tuple, attributions), delta
+        return _format_output(is_layer_tuple, attributions)
 
     def _attribute(
         self,
@@ -393,4 +392,4 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 layer_gradients, layer_evals, grad_diffs
             )
         )
-        return _format_attributions(is_layer_tuple, attributions)
+        return _format_output(is_layer_tuple, attributions)

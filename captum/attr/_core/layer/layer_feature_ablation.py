@@ -6,16 +6,18 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     _extract_device,
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _run_forward,
 )
+from ...._utils.gradient import _forward_layer_eval
 from ...._utils.typing import BaselineType, TargetType
 from ..._utils.attribution import LayerAttribution, PerturbationAttribution
-from ..._utils.common import _format_attributions
-from ..._utils.gradient import _forward_layer_eval
 from ..feature_ablation import FeatureAblation
 
 
@@ -61,6 +63,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         PerturbationAttribution.__init__(self, forward_func)
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -280,12 +283,13 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             ablator = FeatureAblation(layer_forward_func)
 
-            layer_attribs = ablator.attribute(
+            layer_attribs = ablator.attribute.__wrapped__(
+                ablator,  # self
                 layer_eval,
                 baselines=layer_baselines,
                 additional_forward_args=all_inputs,
                 feature_mask=layer_mask,
                 perturbations_per_eval=perturbations_per_eval,
             )
-            _attr = _format_attributions(is_layer_tuple, layer_attribs)
+            _attr = _format_output(is_layer_tuple, layer_attribs)
         return _attr

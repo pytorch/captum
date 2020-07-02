@@ -16,6 +16,79 @@ from ..._utils.common import (
 from .._utils.batching import _divide_and_aggregate_metrics
 
 
+def infidelity_perturb_func_decorator(pertub_func):
+    r"""
+    An auxiliary, decorator function that helps with computing
+    perturbations given perturbed inputs. It can be useful for cases
+    when `pertub_func` returns only perturbed inputs and we
+    internally compute the perturbations as
+    (input - perturbed_input) / (input - baseline).
+
+    If users decorate their `pertub_func` with
+    `@infidelity_perturb_func_decorator` function then their `pertub_func`
+    needs to only return perturbed inputs.
+
+    Note that if your attribution algorithm is inherently local such as
+    Saliency maps you should not use the decorator because the decorator
+    always divides by (input - baseline) and that is unnecessary for local
+    methods.
+    Args:
+
+        pertub_func(callable): Input perturbation function that takes inputs
+            and optionally baselines and returns perturbed inputs
+
+    Returns:
+
+        default_perturb_func(callable): Internal default perturbation
+        function that computes the perturbations internally and returns
+        perturbations and perturbed inputs.
+
+    Examples::
+        >>> @infidelity_perturb_func_decorator
+        >>> def perturb_fn(inputs):
+        >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
+        >>>    return inputs - noise
+        >>> # Computes infidelity score using `perturb_fn`
+        >>> infidelity = infidelity_attr(model, perturb_fn, input, ...)
+
+    """
+
+    def default_perturb_func(inputs, baselines=None):
+        r"""
+        """
+        inputs_perturbed = (
+            pertub_func(inputs, baselines)
+            if baselines is not None
+            else pertub_func(inputs)
+        )
+        inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+        inputs = _format_tensor_into_tuples(inputs)
+        baselines = _format_tensor_into_tuples(baselines)
+        if baselines is None:
+            perturbations = tuple(
+                safe_div(
+                    input - input_perturbed,
+                    input,
+                    torch.tensor(1.0, device=input.device),
+                )
+                for input, input_perturbed in zip(inputs, inputs_perturbed)
+            )
+        else:
+            perturbations = tuple(
+                safe_div(
+                    input - input_perturbed,
+                    input - baseline,
+                    torch.tensor(1.0, device=input.device),
+                )
+                for input, input_perturbed, baseline in zip(
+                    inputs, inputs_perturbed, baselines
+                )
+            )
+        return perturbations, inputs_perturbed
+
+    return default_perturb_func
+
+
 def infidelity(
     forward_func,
     perturb_func,
@@ -24,9 +97,8 @@ def infidelity(
     baselines=None,
     additional_forward_args=None,
     target=None,
-    n_samples=10,
+    n_perturb_samples=10,
     max_examples_per_batch=None,
-    perturb_func_custom=False,
 ):
     r"""
     Explanation infidelity represents the expected mean-squared error
@@ -62,35 +134,52 @@ def infidelity(
                 The perturbation function of model inputs. This function takes
                 model inputs and optionally baselines as input arguments and returns
                 either a tuple of perturbations and perturbed inputs or just
-                perturbed inputs. If `perturb_func` returns only perturbed inputs
-                then the users have to set the `perturb_func_custom=True`, this
-                will allow us to compute the perturbations internally both for local
-                and global infidelity and makes sense
-                to use only if input attributions are global attributions.
+                perturbed inputs. For example:
+
+                 def my_perturb_func(inputs):
+                    <MY-LOGIC-HERE>
+                    return perturbations, perturbed_inputs
+
+                If we want to only return perturbed inputs and compute
+                perturbations internally then we can wrap perturb_func with
+                `infidelity_perturb_func_decorator` decorator such as:
+
+                from captum.metrics import infidelity_perturb_func_decorator
+                @infidelity_perturb_func_decorator
+                def my_perturb_func(inputs):
+                    <MY-LOGIC-HERE>
+                    return perturbed_inputs
+
+                In this case we compute perturbations by dividing
+                (input - perturbed_input) by (input - baselines) and the user needs to
+                only return perturbed inputs in `perturb_func` as described above.
+
+                `infidelity_perturb_func_decorator` makes sense to use only for global
+                attribution algorithms such as integrated gradients, deeplift, etc.
+                In case user has a local attribution algorithm or decides to compute
+                perturbations and perturbed inputs in `perturb_func` then they must not
+                use `infidelity_perturb_func_decorator`.
 
                 If there are more than one inputs passed to infidelity function those
                 will be passed to `perturb_func` as tuples in the same order as they
                 are passed to infidelity function.
 
-                In case `perturb_func_custom=False` and if inputs
+                If inputs
                  - is a single tensor, the function needs to return a tuple
                     of perturbations and perturbed input such as:
                       perturb, perturbed_input
+
+                      and only perturbed_input in case
+                      `infidelity_perturb_func_decorator`
+                      is used.
                  - is a tuple of tensors,
                     corresponding perturbations and perturbed inputs must be computed
                     and returned as tuples in the following format:
                         (perturb1, perturb2, ... perturbN), (perturbed_input1,
                          perturbed_input2, ... perturbed_inputN)
-
-                In case `perturb_func_custom=True` and if inputs
-                 - is a single tensor, the function needs to return
-                     only perturbed input
-                       perturbed_input
-                 - is a tuple of tensors,
-                    corresponding perturbed inputs must be computed and
-                    returned as tuples in the following format:
-                       (perturbed_input1, perturbed_input2, ... perturbed_inputN)
-
+                    Similar to previous case here as well we need to return only
+                    perturbed inputs in case `infidelity_perturb_func_decorator`
+                    decorates out perturb_func
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
                 input examples that are repeated `max_examples_per_batch / batch_size`
@@ -164,9 +253,8 @@ def infidelity(
                 tensor as well. If inputs is provided as a tuple of tensors
                 then attributions will be tuples of tensors as well.
 
-                If `perturb_func_custom=True` then we internally divide global
-                attribution values by (input - baselines) and the user needs to
-                only return perturbed inputs in `perturb_func`.
+                For more details on when to use `infidelity_perturb_func_decorator`,
+                please, read the documentation about `perturb_func`
 
         additional_forward_args (any, optional): If the forward function
                 requires additional arguments other than the inputs for
@@ -206,37 +294,29 @@ def infidelity(
                   target for the corresponding example.
 
                 Default: None
-        n_samples (int, optional): The number of times input tensors are perturbed.
-                Each input example in the inputs tensor is expanded `n_samples`
+        n_perturb_samples (int, optional): The number of times input tensors
+                are perturbed. Each input example in the inputs tensor is expanded
+                `n_perturb_samples`
                 times before calling `perturb_func` function.
 
                 Default: 10
         max_examples_per_batch (int, optional): The number of maximum input
                 examples that are processed together. In case the number of
-                examples (`input batch size * n_samples`) exceeds
+                examples (`input batch size * n_perturb_samples`) exceeds
                 `max_examples_per_batch`, they will be sliced
                 into batches of `max_examples_per_batch` examples and processed
                 in a sequential order. If `max_examples_per_batch` is None, all
-                examples are processed together.
+                examples are processed together. `max_examples_per_batch` should
+                at least be equal `input batch size` and at most
+                `input batch size * n_perturb_samples`.
 
                 Default: None
-        perturb_func_custom (boolean, optional): A flag that indicates whether
-                to use default perturbation logic that always divides the
-                attributions by (input - baseline). If this flag
-                is True then `perturb_func` needs to return only the
-                perturbed inputs.
-                The perturbations will be computed internally by
-                `default_perturb_func`. This makes sense to use only with
-                global attribution values because otherwise there is no need
-                to divide the attributions by (input - baseline).
-
-                Default: False
     Returns:
 
         infidelities (tensor): A tensor of scalar infidelity scores per
-                        input example. The first dimension is equal to the
-                        number of examples in the input batch and the second
-                        dimension is one.
+                input example. The first dimension is equal to the
+                number of examples in the input batch and the second
+                dimension is one.
 
     Examples::
         >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -251,40 +331,17 @@ def infidelity(
         >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
         >>>    return noise, inputs - noise
         >>> # Computes infidelity score for saliency maps
-        >>> infidelity = infidelity_attr(net, perturb_fn, input, attribution)
+        >>> infid = infidelity(net, perturb_fn, input, attribution)
     """
 
-    def default_perturb_func(inputs, inputs_perturbed, baselines=None):
+    def _generate_perturbations(current_n_perturb_samples):
         r"""
-        """
-        if baselines is None:
-            perturbations = tuple(
-                safe_div(
-                    input - input_perturbed,
-                    input,
-                    torch.tensor(1.0, device=input.device),
-                )
-                for input, input_perturbed in zip(inputs, inputs_perturbed)
-            )
-        else:
-            perturbations = tuple(
-                safe_div(
-                    input - input_perturbed,
-                    input - baseline,
-                    torch.tensor(1.0, device=input.device),
-                )
-                for input, input_perturbed, baseline in zip(
-                    inputs, inputs_perturbed, baselines
-                )
-            )
-        return perturbations, inputs_perturbed
-
-    def _generate_perturbations(current_n_samples):
-        r"""
-        The perturbations are generated for each example `current_n_samples` times.
+        The perturbations are generated for each example
+        `current_n_perturb_samples` times.
 
         For performance reasons we are not calling `perturb_func` on each example but
-        on a batch that contains `current_n_samples` repeated instances per example.
+        on a batch that contains `current_n_perturb_samples`
+        repeated instances per example.
         """
 
         def call_perturb_func():
@@ -306,11 +363,13 @@ def infidelity(
             )
 
         inputs_expanded = tuple(
-            torch.repeat_interleave(input, current_n_samples, dim=0) for input in inputs
+            torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
+            for input in inputs
         )
+
         if baselines is not None:
             baselines_expanded = tuple(
-                baseline.repeat_interleave(current_n_samples, dim=0)
+                baseline.repeat_interleave(current_n_perturb_samples, dim=0)
                 if isinstance(baseline, torch.Tensor)
                 and baseline.shape[0] == input.shape[0]
                 and baseline.shape[0] > 1
@@ -320,16 +379,7 @@ def infidelity(
         else:
             baselines_expanded = None
 
-        perturb_func_out = call_perturb_func()
-
-        if perturb_func_custom:
-            return default_perturb_func(
-                inputs_expanded,
-                _format_tensor_into_tuples(perturb_func_out),
-                baselines=baselines_expanded,
-            )
-        else:
-            return perturb_func_out
+        return call_perturb_func()
 
     def _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations):
         # asserts the sizes of the perturbations and inputs
@@ -349,8 +399,10 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
-    def _next_infidelity(current_n_samples):
-        perturbations, inputs_perturbed = _generate_perturbations(current_n_samples)
+    def _next_infidelity(current_n_perturb_samples):
+        perturbations, inputs_perturbed = _generate_perturbations(
+            current_n_perturb_samples
+        )
 
         if not is_input_tpl:
             perturbations = _format_tensor_into_tuples(perturbations)
@@ -359,11 +411,13 @@ def infidelity(
         _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations)
 
         targets_expanded = _expand_target(
-            target, current_n_samples, expansion_type=ExpansionTypes.repeat_interleave
+            target,
+            current_n_perturb_samples,
+            expansion_type=ExpansionTypes.repeat_interleave,
         )
         additional_forward_args_expanded = _expand_additional_forward_args(
             additional_forward_args,
-            current_n_samples,
+            current_n_perturb_samples,
             expansion_type=ExpansionTypes.repeat_interleave,
         )
 
@@ -374,10 +428,12 @@ def infidelity(
             additional_forward_args_expanded,
         )
         inputs_fwd = _run_forward(forward_func, inputs, target, additional_forward_args)
-        inputs_fwd = torch.repeat_interleave(inputs_fwd, current_n_samples, dim=0)
+        inputs_fwd = torch.repeat_interleave(
+            inputs_fwd, current_n_perturb_samples, dim=0
+        )
         inputs_minus_perturb = inputs_fwd - inputs_perturbed_fwd
         attributions_expanded = tuple(
-            torch.repeat_interleave(attribution, current_n_samples, dim=0)
+            torch.repeat_interleave(attribution, current_n_perturb_samples, dim=0)
             for attribution in attributions
         )
         attributions_times_perturb = tuple(
@@ -427,8 +483,8 @@ def infidelity(
     with torch.no_grad():
         metrics_sum = _divide_and_aggregate_metrics(
             inputs,
-            n_samples,
+            n_perturb_samples,
             _next_infidelity,
             max_examples_per_batch=max_examples_per_batch,
         )
-    return metrics_sum * 1 / n_samples
+    return metrics_sum * 1 / n_perturb_samples

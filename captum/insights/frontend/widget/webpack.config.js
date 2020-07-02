@@ -16,11 +16,11 @@ var rules = [
     },
     { test: /^((?!\.module).)*.css$/, use: ['style-loader', 'css-loader'] },
     {
-      test: /\.js$/,
+      test: /\.(js|ts|tsx)$/,
       exclude: /node_modules/,
       loaders: 'babel-loader',
       options: {
-         presets: ['@babel/preset-react', '@babel/preset-env'],
+         presets: ['@babel/preset-react', '@babel/preset-env', '@babel/preset-typescript'],
          plugins: [
             "@babel/plugin-proposal-class-properties"
          ],
@@ -28,6 +28,7 @@ var rules = [
     }
 ]
 
+var extensions = ['.js', '.ts', '.tsx']
 
 module.exports = [
     {// Notebook extension
@@ -46,7 +47,8 @@ module.exports = [
             libraryTarget: 'amd'
         },
         resolveLoader: {
-          modules: ['../node_modules']
+          modules: ['../node_modules'],
+          extensions: extensions
         },
         resolve: {
           modules: ['../node_modules']
@@ -73,7 +75,8 @@ module.exports = [
           modules: ['../node_modules']
         },
         resolve: {
-          modules: ['../node_modules']
+          modules: ['../node_modules'],
+          extensions: extensions
         },
         externals: ['@jupyter-widgets/base']
     },
@@ -107,7 +110,8 @@ module.exports = [
           modules: ['../node_modules']
         },
         resolve: {
-          modules: ['../node_modules']
+          modules: ['../node_modules'],
+          extensions: extensions
         },
         externals: ['@jupyter-widgets/base']
     }

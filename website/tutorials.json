@@ -32,6 +32,14 @@
       "title": "Interpreting a regression model of Boston house prices"
     },
     {
+      "id": "Segmentation_Interpret",
+      "title": "Interpreting semantic segmentation models"
+    },
+    {
+      "id": "Distributed_Attribution",
+      "title": "Using Captum with torch.distributed"
+    },
+    {
       "id": "CIFAR_TorchVision_Captum_Insights",
       "title": "Getting started with Captum Insights"
     },

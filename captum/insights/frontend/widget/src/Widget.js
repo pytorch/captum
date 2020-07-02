@@ -12,10 +12,10 @@ class Widget extends React.Component {
       config: {
         classes: [],
         methods: [],
-        method_arguments: {}
+        method_arguments: {},
       },
       loading: false,
-      callback: null
+      callback: null,
     };
     this.backbone = this.props.backbone;
   }
@@ -47,14 +47,11 @@ class Widget extends React.Component {
 
   _fetchInit = () => {
     this.setState({
-      config: this.backbone.model.get("insights_config")
+      config: this.backbone.model.get("insights_config"),
     });
   };
 
-  fetchData = filterConfig => {
-    filterConfig.approximation_steps = parseInt(
-      filterConfig.approximation_steps
-    );
+  fetchData = (filterConfig) => {
     this.setState({ loading: true }, () => {
       this.backbone.model.save({ config: filterConfig, output: [] });
     });
@@ -64,7 +61,7 @@ class Widget extends React.Component {
     this.setState({ callback: callback }, () => {
       this.backbone.model.save({
         label_details: { labelIndex, instance },
-        attribution: {}
+        attribution: {},
       });
     });
   };
@@ -90,8 +87,8 @@ var CaptumInsightsModel = widgets.DOMWidgetModel.extend({
     _model_module: "jupyter-captum-insights",
     _view_module: "jupyter-captum-insights",
     _model_module_version: "0.1.0",
-    _view_module_version: "0.1.0"
-  })
+    _view_module_version: "0.1.0",
+  }),
 });
 
 var CaptumInsightsView = widgets.DOMWidgetView.extend({
@@ -99,7 +96,7 @@ var CaptumInsightsView = widgets.DOMWidgetView.extend({
     const $app = document.createElement("div");
     ReactDOM.render(<Widget backbone={this} />, $app);
     this.el.append($app);
-  }
+  },
 });
 
 export { Widget as default, CaptumInsightsModel, CaptumInsightsView };

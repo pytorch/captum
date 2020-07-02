@@ -8,6 +8,9 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
+from ...._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from ...._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 from ..._utils.common import (
@@ -15,7 +18,6 @@ from ..._utils.common import (
     _format_callable_baseline,
     _format_input_baseline,
 )
-from ..._utils.gradient import _forward_layer_eval, compute_layer_gradients_and_eval
 from ..gradient_shap import _scale_input
 from ..noise_tunnel import NoiseTunnel
 
@@ -112,6 +114,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -281,7 +284,8 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
 
-        attributions = nt.attribute(
+        attributions = nt.attribute.__wrapped__(
+            nt,  # self
             inputs,
             nt_type="smoothgrad",
             n_samples=n_samples,
@@ -352,6 +356,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],

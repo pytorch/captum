@@ -5,10 +5,13 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_output,
     _is_tuple,
 )
 from ..._utils.typing import (
@@ -20,12 +23,7 @@ from ..._utils.typing import (
 from .._utils.approximation_methods import approximation_parameters
 from .._utils.attribution import GradientAttribution
 from .._utils.batching import _batch_attribution
-from .._utils.common import (
-    _format_attributions,
-    _format_input_baseline,
-    _reshape_and_sum,
-    _validate_input,
-)
+from .._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
 
 
 class IntegratedGradients(GradientAttribution):
@@ -87,6 +85,7 @@ class IntegratedGradients(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
+    @log_usage()
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -282,8 +281,8 @@ class IntegratedGradients(GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            return _format_attributions(is_inputs_tuple, attributions), delta
-        return _format_attributions(is_inputs_tuple, attributions)
+            return _format_output(is_inputs_tuple, attributions), delta
+        return _format_output(is_inputs_tuple, attributions)
 
     def _attribute(
         self,

@@ -5,21 +5,20 @@ from typing import Any, Callable, Tuple, Union, cast
 import torch
 from torch import Tensor, dtype
 
+from captum.log import log_usage
+
 from ..._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _is_tuple,
     _run_forward,
 )
 from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import PerturbationAttribution
-from .._utils.common import (
-    _find_output_mode_and_verify,
-    _format_attributions,
-    _format_input_baseline,
-)
+from .._utils.common import _find_output_mode_and_verify, _format_input_baseline
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -52,6 +51,7 @@ class FeatureAblation(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.use_weights = False
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -331,7 +331,7 @@ class FeatureAblation(PerturbationAttribution):
                 )
             else:
                 attrib = tuple(total_attrib)
-            _result = _format_attributions(is_inputs_tuple, attrib)
+            _result = _format_output(is_inputs_tuple, attrib)
         return _result
 
     def _ablation_generator(

@@ -6,11 +6,19 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum.log import log_usage
+
 from ...._utils.common import (
     ExpansionTypes,
     _expand_target,
     _format_additional_forward_args,
+    _format_baseline,
     _format_input,
+)
+from ...._utils.gradient import (
+    apply_gradient_requirements,
+    compute_layer_gradients_and_eval,
+    undo_gradient_requirements,
 )
 from ...._utils.typing import (
     BaselineType,
@@ -23,15 +31,9 @@ from ..._utils.attribution import LayerAttribution
 from ..._utils.common import (
     _call_custom_attribution_func,
     _compute_conv_delta_and_format_attrs,
-    _format_baseline,
     _format_callable_baseline,
     _tensorize_baseline,
     _validate_input,
-)
-from ..._utils.gradient import (
-    apply_gradient_requirements,
-    compute_layer_gradients_and_eval,
-    undo_gradient_requirements,
 )
 
 
@@ -107,6 +109,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -280,7 +283,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         try:
             main_model_hooks = self._hook_main_model()
 
-            self.model.apply(self._register_hooks)
+            self.model.apply(
+                lambda mod: self._register_hooks(
+                    mod, attribute_to_layer_input=attribute_to_layer_input
+                )
+            )
 
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
@@ -295,7 +302,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 additional_forward_args,
             )
 
-            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
+            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric) -> Sequence:
                 if isinstance(out, Tensor):
                     return out.chunk(2)
                 return tuple(out_sub.chunk(2) for out_sub in out)
@@ -407,6 +414,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -592,7 +600,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
         ) = DeepLiftShap._expand_inputs_baselines_targets(
             self, baselines, inputs, target, additional_forward_args
         )
-        attributions = LayerDeepLift.attribute(
+        attributions = LayerDeepLift.attribute.__wrapped__(  # type: ignore
             self,
             exp_inp,
             exp_base,

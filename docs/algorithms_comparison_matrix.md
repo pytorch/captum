@@ -213,3 +213,5 @@ Please, scroll to the right for more details.
 **^ Including Layer Variant**
 
 **˚ Including Neuron Variant**
+
+<a href="/img/algorithms_comparison_matrix.png">Algorithm Comparison Matrix.png</a>
