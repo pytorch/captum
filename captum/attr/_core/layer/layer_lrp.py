@@ -127,10 +127,11 @@ class LayerLRP(LRP, LayerAttribution):
                         returned. If a tuple is provided for inputs, a tuple of
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
-                        implementations.
+                        implementations. If attributions for all layers are returned
+                        (layer=None) a list of tensors is returned with entries for
+                        each layer.
             - **delta** (*tensor* or list of *tensors* returned if
                 return_convergence_delta=True):
-
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
@@ -157,19 +158,20 @@ class LayerLRP(LRP, LayerAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
-        is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
-        inputs = _format_input(inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
-        # 1. Forward pass
-        self._change_weights(inputs, additional_forward_args)
-        self._register_forward_hooks()
-        # 2. Forward pass + backward pass
-        _ = compute_gradients(
-            self._forward_fn_wrapper, inputs, target, additional_forward_args
-        )
-        relevances = self._get_output_relevance()
-
-        self._restore_model()
+        try:
+            is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
+            inputs = _format_input(inputs)
+            gradient_mask = apply_gradient_requirements(inputs)
+            # 1. Forward pass
+            self._change_weights(inputs, additional_forward_args)
+            self._register_forward_hooks()
+            # 2. Forward pass + backward pass
+            _ = compute_gradients(
+                self._forward_fn_wrapper, inputs, target, additional_forward_args
+            )
+            relevances = self._get_output_relevance()
+        finally:
+            self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:

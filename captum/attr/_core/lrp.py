@@ -155,18 +155,20 @@ class LRP(GradientAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
-        is_inputs_tuple = isinstance(inputs, tuple)
-        inputs = _format_input(inputs)
-        gradient_mask = apply_gradient_requirements(inputs)
-        # 1. Forward pass
-        self._change_weights(inputs, additional_forward_args)
-        self._register_forward_hooks()
-        # 2. Forward pass + backward pass
-        relevances = self.gradient_func(
-            self._forward_fn_wrapper, inputs, target, additional_forward_args
-        )
+        try:
+            is_inputs_tuple = isinstance(inputs, tuple)
+            inputs = _format_input(inputs)
+            gradient_mask = apply_gradient_requirements(inputs)
+            # 1. Forward pass
+            self._change_weights(inputs, additional_forward_args)
+            self._register_forward_hooks()
+            # 2. Forward pass + backward pass
+            relevances = self.gradient_func(
+                self._forward_fn_wrapper, inputs, target, additional_forward_args
+            )
+        finally:
+            self._restore_model()
 
-        self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
@@ -208,8 +210,18 @@ class LRP(GradientAttribution):
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-        remaining_dims = tuple(range(1, len(attributions.shape)))
-        return 1 - torch.sum(attributions, remaining_dims)
+
+        def _single_attribution_delta(attributions):
+            remaining_dims = tuple(range(1, len(attributions.shape)))
+            delta = 1 - torch.sum(attributions, remaining_dims)
+            return delta
+
+        if isinstance(attributions, tuple):
+            delta = map(_single_attribution_delta, attributions)
+            delta = tuple(delta)
+        else:
+            delta = _single_attribution_delta(attributions)
+        return delta
 
     def _get_layers(self, model):
         for layer in model.children():
@@ -243,8 +255,8 @@ class LRP(GradientAttribution):
                 ):
                     raise TypeError(
                         (
-                            "Please select propagation rules inherited from class "
-                            "PropagationRule"
+                            f"Please select propagation rules inherited from class "
+                            f"PropagationRule for module: {module}"
                         )
                     )
 
@@ -278,9 +290,11 @@ class LRP(GradientAttribution):
                 self.forward_handles.append(forward_handle)
 
     def _change_weights(self, inputs, additional_forward_args):
-        self._register_weight_hooks()
-        _ = _run_forward(self.model, inputs, None, additional_forward_args)
-        self._remove_forward_hooks()
+        try:
+            self._register_weight_hooks()
+            _ = _run_forward(self.model, inputs, None, additional_forward_args)
+        finally:
+            self._remove_forward_hooks()
         # pre_hooks for 2nd pass
         self._register_pre_hooks()
 
