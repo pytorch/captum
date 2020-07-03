@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import torch
 
-from ..._core.lrp import LRP
-from ..._utils.attribution import LayerAttribution
-from ..._utils.common import _format_attributions, _format_input
-from ..._utils.gradient import (
+from ...._utils.common import _format_input, _format_output
+from ...._utils.gradient import (
     _forward_layer_eval,
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
 )
+from ..._core.lrp import LRP
+from ..._utils.attribution import LayerAttribution
 
 
 class LayerLRP(LRP, LayerAttribution):
@@ -181,9 +181,9 @@ class LayerLRP(LRP, LayerAttribution):
                     delta.append(self.compute_convergence_delta(relevance_layer))
             else:
                 delta = self.compute_convergence_delta(relevances[0])
-            return _format_attributions(is_layer_tuple, relevances), delta
+            return _format_output(is_layer_tuple, relevances), delta
         else:
-            return _format_attributions(is_layer_tuple, relevances)
+            return _format_output(is_layer_tuple, relevances)
 
     def _is_layer_tuple(self, inputs, additional_forward_args):
         if self.layer is None:

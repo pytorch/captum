@@ -11,12 +11,12 @@ from captum.attr._utils.lrp_rules import (
     IdentityRule,
 )
 
+from ..helpers.basic import BaseTest, assertTensorAlmostEqual
 from ..helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     SimpleLRPModel,
 )
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 def _get_basic_config():
