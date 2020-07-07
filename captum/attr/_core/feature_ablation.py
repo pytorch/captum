@@ -367,17 +367,22 @@ class FeatureAblation(PerturbationAttribution):
         if isinstance(baseline, torch.Tensor):
             baseline = baseline.reshape((1,) + baseline.shape)
 
-        # Repeat features and additional args for batch size.
-        all_features_repeated = [
-            torch.cat([inputs[j]] * perturbations_per_eval, dim=0)
-            for j in range(len(inputs))
-        ]
-        additional_args_repeated = (
-            _expand_additional_forward_args(additional_args, perturbations_per_eval)
-            if additional_args is not None
-            else None
-        )
-        target_repeated = _expand_target(target, perturbations_per_eval)
+        if perturbations_per_eval > 1:
+            # Repeat features and additional args for batch size.
+            all_features_repeated = [
+                torch.cat([inputs[j]] * perturbations_per_eval, dim=0)
+                for j in range(len(inputs))
+            ]
+            additional_args_repeated = (
+                _expand_additional_forward_args(additional_args, perturbations_per_eval)
+                if additional_args is not None
+                else None
+            )
+            target_repeated = _expand_target(target, perturbations_per_eval)
+        else:
+            all_features_repeated = list(inputs)
+            additional_args_repeated = additional_args
+            target_repeated = target
 
         num_features_processed = min_feature
         while num_features_processed < num_features:
