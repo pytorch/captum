@@ -1,4 +1,4 @@
-from captum.insights.features import (
+from captum.insights.attr_vis.features import (
     TextFeature,
     FeatureOutput,
     EmptyFeature,

@@ -21,13 +21,11 @@ from torch.nn import Module
 from captum._utils.common import _run_forward, safe_div
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.insights.config import (
-    ATTRIBUTION_METHOD_CONFIG,
-    ATTRIBUTION_NAMES_TO_METHODS,
-)
-from captum.insights.features import BaseFeature
-from captum.insights.server import namedtuple_to_dict
 from captum.log import log_usage
+
+from .config import ATTRIBUTION_METHOD_CONFIG, ATTRIBUTION_NAMES_TO_METHODS
+from .features import BaseFeature
+from .server import namedtuple_to_dict
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -258,7 +256,7 @@ class AttributionVisualizer(object):
     @log_usage()
     def render(self, debug=True):
         from IPython.display import display
-        from captum.insights.widget import CaptumInsights
+        from .widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
@@ -274,13 +272,13 @@ class AttributionVisualizer(object):
             return self._serve(blocking=blocking, debug=debug, port=port)
 
     def _serve(self, blocking=False, debug=False, port=None):
-        from captum.insights.server import start_server
+        from .server import start_server
 
         return start_server(self, blocking=blocking, debug=debug, _port=port)
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         from IPython.display import display, HTML
-        from captum.insights.server import start_server
+        from .server import start_server
         import ipywidgets as widgets
 
         # TODO: Output widget only captures beginning of server logs. It seems
