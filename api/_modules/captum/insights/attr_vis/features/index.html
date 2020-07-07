@@ -24,7 +24,7 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<h1>Source code for captum.insights.features</h1><div class="highlight"><pre>
+<h1>Source code for captum.insights.attr_vis.features</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="kn">import</span> <span class="nn">base64</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -36,7 +36,8 @@
 
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">safe_div</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils</span> <span class="kn">import</span> <span class="n">visualization</span> <span class="k">as</span> <span class="n">viz</span>
-<span class="kn">from</span> <span class="nn">captum.insights._utils.transforms</span> <span class="kn">import</span> <span class="n">format_transforms</span>
+
+<span class="kn">from</span> <span class="nn">._utils.transforms</span> <span class="kn">import</span> <span class="n">format_transforms</span>
 
 <span class="n">FeatureOutput</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">"FeatureOutput"</span><span class="p">,</span> <span class="s2">"name base modified type contribution"</span><span class="p">)</span>
 
@@ -51,7 +52,7 @@
     <span class="k">return</span> <span class="n">base64img</span>
 
 
-<div class="viewcode-block" id="BaseFeature"><a class="viewcode-back" href="../../../insights.html#captum.insights.features.BaseFeature">[docs]</a><span class="k">class</span> <span class="nc">BaseFeature</span><span class="p">:</span>
+<div class="viewcode-block" id="BaseFeature"><a class="viewcode-back" href="../../../../insights.html#captum.insights.features.BaseFeature">[docs]</a><span class="k">class</span> <span class="nc">BaseFeature</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    All Feature classes extend this class to implement custom visualizations in</span>
 <span class="sd">    Insights.</span>
@@ -99,7 +100,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
-<div class="viewcode-block" id="ImageFeature"><a class="viewcode-back" href="../../../insights.html#captum.insights.features.ImageFeature">[docs]</a><span class="k">class</span> <span class="nc">ImageFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
+<div class="viewcode-block" id="ImageFeature"><a class="viewcode-back" href="../../../../insights.html#captum.insights.features.ImageFeature">[docs]</a><span class="k">class</span> <span class="nc">ImageFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    ImageFeature is used to visualize image features in Insights. It expects an image in</span>
 <span class="sd">    NCHW format. If C has a dimension of 1, its assumed to be a greyscale image.</span>
@@ -172,7 +173,7 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="TextFeature"><a class="viewcode-back" href="../../../insights.html#captum.insights.features.TextFeature">[docs]</a><span class="k">class</span> <span class="nc">TextFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
+<div class="viewcode-block" id="TextFeature"><a class="viewcode-back" href="../../../../insights.html#captum.insights.features.TextFeature">[docs]</a><span class="k">class</span> <span class="nc">TextFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    TextFeature is used to visualize text (e.g. sentences) in Insights.</span>
 <span class="sd">    It expects the visualization transform to convert the input data (e.g. index to</span>
@@ -252,7 +253,7 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GeneralFeature"><a class="viewcode-back" href="../../../insights.html#captum.insights.features.GeneralFeature">[docs]</a><span class="k">class</span> <span class="nc">GeneralFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
+<div class="viewcode-block" id="GeneralFeature"><a class="viewcode-back" href="../../../../insights.html#captum.insights.features.GeneralFeature">[docs]</a><span class="k">class</span> <span class="nc">GeneralFeature</span><span class="p">(</span><span class="n">BaseFeature</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    GeneralFeature is used for non-specified feature visualization in Insights.</span>
 <span class="sd">    It can be used for dense or sparse features.</span>
@@ -335,27 +336,27 @@
 </div>
 <div aria-label="main navigation" class="sphinxsidebar" role="navigation">
 <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../../index.html">Captum</a></h1>
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../attribution.html">Attribution</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../noise_tunnel.html">NoiseTunnel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../layer.html">Layer Attribution</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../neuron.html">Neuron Attribution</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Utilities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../base_classes.html">Base Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Insights API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../insights.html">Insights</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../insights.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
 </ul>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
-<li><a href="../../../index.html">Documentation overview</a><ul>
-<li><a href="../../index.html">Module code</a><ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
 </ul></li>
 </ul></li>
 </ul>
@@ -363,7 +364,7 @@
 <div id="searchbox" role="search" style="display: none">
 <h3 id="searchlabel">Quick search</h3>
 <div class="searchformwrapper">
-<form action="../../../search.html" class="search" method="get">
+<form action="../../../../search.html" class="search" method="get">
 <input aria-labelledby="searchlabel" name="q" type="text"/>
 <input type="submit" value="Go"/>
 </form>
