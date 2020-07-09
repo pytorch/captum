@@ -126,7 +126,7 @@ class Test(BaseTest):
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
-                lambda x: _forward_layer_eval(model, x, output_layer)[0][0][
+                lambda x: _forward_layer_eval(model, x, output_layer, grad_enabled=True)[0][0][
                     (slice(None), *neuron)
                 ]
             )
