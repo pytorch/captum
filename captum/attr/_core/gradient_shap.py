@@ -369,9 +369,9 @@ def _scale_input(
     inp_shape = (bsz,) + tuple([1] * len(inp_shape_wo_bsz))
 
     # expand and reshape the indices
-    rand_coefficient = rand_coefficient.view(inp_shape).requires_grad_()
+    rand_coefficient = rand_coefficient.view(inp_shape)
 
     input_baseline_scaled = (
         rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
-    )
+    ).requires_grad_()
     return input_baseline_scaled
