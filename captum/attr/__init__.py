@@ -15,6 +15,7 @@ from ._core.layer.layer_activation import LayerActivation  # noqa
 from ._core.layer.layer_conductance import LayerConductance  # noqa
 from ._core.layer.layer_deep_lift import LayerDeepLift  # noqa
 from ._core.layer.layer_deep_lift import LayerDeepLiftShap
+from ._core.layer.layer_feature_ablation import LayerFeatureAblation  # noqa
 from ._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
 from ._core.layer.layer_integrated_gradients import LayerIntegratedGradients  # noqa
@@ -71,6 +72,7 @@ __all__ = [
     "LayerConductance",
     "LayerGradientXActivation",
     "LayerActivation",
+    "LayerFeatureAblation",
     "InternalInfluence",
     "LayerGradCam",
     "LayerDeepLift",
