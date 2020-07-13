@@ -16,7 +16,7 @@ from ..._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
 )
-from .._utils.attribution import Attribution
+from .._utils.attribution import Attribution, GradientAttribution
 from .._utils.common import _validate_noise_tunnel_type
 
 
@@ -63,7 +63,9 @@ class NoiseTunnel(Attribution):
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
-
+        self.is_gradient_method = isinstance(
+            self.attribution_method, GradientAttribution
+        )
         Attribution.__init__(self, self.attribution_method.forward_func)
 
     @log_usage()
@@ -165,7 +167,9 @@ class NoiseTunnel(Attribution):
                 ), "stdevs must be type float. " "Given: {}".format(type(stdevs))
                 stdevs_ = (stdevs,) * len(inputs)
             return tuple(
-                add_noise_to_input(input, stdev)
+                add_noise_to_input(input, stdev).requires_grad_()
+                if self.is_gradient_method
+                else add_noise_to_input(input, stdev)
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
