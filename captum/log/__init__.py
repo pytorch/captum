@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
 try:
-    from captum.log.fb.internal_log import TimedLog, log, log_usage, set_environment
+    from captum.log.fb.internal_log import (
+        TimedLog,
+        log,
+        log_usage,
+        set_environment,
+        patch_methods,
+    )
 
     __all__ = ["log", "log_usage", "TimedLog", "set_environment"]
 
@@ -33,4 +39,7 @@ except ImportError:
         return _log_usage
 
     def set_environment(env):
+        pass
+
+    def patch_methods(tester, patch_log=True):
         pass
