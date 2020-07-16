@@ -7,7 +7,7 @@ from typing import Callable
 import numpy as np
 import torch
 
-from captum.log import set_environment
+from captum.log import patch_methods
 
 
 def deep_copy_args(func: Callable):
@@ -99,4 +99,4 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         set_all_random_seeds(1234)
-        set_environment("test")
+        patch_methods(self)
