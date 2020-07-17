@@ -212,6 +212,7 @@ class GuidedGradCam(GradientAttribution):
                         inputs[i].shape[2:],
                         interpolate_mode=interpolate_mode,
                     )
+                )
             except RuntimeError:
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for some "
