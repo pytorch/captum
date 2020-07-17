@@ -197,7 +197,6 @@ class NoiseTunnel(Attribution):
             # FIXME it look like it is very difficult to make torch.normal
             # deterministic this needs an investigation
             noise = torch.normal(0, stdev_expanded)
-
             return input.repeat_interleave(n_samples, dim=0) + noise
 
         def compute_expected_attribution_and_sq(attribution):

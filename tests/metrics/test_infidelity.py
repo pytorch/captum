@@ -100,7 +100,7 @@ class Test(BaseTest):
             n_perturb_samples=5,
             max_batch_size=60,
         )
-        assertArraysAlmostEqual(infid1, infid2, 0.0)
+        assertArraysAlmostEqual(infid1, infid2, 0.01)
 
     def test_basic_infidelity_additional_forward_args1(self):
         model = BasicModel4_MultiArgs()

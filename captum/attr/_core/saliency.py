@@ -124,6 +124,7 @@ class Saliency(GradientAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
+
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 

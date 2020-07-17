@@ -7,8 +7,8 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_activation import LayerActivation
+from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._models.base import (
     configure_interpretable_embedding_layer,

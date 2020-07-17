@@ -159,19 +159,23 @@ def infidelity(
                 `infidelity_perturb_func_decorator` decorator such as:
 
                 from captum.metrics import infidelity_perturb_func_decorator
-                @infidelity_perturb_func_decorator
+                @infidelity_perturb_func_decorator(<use_input_marginal_effects flag>)
                 def my_perturb_func(inputs):
                     <MY-LOGIC-HERE>
                     return perturbed_inputs
 
-                In this case we compute perturbations by dividing
-                (input - perturbed_input) by (input - baselines) and the user needs to
-                only return perturbed inputs in `perturb_func` as described above.
+                In this case we compute perturbations by `input - perturbed_input`
+                difference in case `use_input_marginal_effects` is False and by
+                dividing (input - perturbed_input) by (input - baselines) in case
+                `use_input_marginal_effects` flag is True.
+                The user needs to only return perturbed inputs in `perturb_func`
+                as described above.
 
                 `infidelity_perturb_func_decorator` needs to be used with
                 `use_input_marginal_effects` flag set to False in case infidelity
                 score is being computed for attribution maps that are local aka
-                that do not factor in inputs' marginal effects to the final score.
+                that do not factor in inputs' marginal effects in the final
+                attribution score.
                 Such attribution algorithms include Saliency, GradCam, Guided Backprop,
                 or Integrated Gradients and DeepLift attribution scores that are already
                 computed with `use_input_marginal_effects=False` flag.
@@ -242,16 +246,22 @@ def infidelity(
         attributions (tensor or tuple of tensors):
                 Attribution scores computed based on an attribution algorithm.
                 This attribution scores can be computed using the implementations
-                in the `captum.attr` package. Some of those attributions
-                are so called global attributions, which means that they
-                foctor in inputs marginal effects, as described in:
+                provided in the `captum.attr` package. Some of those attribution
+                approaches are so called global methods, which means that
+                they foctor in inputs' marginal effects, as described in:
                 https://arxiv.org/pdf/1711.06104.pdf
-                Many of them can be easly turned into local attributions,
-                aka attribution mothods that do not factor in inputs'
-                marginal effects but constructing them with
-                `use_input_marginal_effects=False` flag.
-                Examples inherently local attribution methods include:
-                Guided GradCam, Guided Backprop and Deconvolution.
+                Many global attribution algorithms can be used in local modes,
+                meaning that the inputs' marginal effects aren't factored in the
+                attribution scores.
+                This can be done duing the definition of the attribution algorithm
+                by passing `use_input_marginal_effects=False` flag.
+                For example in case of Integrated Gradients (IG) we can, obtain
+                local attribution scores if we define the constructor of IG as:
+                ig = IntegratedGradients(use_input_marginal_effects=False)
+
+                Some attribution algorithms are inherently local.
+                Examples of inherently local attribution methods include:
+                Saliency, Guided GradCam, Guided Backprop and Deconvolution.
 
                 For local attributions we can use real-valued perturbations
                 whereas for global attributions that perturbation is binary.
@@ -263,17 +273,17 @@ def infidelity(
                 This will allow us to approximate sensitivity-n for a global
                 attribution algorithm.
 
-                Attributions have the same shape and dimensionality as the inputs.
-                If inputs is a single tensor then the attributions is a single
-                tensor as well. If inputs is provided as a tuple of tensors
-                then attributions will be tuples of tensors as well.
-
                 `infidelity_perturb_func_decorator` function decorator is a helper
                 function that computes perturbations under the hood if perturbed
                 inputs are provided.
 
                 For more details on how to use `infidelity_perturb_func_decorator`,
                 please, read the documentation about `perturb_func`
+
+                Attributions have the same shape and dimensionality as the inputs.
+                If inputs is a single tensor then the attributions is a single
+                tensor as well. If inputs is provided as a tuple of tensors
+                then attributions will be tuples of tensors as well.
 
         additional_forward_args (any, optional): If the forward function
                 requires additional arguments other than the inputs for
