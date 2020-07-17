@@ -103,7 +103,7 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module) -> None:
+    def __init__(self, model: Module, use_input_marginal_effects: bool = True) -> None:
         r"""
         Args:
 
@@ -113,6 +113,7 @@ class DeepLift(GradientAttribution):
         self.model = model
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @typing.overload
     def attribute(
@@ -330,10 +331,15 @@ class DeepLift(GradientAttribution):
             )
             gradients = self.gradient_func(wrapped_forward_func, inputs)
             if custom_attribution_func is None:
-                attributions = tuple(
-                    (input - baseline) * gradient
-                    for input, baseline, gradient in zip(inputs, baselines, gradients)
-                )
+                if self.uses_input_marginal_effects:
+                    attributions = tuple(
+                        (input - baseline) * gradient
+                        for input, baseline, gradient in zip(
+                            inputs, baselines, gradients
+                        )
+                    )
+                else:
+                    attributions = gradients
             else:
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, inputs, baselines
@@ -560,6 +566,10 @@ class DeepLift(GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
+
 
 class DeepLiftShap(DeepLift):
     r"""
@@ -578,13 +588,15 @@ class DeepLiftShap(DeepLift):
     model across multiple explanations can be complex and non-linear.
     """
 
-    def __init__(self, model: Module) -> None:
+    def __init__(self, model: Module, use_input_marginal_effects: bool = True) -> None:
         r"""
         Args:
 
             model (nn.Module):  The reference to PyTorch model instance.
         """
-        DeepLift.__init__(self, model)
+        DeepLift.__init__(
+            self, model, use_input_marginal_effects=use_input_marginal_effects
+        )
 
     # There's a mismatch between the signatures of DeepLift.attribute and
     # DeepLiftShap.attribute, so we ignore typing here
@@ -1040,18 +1052,17 @@ def maxpool(
                 list(cast(torch.Size, module.input.shape)),
             ),
         )
-    if grad_input[0].shape != inputs.shape:
-        raise AssertionError(
-            "A problem occurred during maxpool modul's backward pass. "
-            "The gradients with respect to inputs include only a "
-            "subset of inputs. More details about this issue can "
-            "be found here: "
-            "https://pytorch.org/docs/stable/"
-            "nn.html#torch.nn.Module.register_backward_hook "
-            "This can happen for example if you attribute to the outputs of a "
-            "MaxPool. As a workaround, please, attribute to the inputs of "
-            "the following layer."
-        )
+    assert grad_input[0].shape == inputs.shape, (
+        "A problem occurred during maxpool modul's backward pass. "
+        "The gradients with respect to inputs include only a "
+        "subset of inputs. More details about this issue can "
+        "be found here: "
+        "https://pytorch.org/docs/stable/"
+        "nn.html#torch.nn.Module.register_backward_hook "
+        "This can happen for example if you attribute to the outputs of a "
+        "MaxPool. As a workaround, please, attribute to the inputs of "
+        "the following layer."
+    )
 
     new_grad_inp = torch.where(
         abs(delta_in) < eps, grad_input[0], unpool_grad_out_delta / delta_in

@@ -18,8 +18,17 @@ class Test(BaseTest):
     def test_input_x_gradient_test_basic_vanilla(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config())
 
+    def test_input_x_gradient_test_basic_vanilla_wo_marginal_effects(self) -> None:
+        self._input_x_gradient_base_assert(*_get_basic_config(),
+            use_input_marginal_effects=False)
+
     def test_input_x_gradient_test_basic_smoothgrad(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="smoothgrad")
+
+    def test_input_x_gradient_test_basic_smoothgrad_wo_marginal_effects(self) -> None:
+        self._input_x_gradient_base_assert(*_get_basic_config(),
+                                           nt_type="smoothgrad",
+                                           use_input_marginal_effects=False)
 
     def test_input_x_gradient_test_basic_vargrad(self) -> None:
         self._input_x_gradient_base_assert(*_get_basic_config(), nt_type="vargrad")
@@ -53,12 +62,14 @@ class Test(BaseTest):
         expected_grads: TensorOrTupleOfTensorsGeneric,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
+        use_input_marginal_effects = True,
     ) -> None:
-        input_x_grad = InputXGradient(model)
+        input_x_grad = InputXGradient(model,
+            use_input_marginal_effects=use_input_marginal_effects,)
         attributions: TensorOrTupleOfTensorsGeneric
         if nt_type == "vanilla":
             attributions = input_x_grad.attribute(
-                inputs, additional_forward_args=additional_forward_args
+                inputs, additional_forward_args=additional_forward_args,
             )
         else:
             nt = NoiseTunnel(input_x_grad)
@@ -75,18 +86,22 @@ class Test(BaseTest):
                 inputs, attributions, expected_grads
             ):
                 if nt_type == "vanilla":
-                    assertArraysAlmostEqual(
-                        attribution.reshape(-1), (expected_grad * input).reshape(-1)
-                    )
+                    self._assert_attribution(expected_grad, input, attribution,
+                                             use_input_marginal_effects)
                 self.assertEqual(input.shape, attribution.shape)
         elif isinstance(attributions, Tensor):
             if nt_type == "vanilla":
-                assertArraysAlmostEqual(
-                    attributions.reshape(-1),
-                    (expected_grads * inputs).reshape(-1),
-                    delta=0.5,
-                )
+                self._assert_attribution(expected_grads, inputs, attributions,
+                                         use_input_marginal_effects)
             self.assertEqual(inputs.shape, attributions.shape)
+
+    def _assert_attribution(self, expected_grad, input, attribution,
+                            use_input_marginal_effects):
+        assertArraysAlmostEqual(
+            attribution.reshape(-1),
+            (expected_grad * input if use_input_marginal_effects \
+                else expected_grad).reshape(-1)
+        )
 
     def _input_x_gradient_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5

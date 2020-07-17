@@ -26,9 +26,9 @@ def default_perturb_func(inputs, perturb_radius=0.02):
     inputs = _format_input(inputs)
     perturbed_input = tuple(
         input
-        + torch.FloatTensor(input.size(), device=input.device).uniform_(
-            -perturb_radius, perturb_radius
-        )
+        + torch.FloatTensor(input.size())
+        .uniform_(-perturb_radius, perturb_radius)
+        .to(input.device)
         for input in inputs
     )
     return perturbed_input
@@ -166,7 +166,7 @@ def sensitivity_max(
         >>> saliency = Saliency(net)
         >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
         >>> # Computes sensitivity score for saliency maps
-        >>> sens = sensitivity_max(net, saliency.attribute)
+        >>> sens = sensitivity_max(saliency.attribute, input)
 
     """
 

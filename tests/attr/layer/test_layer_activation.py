@@ -108,6 +108,7 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
     ):
         layer_act = LayerActivation(model, target_layer)
+        self.assertTrue(layer_act.uses_input_marginal_effects)
         attributions = layer_act.attribute(
             test_input,
             additional_forward_args=additional_input,

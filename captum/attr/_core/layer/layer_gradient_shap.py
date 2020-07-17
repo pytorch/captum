@@ -64,6 +64,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         r"""
         Args:
@@ -84,6 +85,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @typing.overload
     def attribute(
@@ -279,7 +281,10 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         )
 
         input_min_baseline_x_grad = LayerInputBaselineXGradient(
-            self.forward_func, self.layer, device_ids=self.device_ids
+            self.forward_func,
+            self.layer,
+            device_ids=self.device_ids,
+            use_input_marginal_effects=self.uses_input_marginal_effects,
         )
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
@@ -303,6 +308,10 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
+
 
 class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     def __init__(
@@ -310,6 +319,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ):
         r"""
         Args:
@@ -330,6 +340,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @typing.overload
     def attribute(
@@ -426,3 +437,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

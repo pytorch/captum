@@ -7,6 +7,7 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
+from captum.attr._core.layer.layer_activation import LayerActivation
 
 from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from ...helpers.basic_models import (
@@ -85,11 +86,29 @@ class Test(BaseTest):
         additional_input: Any = None,
     ) -> None:
         layer_act = LayerGradientXActivation(model, target_layer)
+        self.assertTrue(layer_act.uses_input_marginal_effects)
         attributions = layer_act.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
+        )
+        # test Layer Gradient without multiplying with activations
+        layer_grads = LayerGradientXActivation(
+            model, target_layer, use_input_marginal_effects=False
+        )
+        layer_act = LayerActivation(model, target_layer)
+        self.assertFalse(layer_grads.uses_input_marginal_effects)
+        grads = layer_grads.attribute(
+            test_input, target=0, additional_forward_args=additional_input
+        )
+        acts = layer_act.attribute(test_input, additional_forward_args=additional_input)
+
+        assertTensorTuplesAlmostEqual(
+            self,
+            attributions,
+            tuple(act * grad for act, grad in zip(acts, grads)),
+            delta=0.01,
         )
 
 

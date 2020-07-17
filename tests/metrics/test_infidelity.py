@@ -14,7 +14,7 @@ from ..helpers.basic_models import (
 )
 
 
-@infidelity_perturb_func_decorator
+@infidelity_perturb_func_decorator(False)
 def _local_perturb_func_default(inputs):
     return _local_perturb_func(inputs)[1]
 
@@ -35,7 +35,7 @@ def _local_perturb_func(inputs):
     return (perturb1, perturb2), (input1 - perturb1, input2 - perturb2)
 
 
-@infidelity_perturb_func_decorator
+@infidelity_perturb_func_decorator(True)
 def _global_perturb_func1_default(inputs):
     return _global_perturb_func1(inputs)[1]
 
@@ -77,7 +77,7 @@ class Test(BaseTest):
             inputs,
             expected,
             perturb_func=_local_perturb_func_default,
-            local=False,
+            use_input_marginal_effects=False,
         )
         assertTensorAlmostEqual(self, infid, infid_w_common_func)
 
@@ -207,7 +207,7 @@ class Test(BaseTest):
         def perturbed_func2(inputs, baselines):
             return torch.ones(baselines.shape), baselines
 
-        @infidelity_perturb_func_decorator
+        @infidelity_perturb_func_decorator(True)
         def perturbed_func3(inputs, baselines):
             return baselines
 
@@ -231,6 +231,7 @@ class Test(BaseTest):
             n_perturb_samples=3,
             perturb_func=perturbed_func3,
         )
+
         infid2 = self.infidelity_assert(
             model,
             attr,
@@ -268,7 +269,7 @@ class Test(BaseTest):
             pert = torch.tensor([[0, 0, 1], [1, 0, 0], [0, 1, 0]]).float()
             return pert, (1 - pert) * input
 
-        @infidelity_perturb_func_decorator
+        @infidelity_perturb_func_decorator(True)
         def _global_perturb_func3_custom(input):
             return _global_perturb_func3(input)[1]
 
@@ -334,10 +335,10 @@ class Test(BaseTest):
         n_perturb_samples=10,
         max_batch_size=None,
         perturb_func=_local_perturb_func,
-        local=True,
+        use_input_marginal_effects=False,
     ):
         ig = IntegratedGradients(model)
-        if local:
+        if use_input_marginal_effects:
             attrs = tuple(
                 attr / input for input, attr in zip(inputs, ig.attribute(inputs))
             )

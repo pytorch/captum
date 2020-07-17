@@ -158,6 +158,7 @@ class Test(BaseTest):
     ):
         for internal_batch_size in [None, 5, 20]:
             int_inf = InternalInfluence(model, target_layer)
+            self.assertFalse(int_inf.uses_input_marginal_effects)
             attributions = int_inf.attribute(
                 test_input,
                 baselines=baseline,

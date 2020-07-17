@@ -8,6 +8,7 @@ from torch.nn import Module
 
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.layer_conductance import LayerConductance
+from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
 from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
@@ -24,6 +25,17 @@ from ...helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
 
 class Test(BaseTest):
     def test_compare_with_emb_patching(self) -> None:
+        input1 = torch.tensor([[2, 5, 0, 1]])
+        baseline1 = torch.tensor([[0, 0, 0, 0]])
+        # these ones will be use as an additional forward args
+        input2 = torch.tensor([[0, 2, 4, 1]])
+        input3 = torch.tensor([[2, 3, 0, 1]])
+
+        self._assert_compare_with_emb_patching(
+            input1, baseline1, additional_args=(input2, input3)
+        )
+
+    def test_compare_with_emb_patching_wo_inp_marginal_effects(self) -> None:
         input1 = torch.tensor([[2, 5, 0, 1]])
         baseline1 = torch.tensor([[0, 0, 0, 0]])
         # these ones will be use as an additional forward args
@@ -71,6 +83,25 @@ class Test(BaseTest):
             inp,
             ([[90.0, 100.0, 100.0, 100.0]], [[90.0, 100.0, 100.0, 100.0]]),
         )
+
+    def test_multiple_tensors_compare_with_exp_wo_inp_marginal_effects(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        base = torch.tensor([[0.0, 0.0, 0.0]])
+        target_layer = net.multi_relu
+        layer_ig = LayerIntegratedGradients(net, target_layer)
+        layer_ig_wo_marginal_effects = LayerIntegratedGradients(net,
+            target_layer, use_input_marginal_effects=False)
+        layer_act = LayerActivation(net, target_layer)
+        attributions = layer_ig.attribute(inp, target=0)
+        attributions_wo_marginal_eff = layer_ig_wo_marginal_effects.attribute(
+            inp, target=0)
+        activations = layer_act.attribute(inp)
+        inp_minus_baseline_activ = tuple(inp_act - base_act for inp_act, base_act in \
+            zip(layer_act.attribute(inp), layer_act.attribute(base)))
+        assertTensorTuplesAlmostEqual(self, tuple(attr_wo_eff * inp_min_base \
+            for attr_wo_eff, inp_min_base in \
+            zip(attributions_wo_marginal_eff, inp_minus_baseline_activ)), attributions)
 
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False
@@ -139,6 +170,6 @@ class Test(BaseTest):
     ):
         layer_ig = LayerIntegratedGradients(model, target_layer)
         attributions = layer_ig.attribute(
-            test_input, target=0, additional_forward_args=additional_input,
+            test_input, target=0, additional_forward_args=additional_input
         )
         assertTensorTuplesAlmostEqual(self, attributions, expected_ig, delta=0.01)

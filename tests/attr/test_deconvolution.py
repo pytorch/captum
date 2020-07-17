@@ -112,6 +112,7 @@ class Test(BaseTest):
     ) -> None:
         out = model(test_input)
         attrib = Deconvolution(model)
+        self.assertFalse(attrib.uses_input_marginal_effects)
         neuron_attrib = NeuronDeconvolution(model, output_layer)
         for i in range(out.shape[1]):
             deconv_vals = attrib.attribute(test_input, target=i)

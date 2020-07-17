@@ -60,7 +60,9 @@ class GradientShap(GradientAttribution):
     samples and compute the expectation (smoothgrad).
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(
+        self, forward_func: Callable, use_input_marginal_effects: bool = True
+    ) -> None:
         r"""
         Args:
 
@@ -68,6 +70,7 @@ class GradientShap(GradientAttribution):
                        any modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @typing.overload
     def attribute(
@@ -249,7 +252,9 @@ class GradientShap(GradientAttribution):
             "of a torch.Tensor {}.".format(baselines[0])
         )
 
-        input_min_baseline_x_grad = InputBaselineXGradient(self.forward_func)
+        input_min_baseline_x_grad = InputBaselineXGradient(
+            self.forward_func, self.uses_input_marginal_effects
+        )
         input_min_baseline_x_grad.gradient_func = self.gradient_func
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
@@ -273,9 +278,13 @@ class GradientShap(GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
+
 
 class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(self, forward_func: Callable, use_input_marginal_effects=True) -> None:
         r"""
         Args:
 
@@ -283,6 +292,7 @@ class InputBaselineXGradient(GradientAttribution):
                        any modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @typing.overload
     def attribute(
@@ -337,13 +347,16 @@ class InputBaselineXGradient(GradientAttribution):
             self.forward_func, input_baseline_scaled, target, additional_forward_args
         )
 
-        input_baseline_diffs = tuple(
-            input - baseline for input, baseline in zip(inputs, baselines)
-        )
-        attributions = tuple(
-            input_baseline_diff * grad
-            for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
-        )
+        if self.uses_input_marginal_effects:
+            input_baseline_diffs = tuple(
+                input - baseline for input, baseline in zip(inputs, baselines)
+            )
+            attributions = tuple(
+                input_baseline_diff * grad
+                for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
+            )
+        else:
+            attributions = grads
 
         return _compute_conv_delta_and_format_attrs(
             self,
@@ -358,6 +371,10 @@ class InputBaselineXGradient(GradientAttribution):
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
 
 
 def _scale_input(

@@ -37,6 +37,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         r"""
         Args:
@@ -66,6 +67,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -352,10 +354,18 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             for (scaled_grad, input_grad) in zip(scaled_grads, input_grads)
         )
 
-        # computes attribution for each tensor in input tuple
-        # attributions has the same dimensionality as inputs
-        attributions = tuple(
-            total_grad * (input - baseline)
-            for total_grad, input, baseline in zip(total_grads, inputs, baselines)
-        )
+        if self.uses_input_marginal_effects:
+            # computes attribution for each tensor in input tuple
+            # attributions has the same dimensionality as inputs
+            attributions = tuple(
+                total_grad * (input - baseline)
+                for total_grad, input, baseline in zip(total_grads, inputs, baselines)
+            )
+        else:
+            attributions = total_grads
+
         return attributions
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

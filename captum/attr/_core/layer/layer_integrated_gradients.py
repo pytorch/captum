@@ -51,6 +51,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         r"""
         Args:
@@ -71,7 +72,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids=device_ids)
         GradientAttribution.__init__(self, forward_func)
-        self.ig = IntegratedGradients(forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
+        self.ig = IntegratedGradients(forward_func, use_input_marginal_effects)
 
     @typing.overload
     def attribute(
@@ -387,3 +389,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

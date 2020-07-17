@@ -202,6 +202,7 @@ class GuidedGradCam(GradientAttribution):
             target=target,
             additional_forward_args=additional_forward_args,
         )
+        print("inputs: ", inputs, target)
         output_attr: List[Tensor] = []
         for i in range(len(inputs)):
             try:
@@ -213,6 +214,15 @@ class GuidedGradCam(GradientAttribution):
                         interpolate_mode=interpolate_mode,
                     )
                 )
+                print(
+                    guided_backprop_attr[i],
+                    LayerAttribution.interpolate(
+                        grad_cam_attr,
+                        inputs[i].shape[2:],
+                        interpolate_mode=interpolate_mode,
+                    ),
+                )
+                print(output_attr)
             except RuntimeError:
                 warnings.warn(
                     "Couldn't appropriately interpolate GradCAM attributions for some "

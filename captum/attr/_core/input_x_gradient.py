@@ -16,7 +16,9 @@ class InputXGradient(GradientAttribution):
     https://arxiv.org/abs/1611.07270
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(
+        self, forward_func: Callable, use_input_marginal_effects: bool = True,
+    ) -> None:
         r"""
         Args:
 
@@ -24,6 +26,7 @@ class InputXGradient(GradientAttribution):
                           modification of it
         """
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -115,9 +118,16 @@ class InputXGradient(GradientAttribution):
         gradients = self.gradient_func(
             self.forward_func, inputs, target, additional_forward_args
         )
+        if self.uses_input_marginal_effects:
+            attributions = tuple(
+                input * gradient for input, gradient in zip(inputs, gradients)
+            )
+        else:
+            attributions = gradients
 
-        attributions = tuple(
-            input * gradient for input, gradient in zip(inputs, gradients)
-        )
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_output(is_inputs_tuple, attributions)
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

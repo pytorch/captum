@@ -31,6 +31,10 @@ class Saliency(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @property
+    def uses_input_marginal_effects(self):
+        return False
+
     @log_usage()
     def attribute(
         self,
@@ -120,7 +124,6 @@ class Saliency(GradientAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
-
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 

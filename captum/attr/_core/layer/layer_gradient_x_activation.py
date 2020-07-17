@@ -31,6 +31,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         r"""
         Args:
@@ -48,9 +49,15 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                           intermediate outputs from batched results across devices.
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
+            use_input_marginal_effects(boolean): TODO
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -163,6 +170,8 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             is_layer_tuple,
             tuple(
                 layer_gradient * layer_eval
+                if self.uses_input_marginal_effects
+                else layer_gradient
                 for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
             ),
         )

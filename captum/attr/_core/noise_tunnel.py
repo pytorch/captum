@@ -63,10 +63,17 @@ class NoiseTunnel(Attribution):
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
+        self._use_input_marginal_effects = (
+            self.attribution_method.uses_input_marginal_effects
+        )
         self.is_gradient_method = isinstance(
             self.attribution_method, GradientAttribution
         )
         Attribution.__init__(self, self.attribution_method.forward_func)
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -190,6 +197,7 @@ class NoiseTunnel(Attribution):
             # FIXME it look like it is very difficult to make torch.normal
             # deterministic this needs an investigation
             noise = torch.normal(0, stdev_expanded)
+
             return input.repeat_interleave(n_samples, dim=0) + noise
 
         def compute_expected_attribution_and_sq(attribution):

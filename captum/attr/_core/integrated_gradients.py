@@ -43,14 +43,29 @@ class IntegratedGradients(GradientAttribution):
 
     """
 
-    def __init__(self, forward_func: Callable) -> None:
+    def __init__(
+        self, forward_func: Callable, use_input_marginal_effects: bool = True,
+    ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                    modification of it
+            use_input_marginal_effects (bool): Indicates whether to factor
+                    model inputs' marginal effects in the final attribution scores.
+                    In this literature this is also known as local vs global attribution.
+                    If input's marginal effects aren't factored in, then this type of
+                    attribution method is also called local attribution. If they are,
+                    then it is called global.
+                    More detailed can be found here:
+                    https://arxiv.org/abs/1711.06104
+
+                    In case of integrated gradients, if `use_input_marginal_effects`
+                    is set to True, final sensitivity scores are being multiplied by
+                    (inputs - baselines).
         """
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     # The following overloaded method signatures correspond to the case where
     # return_convergence_delta is False, then only attributions are returned,
@@ -344,20 +359,29 @@ class IntegratedGradients(GradientAttribution):
 
         # aggregates across all steps for each tensor in the input tuple
         # total_grads has the same dimensionality as inputs
-        total_grads = [
-            _reshape_and_sum(
-                scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
-            )
-            for (scaled_grad, grad) in zip(scaled_grads, grads)
-        ]
+        total_grads = tuple(
+            [
+                _reshape_and_sum(
+                    scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
+                )
+                for (scaled_grad, grad) in zip(scaled_grads, grads)
+            ]
+        )
 
         # computes attribution for each tensor in input tuple
         # attributions has the same dimensionality as inputs
-        attributions = tuple(
-            total_grad * (input - baseline)
-            for total_grad, input, baseline in zip(total_grads, inputs, baselines)
-        )
+        if not self.uses_input_marginal_effects:
+            attributions = total_grads
+        else:
+            attributions = tuple(
+                total_grad * (input - baseline)
+                for total_grad, input, baseline in zip(total_grads, inputs, baselines)
+            )
         return attributions
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

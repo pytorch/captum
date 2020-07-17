@@ -53,6 +53,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         r"""
         Args:
@@ -75,6 +76,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -194,7 +196,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                                                             baselines)
 
         """
-        gs = GradientShap(self.forward_func)
+        gs = GradientShap(self.forward_func, self.uses_input_marginal_effects)
         gs.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -211,3 +213,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
             stdevs=stdevs,
             additional_forward_args=additional_forward_args,
         )
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

@@ -74,6 +74,9 @@ class Test(BaseTest):
         nt_type: str = "vanilla",
     ) -> None:
         saliency = Saliency(model)
+
+        self.assertFalse(saliency.uses_input_marginal_effects)
+
         if nt_type == "vanilla":
             attributions = saliency.attribute(
                 inputs, additional_forward_args=additional_forward_args

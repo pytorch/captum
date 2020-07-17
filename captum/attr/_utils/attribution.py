@@ -64,6 +64,10 @@ class Attribution:
 
     """
 
+    @property
+    def uses_input_marginal_effects(self):
+        return False
+
     def has_convergence_delta(self) -> bool:
         r"""
         This method informs the user whether the attribution algorithm provides
@@ -307,6 +311,10 @@ class PerturbationAttribution(Attribution):
                         function.
         """
         Attribution.__init__(self, forward_func)
+
+    @property
+    def uses_input_marginal_effects(self):
+        return True
 
 
 class InternalAttribution(Attribution):

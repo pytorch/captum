@@ -27,6 +27,21 @@ class Test(BaseTest):
             net, net.linear2, inp, (0,), [0.0, 390.0, 0.0]
         )
 
+    def test_simple_conductance_input_linear2_wo_inp_marginal_effects(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[100.0, 100.0, 100.0]], requires_grad=True)
+        self._conductance_input_test_assert(
+            net, net.linear2, inp, (0,), [3.96, 3.96, 3.96],
+            use_input_marginal_effects=False,
+        )
+
+    def test_simple_conductance_input_linear2_wo_(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        self._conductance_input_test_assert(
+            net, net.linear2, inp, (0,), [0.0, 390.0, 0.0]
+        )
+
     def test_simple_conductance_input_linear1(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
@@ -115,9 +130,11 @@ class Test(BaseTest):
         test_neuron: Union[int, Tuple[int, ...]],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
+        use_input_marginal_effects: bool = True,
     ) -> None:
         for internal_batch_size in (None, 5, 20):
-            cond = NeuronConductance(model, target_layer)
+            cond = NeuronConductance(model, target_layer, use_input_marginal_effects=use_input_marginal_effects)
+            self.assertEquals(cond.uses_input_marginal_effects, use_input_marginal_effects)
             attributions = cond.attribute(
                 test_input,
                 test_neuron,

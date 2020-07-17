@@ -41,7 +41,9 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module, layer: Module) -> None:
+    def __init__(
+        self, model: Module, layer: Module, use_input_marginal_effects: bool = True
+    ) -> None:
         r"""
         Args:
 
@@ -56,6 +58,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         """
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -183,7 +186,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLift(cast(Module, self.forward_func))
+        dl = DeepLift(cast(Module, self.forward_func), self.uses_input_marginal_effects)
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -198,6 +201,10 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             additional_forward_args=additional_forward_args,
             custom_attribution_func=custom_attribution_func,
         )
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects
 
 
 class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
@@ -221,7 +228,9 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     model across multiple explanations can be complex and non-linear.
     """
 
-    def __init__(self, model: Module, layer: Module) -> None:
+    def __init__(
+        self, model: Module, layer: Module, use_input_marginal_effects: bool = True
+    ) -> None:
         r"""
         Args:
 
@@ -235,6 +244,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         """
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
+        self._use_input_marginal_effects = use_input_marginal_effects
 
     @log_usage()
     def attribute(
@@ -357,7 +367,9 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLiftShap(cast(Module, self.forward_func))
+        dl = DeepLiftShap(
+            cast(Module, self.forward_func), self.uses_input_marginal_effects
+        )
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -372,3 +384,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             additional_forward_args=additional_forward_args,
             custom_attribution_func=custom_attribution_func,
         )
+
+    @property
+    def uses_input_marginal_effects(self):
+        return self._use_input_marginal_effects

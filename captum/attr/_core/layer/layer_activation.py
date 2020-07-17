@@ -42,6 +42,10 @@ class LayerActivation(LayerAttribution):
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
 
+    @property
+    def uses_input_marginal_effects(self):
+        return True
+
     @log_usage()
     def attribute(
         self,
@@ -121,3 +125,7 @@ class LayerActivation(LayerAttribution):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
         return _format_output(is_layer_tuple, layer_eval)
+
+    @property
+    def uses_input_marginal_effects(self):
+        return True
