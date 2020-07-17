@@ -53,10 +53,10 @@ class IntegratedGradients(GradientAttribution):
                     modification of it
             use_input_marginal_effects (bool): Indicates whether to factor
                     model inputs' marginal effects in the final attribution scores.
-                    In this literature this is also known as local vs global attribution.
-                    If input's marginal effects aren't factored in, then this type of
-                    attribution method is also called local attribution. If they are,
-                    then it is called global.
+                    In the literature this is also known as local vs global
+                    attribution. If input's marginal effects aren't factored in,
+                    then this type of attribution method is also called local
+                    attribution. If they are, then it is called global.
                     More detailed can be found here:
                     https://arxiv.org/abs/1711.06104
 

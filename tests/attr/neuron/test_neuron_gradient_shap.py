@@ -22,8 +22,7 @@ class Test(BaseTest):
 
         inputs = torch.tensor([[1.0, 20.0, 10.0]])
         baselines = torch.zeros(2, 3)
-        ngs = NeuronGradientShap(model, model.linear1,
-            use_input_marginal_effects=False)
+        ngs = NeuronGradientShap(model, model.linear1, use_input_marginal_effects=False)
         attr = ngs.attribute(inputs, 0, baselines=baselines, stdevs=0.0)
         self.assertFalse(ngs.uses_input_marginal_effects)
         assertTensorAlmostEqual(self, attr, [1.0, 1.0, 1.0])

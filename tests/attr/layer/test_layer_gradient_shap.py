@@ -38,15 +38,9 @@ class Test(BaseTest):
         model.eval()
 
         inputs = torch.tensor([[1.0, -20.0, 10.0]])
-        baselines = torch.zeros(3,3)
-        lgs = LayerGradientShap(model, model.linear2, use_input_marginal_effects=False
-        )
-        attrs  = lgs.attribute(
-                    inputs,
-                    baselines,
-                    target=0,
-                    stdevs=0.0,
-                )
+        baselines = torch.zeros(3, 3)
+        lgs = LayerGradientShap(model, model.linear2, use_input_marginal_effects=False)
+        attrs = lgs.attribute(inputs, baselines, target=0, stdevs=0.0,)
         assertTensorAlmostEqual(self, attrs, torch.tensor([[-3.0, 0.0]]))
 
     def test_basic_multi_tensor_output(self) -> None:

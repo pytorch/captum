@@ -181,8 +181,9 @@ class Test(BaseTest):
         baselines = (b1, b2)
 
         model = ReLUDeepLiftModel()
-        attr = DeepLiftShap(model,
-            use_input_marginal_effects=False).attribute(inputs, baselines)
+        attr = DeepLiftShap(model, use_input_marginal_effects=False).attribute(
+            inputs, baselines
+        )
         assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1))
         assertTensorAlmostEqual(self, attr[1], 0.5 * torch.ones(4, 1))
 

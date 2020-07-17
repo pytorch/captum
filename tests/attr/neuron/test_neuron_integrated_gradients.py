@@ -34,8 +34,14 @@ class Test(BaseTest):
     def test_simple_ig_input_linear2_wo_inp_marginal_effects(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[100.0, 100.0, 100.0]])
-        self._ig_input_test_assert(net, net.linear2, inp, 0,
-            [3.96, 3.96, 3.96], use_input_marginal_effects=False)
+        self._ig_input_test_assert(
+            net,
+            net.linear2,
+            inp,
+            0,
+            [3.96, 3.96, 3.96],
+            use_input_marginal_effects=False,
+        )
 
     def test_simple_ig_input_linear1(self) -> None:
         net = BasicModel_MultiLayer()
@@ -109,12 +115,16 @@ class Test(BaseTest):
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
         use_input_marginal_effects: bool = True,
-
     ) -> None:
         for internal_batch_size in [None, 5, 20]:
-            grad = NeuronIntegratedGradients(model, target_layer,
-                use_input_marginal_effects=use_input_marginal_effects)
-            self.assertEquals(grad.uses_input_marginal_effects, use_input_marginal_effects)
+            grad = NeuronIntegratedGradients(
+                model,
+                target_layer,
+                use_input_marginal_effects=use_input_marginal_effects,
+            )
+            self.assertEquals(
+                grad.uses_input_marginal_effects, use_input_marginal_effects
+            )
             attributions = grad.attribute(
                 test_input,
                 test_neuron,

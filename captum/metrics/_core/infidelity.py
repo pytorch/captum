@@ -15,6 +15,7 @@ from ..._utils.common import (
 )
 from .._utils.batching import _divide_and_aggregate_metrics
 
+
 def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
     r"""An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
@@ -35,6 +36,7 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
                 of attribution scores.
 
         """
+
     def sub_infidelity_perturb_func_decorator(pertub_func):
         r"""
         Args:
@@ -51,12 +53,14 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
         Examples::
             >>> @infidelity_perturb_func_decorator(True)
             >>> def perturb_fn(inputs):
-            >>>    noise = torch.tensor(np.random.normal(0, 0.003, inputs.shape)).float()
+            >>>    noise = torch.tensor(np.random.normal(0, 0.003,
+            >>>                         inputs.shape)).float()
             >>>    return inputs - noise
             >>> # Computes infidelity score using `perturb_fn`
-            >>> infidelity = infidelity_attr(model, perturb_fn, input, ...)
+            >>> infidelity = infidelity(model, perturb_fn, input, ...)
 
         """
+
         def default_perturb_func(inputs, baselines=None):
             r"""
             """
@@ -74,7 +78,9 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
                         input - input_perturbed,
                         input,
                         torch.tensor(1.0, device=input.device),
-                    ) if use_input_marginal_effects else input - input_perturbed
+                    )
+                    if use_input_marginal_effects
+                    else input - input_perturbed
                     for input, input_perturbed in zip(inputs, inputs_perturbed)
                 )
             else:
@@ -83,7 +89,9 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
                         input - input_perturbed,
                         input - baseline,
                         torch.tensor(1.0, device=input.device),
-                    ) if use_input_marginal_effects else input - input_perturbed
+                    )
+                    if use_input_marginal_effects
+                    else input - input_perturbed
                     for input, input_perturbed, baseline in zip(
                         inputs, inputs_perturbed, baselines
                     )
@@ -91,7 +99,9 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
             return perturbations, inputs_perturbed
 
         return default_perturb_func
+
     return sub_infidelity_perturb_func_decorator
+
 
 def infidelity(
     forward_func,
@@ -159,9 +169,9 @@ def infidelity(
                 only return perturbed inputs in `perturb_func` as described above.
 
                 `infidelity_perturb_func_decorator` needs to be used with
-                `use_input_marginal_effects` flag set to False in case infidelity score is
-                being computed for attribution maps that are local aka that do not factor
-                in inputs' marginal effects to the final score.
+                `use_input_marginal_effects` flag set to False in case infidelity
+                score is being computed for attribution maps that are local aka
+                that do not factor in inputs' marginal effects to the final score.
                 Such attribution algorithms include Saliency, GradCam, Guided Backprop,
                 or Integrated Gradients and DeepLift attribution scores that are already
                 computed with `use_input_marginal_effects=False` flag.

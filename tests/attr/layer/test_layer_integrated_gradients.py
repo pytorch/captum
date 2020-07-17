@@ -90,18 +90,30 @@ class Test(BaseTest):
         base = torch.tensor([[0.0, 0.0, 0.0]])
         target_layer = net.multi_relu
         layer_ig = LayerIntegratedGradients(net, target_layer)
-        layer_ig_wo_marginal_effects = LayerIntegratedGradients(net,
-            target_layer, use_input_marginal_effects=False)
+        layer_ig_wo_marginal_effects = LayerIntegratedGradients(
+            net, target_layer, use_input_marginal_effects=False
+        )
         layer_act = LayerActivation(net, target_layer)
         attributions = layer_ig.attribute(inp, target=0)
         attributions_wo_marginal_eff = layer_ig_wo_marginal_effects.attribute(
-            inp, target=0)
-        activations = layer_act.attribute(inp)
-        inp_minus_baseline_activ = tuple(inp_act - base_act for inp_act, base_act in \
-            zip(layer_act.attribute(inp), layer_act.attribute(base)))
-        assertTensorTuplesAlmostEqual(self, tuple(attr_wo_eff * inp_min_base \
-            for attr_wo_eff, inp_min_base in \
-            zip(attributions_wo_marginal_eff, inp_minus_baseline_activ)), attributions)
+            inp, target=0
+        )
+        inp_minus_baseline_activ = tuple(
+            inp_act - base_act
+            for inp_act, base_act in zip(
+                layer_act.attribute(inp), layer_act.attribute(base)
+            )
+        )
+        assertTensorTuplesAlmostEqual(
+            self,
+            tuple(
+                attr_wo_eff * inp_min_base
+                for attr_wo_eff, inp_min_base in zip(
+                    attributions_wo_marginal_eff, inp_minus_baseline_activ
+                )
+            ),
+            attributions,
+        )
 
     def _assert_compare_with_layer_conductance(
         self, model: Module, input: Tensor, attribute_to_layer_input: bool = False

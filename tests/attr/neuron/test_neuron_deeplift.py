@@ -132,8 +132,9 @@ class Test(BaseTest):
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
 
-        neuron_dl = NeuronDeepLiftShap(model, model.l3,
-            use_input_marginal_effects=False)
+        neuron_dl = NeuronDeepLiftShap(
+            model, model.l3, use_input_marginal_effects=False
+        )
         attributions = neuron_dl.attribute(
             inputs, 0, baselines, attribute_to_neuron_input=False
         )
