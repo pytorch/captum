@@ -18,7 +18,7 @@ from ..._utils.common import (
 )
 from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import PerturbationAttribution
-from .._utils.common import _find_output_mode_and_verify, _format_input_baseline
+from .._utils.common import _format_input_baseline
 
 
 class FeatureAblation(PerturbationAttribution):
@@ -34,11 +34,13 @@ class FeatureAblation(PerturbationAttribution):
     equal to the change in target as a result of ablating the entire feature
     group.
 
-    The forward function can either return a scalar per example, or a single
-    scalar for the full batch. If a single scalar is returned for the batch,
-    `perturbations_per_eval` must be 1, and the returned attributions will have
-    first dimension 1, corresponding to feature importance across all
-    examples in the batch.
+    The forward function can either return a scalar per example or a tensor
+    of a fixed sized tensor (or scalar value) for the full batch, i.e. the
+    output does not grow as the batch size increase. If the output is fixed
+    we consider this model to be an "aggregation" of the inputs. In the fixed
+    sized output mode we require `perturbations_per_eval == 1` and the
+    `feature_mask` to be either `None` or for all of them to have 1 as their
+    first dimension (i.e. a feature mask requires to be applied to all inputs).
     """
 
     def __init__(self, forward_func: Callable) -> None:
@@ -172,8 +174,11 @@ class FeatureAblation(PerturbationAttribution):
                         device contain at most
                         (perturbations_per_eval * #examples) / num_devices
                         samples.
-                        If the forward function returns a single scalar per batch,
-                        perturbations_per_eval must be set to 1.
+                        If the forward function's number of outputs does not
+                        change as the batch size grows (e.g. if it outputs a
+                        scalar value), you must set perturbations_per_eval to 1
+                        and use a single feature mask to describe the features
+                        for all examples in the batch.
                         Default: 1
             **kwargs (Any, optional): Any additional arguments used by child
                         classes of FeatureAblation (such as Occlusion) to construct
@@ -250,11 +255,27 @@ class FeatureAblation(PerturbationAttribution):
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
-            agg_output_mode = _find_output_mode_and_verify(
-                initial_eval, num_examples, perturbations_per_eval, feature_mask
+
+            agg_output_mode = FeatureAblation._find_output_mode(
+                perturbations_per_eval, feature_mask
             )
+
+            # get as a 2D tensor (if it is not a scalar)
+            if isinstance(initial_eval, torch.Tensor):
+                initial_eval = initial_eval.reshape(1, -1)
+                num_outputs = initial_eval.shape[1]
+            else:
+                num_outputs = 1
+
             if not agg_output_mode:
-                initial_eval = initial_eval.reshape(1, num_examples)
+                assert (
+                    isinstance(initial_eval, torch.Tensor)
+                    and num_outputs == num_examples
+                ), (
+                    "expected output of `forward_func` to have "
+                    + "`batch_size` elements for perturbations_per_eval > 1 "
+                    + "and all feature_mask.shape[0] > 1"
+                )
 
             # Initialize attribution totals and counts
             attrib_type = cast(
@@ -263,17 +284,16 @@ class FeatureAblation(PerturbationAttribution):
                 if isinstance(initial_eval, Tensor)
                 else type(initial_eval),
             )
+
             total_attrib = [
-                torch.zeros_like(
-                    input[0:1] if agg_output_mode else input, dtype=attrib_type
-                )
+                torch.zeros((num_outputs,) + input.shape[1:], dtype=attrib_type)
                 for input in inputs
             ]
 
             # Weights are used in cases where ablations may be overlapping.
             if self.use_weights:
                 weights = [
-                    torch.zeros_like(input[0:1] if agg_output_mode else input).float()
+                    torch.zeros((num_outputs,) + input.shape[1:]).float()
                     for input in inputs
                 ]
 
@@ -305,18 +325,22 @@ class FeatureAblation(PerturbationAttribution):
                         current_target,
                         current_add_args,
                     )
-                    # eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)
                     # (contains 1 more dimension than inputs). This adds extra
                     # dimensions of 1 to make the tensor broadcastable with the inputs
                     # tensor.
-                    if agg_output_mode:
+                    if not isinstance(modified_eval, torch.Tensor):
                         eval_diff = initial_eval - modified_eval
                     else:
+                        if not agg_output_mode:
+                            assert (
+                                modified_eval.numel() == current_inputs[0].shape[0]
+                            ), """expected output of forward_func to grow with
+                            batch_size. If this is not the case for your model
+                            please set perturbations_per_eval = 1"""
+
                         eval_diff = (
-                            initial_eval - modified_eval.reshape(-1, num_examples)
-                        ).reshape(
-                            (-1, num_examples) + (len(inputs[i].shape) - 1) * (1,)
-                        )
+                            initial_eval - modified_eval.reshape((-1, num_outputs))
+                        ).reshape((-1, num_outputs) + (len(inputs[i].shape) - 1) * (1,))
                     if self.use_weights:
                         weights[i] += current_mask.float().sum(dim=0)
                     total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(
@@ -483,4 +507,26 @@ class FeatureAblation(PerturbationAttribution):
             torch.min(input_mask).item(),
             torch.max(input_mask).item() + 1,
             input_mask,
+        )
+
+    @staticmethod
+    def _find_output_mode(
+        perturbations_per_eval: int,
+        feature_mask: Union[None, TensorOrTupleOfTensorsGeneric],
+    ) -> bool:
+        """
+        Returns True if the output mode is "aggregation output mode"
+
+        Aggregation output mode is defined as: when there is no 1:1 correspondence
+        with the `num_examples` (`batch_size`) and the amount of outputs your model
+        produces, i.e. the model output does not grow in size as the input becomes
+        larger.
+
+        We assume this is the case if `perturbations_per_eval == 1`
+        and your feature mask is None or is associated to all
+        examples in a batch (fm.shape[0] == 1 for all fm in feature_mask).
+        """
+        return perturbations_per_eval == 1 and (
+            feature_mask is None
+            or all(len(sm.shape) == 0 or sm.shape[0] == 1 for sm in feature_mask)
         )
