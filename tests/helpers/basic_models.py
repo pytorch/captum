@@ -164,6 +164,16 @@ class BasicModelWithSparseInputs(nn.Module):
         ).sum()
 
 
+class BasicModel_MaxPool_ReLU(nn.Module):
+    def __init__(self, inplace=False):
+        super().__init__()
+        self.maxpool = nn.MaxPool1d(3)
+        self.relu = nn.ReLU(inplace=inplace)
+
+    def forward(self, x):
+        return self.relu(self.maxpool(x)).sum(dim=1)
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
         Same as the ReLUDeepLiftModel, but with activations

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -20,18 +20,47 @@ from ..helpers.basic_models import (
 
 
 class Test(BaseTest):
+    r"""
+    The following conversion tests are underlying assumptions
+    made by the rest of tests in this file.
+
+    We are testing them explicitly just in case they break behaviour
+    in the future. As in this case it will be easier to update the tests.
+    """
+
+    def test_python_float_conversion(self) -> None:
+        x = torch.tensor(3, dtype=cast(torch.dtype, float))
+        self.assertEqual(x.dtype, torch.float64)
+
+    def test_python_int_conversion(self) -> None:
+        x = torch.tensor(5, dtype=cast(torch.dtype, int))
+        self.assertEqual(x.dtype, torch.int64)
+
+    def test_float32_tensor_item_conversion(self) -> None:
+        x = torch.tensor(5, dtype=torch.float32)
+        y = torch.tensor(x.item())  # .item() returns a python float
+
+        # for whatever reason it is only
+        # dtype == torch.float64 if you provide dtype=float
+        self.assertEqual(y.dtype, torch.float32)
+
+    def test_int32_tensor_item_conversion(self) -> None:
+        x = torch.tensor(5, dtype=torch.int32)
+        y = torch.tensor(x.item())  # .item() returns a python int
+        self.assertEqual(y.dtype, torch.int64)
+
     def test_simple_ablation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
         self._ablation_test_assert(
-            net, inp, [80.0, 200.0, 120.0], perturbations_per_eval=(1, 2, 3)
+            net, inp, [[80.0, 200.0, 120.0]], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_int_to_int(self) -> None:
         net = BasicModel()
         inp = torch.tensor([[-3, 1, 2]])
         self._ablation_test_assert(
-            net, inp, [-3.0, 0.0, 0.0], perturbations_per_eval=(1, 2, 3)
+            net, inp, [[-3, 0, 0]], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_int_to_float(self) -> None:
@@ -42,7 +71,7 @@ class Test(BaseTest):
 
         inp = torch.tensor([[-3, 1, 2]])
         self._ablation_test_assert(
-            wrapper_func, inp, [-3.0, 0.0, 0.0], perturbations_per_eval=(1, 2, 3)
+            wrapper_func, inp, [[-3.0, 0.0, 0.0]], perturbations_per_eval=(1, 2, 3)
         )
 
     def test_simple_ablation_with_mask(self) -> None:
@@ -51,7 +80,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             net,
             inp,
-            [280.0, 280.0, 120.0],
+            [[280.0, 280.0, 120.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
         )
@@ -62,7 +91,7 @@ class Test(BaseTest):
         self._ablation_test_assert(
             net,
             inp,
-            [248.0, 248.0, 104.0],
+            [[248.0, 248.0, 104.0]],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
@@ -185,16 +214,24 @@ class Test(BaseTest):
             (inp, inp2),
             (
                 [
-                    [0.0, 2.0, 4.0, 3.0],
-                    [4.0, 9.0, 10.0, 7.0],
-                    [4.0, 13.0, 14.0, 11.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [0.0, 2.0, 4.0, 3.0],
+                            [4.0, 9.0, 10.0, 7.0],
+                            [4.0, 13.0, 14.0, 11.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
                 [
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [1.0, 2.0, 2.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0],
+                    [
+                        [
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [1.0, 2.0, 2.0, 1.0],
+                            [0.0, 0.0, 0.0, 0.0],
+                        ]
+                    ]
                 ],
             ),
             perturbations_per_eval=(1, 3, 7, 14),
@@ -209,11 +246,36 @@ class Test(BaseTest):
         with self.assertRaises(AssertionError):
             _ = ablation.attribute(inp, perturbations_per_eval=2)
 
+    def test_error_agg_mode_arbitrary_output(self) -> None:
+        net = BasicModel_MultiLayer()
+
+        # output 3 numbers for the entire batch
+        # note that the batch size == 2
+        def forward_func(inp):
+            pred = net(inp)
+            return torch.stack([pred.sum(), pred.max(), pred.min()])
+
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        ablation = FeatureAblation(forward_func)
+        with self.assertRaises(AssertionError):
+            _ = ablation.attribute(inp, perturbations_per_eval=2)
+
+    def test_error_agg_mode_incorrect_fm(self) -> None:
+        def forward_func(inp):
+            return inp[0].unsqueeze(0)
+
+        inp = torch.tensor([[1, 2, 3], [4, 5, 6]])
+        mask = torch.tensor([[0, 1, 2], [0, 0, 1]])
+
+        ablation = FeatureAblation(forward_func)
+        with self.assertRaises(AssertionError):
+            _ = ablation.attribute(inp, perturbations_per_eval=1, feature_mask=mask)
+
     def test_empty_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()
         inp1 = torch.tensor([[1.0, -2.0, 3.0], [2.0, -1.0, 3.0]])
         inp2 = torch.tensor([])
-        exp: Tuple[List[List[float]], ...] = ([[9.0, -3.0, 12.0]], [[]])
+        exp: Tuple[List[List[float]], List[float]] = ([[9.0, -3.0, 12.0]], [0.0])
         self._ablation_test_assert(model, (inp1, inp2), exp, target=None)
 
     def test_sparse_features(self) -> None:
@@ -222,13 +284,13 @@ class Test(BaseTest):
         # Length of sparse index list may not match # of examples
         inp2 = torch.tensor([1, 7, 2, 4, 5, 3, 6])
         self._ablation_test_assert(
-            model, (inp1, inp2), ([[9.0, -3.0, 12.0]], [[2.0]]), target=None
+            model, (inp1, inp2), ([[9.0, -3.0, 12.0]], [2.0]), target=None
         )
 
     def test_single_ablation_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_ablation_assert(
-            lambda inp: torch.sum(net(inp)).item()
+            lambda inp: torch.sum(net(inp)).item(), dtype=torch.float64
         )
 
     def test_single_ablation_batch_scalar_tensor_0d(self) -> None:
@@ -246,13 +308,13 @@ class Test(BaseTest):
     def test_single_ablation_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_one_sample_batch_scalar_ablation_assert(
-            lambda inp: int(torch.sum(net(inp)).item())
+            lambda inp: int(torch.sum(net(inp)).item()), dtype=torch.int64
         )
 
     def test_multi_sample_ablation_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_ablation_assert(
-            lambda inp: torch.sum(net(inp)).item()
+            lambda inp: torch.sum(net(inp)).item(), dtype=torch.float64,
         )
 
     def test_multi_sample_ablation_batch_scalar_tensor_0d(self) -> None:
@@ -270,13 +332,13 @@ class Test(BaseTest):
     def test_multi_sample_ablation_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_ablation_assert(
-            lambda inp: int(torch.sum(net(inp)).item())
+            lambda inp: int(torch.sum(net(inp)).item()), dtype=torch.int64
         )
 
     def test_multi_inp_ablation_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_ablation_assert(
-            lambda *inp: torch.sum(net(*inp)).item()
+            lambda *inp: torch.sum(net(*inp)).item(), dtype=torch.float64,
         )
 
     def test_multi_inp_ablation_batch_scalar_tensor_0d(self) -> None:
@@ -294,11 +356,76 @@ class Test(BaseTest):
     def test_mutli_inp_ablation_batch_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_ablation_assert(
-            lambda *inp: int(torch.sum(net(*inp)).item())
+            lambda *inp: int(torch.sum(net(*inp)).item()), dtype=torch.int64
+        )
+
+    def test_unassociated_output_3d_tensor(self) -> None:
+        def forward_func(inp):
+            return torch.ones(1, 5, 3, 2)
+
+        inp = torch.randn(10, 5)
+        mask = torch.arange(5).unsqueeze(0)
+        self._ablation_test_assert(
+            model=forward_func,
+            test_input=inp,
+            baselines=None,
+            target=None,
+            feature_mask=mask,
+            perturbations_per_eval=(1,),
+            expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape).numpy().tolist(),
+        )
+
+    def test_single_inp_ablation_multi_output_aggr(self) -> None:
+        def forward_func(inp):
+            return inp[0].unsqueeze(0)
+
+        inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        mask = torch.tensor([[0, 1, 2]])
+        self._ablation_test_assert(
+            model=forward_func,
+            test_input=inp,
+            feature_mask=mask,
+            baselines=None,
+            target=None,
+            perturbations_per_eval=(1,),
+            # should just be the first input spread across each feature
+            expected_ablation=[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]],
+        )
+
+    def test_single_inp_ablation_multi_output_aggr_mask_none(self) -> None:
+        def forward_func(inp):
+            return inp[0].unsqueeze(0)
+
+        inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        self._ablation_test_assert(
+            model=forward_func,
+            test_input=inp,
+            feature_mask=None,
+            baselines=None,
+            target=None,
+            perturbations_per_eval=(1,),
+            # should just be the first input spread across each feature
+            expected_ablation=[[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]],
+        )
+
+    def test_single_inp_ablation_multi_output_aggr_non_standard(self) -> None:
+        def forward_func(inp):
+            return inp[0].unsqueeze(0)
+
+        inp = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        mask = torch.tensor([[0, 0, 1]])
+        self._ablation_test_assert(
+            model=forward_func,
+            test_input=inp,
+            feature_mask=mask,
+            baselines=None,
+            target=None,
+            perturbations_per_eval=(1,),
+            expected_ablation=[[1.0, 1.0, 0.0], [2.0, 2.0, 0.0], [0.0, 0.0, 3.0]],
         )
 
     def _single_input_one_sample_batch_scalar_ablation_assert(
-        self, func: Callable
+        self, func: Callable, dtype: torch.dtype = torch.float32
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
@@ -306,14 +433,14 @@ class Test(BaseTest):
         self._ablation_test_assert(
             func,
             inp,
-            [[82.0, 82.0, 24.0]],
+            torch.tensor([[82.0, 82.0, 24.0]], dtype=dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
         )
 
     def _single_input_multi_sample_batch_scalar_ablation_assert(
-        self, func: Callable
+        self, func: Callable, dtype: torch.dtype = torch.float32,
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
@@ -321,13 +448,15 @@ class Test(BaseTest):
         self._ablation_test_assert(
             func,
             inp,
-            [[642.0, 642.0, 264.0]],
+            torch.tensor([[642.0, 642.0, 264.0]], dtype=dtype),
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
         )
 
-    def _multi_input_batch_scalar_ablation_assert(self, func: Callable) -> None:
+    def _multi_input_batch_scalar_ablation_assert(
+        self, func: Callable, dtype: torch.dtype = torch.float32
+    ) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
@@ -335,9 +464,9 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2]])
         expected = (
-            [[1784.0, 1784.0, 1784.0]],
-            [[160.0, 1200.0, 240.0]],
-            [[16.0, 880.0, 104.0]],
+            torch.tensor([[1784, 1784, 1784]], dtype=dtype),
+            torch.tensor([[160, 1200, 240]], dtype=dtype),
+            torch.tensor([[16, 880, 104]], dtype=dtype),
         )
 
         self._ablation_test_assert(
@@ -355,10 +484,16 @@ class Test(BaseTest):
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_ablation: Union[
-            List[float],
-            List[List[float]],
-            Tuple[List[List[float]], ...],
+            Tensor,
             Tuple[Tensor, ...],
+            # NOTE: mypy doesn't support recursive types
+            # would do a List[NestedList[Union[int, float]]
+            # or Tuple[NestedList[Union[int, float]]
+            # but... we can't.
+            #
+            # See https://github.com/python/mypy/issues/731
+            List[Any],
+            Tuple[List[Any], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
@@ -378,8 +513,19 @@ class Test(BaseTest):
             )
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):
-                    assertTensorAlmostEqual(self, attributions[i], expected_ablation[i])
+                    expected = expected_ablation[i]
+                    if not isinstance(expected, torch.Tensor):
+                        expected = torch.tensor(expected)
+
+                    self.assertEqual(attributions[i].shape, expected.shape)
+                    self.assertEqual(attributions[i].dtype, expected.dtype)
+                    assertTensorAlmostEqual(self, attributions[i], expected)
             else:
+                if not isinstance(expected_ablation, torch.Tensor):
+                    expected_ablation = torch.tensor(expected_ablation)
+
+                self.assertEqual(attributions.shape, expected_ablation.shape)
+                self.assertEqual(attributions.dtype, expected_ablation.dtype)
                 assertTensorAlmostEqual(self, attributions, expected_ablation)
 
 

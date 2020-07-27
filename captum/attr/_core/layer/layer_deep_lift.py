@@ -283,7 +283,11 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         try:
             main_model_hooks = self._hook_main_model()
 
-            self.model.apply(self._register_hooks)
+            self.model.apply(
+                lambda mod: self._register_hooks(
+                    mod, attribute_to_layer_input=attribute_to_layer_input
+                )
+            )
 
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
@@ -298,7 +302,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                 additional_forward_args,
             )
 
-            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric,) -> Sequence:
+            def chunk_output_fn(out: TensorOrTupleOfTensorsGeneric) -> Sequence:
                 if isinstance(out, Tensor):
                     return out.chunk(2)
                 return tuple(out_sub.chunk(2) for out_sub in out)

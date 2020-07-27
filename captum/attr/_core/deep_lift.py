@@ -496,8 +496,12 @@ class DeepLift(GradientAttribution):
             or not self._is_non_linear(module)
         )
 
-    def _register_hooks(self, module: Module) -> None:
-        if not self._can_register_hook(module):
+    def _register_hooks(
+        self, module: Module, attribute_to_layer_input: bool = True
+    ) -> None:
+        if not self._can_register_hook(module) or (
+            not attribute_to_layer_input and module is self.layer  # type: ignore
+        ):
             return
         # adds forward hook to leaf nodes that are non-linear
         forward_handle = module.register_forward_hook(self._forward_hook)
@@ -1035,6 +1039,18 @@ def maxpool(
                 module.padding,
                 list(cast(torch.Size, module.input.shape)),
             ),
+        )
+    if grad_input[0].shape != inputs.shape:
+        raise AssertionError(
+            "A problem occurred during maxpool modul's backward pass. "
+            "The gradients with respect to inputs include only a "
+            "subset of inputs. More details about this issue can "
+            "be found here: "
+            "https://pytorch.org/docs/stable/"
+            "nn.html#torch.nn.Module.register_backward_hook "
+            "This can happen for example if you attribute to the outputs of a "
+            "MaxPool. As a workaround, please, attribute to the inputs of "
+            "the following layer."
         )
 
     new_grad_inp = torch.where(

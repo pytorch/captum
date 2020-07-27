@@ -135,6 +135,7 @@ def _forward_layer_eval(
     additional_forward_args: Any = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
+    grad_enabled: bool = False,
 ) -> Tuple[Tuple[Tensor, ...], Literal[True, False]]:
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
@@ -142,6 +143,7 @@ def _forward_layer_eval(
         layer,
         additional_forward_args=additional_forward_args,
         gradient_neuron_index=None,
+        grad_enabled=grad_enabled,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
     )
@@ -208,6 +210,7 @@ def _forward_layer_distributed_eval(
         nonlocal is_eval_tuple
         eval_tsrs = inp if attribute_to_layer_input else out
         is_eval_tuple = isinstance(eval_tsrs, tuple)
+
         if not is_eval_tuple:
             eval_tsrs = (eval_tsrs,)
         with lock:
@@ -310,6 +313,7 @@ def _forward_layer_eval_with_neuron_grads(
     additional_forward_args: Any = None,
     *,
     gradient_neuron_index: Union[int, Tuple[int, ...]],
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
@@ -323,6 +327,7 @@ def _forward_layer_eval_with_neuron_grads(
     layer: Module,
     additional_forward_args: Any = None,
     gradient_neuron_index: None = None,
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Tuple[Tuple[Tensor, ...], Literal[True, False]]:
@@ -335,6 +340,7 @@ def _forward_layer_eval_with_neuron_grads(
     layer: Module,
     additional_forward_args: Any = None,
     gradient_neuron_index: Union[None, int, Tuple[int, ...]] = None,
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Union[
@@ -356,13 +362,16 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    saved_layer, is_layer_tuple = _forward_layer_distributed_eval(
-        forward_fn,
-        inputs,
-        layer,
-        additional_forward_args=additional_forward_args,
-        attribute_to_layer_input=attribute_to_layer_input,
-    )
+    grad_enabled = True if gradient_neuron_index is not None or grad_enabled else False
+
+    with torch.autograd.set_grad_enabled(grad_enabled):
+        saved_layer, is_layer_tuple = _forward_layer_distributed_eval(
+            forward_fn,
+            inputs,
+            layer,
+            additional_forward_args=additional_forward_args,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
     device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
     # Identifies correct device ordering based on device ids.
     # key_list is a list of devices in appropriate ordering for concatenation.

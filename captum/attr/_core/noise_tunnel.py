@@ -16,7 +16,7 @@ from ..._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
 )
-from .._utils.attribution import Attribution
+from .._utils.attribution import Attribution, GradientAttribution
 from .._utils.common import _validate_noise_tunnel_type
 
 
@@ -63,7 +63,9 @@ class NoiseTunnel(Attribution):
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
-
+        self.is_gradient_method = isinstance(
+            self.attribution_method, GradientAttribution
+        )
         Attribution.__init__(self, self.attribution_method.forward_func)
 
     @log_usage()
@@ -165,7 +167,9 @@ class NoiseTunnel(Attribution):
                 ), "stdevs must be type float. " "Given: {}".format(type(stdevs))
                 stdevs_ = (stdevs,) * len(inputs)
             return tuple(
-                add_noise_to_input(input, stdev)
+                add_noise_to_input(input, stdev).requires_grad_()
+                if self.is_gradient_method
+                else add_noise_to_input(input, stdev)
                 for (input, stdev) in zip(inputs, stdevs_)
             )
 
@@ -199,81 +203,85 @@ class NoiseTunnel(Attribution):
             expected_attribution_sq = torch.mean(attribution ** 2, dim=1, keepdim=False)
             return expected_attribution, expected_attribution_sq
 
-        # Keeps track whether original input is a tuple or not before
-        # converting it into a tuple.
-        is_inputs_tuple = isinstance(inputs, tuple)
+        with torch.no_grad():
+            # Keeps track whether original input is a tuple or not before
+            # converting it into a tuple.
+            is_inputs_tuple = isinstance(inputs, tuple)
 
-        inputs = _format_input(inputs)
+            inputs = _format_input(inputs)
 
-        _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
+            _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
-        delta = None
-        inputs_with_noise = add_noise_to_inputs()
-        # if the algorithm supports targets, baselines and/or additional_forward_args
-        # they will be expanded based on the n_steps and corresponding kwargs
-        # variables will be updated accordingly
-        _expand_and_update_additional_forward_args(n_samples, kwargs)
-        _expand_and_update_target(n_samples, kwargs)
-        _expand_and_update_baselines(
-            inputs,
-            n_samples,
-            kwargs,
-            draw_baseline_from_distrib=draw_baseline_from_distrib,
-        )
-
-        # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
-        # NOTE: using __wrapped__ such that it does not log the inner logs
-        attributions = self.attribution_method.attribute.__wrapped__(  # type: ignore
-            self.attribution_method,  # self
-            inputs_with_noise if is_inputs_tuple else inputs_with_noise[0],
-            **kwargs,
-        )
-
-        return_convergence_delta = (
-            "return_convergence_delta" in kwargs and kwargs["return_convergence_delta"]
-        )
-
-        if self.is_delta_supported and return_convergence_delta:
-            attributions, delta = attributions
-
-        is_attrib_tuple = _is_tuple(attributions)
-        attributions = _format_tensor_into_tuples(attributions)
-
-        expected_attributions = []
-        expected_attributions_sq = []
-        for attribution in attributions:
-            expected_attr, expected_attr_sq = compute_expected_attribution_and_sq(
-                attribution
+            delta = None
+            inputs_with_noise = add_noise_to_inputs()
+            # if the algorithm supports targets, baselines and/or
+            # additional_forward_args they will be expanded based
+            # on the n_steps and corresponding kwargs
+            # variables will be updated accordingly
+            _expand_and_update_additional_forward_args(n_samples, kwargs)
+            _expand_and_update_target(n_samples, kwargs)
+            _expand_and_update_baselines(
+                inputs,
+                n_samples,
+                kwargs,
+                draw_baseline_from_distrib=draw_baseline_from_distrib,
             )
-            expected_attributions.append(expected_attr)
-            expected_attributions_sq.append(expected_attr_sq)
 
-        if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad:
+            # smoothgrad_Attr(x) = 1 / n * sum(Attr(x + N(0, sigma^2))
+            # NOTE: using __wrapped__ such that it does not log the inner logs
+            attr_func = self.attribution_method.attribute
+            attributions = attr_func.__wrapped__(  # type: ignore
+                self.attribution_method,  # self
+                inputs_with_noise if is_inputs_tuple else inputs_with_noise[0],
+                **kwargs,
+            )
+
+            return_convergence_delta = (
+                "return_convergence_delta" in kwargs
+                and kwargs["return_convergence_delta"]
+            )
+
+            if self.is_delta_supported and return_convergence_delta:
+                attributions, delta = attributions
+
+            is_attrib_tuple = _is_tuple(attributions)
+            attributions = _format_tensor_into_tuples(attributions)
+
+            expected_attributions = []
+            expected_attributions_sq = []
+            for attribution in attributions:
+                expected_attr, expected_attr_sq = compute_expected_attribution_and_sq(
+                    attribution
+                )
+                expected_attributions.append(expected_attr)
+                expected_attributions_sq.append(expected_attr_sq)
+
+            if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad:
+                return self._apply_checks_and_return_attributions(
+                    tuple(expected_attributions),
+                    is_attrib_tuple,
+                    return_convergence_delta,
+                    delta,
+                )
+
+            if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad_sq:
+                return self._apply_checks_and_return_attributions(
+                    tuple(expected_attributions_sq),
+                    is_attrib_tuple,
+                    return_convergence_delta,
+                    delta,
+                )
+
+            vargrad = tuple(
+                expected_attribution_sq - expected_attribution * expected_attribution
+                for expected_attribution, expected_attribution_sq in zip(
+                    expected_attributions, expected_attributions_sq
+                )
+            )
+
             return self._apply_checks_and_return_attributions(
-                tuple(expected_attributions),
-                is_attrib_tuple,
-                return_convergence_delta,
-                delta,
+                vargrad, is_attrib_tuple, return_convergence_delta, delta
             )
-
-        if NoiseTunnelType[nt_type] == NoiseTunnelType.smoothgrad_sq:
-            return self._apply_checks_and_return_attributions(
-                tuple(expected_attributions_sq),
-                is_attrib_tuple,
-                return_convergence_delta,
-                delta,
-            )
-
-        vargrad = tuple(
-            expected_attribution_sq - expected_attribution * expected_attribution
-            for expected_attribution, expected_attribution_sq in zip(
-                expected_attributions, expected_attributions_sq
-            )
-        )
-
-        return self._apply_checks_and_return_attributions(
-            vargrad, is_attrib_tuple, return_convergence_delta, delta
-        )
 
     def _apply_checks_and_return_attributions(
         self,
