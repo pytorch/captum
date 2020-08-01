@@ -6,7 +6,7 @@ from torch.nn import Module
 
 
 
-def weighted_combine(
+def WeightedCombine(
     saliency_maps: [Tensor, ...],
     weights: [float, ...],
     output_shape: Tuple, 
