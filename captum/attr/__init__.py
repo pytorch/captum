@@ -48,7 +48,7 @@ from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils.attribution import PerturbationAttribution  # noqa
 from ._utils.class_summarizer import ClassSummarizer
-from ._utils.combine import SaliencyMaskDropout, weighted_combine
+from ._utils.combine import SaliencyMaskDropout, WeightedCombine
 from ._utils.stat import MSE, CommonStats, Count, Max, Mean, Min, StdDev, Sum, Var
 from ._utils.summarizer import Summarizer
 
@@ -101,6 +101,8 @@ __all__ = [
     "Summarizer",
     "CommonStats",
     "ClassSummarizer",
+    "SaliencyMaskDropout",
+    "WeightedCombine",
     "Mean",
     "StdDev",
     "MSE",
