@@ -56,9 +56,7 @@ class SaliencyMaskDropout(Module):
         self.keep_percent = keep_percent
         self.drop_percent = 1.0 - self.keep_percent
                 
-    def forward(self, 
-            image: Tensor, 
-            saliency_map: Tensor):
+    def forward(self, image, saliency_map):
         assert torch.is_tensor(image), "image should be a Torch Tensor"
         assert torch.is_tensor(saliency_map), "saliency map should be a Torch Tensor"
         assert len(image.size()) == 4, "image should have dimensions (batch size, channels, height, width)"
@@ -79,10 +77,11 @@ class SaliencyMaskDropout(Module):
         # We will create the saliency mask but we use torch.autograd so that we can optionally
         # propagate the gradients backwards through the mask. k is assumed to be a dead-end, so 
         # no gradients go to it. 
-        drop_map = DropMap.apply(smap, k) 
+        drop_map = torch.gt(smap, k)
         image = image.reshape(batch_size, channels, height * width)
 
         # Multiply the input by the mask, but optionally scale it like we would a dropout layer
         masked_image = image * drop_map.unsqueeze(1) * self.scale
         masked_image = masked_image.reshape(batch_size, channels, height, width)
+        drop_map = drop_map.reshape(batch_size, height, width)
         return masked_image, drop_map

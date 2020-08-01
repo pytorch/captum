@@ -6,9 +6,10 @@ from ._core.feature_permutation import FeaturePermutation  # noqa
 from ._core.gradient_shap import GradientShap  # noqa
 from ._core.guided_backprop_deconvnet import Deconvolution  # noqa
 from ._core.guided_backprop_deconvnet import GuidedBackprop
-from ._core.guided_grad_cam import GuidedGradCam  # noqa
+from ._core.guided_grad_cam import GuidedGradCam
 from ._core.input_x_gradient import InputXGradient  # noqa
 from ._core.integrated_gradients import IntegratedGradients  # noqa
+from ._core.layer.fast_cam import LayerFastCam #noqa
 from ._core.layer.grad_cam import LayerGradCam  # noqa
 from ._core.layer.internal_influence import InternalInfluence  # noqa
 from ._core.layer.layer_activation import LayerActivation  # noqa
@@ -47,6 +48,7 @@ from ._utils.attribution import LayerAttribution  # noqa
 from ._utils.attribution import NeuronAttribution  # noqa
 from ._utils.attribution import PerturbationAttribution  # noqa
 from ._utils.class_summarizer import ClassSummarizer
+from ._utils.combine import SaliencyMaskDropout, weighted_combine
 from ._utils.stat import MSE, CommonStats, Count, Max, Mean, Min, StdDev, Sum, Var
 from ._utils.summarizer import Summarizer
 
@@ -74,6 +76,7 @@ __all__ = [
     "LayerActivation",
     "LayerFeatureAblation",
     "InternalInfluence",
+    "LayerFastCam",
     "LayerGradCam",
     "LayerDeepLift",
     "LayerDeepLiftShap",
