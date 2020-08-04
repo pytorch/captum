@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.log import log_usage
-from captum.attr import LayerActivation
+from .layer_activation import LayerActivation
 
 
 class LayerFastCam(LayerActivation):
@@ -122,19 +122,13 @@ class LayerFastCam(LayerActivation):
                                                             weights=[1.0, 1.0, 1.0],
                                                             output_shape=(32, 32))
         """
-        layer_attributes = super().attribute(inputs,
-                                             additional_forward_args, 
-                                             attribute_to_layer_input)
-        outputs = []
-        for layer_attr in layer_attributes:
-            layer_attr = layer_attr.unsqueeze(0)
-            output = self._compute_smoe_scale(layer_attr)
-    
-            if apply_gamma_norm:
-                output = self._compute_gamma_norm(output)
-            outputs.append(output)
-        outputs = torch.cat(outputs, axis=0)
-        return outputs
+        layer_attr = super().attribute(inputs,
+                                       additional_forward_args, 
+                                       attribute_to_layer_input)
+        scaled_attribute = self._compute_smoe_scale(layer_attr)
+        if apply_gamma_norm:
+            scaled_attribute = self._compute_gamma_norm(scaled_attribute)   
+        return scaled_attribute
 
     @staticmethod
     def combine(
@@ -148,31 +142,28 @@ class LayerFastCam(LayerActivation):
         assert len(saliency_maps) > 1, "need more than 1 saliency map to combine."
         assert len(weights) == len(saliency_maps), "weights and saliency maps \
             should have the same length."
-        
-        combined_maps = []
-        for saliency_map in saliency_maps:
-            bn  = saliency_maps[0].size()[0]
-            cm  = torch.zeros((bn, 1, output_shape[0], output_shape[1]), 
-                                dtype=saliency_maps[0].dtype, 
-                                device=saliency_maps[0].device)
-            ww  = []
-            for i, smap in enumerate(saliency_maps):
-                w = F.interpolate(smap.unsqueeze(1), 
-                                    size=output_shape, 
-                                    mode=resize_mode, 
-                                    align_corners=False) 
-                ww.append(w)
-                cm  += (w * weights[i])
-            cm  = cm / np.sum(weights)
-            cm  = cm.reshape(bn, output_shape[0], output_shape[1])
-            ww  = torch.stack(ww,dim=1)
-            ww  = ww.reshape(bn, len(weights), output_shape[0], output_shape[1])
-            if relu_attribution:
-                cm = F.relu(cm)
-                ww = F.relu(ww)
-            combined_maps.append(cm)
-        return combined_maps
-        
+
+        bn  = saliency_maps[0].size()[0]
+        combined_map  = torch.zeros((bn, 1, output_shape[0], output_shape[1]),
+                          dtype=saliency_maps[0].dtype,
+                          device=saliency_maps[0].device)
+        weighted_map  = []
+        for i, smap in enumerate(saliency_maps):
+            w = F.interpolate(smap.unsqueeze(1),
+                              size=output_shape,
+                              mode=resize_mode,
+                              align_corners=False)
+            weighted_map.append(w)
+            combined_map  += (w * weights[i])
+        combined_map  = combined_map / np.sum(weights)
+        combined_map  = combined_map.reshape(bn, output_shape[0], output_shape[1])
+        weighted_map  = torch.stack(weighted_map, dim=1)
+        weighted_map  = weighted_map.reshape(bn, len(weights), output_shape[0], output_shape[1])
+        if relu_attribution:
+            combined_map = F.relu(combined_map)
+            weighted_map = F.relu(weighted_map)
+        return combined_map, weighted_map
+
     def _compute_smoe_scale(
         self,
         inputs: Tensor
@@ -258,5 +249,5 @@ class LayerFastCam(LayerActivation):
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
         x = torch.where(torch.isfinite(x), x, torch.zeros_like(x))
-        x = x.reshape(s0, s1, s2)
-        return x
+        output = x.reshape(s0, s1, s2)
+        return output
