@@ -8,10 +8,13 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.log import log_usage
-from .layer_activation import LayerActivation
+
+from ...._utils.common import _format_output
+from ...._utils.gradient import _forward_layer_eval
+from ..._utils.attribution import LayerAttribution
 
 
-class LayerFastCam(LayerActivation):
+class LayerFastCam(LayerAttribution):
     r"""
     Compute saliency map using Saliency Map Order Equivalence (SMOE). This 
     method first computes the layer activation, then passes activations through 
@@ -46,7 +49,7 @@ class LayerFastCam(LayerActivation):
                           If forward_func is given as the DataParallel model itself,
                           then it is not necessary to provide this argument.
         """
-        LayerActivation.__init__(self, forward_func, layer, device_ids)
+        self.layer_act = LayerAttribution.__init__(self, forward_func, layer, device_ids)
         
     @log_usage()
     def attribute(
@@ -122,13 +125,24 @@ class LayerFastCam(LayerActivation):
                                                             weights=[1.0, 1.0, 1.0],
                                                             output_shape=(32, 32))
         """
-        layer_attr = super().attribute(inputs,
-                                       additional_forward_args, 
-                                       attribute_to_layer_input)
-        scaled_attribute = self._compute_smoe_scale(layer_attr)
-        if apply_gamma_norm:
-            scaled_attribute = self._compute_gamma_norm(scaled_attribute)   
-        return scaled_attribute
+        with torch.no_grad():
+            layer_attrs, is_layer_tuple = _forward_layer_eval(
+                self.forward_func,
+                inputs,
+                self.layer,
+                additional_forward_args,
+                device_ids=self.device_ids,
+                attribute_to_layer_input=attribute_to_layer_input,
+            )
+        # return _format_output(is_layer_tuple, layer_attrs)
+        # return layer_attrs
+        scaled_attributes = []
+        for layer_i, layer_attr in enumerate(layer_attrs):
+            scaled_attribute = self._compute_smoe_scale(layer_attr)
+            if apply_gamma_norm:
+                scaled_attribute = self._compute_gamma_norm(scaled_attribute)
+            scaled_attributes.append(scaled_attribute)
+        return _format_output(is_layer_tuple, tuple(scaled_attributes))
 
     @staticmethod
     def combine(
@@ -137,7 +151,7 @@ class LayerFastCam(LayerActivation):
         output_shape: Tuple, 
         resize_mode: str = "bilinear",
         relu_attribution: bool = False
-    ) -> Tensor:
+    ) -> (Tensor, [Tensor, ...]):
         
         assert len(saliency_maps) > 1, "need more than 1 saliency map to combine."
         assert len(weights) == len(saliency_maps), "weights and saliency maps \
@@ -170,7 +184,7 @@ class LayerFastCam(LayerActivation):
         ) -> Tensor:
         r"""
         """
-        x = inputs + 1e-8
+        x = inputs + 1e-7
         m = x.mean(dim=1)
         k = torch.log2(m) - torch.mean(torch.log2(x), dim=1)
         th = k * m
@@ -241,7 +255,7 @@ class LayerFastCam(LayerActivation):
                             12.507343278686905, -0.13857109526572012,
                             9.9843695780195716e-6, 1.5056327351493116e-7])
         two_pi = torch.tensor(np.sqrt(2.0 * np.pi))
-        eps = 1e-8
+        eps = 1e-7
     
         s0, s1, s2 = inputs.size()
         x = inputs.reshape(s0, s1 * s2) 
