@@ -58,13 +58,13 @@ class Test(BaseTest):
         self.assertEqual(attributions[1][0], 1.0)
         self.assertEqual(delta[0], 0.0)
 
-    def test_relu_deeplift_exact_match_wo_inp_marginal_effects(self) -> None:
+    def test_relu_deeplift_exact_match_wo_mutliplying_by_inputs(self) -> None:
         x1 = torch.tensor([1.0])
         x2 = torch.tensor([2.0])
         inputs = (x1, x2)
 
         model = ReLUDeepLiftModel()
-        dl = DeepLift(model, use_input_marginal_effects=False)
+        dl = DeepLift(model, multiply_by_inputs=False)
         attributions = dl.attribute(inputs)
         self.assertEqual(attributions[0][0], 2.0)
         self.assertEqual(attributions[1][0], 0.5)
@@ -170,7 +170,7 @@ class Test(BaseTest):
         model = ReLUDeepLiftModel()
         self._deeplift_assert(model, DeepLiftShap(model), inputs, baselines)
 
-    def test_relu_deepliftshap_batch_4D_input_wo_inp_marginal_effects(self) -> None:
+    def test_relu_deepliftshap_batch_4D_input_wo_mutliplying_by_inputs(self) -> None:
         x1 = torch.ones(4, 1, 1, 1)
         x2 = torch.tensor([[[[2.0]]]] * 4)
 
@@ -181,7 +181,7 @@ class Test(BaseTest):
         baselines = (b1, b2)
 
         model = ReLUDeepLiftModel()
-        attr = DeepLiftShap(model, use_input_marginal_effects=False).attribute(
+        attr = DeepLiftShap(model, multiply_by_inputs=False).attribute(
             inputs, baselines
         )
         assertTensorAlmostEqual(self, attr[0], 2 * torch.ones(4, 1))

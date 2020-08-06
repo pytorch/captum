@@ -8,6 +8,7 @@ from torch.nn import Module
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
+from captum.attr._core.layer.layer_activation import LayerActivation
 
 from ...helpers.basic import (
     BaseTest,
@@ -33,15 +34,15 @@ class Test(BaseTest):
 
         self._assert_attributions(model, model.linear2, inputs, baselines, 0, expected)
 
-    def test_basic_multilayer_wo_inp_marginal_effects(self) -> None:
+    def test_basic_multilayer_wo_multiplying_by_inputs(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         model.eval()
 
         inputs = torch.tensor([[1.0, -20.0, 10.0]])
         baselines = torch.zeros(3, 3)
-        lgs = LayerGradientShap(model, model.linear2, use_input_marginal_effects=False)
+        lgs = LayerGradientShap(model, model.linear2, multiply_by_inputs=False)
         attrs = lgs.attribute(inputs, baselines, target=0, stdevs=0.0,)
-        assertTensorAlmostEqual(self, attrs, torch.tensor([[-3.0, 0.0]]))
+        assertTensorAlmostEqual(self, attrs, torch.tensor([[1.0, 0.0]]))
 
     def test_basic_multi_tensor_output(self) -> None:
         model = BasicModel_MultiLayer(multi_input_module=True)

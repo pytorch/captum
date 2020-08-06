@@ -77,7 +77,7 @@ class Test(BaseTest):
             inputs,
             expected,
             perturb_func=_local_perturb_func_default,
-            use_input_marginal_effects=False,
+            multiply_by_inputs=False,
         )
         assertTensorAlmostEqual(self, infid, infid_w_common_func)
 
@@ -335,10 +335,10 @@ class Test(BaseTest):
         n_perturb_samples=10,
         max_batch_size=None,
         perturb_func=_local_perturb_func,
-        use_input_marginal_effects=False,
+        multiply_by_inputs=False,
     ):
         ig = IntegratedGradients(model)
-        if use_input_marginal_effects:
+        if multiply_by_inputs:
             attrs = tuple(
                 attr / input for input, attr in zip(inputs, ig.attribute(inputs))
             )

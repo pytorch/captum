@@ -22,12 +22,12 @@ class Test(BaseTest):
 
         inputs = torch.tensor([[1.0, 20.0, 10.0]])
         baselines = torch.zeros(2, 3)
-        ngs = NeuronGradientShap(model, model.linear1, use_input_marginal_effects=False)
+        ngs = NeuronGradientShap(model, model.linear1, multiply_by_inputs=False)
         attr = ngs.attribute(inputs, 0, baselines=baselines, stdevs=0.0)
-        self.assertFalse(ngs.uses_input_marginal_effects)
+        self.assertFalse(ngs.multiplies_by_inputs)
         assertTensorAlmostEqual(self, attr, [1.0, 1.0, 1.0])
 
-    def test_basic_multilayer_wo_inp_marginal_effects(self) -> None:
+    def test_basic_multilayer_wo_mult_by_inputs(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         model.eval()
 
@@ -77,5 +77,5 @@ class Test(BaseTest):
                 nig.attribute(inputs, neuron_ind, baselines=baseline.unsqueeze(0))
             )
         combined_attrs_ig = torch.stack(attrs_ig, dim=0).mean(dim=0)
-        self.assertTrue(ngs.uses_input_marginal_effects)
+        self.assertTrue(ngs.multiplies_by_inputs)
         assertTensorAlmostEqual(self, attrs_gs, combined_attrs_ig, 0.5)

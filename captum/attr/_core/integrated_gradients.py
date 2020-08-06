@@ -44,28 +44,29 @@ class IntegratedGradients(GradientAttribution):
     """
 
     def __init__(
-        self, forward_func: Callable, use_input_marginal_effects: bool = True,
+        self, forward_func: Callable, multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
                     modification of it
-            use_input_marginal_effects (bool): Indicates whether to factor
-                    model inputs' marginal effects in the final attribution scores.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                    model inputs' multiplier in the final attribution scores.
                     In the literature this is also known as local vs global
-                    attribution. If input's marginal effects aren't factored in,
-                    then this type of attribution method is also called local
-                    attribution. If they are, then it is called global.
+                    attribution. If inputs' multiplier isn't factored in,
+                    then that type of attribution method is also called local
+                    attribution. If it is, then that type of attribution
+                    method is called global.
                     More detailed can be found here:
                     https://arxiv.org/abs/1711.06104
 
-                    In case of integrated gradients, if `use_input_marginal_effects`
+                    In case of integrated gradients, if `multiply_by_inputs`
                     is set to True, final sensitivity scores are being multiplied by
                     (inputs - baselines).
         """
         GradientAttribution.__init__(self, forward_func)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     # The following overloaded method signatures correspond to the case where
     # return_convergence_delta is False, then only attributions are returned,
@@ -370,7 +371,7 @@ class IntegratedGradients(GradientAttribution):
 
         # computes attribution for each tensor in input tuple
         # attributions has the same dimensionality as inputs
-        if not self.uses_input_marginal_effects:
+        if not self.multiplies_by_inputs:
             attributions = total_grads
         else:
             attributions = tuple(
@@ -383,5 +384,5 @@ class IntegratedGradients(GradientAttribution):
         return True
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

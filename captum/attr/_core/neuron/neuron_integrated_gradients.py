@@ -30,31 +30,46 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
-        use_input_marginal_effects: bool = True,
+        multiply_by_inputs: bool = True,
     ):
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        attribution of each neuron in the input or output of
+                        this layer.
+                        Currently, it is assumed that the inputs or the outputs
+                        of the layer, depending on which one is used for
+                        attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Neuron Integrated Gradients,
+                        if `multiply_by_inputs` is set to True, final
+                        sensitivity scores are being multiplied
+                        by (inputs - baselines).
+
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -192,7 +207,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_ig.attribute(input, (4,1,2))
         """
-        ig = IntegratedGradients(self.forward_func, self.uses_input_marginal_effects)
+        ig = IntegratedGradients(self.forward_func, self.multiplies_by_inputs)
         ig.gradient_func = construct_neuron_grad_fn(
             self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
         )
@@ -209,5 +224,5 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

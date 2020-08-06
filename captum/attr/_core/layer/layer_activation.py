@@ -123,5 +123,5 @@ class LayerActivation(LayerAttribution):
         return _format_output(is_layer_tuple, layer_eval)
 
     @property
-    def uses_input_marginal_effects(self):
+    def multiplies_by_inputs(self):
         return True

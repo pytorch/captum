@@ -53,30 +53,44 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
-        use_input_marginal_effects: bool = True,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          The output size of the attribute method matches the
-                          dimensions of the inputs or ouputs of the neuron with
-                          index `neuron_index` in this layer, depending on whether
-                          we attribute to the inputs or outputs of the neuron.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the neurons in this layer, depending on which one is
-                          used for attribution, can only be a single tensor.
+                        The output size of the attribute method matches the
+                        dimensions of the inputs or ouputs of the neuron with
+                        index `neuron_index` in this layer, depending on whether
+                        we attribute to the inputs or outputs of the neuron.
+                        Currently, it is assumed that the inputs or the outputs
+                        of the neurons in this layer, depending on which one is
+                        used for attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Neuron Gradient SHAP,
+                        if `multiply_by_inputs` is set to True, the
+                        sensitivity scores for scaled inputs are
+                        being multiplied by (inputs - baselines).
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -196,7 +210,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                                                             baselines)
 
         """
-        gs = GradientShap(self.forward_func, self.uses_input_marginal_effects)
+        gs = GradientShap(self.forward_func, self.multiplies_by_inputs)
         gs.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -215,5 +229,5 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

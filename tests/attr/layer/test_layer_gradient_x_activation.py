@@ -86,7 +86,7 @@ class Test(BaseTest):
         additional_input: Any = None,
     ) -> None:
         layer_act = LayerGradientXActivation(model, target_layer)
-        self.assertTrue(layer_act.uses_input_marginal_effects)
+        self.assertTrue(layer_act.multiplies_by_inputs)
         attributions = layer_act.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )
@@ -95,10 +95,10 @@ class Test(BaseTest):
         )
         # test Layer Gradient without multiplying with activations
         layer_grads = LayerGradientXActivation(
-            model, target_layer, use_input_marginal_effects=False
+            model, target_layer, multiply_by_inputs=False
         )
         layer_act = LayerActivation(model, target_layer)
-        self.assertFalse(layer_grads.uses_input_marginal_effects)
+        self.assertFalse(layer_grads.multiplies_by_inputs)
         grads = layer_grads.attribute(
             test_input, target=0, additional_forward_args=additional_input
         )

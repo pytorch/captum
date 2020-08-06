@@ -63,7 +63,7 @@ class Test(BaseTest):
         ):
             assertTensorAlmostEqual(self, attribution, attribution_without_delta)
 
-    def test_basic_multi_input_wo_inp_marginal_effects(self) -> None:
+    def test_basic_multi_input_wo_mutliplying_by_inputs(self) -> None:
         batch_size = 10
 
         x1 = torch.ones(batch_size, 3)
@@ -83,8 +83,8 @@ class Test(BaseTest):
         np.random.seed(0)
         torch.manual_seed(0)
         gradient_shap = GradientShap(model)
-        gradient_shap_wo_inp_marginal_effects = GradientShap(
-            model, use_input_marginal_effects=False
+        gradient_shap_wo_mutliplying_by_inputs = GradientShap(
+            model, multiply_by_inputs=False
         )
         n_samples = 50
         attributions = cast(
@@ -93,20 +93,20 @@ class Test(BaseTest):
                 inputs, baselines, n_samples=n_samples, stdevs=0.0,
             ),
         )
-        attributions_wo_inp_marginal_effects = cast(
+        attributions_wo_mutliplying_by_inputs = cast(
             Tuple[Tuple[Tensor, ...], Tensor],
-            gradient_shap_wo_inp_marginal_effects.attribute(
+            gradient_shap_wo_mutliplying_by_inputs.attribute(
                 inputs, baselines, n_samples=n_samples, stdevs=0.0,
             ),
         )
         assertTensorAlmostEqual(
             self,
-            attributions_wo_inp_marginal_effects[0] * (x1 - baselines[0][0:1]),
+            attributions_wo_mutliplying_by_inputs[0] * (x1 - baselines[0][0:1]),
             attributions[0],
         )
         assertTensorAlmostEqual(
             self,
-            attributions_wo_inp_marginal_effects[1] * (x2 - baselines[1][0:1]),
+            attributions_wo_mutliplying_by_inputs[1] * (x2 - baselines[1][0:1]),
             attributions[1],
         )
 

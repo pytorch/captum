@@ -42,23 +42,38 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
     """
 
     def __init__(
-        self, model: Module, layer: Module, use_input_marginal_effects: bool = True
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True
     ) -> None:
         r"""
         Args:
 
             model (torch.nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          Attributions for a particular neuron for the input or output
-                          of this layer are computed using the argument neuron_index
-                          in the attribute method.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
+                        Attributions for a particular neuron for the input or output
+                        of this layer are computed using the argument neuron_index
+                        in the attribute method.
+                        Currently, it is assumed that the inputs or the outputs
+                        of the layer, depending on which one is used for
+                        attribution, can only be a single tensor.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Neuron DeepLift, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores, aka mulitipliers
+                        are being multiplied by (inputs - baselines).
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -186,7 +201,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLift(cast(Module, self.forward_func), self.uses_input_marginal_effects)
+        dl = DeepLift(cast(Module, self.forward_func), self.multiplies_by_inputs)
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -203,8 +218,8 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
 
 class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
@@ -229,22 +244,37 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
     """
 
     def __init__(
-        self, model: Module, layer: Module, use_input_marginal_effects: bool = True
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True
     ) -> None:
         r"""
         Args:
 
             model (torch.nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          Attributions for a particular neuron for the input or output
-                          of this layer are computed using the argument neuron_index
-                          in the attribute method.
-                          Currently, only layers with a single tensor input and output
-                          are supported.
+                        Attributions for a particular neuron for the input or output
+                        of this layer are computed using the argument neuron_index
+                        in the attribute method.
+                        Currently, only layers with a single tensor input and output
+                        are supported.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Neuron DeepLift Shap, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores, aka mulitipliers
+                        are being multiplied by (inputs - baselines).
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
         NeuronAttribution.__init__(self, model, layer)
         GradientAttribution.__init__(self, model)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -367,9 +397,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = dl.attribute(input, (4,1,2))
         """
-        dl = DeepLiftShap(
-            cast(Module, self.forward_func), self.uses_input_marginal_effects
-        )
+        dl = DeepLiftShap(cast(Module, self.forward_func), self.multiplies_by_inputs)
         dl.gradient_func = construct_neuron_grad_fn(
             self.layer,
             neuron_index,
@@ -386,5 +414,5 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
         )
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

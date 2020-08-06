@@ -65,7 +65,7 @@ class Attribution:
     """
 
     @property
-    def uses_input_marginal_effects(self):
+    def multiplies_by_inputs(self):
         return False
 
     def has_convergence_delta(self) -> bool:
@@ -313,7 +313,7 @@ class PerturbationAttribution(Attribution):
         Attribution.__init__(self, forward_func)
 
     @property
-    def uses_input_marginal_effects(self):
+    def multiplies_by_inputs(self):
         return True
 
 

@@ -28,9 +28,9 @@ class Test(BaseTest):
     def test_multivariable_vanilla(self) -> None:
         self._assert_multi_variable("vanilla", "riemann_right")
 
-    def test_multivariable_vanilla_wo_inp_marginal_effects(self) -> None:
+    def test_multivariable_vanilla_wo_mutliplying_by_inputs(self) -> None:
         self._assert_multi_variable(
-            "vanilla", "riemann_right", use_input_marginal_effects=False
+            "vanilla", "riemann_right", multiply_by_inputs=False
         )
 
     def test_multivariable_smoothgrad(self) -> None:
@@ -90,22 +90,22 @@ class Test(BaseTest):
     def test_batched_input_vargrad(self) -> None:
         self._assert_batched_tensor_input("vargrad", "gausslegendre")
 
-    def test_batched_input_smoothgrad__wo_inp_marginal_effects(self) -> None:
+    def test_batched_input_smoothgrad_wo_mutliplying_by_inputs(self) -> None:
         model = BasicModel_MultiLayer()
         inputs = torch.tensor(
             [[1.5, 2.0, 1.3], [0.5, 0.1, 2.3], [1.5, 2.0, 1.3]], requires_grad=True
         )
-        ig_wo_marginal_effects = IntegratedGradients(
-            model, use_input_marginal_effects=False
+        ig_wo_mutliplying_by_inputs = IntegratedGradients(
+            model, multiply_by_inputs=False
         )
-        nt_wo_marginal_effects = NoiseTunnel(ig_wo_marginal_effects)
+        nt_wo_mutliplying_by_inputs = NoiseTunnel(ig_wo_mutliplying_by_inputs)
 
         ig = IntegratedGradients(model)
         nt = NoiseTunnel(ig)
         n_samples = 5
         target = 0
         type = "smoothgrad"
-        attributions_wo_marginal_effects = nt_wo_marginal_effects.attribute(
+        attributions_wo_mutliplying_by_inputs = nt_wo_mutliplying_by_inputs.attribute(
             inputs,
             nt_type=type,
             n_samples=n_samples,
@@ -122,7 +122,7 @@ class Test(BaseTest):
             n_steps=500,
         )
         assertTensorAlmostEqual(
-            self, attributions_wo_marginal_effects * inputs, attributions
+            self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
 
     def test_batched_multi_input_vanilla(self) -> None:
@@ -141,7 +141,7 @@ class Test(BaseTest):
         self,
         type: str,
         approximation_method: str = "gausslegendre",
-        use_input_marginal_effects: bool = True,
+        multiply_by_inputs: bool = True,
     ) -> None:
         model = BasicModel2()
 
@@ -157,17 +157,17 @@ class Test(BaseTest):
             (baseline1, baseline2),
             type=type,
             approximation_method=approximation_method,
-            use_input_marginal_effects=use_input_marginal_effects,
+            multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
             assertArraysAlmostEqual(
                 attributions1[0].tolist(),
-                [1.5] if use_input_marginal_effects else [0.5],
+                [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
             )
             assertArraysAlmostEqual(
                 attributions1[1].tolist(),
-                [-0.5] if use_input_marginal_effects else [-0.5],
+                [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
             )
         model = BasicModel3()
@@ -177,17 +177,17 @@ class Test(BaseTest):
             (baseline1, baseline2),
             type=type,
             approximation_method=approximation_method,
-            use_input_marginal_effects=use_input_marginal_effects,
+            multiply_by_inputs=multiply_by_inputs,
         )
         if type == "vanilla":
             assertArraysAlmostEqual(
                 attributions2[0].tolist(),
-                [1.5] if use_input_marginal_effects else [0.5],
+                [1.5] if multiply_by_inputs else [0.5],
                 delta=0.05,
             )
             assertArraysAlmostEqual(
                 attributions2[1].tolist(),
-                [-0.5] if use_input_marginal_effects else [-0.5],
+                [-0.5] if multiply_by_inputs else [-0.5],
                 delta=0.05,
             )
             # Verifies implementation invariance
@@ -336,15 +336,13 @@ class Test(BaseTest):
         additional_forward_args: Any = None,
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
-        use_input_marginal_effects=True,
+        multiply_by_inputs=True,
     ) -> Tuple[Tensor, ...]:
         r"""
             attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
-        ig = IntegratedGradients(
-            model, use_input_marginal_effects=use_input_marginal_effects
-        )
-        self.assertEquals(ig.uses_input_marginal_effects, use_input_marginal_effects)
+        ig = IntegratedGradients(model, multiply_by_inputs=multiply_by_inputs)
+        self.assertEquals(ig.multiplies_by_inputs, multiply_by_inputs)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
         inputs: Tuple[Tensor, ...]
@@ -411,14 +409,12 @@ class Test(BaseTest):
                 method=approximation_method,
                 n_steps=500,
             )
-            self.assertEquals(
-                nt.uses_input_marginal_effects, use_input_marginal_effects
-            )
+            self.assertEquals(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
         for input, attribution in zip(inputs, attributions):
             self.assertEqual(attribution.shape, input.shape)
-        if use_input_marginal_effects:
+        if multiply_by_inputs:
             self.assertTrue(all(abs(delta.numpy().flatten()) < 0.07))
 
         # compare attributions retrieved with and without

@@ -395,5 +395,5 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         return _format_output(is_layer_tuple, attributions)
 
     @property
-    def uses_input_marginal_effects(self):
+    def multiplies_by_inputs(self):
         return True

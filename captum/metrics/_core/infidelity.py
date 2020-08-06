@@ -16,13 +16,13 @@ from ..._utils.common import (
 from .._utils.batching import _divide_and_aggregate_metrics
 
 
-def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
+def infidelity_perturb_func_decorator(multipy_by_inputs=True):
     r"""An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
     when `pertub_func` returns only perturbed inputs and we
     internally compute the perturbations as
     (input - perturbed_input) / (input - baseline) if
-    use_input_marginal_effects is set to True and
+    multipy_by_inputs is set to True and
     (input - perturbed_input) otherwise.
 
     If users decorate their `pertub_func` with
@@ -31,9 +31,9 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
 
     Args:
 
-        use_input_marginal_effects (bool): Indicates whether model inputs'
-                marginal effects are factored in the computation
-                of attribution scores.
+        multipy_by_inputs (bool): Indicates whether model inputs'
+                multiplier is factored in the computation of
+                attribution scores.
 
         """
 
@@ -79,7 +79,7 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
                         input,
                         torch.tensor(1.0, device=input.device),
                     )
-                    if use_input_marginal_effects
+                    if multipy_by_inputs
                     else input - input_perturbed
                     for input, input_perturbed in zip(inputs, inputs_perturbed)
                 )
@@ -90,7 +90,7 @@ def infidelity_perturb_func_decorator(use_input_marginal_effects=True):
                         input - baseline,
                         torch.tensor(1.0, device=input.device),
                     )
-                    if use_input_marginal_effects
+                    if multipy_by_inputs
                     else input - input_perturbed
                     for input, input_perturbed, baseline in zip(
                         inputs, inputs_perturbed, baselines
@@ -159,26 +159,25 @@ def infidelity(
                 `infidelity_perturb_func_decorator` decorator such as:
 
                 from captum.metrics import infidelity_perturb_func_decorator
-                @infidelity_perturb_func_decorator(<use_input_marginal_effects flag>)
+                @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
                 def my_perturb_func(inputs):
                     <MY-LOGIC-HERE>
                     return perturbed_inputs
 
                 In this case we compute perturbations by `input - perturbed_input`
-                difference in case `use_input_marginal_effects` is False and by
+                difference in case `multipy_by_inputs` is False and by
                 dividing (input - perturbed_input) by (input - baselines) in case
-                `use_input_marginal_effects` flag is True.
+                `multipy_by_inputs` flag is True.
                 The user needs to only return perturbed inputs in `perturb_func`
                 as described above.
 
                 `infidelity_perturb_func_decorator` needs to be used with
-                `use_input_marginal_effects` flag set to False in case infidelity
+                `multipy_by_inputs` flag set to False in case infidelity
                 score is being computed for attribution maps that are local aka
-                that do not factor in inputs' marginal effects in the final
-                attribution score.
+                that do not factor in inputs in the final attribution score.
                 Such attribution algorithms include Saliency, GradCam, Guided Backprop,
                 or Integrated Gradients and DeepLift attribution scores that are already
-                computed with `use_input_marginal_effects=False` flag.
+                computed with `multipy_by_inputs=False` flag.
 
                 If there are more than one inputs passed to infidelity function those
                 will be passed to `perturb_func` as tuples in the same order as they
@@ -248,16 +247,16 @@ def infidelity(
                 This attribution scores can be computed using the implementations
                 provided in the `captum.attr` package. Some of those attribution
                 approaches are so called global methods, which means that
-                they foctor in inputs' marginal effects, as described in:
+                they factor in the inputs multiplier, as described in:
                 https://arxiv.org/pdf/1711.06104.pdf
                 Many global attribution algorithms can be used in local modes,
-                meaning that the inputs' marginal effects aren't factored in the
+                meaning that the inputs multiplier isn't factored in the
                 attribution scores.
                 This can be done duing the definition of the attribution algorithm
-                by passing `use_input_marginal_effects=False` flag.
+                by passing `multipy_by_inputs=False` flag.
                 For example in case of Integrated Gradients (IG) we can, obtain
                 local attribution scores if we define the constructor of IG as:
-                ig = IntegratedGradients(use_input_marginal_effects=False)
+                ig = IntegratedGradients(multipy_by_inputs=False)
 
                 Some attribution algorithms are inherently local.
                 Examples of inherently local attribution methods include:

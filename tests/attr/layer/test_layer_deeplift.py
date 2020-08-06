@@ -41,11 +41,11 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
-    def test_relu_layer_deeplift_wo_inp_marginal_effects(self) -> None:
+    def test_relu_layer_deeplift_wo_mutliplying_by_inputs(self) -> None:
         model = ReLULinearModel(inplace=True)
         inputs, baselines = _create_inps_and_base_for_deeplift_neuron_layer_testing()
 
-        layer_dl = LayerDeepLift(model, model.relu, use_input_marginal_effects=False)
+        layer_dl = LayerDeepLift(model, model.relu, multiply_by_inputs=False)
         attributions = layer_dl.attribute(
             inputs, baselines, attribute_to_layer_input=True,
         )
@@ -163,15 +163,13 @@ class TestDeepLift(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 15.0]])
         assert_delta(self, delta)
 
-    def test_relu_layer_deepliftshap_wo_inp_marginal_effects(self) -> None:
+    def test_relu_layer_deepliftshap_wo_mutliplying_by_inputs(self) -> None:
         model = ReLULinearModel()
         (
             inputs,
             baselines,
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
-        layer_dl_shap = LayerDeepLiftShap(
-            model, model.relu, use_input_marginal_effects=False
-        )
+        layer_dl_shap = LayerDeepLiftShap(model, model.relu, multiply_by_inputs=False)
         attributions = layer_dl_shap.attribute(
             inputs, baselines, attribute_to_layer_input=True,
         )

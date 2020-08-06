@@ -60,17 +60,28 @@ class GradientShap(GradientAttribution):
     samples and compute the expectation (smoothgrad).
     """
 
-    def __init__(
-        self, forward_func: Callable, use_input_marginal_effects: bool = True
-    ) -> None:
+    def __init__(self, forward_func: Callable, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
 
             forward_func (function): The forward function of the model or
-                       any modification of it
+                       any modification of it.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                    model inputs' multiplier in the final attribution scores.
+                    In the literature this is also known as local vs global
+                    attribution. If inputs' multiplier isn't factored in
+                    then this type of attribution method is also called local
+                    attribution. If it is, then that type of attribution
+                    method is called global.
+                    More detailed can be found here:
+                    https://arxiv.org/abs/1711.06104
+
+                    In case of gradient shap, if `multiply_by_inputs`
+                    is set to True, the sensitivity scores of scaled inputs
+                    are being multiplied by (inputs - baselines).
         """
         GradientAttribution.__init__(self, forward_func)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
     def attribute(
@@ -253,7 +264,7 @@ class GradientShap(GradientAttribution):
         )
 
         input_min_baseline_x_grad = InputBaselineXGradient(
-            self.forward_func, self.uses_input_marginal_effects
+            self.forward_func, self.multiplies_by_inputs
         )
         input_min_baseline_x_grad.gradient_func = self.gradient_func
 
@@ -279,20 +290,34 @@ class GradientShap(GradientAttribution):
         return True
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
 
 class InputBaselineXGradient(GradientAttribution):
-    def __init__(self, forward_func: Callable, use_input_marginal_effects=True) -> None:
+    def __init__(self, forward_func: Callable, multiply_by_inputs=True) -> None:
         r"""
         Args:
 
             forward_func (function): The forward function of the model or
-                       any modification of it
+                        any modification of it
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then this type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of gradient shap, if `multiply_by_inputs`
+                        is set to True, the sensitivity scores of scaled inputs
+                        are being multiplied by (inputs - baselines).
+
         """
         GradientAttribution.__init__(self, forward_func)
-        self._use_input_marginal_effects = use_input_marginal_effects
+        self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
     def attribute(
@@ -347,7 +372,7 @@ class InputBaselineXGradient(GradientAttribution):
             self.forward_func, input_baseline_scaled, target, additional_forward_args
         )
 
-        if self.uses_input_marginal_effects:
+        if self.multiplies_by_inputs:
             input_baseline_diffs = tuple(
                 input - baseline for input, baseline in zip(inputs, baselines)
             )
@@ -373,8 +398,8 @@ class InputBaselineXGradient(GradientAttribution):
         return True
 
     @property
-    def uses_input_marginal_effects(self):
-        return self._use_input_marginal_effects
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
 
 def _scale_input(
