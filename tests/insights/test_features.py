@@ -1,16 +1,17 @@
-from captum.insights.attr_vis.features import (
-    TextFeature,
-    FeatureOutput,
-    EmptyFeature,
-    ImageFeature,
-    GeneralFeature,
-    _convert_figure_base64,
-)
-
-from tests.helpers.basic import BaseTest
 from unittest.mock import patch
+
 import torch
 from matplotlib.figure import Figure
+
+from captum.insights.attr_vis.features import (
+    EmptyFeature,
+    FeatureOutput,
+    GeneralFeature,
+    ImageFeature,
+    TextFeature,
+    _convert_figure_base64,
+)
+from tests.helpers.basic import BaseTest
 
 
 class TestTextFeature(BaseTest):
