@@ -269,8 +269,6 @@ class GradientAttribution(Attribution):
         _validate_target(num_samples, target)
 
         def _sum_rows(input: Tensor) -> Tensor:
-            #return input.view(input.shape[0], -1).sum(1)
-	    #CHANGED HERE TO RESHAPE
             return input.reshape(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
