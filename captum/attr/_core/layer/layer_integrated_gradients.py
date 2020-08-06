@@ -80,7 +80,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                         In case of layer integrated gradients, if `multiply_by_inputs`
                         is set to True, final sensitivity scores are being multiplied by
-                        (layer activations for inputs - layer activations for baselines).
+                        layer activations for inputs - layer activations for baselines.
 
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids=device_ids)

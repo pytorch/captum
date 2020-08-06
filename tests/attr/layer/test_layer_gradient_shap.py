@@ -8,7 +8,6 @@ from torch.nn import Module
 from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
-from captum.attr._core.layer.layer_activation import LayerActivation
 
 from ...helpers.basic import (
     BaseTest,

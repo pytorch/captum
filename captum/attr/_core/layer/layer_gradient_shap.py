@@ -95,7 +95,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         In case of layer gradient shap, if `multiply_by_inputs`
                         is set to True, the sensitivity scores for scaled inputs
                         are being multiplied by
-                        (layer activations for inputs - layer activations for baselines).
+                        layer activations for inputs - layer activations for baselines.
 
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
@@ -365,7 +365,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
                         In case of layer input minus baseline x gradient,
                         if `multiply_by_inputs` is set to True, the sensitivity scores
                         for scaled inputs are being multiplied by
-                        (layer activations for inputs - layer activations for baselines).
+                        layer activations for inputs - layer activations for baselines.
 
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
