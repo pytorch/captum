@@ -349,7 +349,7 @@ class AttributionVisualizer(object):
         transformed_inputs = inputs
         # TODO support batch size > 1
         if batch:
-            transformed_inputs = inputs.squeeze()
+            transformed_inputs = inputs.squeeze(0)
 
         for t in transforms:
             transformed_inputs = t(transformed_inputs)
