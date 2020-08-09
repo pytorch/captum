@@ -119,7 +119,7 @@ class DeepLift(GradientAttribution):
                         https://arxiv.org/abs/1711.06104
 
                         In case of DeepLift, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
+                        is set to True, final sensitivity scores
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
@@ -619,7 +619,7 @@ class DeepLiftShap(DeepLift):
                         https://arxiv.org/abs/1711.06104
 
                         In case of DeepLiftShap, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
+                        is set to True, final sensitivity scores
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.

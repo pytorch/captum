@@ -66,7 +66,7 @@ class NeuronDeepLift(NeuronAttribution, GradientAttribution):
                         https://arxiv.org/abs/1711.06104
 
                         In case of Neuron DeepLift, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
+                        is set to True, final sensitivity scores
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.
@@ -267,7 +267,7 @@ class NeuronDeepLiftShap(NeuronAttribution, GradientAttribution):
                         https://arxiv.org/abs/1711.06104
 
                         In case of Neuron DeepLift Shap, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
+                        is set to True, final sensitivity scores
                         are being multiplied by (inputs - baselines).
                         This flag applies only if `custom_attribution_func` is
                         set to None.

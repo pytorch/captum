@@ -361,12 +361,10 @@ class IntegratedGradients(GradientAttribution):
         # aggregates across all steps for each tensor in the input tuple
         # total_grads has the same dimensionality as inputs
         total_grads = tuple(
-            [
-                _reshape_and_sum(
-                    scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
-                )
-                for (scaled_grad, grad) in zip(scaled_grads, grads)
-            ]
+            _reshape_and_sum(
+                scaled_grad, n_steps, grad.shape[0] // n_steps, grad.shape[1:]
+            )
+            for (scaled_grad, grad) in zip(scaled_grads, grads)
         )
 
         # computes attribution for each tensor in input tuple

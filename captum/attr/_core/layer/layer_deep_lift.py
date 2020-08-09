@@ -89,7 +89,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                         https://arxiv.org/abs/1711.06104
 
                         In case of Layer DeepLift, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
+                        is set to True, final sensitivity scores
                         are being multiplied by
                         layer activations for inputs - layer activations for baselines.
                         This flag applies only if `custom_attribution_func` is
@@ -418,8 +418,8 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
                         https://arxiv.org/abs/1711.06104
 
                         In case of LayerDeepLiftShap, if `multiply_by_inputs`
-                        is set to True, final sensitivity scores, aka mulitipliers
-                        are being multiplied by
+                        is set to True, final sensitivity scores are being
+                        multiplied by
                         layer activations for inputs - layer activations for baselines
                         This flag applies only if `custom_attribution_func` is
                         set to None.

@@ -164,10 +164,10 @@ def infidelity(
                     <MY-LOGIC-HERE>
                     return perturbed_inputs
 
-                In this case we compute perturbations by `input - perturbed_input`
-                difference in case `multipy_by_inputs` is False and by
-                dividing (input - perturbed_input) by (input - baselines) in case
-                `multipy_by_inputs` flag is True.
+                In case `multipy_by_inputs` is False we compute perturbations by
+                `input - perturbed_input` difference and in case `multipy_by_inputs`
+                flag is True we compute it by dividing
+                (input - perturbed_input) by (input - baselines).
                 The user needs to only return perturbed inputs in `perturb_func`
                 as described above.
 
@@ -247,14 +247,14 @@ def infidelity(
                 This attribution scores can be computed using the implementations
                 provided in the `captum.attr` package. Some of those attribution
                 approaches are so called global methods, which means that
-                they factor in the inputs multiplier, as described in:
+                they factor in model inputs' multiplier, as described in:
                 https://arxiv.org/pdf/1711.06104.pdf
                 Many global attribution algorithms can be used in local modes,
                 meaning that the inputs multiplier isn't factored in the
                 attribution scores.
                 This can be done duing the definition of the attribution algorithm
                 by passing `multipy_by_inputs=False` flag.
-                For example in case of Integrated Gradients (IG) we can, obtain
+                For example in case of Integrated Gradients (IG) we can obtain
                 local attribution scores if we define the constructor of IG as:
                 ig = IntegratedGradients(multipy_by_inputs=False)
 
@@ -276,7 +276,7 @@ def infidelity(
                 function that computes perturbations under the hood if perturbed
                 inputs are provided.
 
-                For more details on how to use `infidelity_perturb_func_decorator`,
+                For more details about how to use `infidelity_perturb_func_decorator`,
                 please, read the documentation about `perturb_func`
 
                 Attributions have the same shape and dimensionality as the inputs.
