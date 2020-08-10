@@ -292,9 +292,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         """
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
-        print("before requires grad ... ", inputs)
         gradient_mask = apply_gradient_requirements(inputs)
-        print("after requires grad ... ")
         _validate_input(inputs, baselines)
 
         baselines = _tensorize_baseline(inputs, baselines)
