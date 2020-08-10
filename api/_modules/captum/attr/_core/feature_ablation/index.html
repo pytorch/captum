@@ -45,7 +45,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">.._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
-<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_find_output_mode_and_verify</span><span class="p">,</span> <span class="n">_format_input_baseline</span>
+<span class="kn">from</span> <span class="nn">.._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
 
 
 <div class="viewcode-block" id="FeatureAblation"><a class="viewcode-back" href="../../../../feature_ablation.html#captum.attr.FeatureAblation">[docs]</a><span class="k">class</span> <span class="nc">FeatureAblation</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
@@ -61,11 +61,13 @@
 <span class="sd">    equal to the change in target as a result of ablating the entire feature</span>
 <span class="sd">    group.</span>
 
-<span class="sd">    The forward function can either return a scalar per example, or a single</span>
-<span class="sd">    scalar for the full batch. If a single scalar is returned for the batch,</span>
-<span class="sd">    `perturbations_per_eval` must be 1, and the returned attributions will have</span>
-<span class="sd">    first dimension 1, corresponding to feature importance across all</span>
-<span class="sd">    examples in the batch.</span>
+<span class="sd">    The forward function can either return a scalar per example or a tensor</span>
+<span class="sd">    of a fixed sized tensor (or scalar value) for the full batch, i.e. the</span>
+<span class="sd">    output does not grow as the batch size increase. If the output is fixed</span>
+<span class="sd">    we consider this model to be an "aggregation" of the inputs. In the fixed</span>
+<span class="sd">    sized output mode we require `perturbations_per_eval == 1` and the</span>
+<span class="sd">    `feature_mask` to be either `None` or for all of them to have 1 as their</span>
+<span class="sd">    first dimension (i.e. a feature mask requires to be applied to all inputs).</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -199,8 +201,11 @@
 <span class="sd">                        device contain at most</span>
 <span class="sd">                        (perturbations_per_eval * #examples) / num_devices</span>
 <span class="sd">                        samples.</span>
-<span class="sd">                        If the forward function returns a single scalar per batch,</span>
-<span class="sd">                        perturbations_per_eval must be set to 1.</span>
+<span class="sd">                        If the forward function's number of outputs does not</span>
+<span class="sd">                        change as the batch size grows (e.g. if it outputs a</span>
+<span class="sd">                        scalar value), you must set perturbations_per_eval to 1</span>
+<span class="sd">                        and use a single feature mask to describe the features</span>
+<span class="sd">                        for all examples in the batch.</span>
 <span class="sd">                        Default: 1</span>
 <span class="sd">            **kwargs (Any, optional): Any additional arguments used by child</span>
 <span class="sd">                        classes of FeatureAblation (such as Occlusion) to construct</span>
@@ -277,11 +282,27 @@
             <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
-            <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">_find_output_mode_and_verify</span><span class="p">(</span>
-                <span class="n">initial_eval</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
+
+            <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">_find_output_mode</span><span class="p">(</span>
+                <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
             <span class="p">)</span>
+
+            <span class="c1"># get as a 2D tensor (if it is not a scalar)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">num_outputs</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">num_outputs</span> <span class="o">=</span> <span class="mi">1</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">agg_output_mode</span><span class="p">:</span>
-                <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">num_outputs</span> <span class="o">==</span> <span class="n">num_examples</span>
+                <span class="p">),</span> <span class="p">(</span>
+                    <span class="s2">"expected output of `forward_func` to have "</span>
+                    <span class="o">+</span> <span class="s2">"`batch_size` elements for perturbations_per_eval &gt; 1 "</span>
+                    <span class="o">+</span> <span class="s2">"and all feature_mask.shape[0] &gt; 1"</span>
+                <span class="p">)</span>
 
             <span class="c1"># Initialize attribution totals and counts</span>
             <span class="n">attrib_type</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
@@ -290,17 +311,16 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span>
                 <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">initial_eval</span><span class="p">),</span>
             <span class="p">)</span>
+
             <span class="n">total_attrib</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span>
-                    <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">agg_output_mode</span> <span class="k">else</span> <span class="nb">input</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">attrib_type</span>
-                <span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">attrib_type</span><span class="p">)</span>
                 <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
             <span class="p">]</span>
 
             <span class="c1"># Weights are used in cases where ablations may be overlapping.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
                 <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">agg_output_mode</span> <span class="k">else</span> <span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_outputs</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
                     <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span>
                 <span class="p">]</span>
 
@@ -332,18 +352,22 @@
                         <span class="n">current_target</span><span class="p">,</span>
                         <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="c1"># eval_diff dimensions: (#features in batch, #num_examples, 1,.. 1)</span>
                     <span class="c1"># (contains 1 more dimension than inputs). This adds extra</span>
                     <span class="c1"># dimensions of 1 to make the tensor broadcastable with the inputs</span>
                     <span class="c1"># tensor.</span>
-                    <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modified_eval</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span>
                     <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">agg_output_mode</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="p">(</span>
+                                <span class="n">modified_eval</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="n">current_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="p">),</span> <span class="s2">"""expected output of forward_func to grow with</span>
+<span class="s2">                            batch_size. If this is not the case for your model</span>
+<span class="s2">                            please set perturbations_per_eval = 1"""</span>
+
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span>
-                        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
-                        <span class="p">)</span>
+                            <span class="n">initial_eval</span> <span class="o">-</span> <span class="n">modified_eval</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">))</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_outputs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
                         <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                     <span class="n">total_attrib</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">eval_diff</span> <span class="o">*</span> <span class="n">current_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">attrib_type</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
@@ -510,6 +534,28 @@
             <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
             <span class="n">input_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_find_output_mode</span><span class="p">(</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">"""</span>
+<span class="sd">        Returns True if the output mode is "aggregation output mode"</span>
+
+<span class="sd">        Aggregation output mode is defined as: when there is no 1:1 correspondence</span>
+<span class="sd">        with the `num_examples` (`batch_size`) and the amount of outputs your model</span>
+<span class="sd">        produces, i.e. the model output does not grow in size as the input becomes</span>
+<span class="sd">        larger.</span>
+
+<span class="sd">        We assume this is the case if `perturbations_per_eval == 1`</span>
+<span class="sd">        and your feature mask is None or is associated to all</span>
+<span class="sd">        examples in a batch (fm.shape[0] == 1 for all fm in feature_mask).</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">perturbations_per_eval</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">sm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">sm</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
         <span class="p">)</span></div>
 </pre></div>
 </div>

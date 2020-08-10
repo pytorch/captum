@@ -39,11 +39,13 @@ can be ablated, measuring the importance of the segment (feature group).
 Each input scalar in the group will be given the same attribution value
 equal to the change in target as a result of ablating the entire feature
 group.</p>
-<p>The forward function can either return a scalar per example, or a single
-scalar for the full batch. If a single scalar is returned for the batch,
-<cite>perturbations_per_eval</cite> must be 1, and the returned attributions will have
-first dimension 1, corresponding to feature importance across all
-examples in the batch.</p>
+<p>The forward function can either return a scalar per example or a tensor
+of a fixed sized tensor (or scalar value) for the full batch, i.e. the
+output does not grow as the batch size increase. If the output is fixed
+we consider this model to be an “aggregation” of the inputs. In the fixed
+sized output mode we require <cite>perturbations_per_eval == 1</cite> and the
+<cite>feature_mask</cite> to be either <cite>None</cite> or for all of them to have 1 as their
+first dimension (i.e. a feature mask requires to be applied to all inputs).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or
@@ -161,8 +163,11 @@ available devices, so evaluations on each available
 device contain at most
 (perturbations_per_eval * #examples) / num_devices
 samples.
-If the forward function returns a single scalar per batch,
-perturbations_per_eval must be set to 1.
+If the forward function’s number of outputs does not
+change as the batch size grows (e.g. if it outputs a
+scalar value), you must set perturbations_per_eval to 1
+and use a single feature mask to describe the features
+for all examples in the batch.
 Default: 1</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em><em>, </em><em>optional</em>) – Any additional arguments used by child
 classes of FeatureAblation (such as Occlusion) to construct

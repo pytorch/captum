@@ -130,16 +130,32 @@
 <span class="sd">    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then that type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of DeepLift, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, final sensitivity scores</span>
+<span class="sd">                        are being multiplied by (inputs - baselines).</span>
+<span class="sd">                        This flag applies only if `custom_attribution_func` is</span>
+<span class="sd">                        set to None.</span>
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">forward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backward_handles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -357,10 +373,15 @@
             <span class="p">)</span>
             <span class="n">gradients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span><span class="p">(</span><span class="n">wrapped_forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">custom_attribution_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="o">*</span> <span class="n">gradient</span>
-                    <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">gradients</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">:</span>
+                    <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                        <span class="p">(</span><span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span> <span class="o">*</span> <span class="n">gradient</span>
+                        <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                            <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">gradients</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">attributions</span> <span class="o">=</span> <span class="n">gradients</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">attributions</span> <span class="o">=</span> <span class="n">_call_custom_attribution_func</span><span class="p">(</span>
                     <span class="n">custom_attribution_func</span><span class="p">,</span> <span class="n">gradients</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span>
@@ -585,7 +606,11 @@
             <span class="p">]</span>  <span class="c1"># type: ignore</span>
 
 <div class="viewcode-block" id="DeepLift.has_convergence_delta"><a class="viewcode-back" href="../../../../deep_lift.html#captum.attr.DeepLift.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span></div></div>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
 <div class="viewcode-block" id="DeepLiftShap"><a class="viewcode-back" href="../../../../deep_lift_shap.html#captum.attr.DeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">DeepLiftShap</span><span class="p">(</span><span class="n">DeepLift</span><span class="p">):</span>
@@ -605,13 +630,28 @@
 <span class="sd">    model across multiple explanations can be complex and non-linear.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (nn.Module):  The reference to PyTorch model instance.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then that type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of DeepLiftShap, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, final sensitivity scores</span>
+<span class="sd">                        are being multiplied by (inputs - baselines).</span>
+<span class="sd">                        This flag applies only if `custom_attribution_func` is</span>
+<span class="sd">                        set to None.</span>
 <span class="sd">        """</span>
-        <span class="n">DeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="n">DeepLift</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="n">multiply_by_inputs</span><span class="p">)</span>
 
     <span class="c1"># There's a mismatch between the signatures of DeepLift.attribute and</span>
     <span class="c1"># DeepLiftShap.attribute, so we ignore typing here</span>

@@ -80,28 +80,44 @@
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
-<span class="sd">                          modification of it</span>
+<span class="sd">                        modification of it</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
-<span class="sd">                          The output size of the attribute method matches the</span>
-<span class="sd">                          dimensions of the inputs or ouputs of the neuron with</span>
-<span class="sd">                          index `neuron_index` in this layer, depending on whether</span>
-<span class="sd">                          we attribute to the inputs or outputs of the neuron.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the neurons in this layer, depending on which one is</span>
-<span class="sd">                          used for attribution, can only be a single tensor.</span>
+<span class="sd">                        The output size of the attribute method matches the</span>
+<span class="sd">                        dimensions of the inputs or ouputs of the neuron with</span>
+<span class="sd">                        index `neuron_index` in this layer, depending on whether</span>
+<span class="sd">                        we attribute to the inputs or outputs of the neuron.</span>
+<span class="sd">                        Currently, it is assumed that the inputs or the outputs</span>
+<span class="sd">                        of the neurons in this layer, depending on which one is</span>
+<span class="sd">                        used for attribution, can only be a single tensor.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
-<span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
-<span class="sd">                          intermediate outputs from batched results across devices.</span>
-<span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                          then it is not necessary to provide this argument.</span>
+<span class="sd">                        applies a DataParallel model. This allows reconstruction of</span>
+<span class="sd">                        intermediate outputs from batched results across devices.</span>
+<span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                        then it is not necessary to provide this argument.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then that type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of Neuron Gradient SHAP,</span>
+<span class="sd">                        if `multiply_by_inputs` is set to True, the</span>
+<span class="sd">                        sensitivity scores for scaled inputs are</span>
+<span class="sd">                        being multiplied by (inputs - baselines).</span>
 <span class="sd">        """</span>
         <span class="n">NeuronAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
 <div class="viewcode-block" id="NeuronGradientShap.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronGradientShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -221,7 +237,7 @@
 <span class="sd">                                                            baselines)</span>
 
 <span class="sd">        """</span>
-        <span class="n">gs</span> <span class="o">=</span> <span class="n">GradientShap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">GradientShap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
         <span class="n">gs</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">neuron_index</span><span class="p">,</span>
@@ -237,7 +253,11 @@
             <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
             <span class="n">stdevs</span><span class="o">=</span><span class="n">stdevs</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 </pre></div>
 </div>
 </div>

@@ -68,21 +68,39 @@
 <span class="sd">    https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (torch.nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
-<span class="sd">                          Attributions for a particular neuron for the input or output</span>
-<span class="sd">                          of this layer are computed using the argument neuron_index</span>
-<span class="sd">                          in the attribute method.</span>
-<span class="sd">                          Currently, it is assumed that the inputs or the outputs</span>
-<span class="sd">                          of the layer, depending on which one is used for</span>
-<span class="sd">                          attribution, can only be a single tensor.</span>
+<span class="sd">                        Attributions for a particular neuron for the input or output</span>
+<span class="sd">                        of this layer are computed using the argument neuron_index</span>
+<span class="sd">                        in the attribute method.</span>
+<span class="sd">                        Currently, it is assumed that the inputs or the outputs</span>
+<span class="sd">                        of the layer, depending on which one is used for</span>
+<span class="sd">                        attribution, can only be a single tensor.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then that type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of Neuron DeepLift, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, final sensitivity scores</span>
+<span class="sd">                        are being multiplied by (inputs - baselines).</span>
+<span class="sd">                        This flag applies only if `custom_attribution_func` is</span>
+<span class="sd">                        set to None.</span>
 <span class="sd">        """</span>
         <span class="n">NeuronAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
 <div class="viewcode-block" id="NeuronDeepLift.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLift.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -210,7 +228,7 @@
 <span class="sd">            &gt;&gt;&gt; # index (4,1,2).</span>
 <span class="sd">            &gt;&gt;&gt; attribution = dl.attribute(input, (4,1,2))</span>
 <span class="sd">        """</span>
-        <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLift</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">))</span>
+        <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLift</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
         <span class="n">dl</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">neuron_index</span><span class="p">,</span>
@@ -224,7 +242,11 @@
             <span class="n">baselines</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
 <div class="viewcode-block" id="NeuronDeepLiftShap"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap">[docs]</a><span class="k">class</span> <span class="nc">NeuronDeepLiftShap</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
@@ -248,20 +270,38 @@
 <span class="sd">    model across multiple explanations can be complex and non-linear.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            model (torch.nn.Module):  The reference to PyTorch model instance.</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
-<span class="sd">                          Attributions for a particular neuron for the input or output</span>
-<span class="sd">                          of this layer are computed using the argument neuron_index</span>
-<span class="sd">                          in the attribute method.</span>
-<span class="sd">                          Currently, only layers with a single tensor input and output</span>
-<span class="sd">                          are supported.</span>
+<span class="sd">                        Attributions for a particular neuron for the input or output</span>
+<span class="sd">                        of this layer are computed using the argument neuron_index</span>
+<span class="sd">                        in the attribute method.</span>
+<span class="sd">                        Currently, only layers with a single tensor input and output</span>
+<span class="sd">                        are supported.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then that type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of Neuron DeepLift Shap, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, final sensitivity scores</span>
+<span class="sd">                        are being multiplied by (inputs - baselines).</span>
+<span class="sd">                        This flag applies only if `custom_attribution_func` is</span>
+<span class="sd">                        set to None.</span>
 <span class="sd">        """</span>
         <span class="n">NeuronAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
 <div class="viewcode-block" id="NeuronDeepLiftShap.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronDeepLiftShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -384,7 +424,7 @@
 <span class="sd">            &gt;&gt;&gt; # index (4,1,2).</span>
 <span class="sd">            &gt;&gt;&gt; attribution = dl.attribute(input, (4,1,2))</span>
 <span class="sd">        """</span>
-        <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">))</span>
+        <span class="n">dl</span> <span class="o">=</span> <span class="n">DeepLiftShap</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
         <span class="n">dl</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">neuron_index</span><span class="p">,</span>
@@ -398,7 +438,11 @@
             <span class="n">baselines</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">custom_attribution_func</span><span class="o">=</span><span class="n">custom_attribution_func</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 </pre></div>
 </div>
 </div>

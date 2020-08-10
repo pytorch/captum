@@ -87,14 +87,28 @@
 <span class="sd">    samples and compute the expectation (smoothgrad).</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (function): The forward function of the model or</span>
-<span class="sd">                       any modification of it</span>
+<span class="sd">                       any modification of it.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                    model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                    In the literature this is also known as local vs global</span>
+<span class="sd">                    attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                    then this type of attribution method is also called local</span>
+<span class="sd">                    attribution. If it is, then that type of attribution</span>
+<span class="sd">                    method is called global.</span>
+<span class="sd">                    More detailed can be found here:</span>
+<span class="sd">                    https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                    In case of gradient shap, if `multiply_by_inputs`</span>
+<span class="sd">                    is set to True, the sensitivity scores of scaled inputs</span>
+<span class="sd">                    are being multiplied by (inputs - baselines).</span>
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -276,7 +290,9 @@
             <span class="s2">"of a torch.Tensor </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="p">)</span>
 
-        <span class="n">input_min_baseline_x_grad</span> <span class="o">=</span> <span class="n">InputBaselineXGradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">)</span>
+        <span class="n">input_min_baseline_x_grad</span> <span class="o">=</span> <span class="n">InputBaselineXGradient</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span>
+        <span class="p">)</span>
         <span class="n">input_min_baseline_x_grad</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_func</span>
 
         <span class="n">nt</span> <span class="o">=</span> <span class="n">NoiseTunnel</span><span class="p">(</span><span class="n">input_min_baseline_x_grad</span><span class="p">)</span>
@@ -298,18 +314,37 @@
         <span class="k">return</span> <span class="n">attributions</span></div>
 
 <div class="viewcode-block" id="GradientShap.has_convergence_delta"><a class="viewcode-back" href="../../../../gradient_shap.html#captum.attr.GradientShap.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">True</span></div></div>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span></div>
 
 
 <span class="k">class</span> <span class="nc">InputBaselineXGradient</span><span class="p">(</span><span class="n">GradientAttribution</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (function): The forward function of the model or</span>
-<span class="sd">                       any modification of it</span>
+<span class="sd">                        any modification of it</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in</span>
+<span class="sd">                        then this type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of gradient shap, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, the sensitivity scores of scaled inputs</span>
+<span class="sd">                        are being multiplied by (inputs - baselines).</span>
+
 <span class="sd">        """</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -364,13 +399,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">input_baseline_scaled</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
         <span class="p">)</span>
 
-        <span class="n">input_baseline_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span> <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">input_baseline_diff</span> <span class="o">*</span> <span class="n">grad</span>
-            <span class="k">for</span> <span class="n">input_baseline_diff</span><span class="p">,</span> <span class="n">grad</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_baseline_diffs</span><span class="p">,</span> <span class="n">grads</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">:</span>
+            <span class="n">input_baseline_diffs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">input</span> <span class="o">-</span> <span class="n">baseline</span> <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baseline</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">input_baseline_diff</span> <span class="o">*</span> <span class="n">grad</span>
+                <span class="k">for</span> <span class="n">input_baseline_diff</span><span class="p">,</span> <span class="n">grad</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_baseline_diffs</span><span class="p">,</span> <span class="n">grads</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attributions</span> <span class="o">=</span> <span class="n">grads</span>
 
         <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -385,6 +423,10 @@
 
     <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span>
 
 
 <span class="k">def</span> <span class="nf">_scale_input</span><span class="p">(</span>

@@ -58,26 +58,46 @@
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
-<span class="sd">                          modification of it</span>
+<span class="sd">                        modification of it</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which attributions are computed.</span>
-<span class="sd">                          Output size of attribute matches this layer's input or</span>
-<span class="sd">                          output dimensions, depending on whether we attribute to</span>
-<span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
-<span class="sd">                          attribution of each neuron in the input or output of</span>
-<span class="sd">                          this layer.</span>
+<span class="sd">                        Output size of attribute matches this layer's input or</span>
+<span class="sd">                        output dimensions, depending on whether we attribute to</span>
+<span class="sd">                        the inputs or outputs of the layer, corresponding to</span>
+<span class="sd">                        attribution of each neuron in the input or output of</span>
+<span class="sd">                        this layer.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
-<span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
-<span class="sd">                          intermediate outputs from batched results across devices.</span>
-<span class="sd">                          If forward_func is given as the DataParallel model itself,</span>
-<span class="sd">                          then it is not necessary to provide this argument.</span>
+<span class="sd">                        applies a DataParallel model. This allows reconstruction of</span>
+<span class="sd">                        intermediate outputs from batched results across devices.</span>
+<span class="sd">                        If forward_func is given as the DataParallel model itself,</span>
+<span class="sd">                        then it is not necessary to provide this argument.</span>
+<span class="sd">            multiply_by_inputs (bool, optional): Indicates whether to factor</span>
+<span class="sd">                        model inputs' multiplier in the final attribution scores.</span>
+<span class="sd">                        In the literature this is also known as local vs global</span>
+<span class="sd">                        attribution. If inputs' multiplier isn't factored in,</span>
+<span class="sd">                        then this type of attribution method is also called local</span>
+<span class="sd">                        attribution. If it is, then that type of attribution</span>
+<span class="sd">                        method is called global.</span>
+<span class="sd">                        More detailed can be found here:</span>
+<span class="sd">                        https://arxiv.org/abs/1711.06104</span>
+
+<span class="sd">                        In case of layer gradient x activation, if `multiply_by_inputs`</span>
+<span class="sd">                        is set to True, final sensitivity scores are being multiplied by</span>
+<span class="sd">                        layer activations for inputs.</span>
+
 <span class="sd">        """</span>
         <span class="n">LayerAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">)</span>
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span>
 
 <div class="viewcode-block" id="LayerGradientXActivation.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerGradientXActivation.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -190,6 +210,8 @@
             <span class="n">is_layer_tuple</span><span class="p">,</span>
             <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">layer_gradient</span> <span class="o">*</span> <span class="n">layer_eval</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span>
+                <span class="k">else</span> <span class="n">layer_gradient</span>
                 <span class="k">for</span> <span class="n">layer_gradient</span><span class="p">,</span> <span class="n">layer_eval</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">)</span>
             <span class="p">),</span>
         <span class="p">)</span></div></div>

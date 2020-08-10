@@ -38,7 +38,7 @@ respect to the inputs of the network.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -146,7 +146,7 @@ corresponding sized tensors is returned.</p>
 <h2>Neuron Integrated Gradients<a class="headerlink" href="#neuron-integrated-gradients" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="captum.attr.NeuronIntegratedGradients">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronIntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronIntegratedGradients</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">multiply_by_inputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_integrated_gradients.html#NeuronIntegratedGradients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronIntegratedGradients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximates the integral of gradients for a particular neuron
 along the path from a baseline input to the given input.
 If no baseline is provided, the default baseline is the zero tensor.
@@ -160,7 +160,7 @@ where the output is the output of the identified neuron.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
@@ -174,6 +174,20 @@ applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+model inputs’ multiplier in the final attribution scores.
+In the literature this is also known as local vs global
+attribution. If inputs’ multiplier isn’t factored in
+then that type of attribution method is also called local
+attribution. If it is, then that type of attribution
+method is called global.
+More detailed can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1711.06104">https://arxiv.org/abs/1711.06104</a></p>
+<p>In case of Neuron Integrated Gradients,
+if <cite>multiply_by_inputs</cite> is set to True, final
+sensitivity scores are being multiplied
+by (inputs - baselines).</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -319,7 +333,7 @@ corresponding sized tensors is returned.</p>
 <h2>Neuron Conductance<a class="headerlink" href="#neuron-conductance" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="captum.attr.NeuronConductance">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronConductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronConductance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">multiply_by_inputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_conductance.html#NeuronConductance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronConductance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes conductance with respect to particular hidden neuron. The
 returned output is in the shape of the input, showing the attribution
 / conductance of each input feature to the selected hidden layer neuron.
@@ -330,7 +344,7 @@ The details of the approach can be found here:
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
@@ -350,6 +364,20 @@ applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+model inputs’ multiplier in the final attribution scores.
+In the literature this is also known as local vs global
+attribution. If inputs’ multiplier isn’t factored in
+then that type of attribution method is also called local
+attribution. If it is, then that type of attribution
+method is called global.
+More detailed can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1711.06104">https://arxiv.org/abs/1711.06104</a></p>
+<p>In case of Neuron Conductance,
+if <cite>multiply_by_inputs</cite> is set to True, final
+sensitivity scores are being multiplied
+by (inputs - baselines).</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -517,7 +545,7 @@ corresponding sized tensors is returned.</p>
 <h2>Neuron DeepLift<a class="headerlink" href="#neuron-deeplift" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="captum.attr.NeuronDeepLift">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">multiply_by_inputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements DeepLIFT algorithm for the neuron based on the following paper:
 Learning Important Features Through Propagating Activation Differences,
 Avanti Shrikumar, et. al.
@@ -542,14 +570,29 @@ More details on how to build custom RNNs can be found here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
 Currently, it is assumed that the inputs or the outputs
 of the layer, depending on which one is used for
 attribution, can only be a single tensor.</p></li>
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+model inputs’ multiplier in the final attribution scores.
+In the literature this is also known as local vs global
+attribution. If inputs’ multiplier isn’t factored in
+then that type of attribution method is also called local
+attribution. If it is, then that type of attribution
+method is called global.
+More detailed can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1711.06104">https://arxiv.org/abs/1711.06104</a></p>
+<p>In case of Neuron DeepLift, if <cite>multiply_by_inputs</cite>
+is set to True, final sensitivity scores
+are being multiplied by (inputs - baselines).
+This flag applies only if <cite>custom_attribution_func</cite> is
+set to None.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -688,7 +731,7 @@ corresponding sized tensors is returned.</p>
 <h2>Neuron DeepLiftShap<a class="headerlink" href="#neuron-deepliftshap" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="captum.attr.NeuronDeepLiftShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronDeepLiftShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">multiply_by_inputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_deep_lift.html#NeuronDeepLiftShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronDeepLiftShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends NeuronAttribution and uses LayerDeepLiftShap algorithms and
 approximates SHAP values for given input <cite>layer</cite> and <cite>neuron_index</cite>.
 For each input sample - baseline pair it computes DeepLift attributions
@@ -714,13 +757,28 @@ model across multiple explanations can be complex and non-linear.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>model</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – The reference to PyTorch model instance.</p></li>
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 Attributions for a particular neuron for the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
 Currently, only layers with a single tensor input and output
 are supported.</p></li>
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+model inputs’ multiplier in the final attribution scores.
+In the literature this is also known as local vs global
+attribution. If inputs’ multiplier isn’t factored in
+then that type of attribution method is also called local
+attribution. If it is, then that type of attribution
+method is called global.
+More detailed can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1711.06104">https://arxiv.org/abs/1711.06104</a></p>
+<p>In case of Neuron DeepLift Shap, if <cite>multiply_by_inputs</cite>
+is set to True, final sensitivity scores
+are being multiplied by (inputs - baselines).
+This flag applies only if <cite>custom_attribution_func</cite> is
+set to None.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -852,7 +910,7 @@ corresponding sized tensors is returned.</p>
 <h2>Neuron GradientShap<a class="headerlink" href="#neuron-gradientshap" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="captum.attr.NeuronGradientShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradientShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">NeuronGradientShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">layer</span></em>, <em class="sig-param"><span class="n">device_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">multiply_by_inputs</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/neuron/neuron_gradient_shap.html#NeuronGradientShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.NeuronGradientShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements gradient SHAP for a neuron in a hidden layer based on the
 implementation from SHAP’s primary author. For reference, please, view:</p>
 <p><a class="reference external" href="https://github.com/slundberg/shap">https://github.com/slundberg/shap</a>#deep-learning-example-with-gradientexplainer-tensorflowkeraspytorch-models</p>
@@ -883,7 +941,7 @@ samples and compute the expectation (smoothgrad).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which neuron attributions are computed.
 The output size of the attribute method matches the
 dimensions of the inputs or ouputs of the neuron with
 index <cite>neuron_index</cite> in this layer, depending on whether
@@ -896,6 +954,20 @@ applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
 If forward_func is given as the DataParallel model itself,
 then it is not necessary to provide this argument.</p></li>
+<li><p><strong>multiply_by_inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Indicates whether to factor
+model inputs’ multiplier in the final attribution scores.
+In the literature this is also known as local vs global
+attribution. If inputs’ multiplier isn’t factored in
+then that type of attribution method is also called local
+attribution. If it is, then that type of attribution
+method is called global.
+More detailed can be found here:
+<a class="reference external" href="https://arxiv.org/abs/1711.06104">https://arxiv.org/abs/1711.06104</a></p>
+<p>In case of Neuron Gradient SHAP,
+if <cite>multiply_by_inputs</cite> is set to True, the
+sensitivity scores for scaled inputs are
+being multiplied by (inputs - baselines).</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -1286,7 +1358,7 @@ group.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/nn.html#torch.nn.Module" title="(in PyTorch vmaster (1.5.0a0+78c9009 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v&lt;a href='http://pytorch.org/docs/versions.html'&gt;1.6.0 &amp;#x25BC&lt;/a&gt;)"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
 Attributions for a particular neuron in the input or output
 of this layer are computed using the argument neuron_index
 in the attribute method.
