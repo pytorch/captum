@@ -103,16 +103,32 @@ class DeepLift(GradientAttribution):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module) -> None:
+    def __init__(self, model: Module, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
 
             model (nn.Module):  The reference to PyTorch model instance.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of DeepLift, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores
+                        are being multiplied by (inputs - baselines).
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
         GradientAttribution.__init__(self, model)
         self.model = model
         self.forward_handles: List[RemovableHandle] = []
         self.backward_handles: List[RemovableHandle] = []
+        self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
     def attribute(
@@ -330,10 +346,15 @@ class DeepLift(GradientAttribution):
             )
             gradients = self.gradient_func(wrapped_forward_func, inputs)
             if custom_attribution_func is None:
-                attributions = tuple(
-                    (input - baseline) * gradient
-                    for input, baseline, gradient in zip(inputs, baselines, gradients)
-                )
+                if self.multiplies_by_inputs:
+                    attributions = tuple(
+                        (input - baseline) * gradient
+                        for input, baseline, gradient in zip(
+                            inputs, baselines, gradients
+                        )
+                    )
+                else:
+                    attributions = gradients
             else:
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, inputs, baselines
@@ -560,6 +581,10 @@ class DeepLift(GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
+
 
 class DeepLiftShap(DeepLift):
     r"""
@@ -578,13 +603,28 @@ class DeepLiftShap(DeepLift):
     model across multiple explanations can be complex and non-linear.
     """
 
-    def __init__(self, model: Module) -> None:
+    def __init__(self, model: Module, multiply_by_inputs: bool = True) -> None:
         r"""
         Args:
 
             model (nn.Module):  The reference to PyTorch model instance.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of DeepLiftShap, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores
+                        are being multiplied by (inputs - baselines).
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
-        DeepLift.__init__(self, model)
+        DeepLift.__init__(self, model, multiply_by_inputs=multiply_by_inputs)
 
     # There's a mismatch between the signatures of DeepLift.attribute and
     # DeepLiftShap.attribute, so we ignore typing here

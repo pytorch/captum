@@ -5,8 +5,8 @@ try:
         TimedLog,
         log,
         log_usage,
-        set_environment,
         patch_methods,
+        set_environment,
     )
 
     __all__ = ["log", "log_usage", "TimedLog", "set_environment"]

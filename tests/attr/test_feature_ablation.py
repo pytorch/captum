@@ -503,6 +503,7 @@ class Test(BaseTest):
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = FeatureAblation(model)
+            self.assertTrue(ablation.multiplies_by_inputs)
             attributions = ablation.attribute(
                 test_input,
                 target=target,

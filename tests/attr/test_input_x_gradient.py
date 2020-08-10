@@ -55,10 +55,11 @@ class Test(BaseTest):
         nt_type: str = "vanilla",
     ) -> None:
         input_x_grad = InputXGradient(model)
+        self.assertTrue(input_x_grad.multiplies_by_inputs)
         attributions: TensorOrTupleOfTensorsGeneric
         if nt_type == "vanilla":
             attributions = input_x_grad.attribute(
-                inputs, additional_forward_args=additional_forward_args
+                inputs, additional_forward_args=additional_forward_args,
             )
         else:
             nt = NoiseTunnel(input_x_grad)
@@ -75,18 +76,17 @@ class Test(BaseTest):
                 inputs, attributions, expected_grads
             ):
                 if nt_type == "vanilla":
-                    assertArraysAlmostEqual(
-                        attribution.reshape(-1), (expected_grad * input).reshape(-1)
-                    )
+                    self._assert_attribution(expected_grad, input, attribution)
                 self.assertEqual(input.shape, attribution.shape)
         elif isinstance(attributions, Tensor):
             if nt_type == "vanilla":
-                assertArraysAlmostEqual(
-                    attributions.reshape(-1),
-                    (expected_grads * inputs).reshape(-1),
-                    delta=0.5,
-                )
+                self._assert_attribution(expected_grads, inputs, attributions)
             self.assertEqual(inputs.shape, attributions.shape)
+
+    def _assert_attribution(self, expected_grad, input, attribution):
+        assertArraysAlmostEqual(
+            attribution.reshape(-1), (expected_grad * input).reshape(-1),
+        )
 
     def _input_x_gradient_classification_assert(self, nt_type: str = "vanilla") -> None:
         num_in = 5

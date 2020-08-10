@@ -94,6 +94,7 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
     ) -> None:
         guided_gc = GuidedGradCam(model, target_layer)
+        self.assertFalse(guided_gc.multiplies_by_inputs)
         attributions = guided_gc.attribute(
             test_input,
             target=0,

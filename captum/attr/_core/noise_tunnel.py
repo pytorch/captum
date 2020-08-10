@@ -63,10 +63,15 @@ class NoiseTunnel(Attribution):
         """
         self.attribution_method = attribution_method
         self.is_delta_supported = self.attribution_method.has_convergence_delta()
+        self._multiply_by_inputs = self.attribution_method.multiplies_by_inputs
         self.is_gradient_method = isinstance(
             self.attribution_method, GradientAttribution
         )
         Attribution.__init__(self, self.attribution_method.forward_func)
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
     @log_usage()
     def attribute(

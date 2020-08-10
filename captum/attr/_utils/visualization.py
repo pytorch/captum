@@ -12,7 +12,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 try:
-    from IPython.core.display import display, HTML
+    from IPython.core.display import HTML, display
 
     HAS_IPYTHON = True
 except ImportError:

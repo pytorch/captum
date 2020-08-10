@@ -66,20 +66,39 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     https://pytorch.org/blog/optimizing-cuda-rnn-with-torchscript/
     """
 
-    def __init__(self, model: Module, layer: Module):
+    def __init__(
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True,
+    ):
         r"""
         Args:
 
             model (torch.nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          The size and dimensionality of the attributions
-                          corresponds to the size and dimensionality of the layer's
-                          input or output depending on whether we attribute to the
-                          inputs or outputs of the layer.
+                        The size and dimensionality of the attributions
+                        corresponds to the size and dimensionality of the layer's
+                        input or output depending on whether we attribute to the
+                        inputs or outputs of the layer.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Layer DeepLift, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores
+                        are being multiplied by
+                        layer activations for inputs - layer activations for baselines.
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
         LayerAttribution.__init__(self, model, layer)
         DeepLift.__init__(self, model)
         self.model = model
+        self._multiply_by_inputs = multiply_by_inputs
 
     # Ignoring mypy error for inconsistent signature with DeepLift
     @typing.overload  # type: ignore
@@ -274,7 +293,6 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         inputs = _format_input(inputs)
         baselines = _format_baseline(baselines, inputs)
         gradient_mask = apply_gradient_requirements(inputs)
-
         _validate_input(inputs, baselines)
 
         baselines = _tensorize_baseline(inputs, baselines)
@@ -320,12 +338,15 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             gradients = tuple(map(lambda grad: grad[0], gradients))
 
             if custom_attribution_func is None:
-                attributions = tuple(
-                    (input - baseline) * gradient
-                    for input, baseline, gradient in zip(
-                        attr_inputs, attr_baselines, gradients
+                if self.multiplies_by_inputs:
+                    attributions = tuple(
+                        (input - baseline) * gradient
+                        for input, baseline, gradient in zip(
+                            attr_inputs, attr_baselines, gradients
+                        )
                     )
-                )
+                else:
+                    attributions = gradients
             else:
                 attributions = _call_custom_attribution_func(
                     custom_attribution_func, gradients, attr_inputs, attr_baselines
@@ -345,6 +366,10 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             target,
             is_layer_tuple,
         )
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
 
 class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
@@ -368,19 +393,37 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     model across multiple explanations can be complex and non-linear.
     """
 
-    def __init__(self, model: Module, layer: Module) -> None:
+    def __init__(
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True,
+    ) -> None:
         r"""
         Args:
 
             model (torch.nn.Module):  The reference to PyTorch model instance.
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          The size and dimensionality of the attributions
-                          corresponds to the size and dimensionality of the layer's
-                          input or output depending on whether we attribute to the
-                          inputs or outputs of the layer.
+                        The size and dimensionality of the attributions
+                        corresponds to the size and dimensionality of the layer's
+                        input or output depending on whether we attribute to the
+                        inputs or outputs of the layer.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of LayerDeepLiftShap, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores are being
+                        multiplied by
+                        layer activations for inputs - layer activations for baselines
+                        This flag applies only if `custom_attribution_func` is
+                        set to None.
         """
         LayerDeepLift.__init__(self, model, layer)
-        DeepLiftShap.__init__(self, model)
+        DeepLiftShap.__init__(self, model, multiply_by_inputs)
 
     # Ignoring mypy error for inconsistent signature with DeepLiftShap
     @typing.overload  # type: ignore
@@ -629,3 +672,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
             return attributions, delta
         else:
             return attributions
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

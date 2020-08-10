@@ -13,7 +13,6 @@ from ..helpers.basic import BaseTest, deep_copy_args
 from .helpers.gen_test_utils import gen_test_name, parse_test_config
 from .helpers.test_config import config
 
-
 """
 Tests in this file are dynamically generated based on the config
 defined in tests/attr/helpers/test_config.py. To add new test cases,

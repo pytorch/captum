@@ -256,6 +256,7 @@ class AttributionVisualizer(object):
     @log_usage()
     def render(self, debug=True):
         from IPython.display import display
+
         from .widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
@@ -277,9 +278,10 @@ class AttributionVisualizer(object):
         return start_server(self, blocking=blocking, debug=debug, _port=port)
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
-        from IPython.display import display, HTML
-        from .server import start_server
         import ipywidgets as widgets
+        from IPython.display import HTML, display
+
+        from .server import start_server
 
         # TODO: Output widget only captures beginning of server logs. It seems
         # the context manager isn't respected when the web server is run on a

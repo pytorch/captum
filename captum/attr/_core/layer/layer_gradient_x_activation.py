@@ -31,26 +31,46 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        attribution of each neuron in the input or output of
+                        this layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in,
+                        then this type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of layer gradient x activation, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores are being multiplied by
+                        layer activations for inputs.
+
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._multiply_by_inputs = multiply_by_inputs
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -163,6 +183,8 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             is_layer_tuple,
             tuple(
                 layer_gradient * layer_eval
+                if self.multiplies_by_inputs
+                else layer_gradient
                 for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
             ),
         )
