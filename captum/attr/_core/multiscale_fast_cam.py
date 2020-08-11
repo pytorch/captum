@@ -15,16 +15,43 @@ from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
 
 
 class MultiscaleFastCam(GradientAttribution):
+    r"""
+    Compute saliency map using Saliency Map Order Equivalence (SMOE). This 
+    method first computes the layer activation, then passes activations through 
+    a nonlinear SMOE function. 
+
+    The recommended use case for FastCAM is to compute saliency maps for multiple 
+    layers with different scales in a deep network, then combine them to obtain
+    a more meaningful saliency map for the original input.
+
+    More details regrading FastCam can be found in the original paper:
+    https://arxiv.org/abs/1911.11293
+    """
+
     def __init__(
         self,
         forward_func: Callable,
         layers: [Module, ...],
-        scale: Any = "gamma",
+        norm: Any = "gamma",
         device_ids: Union[None, List[int]] = None,
     ) -> None:
+        r"""
+        Args:
+
+            forward_func (callable):  The forward function of the model or any
+                          modification of it
+            layers (list(torch.nn.Module)): A list of layers for which attributions 
+                          are computed.
+            scale (str): choice of scale to normalize saliency maps
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                          applies a DataParallel model. This allows reconstruction of
+                          intermediate outputs from batched results across devices.
+                          If forward_func is given as the DataParallel model itself,
+                          then it is not necessary to provide this argument.
+        """
         GradientAttribution.__init__(self, forward_func)
         self.layer_acts = [LayerActivation(forward_func, l, device_ids) for l in layers]
-        self.scale_func = self._set_scaling_func(scale)
+        self.norm_func = self._set_norm_func(norm)
     
     def attribute(
         self,
@@ -32,14 +59,70 @@ class MultiscaleFastCam(GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
     ) -> [Tensor, ...]:
+        r"""
+        Args:
 
+            inputs (tensor):  Input for which attributions
+                        are computed. Input should only contain one image, with
+                        dimensions BHWC.
+            additional_forward_args (any, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        Note that attributions are not computed with respect
+                        to these arguments.
+                        Default: None
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attributions with respect to the layer input
+                        or output. If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to the
+                        layer input, otherwise it will be computed with respect
+                        to layer output.
+                        Note that currently it is assumed that either the input
+                        or the outputs of internal layers, depending on whether we
+                        attribute to the input or output, are single tensors.
+                        Support for multiple tensors will be added later.
+                        Default: False
+            apply_gamma_norm (bool, optional): If set to true, apply gamma scale 
+                        norm to saliency maps. 
+
+        Returns:
+            list of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Attributions based on FastCAM method.
+                        Each element of the list is attributions computed from 
+                        layer 0. 
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and returns an Nx10 tensor of class probabilities.
+            >>> # It contains a layer conv4, which is an instance of nn.conv2d,
+            >>> # and the output of this layer has dimensions Nx50x8x8.
+            >>> input = torch.randn(1, 3, 32, 32)
+            >>> fastcam = MultiscaleFastCam(model,
+                                            layers=[model.relu,
+                                                    model.layer1[2].relu,
+                                                    model.layer2[3].relu,
+                                                    model.layer3[5].relu,
+                                                    model.layer4[2].relu],
+                                            norm="gamma")
+            >>> attributes = fastcam.attribute(transformed_img)
+            >>> combined_map, weighted_maps = fastcam.combine(attributes,
+                                                              weights=[1.0 for _ in range(5)],
+                                                              output_shape=(in_height, in_width))
+        """
         attributes = []
         for layer_act in self.layer_acts:
             layer_attr = layer_act.attribute(inputs,
                                              additional_forward_args,
                                              attribute_to_layer_input)
-            smoe_attr = self._compute_smoe(layer_attr)
-            scaled_attr = self.scale_func(smoe_attr)
+            smoe_attr = self._compute_smoe_scale(layer_attr)
+            scaled_attr = self.norm_func(smoe_attr)
             attributes.append(scaled_attr)
         return attributes
     
@@ -51,6 +134,25 @@ class MultiscaleFastCam(GradientAttribution):
         resize_mode: str = "bilinear",
         relu_attribution: bool = False
     ) -> (Tensor, [Tensor, ...]):
+        """Combine multi-scale saliency map (attributions) by taking in saliency maps
+        from multiple layers of the network. 
+        
+        Args:
+            
+            saliency_maps (list(Tensors)): A List of attributions with different size. The
+                            direct way to use this is to pass in the outputs of `attribute`
+                            function above.
+            weights (list(float)): Weights for each saliency map
+            output_shape (tuple): Specifies the output shape of saliency. In most cases, this
+                            should be the same as input image shape.
+            resize_mode (str): Resize mode for interpolation.
+            relu_attribution (bool): Apply relu to saliency maps before returning output.
+        
+        Returns:
+            - **combined_map** (*tensor*): The combined and weighted saliency map
+            - **weighted_maps** (list of *tensors*): A List of weighted maps, interpolated 
+                                    to `output_shape`.
+        """
         
         assert len(saliency_maps) > 1, "need more than 1 saliency map to combine."
         assert len(weights) == len(saliency_maps), "weights and saliency maps \
@@ -77,26 +179,28 @@ class MultiscaleFastCam(GradientAttribution):
             weighted_map = F.relu(weighted_map)
         return combined_map, weighted_map
 
-    def _set_scaling_func(self, scale):
+    def _set_norm_func(self, scale):
         if scale == "gamma":
-            return self._compute_gamma_scale
-        elif scale == "normal":
-            return self._compute_normal_scale
+            return self._compute_gamma_norm
+        elif scale == "gaussian":
+            return self._compute_gaussian_norm
         elif scale is None or scale == "None":
             return lambda x: x
         elif callable(scale):
             return scale
         else:
-            raise NameError(f"{scale} scaling option not found or invalid")
+            msg = f"{scale} scaling option not found or invalid. " + \
+                "Available options: [gamma, normal, None]"
+            raise NameError(msg)
 
-    def _compute_smoe(self, inputs):
+    def _compute_smoe_scale(self, inputs):
         x = inputs + 1e-7
         m = x.mean(dim=1)
         k = torch.log2(m) - torch.mean(torch.log2(x), dim=1)
         th = k * m
         return th
 
-    def _compute_gamma_scale(self, inputs):
+    def _compute_gamma_norm(self, inputs):
         def _gamma(z):
             x = torch.ones_like(z) * 0.99999999999980993
             for i in range(8):
@@ -168,4 +272,11 @@ class MultiscaleFastCam(GradientAttribution):
         output = x.reshape(s0, s1, s2)
         return output
 
-        
+    def _compute_gaussian_norm(self, inputs):
+        s0, s1, s2 = inputs.size()
+        x = inputs.reshape(s0,s1*s2) 
+        m = x.mean(dim=1).reshape(s0, 1)
+        s = x.std(dim=1).reshape(s0, 1)
+        x = 0.5*(1.0 + torch.erf((x-m)/(s*torch.sqrt(torch.tensor(2.0)))))        
+        x = x.reshape(s0,s1,s2)
+        return x
