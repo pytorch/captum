@@ -384,8 +384,8 @@ def visualize_image_attr_multiple(
             >>> attribution, delta = ig.attribute(orig_image, target=3)
             >>> # Displays original image and heat map visualization of
             >>> # computed attributions side by side.
-            >>> _ = visualize_mutliple_image_attr(["original_image", "heat_map"],
-            >>>                     ["all", "positive"], attribution, orig_image)
+            >>> _ = visualize_mutliple_image_attr(attribution, orig_image,
+            >>>                     ["original_image", "heat_map"], ["all", "positive"])
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
     if titles is not None:
