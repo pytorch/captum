@@ -126,7 +126,7 @@ class MultiscaleFastCam(GradientAttribution):
             smoe_attr = self._compute_smoe_scale(layer_attr)
             scaled_attr = self.norm_func(smoe_attr)
             attributes.append(scaled_attr)
-        return attributes
+        return tuple(attributes)
 
     @staticmethod
     def combine(
@@ -138,9 +138,7 @@ class MultiscaleFastCam(GradientAttribution):
     ) -> (Tensor, [Tensor, ...]):
         """Combine multi-scale saliency map (attributions) by taking in saliency
                             maps from multiple layers of the network.
-
         Args:
-
             saliency_maps (list(Tensors)): A List of attributions with different
                             size. The direct way to use this is to pass in the
                             outputs of `attribute` function above.
@@ -150,7 +148,6 @@ class MultiscaleFastCam(GradientAttribution):
             resize_mode (str): Resize mode for interpolation.
             relu_attribution (bool): Apply relu to saliency maps before returning
                             output.
-
         Returns:
             - **combined_map** (*tensor*): The combined and weighted saliency map
             - **weighted_maps** (list of *tensors*): A List of weighted maps,
@@ -169,26 +166,23 @@ class MultiscaleFastCam(GradientAttribution):
             dtype=saliency_maps[0].dtype,
             device=saliency_maps[0].device,
         )
-        weighted_map = []
-        for i, smap in enumerate(saliency_maps):
-            w = F.interpolate(
-                smap.unsqueeze(1),
-                size=output_shape,
-                mode=resize_mode,
-                align_corners=False,
-            )
-            weighted_map.append(w)
-            combined_map += w * weights[i]
+        weighted_maps = [[] for _ in range(bn)]
+        for m, smap in enumerate(saliency_maps):
+            for i in range(bn):
+                w = F.interpolate(
+                    smap[i].unsqueeze(0).unsqueeze(0),
+                    size=output_shape,
+                    mode=resize_mode,
+                    align_corners=False,
+                ).squeeze()
+                weighted_maps[i].append(w)
+                combined_map[i] += w * weights[m]
         combined_map = combined_map / np.sum(weights)
-        combined_map = combined_map.reshape(bn, output_shape[0], output_shape[1])
-        weighted_map = torch.stack(weighted_map, dim=1)
-        weighted_map = weighted_map.reshape(
-            bn, len(weights), output_shape[0], output_shape[1]
-        )
+        weighted_maps = torch.stack([torch.stack(wmaps) for wmaps in weighted_maps])
         if relu_attribution:
             combined_map = F.relu(combined_map)
-            weighted_map = F.relu(weighted_map)
-        return combined_map, weighted_map
+            weighted_maps = F.relu(weighted_maps)
+        return combined_map, weighted_maps
 
     def _set_norm_func(self, scale):
         if scale == "gamma":
@@ -196,7 +190,7 @@ class MultiscaleFastCam(GradientAttribution):
         elif scale == "gaussian":
             return self._compute_gaussian_norm
         elif scale is None or scale == "None":
-            return lambda x: x
+            return lambda x: x.squeeze()
         elif callable(scale):
             return scale
         else:
@@ -208,8 +202,8 @@ class MultiscaleFastCam(GradientAttribution):
 
     def _compute_smoe_scale(self, inputs):
         x = inputs + 1e-7
-        m = x.mean(dim=1)
-        k = torch.log2(m) - torch.mean(torch.log2(x), dim=1)
+        m = x.mean(1, keepdims=True)
+        k = torch.log2(m) - torch.log2(x).mean(dim=1, keepdims=True)
         th = k * m
         return th
 
@@ -257,7 +251,8 @@ class MultiscaleFastCam(GradientAttribution):
 
         def _compute_ml_est(x, i=10):
             x = x + eps
-            s = torch.log(torch.mean(x, dim=1)) - torch.mean(torch.log(x), dim=1)
+            s = torch.log(x.mean(dim=1, keepdims=True)) \
+                    - torch.log(x).mean(dim=1, keepdims=True)
             s3 = s - 3.0
             rt = torch.sqrt(s3.pow(2.0) + 24.0 * s)
             nm = 3.0 - s + rt
@@ -266,7 +261,7 @@ class MultiscaleFastCam(GradientAttribution):
             for _ in range(i):
                 k = _k_update(k, s)
             k = torch.clamp(k, eps, 18.0)
-            th = torch.reciprocal(k) * torch.mean(x, dim=1)
+            th = torch.reciprocal(k) * torch.mean(x, dim=1, keepdims=True)
             return k, th
 
         cheb = torch.tensor(
@@ -284,20 +279,20 @@ class MultiscaleFastCam(GradientAttribution):
         two_pi = torch.tensor(np.sqrt(2.0 * np.pi))
         eps = 1e-7
 
-        s0, s1, s2 = inputs.size()
-        x = inputs.reshape(s0, s1 * s2)
-        x = x - torch.min(x, dim=1)[0] + eps
+        b, _, h, w = inputs.size()
+        x = inputs.reshape(b, h*w)
+        x = x - torch.min(x, dim=1, keepdims=True)[0] + eps
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
         x = torch.where(torch.isfinite(x), x, torch.zeros_like(x))
-        output = x.reshape(s0, s1, s2)
+        output = x.reshape(b, h, w)
         return output
 
     def _compute_gaussian_norm(self, inputs):
-        s0, s1, s2 = inputs.size()
-        x = inputs.reshape(s0, s1 * s2)
-        m = x.mean(dim=1).reshape(s0, 1)
-        s = x.std(dim=1).reshape(s0, 1)
+        b, _, h, w = inputs.size()
+        x = inputs.reshape(b, h * w)
+        m = x.mean(dim=1, keepdims=True)
+        s = x.std(dim=1, keepdims=True)
         x = 0.5 * (1.0 + torch.erf((x - m) / (s * torch.sqrt(torch.tensor(2.0)))))
-        x = x.reshape(s0, s1, s2)
+        x = x.reshape(b, h, w)
         return x
