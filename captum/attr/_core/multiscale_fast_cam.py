@@ -4,10 +4,9 @@ from typing import Any, Callable, List, Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
+from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
-
-from captum.log import log_usage
 
 from .._utils.attribution import GradientAttribution
 from .layer.layer_activation import LayerActivation
