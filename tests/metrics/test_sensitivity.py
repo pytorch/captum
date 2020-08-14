@@ -76,8 +76,8 @@ class Test(BaseTest):
         input1 = torch.tensor([3.0] * 5)
         input2 = torch.tensor([1.0] * 5)
 
-        baseline1 = torch.arange(0, 2)
-        baseline2 = torch.arange(0, 2)
+        baseline1 = torch.arange(0, 2).float()
+        baseline2 = torch.arange(0, 2).float()
 
         self.setUp()
         self.sensitivity_max_assert(
