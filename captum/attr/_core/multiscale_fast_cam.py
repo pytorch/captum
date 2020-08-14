@@ -37,11 +37,11 @@ class MultiscaleFastCam(GradientAttribution):
         r"""
         Args:
 
-            forward_func (callable):  The forward function of the model or any
+            forward_func (callable): The forward function of the model or any
                           modification of it
             layers (list(torch.nn.Module)): A list of layers for which attributions
                           are computed.
-            scale (str): choice of scale to normalize saliency maps
+            norm (str): choice of norm to normalize saliency maps
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -64,7 +64,7 @@ class MultiscaleFastCam(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor):  Input for which attributions
+            inputs (tensor): Input for which attributions
                         are computed. Input should have dimensions BHWC.
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
@@ -89,8 +89,6 @@ class MultiscaleFastCam(GradientAttribution):
                         attribute to the input or output, are single tensors.
                         Support for multiple tensors will be added later.
                         Default: False
-            apply_gamma_norm (bool, optional): If set to true, apply gamma scale
-                        norm to saliency maps.
 
         Returns:
             list of *tensors* of **attributions**:
