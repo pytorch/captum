@@ -473,7 +473,8 @@ def _reduce_list(
     and red_func can be applied to all elements in each corresponding position.
     """
     if isinstance(val_list[0], torch.Tensor):
-        return red_func(val_list)
+        first_device = val_list[0].device
+        return red_func([elem.to(first_device) for elem in val_list])
     elif isinstance(val_list[0], bool):
         return any(val_list)
     elif isinstance(val_list[0], tuple):
