@@ -65,8 +65,7 @@ class MultiscaleFastCam(GradientAttribution):
         Args:
 
             inputs (tensor):  Input for which attributions
-                        are computed. Input should only contain one image, with
-                        dimensions BHWC.
+                        are computed. Input should have dimensions BHWC.
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
