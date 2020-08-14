@@ -29,7 +29,7 @@ class MultiscaleFastCam(GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layers: [Module, ...],
+        layers: List[Module],
         norm: Any = "gamma",
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -59,7 +59,7 @@ class MultiscaleFastCam(GradientAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> [Tensor, ...]:
+    ) -> Tuple[Tensor, ...]:
         r"""
         Args:
 
@@ -126,12 +126,12 @@ class MultiscaleFastCam(GradientAttribution):
 
     @staticmethod
     def combine(
-        saliency_maps: [Tensor, ...],
-        weights: [float, ...],
+        saliency_maps: List[Tensor],
+        weights: List[float],
         output_shape: Tuple,
         resize_mode: str = "bilinear",
         relu_attribution: bool = False,
-    ) -> (Tensor, [Tensor, ...]):
+        ) -> Tuple[Tensor, Tensor]:
         """Combine multi-scale saliency map (attributions) by taking in saliency
                             maps from multiple layers of the network.
         Args:
@@ -162,7 +162,7 @@ class MultiscaleFastCam(GradientAttribution):
             dtype=saliency_maps[0].dtype,
             device=saliency_maps[0].device,
         )
-        weighted_maps = [[] for _ in range(bn)]
+        weighted_maps = [[] for _ in range(bn)] # type: List[List[Any]]
         for m, smap in enumerate(saliency_maps):
             for i in range(bn):
                 w = F.interpolate(
