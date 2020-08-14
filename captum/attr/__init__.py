@@ -76,7 +76,6 @@ __all__ = [
     "LayerActivation",
     "LayerFeatureAblation",
     "InternalInfluence",
-    "LayerFastCam",
     "LayerGradCam",
     "LayerDeepLift",
     "LayerDeepLiftShap",
