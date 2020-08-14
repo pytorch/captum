@@ -250,8 +250,9 @@ class MultiscaleFastCam(GradientAttribution):
 
         def _compute_ml_est(x, i=10):
             x = x + eps
-            s = torch.log(x.mean(dim=1, keepdims=True)) \
-                    - torch.log(x).mean(dim=1, keepdims=True)
+            s = torch.log(x.mean(dim=1, keepdims=True)) - torch.log(x).mean(
+                dim=1, keepdims=True
+            )
             s3 = s - 3.0
             rt = torch.sqrt(s3.pow(2.0) + 24.0 * s)
             nm = 3.0 - s + rt
@@ -279,7 +280,7 @@ class MultiscaleFastCam(GradientAttribution):
         eps = 1e-7
 
         b, _, h, w = inputs.size()
-        x = inputs.reshape(b, h*w)
+        x = inputs.reshape(b, h * w)
         x = x - torch.min(x, dim=1, keepdims=True)[0] + eps
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
