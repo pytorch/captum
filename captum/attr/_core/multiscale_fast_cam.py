@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from typing import Any, Callable, List, Tuple, Union
 
-import numpy as np
 import torch
 import torch.nn.functional as F
-from captum.log import log_usage
 from torch import Tensor
 from torch.nn import Module
+
+import numpy as np
+from captum.log import log_usage
 
 from .._utils.attribution import GradientAttribution
 from .layer.layer_activation import LayerActivation
