@@ -80,7 +80,7 @@ class Test(BaseTest):
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
         inp2 = torch.ones(1)
         self._guided_grad_cam_test_assert(
-            net, net.conv1, (inp, inp2), ([], []), interpolate_mode="triilinear"
+            net, net.conv1, (inp, inp2), ([], []), interpolate_mode="made_up_nonlinear"
         )
 
     def _guided_grad_cam_test_assert(
@@ -94,6 +94,7 @@ class Test(BaseTest):
         attribute_to_layer_input: bool = False,
     ) -> None:
         guided_gc = GuidedGradCam(model, target_layer)
+        self.assertFalse(guided_gc.multiplies_by_inputs)
         attributions = guided_gc.attribute(
             test_input,
             target=0,

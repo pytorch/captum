@@ -110,6 +110,7 @@ class Test(BaseTest):
     ):
         out = model(test_input)
         attrib = GuidedBackprop(model)
+        self.assertFalse(attrib.multiplies_by_inputs)
         neuron_attrib = NeuronGuidedBackprop(model, output_layer)
         for i in range(out.shape[1]):
             gbp_vals = attrib.attribute(test_input, target=i)

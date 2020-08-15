@@ -119,5 +119,10 @@ class InputXGradient(GradientAttribution):
         attributions = tuple(
             input * gradient for input, gradient in zip(inputs, gradients)
         )
+
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_output(is_inputs_tuple, attributions)
+
+    @property
+    def multiplies_by_inputs(self):
+        return True

@@ -11,21 +11,22 @@ import torch
 HAS_PYTEXT = True
 try:
     from pytext.common.constants import DatasetFieldName
-    from pytext.data import CommonMetadata
-    from pytext.fields import FieldMeta
-    from pytext.config.component import create_model
-    from pytext.models.doc_model import DocModel_Deprecated
-    from pytext.models.decoders.mlp_decoder import MLPDecoder
-    from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
-    from pytext.models.embeddings.word_embedding import WordEmbedding
-    from pytext.config.component import create_featurizer
-    from pytext.config.field_config import FeatureConfig, WordFeatConfig
-    from pytext.data.featurizer import SimpleFeaturizer
-    from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
+    from pytext.config.component import create_featurizer, create_model
     from pytext.config.doc_classification import ModelInputConfig, TargetConfig
+    from pytext.config.field_config import FeatureConfig, WordFeatConfig
+    from pytext.data import CommonMetadata
+    from pytext.data.doc_classification_data_handler import DocClassificationDataHandler
+    from pytext.data.featurizer import SimpleFeaturizer
+    from pytext.fields import FieldMeta
+    from pytext.models.decoders.mlp_decoder import MLPDecoder
+    from pytext.models.doc_model import DocModel_Deprecated
+    from pytext.models.embeddings.word_embedding import WordEmbedding
+    from pytext.models.representations.bilstm_doc_attention import BiLSTMDocAttention
 
-    from captum.attr._models.pytext import configure_model_integ_grads_embeddings
-    from captum.attr._models.pytext import BaselineGenerator
+    from captum.attr._models.pytext import (
+        BaselineGenerator,
+        configure_model_integ_grads_embeddings,
+    )
 except ImportError:
     HAS_PYTEXT = False
 

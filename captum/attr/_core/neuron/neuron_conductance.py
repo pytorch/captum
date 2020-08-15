@@ -37,35 +37,52 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
-                          Attributions for a particular neuron in the input or output
-                          of this layer are computed using the argument neuron_index
-                          in the attribute method.
-                          Currently, only layers with a single tensor input or output
-                          are supported.
+                        Attributions for a particular neuron in the input or output
+                        of this layer are computed using the argument neuron_index
+                        in the attribute method.
+                        Currently, only layers with a single tensor input or output
+                        are supported.
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
-                          Currently, it is assumed that the inputs or the outputs
-                          of the layer, depending on which one is used for
-                          attribution, can only be a single tensor.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        attribution of each neuron in the input or output of
+                        this layer.
+                        Currently, it is assumed that the inputs or the outputs
+                        of the layer, depending on which one is used for
+                        attribution, can only be a single tensor.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in
+                        then that type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of Neuron Conductance,
+                        if `multiply_by_inputs` is set to True, final
+                        sensitivity scores are being multiplied
+                        by (inputs - baselines).
+
         """
         NeuronAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
     def attribute(
@@ -352,10 +369,18 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             for (scaled_grad, input_grad) in zip(scaled_grads, input_grads)
         )
 
-        # computes attribution for each tensor in input tuple
-        # attributions has the same dimensionality as inputs
-        attributions = tuple(
-            total_grad * (input - baseline)
-            for total_grad, input, baseline in zip(total_grads, inputs, baselines)
-        )
+        if self.multiplies_by_inputs:
+            # computes attribution for each tensor in input tuple
+            # attributions has the same dimensionality as inputs
+            attributions = tuple(
+                total_grad * (input - baseline)
+                for total_grad, input, baseline in zip(total_grads, inputs, baselines)
+            )
+        else:
+            attributions = total_grads
+
         return attributions
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

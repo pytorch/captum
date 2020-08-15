@@ -121,3 +121,7 @@ class LayerActivation(LayerAttribution):
                 attribute_to_layer_input=attribute_to_layer_input,
             )
         return _format_output(is_layer_tuple, layer_eval)
+
+    @property
+    def multiplies_by_inputs(self):
+        return True

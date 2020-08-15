@@ -31,6 +31,10 @@ class Saliency(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
 
+    @property
+    def uses_input_marginal_effects(self):
+        return False
+
     @log_usage()
     def attribute(
         self,

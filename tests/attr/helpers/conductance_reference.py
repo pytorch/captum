@@ -10,7 +10,6 @@ from captum.attr._utils.approximation_methods import approximation_parameters
 from captum.attr._utils.attribution import LayerAttribution
 from captum.attr._utils.common import _reshape_and_sum
 
-
 """
 Note: This implementation of conductance follows the procedure described in the original
 paper exactly (https://arxiv.org/abs/1805.12233), computing gradients of output with
