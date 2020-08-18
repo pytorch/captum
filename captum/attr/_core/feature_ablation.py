@@ -286,14 +286,20 @@ class FeatureAblation(PerturbationAttribution):
             )
 
             total_attrib = [
-                torch.zeros((num_outputs,) + input.shape[1:], dtype=attrib_type)
+                torch.zeros(
+                    (num_outputs,) + input.shape[1:],
+                    dtype=attrib_type,
+                    device=input.device,
+                )
                 for input in inputs
             ]
 
             # Weights are used in cases where ablations may be overlapping.
             if self.use_weights:
                 weights = [
-                    torch.zeros((num_outputs,) + input.shape[1:]).float()
+                    torch.zeros(
+                        (num_outputs,) + input.shape[1:], device=input.device
+                    ).float()
                     for input in inputs
                 ]
 
