@@ -235,7 +235,7 @@ def visualize_image_attr(
     heat_map = None
     # Show original image
     if ImageVisualizationMethod[method] == ImageVisualizationMethod.original_image:
-        if len(original_image.shape) > 1 and original_image.shape[2] == 1:
+        if len(original_image.shape) > 2 and original_image.shape[2] == 1:
             original_image = np.squeeze(original_image, axis = 2)
         plt_axis.imshow(original_image)
     else:
