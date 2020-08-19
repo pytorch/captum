@@ -1,0 +1,25 @@
+.spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.spinner-icon {
+  content: " ";
+  display: block;
+  margin: 1px;
+  border-style: solid;
+  border-radius: 50%;
+  animation: spinner 1.2s linear infinite;
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

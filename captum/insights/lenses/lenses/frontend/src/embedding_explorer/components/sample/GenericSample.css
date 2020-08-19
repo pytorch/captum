@@ -1,0 +1,22 @@
+.generic-sample {
+  display: table;
+}
+
+.generic-sample-row {
+  display: table-row;
+}
+
+.generic-sample-attr-name {
+  display: table-cell;
+  vertical-align: middle;
+  font-weight: bold;
+  padding: 4px;
+  margin: 4px;
+}
+
+.generic-sample-attr-content {
+  display: table-cell;
+  vertical-align: middle;
+  padding: 4px;
+  margin: 4px;
+}

@@ -1,0 +1,16 @@
+.component-bar {
+  display: block;
+  margin-right: 2px;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+
+.component-bars-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.component-bars-column {
+  display: flex;
+  flex-direction: column;
+}

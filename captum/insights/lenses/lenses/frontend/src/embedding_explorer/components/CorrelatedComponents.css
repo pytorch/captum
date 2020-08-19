@@ -1,0 +1,10 @@
+.correlated-components {
+  text-align: center;
+  height: 100%;
+  overflow: scroll;
+}
+
+.correlated-components-svg {
+  overflow: visible;
+  box-sizing: content-box;
+}

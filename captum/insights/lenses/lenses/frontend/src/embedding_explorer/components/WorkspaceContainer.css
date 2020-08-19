@@ -1,0 +1,14 @@
+.workspace-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  margin: 0;
+  overflow: hidden;
+}
+
+.workspace-explorers {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
