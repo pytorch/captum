@@ -1,0 +1,105 @@
+.explorer-container {
+  margin: 4px;
+  flex: 1 1 auto;
+  width: 50%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-header {
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px;
+  box-shadow: 0px 0px 4px #aaaaaa;
+  font-weight: bold;
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  line-height: 32px;
+}
+
+.explorer-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.explorer-body-left {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-body-right {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.explorer-detail-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 32px;
+}
+
+.btn-back {
+  margin-right: 12px;
+}
+
+.btn-more-samples {
+  min-width: 28px;
+  margin-left: 4px;
+}
+
+.btn-fewer-samples {
+  min-width: 28px;
+}
+
+.explorer-detail-title-btn-group {
+  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+}
+
+.btn-compare {
+  margin-left: auto;
+}
+
+.btn-close {
+  margin-left: auto;
+}
+
+.explorer-tab-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.explorer-tab-view-header {
+  display: flex;
+  flex-direction: row;
+}
+
+.explorer-tab-view-header-tab {
+  cursor: pointer;
+  padding: 12px;
+  margin: 0 16px;
+}
+
+.explorer-tab-view-header-tab-active {
+  border-bottom: 2px solid #eb6210;
+}
+
+.explorer-tab-view-body {
+  overflow: scroll;
+  border-radius: 0 0 8px 8px;
+  flex: 1 1 auto;
+  padding: 12px;
+}

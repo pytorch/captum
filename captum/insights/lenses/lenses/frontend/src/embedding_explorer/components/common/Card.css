@@ -1,0 +1,26 @@
+/* TODO remove mbx prefix, merge with CNN inspector card */
+
+.mbx-card {
+  padding: 0;
+  margin: 4px;
+  box-shadow: 0px 0px 4px #aaaaaa;
+  border-radius: 8px;
+  background-color: #ffff;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mbx-card-title {
+  border-bottom: 1px solid #c4c4c4;
+  font-weight: bold;
+  padding: 12px;
+  line-height: 32px;
+}
+
+.mbx-card-body {
+  overflow: scroll;
+  border-radius: 0 0 8px 8px;
+  flex: 1 1 auto;
+}

@@ -1,0 +1,30 @@
+.component-detail {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.component-detail-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.component-detail-module-name {
+  padding: 12px;
+}
+
+.component-detail-description {
+  padding: 12px;
+}
+
+.component-detail-right {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}

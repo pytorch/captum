@@ -1,0 +1,83 @@
+.mbx-app {
+  --padding: 12px;
+  margin: var(--padding);
+  height: calc(100% - 2 * var(--padding));
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.mbx-app-header {
+  border-radius: 8px;
+  padding: 12px;
+  margin: 2px 8px;
+  box-shadow: 0px 0px 4px #aaaaaa;
+  font-weight: bold;
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  line-height: 32px;
+}
+
+.mbx-app-header-title {
+  flex-grow: 1;
+}
+
+.btn-component-mode {
+  margin-left: 12px;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.table-display {
+  display: table;
+}
+
+.table-row-display {
+  display: table-row;
+}
+
+.table-cell-display {
+  display: table-cell;
+}
+
+.btn {
+  cursor: pointer;
+  border-width: 0px;
+  border-radius: 6px;
+  padding: 8px;
+  min-height: 32px;
+  outline: none;
+}
+
+.btn:hover {
+  filter: brightness(130%);
+}
+
+.btn-secondary {
+  background-color: #344854;
+  border: 1px solid #344854;
+  color: white;
+}
+
+.btn-icon {
+  border-radius: 6px;
+  background-color: #f2f2f2;
+  cursor: pointer;
+  border-width: 0px;
+  padding: 8px;
+  width: 32px;
+  min-height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  outline: none;
+}
+
+.btn-icon:hover {
+  filter: brightness(95%);
+}

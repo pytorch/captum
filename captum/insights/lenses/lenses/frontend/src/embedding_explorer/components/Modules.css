@@ -1,0 +1,23 @@
+.module-list {
+  display: table;
+}
+
+.module-list-item {
+  display: table-row;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #ffffff;
+}
+
+.module-list-item-highlighted {
+  background-color: #fef7f4;
+}
+
+.module-list-item-cell {
+  display: table-cell;
+  padding: 10px;
+}
+
+.module-title {
+  font-weight: bold;
+}
