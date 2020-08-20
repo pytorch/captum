@@ -13,7 +13,7 @@ class InputXGradient(GradientAttribution):
     r"""
     A baseline approach for computing the attribution. It multiplies input with
     the gradient with respect to input.
-    https://arxiv.org/abs/1611.07270
+    https://arxiv.org/abs/1605.01713
     """
 
     def __init__(self, forward_func: Callable) -> None:
