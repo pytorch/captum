@@ -169,7 +169,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -180,7 +180,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         )
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_output(
-            is_layer_tuple,
+            len(layer_evals) > 1,
             tuple(
                 layer_gradient * layer_eval
                 if self.multiplies_by_inputs

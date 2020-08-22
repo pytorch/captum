@@ -420,7 +420,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads, _, is_layer_tuple = compute_layer_gradients_and_eval(
+        grads, _ = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             input_baseline_scaled,
@@ -430,7 +430,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_baselines, _ = _forward_layer_eval(
+        attr_baselines = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -439,7 +439,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_inputs, _ = _forward_layer_eval(
+        attr_inputs = _forward_layer_eval(
             self.forward_func,
             inputs,
             self.layer,
@@ -467,7 +467,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            is_layer_tuple,
+            len(attributions) > 1,
         )
 
     def has_convergence_delta(self) -> bool:

@@ -238,6 +238,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             def forward_hook(module, inp, out=None):
                 device = _extract_device(module, inp, out)
+                is_layer_tuple = isinstance(out, tuple) if out is not None else isinstance(inp, tuple)
                 if device not in all_layer_inputs:
                     raise AssertionError(
                         "Layer input not placed on appropriate "
@@ -266,7 +267,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
             additional_forward_args = _format_additional_forward_args(
                 additional_forward_args
             )
-            layer_eval, is_layer_tuple = _forward_layer_eval(
+            layer_eval = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -274,7 +275,7 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-            layer_eval_len = (len(layer_eval),) if is_layer_tuple else (1,)
+            layer_eval_len = (len(layer_eval),)
             all_inputs = (
                 (inputs + additional_forward_args + layer_eval_len)
                 if additional_forward_args is not None
@@ -291,5 +292,5 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                 feature_mask=layer_mask,
                 perturbations_per_eval=perturbations_per_eval,
             )
-            _attr = _format_output(is_layer_tuple, layer_attribs)
+            _attr = _format_output(len(layer_attribs) > 1, layer_attribs)
         return _attr

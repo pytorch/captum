@@ -325,7 +325,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
                     return out.chunk(2)
                 return tuple(out_sub.chunk(2) for out_sub in out)
 
-            (gradients, attrs, is_layer_tuple) = compute_layer_gradients_and_eval(
+            gradients, attrs = compute_layer_gradients_and_eval(
                 wrapped_forward_func,
                 self.layer,
                 inputs,
@@ -364,7 +364,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            is_layer_tuple,
+            len(attributions) > 1,
         )
 
     @property

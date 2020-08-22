@@ -359,7 +359,6 @@ class LayerConductance(LayerAttribution, GradientAttribution):
         (
             layer_gradients,
             layer_evals,
-            is_layer_tuple,
         ) = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
@@ -392,7 +391,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 layer_gradients, layer_evals, grad_diffs
             )
         )
-        return _format_output(is_layer_tuple, attributions)
+        return _format_output(len(attributions) > 1, attributions)
 
     @property
     def multiplies_by_inputs(self):

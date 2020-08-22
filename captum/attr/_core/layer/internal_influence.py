@@ -282,7 +282,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         expanded_target = _expand_target(target, n_steps)
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _, is_layer_tuple = compute_layer_gradients_and_eval(
+        layer_gradients, _ = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
             inputs=scaled_features_tpl,
@@ -306,4 +306,4 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )
-        return _format_output(is_layer_tuple, attrs)
+        return _format_output(len(attrs) > 1, attrs)

@@ -112,7 +112,7 @@ class LayerActivation(LayerAttribution):
             >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            layer_eval, is_layer_tuple = _forward_layer_eval(
+            layer_eval = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -120,7 +120,7 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return _format_output(is_layer_tuple, layer_eval)
+        return _format_output(len(layer_eval) > 1, layer_eval)
 
     @property
     def multiplies_by_inputs(self):

@@ -196,7 +196,7 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -224,4 +224,4 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         )
         if relu_attributions:
             scaled_acts = tuple(F.relu(scaled_act) for scaled_act in scaled_acts)
-        return _format_output(is_layer_tuple, scaled_acts)
+        return _format_output(len(scaled_acts) > 1, scaled_acts)
