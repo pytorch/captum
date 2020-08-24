@@ -238,7 +238,11 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
 
             def forward_hook(module, inp, out=None):
                 device = _extract_device(module, inp, out)
-                is_layer_tuple = isinstance(out, tuple) if out is not None else isinstance(inp, tuple)
+                is_layer_tuple = (
+                    isinstance(out, tuple)
+                    if out is not None
+                    else isinstance(inp, tuple)
+                )
                 if device not in all_layer_inputs:
                     raise AssertionError(
                         "Layer input not placed on appropriate "

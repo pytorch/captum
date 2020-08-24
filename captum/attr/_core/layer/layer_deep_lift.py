@@ -364,7 +364,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) > 1,
+            cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
     @property

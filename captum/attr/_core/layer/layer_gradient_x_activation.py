@@ -16,7 +16,7 @@ from ...._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-from ...._utils.typing import TargetType
+from ...._utils.typing import ModuleOrModuleList, TargetType
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 
 
@@ -29,7 +29,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -79,7 +79,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
 
@@ -179,12 +179,28 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_output(
-            len(layer_evals) > 1,
-            tuple(
-                layer_gradient * layer_eval
-                if self.multiplies_by_inputs
-                else layer_gradient
-                for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
-            ),
-        )
+        if isinstance(self.layer, Module):
+            return _format_output(
+                len(layer_evals) > 1,
+                tuple(
+                    layer_gradient * layer_eval
+                    if self.multiplies_by_inputs
+                    else layer_gradient
+                    for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
+                ),
+            )
+        else:
+            return [
+                _format_output(
+                    len(layer_evals[i]) > 1,
+                    tuple(
+                        layer_gradient * layer_eval
+                        if self.multiplies_by_inputs
+                        else layer_gradient
+                        for layer_gradient, layer_eval in zip(
+                            layer_gradients[i], layer_evals[i]
+                        )
+                    ),
+                )
+                for i in range(len(self.layer))
+            ]

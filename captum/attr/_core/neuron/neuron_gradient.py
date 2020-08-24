@@ -152,4 +152,4 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         )
 
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_output(len(input_grads) > 1, input_grads)
+        return _format_output(is_inputs_tuple, input_grads)

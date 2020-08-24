@@ -9,6 +9,7 @@ from captum.log import log_usage
 
 from ...._utils.common import _format_output
 from ...._utils.gradient import _forward_layer_eval
+from ...._utils.typing import ModuleOrModuleList
 from ..._utils.attribution import LayerAttribution
 
 
@@ -20,7 +21,7 @@ class LayerActivation(LayerAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
@@ -48,7 +49,7 @@ class LayerActivation(LayerAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
 
@@ -120,7 +121,13 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return _format_output(len(layer_eval) > 1, layer_eval)
+        if isinstance(self.layer, Module):
+            return _format_output(len(layer_eval) > 1, layer_eval)
+        else:
+            return [
+                _format_output(len(single_layer_eval) > 1, single_layer_eval)
+                for single_layer_eval in layer_eval
+            ]
 
     @property
     def multiplies_by_inputs(self):

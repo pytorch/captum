@@ -186,7 +186,6 @@ class Test(BaseTest):
             eval[0].squeeze(0).tolist(), [-2.0, 9.0, 9.0, 9.0], delta=0.01
         )
 
-
     def test_layer_gradient_relu_input_inplace(self) -> None:
         model = BasicModel_MultiLayer(inplace=True)
         input = torch.tensor([[5.0, 2.0, 1.0]], requires_grad=True)

@@ -34,6 +34,16 @@ class Test(BaseTest):
             net, net.linear1, inp, [90.0, 101.0, 101.0, 101.0]
         )
 
+    def test_simple_multi_linear_activation(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._multiple_layer_activation_test_assert(
+            net,
+            [net.linear1, net.linear0],
+            inp,
+            ([90.0, 101.0, 101.0, 101.0], [0.0, 100.0, 0.0]),
+        )
+
     def test_simple_relu_activation_input_inplace(self) -> None:
         net = BasicModel_MultiLayer(inplace=True)
         inp = torch.tensor([[2.0, -5.0, 4.0]])
@@ -61,6 +71,20 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 6.0, 0.0]])
         self._layer_activation_test_assert(
             net, net.multi_relu, inp, ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0])
+        )
+
+    def test_simple_multi_layer_multi_output_activation(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+        self._multiple_layer_activation_test_assert(
+            net,
+            [net.multi_relu, net.linear0, net.linear1],
+            inp,
+            [
+                ([0.0, 7.0, 7.0, 7.0], [0.0, 7.0, 7.0, 7.0]),
+                [[0.0, 6.0, 0.0]],
+                [[-4.0, 7.0, 7.0, 7.0]],
+            ],
         )
 
     def test_simple_multi_input_activation(self) -> None:
@@ -117,6 +141,27 @@ class Test(BaseTest):
         assertTensorTuplesAlmostEqual(
             self, attributions, expected_activation, delta=0.01
         )
+
+    def _multiple_layer_activation_test_assert(
+        self,
+        model: Module,
+        target_layers: List[Module],
+        test_input: Union[Tensor, Tuple[Tensor, ...]],
+        expected_activation: Union[List, Tuple[List[float], ...]],
+        additional_input: Any = None,
+        attribute_to_layer_input: bool = False,
+    ):
+        layer_act = LayerActivation(model, target_layers)
+        self.assertTrue(layer_act.multiplies_by_inputs)
+        attributions = layer_act.attribute(
+            test_input,
+            additional_forward_args=additional_input,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
+        for i in range(len(target_layers)):
+            assertTensorTuplesAlmostEqual(
+                self, attributions[i], expected_activation[i], delta=0.01
+            )
 
 
 if __name__ == "__main__":

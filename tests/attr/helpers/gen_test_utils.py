@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-from typing import Any, Dict, List, Tuple, Type, cast
+from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from torch.nn import Module
 
+from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution
 
 
@@ -35,3 +36,10 @@ def parse_test_config(
         test_config["baseline_distr"] if "baseline_distr" in test_config else False
     )
     return algorithms, model, args, layer, noise_tunnel, baseline_distr
+
+
+def get_target_layer(model: Module, layer: Union[str, List[str]]):
+    if isinstance(layer, str):
+        return _get_deep_layer_name(model, layer)
+    else:
+        return [_get_deep_layer_name(model, single_layer) for single_layer in layer]

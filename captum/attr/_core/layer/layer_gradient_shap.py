@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import numpy as np
 import torch
@@ -467,7 +467,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            len(attributions) > 1,
+            cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
     def has_convergence_delta(self) -> bool:
