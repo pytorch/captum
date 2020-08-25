@@ -38,12 +38,15 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
 
             forward_func (callable):  The forward function of the model or any
                         modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                        Output size of attribute matches this layer's input or
-                        output dimensions, depending on whether we attribute to
-                        the inputs or outputs of the layer, corresponding to
-                        attribution of each neuron in the input or output of
-                        this layer.
+            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+                          for which attributions are computed.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer. If multiple layers are provided, attributions
+                          are returned as a list, each element corresponding to the
+                          attributions of the corresponding layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
@@ -137,8 +140,8 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *tensor* or tuple of *tensors* or *list* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors* or *list*):
                         Product of gradient and activation for each
                         neuron in given layer output.
                         Attributions will always be the same size as the
@@ -148,6 +151,10 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         from a forward hook. For standard modules, inputs of
                         a single tensor are usually wrapped in a tuple, while
                         outputs of a single tensor are not.
+                        If multiple layers are provided, attributions
+                        are returned as a list, each element corresponding to the
+                        activations of the corresponding layer.
+
 
         Examples::
 
