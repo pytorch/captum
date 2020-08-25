@@ -116,7 +116,6 @@ class Test(BaseTest):
                 self, attributions, expected_activation, delta=0.01
             )
         else:
-            print(attributions)
             for i in range(len(target_layer)):
                 assertTensorTuplesAlmostEqual(
                     self, attributions[i], expected_activation[i], delta=0.01
