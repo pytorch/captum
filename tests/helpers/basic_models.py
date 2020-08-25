@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-
 """
 @no_type_check annotation is applied to type-hinted models to avoid errors
 related to mismatch with parent (nn.Module) signature. # type_ignore is not
