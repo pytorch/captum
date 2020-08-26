@@ -73,28 +73,26 @@ class Test(BaseTest):
         model = BasicModel2()
         gs = GradientShap(model)
 
-        input1 = torch.tensor([3.0] * 5)
-        input2 = torch.tensor([1.0] * 5)
+        input1 = torch.tensor([0.0] * 5)
+        input2 = torch.tensor([0.0] * 5)
 
-        baseline1 = torch.arange(0, 2).float()
-        baseline2 = torch.arange(0, 2).float()
+        baseline1 = torch.arange(0, 2).float() / 1000
+        baseline2 = torch.arange(0, 2).float() / 1000
 
-        self.setUp()
         self.sensitivity_max_assert(
             gs.attribute,
             (input1, input2),
-            [0.6082, 0.5440, 0.3457, 2.6726, 0.3360],
+            [0.0] * 5,
             baselines=(baseline1, baseline2),
             max_examples_per_batch=2,
         )
 
-        self.setUp()
         self.sensitivity_max_assert(
             gs.attribute,
             (input1, input2),
-            [0.6082, 0.5440, 0.3457, 2.6726, 0.3360],
+            [0.0] * 5,
             baselines=(baseline1, baseline2),
-            max_examples_per_batch=2,
+            max_examples_per_batch=20,
         )
 
     def test_convnet_multi_target(self):
