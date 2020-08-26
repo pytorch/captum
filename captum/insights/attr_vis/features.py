@@ -42,24 +42,24 @@ class BaseFeature:
         visualization_transform: Optional[Callable],
     ):
         r"""
-            Args:
+        Args:
 
-                name (str): The label of the specific feature. For example, an
-                            ImageFeature's name can be "Photo".
-                baseline_transforms (list, callable, optional): Optional list of
-                            callables (e.g. functions) to be called on the input tensor
-                            to construct multiple baselines. Currently only one baseline
-                            is supported. See
-                            :py:class:`.IntegratedGradients` for more
-                            information about baselines.
-                input_transforms (list, callable, optional): Optional list of callables
-                            (e.g. functions) called on the input tensor sequentially to
-                            convert it into the format expected by the model.
-                visualization_transform (callable, optional): Optional callable (e.g.
-                            function) applied as a postprocessing step of the original
-                            input data (before ``input_transforms``) to convert it to a
-                            format to be understood by the frontend visualizer as
-                            specified in ``captum/captum/insights/frontend/App.js``.
+            name (str): The label of the specific feature. For example, an
+                        ImageFeature's name can be "Photo".
+            baseline_transforms (list, callable, optional): Optional list of
+                        callables (e.g. functions) to be called on the input tensor
+                        to construct multiple baselines. Currently only one baseline
+                        is supported. See
+                        :py:class:`.IntegratedGradients` for more
+                        information about baselines.
+            input_transforms (list, callable, optional): Optional list of callables
+                        (e.g. functions) called on the input tensor sequentially to
+                        convert it into the format expected by the model.
+            visualization_transform (callable, optional): Optional callable (e.g.
+                        function) applied as a postprocessing step of the original
+                        input data (before ``input_transforms``) to convert it to a
+                        format to be understood by the frontend visualizer as
+                        specified in ``captum/captum/insights/frontend/App.js``.
         """
         self.name = name
         self.baseline_transforms = format_transforms(baseline_transforms)
@@ -88,22 +88,22 @@ class ImageFeature(BaseFeature):
         visualization_transform: Optional[Callable] = None,
     ):
         r"""
-            Args:
-                name (str): The label of the specific feature. For example, an
-                            ImageFeature's name can be "Photo".
-                baseline_transforms (list, callable, optional): Optional list of
-                            callables (e.g. functions) to be called on the input tensor
-                            to construct multiple baselines. Currently only one baseline
-                            is supported. See
-                            :py:class:`.IntegratedGradients` for more
-                            information about baselines.
-                input_transforms (list, callable, optional): A list of transforms
-                            or transform to be applied to the input. For images,
-                            normalization is often applied here.
-                visualization_transform (callable, optional): Optional callable (e.g.
-                            function) applied as a postprocessing step of the original
-                            input data (before input_transforms) to convert it to a
-                            format to be visualized.
+        Args:
+            name (str): The label of the specific feature. For example, an
+                        ImageFeature's name can be "Photo".
+            baseline_transforms (list, callable, optional): Optional list of
+                        callables (e.g. functions) to be called on the input tensor
+                        to construct multiple baselines. Currently only one baseline
+                        is supported. See
+                        :py:class:`.IntegratedGradients` for more
+                        information about baselines.
+            input_transforms (list, callable, optional): A list of transforms
+                        or transform to be applied to the input. For images,
+                        normalization is often applied here.
+            visualization_transform (callable, optional): Optional callable (e.g.
+                        function) applied as a postprocessing step of the original
+                        input data (before input_transforms) to convert it to a
+                        format to be visualized.
         """
         super().__init__(
             name,
@@ -161,33 +161,33 @@ class TextFeature(BaseFeature):
         visualization_transform: Callable,
     ):
         r"""
-            Args:
-                name (str): The label of the specific feature. For example, an
-                            ImageFeature's name can be "Photo".
-                baseline_transforms (list, callable, optional): Optional list of
-                            callables (e.g. functions) to be called on the input tensor
-                            to construct multiple baselines. Currently only one baseline
-                            is supported. See
-                            :py:class:`.IntegratedGradients` for more
-                            information about baselines.
-                            For text features, a common baseline is a tensor of indices
-                            corresponding to PAD with the same size as the input
-                            tensor. See :py:class:`.TokenReferenceBase` for more
-                            information.
-                input_transforms (list, callable, optional): A list of transforms
-                            or transform to be applied to the input. For text, a common
-                            transform is to convert the tokenized input tensor into an
-                            interpretable embedding. See
-                            :py:class:`.InterpretableEmbeddingBase`
-                            and
-                            :py:func:`~.configure_interpretable_embedding_layer`
-                            for more information.
-                visualization_transform (callable, optional): Optional callable (e.g.
-                            function) applied as a postprocessing step of the original
-                            input data (before ``input_transforms``) to convert it to a
-                            suitable format for visualization. For text features,
-                            a common function is to convert the token indices to their
-                            corresponding (sub)words.
+        Args:
+            name (str): The label of the specific feature. For example, an
+                        ImageFeature's name can be "Photo".
+            baseline_transforms (list, callable, optional): Optional list of
+                        callables (e.g. functions) to be called on the input tensor
+                        to construct multiple baselines. Currently only one baseline
+                        is supported. See
+                        :py:class:`.IntegratedGradients` for more
+                        information about baselines.
+                        For text features, a common baseline is a tensor of indices
+                        corresponding to PAD with the same size as the input
+                        tensor. See :py:class:`.TokenReferenceBase` for more
+                        information.
+            input_transforms (list, callable, optional): A list of transforms
+                        or transform to be applied to the input. For text, a common
+                        transform is to convert the tokenized input tensor into an
+                        interpretable embedding. See
+                        :py:class:`.InterpretableEmbeddingBase`
+                        and
+                        :py:func:`~.configure_interpretable_embedding_layer`
+                        for more information.
+            visualization_transform (callable, optional): Optional callable (e.g.
+                        function) applied as a postprocessing step of the original
+                        input data (before ``input_transforms``) to convert it to a
+                        suitable format for visualization. For text features,
+                        a common function is to convert the token indices to their
+                        corresponding (sub)words.
         """
         super().__init__(
             name,
@@ -237,12 +237,12 @@ class GeneralFeature(BaseFeature):
 
     def __init__(self, name: str, categories: List[str]):
         r"""
-            Args:
-                name (str): The label of the specific feature. For example, an
-                            ImageFeature's name can be "Photo".
-                categories (list[str]): Category labels for the general feature. The
-                            order and size should match the second dimension of the
-                            ``data`` tensor parameter in ``visualize``.
+        Args:
+            name (str): The label of the specific feature. For example, an
+                        ImageFeature's name can be "Photo".
+            categories (list[str]): Category labels for the general feature. The
+                        order and size should match the second dimension of the
+                        ``data`` tensor parameter in ``visualize``.
         """
         super().__init__(
             name,

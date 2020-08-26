@@ -90,13 +90,19 @@ class Test(BaseTest):
         attributions = cast(
             Tuple[Tuple[Tensor, ...], Tensor],
             gradient_shap.attribute(
-                inputs, baselines, n_samples=n_samples, stdevs=0.0,
+                inputs,
+                baselines,
+                n_samples=n_samples,
+                stdevs=0.0,
             ),
         )
         attributions_wo_mutliplying_by_inputs = cast(
             Tuple[Tuple[Tensor, ...], Tensor],
             gradient_shap_wo_mutliplying_by_inputs.attribute(
-                inputs, baselines, n_samples=n_samples, stdevs=0.0,
+                inputs,
+                baselines,
+                n_samples=n_samples,
+                stdevs=0.0,
             ),
         )
         assertTensorAlmostEqual(

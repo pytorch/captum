@@ -117,27 +117,27 @@ class ConductanceReference(LayerAttribution):
         method="riemann_trapezoid",
     ):
         r"""
-            Computes conductance using gradients along the path, applying
-            riemann's method or gauss-legendre.
-            The details of the approach can be found here:
-            https://arxiv.org/abs/1805.12233
+        Computes conductance using gradients along the path, applying
+        riemann's method or gauss-legendre.
+        The details of the approach can be found here:
+        https://arxiv.org/abs/1805.12233
 
-            Args
+        Args
 
-                inputs:     A single high dimensional input tensor, in which
-                            dimension 0 corresponds to number of examples.
-                baselines:   A single high dimensional baseline tensor,
-                            which has the same shape as the input
-                target:     Predicted class index. This is necessary only for
-                            classification use cases
-                n_steps:    The number of steps used by the approximation method
-                method:     Method for integral approximation, one of `riemann_right`,
-                            `riemann_middle`, `riemann_trapezoid` or `gausslegendre`
+            inputs:     A single high dimensional input tensor, in which
+                        dimension 0 corresponds to number of examples.
+            baselines:   A single high dimensional baseline tensor,
+                        which has the same shape as the input
+            target:     Predicted class index. This is necessary only for
+                        classification use cases
+            n_steps:    The number of steps used by the approximation method
+            method:     Method for integral approximation, one of `riemann_right`,
+                        `riemann_middle`, `riemann_trapezoid` or `gausslegendre`
 
-            Return
+        Return
 
-                attributions: Total conductance with respect to each neuron in
-                              output of given layer
+            attributions: Total conductance with respect to each neuron in
+                          output of given layer
         """
         if baselines is None:
             baselines = 0

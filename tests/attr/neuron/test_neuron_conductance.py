@@ -31,7 +31,12 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[100.0, 100.0, 100.0]], requires_grad=True)
         self._conductance_input_test_assert(
-            net, net.linear2, inp, (0,), [3.96, 3.96, 3.96], multiply_by_inputs=False,
+            net,
+            net.linear2,
+            inp,
+            (0,),
+            [3.96, 3.96, 3.96],
+            multiply_by_inputs=False,
         )
 
     def test_simple_conductance_input_linear1(self) -> None:
@@ -126,7 +131,9 @@ class Test(BaseTest):
     ) -> None:
         for internal_batch_size in (None, 5, 20):
             cond = NeuronConductance(
-                model, target_layer, multiply_by_inputs=multiply_by_inputs,
+                model,
+                target_layer,
+                multiply_by_inputs=multiply_by_inputs,
             )
             self.assertEquals(cond.multiplies_by_inputs, multiply_by_inputs)
             attributions = cond.attribute(

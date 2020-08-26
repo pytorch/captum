@@ -26,8 +26,8 @@ def safe_div(
     numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
 ) -> Tensor:
     r"""
-        A simple utility function to perform `numerator / denom`
-        if the statement is undefined => result will be `default_value`
+    A simple utility function to perform `numerator / denom`
+    if the statement is undefined => result will be `default_value`
     """
     if isinstance(denom, float):
         return numerator / denom if denom != 0.0 else default_value

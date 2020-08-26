@@ -35,7 +35,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs=True):
                 multiplier is factored in the computation of
                 attribution scores.
 
-        """
+    """
 
     def sub_infidelity_perturb_func_decorator(pertub_func):
         r"""
@@ -62,8 +62,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs=True):
         """
 
         def default_perturb_func(inputs, baselines=None):
-            r"""
-            """
+            r""""""
             inputs_perturbed = (
                 pertub_func(inputs, baselines)
                 if baselines is not None
@@ -373,8 +372,7 @@ def infidelity(
         """
 
         def call_perturb_func():
-            r"""
-            """
+            r""""""
             baselines_pert = None
             if len(inputs_expanded) == 1:
                 inputs_pert = inputs_expanded[0]
