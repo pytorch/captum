@@ -8,6 +8,7 @@ from torch import Tensor
 from captum.log import log_usage
 
 from ..._utils.common import (
+    _format_input,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
@@ -69,7 +70,16 @@ class LimeBase(PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
         self.train_interpretable_model_func = train_interpretable_model_func
         self.similarity_func = similarity_func
-        self._multiply_by_inputs = multiply_by_inputs
+        self.sampling_func = sampling_func
+        self.sample_interpretable_space = sample_interpretable_space
+        self.from_interp_rep_transform = from_interp_rep_transform
+        self.to_interp_rep_transform = to_interp_rep_transform
+
+        if self.sample_interpretable_space:
+            assert self.from_interp_rep_transform is not None, "Must provide transform from interpretable space to original input space when sampling from interpretable space."
+        else:
+            assert self.to_interp_rep_transform is not None, "Must provide transform from original input space to interpretable space."
+
 
     # The following overloaded method signatures correspond to the case where
     # return_convergence_delta is False, then only attributions are returned,
@@ -82,6 +92,7 @@ class LimeBase(PerturbationAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_samples: int = 50,
+        internal_batch_size: Optional[int] = None,
         **kwargs
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -229,9 +240,40 @@ class LimeBase(PerturbationAttribution):
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
 
-        inputs, baselines = _format_input_baseline(inputs, baselines)
+        inputs = _format_input(inputs)
 
-        _validate_input(inputs, baselines, n_steps, method)
+        interpretable_inps = []
+        similarities = []
+        outputs = []
+
+        curr_inputs = []
+        expanded_additional_args = None
+        expanded_target = None
+        for i in range(n_samples):
+            curr_sample = self.sampling_func(inputs)
+            if self.sample_interpretable_space:
+                interpretable_inps.append(curr_sample)
+                curr_inputs.append(self.from_interp_rep_transform(curr_sample))
+            else:
+                curr_inputs.append(curr_sample)
+                interpretable_inps.append(self.to_interp_rep_transform(curr_sample))
+
+            if internal_batch_size is not None and len(curr_inputs) == internal_batch_size:
+                if expanded_additional_args is None:
+                    expanded_additional_args = (
+                        _expand_additional_forward_args(additional_forward_args, internal_batch_size)
+                        if additional_forward_args is not None
+                        else None
+                    )
+                if expanded_target is None:
+                    expanded_target = _expand_target(target, internal_batch_size)
+                model_out = _run_forward(
+                        self.forward_func,
+                        current_inputs,
+                        current_target,
+                        current_add_args,
+                    )
+                _validate_input(inputs, baselines, n_steps, method)
 
         if internal_batch_size is not None:
             num_examples = inputs[0].shape[0]
