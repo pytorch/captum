@@ -24,6 +24,7 @@ from .._utils.common import (
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
+    _construct_default_feature_mask,
 )
 
 
@@ -87,7 +88,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""""
+        r""" "
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
         description of the feature_mask argument below for more details.
@@ -279,7 +280,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             num_examples = inputs[0].shape[0]
 
             if feature_mask is None:
-                feature_mask, total_features = self.construct_feature_mask(inputs)
+                feature_mask, total_features = _construct_default_feature_mask(inputs)
             else:
                 total_features = int(
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
@@ -446,25 +447,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                 combined_masks,
             )
 
-    def construct_feature_mask(
-        self, inputs: Tuple[Tensor, ...]
-    ) -> Tuple[Tuple[Tensor, ...], int]:
-        feature_mask = []
-        current_num_features = 0
-        for i in range(len(inputs)):
-            num_features = torch.numel(inputs[i][0])
-            feature_mask.append(
-                current_num_features
-                + torch.reshape(
-                    torch.arange(num_features, device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-            )
-            current_num_features += num_features
-        total_features = current_num_features
-        feature_mask = tuple(feature_mask)
-        return feature_mask, total_features
-
 
 class ShapleyValues(PerturbationAttribution):
     """
@@ -523,7 +505,7 @@ class ShapleyValues(PerturbationAttribution):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""""
+        r""" "
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
         description of the feature_mask argument below for more details.
