@@ -44,9 +44,10 @@ def _validate_input(
         n_steps >= 0
     ), "The number of steps must be a positive integer. " "Given: {}".format(n_steps)
 
-    assert method in SUPPORTED_METHODS, (
-        "Approximation method must be one for the following {}. "
-        "Given {}".format(SUPPORTED_METHODS, method)
+    assert (
+        method in SUPPORTED_METHODS
+    ), "Approximation method must be one for the following {}. " "Given {}".format(
+        SUPPORTED_METHODS, method
     )
 
 
@@ -342,3 +343,23 @@ def _find_output_mode_and_verify(
             isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
     return agg_output_mode
+
+
+def _construct_default_feature_mask(
+    inputs: Tuple[Tensor, ...]
+) -> Tuple[Tuple[Tensor, ...], int]:
+    feature_mask = []
+    current_num_features = 0
+    for i in range(len(inputs)):
+        num_features = torch.numel(inputs[i][0])
+        feature_mask.append(
+            current_num_features
+            + torch.reshape(
+                torch.arange(num_features, device=inputs[i].device),
+                inputs[i][0:1].shape,
+            )
+        )
+        current_num_features += num_features
+    total_features = current_num_features
+    feature_mask = tuple(feature_mask)
+    return feature_mask, total_features
