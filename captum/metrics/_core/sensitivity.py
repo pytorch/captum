@@ -9,6 +9,7 @@ from ..._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_target,
+    _format_baseline,
     _format_input,
     _format_tensor_into_tuples,
 )
@@ -214,7 +215,13 @@ def sensitivity_max(
                 current_n_perturb_samples, kwargs_copy
             )
             _expand_and_update_target(current_n_perturb_samples, kwargs_copy)
-            _expand_and_update_baselines(inputs, current_n_perturb_samples, kwargs_copy)
+            if "baselines" in kwargs:
+                baselines = kwargs["baselines"]
+                baselines = _format_baseline(baselines, inputs)
+                if baselines[0].shape == inputs[0].shape:
+                    _expand_and_update_baselines(
+                        inputs, current_n_perturb_samples, kwargs_copy
+                    )
 
         expl_perturbed_inputs = explanation_func(inputs_perturbed, **kwargs_copy)
 

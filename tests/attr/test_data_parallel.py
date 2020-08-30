@@ -34,6 +34,7 @@ schema described there.
 # Distributed Data Parallel env setup
 os.environ["MASTER_ADDR"] = "127.0.0.1"
 os.environ["MASTER_PORT"] = "29500"
+dist.init_process_group(backend="gloo", rank=0, world_size=1)
 
 
 class DataParallelCompareMode(Enum):
@@ -153,7 +154,7 @@ class DataParallelMeta(type):
                 )
                 args_1, args_2 = cuda_args, cuda_args
             elif mode is DataParallelCompareMode.dist_data_parallel:
-                dist.init_process_group(backend="gloo", rank=0, world_size=1)
+
                 model_1, model_2 = (
                     cuda_model,
                     torch.nn.parallel.DistributedDataParallel(cuda_model),
@@ -232,13 +233,13 @@ class DataParallelMeta(type):
                     self, attributions_1, attributions_2, mode="max", delta=dp_delta
                 )
 
-            if mode is DataParallelCompareMode.dist_data_parallel:
-                dist.destroy_process_group()
-
         return data_parallel_test_assert
 
 
 if torch.cuda.is_available() and torch.cuda.device_count() != 0:
 
     class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
-        pass
+        @classmethod
+        def tearDownClass(cls):
+            if torch.distributed.is_initialized():
+                dist.destroy_process_group()
