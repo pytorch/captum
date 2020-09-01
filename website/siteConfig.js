@@ -28,7 +28,7 @@ const siteConfig = {
   projectName: "captum",
 
   // Google analytics
-  gaTrackingId: "UA-139570076-2",
+  gaTrackingId: "UA-177018179-1",
 
   // links that will be used in the header navigation bar
   headerLinks: [
