@@ -36,18 +36,28 @@ from .._utils.common import (
 
 class LimeBase(PerturbationAttribution):
     r"""
-    Integrated Gradients is an axiomatic model interpretability algorithm that
-    assigns an importance score to each input feature by approximating the
-    integral of gradients of the model's output with respect to the inputs
-    along the path (straight line) from given baselines / references to inputs.
+    Lime is an interpretability method that trains an interpretable surrogate model
+    by sampling points around a specified input example and using model evaluations
+    at these points to train a simpler interpretable 'surrogate' model, such as a
+    linear model.
 
-    Baselines can be provided as input arguments to attribute method.
-    To approximate the integral we can choose to use either a variant of
-    Riemann sum or Gauss-Legendre quadrature rule.
+    LimeBase provides a generic framework to train a surrogate interpretable model. This
+    differs from most other attribution methods, since the method returns a representation
+    of the interpretable model (e.g. coefficients of the linear model). For a similar
+    interface to other perturbation-based attribution methods, please use the Lime child
+    class, which defines specific transformations for the interpretable model.
 
-    More details regarding LIME can be found in the
-    original paper:
-    https://arxiv.org/abs/1703.01365
+    LimeBase allows sampling points in either the interpretable space or the original input
+    space to train the surrogate model. The interpretable space is a feature vector used to
+    train the surrogate interpretable model; this feature space is often of smaller dimensionality
+    than the original feature space in order for the surrogate model to be more interpretable.
+
+    If sampling in the interpretable space, a transformation function must be provided to
+    define how a vector sampled in the interpretable space can be transformed into an
+    example in the original input space. If sampling in the original input space, a
+    transformation function must be provided to define how the input can be transformed
+    into its interpretable vector representation.
+
 
     """
 
@@ -192,9 +202,12 @@ def lasso_interpretable_model_trainer(
         raise AssertionError(
             "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
         )
-
+    print(interp_inputs)
+    print(exp_outputs)
+    print(weights)
     clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
-    clf.fit(interp_inputs.numpy(), exp_outputs.numpy(), weights.numpy())
+    clf.fit(interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy())
+    print(clf.coef_)
     return torch.from_numpy(clf.coef_)
 
 
@@ -207,10 +220,10 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
     ), "Must provide baselines to use default interpretable representation transfrom"
     feature_mask = kwargs["feature_mask"]
     if isinstance(feature_mask, Tensor):
-        binary_mask = torch.stack(tuple(curr_sample[i][feature_mask[i]] for i in range(len(curr_sample))))
+        binary_mask = torch.stack(tuple(curr_sample[i][feature_mask[i if feature_mask.shape[0] > 1 else 0]] for i in range(len(curr_sample))))
         return binary_mask * original_inputs + (1 - binary_mask) * kwargs["baselines"]
     else:
-        binary_mask = tuple(torch.stack(tuple(curr_sample[i][feature_mask[j][i]] for i in range(len(curr_sample)))) for j in range(len(feature_mask)))
+        binary_mask = tuple(torch.stack(tuple(curr_sample[i][feature_mask[j][i if feature_mask[j].shape[0] > 1 else 0]] for i in range(len(curr_sample)))) for j in range(len(feature_mask)))
         return tuple(binary_mask[j] * original_inputs[j] + (1 - binary_mask[j]) * kwargs["baselines"][j] for j in range(len(feature_mask)))
 
 
@@ -221,24 +234,27 @@ def default_similarity_kernel(original_inp, _, __, **kwargs):
         if isinstance(original_inp, Tensor)
         else original_inp[0].shape[0]
     )
-    return torch.ones(original_inp.shape[0])
+    return torch.ones(bsz)
 
 
 def default_sampling_func(original_inp, **kwargs):
     assert (
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default interpretable sampling function"
-    bsz = (
-        original_inp.shape[0]
-        if isinstance(original_inp, Tensor)
-        else original_inp[0].shape[0]
-    )
+    if isinstance(original_inp, Tensor):
+        bsz = original_inp.shape[0]
+        device = original_inp.device
+    else:
+        bsz = original_inp[0].shape[0]
+        device = original_inp[0].device
+
     probs = torch.ones(bsz, kwargs["num_interp_features"]) * 0.5
-    return torch.bernoulli(probs)
+    return torch.bernoulli(probs).to(device=device)
 
 
 class Lime(LimeBase):
     r"""
+
     Integrated Gradients is an axiomatic model interpretability algorithm that
     assigns an importance score to each input feature by approximating the
     integral of gradients of the model's output with respect to the inputs

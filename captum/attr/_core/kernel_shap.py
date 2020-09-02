@@ -18,12 +18,12 @@ def linear_regression_interpretable_model_trainer(
         raise AssertionError(
             "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
         )
-    #print(interp_inputs)
-    #print(exp_outputs)
-    #print(weights)
+    print(interp_inputs)
+    print(exp_outputs)
+    print(weights)
     clf = linear_model.LinearRegression()
-    clf.fit(interp_inputs.numpy(), exp_outputs.numpy(), weights.numpy())
-    #print(clf.coef_)
+    clf.fit(interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy())
+    print(clf.coef_)
     return torch.from_numpy(clf.coef_)
 
 
@@ -47,7 +47,7 @@ def kernel_shap_similarity_kernel(
         [
             combination(num_features, int(single_num_selected))
             for single_num_selected in num_selected_features
-        ]
+        ], device = interpretable_sample.device
     )
     similarities = (num_features - 1) / (
         combinations * num_selected_features * (num_features - num_selected_features)
