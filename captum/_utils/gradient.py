@@ -75,20 +75,20 @@ def compute_gradients(
     additional_forward_args: Any = None,
 ) -> Tuple[Tensor, ...]:
     r"""
-        Computes gradients of the output with respect to inputs for an
-        arbitrary forward function.
+    Computes gradients of the output with respect to inputs for an
+    arbitrary forward function.
 
-        Args:
+    Args:
 
-            forward_fn: forward function. This can be for example model's
-                        forward function.
-            input:      Input at which gradients are evaluated,
-                        will be passed to forward_fn.
-            target_ind: Index of the target class for which gradients
-                        must be computed (classification only).
-            additional_forward_args: Additional input arguments that forward
-                        function requires. It takes an empty tuple (no additional
-                        arguments) if no additional arguments are required
+        forward_fn: forward function. This can be for example model's
+                    forward function.
+        input:      Input at which gradients are evaluated,
+                    will be passed to forward_fn.
+        target_ind: Index of the target class for which gradients
+                    must be computed (classification only).
+        additional_forward_args: Additional input arguments that forward
+                    function requires. It takes an empty tuple (no additional
+                    arguments) if no additional arguments are required
     """
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
@@ -441,52 +441,52 @@ def compute_layer_gradients_and_eval(
     Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
 ]:
     r"""
-        Computes gradients of the output with respect to a given layer as well
-        as the output evaluation of the layer for an arbitrary forward function
-        and given input.
+    Computes gradients of the output with respect to a given layer as well
+    as the output evaluation of the layer for an arbitrary forward function
+    and given input.
 
-        For data parallel models, hooks are executed once per device ,so we
-        need to internally combine the separated tensors from devices by
-        concatenating based on device_ids. Any necessary gradients must be taken
-        with respect to each independent batched tensor, so the gradients are
-        computed and combined appropriately.
+    For data parallel models, hooks are executed once per device ,so we
+    need to internally combine the separated tensors from devices by
+    concatenating based on device_ids. Any necessary gradients must be taken
+    with respect to each independent batched tensor, so the gradients are
+    computed and combined appropriately.
 
-        More information regarding the behavior of forward hooks with DataParallel
-        models can be found in the PyTorch data parallel documentation. We maintain
-        the separate inputs in a dictionary protected by a lock, analogous to the
-        gather implementation for the core PyTorch DataParallel implementation.
+    More information regarding the behavior of forward hooks with DataParallel
+    models can be found in the PyTorch data parallel documentation. We maintain
+    the separate inputs in a dictionary protected by a lock, analogous to the
+    gather implementation for the core PyTorch DataParallel implementation.
 
-        NOTE: To properly handle inplace operations, a clone of the layer output
-        is stored. This structure inhibits execution of a backward hook on the last
-        module for the layer output when computing the gradient with respect to
-        the input, since we store an intermediate clone, as
-        opposed to the true module output. If backward module hooks are necessary
-        for the final module when computing input gradients, utilize
-        _forward_layer_eval_with_neuron_grads instead.
+    NOTE: To properly handle inplace operations, a clone of the layer output
+    is stored. This structure inhibits execution of a backward hook on the last
+    module for the layer output when computing the gradient with respect to
+    the input, since we store an intermediate clone, as
+    opposed to the true module output. If backward module hooks are necessary
+    for the final module when computing input gradients, utilize
+    _forward_layer_eval_with_neuron_grads instead.
 
-        Args:
+    Args:
 
-            forward_fn: forward function. This can be for example model's
-                        forward function.
-            layer:      Layer for which gradients / output will be evaluated.
-            inputs:     Input at which gradients are evaluated,
-                        will be passed to forward_fn.
-            target_ind: Index of the target class for which gradients
-                        must be computed (classification only).
-            output_fn:  An optional function that is applied to the layer inputs or
-                        outputs depending whether the `attribute_to_layer_input` is
-                        set to `True` or `False`
-            args:       Additional input arguments that forward function requires.
-                        It takes an empty tuple (no additional arguments) if no
-                        additional arguments are required
+        forward_fn: forward function. This can be for example model's
+                    forward function.
+        layer:      Layer for which gradients / output will be evaluated.
+        inputs:     Input at which gradients are evaluated,
+                    will be passed to forward_fn.
+        target_ind: Index of the target class for which gradients
+                    must be computed (classification only).
+        output_fn:  An optional function that is applied to the layer inputs or
+                    outputs depending whether the `attribute_to_layer_input` is
+                    set to `True` or `False`
+        args:       Additional input arguments that forward function requires.
+                    It takes an empty tuple (no additional arguments) if no
+                    additional arguments are required
 
 
-        Returns:
-            2-element tuple of **gradients**, **evals**:
-            - **gradients**:
-                Gradients of output with respect to target layer output.
-            - **evals**:
-                Target layer output for given input.
+    Returns:
+        2-element tuple of **gradients**, **evals**:
+        - **gradients**:
+            Gradients of output with respect to target layer output.
+        - **evals**:
+            Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
         # saved_layer is a dictionary mapping device to a tuple of

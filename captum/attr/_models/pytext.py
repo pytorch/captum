@@ -9,12 +9,12 @@ from pytext.models.model import EmbeddingBase, EmbeddingList
 
 class PyTextInterpretableEmbedding(EmbeddingBase):
     r"""
-        In PyText DocNN models we need a way to access word embedding layers,
-        generate the embeddings and subtract the baseline.
-        To do so, we separate embedding layers from the model, compute the embeddings
-        separately and do all operations needed outside of the model.
-        The original embedding layer is being replaced by `PyTextInterpretableEmbedding`
-        layer which passes precomputed embedding vectors to lower layers.
+    In PyText DocNN models we need a way to access word embedding layers,
+    generate the embeddings and subtract the baseline.
+    To do so, we separate embedding layers from the model, compute the embeddings
+    separately and do all operations needed outside of the model.
+    The original embedding layer is being replaced by `PyTextInterpretableEmbedding`
+    layer which passes precomputed embedding vectors to lower layers.
     """
 
     def __init__(self, embeddings):
@@ -24,39 +24,39 @@ class PyTextInterpretableEmbedding(EmbeddingBase):
 
     def forward(self, input):
         r"""
-         The forward pass of embedding layer. This can be for the text or any
-         type of embedding.
+        The forward pass of embedding layer. This can be for the text or any
+        type of embedding.
 
-         Args
+        Args
 
-            input: Input embeddings tensor
+           input: Input embeddings tensor
 
-         Return
+        Return
 
-            output: Output tensor is the same as input. It passes through
-                    the embedding tensors to lower layers without any
-                    modifications
+           output: Output tensor is the same as input. It passes through
+                   the embedding tensors to lower layers without any
+                   modifications
         """
         return input
 
     def get_attribution_map(self, attributions):
         r"""
-         After attribution scores are computed for an input embedding vector
-         we need to split it up into attribution sub tensors for each
-         feature type: word, dict and other types
+        After attribution scores are computed for an input embedding vector
+        we need to split it up into attribution sub tensors for each
+        feature type: word, dict and other types
 
-         TODO: we can potentally also output tuples of attributions. This might be
-         a better option. We'll work on this in a separate diff.
+        TODO: we can potentally also output tuples of attributions. This might be
+        a better option. We'll work on this in a separate diff.
 
-         Args
+        Args
 
-            attributions: A tensor that contains attribution values for each input
-                          field. It usually has the same dimensions as the input
-                          tensor
+           attributions: A tensor that contains attribution values for each input
+                         field. It usually has the same dimensions as the input
+                         tensor
 
-         Return
+        Return
 
-            attribution_map: A dictionary of feature_type and attribution values
+           attribution_map: A dictionary of feature_type and attribution values
 
         """
         begin = 0
@@ -138,24 +138,24 @@ class BaselineGenerator(object):
         )
 
     def _generate_baseline_single_dict_feature(self, device):
-        r""" Generate dict features based on Assistant's case study by using
-             sia_transformer:
-             fbcode/assistant/sia/transformer/sia_transformer.py
-             sia_transformer generates dict features in a special gazetter format
-             See `fbsource/fbcode/pytext/models/embeddings/dict_embedding.py`
+        r"""Generate dict features based on Assistant's case study by using
+         sia_transformer:
+         fbcode/assistant/sia/transformer/sia_transformer.py
+         sia_transformer generates dict features in a special gazetter format
+         See `fbsource/fbcode/pytext/models/embeddings/dict_embedding.py`
 
-             It generates word dict feature embeddings for each word token.
+         It generates word dict feature embeddings for each word token.
 
-             The output of SIATransformer after running it on `<pad>` token
-             looks as following:
-            OutputRecord(tokens=['<', 'pad', '>'],
-                         token_ranges=[(0, 1), (1, 4), (4, 5)],
-                         gazetteer_feats=['<pad>', '<pad>', '<pad>'],
-                         gazetteer_feat_lengths=[1, 1, 1],
-                         gazetteer_feat_weights=[0.0, 0.0, 0.0],
-                         characters=[['<', '<pad>', '<pad>'],
-                                    ['p', 'a', 'd'], ['>', '<pad>', '<pad>']],
-                         pretrained_token_embedding=[ ], dense_feats=None)
+         The output of SIATransformer after running it on `<pad>` token
+         looks as following:
+        OutputRecord(tokens=['<', 'pad', '>'],
+                     token_ranges=[(0, 1), (1, 4), (4, 5)],
+                     gazetteer_feats=['<pad>', '<pad>', '<pad>'],
+                     gazetteer_feat_lengths=[1, 1, 1],
+                     gazetteer_feat_weights=[0.0, 0.0, 0.0],
+                     characters=[['<', '<pad>', '<pad>'],
+                                ['p', 'a', 'd'], ['>', '<pad>', '<pad>']],
+                     pretrained_token_embedding=[ ], dense_feats=None)
         """
         gazetteer_feats = [self.PAD, self.PAD, self.PAD]
         gazetteer_feat_lengths = [1, 1, 1]

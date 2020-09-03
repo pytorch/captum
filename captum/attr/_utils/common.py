@@ -44,9 +44,10 @@ def _validate_input(
         n_steps >= 0
     ), "The number of steps must be a positive integer. " "Given: {}".format(n_steps)
 
-    assert method in SUPPORTED_METHODS, (
-        "Approximation method must be one for the following {}. "
-        "Given {}".format(SUPPORTED_METHODS, method)
+    assert (
+        method in SUPPORTED_METHODS
+    ), "Approximation method must be one for the following {}. " "Given {}".format(
+        SUPPORTED_METHODS, method
     )
 
 

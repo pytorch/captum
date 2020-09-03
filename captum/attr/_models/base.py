@@ -9,14 +9,14 @@ from torch.nn import Module
 
 class InterpretableEmbeddingBase(Module):
     r"""
-        Since some embedding vectors, e.g. word are created and assigned in
-        the embedding layers of Pytorch models we need a way to access
-        those layers, generate the embeddings and subtract the baseline.
-        To do so, we separate embedding layers from the model, compute the
-        embeddings separately and do all operations needed outside of the model.
-        The original embedding layer is being replaced by
-        `InterpretableEmbeddingBase` layer which passes already
-        precomputed embedding vectors to the layers below.
+    Since some embedding vectors, e.g. word are created and assigned in
+    the embedding layers of Pytorch models we need a way to access
+    those layers, generate the embeddings and subtract the baseline.
+    To do so, we separate embedding layers from the model, compute the
+    embeddings separately and do all operations needed outside of the model.
+    The original embedding layer is being replaced by
+    `InterpretableEmbeddingBase` layer which passes already
+    precomputed embedding vectors to the layers below.
     """
 
     def __init__(self, embedding, full_name):
@@ -29,39 +29,39 @@ class InterpretableEmbeddingBase(Module):
 
     def forward(self, *inputs, **kwargs):
         r"""
-         The forward function of a wrapper embedding layer that takes and returns
-         embedding layer. It allows embeddings to be created outside of the model
-         and passes them seamlessly to the preceding layers of the model.
+        The forward function of a wrapper embedding layer that takes and returns
+        embedding layer. It allows embeddings to be created outside of the model
+        and passes them seamlessly to the preceding layers of the model.
 
-         Args:
+        Args:
 
-            *inputs (Any, optional): A sequence of inputs arguments that the
-                    forward function takes. Since forward functions can take any
-                    type and number of arguments, this will ensure that we can
-                    execute the forward pass using interpretable embedding layer.
-                    Note that if inputs are specified, it is assumed that the first
-                    argument is the embedding tensor generated using the
-                    `self.embedding` layer using all input arguments provided in
-                    `inputs` and `kwargs`.
-            **kwargs (Any, optional): Similar to `inputs` we want to make sure
-                    that our forward pass supports arbitrary number and type of
-                    key-value arguments. If `inputs` is not provided, `kwargs` must
-                    be provided and the first argument corresponds to the embedding
-                    tensor generated using the `self.embedding`. Note that we make
-                    here an assumption here that `kwargs` is an ordered dict which
-                    is new in python 3.6 and is not guaranteed that it will
-                    consistently remain that way in the newer versions. In case
-                    current implementation doesn't work for special use cases,
-                    it is encouraged to override `InterpretableEmbeddingBase` and
-                    address those specifics in descendant classes.
+           *inputs (Any, optional): A sequence of inputs arguments that the
+                   forward function takes. Since forward functions can take any
+                   type and number of arguments, this will ensure that we can
+                   execute the forward pass using interpretable embedding layer.
+                   Note that if inputs are specified, it is assumed that the first
+                   argument is the embedding tensor generated using the
+                   `self.embedding` layer using all input arguments provided in
+                   `inputs` and `kwargs`.
+           **kwargs (Any, optional): Similar to `inputs` we want to make sure
+                   that our forward pass supports arbitrary number and type of
+                   key-value arguments. If `inputs` is not provided, `kwargs` must
+                   be provided and the first argument corresponds to the embedding
+                   tensor generated using the `self.embedding`. Note that we make
+                   here an assumption here that `kwargs` is an ordered dict which
+                   is new in python 3.6 and is not guaranteed that it will
+                   consistently remain that way in the newer versions. In case
+                   current implementation doesn't work for special use cases,
+                   it is encouraged to override `InterpretableEmbeddingBase` and
+                   address those specifics in descendant classes.
 
-         Returns:
+        Returns:
 
-            embedding_tensor (Tensor):
-                    Returns a tensor which is the same as first argument passed
-                    to the forward function.
-                    It passes pre-computed embedding tensors to lower layers
-                    without any modifications.
+           embedding_tensor (Tensor):
+                   Returns a tensor which is the same as first argument passed
+                   to the forward function.
+                   It passes pre-computed embedding tensors to lower layers
+                   without any modifications.
         """
         assert len(inputs) > 0 or len(kwargs) > 0, (
             "No input arguments are provided to `InterpretableEmbeddingBase`."

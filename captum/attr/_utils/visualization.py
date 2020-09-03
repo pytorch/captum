@@ -99,114 +99,114 @@ def visualize_image_attr(
     use_pyplot: bool = True,
 ):
     r"""
-        Visualizes attribution for a given image by normalizing attribution values
-        of the desired sign (positive, negative, absolute value, or all) and displaying
-        them using the desired mode in a matplotlib figure.
+    Visualizes attribution for a given image by normalizing attribution values
+    of the desired sign (positive, negative, absolute value, or all) and displaying
+    them using the desired mode in a matplotlib figure.
 
-        Args:
+    Args:
 
-            attr (numpy.array): Numpy array corresponding to attributions to be
-                        visualized. Shape must be in the form (H, W, C), with
-                        channels as last dimension. Shape must also match that of
-                        the original image if provided.
-            original_image (numpy.array, optional):  Numpy array corresponding to
-                        original image. Shape must be in the form (H, W, C), with
-                        channels as the last dimension. Image can be provided either
-                        with float values in range 0-1 or int values between 0-255.
-                        This is a necessary argument for any visualization method
-                        which utilizes the original image.
-                        Default: None
-            method (string, optional): Chosen method for visualizing attribution.
-                        Supported options are:
+        attr (numpy.array): Numpy array corresponding to attributions to be
+                    visualized. Shape must be in the form (H, W, C), with
+                    channels as last dimension. Shape must also match that of
+                    the original image if provided.
+        original_image (numpy.array, optional):  Numpy array corresponding to
+                    original image. Shape must be in the form (H, W, C), with
+                    channels as the last dimension. Image can be provided either
+                    with float values in range 0-1 or int values between 0-255.
+                    This is a necessary argument for any visualization method
+                    which utilizes the original image.
+                    Default: None
+        method (string, optional): Chosen method for visualizing attribution.
+                    Supported options are:
 
-                        1. `heat_map` - Display heat map of chosen attributions
+                    1. `heat_map` - Display heat map of chosen attributions
 
-                        2. `blended_heat_map` - Overlay heat map over greyscale
-                           version of original image. Parameter alpha_overlay
-                           corresponds to alpha of heat map.
+                    2. `blended_heat_map` - Overlay heat map over greyscale
+                       version of original image. Parameter alpha_overlay
+                       corresponds to alpha of heat map.
 
-                        3. `original_image` - Only display original image.
+                    3. `original_image` - Only display original image.
 
-                        4. `masked_image` - Mask image (pixel-wise multiply)
-                           by normalized attribution values.
+                    4. `masked_image` - Mask image (pixel-wise multiply)
+                       by normalized attribution values.
 
-                        5. `alpha_scaling` - Sets alpha channel of each pixel
-                           to be equal to normalized attribution value.
-                        Default: `heat_map`
-            sign (string, optional): Chosen sign of attributions to visualize. Supported
-                        options are:
+                    5. `alpha_scaling` - Sets alpha channel of each pixel
+                       to be equal to normalized attribution value.
+                    Default: `heat_map`
+        sign (string, optional): Chosen sign of attributions to visualize. Supported
+                    options are:
 
-                        1. `positive` - Displays only positive pixel attributions.
+                    1. `positive` - Displays only positive pixel attributions.
 
-                        2. `absolute_value` - Displays absolute value of
-                           attributions.
+                    2. `absolute_value` - Displays absolute value of
+                       attributions.
 
-                        3. `negative` - Displays only negative pixel attributions.
+                    3. `negative` - Displays only negative pixel attributions.
 
-                        4. `all` - Displays both positive and negative attribution
-                           values. This is not supported for `masked_image` or
-                           `alpha_scaling` modes, since signed information cannot
-                           be represented in these modes.
-                        Default: `absolute_value`
-            plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
-                        on which to visualize. If None is provided, then a new figure
-                        and axis are created.
-                        Default: None
-            outlier_perc (float or int, optional): Top attribution values which
-                        correspond to a total of outlier_perc percentage of the
-                        total attribution are set to 1 and scaling is performed
-                        using the minimum of these values. For sign=`all`, outliers a
-                        nd scale value are computed using absolute value of
-                        attributions.
-                        Default: 2
-            cmap (string, optional): String corresponding to desired colormap for
-                        heatmap visualization. This defaults to "Reds" for negative
-                        sign, "Blues" for absolute value, "Greens" for positive sign,
-                        and a spectrum from red to green for all. Note that this
-                        argument is only used for visualizations displaying heatmaps.
-                        Default: None
-            alpha_overlay (float, optional): Alpha to set for heatmap when using
-                        `blended_heat_map` visualization mode, which overlays the
-                        heat map over the greyscaled original image.
-                        Default: 0.5
-            show_colorbar (boolean, optional): Displays colorbar for heatmap below
-                        the visualization. If given method does not use a heatmap,
-                        then a colormap axis is created and hidden. This is
-                        necessary for appropriate alignment when visualizing
-                        multiple plots, some with colorbars and some without.
-                        Default: False
-            title (string, optional): Title string for plot. If None, no title is
-                        set.
-                        Default: None
-            fig_size (tuple, optional): Size of figure created.
-                        Default: (6,6)
-            use_pyplot (boolean, optional): If true, uses pyplot to create and show
-                        figure and displays the figure after creating. If False,
-                        uses Matplotlib object oriented API and simply returns a
-                        figure object without showing.
-                        Default: True.
+                    4. `all` - Displays both positive and negative attribution
+                       values. This is not supported for `masked_image` or
+                       `alpha_scaling` modes, since signed information cannot
+                       be represented in these modes.
+                    Default: `absolute_value`
+        plt_fig_axis (tuple, optional): Tuple of matplotlib.pyplot.figure and axis
+                    on which to visualize. If None is provided, then a new figure
+                    and axis are created.
+                    Default: None
+        outlier_perc (float or int, optional): Top attribution values which
+                    correspond to a total of outlier_perc percentage of the
+                    total attribution are set to 1 and scaling is performed
+                    using the minimum of these values. For sign=`all`, outliers a
+                    nd scale value are computed using absolute value of
+                    attributions.
+                    Default: 2
+        cmap (string, optional): String corresponding to desired colormap for
+                    heatmap visualization. This defaults to "Reds" for negative
+                    sign, "Blues" for absolute value, "Greens" for positive sign,
+                    and a spectrum from red to green for all. Note that this
+                    argument is only used for visualizations displaying heatmaps.
+                    Default: None
+        alpha_overlay (float, optional): Alpha to set for heatmap when using
+                    `blended_heat_map` visualization mode, which overlays the
+                    heat map over the greyscaled original image.
+                    Default: 0.5
+        show_colorbar (boolean, optional): Displays colorbar for heatmap below
+                    the visualization. If given method does not use a heatmap,
+                    then a colormap axis is created and hidden. This is
+                    necessary for appropriate alignment when visualizing
+                    multiple plots, some with colorbars and some without.
+                    Default: False
+        title (string, optional): Title string for plot. If None, no title is
+                    set.
+                    Default: None
+        fig_size (tuple, optional): Size of figure created.
+                    Default: (6,6)
+        use_pyplot (boolean, optional): If true, uses pyplot to create and show
+                    figure and displays the figure after creating. If False,
+                    uses Matplotlib object oriented API and simply returns a
+                    figure object without showing.
+                    Default: True.
 
-        Returns:
-            2-element tuple of **figure**, **axis**:
-            - **figure** (*matplotlib.pyplot.figure*):
-                        Figure object on which visualization
-                        is created. If plt_fig_axis argument is given, this is the
-                        same figure provided.
-            - **axis** (*matplotlib.pyplot.axis*):
-                        Axis object on which visualization
-                        is created. If plt_fig_axis argument is given, this is the
-                        same axis provided.
+    Returns:
+        2-element tuple of **figure**, **axis**:
+        - **figure** (*matplotlib.pyplot.figure*):
+                    Figure object on which visualization
+                    is created. If plt_fig_axis argument is given, this is the
+                    same figure provided.
+        - **axis** (*matplotlib.pyplot.axis*):
+                    Axis object on which visualization
+                    is created. If plt_fig_axis argument is given, this is the
+                    same axis provided.
 
-        Examples::
+    Examples::
 
-            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-            >>> # and returns an Nx10 tensor of class probabilities.
-            >>> net = ImageClassifier()
-            >>> ig = IntegratedGradients(net)
-            >>> # Computes integrated gradients for class 3 for a given image .
-            >>> attribution, delta = ig.attribute(orig_image, target=3)
-            >>> # Displays blended heat map visualization of computed attributions.
-            >>> _ = visualize_image_attr(attribution, orig_image, "blended_heat_map")
+        >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+        >>> # and returns an Nx10 tensor of class probabilities.
+        >>> net = ImageClassifier()
+        >>> ig = IntegratedGradients(net)
+        >>> # Computes integrated gradients for class 3 for a given image .
+        >>> attribution, delta = ig.attribute(orig_image, target=3)
+        >>> # Displays blended heat map visualization of computed attributions.
+        >>> _ = visualize_image_attr(attribution, orig_image, "blended_heat_map")
     """
     # Create plot if figure, axis not provided
     if plt_fig_axis is not None:
@@ -327,66 +327,66 @@ def visualize_image_attr_multiple(
     **kwargs: Any
 ):
     r"""
-        Visualizes attribution using multiple visualization methods displayed
-        in a 1 x k grid, where k is the number of desired visualizations.
+    Visualizes attribution using multiple visualization methods displayed
+    in a 1 x k grid, where k is the number of desired visualizations.
 
-        Args:
+    Args:
 
-            attr (numpy.array): Numpy array corresponding to attributions to be
-                        visualized. Shape must be in the form (H, W, C), with
-                        channels as last dimension. Shape must also match that of
-                        the original image if provided.
-            original_image (numpy.array, optional):  Numpy array corresponding to
-                        original image. Shape must be in the form (H, W, C), with
-                        channels as the last dimension. Image can be provided either
-                        with values in range 0-1 or 0-255. This is a necessary
-                        argument for any visualization method which utilizes
-                        the original image.
-            methods (list of strings): List of strings of length k, defining method
-                            for each visualization. Each method must be a valid
-                            string argument for method to visualize_image_attr.
-            signs (list of strings): List of strings of length k, defining signs for
-                            each visualization. Each sign must be a valid
-                            string argument for sign to visualize_image_attr.
-            titles (list of strings, optional):  List of strings of length k, providing
-                        a title string for each plot. If None is provided, no titles
-                        are added to subplots.
-                        Default: None
-            fig_size (tuple, optional): Size of figure created.
-                        Default: (8, 6)
-            use_pyplot (boolean, optional): If true, uses pyplot to create and show
-                        figure and displays the figure after creating. If False,
-                        uses Matplotlib object oriented API and simply returns a
-                        figure object without showing.
-                        Default: True.
-            **kwargs (Any, optional): Any additional arguments which will be passed
-                        to every individual visualization. Such arguments include
-                        `show_colorbar`, `alpha_overlay`, `cmap`, etc.
+        attr (numpy.array): Numpy array corresponding to attributions to be
+                    visualized. Shape must be in the form (H, W, C), with
+                    channels as last dimension. Shape must also match that of
+                    the original image if provided.
+        original_image (numpy.array, optional):  Numpy array corresponding to
+                    original image. Shape must be in the form (H, W, C), with
+                    channels as the last dimension. Image can be provided either
+                    with values in range 0-1 or 0-255. This is a necessary
+                    argument for any visualization method which utilizes
+                    the original image.
+        methods (list of strings): List of strings of length k, defining method
+                        for each visualization. Each method must be a valid
+                        string argument for method to visualize_image_attr.
+        signs (list of strings): List of strings of length k, defining signs for
+                        each visualization. Each sign must be a valid
+                        string argument for sign to visualize_image_attr.
+        titles (list of strings, optional):  List of strings of length k, providing
+                    a title string for each plot. If None is provided, no titles
+                    are added to subplots.
+                    Default: None
+        fig_size (tuple, optional): Size of figure created.
+                    Default: (8, 6)
+        use_pyplot (boolean, optional): If true, uses pyplot to create and show
+                    figure and displays the figure after creating. If False,
+                    uses Matplotlib object oriented API and simply returns a
+                    figure object without showing.
+                    Default: True.
+        **kwargs (Any, optional): Any additional arguments which will be passed
+                    to every individual visualization. Such arguments include
+                    `show_colorbar`, `alpha_overlay`, `cmap`, etc.
 
 
-        Returns:
-            2-element tuple of **figure**, **axis**:
-            - **figure** (*matplotlib.pyplot.figure*):
-                        Figure object on which visualization
-                        is created. If plt_fig_axis argument is given, this is the
-                        same figure provided.
-            - **axis** (*matplotlib.pyplot.axis*):
-                        Axis object on which visualization
-                        is created. If plt_fig_axis argument is given, this is the
-                        same axis provided.
+    Returns:
+        2-element tuple of **figure**, **axis**:
+        - **figure** (*matplotlib.pyplot.figure*):
+                    Figure object on which visualization
+                    is created. If plt_fig_axis argument is given, this is the
+                    same figure provided.
+        - **axis** (*matplotlib.pyplot.axis*):
+                    Axis object on which visualization
+                    is created. If plt_fig_axis argument is given, this is the
+                    same axis provided.
 
-        Examples::
+    Examples::
 
-            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-            >>> # and returns an Nx10 tensor of class probabilities.
-            >>> net = ImageClassifier()
-            >>> ig = IntegratedGradients(net)
-            >>> # Computes integrated gradients for class 3 for a given image .
-            >>> attribution, delta = ig.attribute(orig_image, target=3)
-            >>> # Displays original image and heat map visualization of
-            >>> # computed attributions side by side.
-            >>> _ = visualize_mutliple_image_attr(attribution, orig_image,
-            >>>                     ["original_image", "heat_map"], ["all", "positive"])
+        >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+        >>> # and returns an Nx10 tensor of class probabilities.
+        >>> net = ImageClassifier()
+        >>> ig = IntegratedGradients(net)
+        >>> # Computes integrated gradients for class 3 for a given image .
+        >>> attribution, delta = ig.attribute(orig_image, target=3)
+        >>> # Displays original image and heat map visualization of
+        >>> # computed attributions side by side.
+        >>> _ = visualize_mutliple_image_attr(attribution, orig_image,
+        >>>                     ["original_image", "heat_map"], ["all", "positive"])
     """
     assert len(methods) == len(signs), "Methods and signs array lengths must match."
     if titles is not None:
@@ -426,7 +426,7 @@ def visualize_image_attr_multiple(
 
 class VisualizationDataRecord:
     r"""
-        A data record for storing attribution relevant information
+    A data record for storing attribution relevant information
     """
     __slots__ = [
         "word_attributions",
