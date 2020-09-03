@@ -22,6 +22,7 @@ while getopts 'ndfv:' flag; do
 # but users should hopefully be using conda installs.
 
 # install nodejs and yarn for insights build
+sudo apt-get update
 sudo apt install apt-transport-https ca-certificates
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
