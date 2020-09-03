@@ -18,12 +18,12 @@ def linear_regression_interpretable_model_trainer(
         raise AssertionError(
             "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
         )
-    print(interp_inputs)
-    print(exp_outputs)
-    print(weights)
+    #print(interp_inputs)
+    #print(exp_outputs)
+    #print(weights)
     clf = linear_model.LinearRegression()
     clf.fit(interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy())
-    print(clf.coef_)
+    #print(clf.coef_)
     return torch.from_numpy(clf.coef_)
 
 

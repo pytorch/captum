@@ -50,6 +50,28 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
+    def test_simple_batch_kernel_shap(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
+        self._kernel_shap_test_assert(
+            net,
+            inp,
+            [76.66666, 196.66666, 116.66666],
+            perturbations_per_eval=(1, 2, 3),
+            n_samples=500,
+        )
+
+    def test_simple_batch_kernel_shap_with_mask(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
+        self._kernel_shap_test_assert(
+            net,
+            inp,
+            [275.0, 275.0, 115.0],
+            feature_mask=torch.tensor([[0, 0, 1], [0, 1, 0]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
     def test_multi_input_kernel_shap_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0]])
@@ -103,19 +125,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
-    """def test_multi_sample_shapley_sampling_with_mask(self) -> None:
-        net = BasicModel_MultiLayer()
-        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
-        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
-        self._shapley_test_assert(
-            net,
-            inp,
-            [[39.5, 39.5, 10.5], [275.0, 275.0, 115.0]],
-            feature_mask=mask,
-            perturbations_per_eval=(1, 2, 3),
-        )
-
-    def test_multi_input_shapley_sampling_without_mask(self) -> None:
+    def test_multi_input_batch_kernel_shap_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
@@ -125,7 +135,7 @@ class Test(BaseTest):
             [[78, 0, 198], [0.0, 398.0, 0.0]],
             [[0, 398, 38], [0.0, 38.0, 0.0]],
         )
-        self._shapley_test_assert(
+        self._kernel_shap_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
@@ -134,7 +144,7 @@ class Test(BaseTest):
             test_true_shapley=False,
         )
 
-    def test_multi_input_shapley_sampling_with_mask(self) -> None:
+    def test_multi_input_batch_kernel_shap(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -168,86 +178,39 @@ class Test(BaseTest):
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
         )
-
     # Remaining tests are for cases where forward function returns a scalar
-    # per batch, as either a float, integer, 0d tensor or 1d tensor.
-    def test_single_shapley_batch_scalar_float(self) -> None:
+    # as either a float, integer, 0d tensor or 1d tensor.
+    def test_single_kernel_shap_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_one_sample_batch_scalar_shapley_assert(
+        self._single_input_scalar_kernel_shap_assert(
             lambda inp: torch.sum(net(inp)).item()
         )
 
-    def test_single_shapley_batch_scalar_tensor_0d(self) -> None:
+    def test_single_kernel_shap_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_one_sample_batch_scalar_shapley_assert(
+        self._single_input_scalar_kernel_shap_assert(
             lambda inp: torch.sum(net(inp))
         )
 
-    def test_single_shapley_batch_scalar_tensor_1d(self) -> None:
+    def test_single_kernel_shap_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_one_sample_batch_scalar_shapley_assert(
+        self._single_input_scalar_kernel_shap_assert(
             lambda inp: torch.sum(net(inp)).reshape(1)
         )
 
-    def test_single_shapley_batch_scalar_tensor_int(self) -> None:
+    def test_single_kernel_shap_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_one_sample_batch_scalar_shapley_assert(
+        self._single_input_scalar_kernel_shap_assert(
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
-    def test_multi_sample_shapley_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer()
-        self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).item()
-        )
-
-    def test_multi_sample_shapley_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer()
-        self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp))
-        )
-
-    def test_multi_sample_shapley_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer()
-        self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: torch.sum(net(inp)).reshape(1)
-        )
-
-    def test_multi_sample_shapley_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer()
-        self._single_input_multi_sample_batch_scalar_shapley_assert(
-            lambda inp: int(torch.sum(net(inp)).item())
-        )
-
-    def test_multi_inp_shapley_batch_scalar_float(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: torch.sum(net(*inp)).item()
-        )
-
-    def test_multi_inp_shapley_batch_scalar_tensor_0d(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(lambda *inp: torch.sum(net(*inp)))
-
-    def test_multi_inp_shapley_batch_scalar_tensor_1d(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: torch.sum(net(*inp)).reshape(1)
-        )
-
-    def test_mutli_inp_shapley_batch_scalar_tensor_int(self) -> None:
-        net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_batch_scalar_shapley_assert(
-            lambda *inp: int(torch.sum(net(*inp)).item())
-        )
-
-    def _single_input_one_sample_batch_scalar_shapley_assert(
+    def _single_input_scalar_kernel_shap_assert(
         self, func: Callable
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
 
-        self._shapley_test_assert(
+        self._kernel_shap_test_assert(
             func,
             inp,
             [[79.0, 79.0, 21.0]],
@@ -256,22 +219,31 @@ class Test(BaseTest):
             target=None,
         )
 
-    def _single_input_multi_sample_batch_scalar_shapley_assert(
-        self, func: Callable
-    ) -> None:
-        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
-        mask = torch.tensor([[0, 0, 1]])
-
-        self._shapley_test_assert(
-            func,
-            inp,
-            [[629.0, 629.0, 251.0]],
-            feature_mask=mask,
-            perturbations_per_eval=(1,),
-            target=None,
+    def test_multi_inp_kernel_shap_scalar_tensor_0d(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._multi_input_scalar_kernel_shap_assert(
+            lambda inp: torch.sum(net(inp))
         )
 
-    def _multi_input_batch_scalar_shapley_assert(self, func: Callable) -> None:
+    def test_multi_inp_kernel_shap_scalar_tensor_1d(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._multi_input_scalar_kernel_shap_assert(
+            lambda inp: torch.sum(net(inp)).reshape(1)
+        )
+
+    def test_multi_inp_kernel_shap_scalar_tensor_int(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._multi_input_scalar_kernel_shap_assert(
+            lambda inp: int(torch.sum(net(inp)).item())
+        )
+
+    def test_multi_inp_kernel_shap_scalar_float(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        self._multi_input_scalar_kernel_shap_assert(
+            lambda *inp: torch.sum(net(*inp)).item()
+        )
+
+    def _multi_input_scalar_kernel_shap_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [20.0, 10.0, 13.0]])
@@ -284,7 +256,7 @@ class Test(BaseTest):
             [[306.6666, 3850.6666, 410.6666]],
         )
 
-        self._shapley_test_assert(
+        self._kernel_shap_test_assert(
             func,
             (inp1, inp2, inp3),
             expected,
@@ -293,7 +265,8 @@ class Test(BaseTest):
             perturbations_per_eval=(1,),
             target=None,
             n_samples=800,
-        )"""
+        )
+
 
     def _kernel_shap_test_assert(
         self,
