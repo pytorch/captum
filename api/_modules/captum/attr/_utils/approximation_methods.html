@@ -4,7 +4,7 @@
               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-              ga('create', 'UA-139570076-2', 'auto');
+              ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
             </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -54,9 +54,9 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
     <span class="sa">r</span><span class="sd">"""Retrieves parameters for the input approximation `method`</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            method: The name of the approximation method. Currently only `riemann`</span>
-<span class="sd">                    and gauss legendre are</span>
+<span class="sd">    Args:</span>
+<span class="sd">        method: The name of the approximation method. Currently only `riemann`</span>
+<span class="sd">                and gauss legendre are</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SUPPORTED_RIEMANN_METHODS</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">riemann_builders</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">Riemann</span><span class="p">[</span><span class="n">method</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
@@ -70,22 +70,22 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
     <span class="sa">r</span><span class="sd">"""Step sizes are identical and alphas are scaled in [0, 1]</span>
 
-<span class="sd">        Args:</span>
+<span class="sd">    Args:</span>
 
-<span class="sd">             n: The number of integration steps</span>
-<span class="sd">             method: `left`, `right`, `middle` and `trapezoid` riemann</span>
+<span class="sd">         n: The number of integration steps</span>
+<span class="sd">         method: `left`, `right`, `middle` and `trapezoid` riemann</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            2-element tuple of **step_sizes**, **alphas**:</span>
-<span class="sd">            - **step_sizes** (*callable*):</span>
-<span class="sd">                        `step_sizes` takes the number of steps as an</span>
-<span class="sd">                        input argument and returns an array of steps sizes which</span>
-<span class="sd">                        sum is smaller than or equal to one.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        2-element tuple of **step_sizes**, **alphas**:</span>
+<span class="sd">        - **step_sizes** (*callable*):</span>
+<span class="sd">                    `step_sizes` takes the number of steps as an</span>
+<span class="sd">                    input argument and returns an array of steps sizes which</span>
+<span class="sd">                    sum is smaller than or equal to one.</span>
 
-<span class="sd">            - **alphas** (*callable*):</span>
-<span class="sd">                        `alphas` takes the number of steps as an input argument</span>
-<span class="sd">                        and returns the multipliers/coefficients for the inputs</span>
-<span class="sd">                        of integrand in the range of [0, 1]</span>
+<span class="sd">        - **alphas** (*callable*):</span>
+<span class="sd">                    `alphas` takes the number of steps as an input argument</span>
+<span class="sd">                    and returns the multipliers/coefficients for the inputs</span>
+<span class="sd">                    of integrand in the range of [0, 1]</span>
 
 <span class="sd">    """</span>
 
@@ -122,7 +122,7 @@
 <span class="k">def</span> <span class="nf">gauss_legendre_builders</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
     <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
 <span class="p">]:</span>
-    <span class="sa">r</span><span class="sd">""" Numpy's `np.polynomial.legendre` function helps to compute step sizes</span>
+    <span class="sa">r</span><span class="sd">"""Numpy's `np.polynomial.legendre` function helps to compute step sizes</span>
 <span class="sd">    and alpha coefficients using gauss-legendre quadrature rule.</span>
 <span class="sd">    Since numpy returns the integration parameters in different scales we need to</span>
 <span class="sd">    rescale them to adjust to the desired scale.</span>

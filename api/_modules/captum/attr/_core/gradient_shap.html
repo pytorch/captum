@@ -4,7 +4,7 @@
               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-              ga('create', 'UA-139570076-2', 'auto');
+              ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
             </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -441,7 +441,7 @@
     <span class="n">rand_coefficient</span> <span class="o">=</span> <span class="n">rand_coefficient</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">inp_shape</span><span class="p">)</span>
 
     <span class="n">input_baseline_scaled</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">rand_coefficient</span> <span class="o">*</span> <span class="nb">input</span> <span class="o">+</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">rand_coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">baseline</span>
+        <span class="n">rand_coefficient</span> <span class="o">*</span> <span class="nb">input</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">rand_coefficient</span><span class="p">)</span> <span class="o">*</span> <span class="n">baseline</span>
     <span class="p">)</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">input_baseline_scaled</span>
 </pre></div>

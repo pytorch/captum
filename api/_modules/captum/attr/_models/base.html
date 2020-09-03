@@ -4,7 +4,7 @@
               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-              ga('create', 'UA-139570076-2', 'auto');
+              ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
             </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -36,14 +36,14 @@
 
 <div class="viewcode-block" id="InterpretableEmbeddingBase"><a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableEmbeddingBase">[docs]</a><span class="k">class</span> <span class="nc">InterpretableEmbeddingBase</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Since some embedding vectors, e.g. word are created and assigned in</span>
-<span class="sd">        the embedding layers of Pytorch models we need a way to access</span>
-<span class="sd">        those layers, generate the embeddings and subtract the baseline.</span>
-<span class="sd">        To do so, we separate embedding layers from the model, compute the</span>
-<span class="sd">        embeddings separately and do all operations needed outside of the model.</span>
-<span class="sd">        The original embedding layer is being replaced by</span>
-<span class="sd">        `InterpretableEmbeddingBase` layer which passes already</span>
-<span class="sd">        precomputed embedding vectors to the layers below.</span>
+<span class="sd">    Since some embedding vectors, e.g. word are created and assigned in</span>
+<span class="sd">    the embedding layers of Pytorch models we need a way to access</span>
+<span class="sd">    those layers, generate the embeddings and subtract the baseline.</span>
+<span class="sd">    To do so, we separate embedding layers from the model, compute the</span>
+<span class="sd">    embeddings separately and do all operations needed outside of the model.</span>
+<span class="sd">    The original embedding layer is being replaced by</span>
+<span class="sd">    `InterpretableEmbeddingBase` layer which passes already</span>
+<span class="sd">    precomputed embedding vectors to the layers below.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">):</span>
@@ -56,39 +56,39 @@
 
 <div class="viewcode-block" id="InterpretableEmbeddingBase.forward"><a class="viewcode-back" href="../../../../utilities.html#captum.attr.InterpretableEmbeddingBase.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">         The forward function of a wrapper embedding layer that takes and returns</span>
-<span class="sd">         embedding layer. It allows embeddings to be created outside of the model</span>
-<span class="sd">         and passes them seamlessly to the preceding layers of the model.</span>
+<span class="sd">        The forward function of a wrapper embedding layer that takes and returns</span>
+<span class="sd">        embedding layer. It allows embeddings to be created outside of the model</span>
+<span class="sd">        and passes them seamlessly to the preceding layers of the model.</span>
 
-<span class="sd">         Args:</span>
+<span class="sd">        Args:</span>
 
-<span class="sd">            *inputs (Any, optional): A sequence of inputs arguments that the</span>
-<span class="sd">                    forward function takes. Since forward functions can take any</span>
-<span class="sd">                    type and number of arguments, this will ensure that we can</span>
-<span class="sd">                    execute the forward pass using interpretable embedding layer.</span>
-<span class="sd">                    Note that if inputs are specified, it is assumed that the first</span>
-<span class="sd">                    argument is the embedding tensor generated using the</span>
-<span class="sd">                    `self.embedding` layer using all input arguments provided in</span>
-<span class="sd">                    `inputs` and `kwargs`.</span>
-<span class="sd">            **kwargs (Any, optional): Similar to `inputs` we want to make sure</span>
-<span class="sd">                    that our forward pass supports arbitrary number and type of</span>
-<span class="sd">                    key-value arguments. If `inputs` is not provided, `kwargs` must</span>
-<span class="sd">                    be provided and the first argument corresponds to the embedding</span>
-<span class="sd">                    tensor generated using the `self.embedding`. Note that we make</span>
-<span class="sd">                    here an assumption here that `kwargs` is an ordered dict which</span>
-<span class="sd">                    is new in python 3.6 and is not guaranteed that it will</span>
-<span class="sd">                    consistently remain that way in the newer versions. In case</span>
-<span class="sd">                    current implementation doesn't work for special use cases,</span>
-<span class="sd">                    it is encouraged to override `InterpretableEmbeddingBase` and</span>
-<span class="sd">                    address those specifics in descendant classes.</span>
+<span class="sd">           *inputs (Any, optional): A sequence of inputs arguments that the</span>
+<span class="sd">                   forward function takes. Since forward functions can take any</span>
+<span class="sd">                   type and number of arguments, this will ensure that we can</span>
+<span class="sd">                   execute the forward pass using interpretable embedding layer.</span>
+<span class="sd">                   Note that if inputs are specified, it is assumed that the first</span>
+<span class="sd">                   argument is the embedding tensor generated using the</span>
+<span class="sd">                   `self.embedding` layer using all input arguments provided in</span>
+<span class="sd">                   `inputs` and `kwargs`.</span>
+<span class="sd">           **kwargs (Any, optional): Similar to `inputs` we want to make sure</span>
+<span class="sd">                   that our forward pass supports arbitrary number and type of</span>
+<span class="sd">                   key-value arguments. If `inputs` is not provided, `kwargs` must</span>
+<span class="sd">                   be provided and the first argument corresponds to the embedding</span>
+<span class="sd">                   tensor generated using the `self.embedding`. Note that we make</span>
+<span class="sd">                   here an assumption here that `kwargs` is an ordered dict which</span>
+<span class="sd">                   is new in python 3.6 and is not guaranteed that it will</span>
+<span class="sd">                   consistently remain that way in the newer versions. In case</span>
+<span class="sd">                   current implementation doesn't work for special use cases,</span>
+<span class="sd">                   it is encouraged to override `InterpretableEmbeddingBase` and</span>
+<span class="sd">                   address those specifics in descendant classes.</span>
 
-<span class="sd">         Returns:</span>
+<span class="sd">        Returns:</span>
 
-<span class="sd">            embedding_tensor (Tensor):</span>
-<span class="sd">                    Returns a tensor which is the same as first argument passed</span>
-<span class="sd">                    to the forward function.</span>
-<span class="sd">                    It passes pre-computed embedding tensors to lower layers</span>
-<span class="sd">                    without any modifications.</span>
+<span class="sd">           embedding_tensor (Tensor):</span>
+<span class="sd">                   Returns a tensor which is the same as first argument passed</span>
+<span class="sd">                   to the forward function.</span>
+<span class="sd">                   It passes pre-computed embedding tensors to lower layers</span>
+<span class="sd">                   without any modifications.</span>
 <span class="sd">        """</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
             <span class="s2">"No input arguments are provided to `InterpretableEmbeddingBase`."</span>

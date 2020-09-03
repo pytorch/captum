@@ -4,7 +4,7 @@
               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-              ga('create', 'UA-139570076-2', 'auto');
+              ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
             </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -102,148 +102,148 @@
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Args:</span>
+<span class="sd">        Args:</span>
 
-<span class="sd">                inputs (tensor or tuple of tensors):  Input for which layer</span>
-<span class="sd">                            attributions are computed. If forward_func takes a single</span>
-<span class="sd">                            tensor as input, a single input tensor should be provided.</span>
-<span class="sd">                            If forward_func takes multiple tensors as input, a tuple</span>
-<span class="sd">                            of the input tensors should be provided. It is assumed</span>
-<span class="sd">                            that for all given input tensors, dimension 0 corresponds</span>
-<span class="sd">                            to the number of examples, and if multiple input tensors</span>
-<span class="sd">                            are provided, the examples must be aligned appropriately.</span>
-<span class="sd">                layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
-<span class="sd">                            Layer baselines define reference values which replace each</span>
-<span class="sd">                            layer input / output value when ablated.</span>
-<span class="sd">                            Layer baselines should be a single tensor with dimensions</span>
-<span class="sd">                            matching the input / output of the target layer (or</span>
-<span class="sd">                            broadcastable to match it), based</span>
-<span class="sd">                            on whether we are attributing to the input or output</span>
-<span class="sd">                            of the target layer.</span>
-<span class="sd">                            In the cases when `baselines` is not provided, we internally</span>
-<span class="sd">                            use zero as the baseline for each neuron.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                target (int, tuple, tensor or list, optional):  Output indices for</span>
-<span class="sd">                            which gradients are computed (for classification cases,</span>
-<span class="sd">                            this is usually the target class).</span>
-<span class="sd">                            If the network returns a scalar value per example,</span>
-<span class="sd">                            no target index is necessary.</span>
-<span class="sd">                            For general 2D outputs, targets can be either:</span>
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which layer</span>
+<span class="sd">                        attributions are computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                        Layer baselines define reference values which replace each</span>
+<span class="sd">                        layer input / output value when ablated.</span>
+<span class="sd">                        Layer baselines should be a single tensor with dimensions</span>
+<span class="sd">                        matching the input / output of the target layer (or</span>
+<span class="sd">                        broadcastable to match it), based</span>
+<span class="sd">                        on whether we are attributing to the input or output</span>
+<span class="sd">                        of the target layer.</span>
+<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                        use zero as the baseline for each neuron.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which gradients are computed (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
 
-<span class="sd">                            - a single integer or a tensor containing a single</span>
-<span class="sd">                              integer, which is applied to all input examples</span>
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
 
-<span class="sd">                            - a list of integers or a 1D tensor, with length matching</span>
-<span class="sd">                              the number of examples in inputs (dim 0). Each integer</span>
-<span class="sd">                              is applied as the target for the corresponding example.</span>
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
 
-<span class="sd">                            For outputs with &gt; 2 dimensions, targets can be either:</span>
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
 
-<span class="sd">                            - A single tuple, which contains #output_dims - 1</span>
-<span class="sd">                              elements. This target index is applied to all examples.</span>
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
 
-<span class="sd">                            - A list of tuples with length equal to the number of</span>
-<span class="sd">                              examples in inputs (dim 0), and each tuple containing</span>
-<span class="sd">                              #output_dims - 1 elements. Each tuple is applied as the</span>
-<span class="sd">                              target for the corresponding example.</span>
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
 
-<span class="sd">                            Default: None</span>
-<span class="sd">                additional_forward_args (any, optional): If the forward function</span>
-<span class="sd">                            requires additional arguments other than the inputs for</span>
-<span class="sd">                            which attributions should not be computed, this argument</span>
-<span class="sd">                            can be provided. It must be either a single additional</span>
-<span class="sd">                            argument of a Tensor or arbitrary (non-tuple) type or a</span>
-<span class="sd">                            tuple containing multiple additional arguments including</span>
-<span class="sd">                            tensors or any arbitrary python types. These arguments</span>
-<span class="sd">                            are provided to forward_func in order following the</span>
-<span class="sd">                            arguments in inputs.</span>
-<span class="sd">                            Note that attributions are not computed with respect</span>
-<span class="sd">                            to these arguments.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                layer_mask (tensor or tuple of tensors, optional):</span>
-<span class="sd">                            layer_mask defines a mask for the layer, grouping</span>
-<span class="sd">                            elements of the layer input / output which should be</span>
-<span class="sd">                            ablated together.</span>
-<span class="sd">                            layer_mask should be a single tensor with dimensions</span>
-<span class="sd">                            matching the input / output of the target layer (or</span>
-<span class="sd">                            broadcastable to match it), based</span>
-<span class="sd">                            on whether we are attributing to the input or output</span>
-<span class="sd">                            of the target layer. layer_mask</span>
-<span class="sd">                            should contain integers in the range 0 to num_groups</span>
-<span class="sd">                            - 1, and all elements with the same value are</span>
-<span class="sd">                            considered to be in the same group.</span>
-<span class="sd">                            If None, then a layer mask is constructed which assigns</span>
-<span class="sd">                            each neuron within the layer as a separate group, which</span>
-<span class="sd">                            is ablated independently.</span>
-<span class="sd">                            Default: None</span>
-<span class="sd">                attribute_to_layer_input (bool, optional): Indicates whether to</span>
-<span class="sd">                            compute the attributions with respect to the layer input</span>
-<span class="sd">                            or output. If `attribute_to_layer_input` is set to True</span>
-<span class="sd">                            then the attributions will be computed with respect to</span>
-<span class="sd">                            layer's inputs, otherwise it will be computed with respect</span>
-<span class="sd">                            to layer's outputs.</span>
-<span class="sd">                            Note that currently it is assumed that either the input</span>
-<span class="sd">                            or the output of the layer, depending on whether we</span>
-<span class="sd">                            attribute to the input or output, is a single tensor.</span>
-<span class="sd">                            Support for multiple tensors will be added later.</span>
-<span class="sd">                            Default: False</span>
-<span class="sd">                perturbations_per_eval (int, optional): Allows ablation of multiple</span>
-<span class="sd">                            neuron (groups) to be processed simultaneously in one</span>
-<span class="sd">                            call to forward_fn.</span>
-<span class="sd">                            Each forward pass will contain a maximum of</span>
-<span class="sd">                            perturbations_per_eval * #examples samples.</span>
-<span class="sd">                            For DataParallel models, each batch is split among the</span>
-<span class="sd">                            available devices, so evaluations on each available</span>
-<span class="sd">                            device contain at most</span>
-<span class="sd">                            (perturbations_per_eval * #examples) / num_devices</span>
-<span class="sd">                            samples.</span>
-<span class="sd">                            Default: 1</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            layer_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                        layer_mask defines a mask for the layer, grouping</span>
+<span class="sd">                        elements of the layer input / output which should be</span>
+<span class="sd">                        ablated together.</span>
+<span class="sd">                        layer_mask should be a single tensor with dimensions</span>
+<span class="sd">                        matching the input / output of the target layer (or</span>
+<span class="sd">                        broadcastable to match it), based</span>
+<span class="sd">                        on whether we are attributing to the input or output</span>
+<span class="sd">                        of the target layer. layer_mask</span>
+<span class="sd">                        should contain integers in the range 0 to num_groups</span>
+<span class="sd">                        - 1, and all elements with the same value are</span>
+<span class="sd">                        considered to be in the same group.</span>
+<span class="sd">                        If None, then a layer mask is constructed which assigns</span>
+<span class="sd">                        each neuron within the layer as a separate group, which</span>
+<span class="sd">                        is ablated independently.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            attribute_to_layer_input (bool, optional): Indicates whether to</span>
+<span class="sd">                        compute the attributions with respect to the layer input</span>
+<span class="sd">                        or output. If `attribute_to_layer_input` is set to True</span>
+<span class="sd">                        then the attributions will be computed with respect to</span>
+<span class="sd">                        layer's inputs, otherwise it will be computed with respect</span>
+<span class="sd">                        to layer's outputs.</span>
+<span class="sd">                        Note that currently it is assumed that either the input</span>
+<span class="sd">                        or the output of the layer, depending on whether we</span>
+<span class="sd">                        attribute to the input or output, is a single tensor.</span>
+<span class="sd">                        Support for multiple tensors will be added later.</span>
+<span class="sd">                        Default: False</span>
+<span class="sd">            perturbations_per_eval (int, optional): Allows ablation of multiple</span>
+<span class="sd">                        neuron (groups) to be processed simultaneously in one</span>
+<span class="sd">                        call to forward_fn.</span>
+<span class="sd">                        Each forward pass will contain a maximum of</span>
+<span class="sd">                        perturbations_per_eval * #examples samples.</span>
+<span class="sd">                        For DataParallel models, each batch is split among the</span>
+<span class="sd">                        available devices, so evaluations on each available</span>
+<span class="sd">                        device contain at most</span>
+<span class="sd">                        (perturbations_per_eval * #examples) / num_devices</span>
+<span class="sd">                        samples.</span>
+<span class="sd">                        Default: 1</span>
 
-<span class="sd">            Returns:</span>
-<span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
-<span class="sd">                            Attribution of each neuron in given layer input or</span>
-<span class="sd">                            output. Attributions will always be the same size as</span>
-<span class="sd">                            the input or output of the given layer, depending on</span>
-<span class="sd">                            whether we attribute to the inputs or outputs</span>
-<span class="sd">                            of the layer which is decided by the input flag</span>
-<span class="sd">                            `attribute_to_layer_input`.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        Attribution of each neuron in given layer input or</span>
+<span class="sd">                        output. Attributions will always be the same size as</span>
+<span class="sd">                        the input or output of the given layer, depending on</span>
+<span class="sd">                        whether we attribute to the inputs or outputs</span>
+<span class="sd">                        of the layer which is decided by the input flag</span>
+<span class="sd">                        `attribute_to_layer_input`.</span>
 
-<span class="sd">            Examples::</span>
+<span class="sd">        Examples::</span>
 
-<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
-<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
-<span class="sd">            &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
-<span class="sd">            &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x3x3.</span>
-<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
-<span class="sd">            &gt;&gt;&gt; # Generating random input with size 2 x 4 x 4</span>
-<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 4, 4)</span>
-<span class="sd">            &gt;&gt;&gt; # Defining LayerFeatureAblation interpreter</span>
-<span class="sd">            &gt;&gt;&gt; ablator = LayerFeatureAblation(net, net.conv1)</span>
-<span class="sd">            &gt;&gt;&gt; # Computes ablation attribution, ablating each of the 108</span>
-<span class="sd">            &gt;&gt;&gt; # neurons independently.</span>
-<span class="sd">            &gt;&gt;&gt; attr = ablator.attribute(input, target=1)</span>
+<span class="sd">        &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
+<span class="sd">        &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">        &gt;&gt;&gt; # It contains an attribute conv1, which is an instance of nn.conv2d,</span>
+<span class="sd">        &gt;&gt;&gt; # and the output of this layer has dimensions Nx12x3x3.</span>
+<span class="sd">        &gt;&gt;&gt; net = SimpleClassifier()</span>
+<span class="sd">        &gt;&gt;&gt; # Generating random input with size 2 x 4 x 4</span>
+<span class="sd">        &gt;&gt;&gt; input = torch.randn(2, 4, 4)</span>
+<span class="sd">        &gt;&gt;&gt; # Defining LayerFeatureAblation interpreter</span>
+<span class="sd">        &gt;&gt;&gt; ablator = LayerFeatureAblation(net, net.conv1)</span>
+<span class="sd">        &gt;&gt;&gt; # Computes ablation attribution, ablating each of the 108</span>
+<span class="sd">        &gt;&gt;&gt; # neurons independently.</span>
+<span class="sd">        &gt;&gt;&gt; attr = ablator.attribute(input, target=1)</span>
 
-<span class="sd">            &gt;&gt;&gt; # Alternatively, we may want to ablate neurons in groups, e.g.</span>
-<span class="sd">            &gt;&gt;&gt; # grouping all the layer outputs in the same row.</span>
-<span class="sd">            &gt;&gt;&gt; # This can be done by creating a layer mask as follows, which</span>
-<span class="sd">            &gt;&gt;&gt; # defines the groups of layer inputs / outouts, e.g.:</span>
-<span class="sd">            &gt;&gt;&gt; # +---+---+---+</span>
-<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 0 |</span>
-<span class="sd">            &gt;&gt;&gt; # +---+---+---+</span>
-<span class="sd">            &gt;&gt;&gt; # | 1 | 1 | 1 |</span>
-<span class="sd">            &gt;&gt;&gt; # +---+---+---+</span>
-<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 2 |</span>
-<span class="sd">            &gt;&gt;&gt; # +---+---+---+</span>
-<span class="sd">            &gt;&gt;&gt; # With this mask, all the 36 neurons in a row / channel are ablated</span>
-<span class="sd">            &gt;&gt;&gt; # simultaneously, and the attribution for each neuron in the same</span>
-<span class="sd">            &gt;&gt;&gt; # group (0 - 2) per example are the same.</span>
-<span class="sd">            &gt;&gt;&gt; # The attributions can be calculated as follows:</span>
-<span class="sd">            &gt;&gt;&gt; # layer mask has dimensions 1 x 3 x 3</span>
-<span class="sd">            &gt;&gt;&gt; layer_mask = torch.tensor([[[0,0,0],[1,1,1],</span>
-<span class="sd">            &gt;&gt;&gt;                             [2,2,2]]])</span>
-<span class="sd">            &gt;&gt;&gt; attr = ablator.attribute(input, target=1,</span>
-<span class="sd">            &gt;&gt;&gt;                          layer_mask=layer_mask)</span>
+<span class="sd">        &gt;&gt;&gt; # Alternatively, we may want to ablate neurons in groups, e.g.</span>
+<span class="sd">        &gt;&gt;&gt; # grouping all the layer outputs in the same row.</span>
+<span class="sd">        &gt;&gt;&gt; # This can be done by creating a layer mask as follows, which</span>
+<span class="sd">        &gt;&gt;&gt; # defines the groups of layer inputs / outouts, e.g.:</span>
+<span class="sd">        &gt;&gt;&gt; # +---+---+---+</span>
+<span class="sd">        &gt;&gt;&gt; # | 0 | 0 | 0 |</span>
+<span class="sd">        &gt;&gt;&gt; # +---+---+---+</span>
+<span class="sd">        &gt;&gt;&gt; # | 1 | 1 | 1 |</span>
+<span class="sd">        &gt;&gt;&gt; # +---+---+---+</span>
+<span class="sd">        &gt;&gt;&gt; # | 2 | 2 | 2 |</span>
+<span class="sd">        &gt;&gt;&gt; # +---+---+---+</span>
+<span class="sd">        &gt;&gt;&gt; # With this mask, all the 36 neurons in a row / channel are ablated</span>
+<span class="sd">        &gt;&gt;&gt; # simultaneously, and the attribution for each neuron in the same</span>
+<span class="sd">        &gt;&gt;&gt; # group (0 - 2) per example are the same.</span>
+<span class="sd">        &gt;&gt;&gt; # The attributions can be calculated as follows:</span>
+<span class="sd">        &gt;&gt;&gt; # layer mask has dimensions 1 x 3 x 3</span>
+<span class="sd">        &gt;&gt;&gt; layer_mask = torch.tensor([[[0,0,0],[1,1,1],</span>
+<span class="sd">        &gt;&gt;&gt;                             [2,2,2]]])</span>
+<span class="sd">        &gt;&gt;&gt; attr = ablator.attribute(input, target=1,</span>
+<span class="sd">        &gt;&gt;&gt;                          layer_mask=layer_mask)</span>
 <span class="sd">        """</span>
 
         <span class="k">def</span> <span class="nf">layer_forward_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>

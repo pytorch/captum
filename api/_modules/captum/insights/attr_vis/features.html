@@ -4,7 +4,7 @@
               m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
               })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-              ga('create', 'UA-139570076-2', 'auto');
+              ga('create', 'UA-44373548-48', 'auto');
               ga('send', 'pageview');
             </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -69,24 +69,24 @@
         <span class="n">visualization_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
     <span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Args:</span>
+<span class="sd">        Args:</span>
 
-<span class="sd">                name (str): The label of the specific feature. For example, an</span>
-<span class="sd">                            ImageFeature's name can be "Photo".</span>
-<span class="sd">                baseline_transforms (list, callable, optional): Optional list of</span>
-<span class="sd">                            callables (e.g. functions) to be called on the input tensor</span>
-<span class="sd">                            to construct multiple baselines. Currently only one baseline</span>
-<span class="sd">                            is supported. See</span>
-<span class="sd">                            :py:class:`.IntegratedGradients` for more</span>
-<span class="sd">                            information about baselines.</span>
-<span class="sd">                input_transforms (list, callable, optional): Optional list of callables</span>
-<span class="sd">                            (e.g. functions) called on the input tensor sequentially to</span>
-<span class="sd">                            convert it into the format expected by the model.</span>
-<span class="sd">                visualization_transform (callable, optional): Optional callable (e.g.</span>
-<span class="sd">                            function) applied as a postprocessing step of the original</span>
-<span class="sd">                            input data (before ``input_transforms``) to convert it to a</span>
-<span class="sd">                            format to be understood by the frontend visualizer as</span>
-<span class="sd">                            specified in ``captum/captum/insights/frontend/App.js``.</span>
+<span class="sd">            name (str): The label of the specific feature. For example, an</span>
+<span class="sd">                        ImageFeature's name can be "Photo".</span>
+<span class="sd">            baseline_transforms (list, callable, optional): Optional list of</span>
+<span class="sd">                        callables (e.g. functions) to be called on the input tensor</span>
+<span class="sd">                        to construct multiple baselines. Currently only one baseline</span>
+<span class="sd">                        is supported. See</span>
+<span class="sd">                        :py:class:`.IntegratedGradients` for more</span>
+<span class="sd">                        information about baselines.</span>
+<span class="sd">            input_transforms (list, callable, optional): Optional list of callables</span>
+<span class="sd">                        (e.g. functions) called on the input tensor sequentially to</span>
+<span class="sd">                        convert it into the format expected by the model.</span>
+<span class="sd">            visualization_transform (callable, optional): Optional callable (e.g.</span>
+<span class="sd">                        function) applied as a postprocessing step of the original</span>
+<span class="sd">                        input data (before ``input_transforms``) to convert it to a</span>
+<span class="sd">                        format to be understood by the frontend visualizer as</span>
+<span class="sd">                        specified in ``captum/captum/insights/frontend/App.js``.</span>
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline_transforms</span> <span class="o">=</span> <span class="n">format_transforms</span><span class="p">(</span><span class="n">baseline_transforms</span><span class="p">)</span>
@@ -115,22 +115,22 @@
         <span class="n">visualization_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Args:</span>
-<span class="sd">                name (str): The label of the specific feature. For example, an</span>
-<span class="sd">                            ImageFeature's name can be "Photo".</span>
-<span class="sd">                baseline_transforms (list, callable, optional): Optional list of</span>
-<span class="sd">                            callables (e.g. functions) to be called on the input tensor</span>
-<span class="sd">                            to construct multiple baselines. Currently only one baseline</span>
-<span class="sd">                            is supported. See</span>
-<span class="sd">                            :py:class:`.IntegratedGradients` for more</span>
-<span class="sd">                            information about baselines.</span>
-<span class="sd">                input_transforms (list, callable, optional): A list of transforms</span>
-<span class="sd">                            or transform to be applied to the input. For images,</span>
-<span class="sd">                            normalization is often applied here.</span>
-<span class="sd">                visualization_transform (callable, optional): Optional callable (e.g.</span>
-<span class="sd">                            function) applied as a postprocessing step of the original</span>
-<span class="sd">                            input data (before input_transforms) to convert it to a</span>
-<span class="sd">                            format to be visualized.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The label of the specific feature. For example, an</span>
+<span class="sd">                        ImageFeature's name can be "Photo".</span>
+<span class="sd">            baseline_transforms (list, callable, optional): Optional list of</span>
+<span class="sd">                        callables (e.g. functions) to be called on the input tensor</span>
+<span class="sd">                        to construct multiple baselines. Currently only one baseline</span>
+<span class="sd">                        is supported. See</span>
+<span class="sd">                        :py:class:`.IntegratedGradients` for more</span>
+<span class="sd">                        information about baselines.</span>
+<span class="sd">            input_transforms (list, callable, optional): A list of transforms</span>
+<span class="sd">                        or transform to be applied to the input. For images,</span>
+<span class="sd">                        normalization is often applied here.</span>
+<span class="sd">            visualization_transform (callable, optional): Optional callable (e.g.</span>
+<span class="sd">                        function) applied as a postprocessing step of the original</span>
+<span class="sd">                        input data (before input_transforms) to convert it to a</span>
+<span class="sd">                        format to be visualized.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">name</span><span class="p">,</span>
@@ -188,33 +188,33 @@
         <span class="n">visualization_transform</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Args:</span>
-<span class="sd">                name (str): The label of the specific feature. For example, an</span>
-<span class="sd">                            ImageFeature's name can be "Photo".</span>
-<span class="sd">                baseline_transforms (list, callable, optional): Optional list of</span>
-<span class="sd">                            callables (e.g. functions) to be called on the input tensor</span>
-<span class="sd">                            to construct multiple baselines. Currently only one baseline</span>
-<span class="sd">                            is supported. See</span>
-<span class="sd">                            :py:class:`.IntegratedGradients` for more</span>
-<span class="sd">                            information about baselines.</span>
-<span class="sd">                            For text features, a common baseline is a tensor of indices</span>
-<span class="sd">                            corresponding to PAD with the same size as the input</span>
-<span class="sd">                            tensor. See :py:class:`.TokenReferenceBase` for more</span>
-<span class="sd">                            information.</span>
-<span class="sd">                input_transforms (list, callable, optional): A list of transforms</span>
-<span class="sd">                            or transform to be applied to the input. For text, a common</span>
-<span class="sd">                            transform is to convert the tokenized input tensor into an</span>
-<span class="sd">                            interpretable embedding. See</span>
-<span class="sd">                            :py:class:`.InterpretableEmbeddingBase`</span>
-<span class="sd">                            and</span>
-<span class="sd">                            :py:func:`~.configure_interpretable_embedding_layer`</span>
-<span class="sd">                            for more information.</span>
-<span class="sd">                visualization_transform (callable, optional): Optional callable (e.g.</span>
-<span class="sd">                            function) applied as a postprocessing step of the original</span>
-<span class="sd">                            input data (before ``input_transforms``) to convert it to a</span>
-<span class="sd">                            suitable format for visualization. For text features,</span>
-<span class="sd">                            a common function is to convert the token indices to their</span>
-<span class="sd">                            corresponding (sub)words.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The label of the specific feature. For example, an</span>
+<span class="sd">                        ImageFeature's name can be "Photo".</span>
+<span class="sd">            baseline_transforms (list, callable, optional): Optional list of</span>
+<span class="sd">                        callables (e.g. functions) to be called on the input tensor</span>
+<span class="sd">                        to construct multiple baselines. Currently only one baseline</span>
+<span class="sd">                        is supported. See</span>
+<span class="sd">                        :py:class:`.IntegratedGradients` for more</span>
+<span class="sd">                        information about baselines.</span>
+<span class="sd">                        For text features, a common baseline is a tensor of indices</span>
+<span class="sd">                        corresponding to PAD with the same size as the input</span>
+<span class="sd">                        tensor. See :py:class:`.TokenReferenceBase` for more</span>
+<span class="sd">                        information.</span>
+<span class="sd">            input_transforms (list, callable, optional): A list of transforms</span>
+<span class="sd">                        or transform to be applied to the input. For text, a common</span>
+<span class="sd">                        transform is to convert the tokenized input tensor into an</span>
+<span class="sd">                        interpretable embedding. See</span>
+<span class="sd">                        :py:class:`.InterpretableEmbeddingBase`</span>
+<span class="sd">                        and</span>
+<span class="sd">                        :py:func:`~.configure_interpretable_embedding_layer`</span>
+<span class="sd">                        for more information.</span>
+<span class="sd">            visualization_transform (callable, optional): Optional callable (e.g.</span>
+<span class="sd">                        function) applied as a postprocessing step of the original</span>
+<span class="sd">                        input data (before ``input_transforms``) to convert it to a</span>
+<span class="sd">                        suitable format for visualization. For text features,</span>
+<span class="sd">                        a common function is to convert the token indices to their</span>
+<span class="sd">                        corresponding (sub)words.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">name</span><span class="p">,</span>
@@ -264,12 +264,12 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
         <span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">            Args:</span>
-<span class="sd">                name (str): The label of the specific feature. For example, an</span>
-<span class="sd">                            ImageFeature's name can be "Photo".</span>
-<span class="sd">                categories (list[str]): Category labels for the general feature. The</span>
-<span class="sd">                            order and size should match the second dimension of the</span>
-<span class="sd">                            ``data`` tensor parameter in ``visualize``.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The label of the specific feature. For example, an</span>
+<span class="sd">                        ImageFeature's name can be "Photo".</span>
+<span class="sd">            categories (list[str]): Category labels for the general feature. The</span>
+<span class="sd">                        order and size should match the second dimension of the</span>
+<span class="sd">                        ``data`` tensor parameter in ``visualize``.</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">name</span><span class="p">,</span>
