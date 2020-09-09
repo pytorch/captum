@@ -99,9 +99,12 @@ class LimeBase(PerturbationAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         n_samples: int = 50,
-        internal_batch_size: Optional[int] = None,
+        perturbations_per_eval: int = 1,
         **kwargs
     ) -> TensorOrTupleOfTensorsGeneric:
+
+        bsz = inputs.shape[0] if isinstance(inputs, Tensor) else inputs[0].shape[0]
+        expand_inputs = False
         with torch.no_grad():
             interpretable_inps = []
             similarities = []
@@ -118,7 +121,9 @@ class LimeBase(PerturbationAttribution):
                         self.from_interp_rep_transform(curr_sample, inputs, **kwargs)
                     )
                     similarities.append(
-                        self.similarity_func(inputs, curr_inputs[-1], curr_sample, **kwargs)
+                        self.similarity_func(
+                            inputs, curr_inputs[-1], curr_sample, **kwargs
+                        )
                     )
                 else:
                     curr_inputs.append(curr_sample)
@@ -132,8 +137,8 @@ class LimeBase(PerturbationAttribution):
                     )
 
                 if (
-                    internal_batch_size is not None
-                    and len(curr_inputs) == internal_batch_size
+                    perturbations_per_eval is not None
+                    and len(curr_inputs) == perturbations_per_eval
                 ):
                     if expanded_additional_args is None:
                         expanded_additional_args = (
@@ -145,7 +150,7 @@ class LimeBase(PerturbationAttribution):
                         )
                     if expanded_target is None:
                         expanded_target = _expand_target(target, len(curr_inputs))
-                    if internal_batch_size == 1:
+                    if perturbations_per_eval == 1:
                         combined_inputs = curr_inputs[0]
                     else:
                         combined_inputs = _reduce_list(curr_inputs)
@@ -155,7 +160,20 @@ class LimeBase(PerturbationAttribution):
                         expanded_target,
                         expanded_additional_args,
                     )
-                    outputs.append(model_out)
+                    if (
+                        not expand_inputs
+                        and isinstance(model_out, Tensor)
+                        and model_out.numel() != len(curr_inputs)
+                    ):
+                        assert model_out.numel() == bsz * len(
+                            curr_inputs
+                        ), "Number of outputs is not appropriate, must return one output per example. If forward function returns a scalar per batch, ensure that perturbations_per_eval is set to 1."
+                        expand_inputs = True
+                    outputs.append(
+                        model_out
+                        if isinstance(model_out, Tensor)
+                        else torch.tensor(model_out)
+                    )
 
                     curr_inputs = []
 
@@ -174,11 +192,35 @@ class LimeBase(PerturbationAttribution):
                     expanded_target,
                     expanded_additional_args,
                 )
-                outputs.append(model_out)
+                outputs.append(
+                    model_out
+                    if isinstance(model_out, Tensor)
+                    else torch.tensor(model_out)
+                )
+
+                if (
+                    not expand_inputs
+                    and isinstance(model_out, Tensor)
+                    and model_out.numel() != len(curr_inputs)
+                ):
+                    assert model_out.numel() == bsz * len(
+                        curr_inputs
+                    ), "Number of outputs is not appropriate, must return one output per example. If forward function returns a scalar per batch, ensure that perturbations_per_eval is set to 1."
+                    expand_inputs = True
 
             combined_interp_inps = torch.cat(interpretable_inps)
-            combined_outputs = torch.cat(outputs)
+            combined_outputs = (
+                torch.cat(outputs)
+                if len(outputs[0].shape) > 0
+                else torch.stack(outputs)
+            )
             combined_sim = torch.cat(similarities)
+
+            if expand_inputs:
+                combined_interp_inps = torch.repeat_interleave(
+                    combined_interp_inps, bsz, 0
+                )
+                combined_sim = torch.repeat_interleave(combined_sim, bsz, 0)
 
             interp_model = self.train_interpretable_model_func(
                 combined_interp_inps, combined_outputs, combined_sim, **kwargs
@@ -202,12 +244,14 @@ def lasso_interpretable_model_trainer(
         raise AssertionError(
             "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
         )
-    print(interp_inputs)
-    print(exp_outputs)
-    print(weights)
+    # print(interp_inputs)
+    # print(exp_outputs)
+    # print(weights)
     clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
-    clf.fit(interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy())
-    print(clf.coef_)
+    clf.fit(
+        interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
+    )
+    # print(clf.coef_)
     return torch.from_numpy(clf.coef_)
 
 
@@ -220,21 +264,21 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
     ), "Must provide baselines to use default interpretable representation transfrom"
     feature_mask = kwargs["feature_mask"]
     if isinstance(feature_mask, Tensor):
-        binary_mask = torch.stack(tuple(curr_sample[i][feature_mask[i if feature_mask.shape[0] > 1 else 0]] for i in range(len(curr_sample))))
+        binary_mask = curr_sample[0][feature_mask]
         return binary_mask * original_inputs + (1 - binary_mask) * kwargs["baselines"]
     else:
-        binary_mask = tuple(torch.stack(tuple(curr_sample[i][feature_mask[j][i if feature_mask[j].shape[0] > 1 else 0]] for i in range(len(curr_sample)))) for j in range(len(feature_mask)))
-        return tuple(binary_mask[j] * original_inputs[j] + (1 - binary_mask[j]) * kwargs["baselines"][j] for j in range(len(feature_mask)))
-
+        binary_mask = tuple(
+            curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
+        )
+        return tuple(
+            binary_mask[j] * original_inputs[j]
+            + (1 - binary_mask[j]) * kwargs["baselines"][j]
+            for j in range(len(feature_mask))
+        )
 
 
 def default_similarity_kernel(original_inp, _, __, **kwargs):
-    bsz = (
-        original_inp.shape[0]
-        if isinstance(original_inp, Tensor)
-        else original_inp[0].shape[0]
-    )
-    return torch.ones(bsz)
+    return torch.ones(1)
 
 
 def default_sampling_func(original_inp, **kwargs):
@@ -242,13 +286,13 @@ def default_sampling_func(original_inp, **kwargs):
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default interpretable sampling function"
     if isinstance(original_inp, Tensor):
-        bsz = original_inp.shape[0]
+        # bsz = original_inp.shape[0]
         device = original_inp.device
     else:
-        bsz = original_inp[0].shape[0]
+        # bsz = original_inp[0].shape[0]
         device = original_inp[0].device
 
-    probs = torch.ones(bsz, kwargs["num_interp_features"]) * 0.5
+    probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
     return torch.bernoulli(probs).to(device=device)
 
 
@@ -312,7 +356,9 @@ class Lime(LimeBase):
             )
         else:
             feature_mask = _format_input(feature_mask)
-            num_interp_features = max(torch.max(single_inp) for single_inp in feature_mask) + 1
+            num_interp_features = (
+                max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
+            )
 
         if num_interp_features > 10000:
             warnings.warn(
@@ -332,7 +378,7 @@ class Lime(LimeBase):
             num_interp_features=num_interp_features,
         )
         if return_input_shape:
-            print(coefs)
+            # print(coefs)
             attr = [torch.zeros_like(inp) for inp in formatted_inputs]
             for tensor_ind in range(len(formatted_inputs)):
                 for single_feature in range(num_interp_features):

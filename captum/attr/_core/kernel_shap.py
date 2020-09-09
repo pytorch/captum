@@ -18,12 +18,10 @@ def linear_regression_interpretable_model_trainer(
         raise AssertionError(
             "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
         )
-    #print(interp_inputs)
-    #print(exp_outputs)
-    #print(weights)
     clf = linear_model.LinearRegression()
-    clf.fit(interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy())
-    #print(clf.coef_)
+    clf.fit(
+        interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
+    )
     return torch.from_numpy(clf.coef_)
 
 
@@ -41,19 +39,17 @@ def kernel_shap_similarity_kernel(
     assert (
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default similarity kernel"
-    num_selected_features = interpretable_sample.sum(dim=1)
+    num_selected_features = int(interpretable_sample.sum(dim=1).item())
     num_features = kwargs["num_interp_features"]
-    combinations = torch.tensor(
-        [
-            combination(num_features, int(single_num_selected))
-            for single_num_selected in num_selected_features
-        ], device = interpretable_sample.device
-    )
-    similarities = (num_features - 1) / (
+    combinations = combination(num_features, num_selected_features)
+    denom = (
         combinations * num_selected_features * (num_features - num_selected_features)
     )
-    similarities[similarities == float("Inf")] = 100
-    return similarities
+    if denom != 0:
+        similarities = (num_features - 1) / denom
+    else:
+        similarities = 100
+    return torch.tensor([similarities])
 
 
 class KernelShap(Lime):

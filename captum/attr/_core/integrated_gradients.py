@@ -44,7 +44,9 @@ class IntegratedGradients(GradientAttribution):
     """
 
     def __init__(
-        self, forward_func: Callable, multiply_by_inputs: bool = True,
+        self,
+        forward_func: Callable,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:

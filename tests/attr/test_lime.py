@@ -6,7 +6,7 @@ from typing import Any, Callable, Tuple, Union
 import torch
 
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.lime import Lime
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from ..helpers.basic_models import (
@@ -16,74 +16,75 @@ from ..helpers.basic_models import (
 
 
 class Test(BaseTest):
-    def test_simple_kernel_shap(self) -> None:
+    def test_simple_lime(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             inp,
-            [76.66666, 196.66666, 116.66666],
+            [73.3716, 193.3349, 113.3349],
             perturbations_per_eval=(1, 2, 3),
             n_samples=500,
         )
 
-    def test_simple_kernel_shap_with_mask(self) -> None:
+    def test_simple_lime_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             inp,
-            [275.0, 275.0, 115.0],
+            [271.0, 271.0, 111.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
+            n_samples=500,
         )
 
-    def test_simple_kernel_shap_with_baselines(self) -> None:
+    def test_simple_lime_with_baselines(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]])
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             inp,
-            [248.0, 248.0, 104.0],
+            [244.0, 244.0, 100.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
         )
 
-    def test_simple_batch_kernel_shap(self) -> None:
+    def test_simple_batch_lime(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             inp,
-            [[56.1688, 124.1695, 65.6695], [56.1688, 124.1695, 65.6695]],
+            [[53.0323, 120.6903, 62.1903], [53.0323, 120.6903, 62.1903]],
             perturbations_per_eval=(1, 2, 3),
-            n_samples=20000,
+            n_samples=800,
         )
 
-    def test_simple_batch_kernel_shap_with_mask(self) -> None:
+    def test_simple_batch_lime_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             inp,
-            [[162.9993, 162.9993, 83.0007], [162.9993, 83.0007, 162.9993]],
+            [[159.0, 159.0, 79.0], [159.0, 79.0, 159.0]],
             feature_mask=torch.tensor([[0, 0, 1], [0, 1, 0]]),
             perturbations_per_eval=(1, 2, 3),
-            n_samples=100,
+            n_samples=300,
         )
 
-    def test_multi_input_kernel_shap_without_mask(self) -> None:
+    def test_multi_input_lime_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0]])
         inp2 = torch.tensor([[20.0, 0.0, 50.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0]])
         expected = (
-            [[90, 0, 0]],
-            [[78, 0, 198]],
-            [[0, 398, 38]],
+            [[87, 0, 0]],
+            [[75, 0, 195]],
+            [[0, 395, 35]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
@@ -91,7 +92,7 @@ class Test(BaseTest):
             n_samples=2000,
         )
 
-    def test_multi_input_kernel_shap_with_mask(self) -> None:
+    def test_multi_input_lime_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[0.0, 100.0, 0.0]])
@@ -100,11 +101,11 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 0, 0]])
         expected = (
-            [[255.0, 595.0, 255.0]],
-            [[255.0, 595.0, 0.0]],
-            [[255.0, 255.0, 255.0]],
+            [[251.0, 591.0, 251.0]],
+            [[251.0, 591.0, 0.0]],
+            [[251.0, 251.0, 251.0]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
@@ -112,11 +113,11 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
         )
         expected_with_baseline = (
-            [[184, 580.0, 184]],
-            [[184, 580.0, -12.0]],
-            [[184, 184, 184]],
+            [[180, 576.0, 180]],
+            [[180, 576.0, -8.0]],
+            [[180, 180, 180]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected_with_baseline,
@@ -124,27 +125,28 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
+            n_samples=500,
         )
 
-    def test_multi_input_batch_kernel_shap_without_mask(self) -> None:
+    def test_multi_input_batch_lime_without_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 0.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [0.0, 10.0, 0.0]])
         expected = (
-            [[84.0, 99.0, 59.0], [84.0, 99.0, 59.0]],
-            [[39.0, 199.0, 99.0], [39.0, 199.0, 99.0]],
-            [[0, 218.0, 19.0], [0.0, 218.0, 19.0]],
+            [[81.5, 95.5, 55.5], [81.5, 95.5, 55.5]],
+            [[35.5, 195.5, 95.5], [35.5, 195.5, 95.5]],
+            [[0, 215.0, 15.5], [0, 215.0, 15.5]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_samples=500,
+            n_samples=13000,
         )
 
-    def test_multi_input_batch_kernel_shap(self) -> None:
+    def test_multi_input_batch_lime(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
@@ -153,11 +155,11 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
         expected = (
-            [[841.83333, 841.83333, 841.83333], [165.83333, 841.83333, 165.83333]],
-            [[165.83333, 841.83333, 78.3333], [165.83333, 841.83333, 78.3333]],
-            [[165.83333, 841.83333, 78.3333], [165.83333, 165.83333, 165.83333]],
+            [[838.3333, 838.3333, 838.3333], [162.3333, 838.3333, 162.3333]],
+            [[162.3333, 838.3333, 74.8333], [162.3333, 838.3333, 74.8333]],
+            [[162.3333, 838.3333, 74.8333], [162.3333, 162.3333, 162.3333]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
@@ -165,11 +167,11 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
         )
         expected_with_baseline = (
-            [[810, 810, 810], [118, 810.0, 118]],
-            [[118, 810, 60], [118, 810.0, 60.0]],
-            [[118, 810, 60], [118, 118, 118]],
+            [[806, 806, 806], [114, 806.0, 114]],
+            [[114, 806, 56], [114, 806.0, 56.0]],
+            [[114, 806, 56], [114, 114, 114]],
         )
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             net,
             (inp1, inp2, inp3),
             expected_with_baseline,
@@ -181,64 +183,60 @@ class Test(BaseTest):
 
     # Remaining tests are for cases where forward function returns a scalar
     # as either a float, integer, 0d tensor or 1d tensor.
-    def test_single_kernel_shap_scalar_float(self) -> None:
+    def test_single_lime_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_scalar_kernel_shap_assert(
-            lambda inp: torch.sum(net(inp)).item()
-        )
+        self._single_input_scalar_lime_assert(lambda inp: torch.sum(net(inp)).item())
 
-    def test_single_kernel_shap_scalar_tensor_0d(self) -> None:
+    def test_single_lime_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_scalar_kernel_shap_assert(lambda inp: torch.sum(net(inp)))
+        self._single_input_scalar_lime_assert(lambda inp: torch.sum(net(inp)))
 
-    def test_single_kernel_shap_scalar_tensor_1d(self) -> None:
+    def test_single_lime_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_scalar_kernel_shap_assert(
+        self._single_input_scalar_lime_assert(
             lambda inp: torch.sum(net(inp)).reshape(1)
         )
 
-    def test_single_kernel_shap_scalar_int(self) -> None:
+    def test_single_lime_scalar_int(self) -> None:
         net = BasicModel_MultiLayer()
-        self._single_input_scalar_kernel_shap_assert(
+        self._single_input_scalar_lime_assert(
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
-    def _single_input_scalar_kernel_shap_assert(self, func: Callable) -> None:
+    def _single_input_scalar_lime_assert(self, func: Callable) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])
 
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             func,
             inp,
-            [[79.0, 79.0, 21.0]],
+            [[75.0, 75.0, 17.0]],
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
         )
 
-    def test_multi_inp_kernel_shap_scalar_tensor_0d(self) -> None:
+    def test_multi_inp_lime_scalar_tensor_0d(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_scalar_kernel_shap_assert(lambda *inp: torch.sum(net(*inp)))
+        self._multi_input_scalar_lime_assert(lambda *inp: torch.sum(net(*inp)))
 
-    def test_multi_inp_kernel_shap_scalar_tensor_1d(self) -> None:
+    def test_multi_inp_lime_scalar_tensor_1d(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_scalar_kernel_shap_assert(
+        self._multi_input_scalar_lime_assert(
             lambda *inp: torch.sum(net(*inp)).reshape(1)
         )
 
-    def test_multi_inp_kernel_shap_scalar_tensor_int(self) -> None:
+    def test_multi_inp_lime_scalar_tensor_int(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_scalar_kernel_shap_assert(
+        self._multi_input_scalar_lime_assert(
             lambda *inp: int(torch.sum(net(*inp)).item())
         )
 
-    def test_multi_inp_kernel_shap_scalar_float(self) -> None:
+    def test_multi_inp_lime_scalar_float(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
-        self._multi_input_scalar_kernel_shap_assert(
-            lambda *inp: torch.sum(net(*inp)).item()
-        )
+        self._multi_input_scalar_lime_assert(lambda *inp: torch.sum(net(*inp)).item())
 
-    def _multi_input_scalar_kernel_shap_assert(self, func: Callable) -> None:
+    def _multi_input_scalar_lime_assert(self, func: Callable) -> None:
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [20.0, 10.0, 13.0]])
@@ -247,11 +245,11 @@ class Test(BaseTest):
         mask3 = torch.tensor([[0, 1, 2]])
         expected = (
             [[3850.6666, 3850.6666, 3850.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
-            [[306.6666, 3850.6666, 410.6666]],
+            [[305.5, 3850.6666, 410.1]],
+            [[305.5, 3850.6666, 410.1]],
         )
 
-        self._kernel_shap_test_assert(
+        self._lime_test_assert(
             func,
             (inp1, inp2, inp3),
             expected,
@@ -262,7 +260,7 @@ class Test(BaseTest):
             n_samples=1500,
         )
 
-    def _kernel_shap_test_assert(
+    def _lime_test_assert(
         self,
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
@@ -276,8 +274,8 @@ class Test(BaseTest):
         delta: float = 1.0,
     ) -> None:
         for batch_size in perturbations_per_eval:
-            kernel_shap = KernelShap(model)
-            attributions = kernel_shap.attribute(
+            lime = Lime(model)
+            attributions = lime.attribute(
                 test_input,
                 target=target,
                 feature_mask=feature_mask,

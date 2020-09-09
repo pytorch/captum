@@ -35,7 +35,12 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[100.0, 100.0, 100.0]])
         self._ig_input_test_assert(
-            net, net.linear2, inp, 0, [3.96, 3.96, 3.96], multiply_by_inputs=False,
+            net,
+            net.linear2,
+            inp,
+            0,
+            [3.96, 3.96, 3.96],
+            multiply_by_inputs=False,
         )
 
     def test_simple_ig_input_linear1(self) -> None:
@@ -113,7 +118,9 @@ class Test(BaseTest):
     ) -> None:
         for internal_batch_size in [None, 5, 20]:
             grad = NeuronIntegratedGradients(
-                model, target_layer, multiply_by_inputs=multiply_by_inputs,
+                model,
+                target_layer,
+                multiply_by_inputs=multiply_by_inputs,
             )
             self.assertEquals(grad.multiplies_by_inputs, multiply_by_inputs)
             attributions = grad.attribute(

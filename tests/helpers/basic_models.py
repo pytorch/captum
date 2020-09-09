@@ -26,10 +26,10 @@ class BasicModel(nn.Module):
 
 class BasicModel2(nn.Module):
     """
-        Example model one from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
+    Example model one from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
 
-        f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
+    f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
     """
 
     def __init__(self):
@@ -43,10 +43,10 @@ class BasicModel2(nn.Module):
 
 class BasicModel3(nn.Module):
     """
-        Example model two from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
+    Example model two from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
 
-        f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
+    f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
     """
 
     def __init__(self):
@@ -60,9 +60,9 @@ class BasicModel3(nn.Module):
 
 class BasicModel4_MultiArgs(nn.Module):
     """
-        Slightly modified example model from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
-        f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
+    Slightly modified example model from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
+    f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
     """
 
     def __init__(self):
@@ -77,9 +77,9 @@ class BasicModel4_MultiArgs(nn.Module):
 
 class BasicModel5_MultiArgs(nn.Module):
     """
-        Slightly modified example model from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
-        f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
+    Slightly modified example model from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
+    f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
     """
 
     def __init__(self):
@@ -112,7 +112,7 @@ class BasicLinearModel(nn.Module):
 
 class ReLUDeepLiftModel(nn.Module):
     r"""
-        https://www.youtube.com/watch?v=f_iAM0NPwnM
+    https://www.youtube.com/watch?v=f_iAM0NPwnM
     """
 
     def __init__(self):
@@ -175,8 +175,8 @@ class BasicModel_MaxPool_ReLU(nn.Module):
 
 class TanhDeepLiftModel(nn.Module):
     r"""
-        Same as the ReLUDeepLiftModel, but with activations
-        that can have negative outputs
+    Same as the ReLUDeepLiftModel, but with activations
+    that can have negative outputs
     """
 
     def __init__(self):
@@ -190,8 +190,8 @@ class TanhDeepLiftModel(nn.Module):
 
 class ReLULinearModel(nn.Module):
     r"""
-        Simple architecture similar to:
-        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
+    Simple architecture similar to:
+    https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
     def __init__(self, inplace: bool = False):
