@@ -183,7 +183,6 @@ jobs:
       - conda_install:
           args: "-n"
       - lint_flake8
-      - lint_black
       - isort
       - unit_tests
       - sphinx

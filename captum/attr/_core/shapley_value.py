@@ -88,7 +88,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""" "
+        r"""
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
         description of the feature_mask argument below for more details.
@@ -505,7 +505,7 @@ class ShapleyValues(PerturbationAttribution):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
     ) -> TensorOrTupleOfTensorsGeneric:
-        r""" "
+        r"""
         NOTE: The feature_mask argument differs from other perturbation based
         methods, since feature indices can overlap across tensors. See the
         description of the feature_mask argument below for more details.
