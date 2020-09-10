@@ -10,7 +10,6 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBac
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
-from captum.attr._core.lime import Lime
 from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
@@ -20,6 +19,7 @@ from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.lime import Lime
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation

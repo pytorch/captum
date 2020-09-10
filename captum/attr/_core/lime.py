@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import typing
-from typing import Any, Callable, List, Tuple, Union, Optional
+import warnings
+from typing import Any, Callable, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -8,30 +8,17 @@ from torch import Tensor
 from captum.log import log_usage
 
 from ..._utils.common import (
-    _format_input,
     _expand_additional_forward_args,
     _expand_target,
-    _format_additional_forward_args,
+    _format_input,
     _format_output,
     _is_tuple,
     _reduce_list,
     _run_forward,
 )
-from ..._utils.typing import (
-    BaselineType,
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
-from .._utils.approximation_methods import approximation_parameters
+from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import PerturbationAttribution
-from .._utils.batching import _batch_attribution
-from .._utils.common import (
-    _format_input_baseline,
-    _reshape_and_sum,
-    _validate_input,
-    _construct_default_feature_mask,
-)
+from .._utils.common import _construct_default_feature_mask, _format_input_baseline
 
 
 class LimeBase(PerturbationAttribution):
@@ -41,20 +28,22 @@ class LimeBase(PerturbationAttribution):
     at these points to train a simpler interpretable 'surrogate' model, such as a
     linear model.
 
-    LimeBase provides a generic framework to train a surrogate interpretable model. This
-    differs from most other attribution methods, since the method returns a representation
-    of the interpretable model (e.g. coefficients of the linear model). For a similar
-    interface to other perturbation-based attribution methods, please use the Lime child
-    class, which defines specific transformations for the interpretable model.
+    LimeBase provides a generic framework to train a surrogate interpretable model.
+    This differs from most other attribution methods, since the method returns a
+    representation of the interpretable model (e.g. coefficients of the linear model).
+    For a similar interface to other perturbation-based attribution methods, please use
+    the Lime child class, which defines specific transformations for the interpretable
+    model.
 
-    LimeBase allows sampling points in either the interpretable space or the original input
-    space to train the surrogate model. The interpretable space is a feature vector used to
-    train the surrogate interpretable model; this feature space is often of smaller dimensionality
-    than the original feature space in order for the surrogate model to be more interpretable.
+    LimeBase allows sampling points in either the interpretable space or the original
+    input space to train the surrogate model. The interpretable space is a feature
+    vector used to train the surrogate interpretable model; this feature space is often
+    of smaller dimensionality than the original feature space in order for the surrogate
+    model to be more interpretable.
 
-    If sampling in the interpretable space, a transformation function must be provided to
-    define how a vector sampled in the interpretable space can be transformed into an
-    example in the original input space. If sampling in the original input space, a
+    If sampling in the interpretable space, a transformation function must be provided
+    to define how a vector sampled in the interpretable space can be transformed into
+    an example in the original input space. If sampling in the original input space, a
     transformation function must be provided to define how the input can be transformed
     into its interpretable vector representation.
 
@@ -68,8 +57,8 @@ class LimeBase(PerturbationAttribution):
         similarity_func: Callable,
         sampling_func: Callable,
         sample_interpretable_space: bool,
-        from_interp_rep_transform: Callable,
-        to_interp_rep_transform: Callable,
+        from_interp_rep_transform: Optional[Callable],
+        to_interp_rep_transform: Optional[Callable],
     ) -> None:
         PerturbationAttribution.__init__(self, forward_func)
         self.train_interpretable_model_func = train_interpretable_model_func
@@ -82,17 +71,18 @@ class LimeBase(PerturbationAttribution):
         if self.sample_interpretable_space:
             assert (
                 self.from_interp_rep_transform is not None
-            ), "Must provide transform from interpretable space to original input space when sampling from interpretable space."
+            ), "Must provide transform from interpretable space to original input space"
+            " when sampling from interpretable space."
         else:
             assert (
                 self.to_interp_rep_transform is not None
-            ), "Must provide transform from original input space to interpretable space."
+            ), "Must provide transform from original input space to interpretable space"
 
     # The following overloaded method signatures correspond to the case where
     # return_convergence_delta is False, then only attributions are returned,
     # and when return_convergence_delta is True, the return type is
     # a tuple with both attributions and deltas.
-
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -103,7 +93,11 @@ class LimeBase(PerturbationAttribution):
         **kwargs
     ) -> TensorOrTupleOfTensorsGeneric:
 
-        bsz = inputs.shape[0] if isinstance(inputs, Tensor) else inputs[0].shape[0]
+        bsz = (
+            cast(Tensor, inputs).shape[0]
+            if isinstance(inputs, Tensor)
+            else inputs[0].shape[0]
+        )
         expand_inputs = False
         with torch.no_grad():
             interpretable_inps = []
@@ -118,7 +112,9 @@ class LimeBase(PerturbationAttribution):
                 if self.sample_interpretable_space:
                     interpretable_inps.append(curr_sample)
                     curr_inputs.append(
-                        self.from_interp_rep_transform(curr_sample, inputs, **kwargs)
+                        self.from_interp_rep_transform(  # type: ignore
+                            curr_sample, inputs, **kwargs
+                        )
                     )
                     similarities.append(
                         self.similarity_func(
@@ -128,7 +124,9 @@ class LimeBase(PerturbationAttribution):
                 else:
                     curr_inputs.append(curr_sample)
                     interpretable_inps.append(
-                        self.to_interp_rep_transform(curr_sample, inputs, **kwargs)
+                        self.to_interp_rep_transform(  # type: ignore
+                            curr_sample, inputs, **kwargs
+                        )
                     )
                     similarities.append(
                         self.similarity_func(
@@ -167,7 +165,10 @@ class LimeBase(PerturbationAttribution):
                     ):
                         assert model_out.numel() == bsz * len(
                             curr_inputs
-                        ), "Number of outputs is not appropriate, must return one output per example. If forward function returns a scalar per batch, ensure that perturbations_per_eval is set to 1."
+                        ), "Number of outputs is not appropriate, must return"
+                        " one output per example. If forward function returns a"
+                        " scalar per batch, ensure that perturbations_per_eval is"
+                        " set to 1."
                         expand_inputs = True
                     outputs.append(
                         model_out
@@ -205,7 +206,9 @@ class LimeBase(PerturbationAttribution):
                 ):
                     assert model_out.numel() == bsz * len(
                         curr_inputs
-                    ), "Number of outputs is not appropriate, must return one output per example. If forward function returns a scalar per batch, ensure that perturbations_per_eval is set to 1."
+                    ), "Number of outputs is not appropriate, must return"
+                    " one output per example. If forward function returns a"
+                    " scalar per batch, ensure that perturbations_per_eval is set to 1."
                     expand_inputs = True
 
             combined_interp_inps = torch.cat(interpretable_inps)
@@ -239,15 +242,24 @@ def lasso_interpretable_model_trainer(
     interp_inputs: Tensor, exp_outputs: Tensor, weights: Tensor, **kwargs
 ):
     try:
-        from sklearn import linear_model
-    except:
+        import sklearn
+
+        assert (
+            sklearn.__version__ >= "0.23.0"
+        ), "Must have sklearn version 0.23.0 or higher to use "
+        "sample_weight in Lasso regression."
+    except ImportError:
         raise AssertionError(
-            "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
+            "Requires sklearn for default interpretable model training with"
+            " Lasso regression. Please install sklearn or use a custom interpretable"
+            " model training function."
         )
     # print(interp_inputs)
     # print(exp_outputs)
     # print(weights)
-    clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
+    clf = sklearn.linear_model.Lasso(
+        alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0
+    )
     clf.fit(
         interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
     )
@@ -335,8 +347,8 @@ class Lime(LimeBase):
     # return_convergence_delta is False, then only attributions are returned,
     # and when return_convergence_delta is True, the return type is
     # a tuple with both attributions and deltas.
-
-    def attribute(
+    @log_usage()
+    def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         baselines: BaselineType = None,
@@ -347,7 +359,7 @@ class Lime(LimeBase):
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
     ) -> TensorOrTupleOfTensorsGeneric:
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
 
         if feature_mask is None:
@@ -356,7 +368,7 @@ class Lime(LimeBase):
             )
         else:
             feature_mask = _format_input(feature_mask)
-            num_interp_features = (
+            num_interp_features = int(
                 max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
             )
 
@@ -364,10 +376,11 @@ class Lime(LimeBase):
             warnings.warn(
                 "Attempting to construct interpretable model with > 10000 features."
                 "This can be very slow or lead to OOM issues. Please provide a feature"
-                "mask which groups input features to reduce the number of interpretable features. "
+                "mask which groups input features to reduce the number of interpretable"
+                "features. "
             )
 
-        coefs = super().attribute(
+        coefs = super().attribute.__wrapped__(
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,

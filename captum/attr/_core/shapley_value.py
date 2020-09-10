@@ -21,10 +21,10 @@ from ..._utils.common import (
 from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import PerturbationAttribution
 from .._utils.common import (
+    _construct_default_feature_mask,
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
-    _construct_default_feature_mask,
 )
 
 

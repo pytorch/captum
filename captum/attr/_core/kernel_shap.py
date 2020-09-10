@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import math
 from typing import Callable
+
 import torch
 from torch import Tensor
 
 from .lime import Lime
-
-import math
 
 
 def linear_regression_interpretable_model_trainer(
@@ -14,9 +14,11 @@ def linear_regression_interpretable_model_trainer(
 ):
     try:
         from sklearn import linear_model
-    except:
+    except ImportError:
         raise AssertionError(
-            "Requires sklearn for default interpretable model training with Lasso regression. Please install sklearn or use a custom interpretable model training function."
+            "Requires sklearn for default interpretable model training with linear "
+            "regression. Please install sklearn or use a custom interpretable model "
+            "training function."
         )
     clf = linear_model.LinearRegression()
     clf.fit(
@@ -29,7 +31,7 @@ def combination(n, k):
     try:
         # Combination only available in Python 3.8
         return math.comb(n, k)
-    except:
+    except AttributeError:
         return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
 
 
