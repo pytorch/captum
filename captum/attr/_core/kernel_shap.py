@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 import math
-from typing import Callable
+from typing import Any, Callable, Tuple, Union
 
 import torch
 from torch import Tensor
 
+from captum.log import log_usage
+
+from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from .lime import Lime
 
 

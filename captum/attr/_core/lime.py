@@ -416,10 +416,12 @@ class LimeBase(PerturbationAttribution):
                         )
                     )
                     curr_sim = self.similarity_func(
-                            inputs, curr_inputs[-1], curr_sample, **kwargs
+                        inputs, curr_inputs[-1], curr_sample, **kwargs
                     )
                     similarities.append(
-                        curr_sim if isinstance(curr_sim, Tensor) else torch.tensor(curr_sim)
+                        curr_sim
+                        if isinstance(curr_sim, Tensor)
+                        else torch.tensor(curr_sim)
                     )
                 else:
                     curr_inputs.append(curr_sample)
@@ -429,10 +431,12 @@ class LimeBase(PerturbationAttribution):
                         )
                     )
                     curr_sim = self.similarity_func(
-                            inputs, curr_sample, interpretable_inps[-1], **kwargs
-                        )
+                        inputs, curr_sample, interpretable_inps[-1], **kwargs
+                    )
                     similarities.append(
-                        curr_sim if isinstance(curr_sim, Tensor) else torch.tensor(curr_sim)
+                        curr_sim
+                        if isinstance(curr_sim, Tensor)
+                        else torch.tensor(curr_sim)
                     )
 
                 if (
@@ -549,6 +553,7 @@ def lasso_interpretable_model_trainer(
     try:
         import sklearn
         from sklearn import linear_model
+
         assert (
             sklearn.__version__ >= "0.23.0"
         ), "Must have sklearn version 0.23.0 or higher to use "
@@ -562,9 +567,7 @@ def lasso_interpretable_model_trainer(
     # print(interp_inputs)
     # print(exp_outputs)
     # print(weights)
-    clf = linear_model.Lasso(
-        alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0
-    )
+    clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
     clf.fit(
         interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
     )
