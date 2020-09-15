@@ -420,9 +420,9 @@ class LimeBase(PerturbationAttribution):
                         inputs, curr_inputs[-1], curr_sample, **kwargs
                     )
                     similarities.append(
-                        curr_sim
+                        curr_sim.flatten()
                         if isinstance(curr_sim, Tensor)
-                        else torch.tensor(curr_sim)
+                        else torch.tensor(curr_sim).flatten()
                     )
                 else:
                     curr_inputs.append(curr_sample)
@@ -435,9 +435,9 @@ class LimeBase(PerturbationAttribution):
                         inputs, curr_sample, interpretable_inps[-1], **kwargs
                     )
                     similarities.append(
-                        curr_sim
+                        curr_sim.flatten()
                         if isinstance(curr_sim, Tensor)
-                        else torch.tensor(curr_sim)
+                        else torch.tensor(curr_sim).flatten()
                     )
 
                 if len(curr_inputs) == perturbations_per_eval:
@@ -471,9 +471,9 @@ class LimeBase(PerturbationAttribution):
                         " set to 1."
                         expand_inputs = True
                     outputs.append(
-                        model_out
+                        model_out.flatten()
                         if isinstance(model_out, Tensor)
-                        else torch.tensor(model_out)
+                        else torch.tensor(model_out).flatten()
                     )
 
                     curr_inputs = []
@@ -494,9 +494,9 @@ class LimeBase(PerturbationAttribution):
                     expanded_additional_args,
                 )
                 outputs.append(
-                    model_out
+                    model_out.flatten()
                     if isinstance(model_out, Tensor)
-                    else torch.tensor(model_out)
+                    else torch.tensor(model_out).flatten()
                 )
 
                 if (
@@ -512,17 +512,8 @@ class LimeBase(PerturbationAttribution):
                     expand_inputs = True
 
             combined_interp_inps = torch.cat(interpretable_inps)
-            combined_outputs = (
-                torch.cat(outputs)
-                if len(outputs[0].shape) > 0
-                else torch.stack(outputs)
-            )
-            combined_sim = (
-                torch.cat(similarities)
-                if len(similarities[0].shape) > 0
-                else torch.stack(similarities)
-            )
-
+            combined_outputs = torch.cat(outputs)
+            combined_sim = torch.cat(similarities)
             if expand_inputs:
                 combined_interp_inps = torch.repeat_interleave(
                     combined_interp_inps, bsz, 0
@@ -998,7 +989,7 @@ class Lime(LimeBase):
             attr = [torch.zeros_like(inp) for inp in formatted_inputs]
             for tensor_ind in range(len(formatted_inputs)):
                 for single_feature in range(num_interp_features):
-                    attr[tensor_ind] += coefs[single_feature] * (
+                    attr[tensor_ind] += coefs[single_feature].item() * (
                         feature_mask[tensor_ind] == single_feature
                     )
             return _format_output(is_inputs_tuple, tuple(attr))
