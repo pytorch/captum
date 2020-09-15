@@ -48,7 +48,7 @@ sudo BUILD_INSIGHTS=1 python setup.py develop
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
-  sudo pip install pytext-nlp
+  sudo pip install scikit-learn
 fi
 
 # install pytorch nightly if asked for

@@ -137,7 +137,7 @@ jobs:
     steps:
       - checkout
       - pip_install:
-          args: "-n"
+          args: "-n -f"
       - lint_flake8
       - lint_black
       - isort
@@ -181,7 +181,7 @@ jobs:
     steps:
       - checkout
       - conda_install:
-          args: "-n"
+          args: "-n -f"
       - lint_flake8
       - isort
       - unit_tests
@@ -204,7 +204,7 @@ jobs:
     steps:
       - checkout
       - pip_install:
-          args: "-n -d"
+          args: "-n -d -f"
       - lint_flake8
       - lint_black
       - isort
