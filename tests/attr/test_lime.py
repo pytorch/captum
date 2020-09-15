@@ -30,7 +30,9 @@ from ..helpers.basic_models import (
 )
 
 
-def alt_sampling_func(original_inp, **kwargs):
+def alt_sampling_func(
+    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
+) -> TensorOrTupleOfTensorsGeneric:
     if isinstance(original_inp, Tensor):
         device = original_inp.device
     else:
@@ -41,7 +43,8 @@ def alt_sampling_func(original_inp, **kwargs):
     probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
     curr_sample = torch.bernoulli(probs).to(device=device)
 
-    if isinstance(feature_mask, Tensor):
+    binary_mask: TensorOrTupleOfTensorsGeneric
+    if isinstance(original_inp, Tensor):
         binary_mask = curr_sample[0][feature_mask]
         return binary_mask * original_inp + (1 - binary_mask) * kwargs["baselines"]
     else:
@@ -55,12 +58,16 @@ def alt_sampling_func(original_inp, **kwargs):
         )
 
 
-def alt_to_interp_rep(curr_sample, original_input, **kwargs: Any):
+def alt_to_interp_rep(
+    curr_sample: TensorOrTupleOfTensorsGeneric,
+    original_input: TensorOrTupleOfTensorsGeneric,
+    **kwargs: Any
+) -> Tensor:
     binary_vector = torch.zeros(1, kwargs["num_interp_features"])
     feature_mask = kwargs["feature_mask"]
     for i in range(kwargs["num_interp_features"]):
         curr_total = 1
-        if isinstance(feature_mask, Tensor):
+        if isinstance(curr_sample, Tensor):
             if (
                 torch.sum(
                     torch.abs(
@@ -372,6 +379,7 @@ class Test(BaseTest):
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
             if expected_coefs_only is not None:
+                # Test with return_input_shape = False
                 attributions = lime.attribute(
                     test_input,
                     target=target,
@@ -397,6 +405,7 @@ class Test(BaseTest):
                     alt_to_interp_rep,
                 )
 
+                # Test with equivalent sampling in original input space
                 formatted_inputs, baselines = _format_input_baseline(
                     test_input, baselines
                 )
@@ -427,7 +436,7 @@ class Test(BaseTest):
                     alpha=alpha,
                     num_interp_features=num_interp_features,
                 )
-                assertTensorTuplesAlmostEqual(
+                assertTensorAlmostEqual(
                     self, attributions, expected_coefs_only, delta=delta, mode="max"
                 )
 
