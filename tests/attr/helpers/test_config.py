@@ -517,7 +517,13 @@ config = [
     # Perturbation-Specific Configs
     {
         "name": "conv_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation, Lime, KernelShap],
+        "algorithms": [
+            FeatureAblation,
+            ShapleyValueSampling,
+            FeaturePermutation,
+            Lime,
+            KernelShap,
+        ],
         "model": BasicModel_ConvNet(),
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
