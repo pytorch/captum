@@ -4,15 +4,81 @@ import unittest
 from typing import Any, Callable, Tuple, Union
 
 import torch
+from torch import Tensor
 
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from captum.attr._core.lime import Lime
+from captum.attr._core.lime import (
+    Lime,
+    LimeBase,
+    default_similarity_kernel,
+    lasso_interpretable_model_trainer,
+)
+from captum.attr._utils.common import (
+    _construct_default_feature_mask,
+    _format_input,
+    _format_input_baseline,
+)
 
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from ..helpers.basic import (
+    BaseTest,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
+
+
+def alt_sampling_func(original_inp, **kwargs):
+    if isinstance(original_inp, Tensor):
+        device = original_inp.device
+    else:
+        device = original_inp[0].device
+
+    feature_mask = kwargs["feature_mask"]
+
+    probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
+    curr_sample = torch.bernoulli(probs).to(device=device)
+
+    if isinstance(feature_mask, Tensor):
+        binary_mask = curr_sample[0][feature_mask]
+        return binary_mask * original_inp + (1 - binary_mask) * kwargs["baselines"]
+    else:
+        binary_mask = tuple(
+            curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
+        )
+        return tuple(
+            binary_mask[j] * original_inp[j]
+            + (1 - binary_mask[j]) * kwargs["baselines"][j]
+            for j in range(len(feature_mask))
+        )
+
+
+def alt_to_interp_rep(curr_sample, original_input, **kwargs: Any):
+    binary_vector = torch.zeros(1, kwargs["num_interp_features"])
+    feature_mask = kwargs["feature_mask"]
+    for i in range(kwargs["num_interp_features"]):
+        curr_total = 1
+        if isinstance(feature_mask, Tensor):
+            if (
+                torch.sum(
+                    torch.abs(
+                        (feature_mask == i).float() * (curr_sample - original_input)
+                    )
+                )
+                > 0.001
+            ):
+                curr_total = 0
+        else:
+            sum_diff = sum(
+                torch.sum(torch.abs((mask == i).float() * (sample - inp)))
+                for inp, sample, mask in zip(original_input, curr_sample, feature_mask)
+            )
+            if sum_diff > 0.001:
+                curr_total = 0
+        binary_vector[0][i] = curr_total
+    return binary_vector
 
 
 class Test(BaseTest):
@@ -25,6 +91,7 @@ class Test(BaseTest):
             [73.3716, 193.3349, 113.3349],
             perturbations_per_eval=(1, 2, 3),
             n_samples=500,
+            expected_coefs_only=[73.3716, 193.3349, 113.3349],
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -37,6 +104,7 @@ class Test(BaseTest):
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
             n_samples=500,
+            expected_coefs_only=[271.0, 111.0],
         )
 
     def test_simple_lime_with_baselines(self) -> None:
@@ -49,6 +117,7 @@ class Test(BaseTest):
             feature_mask=torch.tensor([[0, 0, 1]]),
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
+            expected_coefs_only=[244.0, 100.0],
         )
 
     def test_simple_batch_lime(self) -> None:
@@ -60,6 +129,7 @@ class Test(BaseTest):
             [[53.0323, 120.6903, 62.1903], [53.0323, 120.6903, 62.1903]],
             perturbations_per_eval=(1, 2, 3),
             n_samples=800,
+            expected_coefs_only=[53.0323, 120.6903, 62.1903],
         )
 
     def test_simple_batch_lime_with_mask(self) -> None:
@@ -71,7 +141,8 @@ class Test(BaseTest):
             [[159.0, 159.0, 79.0], [159.0, 79.0, 159.0]],
             feature_mask=torch.tensor([[0, 0, 1], [0, 1, 0]]),
             perturbations_per_eval=(1, 2, 3),
-            n_samples=300,
+            n_samples=600,
+            expected_coefs_only=[159.0, 79.0],
         )
 
     def test_multi_input_lime_without_mask(self) -> None:
@@ -90,6 +161,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             n_samples=2000,
+            expected_coefs_only=[87, 0, 0, 75, 0, 195, 0, 395, 35],
         )
 
     def test_multi_input_lime_with_mask(self) -> None:
@@ -111,6 +183,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
+            expected_coefs_only=[251.0, 591.0, 0.0],
         )
         expected_with_baseline = (
             [[180, 576.0, 180]],
@@ -126,6 +199,7 @@ class Test(BaseTest):
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
             n_samples=500,
+            expected_coefs_only=[180, 576.0, -8.0],
         )
 
     def test_multi_input_batch_lime_without_mask(self) -> None:
@@ -143,7 +217,8 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_samples=13000,
+            n_samples=1000,
+            expected_coefs_only=[81.5, 95.5, 55.5, 35.5, 195.5, 95.5, 0, 215.0, 15.5],
         )
 
     def test_multi_input_batch_lime(self) -> None:
@@ -179,6 +254,8 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             baselines=(2, 3.0, 4),
             perturbations_per_eval=(1, 2, 3),
+            expected_coefs_only=[114, 806.0, 56.0],
+            n_samples=300,
         )
 
     # Remaining tests are for cases where forward function returns a scalar
@@ -214,6 +291,8 @@ class Test(BaseTest):
             feature_mask=mask,
             perturbations_per_eval=(1,),
             target=None,
+            expected_coefs_only=[75.0, 17.0],
+            n_samples=700,
         )
 
     def test_multi_inp_lime_scalar_tensor_0d(self) -> None:
@@ -258,6 +337,8 @@ class Test(BaseTest):
             perturbations_per_eval=(1,),
             target=None,
             n_samples=1500,
+            expected_coefs_only=[305.5, 3850.6666, 410.1],
+            delta=1.5,
         )
 
     def _lime_test_assert(
@@ -265,12 +346,14 @@ class Test(BaseTest):
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
         expected_attr,
+        expected_coefs_only=None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         target: Union[None, int] = 0,
         n_samples: int = 100,
+        alpha: float = 1.0,
         delta: float = 1.0,
     ) -> None:
         for batch_size in perturbations_per_eval:
@@ -283,10 +366,70 @@ class Test(BaseTest):
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
                 n_samples=n_samples,
+                alpha=alpha,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
+            if expected_coefs_only is not None:
+                attributions = lime.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                    n_samples=n_samples,
+                    alpha=alpha,
+                    return_input_shape=False,
+                )
+                assertTensorAlmostEqual(
+                    self, attributions, expected_coefs_only, delta=delta, mode="max"
+                )
+
+                lime_alt = LimeBase(
+                    model,
+                    lasso_interpretable_model_trainer,
+                    default_similarity_kernel,
+                    alt_sampling_func,
+                    False,
+                    None,
+                    alt_to_interp_rep,
+                )
+
+                formatted_inputs, baselines = _format_input_baseline(
+                    test_input, baselines
+                )
+                if feature_mask is None:
+                    (
+                        formatted_feature_mask,
+                        num_interp_features,
+                    ) = _construct_default_feature_mask(formatted_inputs)
+                else:
+                    formatted_feature_mask = _format_input(feature_mask)
+                    num_interp_features = int(
+                        max(torch.max(single_inp).item() for single_inp in feature_mask)
+                        + 1
+                    )
+
+                attributions = lime_alt.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=formatted_feature_mask
+                    if isinstance(test_input, tuple)
+                    else formatted_feature_mask[0],
+                    additional_forward_args=additional_input,
+                    baselines=baselines
+                    if isinstance(test_input, tuple)
+                    else baselines[0],
+                    perturbations_per_eval=batch_size,
+                    n_samples=n_samples,
+                    alpha=alpha,
+                    num_interp_features=num_interp_features,
+                )
+                assertTensorTuplesAlmostEqual(
+                    self, attributions, expected_coefs_only, delta=delta, mode="max"
+                )
 
 
 if __name__ == "__main__":

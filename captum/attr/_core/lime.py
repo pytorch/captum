@@ -392,13 +392,14 @@ class LimeBase(PerturbationAttribution):
             >>> # model.
             >>> attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)
         """
-        bsz = (
-            cast(Tensor, inputs).shape[0]
-            if isinstance(inputs, Tensor)
-            else inputs[0].shape[0]
-        )
-        expand_inputs = False
         with torch.no_grad():
+            bsz = (
+                cast(Tensor, inputs).shape[0]
+                if isinstance(inputs, Tensor)
+                else inputs[0].shape[0]
+            )
+            expand_inputs = False
+
             interpretable_inps = []
             similarities = []
             outputs = []
@@ -439,10 +440,7 @@ class LimeBase(PerturbationAttribution):
                         else torch.tensor(curr_sim)
                     )
 
-                if (
-                    perturbations_per_eval is not None
-                    and len(curr_inputs) == perturbations_per_eval
-                ):
+                if len(curr_inputs) == perturbations_per_eval:
                     if expanded_additional_args is None:
                         expanded_additional_args = (
                             _expand_additional_forward_args(
@@ -453,13 +451,10 @@ class LimeBase(PerturbationAttribution):
                         )
                     if expanded_target is None:
                         expanded_target = _expand_target(target, len(curr_inputs))
-                    if perturbations_per_eval == 1:
-                        combined_inputs = curr_inputs[0]
-                    else:
-                        combined_inputs = _reduce_list(curr_inputs)
+
                     model_out = _run_forward(
                         self.forward_func,
-                        combined_inputs,
+                        _reduce_list(curr_inputs),
                         expanded_target,
                         expanded_additional_args,
                     )
@@ -564,14 +559,10 @@ def lasso_interpretable_model_trainer(
             " Lasso regression. Please install sklearn or use a custom interpretable"
             " model training function."
         )
-    # print(interp_inputs)
-    # print(exp_outputs)
-    # print(weights)
     clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
     clf.fit(
         interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
     )
-    # print(clf.coef_)
     return torch.from_numpy(clf.coef_)
 
 
@@ -606,10 +597,8 @@ def default_sampling_func(original_inp, **kwargs):
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default interpretable sampling function"
     if isinstance(original_inp, Tensor):
-        # bsz = original_inp.shape[0]
         device = original_inp.device
     else:
-        # bsz = original_inp[0].shape[0]
         device = original_inp[0].device
 
     probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
@@ -1006,7 +995,6 @@ class Lime(LimeBase):
             alpha=alpha,
         )
         if return_input_shape:
-            # print(coefs)
             attr = [torch.zeros_like(inp) for inp in formatted_inputs]
             for tensor_ind in range(len(formatted_inputs)):
                 for single_feature in range(num_interp_features):

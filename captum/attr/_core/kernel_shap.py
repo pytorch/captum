@@ -30,17 +30,17 @@ def linear_regression_interpretable_model_trainer(
     return torch.from_numpy(clf.coef_)
 
 
-def combination(n, k):
+def combination(n: int, k: int) -> int:
     try:
         # Combination only available in Python 3.8
-        return math.comb(n, k)
+        return math.comb(n, k)  # type: ignore
     except AttributeError:
         return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
 
 
 def kernel_shap_similarity_kernel(
-    original_inp, sampled_inp, interpretable_sample, **kwargs
-):
+    _, __, interpretable_sample: Tensor, **kwargs
+) -> Tensor:
     assert (
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default similarity kernel"
@@ -53,6 +53,11 @@ def kernel_shap_similarity_kernel(
     if denom != 0:
         similarities = (num_features - 1) / denom
     else:
+        # weight should be theoretically infinite when denom = 0
+        # enforcing that trained linear model must satisfy
+        # end-point criteria. In practice, it is sufficient to
+        # make this weight substantially larger so setting this
+        # weight to 100 (all other weights are < 1).
         similarities = 100
     return torch.tensor([similarities])
 
@@ -64,6 +69,9 @@ class KernelShap(Lime):
     regularization terms appropriately in the LIME framework allows
     theoretically obtaining Shapley Values more efficiently than
     directly computing Shapley Values.
+
+    Note that KernelShap requires having sklearn installed, since
+    sklearn is used to train the surrogate linear model.
 
     More information regarding this method and proof of equivalence
     can be found in the original paper here:
@@ -108,7 +116,7 @@ class KernelShap(Lime):
         used for sample-based interpretability, training a separate interpretable
         model to explain a model's prediction on each individual example.
 
-        A batch of inputs can also be provided as inputs, similar to
+        Nevertheless, a batch of inputs can also be provided as inputs, similar to
         other perturbation-based attribution methods. If forward_func returns
         a single value per batch (e.g. loss), then an interpretable model is
         trained with the batch output and corresponding interpretable feature
