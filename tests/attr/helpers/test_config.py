@@ -196,6 +196,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
@@ -243,6 +245,8 @@ config = [
             FeatureAblation,
             DeepLift,
             ShapleyValueSampling,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -513,13 +517,14 @@ config = [
     # Perturbation-Specific Configs
     {
         "name": "conv_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation],
+        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation, Lime, KernelShap],
         "model": BasicModel_ConvNet(),
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
             "target": 0,
             "perturbations_per_eval": 20,
         },
+        "dp_delta": 0.001,
     },
     {
         "name": "basic_multiple_tuple_target_with_perturbations_per_eval",
