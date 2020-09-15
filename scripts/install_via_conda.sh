@@ -22,7 +22,7 @@ conda install -y conda-build
 
 # install other frameworks if asked for and make sure this is before pytorch
 if [[ $FRAMEWORKS == true ]]; then
-  pip install scikit-learn
+  pip install pytext-nlp
 fi
 
 if [[ $PYTORCH_NIGHTLY == true ]]; then
