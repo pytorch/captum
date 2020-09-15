@@ -10,6 +10,7 @@ from torch.nn import Module
 from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.lime import LimeBase
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
@@ -56,7 +57,10 @@ class TargetsMeta(type):
             for algorithm in algorithms:
                 # FeaturePermutation requires a batch of inputs
                 # so skipping tests
-                if issubclass(algorithm, FeaturePermutation):
+                # Lime trains a single interpretable model,
+                # so attributing each example separately
+                # leads to different attributions
+                if issubclass(algorithm, (FeaturePermutation, LimeBase)):
                     continue
                 test_method = cls.make_single_target_test(
                     algorithm,
