@@ -997,9 +997,10 @@ class Lime(LimeBase):
             attr = [torch.zeros_like(inp) for inp in formatted_inputs]
             for tensor_ind in range(len(formatted_inputs)):
                 for single_feature in range(num_interp_features):
-                    attr[tensor_ind] += coefs[single_feature].item() * (
-                        feature_mask[tensor_ind] == single_feature
-                    ).float()
+                    attr[tensor_ind] += (
+                        coefs[single_feature].item()
+                        * (feature_mask[tensor_ind] == single_feature).float()
+                    )
             return _format_output(is_inputs_tuple, tuple(attr))
 
         else:
