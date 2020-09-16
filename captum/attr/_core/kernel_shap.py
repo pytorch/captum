@@ -58,7 +58,7 @@ def kernel_shap_similarity_kernel(
         # end-point criteria. In practice, it is sufficient to
         # make this weight substantially larger so setting this
         # weight to 100 (all other weights are < 1).
-        similarities = 100
+        similarities = 100.0
     return torch.tensor([similarities])
 
 
