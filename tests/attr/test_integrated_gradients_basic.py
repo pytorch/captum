@@ -339,7 +339,7 @@ class Test(BaseTest):
         multiply_by_inputs=True,
     ) -> Tuple[Tensor, ...]:
         r"""
-            attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
+        attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
         ig = IntegratedGradients(model, multiply_by_inputs=multiply_by_inputs)
         self.assertEquals(ig.multiplies_by_inputs, multiply_by_inputs)

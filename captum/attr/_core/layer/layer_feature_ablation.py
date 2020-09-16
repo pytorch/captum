@@ -75,148 +75,148 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
         perturbations_per_eval: int = 1,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         r"""
-            Args:
+        Args:
 
-                inputs (tensor or tuple of tensors):  Input for which layer
-                            attributions are computed. If forward_func takes a single
-                            tensor as input, a single input tensor should be provided.
-                            If forward_func takes multiple tensors as input, a tuple
-                            of the input tensors should be provided. It is assumed
-                            that for all given input tensors, dimension 0 corresponds
-                            to the number of examples, and if multiple input tensors
-                            are provided, the examples must be aligned appropriately.
-                layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):
-                            Layer baselines define reference values which replace each
-                            layer input / output value when ablated.
-                            Layer baselines should be a single tensor with dimensions
-                            matching the input / output of the target layer (or
-                            broadcastable to match it), based
-                            on whether we are attributing to the input or output
-                            of the target layer.
-                            In the cases when `baselines` is not provided, we internally
-                            use zero as the baseline for each neuron.
-                            Default: None
-                target (int, tuple, tensor or list, optional):  Output indices for
-                            which gradients are computed (for classification cases,
-                            this is usually the target class).
-                            If the network returns a scalar value per example,
-                            no target index is necessary.
-                            For general 2D outputs, targets can be either:
+            inputs (tensor or tuple of tensors):  Input for which layer
+                        attributions are computed. If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples, and if multiple input tensors
+                        are provided, the examples must be aligned appropriately.
+            layer_baselines (scalar, tensor, tuple of scalars or tensors, optional):
+                        Layer baselines define reference values which replace each
+                        layer input / output value when ablated.
+                        Layer baselines should be a single tensor with dimensions
+                        matching the input / output of the target layer (or
+                        broadcastable to match it), based
+                        on whether we are attributing to the input or output
+                        of the target layer.
+                        In the cases when `baselines` is not provided, we internally
+                        use zero as the baseline for each neuron.
+                        Default: None
+            target (int, tuple, tensor or list, optional):  Output indices for
+                        which gradients are computed (for classification cases,
+                        this is usually the target class).
+                        If the network returns a scalar value per example,
+                        no target index is necessary.
+                        For general 2D outputs, targets can be either:
 
-                            - a single integer or a tensor containing a single
-                              integer, which is applied to all input examples
+                        - a single integer or a tensor containing a single
+                          integer, which is applied to all input examples
 
-                            - a list of integers or a 1D tensor, with length matching
-                              the number of examples in inputs (dim 0). Each integer
-                              is applied as the target for the corresponding example.
+                        - a list of integers or a 1D tensor, with length matching
+                          the number of examples in inputs (dim 0). Each integer
+                          is applied as the target for the corresponding example.
 
-                            For outputs with > 2 dimensions, targets can be either:
+                        For outputs with > 2 dimensions, targets can be either:
 
-                            - A single tuple, which contains #output_dims - 1
-                              elements. This target index is applied to all examples.
+                        - A single tuple, which contains #output_dims - 1
+                          elements. This target index is applied to all examples.
 
-                            - A list of tuples with length equal to the number of
-                              examples in inputs (dim 0), and each tuple containing
-                              #output_dims - 1 elements. Each tuple is applied as the
-                              target for the corresponding example.
+                        - A list of tuples with length equal to the number of
+                          examples in inputs (dim 0), and each tuple containing
+                          #output_dims - 1 elements. Each tuple is applied as the
+                          target for the corresponding example.
 
-                            Default: None
-                additional_forward_args (any, optional): If the forward function
-                            requires additional arguments other than the inputs for
-                            which attributions should not be computed, this argument
-                            can be provided. It must be either a single additional
-                            argument of a Tensor or arbitrary (non-tuple) type or a
-                            tuple containing multiple additional arguments including
-                            tensors or any arbitrary python types. These arguments
-                            are provided to forward_func in order following the
-                            arguments in inputs.
-                            Note that attributions are not computed with respect
-                            to these arguments.
-                            Default: None
-                layer_mask (tensor or tuple of tensors, optional):
-                            layer_mask defines a mask for the layer, grouping
-                            elements of the layer input / output which should be
-                            ablated together.
-                            layer_mask should be a single tensor with dimensions
-                            matching the input / output of the target layer (or
-                            broadcastable to match it), based
-                            on whether we are attributing to the input or output
-                            of the target layer. layer_mask
-                            should contain integers in the range 0 to num_groups
-                            - 1, and all elements with the same value are
-                            considered to be in the same group.
-                            If None, then a layer mask is constructed which assigns
-                            each neuron within the layer as a separate group, which
-                            is ablated independently.
-                            Default: None
-                attribute_to_layer_input (bool, optional): Indicates whether to
-                            compute the attributions with respect to the layer input
-                            or output. If `attribute_to_layer_input` is set to True
-                            then the attributions will be computed with respect to
-                            layer's inputs, otherwise it will be computed with respect
-                            to layer's outputs.
-                            Note that currently it is assumed that either the input
-                            or the output of the layer, depending on whether we
-                            attribute to the input or output, is a single tensor.
-                            Support for multiple tensors will be added later.
-                            Default: False
-                perturbations_per_eval (int, optional): Allows ablation of multiple
-                            neuron (groups) to be processed simultaneously in one
-                            call to forward_fn.
-                            Each forward pass will contain a maximum of
-                            perturbations_per_eval * #examples samples.
-                            For DataParallel models, each batch is split among the
-                            available devices, so evaluations on each available
-                            device contain at most
-                            (perturbations_per_eval * #examples) / num_devices
-                            samples.
-                            Default: 1
+                        Default: None
+            additional_forward_args (any, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        Note that attributions are not computed with respect
+                        to these arguments.
+                        Default: None
+            layer_mask (tensor or tuple of tensors, optional):
+                        layer_mask defines a mask for the layer, grouping
+                        elements of the layer input / output which should be
+                        ablated together.
+                        layer_mask should be a single tensor with dimensions
+                        matching the input / output of the target layer (or
+                        broadcastable to match it), based
+                        on whether we are attributing to the input or output
+                        of the target layer. layer_mask
+                        should contain integers in the range 0 to num_groups
+                        - 1, and all elements with the same value are
+                        considered to be in the same group.
+                        If None, then a layer mask is constructed which assigns
+                        each neuron within the layer as a separate group, which
+                        is ablated independently.
+                        Default: None
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attributions with respect to the layer input
+                        or output. If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to
+                        layer's inputs, otherwise it will be computed with respect
+                        to layer's outputs.
+                        Note that currently it is assumed that either the input
+                        or the output of the layer, depending on whether we
+                        attribute to the input or output, is a single tensor.
+                        Support for multiple tensors will be added later.
+                        Default: False
+            perturbations_per_eval (int, optional): Allows ablation of multiple
+                        neuron (groups) to be processed simultaneously in one
+                        call to forward_fn.
+                        Each forward pass will contain a maximum of
+                        perturbations_per_eval * #examples samples.
+                        For DataParallel models, each batch is split among the
+                        available devices, so evaluations on each available
+                        device contain at most
+                        (perturbations_per_eval * #examples) / num_devices
+                        samples.
+                        Default: 1
 
-            Returns:
-                *tensor* or tuple of *tensors* of **attributions**:
-                - **attributions** (*tensor* or tuple of *tensors*):
-                            Attribution of each neuron in given layer input or
-                            output. Attributions will always be the same size as
-                            the input or output of the given layer, depending on
-                            whether we attribute to the inputs or outputs
-                            of the layer which is decided by the input flag
-                            `attribute_to_layer_input`.
+        Returns:
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Attribution of each neuron in given layer input or
+                        output. Attributions will always be the same size as
+                        the input or output of the given layer, depending on
+                        whether we attribute to the inputs or outputs
+                        of the layer which is decided by the input flag
+                        `attribute_to_layer_input`.
 
-            Examples::
+        Examples::
 
-            >>> # SimpleClassifier takes a single input tensor of size Nx4x4,
-            >>> # and returns an Nx3 tensor of class probabilities.
-            >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
-            >>> # and the output of this layer has dimensions Nx12x3x3.
-            >>> net = SimpleClassifier()
-            >>> # Generating random input with size 2 x 4 x 4
-            >>> input = torch.randn(2, 4, 4)
-            >>> # Defining LayerFeatureAblation interpreter
-            >>> ablator = LayerFeatureAblation(net, net.conv1)
-            >>> # Computes ablation attribution, ablating each of the 108
-            >>> # neurons independently.
-            >>> attr = ablator.attribute(input, target=1)
+        >>> # SimpleClassifier takes a single input tensor of size Nx4x4,
+        >>> # and returns an Nx3 tensor of class probabilities.
+        >>> # It contains an attribute conv1, which is an instance of nn.conv2d,
+        >>> # and the output of this layer has dimensions Nx12x3x3.
+        >>> net = SimpleClassifier()
+        >>> # Generating random input with size 2 x 4 x 4
+        >>> input = torch.randn(2, 4, 4)
+        >>> # Defining LayerFeatureAblation interpreter
+        >>> ablator = LayerFeatureAblation(net, net.conv1)
+        >>> # Computes ablation attribution, ablating each of the 108
+        >>> # neurons independently.
+        >>> attr = ablator.attribute(input, target=1)
 
-            >>> # Alternatively, we may want to ablate neurons in groups, e.g.
-            >>> # grouping all the layer outputs in the same row.
-            >>> # This can be done by creating a layer mask as follows, which
-            >>> # defines the groups of layer inputs / outouts, e.g.:
-            >>> # +---+---+---+
-            >>> # | 0 | 0 | 0 |
-            >>> # +---+---+---+
-            >>> # | 1 | 1 | 1 |
-            >>> # +---+---+---+
-            >>> # | 2 | 2 | 2 |
-            >>> # +---+---+---+
-            >>> # With this mask, all the 36 neurons in a row / channel are ablated
-            >>> # simultaneously, and the attribution for each neuron in the same
-            >>> # group (0 - 2) per example are the same.
-            >>> # The attributions can be calculated as follows:
-            >>> # layer mask has dimensions 1 x 3 x 3
-            >>> layer_mask = torch.tensor([[[0,0,0],[1,1,1],
-            >>>                             [2,2,2]]])
-            >>> attr = ablator.attribute(input, target=1,
-            >>>                          layer_mask=layer_mask)
+        >>> # Alternatively, we may want to ablate neurons in groups, e.g.
+        >>> # grouping all the layer outputs in the same row.
+        >>> # This can be done by creating a layer mask as follows, which
+        >>> # defines the groups of layer inputs / outouts, e.g.:
+        >>> # +---+---+---+
+        >>> # | 0 | 0 | 0 |
+        >>> # +---+---+---+
+        >>> # | 1 | 1 | 1 |
+        >>> # +---+---+---+
+        >>> # | 2 | 2 | 2 |
+        >>> # +---+---+---+
+        >>> # With this mask, all the 36 neurons in a row / channel are ablated
+        >>> # simultaneously, and the attribution for each neuron in the same
+        >>> # group (0 - 2) per example are the same.
+        >>> # The attributions can be calculated as follows:
+        >>> # layer mask has dimensions 1 x 3 x 3
+        >>> layer_mask = torch.tensor([[[0,0,0],[1,1,1],
+        >>>                             [2,2,2]]])
+        >>> attr = ablator.attribute(input, target=1,
+        >>>                          layer_mask=layer_mask)
         """
 
         def layer_forward_func(*args):

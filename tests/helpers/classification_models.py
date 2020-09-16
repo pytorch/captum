@@ -5,9 +5,9 @@ import torch.nn as nn
 
 class SigmoidModel(nn.Module):
     """
-        Model architecture from:
-        https://medium.com/coinmonks/create-a-neural-network-in
-            -pytorch-and-make-your-life-simpler-ec5367895199
+    Model architecture from:
+    https://medium.com/coinmonks/create-a-neural-network-in
+        -pytorch-and-make-your-life-simpler-ec5367895199
     """
 
     def __init__(self, num_in, num_hidden, num_out):
@@ -28,8 +28,8 @@ class SigmoidModel(nn.Module):
 
 class SoftmaxModel(nn.Module):
     """
-        Model architecture from:
-        https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
+    Model architecture from:
+    https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
     def __init__(self, num_in, num_hidden, num_out, inplace=False):
@@ -53,9 +53,9 @@ class SoftmaxModel(nn.Module):
 
 class SigmoidDeepLiftModel(nn.Module):
     """
-        Model architecture from:
-        https://medium.com/coinmonks/create-a-neural-network-in
-            -pytorch-and-make-your-life-simpler-ec5367895199
+    Model architecture from:
+    https://medium.com/coinmonks/create-a-neural-network-in
+        -pytorch-and-make-your-life-simpler-ec5367895199
     """
 
     def __init__(self, num_in, num_hidden, num_out):
@@ -78,8 +78,8 @@ class SigmoidDeepLiftModel(nn.Module):
 
 class SoftmaxDeepLiftModel(nn.Module):
     """
-        Model architecture from:
-        https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
+    Model architecture from:
+    https://adventuresinmachinelearning.com/pytorch-tutorial-deep-learning/
     """
 
     def __init__(self, num_in, num_hidden, num_out):
