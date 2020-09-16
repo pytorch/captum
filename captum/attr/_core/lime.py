@@ -422,7 +422,7 @@ class LimeBase(PerturbationAttribution):
                     similarities.append(
                         curr_sim.flatten()
                         if isinstance(curr_sim, Tensor)
-                        else torch.tensor(curr_sim).flatten()
+                        else torch.tensor([curr_sim])
                     )
                 else:
                     curr_inputs.append(curr_sample)
@@ -437,7 +437,7 @@ class LimeBase(PerturbationAttribution):
                     similarities.append(
                         curr_sim.flatten()
                         if isinstance(curr_sim, Tensor)
-                        else torch.tensor(curr_sim).flatten()
+                        else torch.tensor([curr_sim])
                     )
 
                 if len(curr_inputs) == perturbations_per_eval:
@@ -473,7 +473,7 @@ class LimeBase(PerturbationAttribution):
                     outputs.append(
                         model_out.flatten()
                         if isinstance(model_out, Tensor)
-                        else torch.tensor(model_out).flatten()
+                        else torch.tensor([model_out])
                     )
 
                     curr_inputs = []
@@ -496,7 +496,7 @@ class LimeBase(PerturbationAttribution):
                 outputs.append(
                     model_out.flatten()
                     if isinstance(model_out, Tensor)
-                    else torch.tensor(model_out).flatten()
+                    else torch.tensor([model_out])
                 )
 
                 if (
@@ -512,8 +512,16 @@ class LimeBase(PerturbationAttribution):
                     expand_inputs = True
 
             combined_interp_inps = torch.cat(interpretable_inps)
-            combined_outputs = torch.cat(outputs)
-            combined_sim = torch.cat(similarities)
+            combined_outputs = (
+                torch.cat(outputs)
+                if len(outputs[0].shape) > 0
+                else torch.stack(outputs)
+            )
+            combined_sim = (
+                torch.cat(similarities)
+                if len(similarities[0].shape) > 0
+                else torch.stack(similarities)
+            )
             if expand_inputs:
                 combined_interp_inps = torch.repeat_interleave(
                     combined_interp_inps, bsz, 0
