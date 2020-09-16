@@ -254,11 +254,9 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
                         of the layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)

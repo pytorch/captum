@@ -146,11 +146,9 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
                         If multiple layers are provided, attributions
                         are returned as a list, each element corresponding to the
                         activations of the corresponding layer.

@@ -192,11 +192,9 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         as the output or input of the given layer depending on
                         whether `attribute_to_layer_input` is set to `False` or
                         `True`respectively.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
 
         Examples::
 

@@ -163,11 +163,9 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
                         Attributions will be the same size as the
                         output of the given layer, except for dimension 2,
                         which will be 1 due to summing over channels.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
         Examples::
 
             >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
