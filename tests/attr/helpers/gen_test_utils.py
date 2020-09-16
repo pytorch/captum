@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import typing
 from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from torch.nn import Module
@@ -38,8 +39,23 @@ def parse_test_config(
     return algorithms, model, args, layer, noise_tunnel, baseline_distr
 
 
-def get_target_layer(model: Module, layer: Union[str, List[str]]):
-    if isinstance(layer, str):
-        return _get_deep_layer_name(model, layer)
+@typing.overload
+def get_target_layer(model: Module, layer_name: str) -> Module:
+    ...
+
+
+@typing.overload
+def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]:
+    ...
+
+
+def get_target_layer(
+    model: Module, layer_name: Union[str, List[str]]
+) -> Union[Module, List[Module]]:
+    if isinstance(layer_name, str):
+        return _get_deep_layer_name(model, layer_name)
     else:
-        return [_get_deep_layer_name(model, single_layer) for single_layer in layer]
+        return [
+            _get_deep_layer_name(model, single_layer_name)
+            for single_layer_name in layer_name
+        ]
