@@ -18,6 +18,7 @@ from ...helpers.basic import (
 from ...helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    Conv1dSeqModel,
 )
 
 
@@ -121,6 +122,13 @@ class Test(BaseTest):
         layer_act = LayerActivation(model, model[0])
         input = torch.randn(1, 3, 5, 5)
         assertTensorAlmostEqual(self, layer_act.attribute(input), model[0](input))
+
+    def test_sequential_module(self) -> None:
+        model = Conv1dSeqModel()
+        layer_act = LayerActivation(model, model.seq)
+        input = torch.randn(2, 4, 1000)
+        out = model(input)
+        assertTensorAlmostEqual(self, layer_act.attribute(input), out)
 
     def _layer_activation_test_assert(
         self,

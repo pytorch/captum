@@ -187,25 +187,23 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         if isinstance(self.layer, Module):
             return _format_output(
                 len(layer_evals) > 1,
-                tuple(
-                    layer_gradient * layer_eval
-                    if self.multiplies_by_inputs
-                    else layer_gradient
-                    for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
-                ),
+                self.multiply_gradient_acts(layer_gradients, layer_evals),
             )
         else:
             return [
                 _format_output(
                     len(layer_evals[i]) > 1,
-                    tuple(
-                        layer_gradient * layer_eval
-                        if self.multiplies_by_inputs
-                        else layer_gradient
-                        for layer_gradient, layer_eval in zip(
-                            layer_gradients[i], layer_evals[i]
-                        )
-                    ),
+                    self.multiply_gradient_acts(layer_gradients[i], layer_evals[i]),
                 )
                 for i in range(len(self.layer))
             ]
+
+    def multiply_gradient_acts(
+        self, gradients: Tuple[Tensor, ...], evals: Tuple[Tensor, ...]
+    ) -> Tuple[Tensor, ...]:
+        return tuple(
+            single_gradient * single_eval
+            if self.multiplies_by_inputs
+            else single_gradient
+            for single_gradient, single_eval in zip(gradients, evals)
+        )

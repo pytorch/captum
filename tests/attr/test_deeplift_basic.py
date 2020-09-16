@@ -18,7 +18,7 @@ from ..helpers.basic import (
 )
 from ..helpers.basic_models import (
     BasicModelWithReusableModules,
-    Conv1dDeepLiftModel,
+    Conv1dSeqModel,
     LinearMaxPoolLinearModel,
     ReLUDeepLiftModel,
     ReLULinearModel,
@@ -145,7 +145,7 @@ class Test(BaseTest):
         self._deeplift_assert(model, DeepLift(model), inputs, baselines)
 
     def test_relu_deeplift_with_hypothetical_contrib_func(self) -> None:
-        model = Conv1dDeepLiftModel()
+        model = Conv1dSeqModel()
         rand_seq_data = torch.abs(torch.randn(2, 4, 1000))
         rand_seq_ref = torch.abs(torch.randn(2, 4, 1000))
         dls = DeepLift(model)
@@ -265,7 +265,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attr_w_func[1], [[0.0, 0.0, 0.0]], 0.0)
 
     def test_relu_deepliftshap_with_hypothetical_contrib_func(self) -> None:
-        model = Conv1dDeepLiftModel()
+        model = Conv1dSeqModel()
         rand_seq_data = torch.abs(torch.randn(2, 4, 1000))
         rand_seq_ref = torch.abs(torch.randn(3, 4, 1000))
         dls = DeepLiftShap(model)
