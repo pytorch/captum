@@ -414,6 +414,6 @@ def _scale_input(
     rand_coefficient = rand_coefficient.view(inp_shape)
 
     input_baseline_scaled = (
-        rand_coefficient * input + (torch.tensor(1) - rand_coefficient) * baseline
+        rand_coefficient * input + (1.0 - rand_coefficient) * baseline
     ).requires_grad_()
     return input_baseline_scaled

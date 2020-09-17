@@ -53,9 +53,14 @@ class HookRemovalMeta(type):
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         created_tests: Dict[Tuple[Type[Attribution], HookRemovalMode], bool] = {}
         for test_config in config:
-            (algorithms, model, args, layer, noise_tunnel, _,) = parse_test_config(
-                test_config
-            )
+            (
+                algorithms,
+                model,
+                args,
+                layer,
+                noise_tunnel,
+                _,
+            ) = parse_test_config(test_config)
 
             for algorithm in algorithms:
                 for mode in HookRemovalMode:
@@ -66,7 +71,12 @@ class HookRemovalMeta(type):
                         continue
 
                     test_method = cls.make_single_hook_removal_test(
-                        algorithm, model, layer, args, noise_tunnel, mode,
+                        algorithm,
+                        model,
+                        layer,
+                        args,
+                        noise_tunnel,
+                        mode,
                     )
                     test_name = gen_test_name(
                         "test_hook_removal_" + mode.name,

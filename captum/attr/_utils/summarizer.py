@@ -162,10 +162,10 @@ def _reorder_stats(stats: List[Stat]) -> Tuple[List[Stat], List[int]]:
 
 class SummarizerSingleTensor:
     r"""
-        A simple class that summarizes a single tensor. The basic functionality
-        of this class is two operations .update and .summary
+    A simple class that summarizes a single tensor. The basic functionality
+    of this class is two operations .update and .summary
 
-        If possible use `Summarizer` instead.
+    If possible use `Summarizer` instead.
     """
 
     def __init__(self, stats: List[Stat], summary_stats_indices: List[int]):

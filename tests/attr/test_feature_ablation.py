@@ -314,7 +314,8 @@ class Test(BaseTest):
     def test_multi_sample_ablation_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_ablation_assert(
-            lambda inp: torch.sum(net(inp)).item(), dtype=torch.float64,
+            lambda inp: torch.sum(net(inp)).item(),
+            dtype=torch.float64,
         )
 
     def test_multi_sample_ablation_batch_scalar_tensor_0d(self) -> None:
@@ -338,7 +339,8 @@ class Test(BaseTest):
     def test_multi_inp_ablation_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         self._multi_input_batch_scalar_ablation_assert(
-            lambda *inp: torch.sum(net(*inp)).item(), dtype=torch.float64,
+            lambda *inp: torch.sum(net(*inp)).item(),
+            dtype=torch.float64,
         )
 
     def test_multi_inp_ablation_batch_scalar_tensor_0d(self) -> None:
@@ -440,7 +442,9 @@ class Test(BaseTest):
         )
 
     def _single_input_multi_sample_batch_scalar_ablation_assert(
-        self, func: Callable, dtype: torch.dtype = torch.float32,
+        self,
+        func: Callable,
+        dtype: torch.dtype = torch.float32,
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         mask = torch.tensor([[0, 0, 1]])

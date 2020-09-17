@@ -474,12 +474,12 @@ class DeepLift(GradientAttribution):
         eps: float = 1e-10,
     ):
         r"""
-         `grad_input` is the gradient of the neuron with respect to its input
-         `grad_output` is the gradient of the neuron with respect to its output
-          we can override `grad_input` according to chain rule with.
-         `grad_output` * delta_out / delta_in.
+        `grad_input` is the gradient of the neuron with respect to its input
+        `grad_output` is the gradient of the neuron with respect to its output
+         we can override `grad_input` according to chain rule with.
+        `grad_output` * delta_out / delta_in.
 
-         """
+        """
         # before accessing the attributes from the module we want
         # to ensure that the properties exist, if not, then it is
         # likely that the module is being reused.

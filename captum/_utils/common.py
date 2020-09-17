@@ -26,8 +26,8 @@ def safe_div(
     numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
 ) -> Tensor:
     r"""
-        A simple utility function to perform `numerator / denom`
-        if the statement is undefined => result will be `default_value`
+    A simple utility function to perform `numerator / denom`
+    if the statement is undefined => result will be `default_value`
     """
     if isinstance(denom, float):
         return numerator / denom if denom != 0.0 else default_value
@@ -472,8 +472,10 @@ def _reduce_list(
     val_list[0]. It is assumed that all tuples in the list have the same length
     and red_func can be applied to all elements in each corresponding position.
     """
+    assert len(val_list) > 0, "Cannot reduce empty list!"
     if isinstance(val_list[0], torch.Tensor):
-        return red_func(val_list)
+        first_device = val_list[0].device
+        return red_func([elem.to(first_device) for elem in val_list])
     elif isinstance(val_list[0], bool):
         return any(val_list)
     elif isinstance(val_list[0], tuple):
