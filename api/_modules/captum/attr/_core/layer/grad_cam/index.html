@@ -190,11 +190,9 @@
 <span class="sd">                        Attributions will be the same size as the</span>
 <span class="sd">                        output of the given layer, except for dimension 2,</span>
 <span class="sd">                        which will be 1 due to summing over channels.</span>
-<span class="sd">                        Attributions are returned in a tuple based on whether</span>
-<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
-<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
-<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
-<span class="sd">                        outputs of a single tensor are not.</span>
+<span class="sd">                        Attributions are returned in a tuple if</span>
+<span class="sd">                        the layer inputs / outputs contain multiple tensors,</span>
+<span class="sd">                        otherwise a single tensor is returned.</span>
 <span class="sd">        Examples::</span>
 
 <span class="sd">            &gt;&gt;&gt; # ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
@@ -223,7 +221,7 @@
         <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="c1"># Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
@@ -251,7 +249,7 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">relu_attributions</span><span class="p">:</span>
             <span class="n">scaled_acts</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">scaled_act</span><span class="p">)</span> <span class="k">for</span> <span class="n">scaled_act</span> <span class="ow">in</span> <span class="n">scaled_acts</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">scaled_acts</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">scaled_acts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">scaled_acts</span><span class="p">)</span></div></div>
 </pre></div>
 </div>
 </div>

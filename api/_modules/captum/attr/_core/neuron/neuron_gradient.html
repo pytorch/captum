@@ -168,7 +168,7 @@
         <span class="p">)</span>
         <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
-        <span class="n">_</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_forward_layer_eval_with_neuron_grads</span><span class="p">(</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">input_grads</span> <span class="o">=</span> <span class="n">_forward_layer_eval_with_neuron_grads</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">inputs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>

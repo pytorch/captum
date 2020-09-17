@@ -354,7 +354,7 @@
 
         <span class="c1"># Conductance Gradients - Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+        <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">,</span> <span class="n">input_grads</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="n">forward_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">layer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">scaled_features_tpl</span><span class="p">,</span>

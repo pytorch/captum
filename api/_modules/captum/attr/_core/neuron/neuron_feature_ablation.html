@@ -248,7 +248,7 @@
 
         <span class="k">def</span> <span class="nf">neuron_forward_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
             <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-                <span class="n">layer_eval</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+                <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                     <span class="n">args</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>

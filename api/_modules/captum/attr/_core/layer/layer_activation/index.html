@@ -36,6 +36,7 @@
 
 <span class="kn">from</span> <span class="nn">...._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span>
 <span class="kn">from</span> <span class="nn">...._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
+<span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">ModuleOrModuleList</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 
 
@@ -47,7 +48,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -55,12 +56,15 @@
 
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
 <span class="sd">                          modification of it</span>
-<span class="sd">            layer (torch.nn.Module): Layer for which attributions are computed.</span>
+<span class="sd">            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers</span>
+<span class="sd">                          for which attributions are computed.</span>
 <span class="sd">                          Output size of attribute matches this layer's input or</span>
 <span class="sd">                          output dimensions, depending on whether we attribute to</span>
 <span class="sd">                          the inputs or outputs of the layer, corresponding to</span>
 <span class="sd">                          attribution of each neuron in the input or output of</span>
-<span class="sd">                          this layer.</span>
+<span class="sd">                          this layer. If multiple layers are provided, attributions</span>
+<span class="sd">                          are returned as a list, each element corresponding to the</span>
+<span class="sd">                          activations of the corresponding layer.</span>
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                          applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                          intermediate outputs from batched results across devices.</span>
@@ -75,7 +79,7 @@
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
@@ -112,16 +116,17 @@
 <span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
-<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">            *tensor* or tuple of *tensors* or *list* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors* or *list*):</span>
 <span class="sd">                        Activation of each neuron in given layer output.</span>
 <span class="sd">                        Attributions will always be the same size as the</span>
 <span class="sd">                        output of the given layer.</span>
-<span class="sd">                        Attributions are returned in a tuple based on whether</span>
-<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
-<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
-<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
-<span class="sd">                        outputs of a single tensor are not.</span>
+<span class="sd">                        Attributions are returned in a tuple if</span>
+<span class="sd">                        the layer inputs / outputs contain multiple tensors,</span>
+<span class="sd">                        otherwise a single tensor is returned.</span>
+<span class="sd">                        If multiple layers are provided, attributions</span>
+<span class="sd">                        are returned as a list, each element corresponding to the</span>
+<span class="sd">                        activations of the corresponding layer.</span>
 
 
 
@@ -139,7 +144,7 @@
 <span class="sd">            &gt;&gt;&gt; attribution = layer_cond.attribute(input)</span>
 <span class="sd">        """</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">layer_eval</span><span class="p">,</span> <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
+            <span class="n">layer_eval</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
@@ -147,7 +152,13 @@
                 <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
                 <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer_eval</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">layer_eval</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">single_layer_eval</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">single_layer_eval</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">single_layer_eval</span> <span class="ow">in</span> <span class="n">layer_eval</span>
+            <span class="p">]</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

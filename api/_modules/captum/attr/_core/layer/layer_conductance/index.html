@@ -266,11 +266,9 @@
 <span class="sd">                        whether we attribute to the inputs or outputs</span>
 <span class="sd">                        of the layer which is decided by the input flag</span>
 <span class="sd">                        `attribute_to_layer_input`.</span>
-<span class="sd">                        Attributions are returned in a tuple based on whether</span>
-<span class="sd">                        the layer inputs / outputs are contained in a tuple</span>
-<span class="sd">                        from a forward hook. For standard modules, inputs of</span>
-<span class="sd">                        a single tensor are usually wrapped in a tuple, while</span>
-<span class="sd">                        outputs of a single tensor are not.</span>
+<span class="sd">                        Attributions are returned in a tuple if</span>
+<span class="sd">                        the layer inputs / outputs contain multiple tensors,</span>
+<span class="sd">                        otherwise a single tensor is returned.</span>
 <span class="sd">            - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        The difference between the total</span>
 <span class="sd">                        approximated and true conductance.</span>
@@ -383,11 +381,7 @@
 
         <span class="c1"># Conductance Gradients - Returns gradient of output with respect to</span>
         <span class="c1"># hidden layer and hidden layer evaluated at each input.</span>
-        <span class="p">(</span>
-            <span class="n">layer_gradients</span><span class="p">,</span>
-            <span class="n">layer_evals</span><span class="p">,</span>
-            <span class="n">is_layer_tuple</span><span class="p">,</span>
-        <span class="p">)</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,)</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
             <span class="n">forward_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">layer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">scaled_features_tpl</span><span class="p">,</span>
@@ -419,7 +413,7 @@
                 <span class="n">layer_gradients</span><span class="p">,</span> <span class="n">layer_evals</span><span class="p">,</span> <span class="n">grad_diffs</span>
             <span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_layer_tuple</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

@@ -355,7 +355,7 @@
                     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
                 <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">out_sub</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">out_sub</span> <span class="ow">in</span> <span class="n">out</span><span class="p">)</span>
 
-            <span class="p">(</span><span class="n">gradients</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">is_layer_tuple</span><span class="p">)</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
+            <span class="n">gradients</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">compute_layer_gradients_and_eval</span><span class="p">(</span>
                 <span class="n">wrapped_forward_func</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">,</span>
@@ -394,7 +394,7 @@
             <span class="n">inputs</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">target</span><span class="p">,</span>
-            <span class="n">is_layer_tuple</span><span class="p">,</span>
+            <span class="n">cast</span><span class="p">(</span><span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]],</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span>
         <span class="p">)</span></div>
 
     <span class="nd">@property</span>

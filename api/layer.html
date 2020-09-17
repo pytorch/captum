@@ -188,11 +188,9 @@ the input or output of the given layer, depending on
 whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
 <cite>attribute_to_layer_input</cite>.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </dd>
 </dl>
 </li>
@@ -261,12 +259,15 @@ provides a convergence delta (aka approximation error) or not.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
+for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.</p></li>
+this layer. If multiple layers are provided, attributions
+are returned as a list, each element corresponding to the
+activations of the corresponding layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -317,14 +318,15 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Activation of each neuron in given layer output.
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em> or <em>list</em>):</dt><dd><p>Activation of each neuron in given layer output.
 Attributions will always be the same size as the
 output of the given layer.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.
+If multiple layers are provided, attributions
+are returned as a list, each element corresponding to the
+activations of the corresponding layer.</p>
 </dd>
 </dl>
 </li>
@@ -332,7 +334,7 @@ outputs of a single tensor are not.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> or <em>list</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -585,11 +587,9 @@ layer output. Attributions will always be the same size
 as the output or input of the given layer depending on
 whether <cite>attribute_to_layer_input</cite> is set to <cite>False</cite> or
 <a href="#id1"><span class="problematic" id="id2">`</span></a>True`respectively.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </dd>
 </dl>
 </li>
@@ -628,12 +628,15 @@ layer on given inputs.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a>) – Layer for which attributions are computed.
+<li><p><strong>layer</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch vmaster (1.6.0a0+4392e52 ))"><em>torch.nn.Module</em></a><em>)</em>) – Layer or layers
+for which attributions are computed.
 Output size of attribute matches this layer’s input or
 output dimensions, depending on whether we attribute to
 the inputs or outputs of the layer, corresponding to
 attribution of each neuron in the input or output of
-this layer.</p></li>
+this layer. If multiple layers are provided, attributions
+are returned as a list, each element corresponding to the
+attributions of the corresponding layer.</p></li>
 <li><p><strong>device_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a><em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>)</em>) – Device ID list, necessary only if forward_func
 applies a DataParallel model. This allows reconstruction of
 intermediate outputs from batched results across devices.
@@ -717,15 +720,16 @@ Default: False</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em>):</dt><dd><p>Product of gradient and activation for each
+<dt><strong>attributions</strong> (<em>tensor</em> or tuple of <em>tensors</em> or <em>list</em>):</dt><dd><p>Product of gradient and activation for each
 neuron in given layer output.
 Attributions will always be the same size as the
 output of the given layer.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.
+If multiple layers are provided, attributions
+are returned as a list, each element corresponding to the
+activations of the corresponding layer.</p>
 </dd>
 </dl>
 </li>
@@ -733,7 +737,7 @@ outputs of a single tensor are not.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> of <strong>attributions</strong></p>
+<dd class="field-odd"><p><em>tensor</em> or tuple of <em>tensors</em> or <em>list</em> of <strong>attributions</strong></p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -876,11 +880,9 @@ Default: False</p></li>
 Attributions will be the same size as the
 output of the given layer, except for dimension 2,
 which will be 1 due to summing over channels.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </dd>
 </dl>
 </li>
@@ -1537,11 +1539,9 @@ respect to layer’s input or output. Attributions will always
 be the same size as the provided layer’s inputs or outputs,
 depending on whether we attribute to the inputs or outputs
 of the layer.
-Attributions are returned in a tuple based on whether
-the layer inputs / outputs are contained in a tuple
-from a forward hook. For standard modules, inputs of
-a single tensor are usually wrapped in a tuple, while
-outputs of a single tensor are not.</p>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </dd>
 </dl>
 </li>
@@ -1788,7 +1788,10 @@ outputs. Attributions will always be the same size and
 dimensionality as the input or output of the given layer,
 depending on whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
-<cite>attribute_to_layer_input</cite>.</p>
+<cite>attribute_to_layer_input</cite>.
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </div></blockquote>
 <ul>
 <li><dl class="simple">
@@ -1989,7 +1992,10 @@ output. Attributions will always be the same size as
 the input or output of the given layer, depending on
 whether we attribute to the inputs or outputs
 of the layer which is decided by the input flag
-<cite>attribute_to_layer_input</cite>.</p>
+<cite>attribute_to_layer_input</cite>
+Attributions are returned in a tuple if
+the layer inputs / outputs contain multiple tensors,
+otherwise a single tensor is returned.</p>
 </dd>
 </dl>
 </li>
