@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, List, Tuple, TypeVar, Union
 
 from torch import Tensor
+from torch.nn import Module
 
 if TYPE_CHECKING:
     import sys
@@ -18,5 +19,6 @@ TensorOrTupleOfTensorsGeneric = TypeVar(
     "TensorOrTupleOfTensorsGeneric", Tensor, Tuple[Tensor, ...]
 )
 TupleOrTensorOrBoolGeneric = TypeVar("TupleOrTensorOrBoolGeneric", Tuple, Tensor, bool)
+ModuleOrModuleList = TypeVar("ModuleOrModuleList", Module, List[Module])
 TargetType = Union[None, int, Tuple[int, ...], Tensor, List[Tuple[int, ...]], List[int]]
 BaselineType = Union[None, Tensor, int, float, Tuple[Union[Tensor, int, float], ...]]

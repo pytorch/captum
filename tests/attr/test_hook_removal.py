@@ -6,11 +6,11 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 from torch.nn import Module
 
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._models.base import _get_deep_layer_name, _set_deep_layer_value
+from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
 from .helpers.test_config import config
 
 """
@@ -118,8 +118,11 @@ class HookRemovalMeta(type):
             if layer is not None:
                 if mode is HookRemovalMode.invalid_module:
                     expect_error = True
-                    _set_deep_layer_value(model, layer, ErrorModule())
-                target_layer = _get_deep_layer_name(model, layer)
+                    if isinstance(layer, list):
+                        _set_deep_layer_value(model, layer[0], ErrorModule())
+                    else:
+                        _set_deep_layer_value(model, layer, ErrorModule())
+                target_layer = get_target_layer(model, layer)
                 internal_algorithm = cast(Type[InternalAttribution], algorithm)
                 attr_method = internal_algorithm(model, target_layer)
             else:

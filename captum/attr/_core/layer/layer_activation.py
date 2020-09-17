@@ -9,6 +9,7 @@ from captum.log import log_usage
 
 from ...._utils.common import _format_output
 from ...._utils.gradient import _forward_layer_eval
+from ...._utils.typing import ModuleOrModuleList
 from ..._utils.attribution import LayerAttribution
 
 
@@ -20,7 +21,7 @@ class LayerActivation(LayerAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
@@ -28,12 +29,15 @@ class LayerActivation(LayerAttribution):
 
             forward_func (callable):  The forward function of the model or any
                           modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
+            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+                          for which attributions are computed.
                           Output size of attribute matches this layer's input or
                           output dimensions, depending on whether we attribute to
                           the inputs or outputs of the layer, corresponding to
                           attribution of each neuron in the input or output of
-                          this layer.
+                          this layer. If multiple layers are provided, attributions
+                          are returned as a list, each element corresponding to the
+                          activations of the corresponding layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
@@ -48,7 +52,7 @@ class LayerActivation(LayerAttribution):
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
 
@@ -85,16 +89,17 @@ class LayerActivation(LayerAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *tensor* or tuple of *tensors* or *list* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors* or *list*):
                         Activation of each neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
+                        If multiple layers are provided, attributions
+                        are returned as a list, each element corresponding to the
+                        activations of the corresponding layer.
 
 
 
@@ -112,7 +117,7 @@ class LayerActivation(LayerAttribution):
             >>> attribution = layer_cond.attribute(input)
         """
         with torch.no_grad():
-            layer_eval, is_layer_tuple = _forward_layer_eval(
+            layer_eval = _forward_layer_eval(
                 self.forward_func,
                 inputs,
                 self.layer,
@@ -120,7 +125,13 @@ class LayerActivation(LayerAttribution):
                 device_ids=self.device_ids,
                 attribute_to_layer_input=attribute_to_layer_input,
             )
-        return _format_output(is_layer_tuple, layer_eval)
+        if isinstance(self.layer, Module):
+            return _format_output(len(layer_eval) > 1, layer_eval)
+        else:
+            return [
+                _format_output(len(single_layer_eval) > 1, single_layer_eval)
+                for single_layer_eval in layer_eval
+            ]
 
     @property
     def multiplies_by_inputs(self):

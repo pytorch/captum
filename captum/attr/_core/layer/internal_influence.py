@@ -192,11 +192,9 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
                         as the output or input of the given layer depending on
                         whether `attribute_to_layer_input` is set to `False` or
                         `True`respectively.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
 
         Examples::
 
@@ -282,7 +280,7 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
         expanded_target = _expand_target(target, n_steps)
 
         # Returns gradient of output with respect to hidden layer.
-        layer_gradients, _, is_layer_tuple = compute_layer_gradients_and_eval(
+        layer_gradients, _ = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
             inputs=scaled_features_tpl,
@@ -306,4 +304,4 @@ class InternalInfluence(LayerAttribution, GradientAttribution):
             )
             for scaled_grad, layer_grad in zip(scaled_grads, layer_gradients)
         )
-        return _format_output(is_layer_tuple, attrs)
+        return _format_output(len(attrs) > 1, attrs)

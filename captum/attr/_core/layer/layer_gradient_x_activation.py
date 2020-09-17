@@ -16,7 +16,7 @@ from ...._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-from ...._utils.typing import TargetType
+from ...._utils.typing import ModuleOrModuleList, TargetType
 from ..._utils.attribution import GradientAttribution, LayerAttribution
 
 
@@ -29,7 +29,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
     ) -> None:
@@ -38,12 +38,15 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
 
             forward_func (callable):  The forward function of the model or any
                         modification of it
-            layer (torch.nn.Module): Layer for which attributions are computed.
-                        Output size of attribute matches this layer's input or
-                        output dimensions, depending on whether we attribute to
-                        the inputs or outputs of the layer, corresponding to
-                        attribution of each neuron in the input or output of
-                        this layer.
+            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+                          for which attributions are computed.
+                          Output size of attribute matches this layer's input or
+                          output dimensions, depending on whether we attribute to
+                          the inputs or outputs of the layer, corresponding to
+                          attribution of each neuron in the input or output of
+                          this layer. If multiple layers are provided, attributions
+                          are returned as a list, each element corresponding to the
+                          attributions of the corresponding layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
                         applies a DataParallel model. This allows reconstruction of
                         intermediate outputs from batched results across devices.
@@ -79,7 +82,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         target: TargetType = None,
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         r"""
         Args:
 
@@ -137,17 +140,19 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
                         Default: False
 
         Returns:
-            *tensor* or tuple of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
+            *tensor* or tuple of *tensors* or *list* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors* or *list*):
                         Product of gradient and activation for each
                         neuron in given layer output.
                         Attributions will always be the same size as the
                         output of the given layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
+                        If multiple layers are provided, attributions
+                        are returned as a list, each element corresponding to the
+                        activations of the corresponding layer.
+
 
         Examples::
 
@@ -169,7 +174,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_evals, is_layer_tuple = compute_layer_gradients_and_eval(
+        layer_gradients, layer_evals = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             inputs,
@@ -179,12 +184,26 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
         undo_gradient_requirements(inputs, gradient_mask)
-        return _format_output(
-            is_layer_tuple,
-            tuple(
-                layer_gradient * layer_eval
-                if self.multiplies_by_inputs
-                else layer_gradient
-                for layer_gradient, layer_eval in zip(layer_gradients, layer_evals)
-            ),
+        if isinstance(self.layer, Module):
+            return _format_output(
+                len(layer_evals) > 1,
+                self.multiply_gradient_acts(layer_gradients, layer_evals),
+            )
+        else:
+            return [
+                _format_output(
+                    len(layer_evals[i]) > 1,
+                    self.multiply_gradient_acts(layer_gradients[i], layer_evals[i]),
+                )
+                for i in range(len(self.layer))
+            ]
+
+    def multiply_gradient_acts(
+        self, gradients: Tuple[Tensor, ...], evals: Tuple[Tensor, ...]
+    ) -> Tuple[Tensor, ...]:
+        return tuple(
+            single_gradient * single_eval
+            if self.multiplies_by_inputs
+            else single_gradient
+            for single_gradient, single_eval in zip(gradients, evals)
         )

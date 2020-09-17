@@ -239,11 +239,9 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                         whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
                         `attribute_to_layer_input`.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total
                         approximated and true conductance.
@@ -356,11 +354,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        (
-            layer_gradients,
-            layer_evals,
-            is_layer_tuple,
-        ) = compute_layer_gradients_and_eval(
+        (layer_gradients, layer_evals,) = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
             inputs=scaled_features_tpl,
@@ -392,7 +386,7 @@ class LayerConductance(LayerAttribution, GradientAttribution):
                 layer_gradients, layer_evals, grad_diffs
             )
         )
-        return _format_output(is_layer_tuple, attributions)
+        return _format_output(len(attributions) > 1, attributions)
 
     @property
     def multiplies_by_inputs(self):
