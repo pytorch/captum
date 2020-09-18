@@ -20,7 +20,7 @@ White noise stimuli is fed to a classifier and the ones that are categorized int
 - [https://github.com/aliborji/WhiteNoiseAnalysis.git](https://github.com/aliborji/WhiteNoiseAnalysis.git)
 
 
-### FastCAM: Multiscale Saliency Map with SMOE scale
+#### FastCAM: Multiscale Saliency Map with SMOE scale
 An attribution method that uses information at the end of each network scale which is then combined into a single saliency map. 
 - [Paper](https://arxiv.org/abs/1911.11293)
 - [https://github.com/LLNL/fastcam](https://github.com/LLNL/fastcam)
