@@ -65,5 +65,5 @@ fi
 
 # install deployment bits if asked for
 if [[ $DEPLOY == true ]]; then
-  sudo pip install beautifulsoup4 ipython nbconvert
+  sudo pip install beautifulsoup4 ipython nbconvert==5.6.1
 fi
