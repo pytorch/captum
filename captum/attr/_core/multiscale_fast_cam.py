@@ -5,10 +5,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor
-from torch.nn import Module
 
 from captum.log import log_usage
 
+from ..._utils.typing import ModuleOrModuleList
 from .._utils.attribution import GradientAttribution
 from .layer.layer_activation import LayerActivation
 
@@ -30,7 +30,7 @@ class MultiscaleFastCam(GradientAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layers: List[Module],
+        layers: ModuleOrModuleList,
         norm: Any = "gamma",
         device_ids: Union[None, List[int]] = None,
     ) -> None:
@@ -39,7 +39,8 @@ class MultiscaleFastCam(GradientAttribution):
 
             forward_func (callable): The forward function of the model or any
                           modification of it
-            layers (list(torch.nn.Module)): A list of layers for which attributions
+            layers (torch.nn.Module or listt(torch.nn.Module)): A list of layers
+                          for which attributions.
                           are computed.
             norm (str): choice of norm to normalize saliency maps
             device_ids (list(int)): Device ID list, necessary only if forward_func
@@ -49,9 +50,7 @@ class MultiscaleFastCam(GradientAttribution):
                           then it is not necessary to provide this argument.
         """
         GradientAttribution.__init__(self, forward_func)
-        self.layer_acts = [
-            LayerActivation(forward_func, layer, device_ids) for layer in layers
-        ]
+        self.layer_act = LayerActivation(forward_func, layers, device_ids)
         self.norm_func = self._set_norm_func(norm)
 
     @log_usage()
@@ -115,11 +114,11 @@ class MultiscaleFastCam(GradientAttribution):
                                 weights=[1.0 for _ in range(5)],
                                 output_shape=(in_height, in_width))
         """
+        layer_attrs = self.layer_act.attribute(
+            inputs, additional_forward_args, attribute_to_layer_input
+        )
         attributes = []
-        for layer_act in self.layer_acts:
-            layer_attr = layer_act.attribute(
-                inputs, additional_forward_args, attribute_to_layer_input
-            )
+        for layer_attr in layer_attrs:
             smoe_attr = self._compute_smoe_scale(layer_attr)
             scaled_attr = self.norm_func(smoe_attr)
             attributes.append(scaled_attr)
