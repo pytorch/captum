@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import numpy as np
 import torch
@@ -254,11 +254,9 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
                         of the layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
@@ -420,7 +418,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads, _, is_layer_tuple = compute_layer_gradients_and_eval(
+        grads, _ = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             input_baseline_scaled,
@@ -430,7 +428,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_baselines, _ = _forward_layer_eval(
+        attr_baselines = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -439,7 +437,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_inputs, _ = _forward_layer_eval(
+        attr_inputs = _forward_layer_eval(
             self.forward_func,
             inputs,
             self.layer,
@@ -467,7 +465,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            is_layer_tuple,
+            cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
     def has_convergence_delta(self) -> bool:

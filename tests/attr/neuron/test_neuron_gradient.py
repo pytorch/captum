@@ -117,7 +117,7 @@ class Test(BaseTest):
     def _gradient_matching_test_assert(
         self, model: Module, output_layer: Module, test_input: Tensor
     ) -> None:
-        out, _ = _forward_layer_eval(model, test_input, output_layer)
+        out = _forward_layer_eval(model, test_input, output_layer)
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
@@ -129,7 +129,7 @@ class Test(BaseTest):
             input_attrib = Saliency(
                 lambda x: _forward_layer_eval(
                     model, x, output_layer, grad_enabled=True
-                )[0][0][(slice(None), *neuron)]
+                )[0][(slice(None), *neuron)]
             )
             sal_vals = input_attrib.attribute(test_input, abs=False)
             grad_vals = gradient_attrib.attribute(test_input, neuron)

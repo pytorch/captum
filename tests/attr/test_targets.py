@@ -11,12 +11,11 @@ from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 from ..helpers.basic_models import BasicModel_MultiLayer
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
 from .helpers.test_config import config
 
 """
@@ -99,7 +98,7 @@ class TargetsMeta(type):
         This method creates a single target test for the given algorithm and parameters.
         """
 
-        target_layer = _get_deep_layer_name(model, layer) if layer is not None else None
+        target_layer = get_target_layer(model, layer) if layer is not None else None
         # Obtains initial arguments to replace with each example
         # individually.
         original_inputs = args["inputs"]

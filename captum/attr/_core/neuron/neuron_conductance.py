@@ -327,7 +327,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
 
         # Conductance Gradients - Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
-        layer_gradients, layer_eval, input_grads, _ = compute_layer_gradients_and_eval(
+        layer_gradients, layer_eval, input_grads = compute_layer_gradients_and_eval(
             forward_fn=self.forward_func,
             layer=self.layer,
             inputs=scaled_features_tpl,

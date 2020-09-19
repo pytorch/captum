@@ -265,6 +265,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         depending on whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
                         `attribute_to_layer_input`.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
@@ -298,7 +301,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         if self.device_ids is None:
             self.device_ids = getattr(self.forward_func, "device_ids", None)
-        inputs_layer, is_layer_tuple = _forward_layer_eval(
+        inputs_layer = _forward_layer_eval(
             self.forward_func,
             inps,
             self.layer,
@@ -307,7 +310,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        baselines_layer, _ = _forward_layer_eval(
+        baselines_layer = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -341,6 +344,11 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
                     device = _extract_device(module, hook_inputs, hook_outputs)
+                    is_layer_tuple = (
+                        isinstance(hook_outputs, tuple)
+                        if hook_outputs is not None
+                        else isinstance(hook_inputs, tuple)
+                    )
                     if is_layer_tuple:
                         return scattered_inputs_dict[device]
                     return scattered_inputs_dict[device][0]
@@ -396,8 +404,8 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            return _format_output(is_layer_tuple, attributions), delta
-        return _format_output(is_layer_tuple, attributions)
+            return _format_output(len(attributions) > 1, attributions), delta
+        return _format_output(len(attributions) > 1, attributions)
 
     def has_convergence_delta(self) -> bool:
         return True

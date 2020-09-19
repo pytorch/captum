@@ -221,7 +221,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
 
         def neuron_forward_func(*args: Any):
             with torch.no_grad():
-                layer_eval, _ = _forward_layer_eval(
+                layer_eval = _forward_layer_eval(
                     self.forward_func,
                     args,
                     self.layer,

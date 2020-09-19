@@ -260,7 +260,7 @@ class TestDeepLift(BaseTest):
         attr = dl.attribute(inputs, target=0)
         attr2 = dl2.attribute(inputs, target=0, attribute_to_layer_input=True)
 
-        self.assertTrue(cast(Tensor, attr).sum() == cast(Tuple, attr2)[0].sum())
+        self.assertTrue(cast(Tensor, attr).sum() == cast(Tensor, attr2).sum())
 
     def test_convnet_maxpool3d_classification(self) -> None:
         inputs = 100 * torch.randn(2, 1, 10, 10, 10)
@@ -275,7 +275,7 @@ class TestDeepLift(BaseTest):
 
         attr = dl.attribute(inputs, target=0, attribute_to_layer_input=False)
         attr2 = dl2.attribute(inputs, target=0, attribute_to_layer_input=True)
-        self.assertTrue(cast(Tensor, attr).sum() == cast(Tuple, attr2)[0].sum())
+        self.assertTrue(cast(Tensor, attr).sum() == cast(Tensor, attr2).sum())
 
     def _relu_custom_attr_func_assert(
         self,
