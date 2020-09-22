@@ -154,10 +154,11 @@ class LRP(GradientAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
+        is_inputs_tuple = isinstance(inputs, tuple)
+        inputs = _format_input(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
+
         try:
-            is_inputs_tuple = isinstance(inputs, tuple)
-            inputs = _format_input(inputs)
-            gradient_mask = apply_gradient_requirements(inputs)
             # 1. Forward pass
             self._change_weights(inputs, additional_forward_args)
             self._register_forward_hooks()

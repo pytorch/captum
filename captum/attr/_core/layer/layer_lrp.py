@@ -158,10 +158,11 @@ class LayerLRP(LRP, LayerAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
+        is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
+        inputs = _format_input(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
+
         try:
-            is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
-            inputs = _format_input(inputs)
-            gradient_mask = apply_gradient_requirements(inputs)
             # 1. Forward pass
             self._change_weights(inputs, additional_forward_args)
             self._register_forward_hooks()
@@ -177,10 +178,10 @@ class LayerLRP(LRP, LayerAttribution):
         if return_convergence_delta:
             if self.layer is None:
                 delta = []
-                for relevance_layer in relevances[0]:
+                for relevance_layer in relevances:
                     delta.append(self.compute_convergence_delta(relevance_layer))
             else:
-                delta = self.compute_convergence_delta(relevances[0])
+                delta = self.compute_convergence_delta(relevances)
             return _format_output(is_layer_tuple, relevances), delta
         else:
             return _format_output(is_layer_tuple, relevances)
@@ -211,10 +212,11 @@ class LayerLRP(LRP, LayerAttribution):
                 else:
                     relevance = layer.rule.relevance_output
                 relevances.append(relevance)
+            return relevances
+
         else:
             if self.attribute_to_layer_input:
                 relevances = self.layer.rule.relevance_input
             else:
                 relevances = self.layer.rule.relevance_output
-
-        return (relevances,)
+            return (relevances,)
