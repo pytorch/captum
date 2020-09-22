@@ -93,7 +93,6 @@ class Test(BaseTest):
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
 
-    """
     def test_lrp_simple_inplaceReLU(self):
         model_default, inputs = _get_simple_model()
         model_inplace, _ = _get_simple_model(inplace=True)
@@ -106,7 +105,6 @@ class Test(BaseTest):
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
         relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
         assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
-    """
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
