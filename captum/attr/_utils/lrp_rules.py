@@ -17,6 +17,7 @@ class PropagationRule(ABC):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
         self._handle_input_hooks = []
+        self.relevance_input = []
         for input in inputs:
             if not hasattr(input, "hook_registered"):
                 input_hook = self._create_backward_hook_input(input.data)
@@ -24,6 +25,7 @@ class PropagationRule(ABC):
                 input.hook_registered = True
         output_hook = self._create_backward_hook_output(outputs.data)
         self._handle_output_hook = outputs.register_hook(output_hook)
+        return outputs.clone()
 
     @staticmethod
     def backward_hook_activation(module, grad_input, grad_output):
@@ -33,7 +35,7 @@ class PropagationRule(ABC):
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
             relevance = grad * inputs
-            self.relevance_input = relevance.data
+            self.relevance_input.append(relevance.data)
             return relevance
 
         return _backward_hook_input
