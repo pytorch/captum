@@ -266,16 +266,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span> <span class="o">=</span> <span class="n">resnet</span><span class="o">.</span><span class="n">resnet152</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">def</span> <span class="nf">save_output</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="n">output</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">layer4</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">save_output</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">maxpool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">layer1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">layer2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">layer3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_model</span><span class="o">.</span><span class="n">layer4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">VQA_Resnet_Model</span><span class="p">(</span><span class="n">Net</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding_tokens</span><span class="p">):</span>
@@ -468,7 +468,7 @@
 <div class="input_area">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">vqa_dataset</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">questions</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">)</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">question</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">questions</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
         <span class="n">q</span><span class="p">,</span> <span class="n">q_len</span> <span class="o">=</span> <span class="n">encode_question</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
@@ -639,10 +639,10 @@ Our input text will need to be transformed into embeddings, as it is a sequence 
 <div class="output">
 <div class="output_area">
 <div class="prompt"></div>
-<div id="843b7ff9-f8c6-4b0c-b6fe-fe65f7ddf64f"></div>
+<div id="a361e9a5-e37c-4244-ba6c-34a8e3bb3a6d"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#843b7ff9-f8c6-4b0c-b6fe-fe65f7ddf64f');
+var element = $('#a361e9a5-e37c-4244-ba6c-34a8e3bb3a6d');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "2033d6dad6c54502ac460d417074440e", "version_major": 2, "version_minor": 0}
@@ -651,10 +651,10 @@ var element = $('#843b7ff9-f8c6-4b0c-b6fe-fe65f7ddf64f');
 </div>
 <div class="output_area">
 <div class="prompt"></div>
-<div id="4770b05f-5b4b-4d84-b957-778e4414d86a"></div>
+<div id="09be6985-a57a-4360-90b9-0530bf985a1f"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#4770b05f-5b4b-4d84-b957-778e4414d86a');
+var element = $('#09be6985-a57a-4360-90b9-0530bf985a1f');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "1217799e7d9c4791a9506cb08eb193fe", "version_major": 2, "version_minor": 0}

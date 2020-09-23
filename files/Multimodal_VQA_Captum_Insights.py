@@ -127,16 +127,16 @@ class ResNetLayer4(torch.nn.Module):
         self.r_model = resnet.resnet152(pretrained=True)
         self.r_model.eval()
         self.r_model.to(device)
-        self.buffer = None
-
-        def save_output(module, input, output):
-            self.buffer = output
-
-        self.r_model.layer4.register_forward_hook(save_output)
 
     def forward(self, x):
-        self.r_model(x)
-        return self.buffer
+        x = self.r_model.conv1(x)
+        x = self.r_model.bn1(x)
+        x = self.r_model.relu(x)
+        x = self.r_model.maxpool(x)
+        x = self.r_model.layer1(x)
+        x = self.r_model.layer2(x)
+        x = self.r_model.layer3(x)
+        return self.r_model.layer4(x)
 
 class VQA_Resnet_Model(Net):
     def __init__(self, embedding_tokens):
@@ -258,7 +258,7 @@ def input_text_transform(x):
 
 def vqa_dataset(image, questions, targets):
     img = Image.open(image).convert("RGB")
-    img = transform(img).unsqueeze(0)
+    img = transform(img).unsqueeze(0).to(device)
 
     for question, target in zip(questions, targets):
         q, q_len = encode_question(question)
