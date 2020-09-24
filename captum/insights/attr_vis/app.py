@@ -18,7 +18,10 @@ from torch.nn import Module
 
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.insights.attribution_calculation import AttributionCalculation, OutputScore
+from captum.insights.attr_vis.attribution_calculation import (
+    AttributionCalculation,
+    OutputScore,
+)
 from captum.log import log_usage
 
 from .config import ATTRIBUTION_METHOD_CONFIG, ATTRIBUTION_NAMES_TO_METHODS
