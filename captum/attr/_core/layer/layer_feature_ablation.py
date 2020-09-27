@@ -180,7 +180,10 @@ class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):
                         the input or output of the given layer, depending on
                         whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
-                        `attribute_to_layer_input`.
+                        `attribute_to_layer_input`
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
 
         Examples::
 
