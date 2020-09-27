@@ -93,6 +93,7 @@ class Test(BaseTest):
         relu_attributions: bool = False,
     ):
         layer_gc = LayerGradCam(model, target_layer)
+        self.assertFalse(layer_gc.multiplies_by_inputs)
         attributions = layer_gc.attribute(
             test_input,
             target=0,

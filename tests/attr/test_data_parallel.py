@@ -17,11 +17,10 @@ from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
 from .helpers.test_config import config
 
 """
@@ -34,6 +33,7 @@ schema described there.
 # Distributed Data Parallel env setup
 os.environ["MASTER_ADDR"] = "127.0.0.1"
 os.environ["MASTER_PORT"] = "29500"
+dist.init_process_group(backend="gloo", rank=0, world_size=1)
 
 
 class DataParallelCompareMode(Enum):
@@ -153,7 +153,7 @@ class DataParallelMeta(type):
                 )
                 args_1, args_2 = cuda_args, cuda_args
             elif mode is DataParallelCompareMode.dist_data_parallel:
-                dist.init_process_group(backend="gloo", rank=0, world_size=1)
+
                 model_1, model_2 = (
                     cuda_model,
                     torch.nn.parallel.DistributedDataParallel(cuda_model),
@@ -167,14 +167,14 @@ class DataParallelMeta(type):
             if target_layer:
                 internal_algorithm = cast(Type[InternalAttribution], algorithm)
                 attr_method_1 = internal_algorithm(
-                    model_1, _get_deep_layer_name(model_1, target_layer)
+                    model_1, get_target_layer(model_1, target_layer)
                 )
                 # cuda_model is used to obtain target_layer since DataParallel
                 # adds additional wrapper.
                 # model_2 is always either the CUDA model itself or DataParallel
                 if alt_device_ids is None:
                     attr_method_2 = internal_algorithm(
-                        model_2, _get_deep_layer_name(cuda_model, target_layer)
+                        model_2, get_target_layer(cuda_model, target_layer)
                     )
                 else:
                     # LayerDeepLift and LayerDeepLiftShap do not take device ids
@@ -195,12 +195,12 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, _get_deep_layer_name(cuda_model, target_layer)
+                            model_2, get_target_layer(cuda_model, target_layer)
                         )
                     else:
                         attr_method_2 = internal_algorithm(
                             model_2.forward,
-                            _get_deep_layer_name(cuda_model, target_layer),
+                            get_target_layer(cuda_model, target_layer),
                             device_ids=alt_device_ids,
                         )
             else:
@@ -218,9 +218,19 @@ class DataParallelMeta(type):
                 attributions_2, delta_2 = attr_method_2.attribute(
                     return_convergence_delta=True, **args_2
                 )
-                assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, mode="max", delta=dp_delta
-                )
+                if isinstance(attributions_1, list):
+                    for i in range(len(attributions_1)):
+                        assertTensorTuplesAlmostEqual(
+                            self,
+                            attributions_1[i],
+                            attributions_2[i],
+                            mode="max",
+                            delta=dp_delta,
+                        )
+                else:
+                    assertTensorTuplesAlmostEqual(
+                        self, attributions_1, attributions_2, mode="max", delta=dp_delta
+                    )
                 assertTensorTuplesAlmostEqual(
                     self, delta_1, delta_2, mode="max", delta=dp_delta
                 )
@@ -228,12 +238,19 @@ class DataParallelMeta(type):
                 attributions_1 = attr_method_1.attribute(**args_1)
                 self.setUp()
                 attributions_2 = attr_method_2.attribute(**args_2)
-                assertTensorTuplesAlmostEqual(
-                    self, attributions_1, attributions_2, mode="max", delta=dp_delta
-                )
-
-            if mode is DataParallelCompareMode.dist_data_parallel:
-                dist.destroy_process_group()
+                if isinstance(attributions_1, list):
+                    for i in range(len(attributions_1)):
+                        assertTensorTuplesAlmostEqual(
+                            self,
+                            attributions_1[i],
+                            attributions_2[i],
+                            mode="max",
+                            delta=dp_delta,
+                        )
+                else:
+                    assertTensorTuplesAlmostEqual(
+                        self, attributions_1, attributions_2, mode="max", delta=dp_delta
+                    )
 
         return data_parallel_test_assert
 
@@ -241,4 +258,7 @@ class DataParallelMeta(type):
 if torch.cuda.is_available() and torch.cuda.device_count() != 0:
 
     class DataParallelTest(BaseTest, metaclass=DataParallelMeta):
-        pass
+        @classmethod
+        def tearDownClass(cls):
+            if torch.distributed.is_initialized():
+                dist.destroy_process_group()

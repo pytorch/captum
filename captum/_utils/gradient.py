@@ -2,6 +2,7 @@
 import threading
 import typing
 import warnings
+from collections import defaultdict
 from typing import Any, Callable, Dict, List, Tuple, Union, cast
 
 import torch
@@ -9,7 +10,12 @@ from torch import Tensor, device
 from torch.nn import Module
 
 from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_column
-from .typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from .typing import (
+    Literal,
+    ModuleOrModuleList,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 
 
 def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
@@ -75,20 +81,20 @@ def compute_gradients(
     additional_forward_args: Any = None,
 ) -> Tuple[Tensor, ...]:
     r"""
-        Computes gradients of the output with respect to inputs for an
-        arbitrary forward function.
+    Computes gradients of the output with respect to inputs for an
+    arbitrary forward function.
 
-        Args:
+    Args:
 
-            forward_fn: forward function. This can be for example model's
-                        forward function.
-            input:      Input at which gradients are evaluated,
-                        will be passed to forward_fn.
-            target_ind: Index of the target class for which gradients
-                        must be computed (classification only).
-            additional_forward_args: Additional input arguments that forward
-                        function requires. It takes an empty tuple (no additional
-                        arguments) if no additional arguments are required
+        forward_fn: forward function. This can be for example model's
+                    forward function.
+        input:      Input at which gradients are evaluated,
+                    will be passed to forward_fn.
+        target_ind: Index of the target class for which gradients
+                    must be computed (classification only).
+        additional_forward_args: Additional input arguments that forward
+                    function requires. It takes an empty tuple (no additional
+                    arguments) if no additional arguments are required
     """
     with torch.autograd.set_grad_enabled(True):
         # runs forward pass
@@ -128,6 +134,7 @@ def _neuron_gradients(
     return _total_gradients
 
 
+@typing.overload
 def _forward_layer_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
@@ -135,13 +142,40 @@ def _forward_layer_eval(
     additional_forward_args: Any = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Literal[True, False]]:
+    grad_enabled: bool = False,
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _forward_layer_eval(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: List[Module],
+    additional_forward_args: Any = None,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    grad_enabled: bool = False,
+) -> List[Tuple[Tensor, ...]]:
+    ...
+
+
+def _forward_layer_eval(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: ModuleOrModuleList,
+    additional_forward_args: Any = None,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    grad_enabled: bool = False,
+) -> Union[Tuple[Tensor, ...], List[Tuple[Tensor, ...]]]:
     return _forward_layer_eval_with_neuron_grads(
         forward_fn,
         inputs,
         layer,
         additional_forward_args=additional_forward_args,
         gradient_neuron_index=None,
+        grad_enabled=grad_enabled,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
     )
@@ -151,12 +185,12 @@ def _forward_layer_eval(
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
+    layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
-) -> Tuple[Dict[device, Tuple[Tensor, ...]], Literal[True, False]]:
+) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
     ...
 
 
@@ -164,27 +198,27 @@ def _forward_layer_distributed_eval(
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
+    layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: Literal[True],
-) -> Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, Literal[True, False]]:
+) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
     ...
 
 
 def _forward_layer_distributed_eval(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
+    layer: ModuleOrModuleList,
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
 ) -> Union[
-    Tuple[Dict[device, Tuple[Tensor, ...]], Tensor, bool],
-    Tuple[Dict[device, Tuple[Tensor, ...]], bool],
+    Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
+    Dict[Module, Dict[device, Tuple[Tensor, ...]]],
 ]:
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
@@ -196,43 +230,52 @@ def _forward_layer_distributed_eval(
     This is especially useful when we execute forward pass in a distributed setting,
     using `DataParallel`s for example.
     """
-    saved_layer = {}
-    is_eval_tuple = False
+    saved_layer: Dict[Module, Dict[device, Tuple[Tensor, ...]]] = defaultdict(dict)
     lock = threading.Lock()
+    all_layers: List[Module] = [layer] if isinstance(layer, Module) else layer
+
     # Set a forward hook on specified module and run forward pass to
     # get layer output tensor(s).
     # For DataParallel models, each partition adds entry to dictionary
     # with key as device and value as corresponding Tensor.
+    def hook_wrapper(original_module):
+        def forward_hook(module, inp, out=None):
+            eval_tsrs = inp if attribute_to_layer_input else out
+            is_eval_tuple = isinstance(eval_tsrs, tuple)
 
-    def forward_hook(module, inp, out=None):
-        nonlocal is_eval_tuple
-        eval_tsrs = inp if attribute_to_layer_input else out
-        is_eval_tuple = isinstance(eval_tsrs, tuple)
+            if not is_eval_tuple:
+                eval_tsrs = (eval_tsrs,)
+            with lock:
+                nonlocal saved_layer
+                # Note that cloning behaviour of `eval_tsr` is different
+                # when `forward_hook_with_return` is set to True. This is because
+                # otherwise `backward()` on the last output layer won't execute.
+                if forward_hook_with_return:
+                    saved_layer[original_module][eval_tsrs[0].device] = eval_tsrs
+                    eval_tsrs_to_return = tuple(
+                        eval_tsr.clone() for eval_tsr in eval_tsrs
+                    )
+                    if not is_eval_tuple:
+                        eval_tsrs_to_return = eval_tsrs_to_return[0]
+                    return eval_tsrs_to_return
+                else:
+                    saved_layer[original_module][eval_tsrs[0].device] = tuple(
+                        eval_tsr.clone() for eval_tsr in eval_tsrs
+                    )
 
-        if not is_eval_tuple:
-            eval_tsrs = (eval_tsrs,)
-        with lock:
-            nonlocal saved_layer
-            # Note that cloning behaviour of `eval_tsr` is different
-            # when `forward_hook_with_return` is set to True. This is because
-            # otherwise `backward()` on the last output layer won't execute.
-            if forward_hook_with_return:
-                saved_layer[eval_tsrs[0].device] = eval_tsrs
-                eval_tsrs_to_return = tuple(eval_tsr.clone() for eval_tsr in eval_tsrs)
-                if not is_eval_tuple:
-                    eval_tsrs_to_return = eval_tsrs_to_return[0]
-                return eval_tsrs_to_return
-            else:
-                saved_layer[eval_tsrs[0].device] = tuple(
-                    eval_tsr.clone() for eval_tsr in eval_tsrs
-                )
+        return forward_hook
 
-    hook = None
+    all_hooks = []
     try:
-        if attribute_to_layer_input:
-            hook = layer.register_forward_pre_hook(forward_hook)
-        else:
-            hook = layer.register_forward_hook(forward_hook)
+        for single_layer in all_layers:
+            if attribute_to_layer_input:
+                all_hooks.append(
+                    single_layer.register_forward_pre_hook(hook_wrapper(single_layer))
+                )
+            else:
+                all_hooks.append(
+                    single_layer.register_forward_hook(hook_wrapper(single_layer))
+                )
         output = _run_forward(
             forward_fn,
             inputs,
@@ -240,15 +283,15 @@ def _forward_layer_distributed_eval(
             additional_forward_args=additional_forward_args,
         )
     finally:
-        if hook is not None:
+        for hook in all_hooks:
             hook.remove()
 
     if len(saved_layer) == 0:
         raise AssertionError("Forward hook did not obtain any outputs for given layer")
 
     if forward_hook_with_return:
-        return saved_layer, output, is_eval_tuple
-    return saved_layer, is_eval_tuple
+        return saved_layer, output
+    return saved_layer
 
 
 def _gather_distributed_tensors(
@@ -274,7 +317,7 @@ def _gather_distributed_tensors(
 
 def _extract_device_ids(
     forward_fn: Callable,
-    saved_layer: Dict[device, Tuple[Tensor, ...]],
+    saved_layer: Dict[Module, Dict[device, Tuple[Tensor, ...]]],
     device_ids: Union[None, List[int]],
 ) -> Union[None, List[int]]:
     r"""
@@ -286,7 +329,10 @@ def _extract_device_ids(
     # Multiple devices / keys implies a DataParallel model, so we look for
     # device IDs if given or available from forward function
     # (DataParallel model object).
-    if len(saved_layer) > 1 and device_ids is None:
+    if (
+        max(len(saved_layer[single_layer]) for single_layer in saved_layer) > 1
+        and device_ids is None
+    ):
         if (
             hasattr(forward_fn, "device_ids")
             and cast(Any, forward_fn).device_ids is not None
@@ -311,9 +357,10 @@ def _forward_layer_eval_with_neuron_grads(
     additional_forward_args: Any = None,
     *,
     gradient_neuron_index: Union[int, Tuple[int, ...]],
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
     ...
 
 
@@ -324,22 +371,40 @@ def _forward_layer_eval_with_neuron_grads(
     layer: Module,
     additional_forward_args: Any = None,
     gradient_neuron_index: None = None,
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
-) -> Tuple[Tuple[Tensor, ...], Literal[True, False]]:
+) -> Tuple[Tensor, ...]:
+    ...
+
+
+@typing.overload
+def _forward_layer_eval_with_neuron_grads(
+    forward_fn: Callable,
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    layer: List[Module],
+    additional_forward_args: Any = None,
+    gradient_neuron_index: None = None,
+    grad_enabled: bool = False,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+) -> List[Tuple[Tensor, ...]]:
     ...
 
 
 def _forward_layer_eval_with_neuron_grads(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
-    layer: Module,
+    layer: ModuleOrModuleList,
     additional_forward_args: Any = None,
     gradient_neuron_index: Union[None, int, Tuple[int, ...]] = None,
+    grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
 ) -> Union[
-    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool], Tuple[Tuple[Tensor, ...], bool]
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
+    Tuple[Tensor, ...],
+    List[Tuple[Tensor, ...]],
 ]:
     """
     This method computes forward evaluation for a particular layer using a
@@ -357,32 +422,40 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    saved_layer, is_layer_tuple = _forward_layer_distributed_eval(
-        forward_fn,
-        inputs,
-        layer,
-        additional_forward_args=additional_forward_args,
-        attribute_to_layer_input=attribute_to_layer_input,
-    )
+    grad_enabled = True if gradient_neuron_index is not None or grad_enabled else False
+
+    with torch.autograd.set_grad_enabled(grad_enabled):
+        saved_layer = _forward_layer_distributed_eval(
+            forward_fn,
+            inputs,
+            layer,
+            additional_forward_args=additional_forward_args,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
     device_ids = _extract_device_ids(forward_fn, saved_layer, device_ids)
     # Identifies correct device ordering based on device ids.
     # key_list is a list of devices in appropriate ordering for concatenation.
     # If only one key exists (standard model), key list simply has one element.
-    key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
+    key_list = _sort_key_list(list(next(iter(saved_layer.values())).keys()), device_ids)
     if gradient_neuron_index is not None:
+        assert isinstance(
+            layer, Module
+        ), "Cannot compute neuron gradients for multiple layers simultaneously!"
         inp_grads = _neuron_gradients(
-            inputs, saved_layer, key_list, gradient_neuron_index
+            inputs, saved_layer[layer], key_list, gradient_neuron_index
         )
         return (
-            _gather_distributed_tensors(saved_layer, key_list=key_list),
+            _gather_distributed_tensors(saved_layer[layer], key_list=key_list),
             inp_grads,
-            is_layer_tuple,
         )
     else:
-        return (
-            _gather_distributed_tensors(saved_layer, key_list=key_list),
-            is_layer_tuple,
-        )
+        if isinstance(layer, Module):
+            return _gather_distributed_tensors(saved_layer[layer], key_list=key_list)
+        else:
+            return [
+                _gather_distributed_tensors(saved_layer[curr_layer], key_list=key_list)
+                for curr_layer in layer
+            ]
 
 
 @typing.overload
@@ -397,9 +470,22 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[
-    Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]
-]:
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def compute_layer_gradients_and_eval(
+    forward_fn: Callable,
+    layer: List[Module],
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
+    target_ind: TargetType = None,
+    additional_forward_args: Any = None,
+    gradient_neuron_index: None = None,
+    device_ids: Union[None, List[int]] = None,
+    attribute_to_layer_input: bool = False,
+    output_fn: Union[None, Callable] = None,
+) -> Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]]:
     ...
 
 
@@ -414,13 +500,13 @@ def compute_layer_gradients_and_eval(
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
-) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Literal[True, False]]:
+) -> Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]]:
     ...
 
 
 def compute_layer_gradients_and_eval(
     forward_fn: Callable,
-    layer: Module,
+    layer: ModuleOrModuleList,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
@@ -429,61 +515,62 @@ def compute_layer_gradients_and_eval(
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
 ) -> Union[
-    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
-    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...], bool],
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...]],
+    Tuple[Tuple[Tensor, ...], Tuple[Tensor, ...], Tuple[Tensor, ...]],
+    Tuple[List[Tuple[Tensor, ...]], List[Tuple[Tensor, ...]]],
 ]:
     r"""
-        Computes gradients of the output with respect to a given layer as well
-        as the output evaluation of the layer for an arbitrary forward function
-        and given input.
+    Computes gradients of the output with respect to a given layer as well
+    as the output evaluation of the layer for an arbitrary forward function
+    and given input.
 
-        For data parallel models, hooks are executed once per device ,so we
-        need to internally combine the separated tensors from devices by
-        concatenating based on device_ids. Any necessary gradients must be taken
-        with respect to each independent batched tensor, so the gradients are
-        computed and combined appropriately.
+    For data parallel models, hooks are executed once per device ,so we
+    need to internally combine the separated tensors from devices by
+    concatenating based on device_ids. Any necessary gradients must be taken
+    with respect to each independent batched tensor, so the gradients are
+    computed and combined appropriately.
 
-        More information regarding the behavior of forward hooks with DataParallel
-        models can be found in the PyTorch data parallel documentation. We maintain
-        the separate inputs in a dictionary protected by a lock, analogous to the
-        gather implementation for the core PyTorch DataParallel implementation.
+    More information regarding the behavior of forward hooks with DataParallel
+    models can be found in the PyTorch data parallel documentation. We maintain
+    the separate inputs in a dictionary protected by a lock, analogous to the
+    gather implementation for the core PyTorch DataParallel implementation.
 
-        NOTE: To properly handle inplace operations, a clone of the layer output
-        is stored. This structure inhibits execution of a backward hook on the last
-        module for the layer output when computing the gradient with respect to
-        the input, since we store an intermediate clone, as
-        opposed to the true module output. If backward module hooks are necessary
-        for the final module when computing input gradients, utilize
-        _forward_layer_eval_with_neuron_grads instead.
+    NOTE: To properly handle inplace operations, a clone of the layer output
+    is stored. This structure inhibits execution of a backward hook on the last
+    module for the layer output when computing the gradient with respect to
+    the input, since we store an intermediate clone, as
+    opposed to the true module output. If backward module hooks are necessary
+    for the final module when computing input gradients, utilize
+    _forward_layer_eval_with_neuron_grads instead.
 
-        Args:
+    Args:
 
-            forward_fn: forward function. This can be for example model's
-                        forward function.
-            layer:      Layer for which gradients / output will be evaluated.
-            inputs:     Input at which gradients are evaluated,
-                        will be passed to forward_fn.
-            target_ind: Index of the target class for which gradients
-                        must be computed (classification only).
-            output_fn:  An optional function that is applied to the layer inputs or
-                        outputs depending whether the `attribute_to_layer_input` is
-                        set to `True` or `False`
-            args:       Additional input arguments that forward function requires.
-                        It takes an empty tuple (no additional arguments) if no
-                        additional arguments are required
+        forward_fn: forward function. This can be for example model's
+                    forward function.
+        layer:      Layer for which gradients / output will be evaluated.
+        inputs:     Input at which gradients are evaluated,
+                    will be passed to forward_fn.
+        target_ind: Index of the target class for which gradients
+                    must be computed (classification only).
+        output_fn:  An optional function that is applied to the layer inputs or
+                    outputs depending whether the `attribute_to_layer_input` is
+                    set to `True` or `False`
+        args:       Additional input arguments that forward function requires.
+                    It takes an empty tuple (no additional arguments) if no
+                    additional arguments are required
 
 
-        Returns:
-            2-element tuple of **gradients**, **evals**:
-            - **gradients**:
-                Gradients of output with respect to target layer output.
-            - **evals**:
-                Target layer output for given input.
+    Returns:
+        2-element tuple of **gradients**, **evals**:
+        - **gradients**:
+            Gradients of output with respect to target layer output.
+        - **evals**:
+            Target layer output for given input.
     """
     with torch.autograd.set_grad_enabled(True):
         # saved_layer is a dictionary mapping device to a tuple of
         # layer evaluations on that device.
-        saved_layer, output, is_layer_tuple = _forward_layer_distributed_eval(
+        saved_layer, output = _forward_layer_distributed_eval(
             forward_fn,
             inputs,
             layer,
@@ -502,37 +589,76 @@ def compute_layer_gradients_and_eval(
         # Identifies correct device ordering based on device ids.
         # key_list is a list of devices in appropriate ordering for concatenation.
         # If only one key exists (standard model), key list simply has one element.
-        key_list = _sort_key_list(list(saved_layer.keys()), device_ids)
-
-        all_outputs = _reduce_list(
-            [
-                saved_layer[device_id]
-                if output_fn is None
-                else output_fn(saved_layer[device_id])
-                for device_id in key_list
-            ]
+        key_list = _sort_key_list(
+            list(next(iter(saved_layer.values())).keys()), device_ids
         )
-        num_tensors = len(saved_layer[next(iter(saved_layer))])
+        all_outputs: Union[Tuple[Tensor, ...], List[Tuple[Tensor, ...]]]
+        if isinstance(layer, Module):
+            all_outputs = _reduce_list(
+                [
+                    saved_layer[layer][device_id]
+                    if output_fn is None
+                    else output_fn(saved_layer[layer][device_id])
+                    for device_id in key_list
+                ]
+            )
+        else:
+            all_outputs = [
+                _reduce_list(
+                    [
+                        saved_layer[single_layer][device_id]
+                        if output_fn is None
+                        else output_fn(saved_layer[single_layer][device_id])
+                        for device_id in key_list
+                    ]
+                )
+                for single_layer in layer
+            ]
+        all_layers: List[Module] = [layer] if isinstance(layer, Module) else layer
         grad_inputs = tuple(
             layer_tensor
+            for single_layer in all_layers
             for device_id in key_list
-            for layer_tensor in saved_layer[device_id]
+            for layer_tensor in saved_layer[single_layer][device_id]
         )
         saved_grads = torch.autograd.grad(torch.unbind(output), grad_inputs)
-        saved_grads = [
-            saved_grads[i : i + num_tensors]
-            for i in range(0, len(saved_grads), num_tensors)
-        ]
-        if output_fn is not None:
-            saved_grads = [output_fn(saved_grad) for saved_grad in saved_grads]
 
-        all_grads = _reduce_list(saved_grads)
+        offset = 0
+        all_grads: List[Tuple[Tensor, ...]] = []
+        for single_layer in all_layers:
+            num_tensors = len(next(iter(saved_layer[single_layer].values())))
+            curr_saved_grads = [
+                saved_grads[i : i + num_tensors]
+                for i in range(
+                    offset, offset + len(key_list) * num_tensors, num_tensors
+                )
+            ]
+            offset += len(key_list) * num_tensors
+            if output_fn is not None:
+                curr_saved_grads = [
+                    output_fn(curr_saved_grad) for curr_saved_grad in curr_saved_grads
+                ]
+
+            all_grads.append(_reduce_list(curr_saved_grads))
+
+        layer_grads: Union[Tuple[Tensor, ...], List[Tuple[Tensor, ...]]]
+        layer_grads = all_grads
+        if isinstance(layer, Module):
+            layer_grads = all_grads[0]
+
         if gradient_neuron_index is not None:
+            assert isinstance(
+                layer, Module
+            ), "Cannot compute neuron gradients for multiple layers simultaneously!"
             inp_grads = _neuron_gradients(
-                inputs, saved_layer, key_list, gradient_neuron_index
+                inputs, saved_layer[layer], key_list, gradient_neuron_index
             )
-            return all_grads, all_outputs, inp_grads, is_layer_tuple
-    return all_grads, all_outputs, is_layer_tuple
+            return (
+                cast(Tuple[Tensor, ...], layer_grads),
+                cast(Tuple[Tensor, ...], all_outputs),
+                inp_grads,
+            )
+    return layer_grads, all_outputs  # type: ignore
 
 
 def construct_neuron_grad_fn(
@@ -547,7 +673,7 @@ def construct_neuron_grad_fn(
         target_ind: TargetType = None,
         additional_forward_args: Any = None,
     ) -> Tuple[Tensor, ...]:
-        _, grads, _ = _forward_layer_eval_with_neuron_grads(
+        _, grads = _forward_layer_eval_with_neuron_grads(
             forward_fn,
             inputs,
             layer,

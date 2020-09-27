@@ -9,6 +9,7 @@ from ..._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_target,
+    _format_baseline,
     _format_input,
     _format_tensor_into_tuples,
 )
@@ -26,9 +27,9 @@ def default_perturb_func(inputs, perturb_radius=0.02):
     inputs = _format_input(inputs)
     perturbed_input = tuple(
         input
-        + torch.FloatTensor(input.size(), device=input.device).uniform_(
-            -perturb_radius, perturb_radius
-        )
+        + torch.FloatTensor(input.size())
+        .uniform_(-perturb_radius, perturb_radius)
+        .to(input.device)
         for input in inputs
     )
     return perturbed_input
@@ -166,7 +167,7 @@ def sensitivity_max(
         >>> saliency = Saliency(net)
         >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
         >>> # Computes sensitivity score for saliency maps
-        >>> sens = sensitivity_max(net, saliency.attribute)
+        >>> sens = sensitivity_max(saliency.attribute, input)
 
     """
 
@@ -214,7 +215,13 @@ def sensitivity_max(
                 current_n_perturb_samples, kwargs_copy
             )
             _expand_and_update_target(current_n_perturb_samples, kwargs_copy)
-            _expand_and_update_baselines(inputs, current_n_perturb_samples, kwargs_copy)
+            if "baselines" in kwargs:
+                baselines = kwargs["baselines"]
+                baselines = _format_baseline(baselines, inputs)
+                if baselines[0].shape == inputs[0].shape:
+                    _expand_and_update_baselines(
+                        inputs, current_n_perturb_samples, kwargs_copy
+                    )
 
         expl_perturbed_inputs = explanation_func(inputs_perturbed, **kwargs_copy)
 

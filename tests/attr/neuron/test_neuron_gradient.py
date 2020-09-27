@@ -117,18 +117,19 @@ class Test(BaseTest):
     def _gradient_matching_test_assert(
         self, model: Module, output_layer: Module, test_input: Tensor
     ) -> None:
-        out, _ = _forward_layer_eval(model, test_input, output_layer)
+        out = _forward_layer_eval(model, test_input, output_layer)
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
+        self.assertFalse(gradient_attrib.multiplies_by_inputs)
         for i in range(cast(Tuple[int, ...], out.shape)[1]):
             neuron: Tuple[int, ...] = (i,)
             while len(neuron) < len(out.shape) - 1:
                 neuron = neuron + (0,)
             input_attrib = Saliency(
-                lambda x: _forward_layer_eval(model, x, output_layer)[0][0][
-                    (slice(None), *neuron)
-                ]
+                lambda x: _forward_layer_eval(
+                    model, x, output_layer, grad_enabled=True
+                )[0][(slice(None), *neuron)]
             )
             sal_vals = input_attrib.attribute(test_input, abs=False)
             grad_vals = gradient_attrib.attribute(test_input, neuron)

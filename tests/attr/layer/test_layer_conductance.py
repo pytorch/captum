@@ -143,6 +143,7 @@ class Test(BaseTest):
         additional_args: Any = None,
     ) -> None:
         cond = LayerConductance(model, target_layer)
+        self.assertTrue(cond.multiplies_by_inputs)
         for internal_batch_size in (None, 4, 20):
             attributions, delta = cond.attribute(
                 test_input,

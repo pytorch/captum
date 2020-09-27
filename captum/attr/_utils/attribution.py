@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Callable, List, Tuple, Type, Union, cast
+from typing import Any, Callable, Generic, List, Tuple, Type, Union, cast
 
 import torch
 import torch.nn.functional as F
@@ -15,7 +15,7 @@ from ..._utils.common import (
     _validate_target,
 )
 from ..._utils.gradient import compute_gradients
-from ..._utils.typing import TargetType
+from ..._utils.typing import ModuleOrModuleList, TargetType
 from .common import _format_input_baseline, _tensorize_baseline, _validate_input
 
 
@@ -63,6 +63,10 @@ class Attribution:
                     corresponding sized tensors is returned.
 
     """
+
+    @property
+    def multiplies_by_inputs(self):
+        return False
 
     def has_convergence_delta(self) -> bool:
         r"""
@@ -308,8 +312,13 @@ class PerturbationAttribution(Attribution):
         """
         Attribution.__init__(self, forward_func)
 
+    @property
+    def multiplies_by_inputs(self):
+        return True
 
-class InternalAttribution(Attribution):
+
+class InternalAttribution(Attribution, Generic[ModuleOrModuleList]):
+    layer: ModuleOrModuleList
     r"""
     Shared base class for LayerAttrubution and NeuronAttribution,
     attribution types that require a model and a particular layer.
@@ -318,7 +327,7 @@ class InternalAttribution(Attribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
@@ -351,7 +360,7 @@ class LayerAttribution(InternalAttribution):
     def __init__(
         self,
         forward_func: Callable,
-        layer: Module,
+        layer: ModuleOrModuleList,
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""

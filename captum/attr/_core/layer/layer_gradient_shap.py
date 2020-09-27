@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import typing
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import numpy as np
 import torch
@@ -64,26 +64,43 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        attribution of each neuron in the input or output of
+                        this layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in,
+                        then this type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of layer gradient shap, if `multiply_by_inputs`
+                        is set to True, the sensitivity scores for scaled inputs
+                        are being multiplied by
+                        layer activations for inputs - layer activations for baselines.
+
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
     def attribute(
@@ -237,11 +254,9 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
                         be the same size as the provided layer's inputs or outputs,
                         depending on whether we attribute to the inputs or outputs
                         of the layer.
-                        Attributions are returned in a tuple based on whether
-                        the layer inputs / outputs are contained in a tuple
-                        from a forward hook. For standard modules, inputs of
-                        a single tensor are usually wrapped in a tuple, while
-                        outputs of a single tensor are not.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         This is computed using the property that the total
                         sum of forward_func(inputs) - forward_func(baselines)
@@ -279,7 +294,10 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
         )
 
         input_min_baseline_x_grad = LayerInputBaselineXGradient(
-            self.forward_func, self.layer, device_ids=self.device_ids
+            self.forward_func,
+            self.layer,
+            device_ids=self.device_ids,
+            multiply_by_inputs=self.multiplies_by_inputs,
         )
 
         nt = NoiseTunnel(input_min_baseline_x_grad)
@@ -303,6 +321,10 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
     def has_convergence_delta(self) -> bool:
         return True
 
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs
+
 
 class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
     def __init__(
@@ -310,26 +332,43 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        multiply_by_inputs: bool = True,
     ):
         r"""
         Args:
 
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          attribution of each neuron in the input or output of
-                          this layer.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        attribution of each neuron in the input or output of
+                        this layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in,
+                        then this type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of layer input minus baseline x gradient,
+                        if `multiply_by_inputs` is set to True, the sensitivity scores
+                        for scaled inputs are being multiplied by
+                        layer activations for inputs - layer activations for baselines.
+
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids)
         GradientAttribution.__init__(self, forward_func)
+        self._multiply_by_inputs = multiply_by_inputs
 
     @typing.overload
     def attribute(
@@ -379,7 +418,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             _scale_input(input, baseline, rand_coefficient)
             for input, baseline in zip(inputs, baselines)
         )
-        grads, _, is_layer_tuple = compute_layer_gradients_and_eval(
+        grads, _ = compute_layer_gradients_and_eval(
             self.forward_func,
             self.layer,
             input_baseline_scaled,
@@ -389,7 +428,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_baselines, _ = _forward_layer_eval(
+        attr_baselines = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -398,7 +437,7 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        attr_inputs, _ = _forward_layer_eval(
+        attr_inputs = _forward_layer_eval(
             self.forward_func,
             inputs,
             self.layer,
@@ -406,13 +445,18 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        input_baseline_diffs = tuple(
-            input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
-        )
-        attributions = tuple(
-            input_baseline_diff * grad
-            for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
-        )
+
+        if self.multiplies_by_inputs:
+            input_baseline_diffs = tuple(
+                input - baseline for input, baseline in zip(attr_inputs, attr_baselines)
+            )
+            attributions = tuple(
+                input_baseline_diff * grad
+                for input_baseline_diff, grad in zip(input_baseline_diffs, grads)
+            )
+        else:
+            attributions = grads
+
         return _compute_conv_delta_and_format_attrs(
             self,
             return_convergence_delta,
@@ -421,8 +465,12 @@ class LayerInputBaselineXGradient(LayerAttribution, GradientAttribution):
             inputs,
             additional_forward_args,
             target,
-            is_layer_tuple,
+            cast(Union[Literal[True], Literal[False]], len(attributions) > 1),
         )
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def multiplies_by_inputs(self):
+        return self._multiply_by_inputs

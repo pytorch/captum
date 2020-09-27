@@ -227,6 +227,7 @@ class Test(BaseTest):
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = NeuronFeatureAblation(model, layer)
+            self.assertTrue(ablation.multiplies_by_inputs)
             attributions = ablation.attribute(
                 test_input,
                 neuron_index=neuron_index,

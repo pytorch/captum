@@ -51,27 +51,41 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
         forward_func: Callable,
         layer: Module,
         device_ids: Union[None, List[int]] = None,
+        multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
             forward_func (callable):  The forward function of the model or any
-                          modification of it
+                        modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
-                          Output size of attribute matches this layer's input or
-                          output dimensions, depending on whether we attribute to
-                          the inputs or outputs of the layer, corresponding to
-                          the attribution of each neuron in the input or output
-                          of this layer.
+                        Output size of attribute matches this layer's input or
+                        output dimensions, depending on whether we attribute to
+                        the inputs or outputs of the layer, corresponding to
+                        the attribution of each neuron in the input or output
+                        of this layer.
             device_ids (list(int)): Device ID list, necessary only if forward_func
-                          applies a DataParallel model. This allows reconstruction of
-                          intermediate outputs from batched results across devices.
-                          If forward_func is given as the DataParallel model itself,
-                          then it is not necessary to provide this argument.
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
+            multiply_by_inputs (bool, optional): Indicates whether to factor
+                        model inputs' multiplier in the final attribution scores.
+                        In the literature this is also known as local vs global
+                        attribution. If inputs' multiplier isn't factored in,
+                        then this type of attribution method is also called local
+                        attribution. If it is, then that type of attribution
+                        method is called global.
+                        More detailed can be found here:
+                        https://arxiv.org/abs/1711.06104
+
+                        In case of layer integrated gradients, if `multiply_by_inputs`
+                        is set to True, final sensitivity scores are being multiplied by
+                        layer activations for inputs - layer activations for baselines.
 
         """
         LayerAttribution.__init__(self, forward_func, layer, device_ids=device_ids)
         GradientAttribution.__init__(self, forward_func)
-        self.ig = IntegratedGradients(forward_func)
+        self.ig = IntegratedGradients(forward_func, multiply_by_inputs)
 
     @typing.overload
     def attribute(
@@ -251,6 +265,9 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                         depending on whether we attribute to the inputs or outputs
                         of the layer which is decided by the input flag
                         `attribute_to_layer_input`.
+                        Attributions are returned in a tuple if
+                        the layer inputs / outputs contain multiple tensors,
+                        otherwise a single tensor is returned.
                 - **delta** (*tensor*, returned if return_convergence_delta=True):
                         The difference between the total approximated and true
                         integrated gradients. This is computed using the property
@@ -284,7 +301,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         if self.device_ids is None:
             self.device_ids = getattr(self.forward_func, "device_ids", None)
-        inputs_layer, is_layer_tuple = _forward_layer_eval(
+        inputs_layer = _forward_layer_eval(
             self.forward_func,
             inps,
             self.layer,
@@ -293,7 +310,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        baselines_layer, _ = _forward_layer_eval(
+        baselines_layer = _forward_layer_eval(
             self.forward_func,
             baselines,
             self.layer,
@@ -327,6 +344,11 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
                 def layer_forward_hook(module, hook_inputs, hook_outputs=None):
                     device = _extract_device(module, hook_inputs, hook_outputs)
+                    is_layer_tuple = (
+                        isinstance(hook_outputs, tuple)
+                        if hook_outputs is not None
+                        else isinstance(hook_inputs, tuple)
+                    )
                     if is_layer_tuple:
                         return scattered_inputs_dict[device]
                     return scattered_inputs_dict[device][0]
@@ -382,8 +404,12 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            return _format_output(is_layer_tuple, attributions), delta
-        return _format_output(is_layer_tuple, attributions)
+            return _format_output(len(attributions) > 1, attributions), delta
+        return _format_output(len(attributions) > 1, attributions)
 
     def has_convergence_delta(self) -> bool:
         return True
+
+    @property
+    def multiplies_by_inputs(self):
+        return self.ig.multiplies_by_inputs
