@@ -181,23 +181,9 @@ class LayerLRP(LRP, LayerAttribution):
                     delta.append(self.compute_convergence_delta(relevance_layer))
             else:
                 delta = self.compute_convergence_delta(relevances)
-            return _format_output(len(relevances) > 1, relevances), delta
+            return relevances, delta
         else:
-            return _format_output(len(relevances) > 1, relevances)
-
-    def _is_layer_tuple(self, inputs, additional_forward_args):
-        if self.layer is None:
-            is_layer_tuple = isinstance(inputs, tuple)
-        else:
-            with torch.no_grad():
-                _, is_layer_tuple = _forward_layer_eval(
-                    self.model,
-                    inputs,
-                    self.layer,
-                    additional_forward_args,
-                    attribute_to_layer_input=self.attribute_to_layer_input,
-                )
-        return is_layer_tuple
+            return relevances
 
     def _get_output_relevance(self):
         if self.layer is None:
@@ -210,7 +196,7 @@ class LayerLRP(LRP, LayerAttribution):
                     relevance = layer.rule.relevance_input
                 else:
                     relevance = layer.rule.relevance_output
-                relevances.append(relevance)
+                relevances.append(self._convert_list_to_tuple(relevance)) # convert list into tuple here?
             return relevances
 
         else:
@@ -218,4 +204,11 @@ class LayerLRP(LRP, LayerAttribution):
                 relevances = self.layer.rule.relevance_input
             else:
                 relevances = self.layer.rule.relevance_output
-            return (relevances,)
+            return self._convert_list_to_tuple(relevances) # seems artificial, might just need to convert list to tuple?
+
+    @staticmethod
+    def _convert_list_to_tuple(relevances):
+        if isinstance(relevances, list):
+            return tuple(relevances)
+        else:
+            return relevances
