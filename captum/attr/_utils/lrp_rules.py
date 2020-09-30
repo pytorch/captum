@@ -16,6 +16,7 @@ class PropagationRule(ABC):
     def forward_hook(self, module, inputs, outputs):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
+        self._has_single_input = len(inputs) == 1
         self._handle_input_hooks = []
         self.relevance_input = []
         for input in inputs:
@@ -35,7 +36,10 @@ class PropagationRule(ABC):
     def _create_backward_hook_input(self, inputs):
         def _backward_hook_input(grad):
             relevance = grad * inputs
-            self.relevance_input.append(relevance.data)
+            if self._has_single_input:
+                self.relevance_input = relevance.data
+            else:
+                self.relevance_input.append(relevance.data)
             return relevance
 
         return _backward_hook_input
