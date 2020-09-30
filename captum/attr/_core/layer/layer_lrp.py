@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-import torch
-
-from ...._utils.common import _format_input, _format_output
+from ...._utils.common import _format_input
 from ...._utils.gradient import (
-    _forward_layer_eval,
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
@@ -196,7 +193,7 @@ class LayerLRP(LRP, LayerAttribution):
                     relevance = layer.rule.relevance_input
                 else:
                     relevance = layer.rule.relevance_output
-                relevances.append(self._convert_list_to_tuple(relevance)) # convert list into tuple here?
+                relevances.append(self._convert_list_to_tuple(relevance))
             return relevances
 
         else:
@@ -204,7 +201,7 @@ class LayerLRP(LRP, LayerAttribution):
                 relevances = self.layer.rule.relevance_input
             else:
                 relevances = self.layer.rule.relevance_output
-            return self._convert_list_to_tuple(relevances) # seems artificial, might just need to convert list to tuple?
+            return self._convert_list_to_tuple(relevances)
 
     @staticmethod
     def _convert_list_to_tuple(relevances):
