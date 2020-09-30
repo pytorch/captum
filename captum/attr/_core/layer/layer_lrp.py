@@ -158,7 +158,6 @@ class LayerLRP(LRP, LayerAttribution):
         self.backward_handles = []
         self.forward_handles = []
 
-        is_layer_tuple = self._is_layer_tuple(inputs, additional_forward_args)
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -182,9 +181,9 @@ class LayerLRP(LRP, LayerAttribution):
                     delta.append(self.compute_convergence_delta(relevance_layer))
             else:
                 delta = self.compute_convergence_delta(relevances)
-            return _format_output(is_layer_tuple, relevances), delta
+            return _format_output(len(relevances) > 1, relevances), delta
         else:
-            return _format_output(is_layer_tuple, relevances)
+            return _format_output(len(relevances) > 1, relevances)
 
     def _is_layer_tuple(self, inputs, additional_forward_args):
         if self.layer is None:

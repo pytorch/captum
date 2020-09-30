@@ -68,7 +68,7 @@ class Test(BaseTest):
         relevance, delta = lrp.attribute(
             inputs, classIndex.item(), return_convergence_delta=True
         )
-        self.assertEqual(delta.item(), 0)
+        self.assertEqual(delta[0].item(), 0)
         self.assertEqual(relevance.shape, torch.Size([1, 2, 2, 2]))
 
     def test_lrp_simple_attributions(self):
@@ -104,7 +104,7 @@ class Test(BaseTest):
         lrp_inplace = LayerLRP(model_inplace, model_inplace.linear2)
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
         relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
-        assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
+        assertTensorAlmostEqual(self, relevance_default[0], relevance_inplace[0])
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
