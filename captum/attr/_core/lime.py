@@ -7,7 +7,7 @@ from torch import Tensor
 
 from captum.log import log_usage
 
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_input,
@@ -16,9 +16,9 @@ from ..._utils.common import (
     _reduce_list,
     _run_forward,
 )
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import PerturbationAttribution
-from .._utils.common import _construct_default_feature_mask, _format_input_baseline
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.attribution import PerturbationAttribution
+from captum._utils.common import _construct_default_feature_mask, _format_input_baseline
 
 
 class LimeBase(PerturbationAttribution):
@@ -56,8 +56,8 @@ class LimeBase(PerturbationAttribution):
         forward_func: Callable,
         train_interpretable_model_func: Callable,
         similarity_func: Callable,
-        sampling_func: Callable,
-        sample_interpretable_space: bool,
+        perturb_func: Callable,
+        perturb_interpretable_space: bool,
         from_interp_rep_transform: Optional[Callable],
         to_interp_rep_transform: Optional[Callable],
     ) -> None:
@@ -81,8 +81,8 @@ class LimeBase(PerturbationAttribution):
                         **kwargs: Any
                     ) -> Any (Representation of interpretable model)
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
             similarity_func (callable): Function which takes a single sample
                     along with its corresponding interpretable representation
                     and returns the weight of the interpretable sample for
@@ -94,50 +94,50 @@ class LimeBase(PerturbationAttribution):
 
                     similarity_func(
                         original_input: Tensor or tuple of Tensors,
-                        sampled_input: Tensor or tuple of Tensors,
-                        sampled_interpretable_input:
+                        perturbed_input: Tensor or tuple of Tensors,
+                        perturbed_interpretable_input:
                             Tensor [2D 1 x num_interp_features],
                         **kwargs: Any
                     ) -> float or Tensor containing float scalar
 
-                    sampled_input and original_input will be the same type and
+                    perturbed_input and original_input will be the same type and
                     contain tensors of the same shape (regardless of whether
                     the sampling function returns inputs in the interpretable
                     space). original_input is the same as the input provided
                     when calling attribute.
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
-            sampling_func (callable): Function which returns a single
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
+            perturb_func (callable): Function which returns a single
                     sampled input, generally a perturbation of the original
                     input, which is used to train the interpretable surrogate
-                    model. Sampling function can return samples in either
+                    model. Function can return samples in either
                     the original input space (matching type and tensor shapes
                     of original input) or in the interpretable input space,
                     which is a vector containing the intepretable features.
 
                     The expected signature of this callable is:
 
-                    sampling_func(
+                    perturb_func(
                         original_input: Tensor or tuple of Tensors,
                         **kwargs: Any
                     ) -> Tensor or tuple of Tensors
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
 
                     Returned sampled input should match the input type (Tensor
                     or Tuple of Tensor and corresponding shapes) if
-                    sample_interpretable_space = False. If
-                    sample_interpretable_space = True, the return type should
+                    perturb_interpretable_space = False. If
+                    perturb_interpretable_space = True, the return type should
                     be a single tensor of shape 1 x num_interp_features,
                     corresponding to the representation of the
                     sample to train the interpretable model.
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
-            sample_interpretable_space (bool, optional): Indicates whether
-                    sampling_func returns a sample in the interpretable space
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
+            perturb_interpretable_space (bool): Indicates whether
+                    perturb_func returns a sample in the interpretable space
                     (tensor of shape 1 x num_interp_features) or a sample
                     in the original space, matching the format of the original
                     input. Once sampled, inputs can be converted to / from
@@ -147,9 +147,9 @@ class LimeBase(PerturbationAttribution):
                     single sample's interpretable representation (tensor
                     of shape 1 x num_interp_features) and returns
                     the corresponding input in the original input space
-                    (mathing shapes of original input to attribute).
+                    (mathcing shapes of original input to attribute).
 
-                    This argument is necessary if sample_interpretable_space
+                    This argument is necessary if perturb_interpretable_space
                     is True, otherwise None can be provided for this argument.
 
                     The expected signature of this callable is:
@@ -163,8 +163,8 @@ class LimeBase(PerturbationAttribution):
                     Returned sampled input should match the type of original_input
                     and corresponding tensor shapes.
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
 
             to_interp_rep_transform (callable): Function which takes a
                     sample in the original input space and converts to
@@ -172,7 +172,7 @@ class LimeBase(PerturbationAttribution):
                     of shape 1 x num_interp_features) and returns
                     the corresponding input in the original input space.
 
-                    This argument is necessary if sample_interpretable_space
+                    This argument is necessary if perturb_interpretable_space
                     is False, otherwise None can be provided for this argument.
 
                     The expected signature of this callable is:
@@ -186,18 +186,18 @@ class LimeBase(PerturbationAttribution):
                     curr_sample will match the type of original_input
                     and corresponding tensor shapes.
 
-                    Note that kwargs include all kwargs passed to the attribute
-                    method.
+                    All kwargs passed to the attribute method are
+                    provided as keyword arguments (kwargs) to this callable.
         """
         PerturbationAttribution.__init__(self, forward_func)
         self.train_interpretable_model_func = train_interpretable_model_func
         self.similarity_func = similarity_func
-        self.sampling_func = sampling_func
-        self.sample_interpretable_space = sample_interpretable_space
+        self.perturb_func = perturb_func
+        self.perturb_interpretable_space = perturb_interpretable_space
         self.from_interp_rep_transform = from_interp_rep_transform
         self.to_interp_rep_transform = to_interp_rep_transform
 
-        if self.sample_interpretable_space:
+        if self.perturb_interpretable_space:
             assert (
                 self.from_interp_rep_transform is not None
             ), "Must provide transform from interpretable space to original input space"
@@ -207,10 +207,6 @@ class LimeBase(PerturbationAttribution):
                 self.to_interp_rep_transform is not None
             ), "Must provide transform from original input space to interpretable space"
 
-    # The following overloaded method signatures correspond to the case where
-    # return_convergence_delta is False, then only attributions are returned,
-    # and when return_convergence_delta is True, the return type is
-    # a tuple with both attributions and deltas.
     @log_usage()
     def attribute(
         self,
@@ -356,18 +352,18 @@ class LimeBase(PerturbationAttribution):
             >>> # Define similarity kernel (exponential kernel based on L2 norm)
             >>> def similarity_kernel(
             >>>     original_input: Tensor,
-            >>>     sampled_input: Tensor,
-            >>>     sampled_interpretable_input: Tensor,
+            >>>     perturbed_input: Tensor,
+            >>>     perturbed_interpretable_input: Tensor,
             >>>     **kwargs)->Tensor:
             >>>         # kernel_width will be provided to attribute as a kwarg
             >>>         kernel_width = kwargs["kernel_width"]
-            >>>         l2_dist = torch.norm(original_input - sampled_input)
+            >>>         l2_dist = torch.norm(original_input - perturbed_input)
             >>>         return torch.exp(- (l2_dist**2) / (kernel_width**2))
             >>>
             >>>
             >>> # Define sampling function
             >>> # This function samples in original input space
-            >>> def sampling_func(
+            >>> def perturb_func(
             >>>     original_input: Tensor,
             >>>     **kwargs)->Tensor:
             >>>         return original_input + torch.randn_like(original_input)
@@ -384,8 +380,8 @@ class LimeBase(PerturbationAttribution):
             >>> lime_attr = LimeBase(net,
                                      linear_regression_interpretable_model_trainer,
                                      similarity_func=similarity_kernel,
-                                     sampling_func=sampling_func,
-                                     sample_interpretable_space=False,
+                                     perturb_func=perturb_func,
+                                     perturb_interpretable_space=False,
                                      from_interp_rep_transform=None,
                                      to_interp_rep_transform=lambda x: x)
             >>> # Computes interpretable model, returning coefficients of linear
@@ -408,8 +404,8 @@ class LimeBase(PerturbationAttribution):
             expanded_additional_args = None
             expanded_target = None
             for i in range(n_samples):
-                curr_sample = self.sampling_func(inputs, **kwargs)
-                if self.sample_interpretable_space:
+                curr_sample = self.perturb_func(inputs, **kwargs)
+                if self.perturb_interpretable_space:
                     interpretable_inps.append(curr_sample)
                     curr_inputs.append(
                         self.from_interp_rep_transform(  # type: ignore
@@ -591,7 +587,7 @@ def default_similarity_kernel(original_inp, _, __, **kwargs):
     return 1.0
 
 
-def default_sampling_func(original_inp, **kwargs):
+def default_perturb_func(original_inp, **kwargs):
     assert (
         "num_interp_features" in kwargs
     ), "Must provide num_interp_features to use default interpretable sampling function"
@@ -645,7 +641,7 @@ class Lime(LimeBase):
         forward_func: Callable,
         train_interpretable_model_func: Callable = lasso_interpretable_model_trainer,
         similarity_func: Callable = default_similarity_kernel,
-        sampling_func: Callable = default_sampling_func,
+        perturb_func: Callable = default_perturb_func,
     ) -> None:
         r"""
 
@@ -688,20 +684,20 @@ class Lime(LimeBase):
 
                     similarity_func(
                         original_input: Tensor or tuple of Tensors,
-                        sampled_input: Tensor or tuple of Tensors,
-                        sampled_interpretable_input:
+                        perturbed_input: Tensor or tuple of Tensors,
+                        perturbed_interpretable_input:
                             Tensor [2D 1 x num_interp_features],
                         **kwargs: Any
                     ) -> float or Tensor containing float scalar
 
-                    sampled_input and original_input will be the same type and
+                    perturbed_input and original_input will be the same type and
                     contain tensors of the same shape, with original_input
                     being the same as the input provided when calling attribute.
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask), and
                     alpha (for Lasso regression).
-            sampling_func (callable): Function which returns a single
+            perturb_func (callable): Function which returns a single
                     sampled input, which is a binary vector of length
                     num_interp_features. The default function returns
                     a binary vector where each element is selected
@@ -710,7 +706,7 @@ class Lime(LimeBase):
                     be implemented by providing a function with the
                     following expected signature:
 
-                    sampling_func(
+                    perturb_func(
                         original_input: Tensor or tuple of Tensors,
                         **kwargs: Any
                     ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
@@ -725,7 +721,7 @@ class Lime(LimeBase):
             forward_func,
             train_interpretable_model_func,
             similarity_func,
-            sampling_func,
+            perturb_func,
             True,
             default_from_interp_rep_transform,
             None,

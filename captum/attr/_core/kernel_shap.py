@@ -8,8 +8,8 @@ from torch import Tensor
 
 from captum.log import log_usage
 
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .lime import Lime
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr.lime import Lime
 
 
 def linear_regression_interpretable_model_trainer(

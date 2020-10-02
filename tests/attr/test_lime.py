@@ -30,7 +30,7 @@ from ..helpers.basic_models import (
 )
 
 
-def alt_sampling_func(
+def alt_perturb_func(
     original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
 ) -> TensorOrTupleOfTensorsGeneric:
     if isinstance(original_inp, Tensor):
@@ -399,7 +399,7 @@ class Test(BaseTest):
                     model,
                     lasso_interpretable_model_trainer,
                     default_similarity_kernel,
-                    alt_sampling_func,
+                    alt_perturb_func,
                     False,
                     None,
                     alt_to_interp_rep,
