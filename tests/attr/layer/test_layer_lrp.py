@@ -104,7 +104,7 @@ class Test(BaseTest):
         lrp_inplace = LayerLRP(model_inplace, model_inplace.linear2)
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
         relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
-        assertTensorAlmostEqual(self, relevance_default[0], relevance_inplace[0])
+        assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
