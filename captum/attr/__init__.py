@@ -9,7 +9,6 @@ from ._core.guided_backprop_deconvnet import GuidedBackprop
 from ._core.guided_grad_cam import GuidedGradCam  # noqa
 from ._core.input_x_gradient import InputXGradient  # noqa
 from ._core.integrated_gradients import IntegratedGradients  # noqa
-from ._core.lrp import LRP  # noqa
 from ._core.layer.grad_cam import LayerGradCam  # noqa
 from ._core.layer.internal_influence import InternalInfluence  # noqa
 from ._core.layer.layer_activation import LayerActivation  # noqa
@@ -21,6 +20,7 @@ from ._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
 from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
 from ._core.layer.layer_integrated_gradients import LayerIntegratedGradients  # noqa
 from ._core.layer.layer_lrp import LayerLRP  # noqa
+from ._core.lrp import LRP  # noqa
 from ._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from ._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
 from ._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
