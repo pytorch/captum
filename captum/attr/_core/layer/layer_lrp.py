@@ -21,8 +21,6 @@ class LayerLRP(LRP, LayerAttribution):
     inspired by the tutorial of the same group
     [https://doi.org/10.1016/j.dsp.2017.10.011] and the publication by
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
-
-    Warning: In-place relus lead to unexptected failures in layer LRP.
     """
 
     def __init__(self, model, layer):
@@ -111,10 +109,11 @@ class LayerLRP(LRP, LayerAttribution):
 
             verbose (bool, optional): Indicates whether information on application
                     of rules is printed during propagation.
+                    Default: False
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions** or 2-element tuple of
-                **attributions**, **delta**::
+                **attributions**, **delta** or lists of **attributions** and **delta**:
             - **attributions** (*tensor* or tuple of *tensors*):
                         The propagated relevance values with respect to each
                         input feature. Attributions will always
@@ -125,15 +124,16 @@ class LayerLRP(LRP, LayerAttribution):
                         corresponding sized tensors is returned. The sum of attributions
                         is one and not corresponding to the prediction score as in other
                         implementations. If attributions for all layers are returned
-                        (layer=None) a list of tensors is returned with entries for
-                        each layer.
-            - **delta** (*tensor* or list of *tensors* returned if
-                return_convergence_delta=True):
+                        (layer=None) a list of tensors or tuples of tensors is returned
+                        with entries for each layer.
+            - **delta** (*tensor*, tuple of *tensor*, list of *tensors*, or list of
+                tuples of *tensor* returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
                         If attributions for all layers are returned (layer=None) a list
-                        of tensors is returned with entries for each layer.
+                        of tensors or tuples of tensors is returned with entries for
+                        each layer.
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
