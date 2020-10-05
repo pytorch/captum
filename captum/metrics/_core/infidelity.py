@@ -65,7 +65,9 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
 
         """
 
-        def default_perturb_func(inputs, baselines=None):
+        def default_perturb_func(
+            inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
+        ):
             r""""""
             inputs_perturbed = (
                 pertub_func(inputs, baselines)
