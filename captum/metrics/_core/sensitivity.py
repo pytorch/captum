@@ -2,10 +2,12 @@
 
 from copy import deepcopy
 from inspect import signature
+from typing import Any, Callable, Tuple, Union, cast
 
 import torch
+from torch import Tensor
 
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_target,
@@ -13,21 +15,41 @@ from ..._utils.common import (
     _format_input,
     _format_tensor_into_tuples,
 )
-from .._utils.batching import _divide_and_aggregate_metrics
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 
 
-def default_perturb_func(inputs, perturb_radius=0.02):
+def default_perturb_func(
+    inputs: TensorOrTupleOfTensorsGeneric, perturb_radius: float = 0.02
+) -> Tuple[Tensor, ...]:
     r"""A default function for generating perturbations of `inputs`
     within perturbation radius of `perturb_radius`.
     This function samples uniformly random from the L_Infinity ball
     with `perturb_radius` radius.
     The users can override this function if they prefer to use a
     different perturbation function.
+
+    Args:
+
+        inputs (tensor or a tuple of tensors): The input tensors that we'd
+                like to perturb by adding a random noise sampled unifromly
+                random from an L_infinity ball with a radius `perturb_radius`.
+
+        radius (float): A radius used for sampling from
+                an L_infinity ball.
+
+    Returns:
+
+        perturbed_input (tuple(tensor)): A list of perturbed inputs that
+                are createed by adding noise sampled uniformly random
+                from L_infiniy ball with a radius `perturb_radius` to the
+                original inputs.
+
     """
     inputs = _format_input(inputs)
     perturbed_input = tuple(
         input
-        + torch.FloatTensor(input.size())
+        + torch.FloatTensor(input.size())  # type: ignore
         .uniform_(-perturb_radius, perturb_radius)
         .to(input.device)
         for input in inputs
@@ -36,15 +58,15 @@ def default_perturb_func(inputs, perturb_radius=0.02):
 
 
 def sensitivity_max(
-    explanation_func,
-    inputs,
-    perturb_func=default_perturb_func,
-    perturb_radius=0.02,
-    n_perturb_samples=10,
-    norm_ord="fro",
-    max_examples_per_batch=None,
-    **kwargs,
-):
+    explanation_func: Callable,
+    inputs: TensorOrTupleOfTensorsGeneric,
+    perturb_func: Callable = default_perturb_func,
+    perturb_radius: float = 0.02,
+    n_perturb_samples: int = 10,
+    norm_ord: str = "fro",
+    max_examples_per_batch: int = None,
+    **kwargs: Any,
+) -> Tensor:
     r"""
     Explanation sensitivity measures the extent of explanation change when
     the input is slightly perturbed. It has been shown that the models that
@@ -171,7 +193,9 @@ def sensitivity_max(
 
     """
 
-    def _generate_perturbations(current_n_perturb_samples):
+    def _generate_perturbations(
+        current_n_perturb_samples: int,
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         The perturbations are generated for each example
         `current_n_perturb_samples` times.
@@ -180,7 +204,7 @@ def sensitivity_max(
         on a batch that contains `current_n_perturb_samples` repeated instances
         per example.
         """
-        inputs_expanded = tuple(
+        inputs_expanded: Union[Tensor, Tuple[Tensor, ...]] = tuple(
             torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
             for input in inputs
         )
@@ -193,13 +217,13 @@ def sensitivity_max(
             else perturb_func(inputs_expanded)
         )
 
-    def max_values(input_tnsr):
-        return torch.max(input_tnsr, dim=1).values
+    def max_values(input_tnsr: Tensor) -> Tensor:
+        return torch.max(input_tnsr, dim=1).values  # type: ignore
 
     kwarg_expanded_for = None
-    kwargs_copy = None
+    kwargs_copy: Any = None
 
-    def _next_sensitivity_max(current_n_perturb_samples):
+    def _next_sensitivity_max(current_n_perturb_samples: int) -> Tensor:
         inputs_perturbed = _generate_perturbations(current_n_perturb_samples)
 
         # copy kwargs and update some of the arguments that need to be expanded
@@ -217,10 +241,17 @@ def sensitivity_max(
             _expand_and_update_target(current_n_perturb_samples, kwargs_copy)
             if "baselines" in kwargs:
                 baselines = kwargs["baselines"]
-                baselines = _format_baseline(baselines, inputs)
-                if baselines[0].shape == inputs[0].shape:
+                baselines = _format_baseline(
+                    baselines, cast(Tuple[Tensor, ...], inputs)
+                )
+                if (
+                    isinstance(baselines[0], Tensor)
+                    and baselines[0].shape == inputs[0].shape
+                ):
                     _expand_and_update_baselines(
-                        inputs, current_n_perturb_samples, kwargs_copy
+                        cast(Tuple[Tensor, ...], inputs),
+                        current_n_perturb_samples,
+                        kwargs_copy,
                     )
 
         expl_perturbed_inputs = explanation_func(inputs_perturbed, **kwargs_copy)
@@ -269,14 +300,14 @@ def sensitivity_max(
         )
         return max_values(sensitivities_norm.view(bsz, -1))
 
-    inputs = _format_input(inputs)
+    inputs = _format_input(inputs)  # type: ignore
 
     bsz = inputs[0].size(0)
 
     with torch.no_grad():
         expl_inputs = explanation_func(inputs, **kwargs)
         metrics_max = _divide_and_aggregate_metrics(
-            inputs,
+            cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
             _next_sensitivity_max,
             max_examples_per_batch=max_examples_per_batch,
