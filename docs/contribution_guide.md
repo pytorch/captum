@@ -35,10 +35,10 @@ Before contributing an algorithm to Captum, please review these guidelines and p
     * Since one of the core values of Captum is multimodality, we prefer algorithms that are generic so that they can be used for different types of model architectures and input types. If the algorithm is unimodal, let’s say, if it works only for text or vision models, it is important to clarify what type of vision or text models the implementation supports. Does it work for LSTMs only? In other words, it is important to discuss the scope of the algorithm and its impact.
 3. **Benchmarking Results**
     * We also would like comparisons with existing algorithm benchmarks in terms of performance and visual interpretation, and strong results compared to baselines are a plus when considering inclusion in Captum.
-        * *Performance benchmarking*
+        * **Performance benchmarking**
             Please report runtime execution numbers of the algorithm in CPU and GPU environments. Describe the environment where the experiments were conducted. It is also encouraged to do performance comparison with existing baseline approaches and report those numbers as well.
-        * *Visual interpretation*
-            Although visual interpretations can be deceptive, it is important to compare newly implemented algorithms with other state of the art approaches side by side using well-known baseline models and datasets. For baseline models and datasets check out the section on *Algorithm benchmarking on real** datasets and models* section
+        * **Visual interpretation**
+            Although visual interpretations can be deceptive, it is important to compare newly implemented algorithms with other state of the art approaches side by side using well-known baseline models and datasets. For baseline models and datasets check out the section on [**Algorithm benchmarking on real**]((#algorithm-benchmarking-on-real-datasets-and-models) datasets and models** section
         * In addition to visual interpretations, if possible, for attribution algorithms we can also assess infidelity and sensitivity metrics provided in captum.metrics package.
 4. **Axiomatic and Mathematically Sound**
     * Since evaluation and qualitative analysis of interpretability methods can sometimes be misleading, methods that are axiomatic or have strong theoretical justification are preferred.
@@ -53,14 +53,12 @@ If an algorithm or feature adds only marginal improvements or does not meet most
 ## Algorithm benchmarking on real datasets and models
 
 **NLP**
-
 We provide a sample CNN-based model for sensitivity analysis. Although, currently, we do not provide a LSTM model in the tutorials, we strongly encourage you to test the model on a baseline LSTM model (e.g. the original LSTM model described inLong short-term memory (https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735) for sentiment analysis) as well.
 Besides that, it is encouraged to test the algorithms on Bert models as well. An example Bert Q&A model is available in the tutorial’s section.
 https://captum.ai/tutorials/Bert_SQUAD_Interpret
 https://captum.ai/tutorials/IMDB_TorchText_Interpret
 
 **Vision**
-
 We provide a sample toy model for CIFAR dataset and examples with ResNet model.
 https://captum.ai/tutorials/CIFAR_TorchVision_Interpret
 https://captum.ai/tutorials/Resnet_TorchVision_Interpret
@@ -69,16 +67,13 @@ We also encourage you to test your models on other well-known benchmarks such as
 dataset, Inception and VGG models.
 
 **Baseline MLP Classification Models**
-
 In terms of baseline MLP models and datasets we encourage you to use titanic dataset and the simple MLP model that we built in the following tutorial:
 https://captum.ai/tutorials/Titanic_Basic_Interpret
 
 **Baseline  Regression models**
-
 Boston House prices dataset and model can be found here:
 https://captum.ai/tutorials/House_Prices_Regression_Interpret
 
 **Multimodal**
-
 You can use VQA model and dataset described here:
 https://captum.ai/tutorials/Multimodal_VQA_Captum_Insights
