@@ -55,15 +55,13 @@ If an algorithm or feature adds only marginal improvements or does not meet most
 ## Algorithm benchmarking on real datasets and models
 
 **NLP**
-
-We provide a sample CNN-based model for sensitivity analysis. Although, currently, we do not provide a LSTM model in the tutorials, we strongly encourage you to test the model on a baseline LSTM model (e.g. the original LSTM model described inLong short-term memory (https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735) for sentiment analysis) as well.
+- We provide a sample CNN-based model for sensitivity analysis. Although, currently, we do not provide a LSTM model in the tutorials, we strongly encourage you to test the model on a baseline LSTM model (e.g. the original LSTM model described inLong short-term memory (https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735) for sentiment analysis) as well.
 Besides that, it is encouraged to test the algorithms on Bert models as well. An example Bert Q&A model is available in the tutorial’s section.
 https://captum.ai/tutorials/Bert_SQUAD_Interpret
 https://captum.ai/tutorials/IMDB_TorchText_Interpret
 
 **Vision**
-
-We provide a sample toy model for CIFAR dataset and examples with ResNet model.
+- We provide a sample toy model for CIFAR dataset and examples with ResNet model.
 https://captum.ai/tutorials/CIFAR_TorchVision_Interpret
 https://captum.ai/tutorials/Resnet_TorchVision_Interpret
 These would be great starting points for benchmarking.
@@ -71,16 +69,13 @@ We also encourage you to test your models on other well-known benchmarks such as
 dataset, Inception and VGG models.
 
 **Baseline MLP Classification Models**
-
-In terms of baseline MLP models and datasets we encourage you to use titanic dataset and the simple MLP model that we built in the following tutorial:
+- In terms of baseline MLP models and datasets we encourage you to use titanic dataset and the simple MLP model that we built in the following tutorial:
 https://captum.ai/tutorials/Titanic_Basic_Interpret
 
 **Baseline  Regression models**
-
-Boston House prices dataset and model can be found here:
+- Boston House prices dataset and model can be found here:
 https://captum.ai/tutorials/House_Prices_Regression_Interpret
 
 **Multimodal**
-
-You can use VQA model and dataset described here:
+- You can use VQA model and dataset described here:
 https://captum.ai/tutorials/Multimodal_VQA_Captum_Insights
