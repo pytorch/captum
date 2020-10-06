@@ -36,11 +36,9 @@ Before contributing an algorithm to Captum, please review these guidelines and p
 3. **Benchmarking Results**
     * We also would like comparisons with existing algorithm benchmarks in terms of performance and visual interpretation, and strong results compared to baselines are a plus when considering inclusion in Captum.
         * **Performance benchmarking**
-
-            Please report runtime execution numbers of the algorithm in CPU and GPU environments. Describe the environment where the experiments were conducted. It is also encouraged to do performance comparison with existing baseline approaches and report those numbers as well.
+            * Please report runtime execution numbers of the algorithm in CPU and GPU environments. Describe the environment where the experiments were conducted. It is also encouraged to do performance comparison with existing baseline approaches and report those numbers as well.
         * **Visual interpretation**
-
-            Although visual interpretations can be deceptive, it is important to compare newly implemented algorithms with other state of the art approaches side by side using well-known baseline models and datasets. For baseline models and datasets check out the section on [**Algorithm benchmarking on real**(#algorithm-benchmarking-on-real-datasets-and-models) datasets and models** section
+            * Although visual interpretations can be deceptive, it is important to compare newly implemented algorithms with other state of the art approaches side by  side using well-known baseline models and datasets. For baseline models and datasets check out the section on [**Algorithm benchmarking on real**(#algorithm-benchmarking-on-real-datasets-and-models) datasets and models** section
         * In addition to visual interpretations, if possible, for attribution algorithms we can also assess infidelity and sensitivity metrics provided in captum.metrics package.
 4. **Axiomatic and Mathematically Sound**
     * Since evaluation and qualitative analysis of interpretability methods can sometimes be misleading, methods that are axiomatic or have strong theoretical justification are preferred.
