@@ -96,7 +96,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
@@ -116,13 +116,21 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron in output of given
-                        layer for which attribution is desired. Length of
-                        this tuple must be one less than the number of
-                        dimensions in the output of the given layer (since
-                        dimension 0 corresponds to number of examples).
+            neuron_index (int or tuple): Index of neuron or neurons in output of
+                        given layer for which attribution is desired. Length of
+                        this tuple must be one less than the number of dimensions
+                        in the output of the given layer (since dimension 0
+                        corresponds to number of examples).
+                        The elements of the tuple can be either integers or slice
+                        objects (slice object also allows indexing a range of
+                        neurons rather individual ones).
                         An integer may be provided instead of a tuple of
                         length 1.
+                        If any of the tuple elements is a slice object, the indexed
+                        output tensor is used for attribution. Note that specifying
+                        a slice of a tesnor would amount to computing the attribution
+                        of the sum of the specified neurons, and not the individual
+                        neurons independantly.
             baselines (tensor, tuple of tensors, callable):
                         Baselines define the starting point from which expectation
                         is computed and can be provided as:
