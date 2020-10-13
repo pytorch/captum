@@ -418,9 +418,9 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
 
 
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[int, ...]]
+    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
 ) -> Tensor:
-    target = cast(Tuple[int, ...], (target,) if isinstance(target, int) else target)
+    target = (target,) if isinstance(target, int) else target
     assert (
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)

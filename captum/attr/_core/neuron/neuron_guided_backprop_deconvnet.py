@@ -60,7 +60,7 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -76,13 +76,19 @@ class NeuronDeconvolution(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron in output of given
-                          layer for which attribution is desired. Length of
-                          this tuple must be one less than the number of
-                          dimensions in the output of the given layer (since
-                          dimension 0 corresponds to number of examples).
-                          An integer may be provided instead of a tuple of
-                          length 1.
+            neuron_index (int or tuple): Index of neuron or neurons in output of
+                        given layer for which attribution is desired. Length of
+                        this tuple must be one less than the number of dimensions
+                        in the output of the given layer (since dimension 0
+                        corresponds to number of examples). The elements of the
+                        tuple can be either integers or slice objects (slice object
+                        also allows indexing a range of neurons rather individual
+                        ones). An integer may be provided instead of a tuple of
+                        length 1. If any of the tuple elements is a slice object,
+                        the indexed output tensor is used for attribution. Note
+                        that specifying a slice of a tesnor would amount to computing
+                        the attribution of the sum of the specified neurons, and not
+                        the individual neurons independantly.
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
@@ -188,7 +194,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -204,13 +210,19 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
                         to the number of examples (aka batch size), and if
                         multiple input tensors are provided, the examples must
                         be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron in output of given
-                          layer for which attribution is desired. Length of
-                          this tuple must be one less than the number of
-                          dimensions in the output of the given layer (since
-                          dimension 0 corresponds to number of examples).
-                          An integer may be provided instead of a tuple of
-                          length 1.
+            neuron_index (int or tuple): Index of neuron or neurons in output of
+                        given layer for which attribution is desired. Length of
+                        this tuple must be one less than the number of dimensions
+                        in the output of the given layer (since dimension 0
+                        corresponds to number of examples). The elements of the
+                        tuple can be either integers or slice objects (slice object
+                        also allows indexing a range of neurons rather individual
+                        ones). An integer may be provided instead of a tuple of
+                        length 1. If any of the tuple elements is a slice object,
+                        the indexed output tensor is used for attribution. Note
+                        that specifying a slice of a tesnor would amount to computing
+                        the attribution of the sum of the specified neurons, and not
+                        the individual neurons independantly.
             additional_forward_args (any, optional): If the forward function
                         requires additional arguments other than the inputs for
                         which attributions should not be computed, this argument
