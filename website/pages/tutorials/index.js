@@ -77,7 +77,7 @@ class TutorialHome extends React.Component {
                 It leverages segmentation masks to define ablation groups over the input features.
                 We show how this kind of analysis helps understanding which parts of the input impacts a certain target in the model.
                 Find the tutorial <a href="Resnet_TorchVision_Ablation">here</a>.
-    
+
                 <h4>Interpreting multimodal models:</h4>
                 To demonstrate interpreting multimodal models we have chosen to look at an open source Visual Question Answer (VQA) model.
                 Using Captum and Integrated Gradients we interpret the output of several test questions and analyze the attribution scores
@@ -93,6 +93,17 @@ class TutorialHome extends React.Component {
                 To demonstrate interpreting regression models we have chosen to look at the Boston house prices dataset.
                 Using Captum and a variety of attribution methods, we evaluate feature importance as well as internal attribution to understand
                 the network function. Find the tutorial <a href="House_Prices_Regression_Interpret">here</a>.
+
+                <h4>Interpreting a semantic segmentation model:</h4>
+                In this tutorial, we demonstrate applying Captum to a semantic segmentation task to understand what pixels
+                and regions contribute to the labeling of a particular class. We explore applying GradCAM as well as Feature Ablation
+                to a pretrained Fully-Convolutional Network model with a ResNet-101 backbone. Find the tutorial <a href="Segmentation_Interpret">here</a>.
+
+                <h4>Using Captum with torch.distributed:</h4>
+                This tutorial provides examples of using Captum with the torch.distributed package and DataParallel,
+                allowing attributions to be computed in a distributed manner across processors, machines or GPUs.
+                Find the tutorial <a href="Distributed_Attribution">here</a>.
+
 
                 <h4>Getting Started with Captum Insights:</h4>
                 This tutorial demonstrates how to use Captum Insights for a vision model in a notebook setting.  A simple pretrained torchvision

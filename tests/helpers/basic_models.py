@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-
 """
 @no_type_check annotation is applied to type-hinted models to avoid errors
 related to mismatch with parent (nn.Module) signature. # type_ignore is not
@@ -27,10 +26,10 @@ class BasicModel(nn.Module):
 
 class BasicModel2(nn.Module):
     """
-        Example model one from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
+    Example model one from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
 
-        f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
+    f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
     """
 
     def __init__(self):
@@ -44,10 +43,10 @@ class BasicModel2(nn.Module):
 
 class BasicModel3(nn.Module):
     """
-        Example model two from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
+    Example model two from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
 
-        f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
+    f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
     """
 
     def __init__(self):
@@ -61,9 +60,9 @@ class BasicModel3(nn.Module):
 
 class BasicModel4_MultiArgs(nn.Module):
     """
-        Slightly modified example model from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
-        f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
+    Slightly modified example model from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
+    f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
     """
 
     def __init__(self):
@@ -78,9 +77,9 @@ class BasicModel4_MultiArgs(nn.Module):
 
 class BasicModel5_MultiArgs(nn.Module):
     """
-        Slightly modified example model from the paper
-        https://arxiv.org/pdf/1703.01365.pdf
-        f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
+    Slightly modified example model from the paper
+    https://arxiv.org/pdf/1703.01365.pdf
+    f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
     """
 
     def __init__(self):
@@ -113,7 +112,7 @@ class BasicLinearModel(nn.Module):
 
 class ReLUDeepLiftModel(nn.Module):
     r"""
-        https://www.youtube.com/watch?v=f_iAM0NPwnM
+    https://www.youtube.com/watch?v=f_iAM0NPwnM
     """
 
     def __init__(self):
@@ -164,10 +163,20 @@ class BasicModelWithSparseInputs(nn.Module):
         ).sum()
 
 
+class BasicModel_MaxPool_ReLU(nn.Module):
+    def __init__(self, inplace=False):
+        super().__init__()
+        self.maxpool = nn.MaxPool1d(3)
+        self.relu = nn.ReLU(inplace=inplace)
+
+    def forward(self, x):
+        return self.relu(self.maxpool(x)).sum(dim=1)
+
+
 class TanhDeepLiftModel(nn.Module):
     r"""
-        Same as the ReLUDeepLiftModel, but with activations
-        that can have negative outputs
+    Same as the ReLUDeepLiftModel, but with activations
+    that can have negative outputs
     """
 
     def __init__(self):
@@ -181,8 +190,8 @@ class TanhDeepLiftModel(nn.Module):
 
 class ReLULinearModel(nn.Module):
     r"""
-        Simple architecture similar to:
-        https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
+    Simple architecture similar to:
+    https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
     def __init__(self, inplace: bool = False):
@@ -200,7 +209,7 @@ class ReLULinearModel(nn.Module):
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
-class Conv1dDeepLiftModel(nn.Module):
+class Conv1dSeqModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.seq = nn.Sequential(nn.Conv1d(4, 2, 1), nn.ReLU(), nn.Linear(1000, 1))

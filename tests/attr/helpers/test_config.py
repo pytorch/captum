@@ -12,6 +12,7 @@ from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
+from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
 from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
@@ -1054,5 +1055,20 @@ config = [
             "neuron_index": (3,),
             "perturbations_per_eval": 2,
         },
+    },
+    # Layer Attribution with Multiple Layers
+    {
+        "name": "basic_activation_multi_layer_multi_output",
+        "algorithms": [LayerActivation],
+        "model": BasicModel_MultiLayer(multi_input_module=True),
+        "layer": ["multi_relu", "linear1", "linear0"],
+        "attribute_args": {"inputs": torch.randn(4, 3)},
+    },
+    {
+        "name": "basic_gradient_multi_layer_multi_output",
+        "algorithms": [LayerGradientXActivation],
+        "model": BasicModel_MultiLayer(multi_input_module=True),
+        "layer": ["multi_relu", "linear1", "linear0"],
+        "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
     },
 ]

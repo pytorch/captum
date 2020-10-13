@@ -207,7 +207,7 @@ class Test(BaseTest):
         feature_importance = FeaturePermutation(model)
         attr1, attr2 = feature_importance.attribute((inp1, inp2))
         self.assertEqual(attr1.shape, (1, 3))
-        self.assertEqual(attr2.shape, inp2.shape)
+        self.assertEqual(attr2.shape, (1,))
 
     def test_sparse_features(self) -> None:
         model = BasicModelWithSparseInputs()

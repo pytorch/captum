@@ -34,7 +34,7 @@ if [ ! -x "$(command -v yarn)" ]; then
 fi
 
 # go into subdir
-pushd captum/insights/frontend || exit
+pushd captum/insights/attr_vis/frontend || exit
 
 echo "-----------------------------------"
 echo "Install Dependencies"

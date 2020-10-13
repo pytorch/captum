@@ -1,1 +1,1 @@
-from .api import AttributionVisualizer, Batch, FilterConfig  # noqa
+from .attr_vis import AttributionVisualizer, Batch  # noqa

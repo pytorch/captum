@@ -13,7 +13,7 @@ class InputXGradient(GradientAttribution):
     r"""
     A baseline approach for computing the attribution. It multiplies input with
     the gradient with respect to input.
-    https://arxiv.org/abs/1611.07270
+    https://arxiv.org/abs/1605.01713
     """
 
     def __init__(self, forward_func: Callable) -> None:
@@ -119,5 +119,10 @@ class InputXGradient(GradientAttribution):
         attributions = tuple(
             input * gradient for input, gradient in zip(inputs, gradients)
         )
+
         undo_gradient_requirements(inputs, gradient_mask)
         return _format_output(is_inputs_tuple, attributions)
+
+    @property
+    def multiplies_by_inputs(self):
+        return True

@@ -49,3 +49,15 @@ Layer GradientShap
 
 .. autoclass:: captum.attr.LayerGradientShap
     :members:
+
+Layer Integrated Gradients
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerIntegratedGradients
+    :members:
+
+Layer Feature Ablation
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: captum.attr.LayerFeatureAblation
+    :members:

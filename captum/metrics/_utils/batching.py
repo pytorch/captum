@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
 import warnings
+from typing import Callable, Tuple
 
 import torch
+from torch import Tensor
 
 
 def _divide_and_aggregate_metrics(
-    inputs,
-    n_perturb_samples,
-    metric_func,
-    agg_func=torch.add,
-    max_examples_per_batch=None,
-):
+    inputs: Tuple[Tensor, ...],
+    n_perturb_samples: int,
+    metric_func: Callable,
+    agg_func: Callable = torch.add,
+    max_examples_per_batch: int = None,
+) -> Tensor:
     r"""
     This function is used to slice large number of samples `n_perturb_samples` per
     input example into smaller pieces, computing the metics for each small piece and
@@ -34,6 +36,10 @@ def _divide_and_aggregate_metrics(
         max_examples_per_batch (int, optional): The maximum number of allowed examples
                         per batch.
 
+        Returns:
+
+            metric (tensor): A metric score estimated by `metric_func` per
+                        input example.
     """
     bsz = inputs[0].size(0)
 

@@ -6,13 +6,12 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 from torch.nn import Module
 
 from captum.attr._core.noise_tunnel import NoiseTunnel
-from captum.attr._models.base import _get_deep_layer_name, _set_deep_layer_value
+from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
 from .helpers.test_config import config
-
 
 """
 Tests in this file are dynamically generated based on the config
@@ -54,9 +53,14 @@ class HookRemovalMeta(type):
     def __new__(cls, name: str, bases: Tuple, attrs: Dict):
         created_tests: Dict[Tuple[Type[Attribution], HookRemovalMode], bool] = {}
         for test_config in config:
-            (algorithms, model, args, layer, noise_tunnel, _,) = parse_test_config(
-                test_config
-            )
+            (
+                algorithms,
+                model,
+                args,
+                layer,
+                noise_tunnel,
+                _,
+            ) = parse_test_config(test_config)
 
             for algorithm in algorithms:
                 for mode in HookRemovalMode:
@@ -67,7 +71,12 @@ class HookRemovalMeta(type):
                         continue
 
                     test_method = cls.make_single_hook_removal_test(
-                        algorithm, model, layer, args, noise_tunnel, mode,
+                        algorithm,
+                        model,
+                        layer,
+                        args,
+                        noise_tunnel,
+                        mode,
                     )
                     test_name = gen_test_name(
                         "test_hook_removal_" + mode.name,
@@ -109,8 +118,11 @@ class HookRemovalMeta(type):
             if layer is not None:
                 if mode is HookRemovalMode.invalid_module:
                     expect_error = True
-                    _set_deep_layer_value(model, layer, ErrorModule())
-                target_layer = _get_deep_layer_name(model, layer)
+                    if isinstance(layer, list):
+                        _set_deep_layer_value(model, layer[0], ErrorModule())
+                    else:
+                        _set_deep_layer_value(model, layer, ErrorModule())
+                target_layer = get_target_layer(model, layer)
                 internal_algorithm = cast(Type[InternalAttribution], algorithm)
                 attr_method = internal_algorithm(model, target_layer)
             else:

@@ -27,7 +27,9 @@ class ClassSummarizer(Summarizer):
         )
 
     def update(  # type: ignore
-        self, x: TensorOrTupleOfTensorsGeneric, labels: TargetType = None,
+        self,
+        x: TensorOrTupleOfTensorsGeneric,
+        labels: TargetType = None,
     ):
         r"""
         Updates the stats of the summarizer, optionally associated to classes.

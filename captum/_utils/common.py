@@ -23,17 +23,17 @@ class ExpansionTypes(Enum):
 
 
 def safe_div(
-    denom: Tensor, quotient: Union[Tensor, float], default_value: Tensor
+    numerator: Tensor, denom: Union[Tensor, float], default_value: Tensor
 ) -> Tensor:
     r"""
-        A simple utility function to perform `denom / quotient`
-        if the statement is undefined => result will be `default_value`
+    A simple utility function to perform `numerator / denom`
+    if the statement is undefined => result will be `default_value`
     """
-    if isinstance(quotient, float):
-        return denom / quotient if quotient != 0.0 else default_value
+    if isinstance(denom, float):
+        return numerator / denom if denom != 0.0 else default_value
 
-    # if quotient is a tensor
-    return denom / torch.where(quotient != 0.0, quotient, default_value)
+    # if denominator is a tensor
+    return numerator / torch.where(denom != 0.0, denom, default_value)
 
 
 @typing.overload
@@ -418,9 +418,9 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
 
 
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[int, ...]]
+    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
 ) -> Tensor:
-    target = cast(Tuple[int, ...], (target,) if isinstance(target, int) else target)
+    target = (target,) if isinstance(target, int) else target
     assert (
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)
@@ -472,8 +472,10 @@ def _reduce_list(
     val_list[0]. It is assumed that all tuples in the list have the same length
     and red_func can be applied to all elements in each corresponding position.
     """
+    assert len(val_list) > 0, "Cannot reduce empty list!"
     if isinstance(val_list[0], torch.Tensor):
-        return red_func(val_list)
+        first_device = val_list[0].device
+        return red_func([elem.to(first_device) for elem in val_list])
     elif isinstance(val_list[0], bool):
         return any(val_list)
     elif isinstance(val_list[0], tuple):
