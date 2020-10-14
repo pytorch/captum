@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>The Captum Contribution Process · Captum</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="The Captum development process involves a healthy amount of open discussions between the core development team and the community."/><meta name="docsearch:language" content="en"/><meta property="og:title" content="The Captum Contribution Process · Captum"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="The Captum development process involves a healthy amount of open discussions between the core development team and the community."/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>General</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">About</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/introduction">Introduction</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">General</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/getting_started">Getting Started</a></li><li class="navListItem"><a class="navItem" href="/docs/captum_insights">Captum Insights</a></li><li class="navListItem"><a class="navItem" href="/docs/algorithms">Algorithm Descriptions</a></li><li class="navListItem"><a class="navItem" href="/docs/algorithms_comparison_matrix">Algorithm Comparison Matrix</a></li><li class="navListItem"><a class="navItem" href="/docs/faq">FAQ</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/contribution_guidelines">The Captum Contribution Process</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Usage</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/extension/integrated_gradients">Integrated Gradients</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/pytorch/captum/edit/master/docs/contribution_guide.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 class="postHeaderTitle">The Captum Contribution Process</h1></header><article><div><span><p>The Captum development process involves a healthy amount of open discussions between the core development team and the community.
+Captum operates similar to most open source projects on GitHub. However, if you've never contributed to an open source project before, here is the basic process.</p>
+<ol>
+<li><strong>Figure out what you're going to work on.</strong></li>
+<li><strong>Figure out the scope of your change and reach out for design comments or feedback on a GitHub issue.</strong>
+<ul>
+<li><strong>If you want to contribute a new feature or algorithm, please, check out the section on Proposing new features and algorithms.</strong></li>
+<li>We expect that all contributed features, algorithms and improvements follow these guidelines, analogous to existing methods in Captum:
+<ul>
+<li>Algorithm APIs should maintain as much similarity as possible with existing APIs to ensure ease-of-use when switching between algorithms.</li>
+<li>Detailed documentation including a summary of the general algorithm, example usage, and descriptions of all parameters and returns as well as documentation of any limitations.</li>
+<li>Explicit test cases for test models, similar to existing method test cases.</li>
+<li>Test the algorithms and changes on real models and real datasets. Use the datasets and models mentioned in the benchmarking section or in Captum tutorials or propose new datasets in GitHub issue’s section and we will review them.</li>
+<li>Support and tests for model wrappers such as DataParallel, DistributedDataParallel, and JIT.</li>
+<li>Type hints and formatting as described in the general contributing guidelines.</li>
+</ul></li>
+</ul></li>
+<li><strong>Code it out!</strong></li>
+<li><strong>Open a Pull Request!</strong></li>
+<li><strong>Iterate on the pull request until it's accepted!</strong></li>
+</ol>
+<h2><a class="anchor" aria-hidden="true" id="proposing-new-features-and-algorithms"></a><a href="#proposing-new-features-and-algorithms" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Proposing New Features and Algorithms</h2>
+<p>New feature ideas are best discussed on a specific issue. Please include as much information as you can, including any accompanying data and your proposed solution. The Captum team and community frequently reviews new issues and comments where they think they can help.</p>
+<p>While we would like to accept as many algorithms and features to Captum as possible, the core team is responsible for maintaining and supporting all functionalities in the future, so we need to ensure the package remains maintainable. Additionally, we also want to ensure that the supported methods cover the variety and breadth of methods in model interpretability, without overwhelming new users with many new or experimental methods. To balance these objectives, we have established guidelines and general criteria to help make decisions when considering new algorithms and features. The evaluation of any model interpretability algorithm can be subjective, especially since there are no general purpose qualitative and quantitative metrics measuring their quality. Hence, we provide these guidelines as a starting point and will utilize discussions in GitHub issues (<a href="https://github.com/pytorch/captum/issues">https://github.com/pytorch/captum/issues</a>) to ensure a transparent process while reviewing proposals.</p>
+<p>Before contributing an algorithm to Captum, please review these guidelines and provide as much context as possible regarding which criteria apply to the proposed method.</p>
+<ol>
+<li><strong>Usage / Citations and Impact on Model Interpretability Community</strong>
+<ul>
+<li>A primary factor we look at when considering new methods is popularity of the method and impact on the model interpretability community. Our baseline for consideration is generally 20 citations or 100 forks on GitHub, but this is not an absolute requirement.  If an algorithm is newly published or has had less visibility in the community, this criteria may not be satisfied, but strengths in the remaining criteria could justify acceptance.</li>
+</ul></li>
+<li><strong>Multimodality</strong>
+<ul>
+<li>Since one of the core values of Captum is multimodality, we prefer algorithms that are generic so that they can be used for different types of model architectures and input types. If the algorithm is unimodal, let’s say, if it works only for text or vision models, it is important to clarify what type of vision or text models the implementation supports. Does it work for LSTMs only? In other words, it is important to discuss the scope of the algorithm and its impact.</li>
+</ul></li>
+<li><strong>Benchmarking Results</strong>
+<ul>
+<li>We also would like comparisons with existing algorithm benchmarks in terms of performance and visual interpretation, and strong results compared to baselines are a plus when considering inclusion in Captum.
+<ul>
+<li><strong>Performance benchmarking</strong>
+<ul>
+<li>Please report runtime execution numbers of the algorithm in CPU and GPU environments. Describe the environment where the experiments were conducted. It is also encouraged to do performance comparison with existing baseline approaches and report those numbers as well.</li>
+</ul></li>
+<li><strong>Visual interpretation</strong>
+<ul>
+<li>Although visual interpretations can be deceptive, it is important to compare newly implemented algorithms with other state of the art approaches side by  side using well-known baseline models and datasets. For baseline models and datasets check out the section on <a href="#algorithm-benchmarking-on-real-datasets-and-models"><strong>Algorithm benchmarking on real datasets and models</strong></a> section</li>
+</ul></li>
+<li>In addition to visual interpretations, if possible, for attribution algorithms we can also assess infidelity and sensitivity metrics provided in captum.metrics package.</li>
+</ul></li>
+</ul></li>
+<li><strong>Axiomatic and Mathematically Sound</strong>
+<ul>
+<li>Since evaluation and qualitative analysis of interpretability methods can sometimes be misleading, methods that are axiomatic or have strong theoretical justification are preferred.</li>
+</ul></li>
+</ol>
+<p>If you think that proposed algorithm/feature satisfies many of the above criteria, please open an issue on GitHub (<a href="https://github.com/pytorch/captum/issues">https://github.com/pytorch/captum/issues</a>) to discuss the method with the core Captum team members before submitting a pull request. If the method seems suitable for inclusion in Captum, we will generally request a design document or proposal, explaining the proposed API and structure for the new algorithm. An example of a design proposal for LIME and Kernel SHAP can be found here (<a href="https://github.com/pytorch/captum/issues/467">https://github.com/pytorch/captum/issues/467</a>).</p>
+<p>If an algorithm or feature adds only marginal improvements or does not meet most the criteria described above, then we would suggest including it into our AWESOME_<a href="http://LIST.MD">LIST.MD</a> (<a href="https://github.com/pytorch/captum/blob/master/AWESOME_LIST.md">https://github.com/pytorch/captum/blob/master/AWESOME_LIST.md</a>) instead of adding it to the core Captum library. In the future, if the algorithm gains more popularity and acceptance in the model interpretability community, we would be happy to accept a PR to add it to the Captum core library.</p>
+<p><em>Note that we reserve the right to decide not to include any algorithms that meet the above criteria, but we are unable to support in the long run.</em></p>
+<h2><a class="anchor" aria-hidden="true" id="algorithm-benchmarking-on-real-datasets-and-models"></a><a href="#algorithm-benchmarking-on-real-datasets-and-models" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Algorithm benchmarking on real datasets and models</h2>
+<p><strong>NLP</strong></p>
+<ul>
+<li>We provide a sample CNN-based model for sensitivity analysis. Although, currently, we do not provide a LSTM model in the tutorials, we strongly encourage you to test the model on a baseline LSTM model (e.g. the original LSTM model described inLong short-term memory (<a href="https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735">https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735</a>) for sentiment analysis) as well.
+Besides that, it is encouraged to test the algorithms on Bert models as well. An example Bert Q&amp;A model is available in the tutorial’s section.
+<a href="https://captum.ai/tutorials/Bert_SQUAD_Interpret">https://captum.ai/tutorials/Bert_SQUAD_Interpret</a>
+<a href="https://captum.ai/tutorials/IMDB_TorchText_Interpret">https://captum.ai/tutorials/IMDB_TorchText_Interpret</a></li>
+</ul>
+<p><strong>Vision</strong></p>
+<ul>
+<li>We provide a sample toy model for CIFAR dataset and examples with ResNet model.
+<a href="https://captum.ai/tutorials/CIFAR_TorchVision_Interpret">https://captum.ai/tutorials/CIFAR_TorchVision_Interpret</a>
+<a href="https://captum.ai/tutorials/Resnet_TorchVision_Interpret">https://captum.ai/tutorials/Resnet_TorchVision_Interpret</a>
+These would be great starting points for benchmarking.
+We also encourage you to test your models on other well-known benchmarks such as MNIST digit and fashion
+dataset, Inception and VGG models.</li>
+</ul>
+<p><strong>Baseline MLP Classification Models</strong></p>
+<ul>
+<li>In terms of baseline MLP models and datasets we encourage you to use titanic dataset and the simple MLP model that we built in the following tutorial:
+<a href="https://captum.ai/tutorials/Titanic_Basic_Interpret">https://captum.ai/tutorials/Titanic_Basic_Interpret</a></li>
+</ul>
+<p><strong>Baseline Regression models</strong></p>
+<ul>
+<li>Boston House prices dataset and model can be found here:
+<a href="https://captum.ai/tutorials/House_Prices_Regression_Interpret">https://captum.ai/tutorials/House_Prices_Regression_Interpret</a></li>
+</ul>
+<p><strong>Multimodal</strong></p>
+<ul>
+<li>You can use VQA model and dataset described here:
+<a href="https://captum.ai/tutorials/Multimodal_VQA_Captum_Insights">https://captum.ai/tutorials/Multimodal_VQA_Captum_Insights</a></li>
+</ul>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/faq"><span class="arrow-prev">← </span><span>FAQ</span></a><a class="docs-next button" href="/docs/extension/integrated_gradients"><span>Integrated Gradients</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#proposing-new-features-and-algorithms">Proposing New Features and Algorithms</a></li><li><a href="#algorithm-benchmarking-on-real-datasets-and-models">Algorithm benchmarking on real datasets and models</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
