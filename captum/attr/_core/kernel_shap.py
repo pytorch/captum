@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from captum.attr.lime import Lime
+from captum.attr._core.lime import Lime
 from captum.log import log_usage
 
 

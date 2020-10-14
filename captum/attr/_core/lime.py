@@ -5,7 +5,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union, cast
 import torch
 from torch import Tensor
 
-from captum._utils.attribution import PerturbationAttribution
+from captum.attr._utils.attribution import PerturbationAttribution
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -15,7 +15,10 @@ from captum._utils.common import (
     _reduce_list,
     _run_forward,
 )
-from captum.attr._utils.common import _construct_default_feature_mask
+from captum.attr._utils.common import (
+    _construct_default_feature_mask,
+    _format_input_baseline,
+)
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 
@@ -946,7 +949,7 @@ class Lime(LimeBase):
             >>> attr = lime.attribute(input, target=1, feature_mask=feature_mask)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        formatted_inputs = _format_input(inputs)
+        formatted_inputs, formatted_baselines = _format_input_baseline(inputs, baselines)
 
         if feature_mask is None:
             feature_mask, num_interp_features = _construct_default_feature_mask(
@@ -971,6 +974,7 @@ class Lime(LimeBase):
 
         if not is_inputs_tuple:
             feature_mask = feature_mask[0]
+            baselines = formatted_baselines[0]
 
         if num_interp_features > 10000:
             warnings.warn(

@@ -18,12 +18,12 @@ from captum.attr._utils.common import (
     _format_input,
     _format_input_baseline,
 )
-from tests.attr.helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from tests.attr.helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )

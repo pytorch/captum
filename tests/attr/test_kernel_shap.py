@@ -7,12 +7,12 @@ import torch
 
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
-from tests.attr.helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from tests.attr.helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
@@ -316,6 +316,7 @@ class Test(BaseTest):
                 perturbations_per_eval=batch_size,
                 n_perturb_samples=n_perturb_samples,
             )
+            print(attributions)
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
@@ -332,6 +333,7 @@ class Test(BaseTest):
                     n_perturb_samples=n_perturb_samples,
                     return_input_shape=False,
                 )
+                print(attributions)
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs, delta=delta, mode="max"
                 )
