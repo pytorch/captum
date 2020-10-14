@@ -6,14 +6,13 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr.lime import Lime
+from captum.log import log_usage
 
 
 def linear_regression_interpretable_model_trainer(
-    interp_inputs: Tensor, exp_outputs: Tensor, weights: Tensor, **kwargs
+    interpretable_inputs: Tensor, expected_outputs: Tensor, weights: Tensor, **kwargs
 ):
     try:
         from sklearn import linear_model
@@ -25,7 +24,9 @@ def linear_regression_interpretable_model_trainer(
         )
     clf = linear_model.LinearRegression()
     clf.fit(
-        interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
+        interpretable_inputs.cpu().numpy(),
+        expected_outputs.cpu().numpy(),
+        weights.cpu().numpy(),
     )
     return torch.from_numpy(clf.coef_)
 
@@ -70,9 +71,6 @@ class KernelShap(Lime):
     theoretically obtaining Shapley Values more efficiently than
     directly computing Shapley Values.
 
-    Note that KernelShap requires having sklearn installed, since
-    sklearn is used to train the surrogate linear model.
-
     More information regarding this method and proof of equivalence
     can be found in the original paper here:
     https://arxiv.org/abs/1705.07874
@@ -100,7 +98,7 @@ class KernelShap(Lime):
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_samples: int = 25,
+        n_perturb_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -232,9 +230,9 @@ class KernelShap(Lime):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_perturb_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretabe model.
-                        Default: `50` if `n_samples` is not provided.
+                        Default: `50` if `n_perturb_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -285,7 +283,7 @@ class KernelShap(Lime):
             >>> ks = KernelShap(net)
             >>> # Computes attribution, with each of the 4 x 4 = 16
             >>> # features as a separate interpretable feature
-            >>> attr = ks.attribute(input, target=1, n_samples=200)
+            >>> attr = ks.attribute(input, target=1, n_perturb_samples=200)
 
             >>> # Alternatively, we can group each 2x2 square of the inputs
             >>> # as one 'interpretable' feature and perturb them together.
@@ -318,7 +316,7 @@ class KernelShap(Lime):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            n_samples=n_samples,
+            n_perturb_samples=n_perturb_samples,
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
         )

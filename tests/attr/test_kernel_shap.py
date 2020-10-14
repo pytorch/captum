@@ -1,21 +1,47 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.kernel_shap import KernelShap
-
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ..helpers.basic_models import (
+from tests.attr.helpers.basic import (
+    BaseTest,
+    assertTensorAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
+from tests.attr.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
 
 
 class Test(BaseTest):
+    def setUp(self) -> None:
+        super().setUp()
+        try:
+            import sklearn  # noqa: F401
+        except ImportError:
+            raise unittest.SkipTest(
+                "Skipping Kernel Shap tests, sklearn not available."
+            )
+
+    def test_linear_kernel_shap(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        baseline = torch.tensor([[10.0, 20.0, 10.0]], requires_grad=True)
+
+        self._kernel_shap_test_assert(
+            net,
+            inp,
+            [40.0, 120.0, 80.0],
+            n_perturb_samples=500,
+            baselines=baseline,
+            expected_coefs=[40.0, 120.0, 80.0],
+        )
+
     def test_simple_kernel_shap(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
@@ -24,7 +50,7 @@ class Test(BaseTest):
             inp,
             [76.66666, 196.66666, 116.66666],
             perturbations_per_eval=(1, 2, 3),
-            n_samples=500,
+            n_perturb_samples=500,
         )
 
     def test_simple_kernel_shap_with_mask(self) -> None:
@@ -36,6 +62,7 @@ class Test(BaseTest):
             [275.0, 275.0, 115.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
             perturbations_per_eval=(1, 2, 3),
+            expected_coefs=[275.0, 115.0],
         )
 
     def test_simple_kernel_shap_with_baselines(self) -> None:
@@ -58,7 +85,7 @@ class Test(BaseTest):
             inp,
             [[56.1688, 124.1695, 65.6695], [56.1688, 124.1695, 65.6695]],
             perturbations_per_eval=(1, 2, 3),
-            n_samples=20000,
+            n_perturb_samples=20000,
         )
 
     def test_simple_batch_kernel_shap_with_mask(self) -> None:
@@ -70,7 +97,8 @@ class Test(BaseTest):
             [[162.9993, 162.9993, 83.0007], [162.9993, 83.0007, 162.9993]],
             feature_mask=torch.tensor([[0, 0, 1], [0, 1, 0]]),
             perturbations_per_eval=(1, 2, 3),
-            n_samples=100,
+            n_perturb_samples=100,
+            expected_coefs=[162.9993, 83.0007],
         )
 
     def test_multi_input_kernel_shap_without_mask(self) -> None:
@@ -88,7 +116,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_samples=2000,
+            n_perturb_samples=2000,
         )
 
     def test_multi_input_kernel_shap_with_mask(self) -> None:
@@ -141,7 +169,8 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_samples=500,
+            n_perturb_samples=500,
+            expected_coefs=[84.0, 99.0, 59.0, 39.0, 199.0, 99.0, 0.0, 218.0, 19.0],
         )
 
     def test_multi_input_batch_kernel_shap(self) -> None:
@@ -259,7 +288,7 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
             perturbations_per_eval=(1,),
             target=None,
-            n_samples=1500,
+            n_perturb_samples=1500,
         )
 
     def _kernel_shap_test_assert(
@@ -272,8 +301,9 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         target: Union[None, int] = 0,
-        n_samples: int = 100,
+        n_perturb_samples: int = 100,
         delta: float = 1.0,
+        expected_coefs: Union[None, List[float]] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
@@ -284,11 +314,27 @@ class Test(BaseTest):
                 additional_forward_args=additional_input,
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
-                n_samples=n_samples,
+                n_perturb_samples=n_perturb_samples,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
+
+            if expected_coefs is not None:
+                # Test with return_input_shape = False
+                attributions = kernel_shap.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                    n_perturb_samples=n_perturb_samples,
+                    return_input_shape=False,
+                )
+                assertTensorAlmostEqual(
+                    self, attributions, expected_coefs, delta=delta, mode="max"
+                )
 
 
 if __name__ == "__main__":

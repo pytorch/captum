@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 import warnings
-from typing import Any, Callable, Optional, Tuple, Union, cast
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
+from captum._utils.attribution import PerturbationAttribution
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -16,9 +15,9 @@ from captum._utils.common import (
     _reduce_list,
     _run_forward,
 )
+from captum.attr._utils.common import _construct_default_feature_mask
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from captum._utils.attribution import PerturbationAttribution
-from captum._utils.common import _construct_default_feature_mask, _format_input_baseline
+from captum.log import log_usage
 
 
 class LimeBase(PerturbationAttribution):
@@ -75,8 +74,9 @@ class LimeBase(PerturbationAttribution):
                     The expected signature of this callable is:
 
                     train_interpretable_model_func(
-                        interp_inputs: Tensor [2D num_samples x num_interp_features],
-                        exp_outputs: Tensor [1D num_samples],
+                        interpretable_inputs: Tensor
+                                            [2D num_samples x num_interp_features],
+                        expected_outputs: Tensor [1D num_samples],
                         weights: Tensor [1D num_samples]
                         **kwargs: Any
                     ) -> Any (Representation of interpretable model)
@@ -144,10 +144,10 @@ class LimeBase(PerturbationAttribution):
                     the interpretable representation with either
                     to_interp_rep_transform or from_interp_rep_transform.
             from_interp_rep_transform (callable): Function which takes a
-                    single sample's interpretable representation (tensor
+                    single sampled interpretable representation (tensor
                     of shape 1 x num_interp_features) and returns
-                    the corresponding input in the original input space
-                    (mathcing shapes of original input to attribute).
+                    the corresponding representation in the input space
+                    (matching shapes of original input to attribute).
 
                     This argument is necessary if perturb_interpretable_space
                     is True, otherwise None can be provided for this argument.
@@ -169,8 +169,7 @@ class LimeBase(PerturbationAttribution):
             to_interp_rep_transform (callable): Function which takes a
                     sample in the original input space and converts to
                     its interpretable representation (tensor
-                    of shape 1 x num_interp_features) and returns
-                    the corresponding input in the original input space.
+                    of shape 1 x num_interp_features).
 
                     This argument is necessary if perturb_interpretable_space
                     is False, otherwise None can be provided for this argument.
@@ -213,15 +212,15 @@ class LimeBase(PerturbationAttribution):
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         additional_forward_args: Any = None,
-        n_samples: int = 50,
+        n_perturb_samples: int = 50,
         perturbations_per_eval: int = 1,
         **kwargs
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method attributes the output of the model with given target index
         (in case it is provided, otherwise it assumes that output is a
-        scalar) to the inputs of the model using the approach described above,
-        training an interpretable model and returning a representation of the
+        scalar) to the inputs of the model using the approach described above.
+        It trains an interpretable model and returns a representation of the
         interpretable model.
 
         It is recommended to only provide a single example as input (tensors
@@ -292,9 +291,9 @@ class LimeBase(PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_perturb_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretabe model.
-                        Default: `50` if `n_samples` is not provided.
+                        Default: `50` if `n_perturb_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -338,13 +337,13 @@ class LimeBase(PerturbationAttribution):
             >>>
             >>> # Define interpretable model training function
             >>> def linear_regression_interpretable_model_trainer(
-            >>>     interp_inputs: Tensor,
-            >>>     exp_outputs: Tensor,
+            >>>     interpretable_inputs: Tensor,
+            >>>     expected_outputs: Tensor,
             >>>     weights: Tensor, **kwargs):
             >>>         clf = linear_model.LinearRegression()
             >>>         clf.fit(
-            >>>             interp_inputs.cpu().numpy(),
-            >>>             exp_outputs.cpu().numpy(),
+            >>>             interpretable_inputs.cpu().numpy(),
+            >>>             expected_outputs.cpu().numpy(),
             >>>             weights.cpu().numpy())
             >>>         return clf.coef_
             >>>
@@ -389,123 +388,77 @@ class LimeBase(PerturbationAttribution):
             >>> attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)
         """
         with torch.no_grad():
-            bsz = (
-                cast(Tensor, inputs).shape[0]
-                if isinstance(inputs, Tensor)
-                else inputs[0].shape[0]
+            inp_tensor = (
+                cast(Tensor, inputs) if isinstance(inputs, Tensor) else inputs[0]
             )
+            bsz = inp_tensor.shape[0]
+            device = inp_tensor.device
             expand_inputs = False
 
             interpretable_inps = []
             similarities = []
             outputs = []
 
-            curr_inputs = []
+            curr_model_inputs = []
             expanded_additional_args = None
             expanded_target = None
-            for i in range(n_samples):
+            for i in range(n_perturb_samples):
                 curr_sample = self.perturb_func(inputs, **kwargs)
                 if self.perturb_interpretable_space:
                     interpretable_inps.append(curr_sample)
-                    curr_inputs.append(
+                    curr_model_inputs.append(
                         self.from_interp_rep_transform(  # type: ignore
                             curr_sample, inputs, **kwargs
                         )
                     )
-                    curr_sim = self.similarity_func(
-                        inputs, curr_inputs[-1], curr_sample, **kwargs
-                    )
-                    similarities.append(
-                        curr_sim.flatten()
-                        if isinstance(curr_sim, Tensor)
-                        else torch.tensor([curr_sim])
-                    )
                 else:
-                    curr_inputs.append(curr_sample)
+                    curr_model_inputs.append(curr_sample)
                     interpretable_inps.append(
                         self.to_interp_rep_transform(  # type: ignore
                             curr_sample, inputs, **kwargs
                         )
                     )
-                    curr_sim = self.similarity_func(
-                        inputs, curr_sample, interpretable_inps[-1], **kwargs
-                    )
-                    similarities.append(
-                        curr_sim.flatten()
-                        if isinstance(curr_sim, Tensor)
-                        else torch.tensor([curr_sim])
-                    )
+                curr_sim = self.similarity_func(
+                    inputs, curr_model_inputs[-1], interpretable_inps[-1], **kwargs
+                )
+                similarities.append(
+                    curr_sim.flatten()
+                    if isinstance(curr_sim, Tensor)
+                    else torch.tensor([curr_sim], device=device)
+                )
 
-                if len(curr_inputs) == perturbations_per_eval:
+                if len(curr_model_inputs) == perturbations_per_eval:
                     if expanded_additional_args is None:
-                        expanded_additional_args = (
-                            _expand_additional_forward_args(
-                                additional_forward_args, len(curr_inputs)
-                            )
-                            if additional_forward_args is not None
-                            else None
+                        expanded_additional_args = _expand_additional_forward_args(
+                            additional_forward_args, len(curr_model_inputs)
                         )
                     if expanded_target is None:
-                        expanded_target = _expand_target(target, len(curr_inputs))
+                        expanded_target = _expand_target(target, len(curr_model_inputs))
 
-                    model_out = _run_forward(
-                        self.forward_func,
-                        _reduce_list(curr_inputs),
+                    model_out, expand_inputs = self._evaluate_batch(
+                        curr_model_inputs,
                         expanded_target,
                         expanded_additional_args,
+                        bsz,
+                        device,
                     )
-                    if (
-                        not expand_inputs
-                        and isinstance(model_out, Tensor)
-                        and model_out.numel() != len(curr_inputs)
-                    ):
-                        assert model_out.numel() == bsz * len(
-                            curr_inputs
-                        ), "Number of outputs is not appropriate, must return"
-                        " one output per example. If forward function returns a"
-                        " scalar per batch, ensure that perturbations_per_eval is"
-                        " set to 1."
-                        expand_inputs = True
-                    outputs.append(
-                        model_out.flatten()
-                        if isinstance(model_out, Tensor)
-                        else torch.tensor([model_out])
-                    )
+                    outputs.append(model_out)
 
-                    curr_inputs = []
+                    curr_model_inputs = []
 
-            if len(curr_inputs) > 0:
-                expanded_additional_args = (
-                    _expand_additional_forward_args(
-                        additional_forward_args, len(curr_inputs)
-                    )
-                    if additional_forward_args is not None
-                    else None
+            if len(curr_model_inputs) > 0:
+                expanded_additional_args = _expand_additional_forward_args(
+                    additional_forward_args, len(curr_model_inputs)
                 )
-                expanded_target = _expand_target(target, len(curr_inputs))
-                model_out = _run_forward(
-                    self.forward_func,
-                    _reduce_list(curr_inputs),
+                expanded_target = _expand_target(target, len(curr_model_inputs))
+                model_out, expand_inputs = self._evaluate_batch(
+                    curr_model_inputs,
                     expanded_target,
                     expanded_additional_args,
+                    bsz,
+                    device,
                 )
-                outputs.append(
-                    model_out.flatten()
-                    if isinstance(model_out, Tensor)
-                    else torch.tensor([model_out])
-                )
-
-                if (
-                    not expand_inputs
-                    and isinstance(model_out, Tensor)
-                    and model_out.numel() != len(curr_inputs)
-                ):
-                    assert model_out.numel() == bsz * len(
-                        curr_inputs
-                    ), "Number of outputs is not appropriate, must return"
-                    " one output per example. If forward function returns a"
-                    " scalar per batch, ensure that perturbations_per_eval is set to 1."
-                    expand_inputs = True
+                outputs.append(model_out)
 
             combined_interp_inps = torch.cat(interpretable_inps)
             combined_outputs = (
@@ -529,6 +482,39 @@ class LimeBase(PerturbationAttribution):
             )
             return interp_model
 
+    def _evaluate_batch(
+        self,
+        curr_model_inputs: List[TensorOrTupleOfTensorsGeneric],
+        expanded_target: TargetType,
+        expanded_additional_args: Any,
+        batch_size: int,
+        device: torch.device,
+    ) -> Tuple[Tensor, bool]:
+        model_out = _run_forward(
+            self.forward_func,
+            _reduce_list(curr_model_inputs),
+            expanded_target,
+            expanded_additional_args,
+        )
+        expand_inputs = False
+        if isinstance(model_out, Tensor) and model_out.numel() != len(
+            curr_model_inputs
+        ):
+            assert model_out.numel() == batch_size * len(
+                curr_model_inputs
+            ), "Number of outputs is not appropriate, must return"
+            " one output per example. If forward function returns a"
+            " scalar per batch, ensure that perturbations_per_eval is"
+            " set to 1."
+            expand_inputs = True
+
+        return (
+            model_out.flatten()
+            if isinstance(model_out, Tensor)
+            else torch.tensor([model_out], device=device),
+            expand_inputs,
+        )
+
     def has_convergence_delta(self) -> bool:
         return False
 
@@ -538,7 +524,7 @@ class LimeBase(PerturbationAttribution):
 
 
 def lasso_interpretable_model_trainer(
-    interp_inputs: Tensor, exp_outputs: Tensor, weights: Tensor, **kwargs
+    interpretable_inputs: Tensor, expected_outputs: Tensor, weights: Tensor, **kwargs
 ):
     try:
         import sklearn
@@ -556,7 +542,9 @@ def lasso_interpretable_model_trainer(
         )
     clf = linear_model.Lasso(alpha=kwargs["alpha"] if "alpha" in kwargs else 1.0)
     clf.fit(
-        interp_inputs.cpu().numpy(), exp_outputs.cpu().numpy(), weights.cpu().numpy()
+        interpretable_inputs.cpu().numpy(),
+        expected_outputs.cpu().numpy(),
+        weights.cpu().numpy(),
     )
     return torch.from_numpy(clf.coef_)
 
@@ -663,8 +651,9 @@ class Lime(LimeBase):
                     callable is:
 
                     train_interpretable_model_func(
-                        interp_inputs: Tensor [2D num_samples x num_interp_features],
-                        exp_outputs: Tensor [1D num_samples],
+                        interpretable_inputs: Tensor
+                                            [2D num_samples x num_interp_features],
+                        expected_outputs: Tensor [1D num_samples],
                         weights: Tensor [1D num_samples]
                         **kwargs: Any
                     ) -> Tensor [1D num_interp_features]
@@ -735,7 +724,7 @@ class Lime(LimeBase):
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_samples: int = 25,
+        n_perturb_samples: int = 25,
         perturbations_per_eval: int = 1,
         alpha: float = 1.0,
         return_input_shape: bool = True,
@@ -871,9 +860,9 @@ class Lime(LimeBase):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_samples (int, optional):  The number of samples of the original
+            n_perturb_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretabe model.
-                        Default: `50` if `n_samples` is not provided.
+                        Default: `50` if `n_perturb_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -929,7 +918,7 @@ class Lime(LimeBase):
             >>> lime = Lime(net)
             >>> # Computes attribution, with each of the 4 x 4 = 16
             >>> # features as a separate interpretable feature
-            >>> attr = lime.attribute(input, target=1, n_samples=200)
+            >>> attr = lime.attribute(input, target=1, n_perturb_samples=200)
 
             >>> # Alternatively, we can group each 2x2 square of the inputs
             >>> # as one 'interpretable' feature and perturb them together.
@@ -957,7 +946,7 @@ class Lime(LimeBase):
             >>> attr = lime.attribute(input, target=1, feature_mask=feature_mask)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
+        formatted_inputs = _format_input(inputs)
 
         if feature_mask is None:
             feature_mask, num_interp_features = _construct_default_feature_mask(
@@ -965,9 +954,23 @@ class Lime(LimeBase):
             )
         else:
             feature_mask = _format_input(feature_mask)
+            min_interp_features = int(
+                min(torch.min(single_inp).item() for single_inp in feature_mask)
+            )
+            if min_interp_features != 0:
+                warnings.warn(
+                    "Minimum element in feature mask is not 0, shifting indices to"
+                    " start at 0."
+                )
+                feature_mask = tuple(
+                    single_inp + min_interp_features for single_inp in feature_mask
+                )
             num_interp_features = int(
                 max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
             )
+
+        if not is_inputs_tuple:
+            feature_mask = feature_mask[0]
 
         if num_interp_features > 10000:
             warnings.warn(
@@ -982,10 +985,10 @@ class Lime(LimeBase):
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,
-            n_samples=n_samples,
+            n_perturb_samples=n_perturb_samples,
             perturbations_per_eval=perturbations_per_eval,
-            baselines=baselines if is_inputs_tuple else baselines[0],
-            feature_mask=feature_mask if is_inputs_tuple else feature_mask[0],
+            baselines=baselines,
+            feature_mask=feature_mask,
             num_interp_features=num_interp_features,
             alpha=alpha,
         )
