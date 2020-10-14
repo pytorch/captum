@@ -169,7 +169,7 @@ class Test(BaseTest):
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=500,
+            n_perturb_samples=1000,
             expected_coefs=[84.0, 99.0, 59.0, 39.0, 199.0, 99.0, 0.0, 218.0, 19.0],
         )
 
@@ -316,7 +316,6 @@ class Test(BaseTest):
                 perturbations_per_eval=batch_size,
                 n_perturb_samples=n_perturb_samples,
             )
-            print(attributions)
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
@@ -333,7 +332,6 @@ class Test(BaseTest):
                     n_perturb_samples=n_perturb_samples,
                     return_input_shape=False,
                 )
-                print(attributions)
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs, delta=delta, mode="max"
                 )

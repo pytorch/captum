@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Optional, Tuple, Union, cast
 import torch
 from torch import Tensor
 
-from captum.attr._utils.attribution import PerturbationAttribution
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
@@ -15,11 +14,12 @@ from captum._utils.common import (
     _reduce_list,
     _run_forward,
 )
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
     _format_input_baseline,
 )
-from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.log import log_usage
 
 
@@ -949,7 +949,7 @@ class Lime(LimeBase):
             >>> attr = lime.attribute(input, target=1, feature_mask=feature_mask)
         """
         is_inputs_tuple = _is_tuple(inputs)
-        formatted_inputs, formatted_baselines = _format_input_baseline(inputs, baselines)
+        formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
 
         if feature_mask is None:
             feature_mask, num_interp_features = _construct_default_feature_mask(
@@ -968,13 +968,10 @@ class Lime(LimeBase):
                 feature_mask = tuple(
                     single_inp + min_interp_features for single_inp in feature_mask
                 )
+
             num_interp_features = int(
                 max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
             )
-
-        if not is_inputs_tuple:
-            feature_mask = feature_mask[0]
-            baselines = formatted_baselines[0]
 
         if num_interp_features > 10000:
             warnings.warn(
@@ -991,8 +988,8 @@ class Lime(LimeBase):
             additional_forward_args=additional_forward_args,
             n_perturb_samples=n_perturb_samples,
             perturbations_per_eval=perturbations_per_eval,
-            baselines=baselines,
-            feature_mask=feature_mask,
+            baselines=baselines if is_inputs_tuple else baselines[0],
+            feature_mask=feature_mask if is_inputs_tuple else feature_mask[0],
             num_interp_features=num_interp_features,
             alpha=alpha,
         )
