@@ -66,7 +66,8 @@ class BaseFeature:
         self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         raise NotImplementedError
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -112,7 +113,8 @@ class ImageFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -196,7 +198,8 @@ class TextFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "text"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -252,7 +255,8 @@ class GeneralFeature(BaseFeature):
         )
         self.categories = categories
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "general"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -292,7 +296,8 @@ class EmptyFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "empty"
 
     def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:
