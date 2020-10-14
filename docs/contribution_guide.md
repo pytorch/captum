@@ -70,7 +70,7 @@ dataset, Inception and VGG models.
 - In terms of baseline MLP models and datasets we encourage you to use titanic dataset and the simple MLP model that we built in the following tutorial:
 https://captum.ai/tutorials/Titanic_Basic_Interpret
 
-**Baseline  Regression models**
+**Baseline Regression models**
 - Boston House prices dataset and model can be found here:
 https://captum.ai/tutorials/House_Prices_Regression_Interpret
 
