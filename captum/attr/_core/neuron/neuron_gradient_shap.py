@@ -8,6 +8,7 @@ from captum.log import log_usage
 from ...._utils.gradient import construct_neuron_grad_fn
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
+from ..._utils.common import neuron_index_deprecation_decorator
 from ..gradient_shap import GradientShap
 
 
@@ -28,7 +29,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
     It adds white noise to each input sample `n_samples` times, selects a
     random baseline from baselines' distribution and a random point along the
     path between the baseline and the input, and computes the gradient of the
-    neuron with index `neuron_index` with respect to those selected random
+    neuron with index `neuron_selector` with respect to those selected random
     points. The final SHAP values represent the expected values of
     `gradients * (inputs - baselines)`.
 
@@ -63,7 +64,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         The output size of the attribute method matches the
                         dimensions of the inputs or ouputs of the neuron with
-                        index `neuron_index` in this layer, depending on whether
+                        index `neuron_selector` in this layer, depending on whether
                         we attribute to the inputs or outputs of the neuron.
                         Currently, it is assumed that the inputs or the outputs
                         of the neurons in this layer, depending on which one is
@@ -93,10 +94,11 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: Union[
             TensorOrTupleOfTensorsGeneric, Callable[..., TensorOrTupleOfTensorsGeneric]
         ],
@@ -116,7 +118,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron or neurons in output of
+            neuron_selector (int or tuple): Index of neuron or neurons in output of
                         given layer for which attribution is desired. Length of
                         this tuple must be one less than the number of dimensions
                         in the output of the given layer (since dimension 0
@@ -221,7 +223,7 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         gs = GradientShap(self.forward_func, self.multiplies_by_inputs)
         gs.gradient_func = construct_neuron_grad_fn(
             self.layer,
-            neuron_index,
+            neuron_selector,
             self.device_ids,
             attribute_to_neuron_input=attribute_to_neuron_input,
         )

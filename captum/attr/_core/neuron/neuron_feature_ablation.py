@@ -6,10 +6,11 @@ from torch.nn import Module
 
 from captum.log import log_usage
 
-from ...._utils.common import _verify_select_column
+from ...._utils.common import _verify_select_neuron
 from ...._utils.gradient import _forward_layer_eval
 from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
+from ..._utils.common import neuron_index_deprecation_decorator
 from ..feature_ablation import FeatureAblation
 
 
@@ -41,7 +42,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                           modification of it
             layer (torch.nn.Module): Layer for which attributions are computed.
                           Attributions for a particular neuron in the input or output
-                          of this layer are computed using the argument neuron_index
+                          of this layer are computed using the argument neuron_selector
                           in the attribute method.
                           Currently, it is assumed that the inputs or the outputs
                           of the layer, depending on which one is used for
@@ -56,10 +57,11 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
         PerturbationAttribution.__init__(self, forward_func)
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: BaselineType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
@@ -77,7 +79,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron in output of given
+            neuron_selector (int or tuple): Index of neuron in output of given
                             layer for which attribution is desired. The length of
                             this tuple must be one less than the number of
                             dimensions in the output of the given layer (since
@@ -193,7 +195,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>> # index (4,1,2).
             >>> # Computes ablation attribution, ablating each of the 16
             >>> # scalar inputs independently.
-            >>> attr = ablator.attribute(input, neuron_index=(4,1,2))
+            >>> attr = ablator.attribute(input, neuron_selector=(4,1,2))
 
             >>> # Alternatively, we may want to ablate features in groups, e.g.
             >>> # grouping each 2x2 square of the inputs and ablating them together.
@@ -215,7 +217,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
             >>> # feature mask has dimensions 1 x 4 x 4
             >>> feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],
             >>>                             [2,2,3,3],[2,2,3,3]]])
-            >>> attr = ablator.attribute(input, neuron_index=(4,1,2),
+            >>> attr = ablator.attribute(input, neuron_selector=(4,1,2),
             >>>                          feature_mask=feature_mask)
         """
 
@@ -228,11 +230,7 @@ class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):
                     device_ids=self.device_ids,
                     attribute_to_layer_input=attribute_to_neuron_input,
                 )
-                assert len(layer_eval) == 1, (
-                    "Layers with multiple inputs /"
-                    " outputs are not supported for neuron ablation."
-                )
-                return _verify_select_column(layer_eval[0], neuron_index)
+                return _verify_select_neuron(layer_eval, neuron_selector)
 
         ablator = FeatureAblation(neuron_forward_func)
 

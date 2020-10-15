@@ -417,6 +417,15 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError("Target type %r is not valid." % target)
 
 
+def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
+    if isinstance(target, tuple):
+        for index in target:
+            if isinstance(index, slice):
+                return True
+        return False
+    return isinstance(target, slice)
+
+
 def _verify_select_column(
     output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
 ) -> Tensor:
@@ -425,6 +434,24 @@ def _verify_select_column(
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)
     return output[(slice(None), *target)]
+
+
+def _verify_select_neuron(
+    layer_output: Tuple[Tensor, ...],
+    selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+) -> Tensor:
+    if callable(selector):
+        return selector(layer_output if len(layer_output) > 1 else layer_output[0])
+
+    assert len(layer_output) == 1, (
+        "Cannot select neuron index from layer with multiple tensors,"
+        "consider providing a neuron selector function instead."
+    )
+
+    selected_neurons = _verify_select_column(layer_output[0], selector)
+    if _contains_slice(selector):
+        return selected_neurons.reshape(selected_neurons.shape[0], -1).sum(1)
+    return selected_neurons
 
 
 def _extract_device(

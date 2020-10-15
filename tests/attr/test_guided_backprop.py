@@ -101,7 +101,7 @@ class Test(BaseTest):
         self,
         model: Module,
         layer: Module,
-        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
@@ -109,7 +109,7 @@ class Test(BaseTest):
         guided_backprop = NeuronGuidedBackprop(model, layer)
         attributions = guided_backprop.attribute(
             test_input,
-            neuron_index=neuron_index,
+            neuron_selector=neuron_selector,
             additional_forward_args=additional_input,
         )
         for i in range(len(test_input)):

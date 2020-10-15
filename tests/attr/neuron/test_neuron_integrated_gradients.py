@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -52,6 +52,13 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
+
+    def test_simple_ig_input_relu_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._ig_input_test_assert(
+            net, net.relu, inp, lambda x: torch.sum(x[:, 2:]), [0.0, 10.0, 8.0]
+        )
 
     def test_simple_ig_input_relu2_agg_neurons(self) -> None:
         net = BasicModel_MultiLayer()
@@ -113,7 +120,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron: Union[int, Tuple[Union[int, slice], ...]],
+        test_neuron: Union[int, Tuple[Union[int, slice], ...], Callable],
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
         multiply_by_inputs: bool = True,

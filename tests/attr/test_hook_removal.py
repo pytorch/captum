@@ -27,7 +27,7 @@ class HookRemovalMode(Enum):
     `normal` - Verifies no hooks remain after running an attribution method
     normally
     `incorrect_target_or_neuron` - Verifies no hooks remain after an incorrect
-    target and neuron_index are provided, which causes an assertion error
+    target and neuron_selector are provided, which causes an assertion error
     in the algorithm.
     `invalid_module` - Verifies no hooks remain after an invalid module
     is executed, which causes an assertion error in model execution.
@@ -137,8 +137,8 @@ class HookRemovalMeta(type):
                 if "target" in args:
                     args["target"] = (9999,) * 20
                     expect_error = True
-                if "neuron_index" in args:
-                    args["neuron_index"] = (9999,) * 20
+                if "neuron_selector" in args:
+                    args["neuron_selector"] = (9999,) * 20
                     expect_error = True
 
             if expect_error:

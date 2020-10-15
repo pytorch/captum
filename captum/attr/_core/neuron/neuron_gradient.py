@@ -18,6 +18,7 @@ from ...._utils.gradient import (
 )
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
+from ..._utils.common import neuron_index_deprecation_decorator
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):
@@ -56,10 +57,11 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
         GradientAttribution.__init__(self, forward_func)
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         additional_forward_args: Any = None,
         attribute_to_neuron_input: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -74,7 +76,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron or neurons in output of
+            neuron_selector (int or tuple): Index of neuron or neurons in output of
                         given layer for which attribution is desired. Length of
                         this tuple must be one less than the number of
                         dimensions in the output of the given layer (since
@@ -154,7 +156,7 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
             inputs,
             self.layer,
             additional_forward_args,
-            gradient_neuron_index=neuron_index,
+            gradient_neuron_selector=neuron_selector,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
