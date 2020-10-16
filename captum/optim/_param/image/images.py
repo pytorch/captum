@@ -34,7 +34,7 @@ class ImageTensor(torch.Tensor):
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
         plt.imshow(numpy_thing.astype(np.uint8))
-        plt.axis('off')
+        plt.axis("off")
         plt.show()
 
     def export(self, filename, scale=255):
@@ -43,7 +43,7 @@ class ImageTensor(torch.Tensor):
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
         plt.imshow(numpy_thing.astype(np.uint8), frameon=False)
-        plt.axis('off')
+        plt.axis("off")
         plt.savefig(filename)
 
     def cpu(self):

@@ -145,9 +145,7 @@ def n_steps(n: int) -> StopCriteria:
 
     def continue_while(step, obj, history, optim):
         if len(history) > 0:
-            pbar.set_postfix(
-                {"Objective": f"{history[-1].mean():.1f}"}, refresh=False
-            )
+            pbar.set_postfix({"Objective": f"{history[-1].mean():.1f}"}, refresh=False)
         if step < n:
             pbar.update()
             return True
@@ -159,7 +157,6 @@ def n_steps(n: int) -> StopCriteria:
 
 
 def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
-
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         assert activations is not None
