@@ -1,10 +1,9 @@
+from typing import Iterable
 from warnings import warn
-from typing import Iterable, Dict, Optional
 
-import torch
 import torch.nn as nn
 
-from clarity.pytorch import ModuleOutputMapping
+# from clarity.pytorch import ModuleOutputMapping
 
 
 class AbortForwardException(Exception):
@@ -39,7 +38,8 @@ class ModuleReuseException(Exception):
 
 class ModuleOutputsHook:
     def __init__(self, target_modules: Iterable[nn.Module]):
-        self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
+        # self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
+        self.outputs = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
             for module in target_modules
@@ -59,17 +59,19 @@ class ModuleOutputsHook:
                 self.outputs[module] = output
             else:
                 warn(
-                    f"Hook attached to {module} was called multiple times. As of 2019-11-22 please don't reuse nn.Modules in your models."
+                    f"Hook attached to {module} was called multiple times. "
+                    "As of 2019-11-22 please don't reuse nn.Modules in your models."
                 )
             if self.is_ready:
                 raise AbortForwardException("Forward hook called, all outputs saved.")
 
         return forward_hook
 
-    def consume_outputs(self) -> ModuleOutputMapping:
+    def consume_outputs(self):  # -> ModuleOutputMapping:
         if not self.is_ready:
             warn(
-                "Consume captured outputs, but not all requested target outputs have been captured yet!"
+                "Consume captured outputs, but not all requested target outputs "
+                "have been captured yet!"
             )
         outputs = self.outputs
         self._reset_outputs()
@@ -84,5 +86,5 @@ class ModuleOutputsHook:
             hook.remove()
 
     def __del__(self):
-        print(f"DEL HOOKS!: {list(self.outputs.keys())}")
+        # print(f"DEL HOOKS!: {list(self.outputs.keys())}")
         self.remove_hooks()

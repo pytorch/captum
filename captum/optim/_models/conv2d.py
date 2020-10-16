@@ -1,7 +1,8 @@
-import torch
+# import torch
+import math
+
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 
 def _is_static_pad(kernel_size, stride=1, dilation=1, **_):
@@ -24,13 +25,22 @@ def _split_channels(num_chan, num_groups):
 
 
 class Conv2dSame(nn.Conv2d):
-    """ Tensorflow like 'SAME' convolution wrapper for 2D convolutions
-    """
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
-                 padding=0, dilation=1, groups=1, bias=True):
+    """Tensorflow like 'SAME' convolution wrapper for 2D convolutions"""
+
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride=1,
+        padding=0,
+        dilation=1,
+        groups=1,
+        bias=True,
+    ):
         super(Conv2dSame, self).__init__(
-            in_channels, out_channels, kernel_size, stride, 0, dilation,
-            groups, bias)
+            in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
+        )
 
     def forward(self, x):
         ih, iw = x.size()[-2:]
@@ -38,23 +48,35 @@ class Conv2dSame(nn.Conv2d):
         pad_h = _calc_same_pad(ih, kh, self.stride[0], self.dilation[0])
         pad_w = _calc_same_pad(iw, kw, self.stride[1], self.dilation[1])
         if pad_h > 0 or pad_w > 0:
-            x = F.pad(x, [pad_w//2, pad_w - pad_w//2, pad_h//2, pad_h - pad_h//2])
-        return F.conv2d(x, self.weight, self.bias, self.stride,
-                        self.padding, self.dilation, self.groups)
+            x = F.pad(
+                x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2]
+            )
+        return F.conv2d(
+            x,
+            self.weight,
+            self.bias,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.groups,
+        )
 
 
 # def conv2d_pad(in_chs, out_chs, kernel_size, **kwargs):
 #     padding = kwargs.pop('padding', '')
 #     kwargs.setdefault('bias', False)
 #     if isinstance(padding, str):
-#         # for any string padding, the padding will be calculated for you, one of three ways
+#         # for any string padding, the padding will be calculated for you, one of
+#         # three ways
 #         padding = padding.lower()
 #         if padding == 'same':
-#             # TF compatible 'SAME' padding, has a performance and GPU memory allocation impact
+#             # TF compatible 'SAME' padding, has a performance and GPU memory
+#             # allocation impact
 #             if _is_static_pad(kernel_size, **kwargs):
 #                 # static case, no extra overhead
 #                 padding = _get_padding(kernel_size, **kwargs)
-#                 return nn.Conv2d(in_chs, out_chs, kernel_size, padding=padding, **kwargs)
+#                 return nn.Conv2d(in_chs, out_chs, kernel_size,
+#                    padding=padding, **kwargs)
 #             else:
 #                 # dynamic padding
 #                 return Conv2dSame(in_chs, out_chs, kernel_size, **kwargs)
@@ -84,7 +106,8 @@ class Conv2dSame(nn.Conv2d):
 #         num_groups = len(kernel_size)
 #         in_splits = _split_channels(in_channels, num_groups)
 #         out_splits = _split_channels(out_channels, num_groups)
-#         for idx, (k, in_ch, out_ch) in enumerate(zip(kernel_size, in_splits, out_splits)):
+#         for idx, (k, in_ch, out_ch) in enumerate(zip(kernel_size, in_splits,
+#            out_splits)):
 #             d = 1
 #             # FIXME make compat with non-square kernel/dilations/strides
 #             if stride == 1 and dilated:
@@ -111,7 +134,8 @@ class Conv2dSame(nn.Conv2d):
 #     assert 'groups' not in kwargs  # only use 'depthwise' bool arg
 #     if isinstance(kernel_size, list):
 #         # We're going to use only lists for defining the MixedConv2d kernel groups,
-#         # ints, tuples, other iterables will continue to pass to normal conv and specify h, w.
+#         # ints, tuples, other iterables will continue to pass to normal conv and
+#         # specify h, w.
 #         return MixedConv2d(in_chs, out_chs, kernel_size, **kwargs)
 #     else:
 #         depthwise = kwargs.pop('depthwise', False)

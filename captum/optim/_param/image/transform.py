@@ -1,12 +1,14 @@
+import logging
 import math
 import numbers
-import logging
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from kornia.geometry.transform import rotate, scale, shear, translate
+
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class BlendAlpha(nn.Module):
@@ -104,7 +106,10 @@ def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
 
 
 class RandomAffine(nn.Module):
-    """TODO: Can we look into Distributions more to give more control and be more PyTorch-y?"""
+    """
+    TODO: Can we look into Distributions more to give more control and
+    be more PyTorch-y?
+    """
 
     def __init__(self, rotate=False, scale=False, shear=False, translate=False):
         super().__init__()
@@ -146,7 +151,8 @@ class RandomAffine(nn.Module):
 #         return self.homography_warper(x, homography)
 
 
-# via https://discuss.pytorch.org/t/is-there-anyway-to-do-gaussian-filtering-for-an-image-2d-3d-in-pytorch/12351/9
+# via https://discuss.pytorch.org/t/is-there-anyway-to-do-gaussian-
+# filtering-for-an-image-2d-3d-in-pytorch/12351/9
 class GaussianSmoothing(nn.Module):
     """
     Apply gaussian smoothing on a
@@ -179,7 +185,7 @@ class GaussianSmoothing(nn.Module):
             kernel *= (
                 1
                 / (std * math.sqrt(2 * math.pi))
-                * torch.exp(-((mgrid - mean) / std) ** 2 / 2)
+                * torch.exp(-(((mgrid - mean) / std) ** 2) / 2)
             )
 
         # Make sure sum of values in gaussian kernel equals 1.
@@ -212,6 +218,16 @@ class GaussianSmoothing(nn.Module):
             filtered (torch.Tensor): Filtered output.
         """
         return self.conv(input, weight=self.weight, groups=self.groups)
+
+
+class Normalize(nn.Module):
+    def __init__(self, mean, std):
+        super().__init__()
+        self.mean = torch.as_tensor(mean).view(3, 1, 1).to(device)
+        self.std = torch.as_tensor(std).view(3, 1, 1).to(device)
+
+    def forward(self, x):
+        return (x - self.mean) / self.std
 
 
 def test_transform():
