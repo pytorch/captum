@@ -3,7 +3,6 @@ from pprint import pprint
 import numpy as np
 import tensorflow as tf
 import torch
-
 from clarity.pytorch.inception_v1 import GS_SAVED_WEIGHTS_URL, GoogLeNet, googlenet
 from lucid.misc.io import load
 from lucid.misc.io.writing import write_handle
