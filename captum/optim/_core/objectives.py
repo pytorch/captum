@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm.auto import tqdm
 
+from .._param.image.images import ImageParameterization, NaturalImage
+from .._param.image.transform import RandomAffine
 from .._utils.typing import (
     LossFunction,
     ModuleOutputMapping,
@@ -16,8 +18,6 @@ from .._utils.typing import (
     SingleTargetLossFunction,
     StopCriteria,
 )
-from .._param.image.images import ImageParameterization, NaturalImage
-from .._param.image.transform import RandomAffine
 from .output_hook import AbortForwardException, ModuleOutputsHook
 
 

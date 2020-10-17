@@ -4,10 +4,9 @@ from pprint import pprint
 import numpy as np
 import tensorflow as tf
 import torch
+
 from clarity.pytorch.inception_v1 import GS_SAVED_WEIGHTS_URL, GoogLeNet, googlenet
 from lucid.misc.io import load
-
-# from lucid.misc.io.loading import _load_graphdef_protobuf
 from lucid.misc.io.writing import write_handle
 from lucid.modelzoo.vision_models import InceptionV1
 from lucid.optvis.render import import_model
