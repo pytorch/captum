@@ -160,13 +160,15 @@ class LayerLRP(LRP, LayerAttribution):
 
         try:
             # 1. Forward pass
-            self._change_weights(inputs, additional_forward_args)
+            output = self._compute_output_and_change_weights(
+                inputs, target, additional_forward_args
+            )
             self._register_forward_hooks()
             # 2. Forward pass + backward pass
             _ = compute_gradients(
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
             )
-            relevances = self._get_output_relevance()
+            relevances = self._get_output_relevance(output)
         finally:
             self._restore_model()
         undo_gradient_requirements(inputs, gradient_mask)
@@ -175,14 +177,16 @@ class LayerLRP(LRP, LayerAttribution):
             if self.layer is None:
                 delta = []
                 for relevance_layer in relevances:
-                    delta.append(self.compute_convergence_delta(relevance_layer))
+                    delta.append(
+                        self.compute_convergence_delta(relevance_layer, output)
+                    )
             else:
-                delta = self.compute_convergence_delta(relevances)
+                delta = self.compute_convergence_delta(relevances, output)
             return relevances, delta
         else:
             return relevances
 
-    def _get_output_relevance(self):
+    def _get_output_relevance(self, output):
         if self.layer is None:
             relevances = []
             relevance_layers = [
@@ -190,17 +194,25 @@ class LayerLRP(LRP, LayerAttribution):
             ]
             for layer in relevance_layers:
                 if self.attribute_to_layer_input:
-                    relevance = layer.rule.relevance_input
+                    normalized_relevances = layer.rule.relevance_input
                 else:
-                    relevance = layer.rule.relevance_output
+                    normalized_relevances = layer.rule.relevance_output
+                relevance = [
+                    normalized_relevance * output.unsqueeze(dim=1)
+                    for normalized_relevance in normalized_relevances
+                ]
                 relevances.append(self._convert_list_to_tuple(relevance))
             return relevances
 
         else:
             if self.attribute_to_layer_input:
-                relevances = self.layer.rule.relevance_input
+                normalized_relevances = self.layer.rule.relevance_input
             else:
-                relevances = self.layer.rule.relevance_output
+                normalized_relevances = self.layer.rule.relevance_output
+            relevances = [
+                normalized_relevance * output.unsqueeze(dim=1)
+                for normalized_relevance in normalized_relevances
+            ]
             return self._convert_list_to_tuple(relevances)
 
     @staticmethod

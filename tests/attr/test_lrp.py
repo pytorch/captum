@@ -29,7 +29,7 @@ def _get_rule_config():
     layer = nn.modules.Conv1d(1, 1, 2, bias=False)
     nn.init.constant_(layer.weight.data, 2)
     activations = torch.tensor([[[1.0, 5.0, 7.0]]])
-    input = torch.tensor([2, 0, -2])
+    input = torch.tensor([[2, 0, -2]])
     return relevance, layer, activations, input
 
 
@@ -87,9 +87,7 @@ class Test(BaseTest):
         model.linear2.rule = EpsilonRule()
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(
-            self, relevance, torch.tensor([18 / 108, 36 / 108, 54 / 108])
-        )
+        assertTensorAlmostEqual(self, relevance, torch.tensor([18, 36, 54]))
 
     def test_lrp_simple_attributions_batch(self):
         model, inputs = _get_simple_model()
@@ -97,8 +95,10 @@ class Test(BaseTest):
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
         lrp = LRP(model)
-        inputs = torch.stack((inputs, 3 * inputs))
-        relevance, delta = lrp.attribute(inputs, return_convergence_delta=True)
+        inputs = torch.cat((inputs, 3 * inputs))
+        relevance, delta = lrp.attribute(
+            inputs, target=0, return_convergence_delta=True
+        )
         self.assertEqual(relevance.shape, inputs.shape)
         self.assertEqual(delta.shape[0], inputs.shape[0])
 
@@ -149,7 +149,7 @@ class Test(BaseTest):
         # )
         # Result if gradient is used for propagation over tanh
         assertTensorAlmostEqual(
-            self, relevance, torch.Tensor([[1 / 6, 1 / 3, 1 / 2]])
+            self, relevance, torch.Tensor([[0.0269, 0.0537, 0.0806]])
         )  # Result if tanh is skipped for propagation
 
     def test_lrp_simple_attributions_GammaRule(self):
@@ -162,7 +162,7 @@ class Test(BaseTest):
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
-            self, relevance.data, torch.tensor([21 / 216, 78 / 216, 117 / 216])
+            self, relevance.data, torch.tensor([[28 / 3, 104 / 3, 52]])
         )
 
     def test_lrp_simple_attributions_AlphaBeta(self):
@@ -174,7 +174,7 @@ class Test(BaseTest):
         model.linear2.rule = Alpha1_Beta0_Rule()
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([0.1250, 0.3500, 0.5250]))
+        assertTensorAlmostEqual(self, relevance, torch.tensor([[12, 33.6, 50.4]]))
 
     def test_lrp_Identity(self):
         model, inputs = _get_simple_model()
@@ -185,7 +185,7 @@ class Test(BaseTest):
         model.linear2.rule = EpsilonRule()
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([0.2500, 0.3750, 0.3750]))
+        assertTensorAlmostEqual(self, relevance, torch.tensor([24, 36, 36]))
 
     def test_lrp_simple2_attributions(self):
         model, input = _get_simple_model2()
@@ -216,13 +216,10 @@ class Test(BaseTest):
 
         model = SkipConnection()
         input = torch.Tensor([[2, 3]])
-        output = model(input)
         model.add.rule = EpsilonRule()
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
-        assertTensorAlmostEqual(
-            self, relevance, torch.Tensor([[10, 18]]) / output[0, 1]
-        )
+        assertTensorAlmostEqual(self, relevance, torch.Tensor([[10, 18]]))
 
     def test_lrp_maxpool1D(self):
         class MaxPoolModel(nn.Module):
@@ -239,9 +236,7 @@ class Test(BaseTest):
         input = torch.tensor([[[1.0, 2.0], [5.0, 6.0]]])
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
-        assertTensorAlmostEqual(
-            self, relevance, torch.Tensor([[[0.0, 0.0], [5 / 11, 6 / 11]]])
-        )
+        assertTensorAlmostEqual(self, relevance, torch.Tensor([[[0.0, 0.0], [10, 12]]]))
 
     def test_lrp_maxpool2D(self):
         class MaxPoolModel(nn.Module):
@@ -257,7 +252,7 @@ class Test(BaseTest):
         lrp = LRP(model)
         relevance = lrp.attribute(input)
         assertTensorAlmostEqual(
-            self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 1.0]]]])
+            self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 6.0]]]])
         )
 
     def test_lrp_maxpool3D(self):
@@ -276,32 +271,33 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self,
             relevance,
-            torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 1.0]]]]]),
+            torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 8.0]]]]]),
         )
 
     def test_lrp_multi(self):
         model = BasicModel_MultiLayer()
-        input = torch.Tensor([1, 2, 3])
+        input = torch.Tensor([[1, 2, 3]])
         add_input = 0
         output = model(input)
         output_add = model(input, add_input=add_input)
         self.assertTrue(torch.equal(output, output_add))
         lrp = LRP(model)
-        attributions = lrp.attribute(input)
+        attributions = lrp.attribute(input, target=0)
         attributions_add_input = lrp.attribute(
-            input, additional_forward_args=(add_input,)
+            input, target=0, additional_forward_args=(add_input,)
         )
-        # due to problem with grad() function the results do not match
-        # (https://github.com/pytorch/pytorch/issues/35802)
         self.assertTrue(torch.equal(attributions, attributions_add_input))
 
     def test_lrp_multi_inputs(self):
         model = BasicModel_MultiLayer()
-        input = torch.Tensor([1, 2, 3])
+        input = torch.Tensor([[1, 2, 3]])
         input = (input, 3 * input)
         lrp = LRP(model)
-        attributions, delta = lrp.attribute(input, return_convergence_delta=True)
+        attributions, delta = lrp.attribute(
+            input, target=0, return_convergence_delta=True
+        )
         self.assertEqual(len(input), len(delta))
+        assertTensorAlmostEqual(self, attributions[0], torch.Tensor([[16, 32, 48]]))
 
     def test_lrp_ixg_equivalency(self):
         model, inputs = _get_simple_model()
@@ -310,5 +306,5 @@ class Test(BaseTest):
         ixg = InputXGradient(model)
         attributions_ixg = ixg.attribute(inputs)
         assertTensorAlmostEqual(
-            self, attributions_lrp, attributions_ixg / 108
+            self, attributions_lrp, attributions_ixg
         )  # Divide by score because LRP relevance is normalized.

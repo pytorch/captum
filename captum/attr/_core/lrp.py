@@ -159,11 +159,17 @@ class LRP(GradientAttribution):
 
         try:
             # 1. Forward pass
-            self._change_weights(inputs, additional_forward_args)
+            output = self._compute_output_and_change_weights(
+                inputs, target, additional_forward_args
+            )
             self._register_forward_hooks()
             # 2. Forward pass + backward pass
-            relevances = self.gradient_func(
+            normalized_relevances = self.gradient_func(
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
+            )
+            relevances = tuple(
+                normalized_relevance * output.unsqueeze(dim=1)
+                for normalized_relevance in normalized_relevances
             )
         finally:
             self._restore_model()
@@ -173,7 +179,7 @@ class LRP(GradientAttribution):
         if return_convergence_delta:
             delta = []
             for relevance in relevances:
-                delta.append(self.compute_convergence_delta(relevance))
+                delta.append(self.compute_convergence_delta(relevance, output))
             return (
                 _format_output(is_inputs_tuple, relevances),
                 _format_output(is_inputs_tuple, tuple(delta)),
@@ -184,7 +190,7 @@ class LRP(GradientAttribution):
     def has_convergence_delta(self):
         return True
 
-    def compute_convergence_delta(self, attributions):
+    def compute_convergence_delta(self, attributions, output):
         """
         Here, we use the completeness property of LRP: The relevance is conserved
         during the propagation through the models' layers. Therefore, the difference
@@ -210,16 +216,20 @@ class LRP(GradientAttribution):
             - **delta** Difference of relevance in output layer and input layer.
         """
 
-        def _single_attribution_delta(attributions):
+        def _single_attribution_delta(attributions, output):
             remaining_dims = tuple(range(1, len(attributions.shape)))
-            delta = 1 - torch.sum(attributions, remaining_dims)
+            sum_attributions = torch.sum(attributions, dim=remaining_dims)
+            delta = output - sum_attributions
             return delta
 
         if isinstance(attributions, tuple):
-            delta = map(_single_attribution_delta, attributions)
+            delta = [
+                _single_attribution_delta(attribution, output)
+                for attribution in attributions
+            ]
             delta = tuple(delta)
         else:
-            delta = _single_attribution_delta(attributions)
+            delta = _single_attribution_delta(attributions, output)
         return delta
 
     def _get_layers(self, model):
@@ -288,14 +298,17 @@ class LRP(GradientAttribution):
                 )
                 self.forward_handles.append(forward_handle)
 
-    def _change_weights(self, inputs, additional_forward_args):
+    def _compute_output_and_change_weights(
+        self, inputs, target, additional_forward_args
+    ):
         try:
             self._register_weight_hooks()
-            _ = _run_forward(self.model, inputs, None, additional_forward_args)
+            output = _run_forward(self.model, inputs, target, additional_forward_args)
         finally:
             self._remove_forward_hooks()
         # pre_hooks for 2nd pass
         self._register_pre_hooks()
+        return output
 
     def _remove_forward_hooks(self):
         for forward_handle in self.forward_handles:

@@ -26,7 +26,7 @@ def _get_rule_config():
 
 def _get_simple_model(inplace=False):
     model = SimpleLRPModel(inplace)
-    inputs = torch.tensor([1.0, 2.0, 3.0])
+    inputs = torch.tensor([[1.0, 2.0, 3.0]])
 
     return model, inputs
 
@@ -68,8 +68,7 @@ class Test(BaseTest):
         relevance, delta = lrp.attribute(
             inputs, classIndex.item(), return_convergence_delta=True
         )
-        self.assertEqual(delta[0].item(), 0)
-        self.assertEqual(relevance.shape, torch.Size([1, 2, 2, 2]))
+        self.assertEqual(relevance[0].shape, torch.Size([2, 2, 2]))
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -80,7 +79,7 @@ class Test(BaseTest):
         relevance_upper = lrp_upper.attribute(inputs, attribute_to_layer_input=True)
         lrp_lower = LayerLRP(model, model.linear)
         relevance_lower = lrp_lower.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance_lower, relevance_upper[0])
+        assertTensorAlmostEqual(self, relevance_lower[0], relevance_upper[0])
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()
@@ -104,7 +103,7 @@ class Test(BaseTest):
         lrp_inplace = LayerLRP(model_inplace, model_inplace.linear2)
         relevance_default = lrp_default.attribute(inputs, attribute_to_layer_input=True)
         relevance_inplace = lrp_inplace.attribute(inputs, attribute_to_layer_input=True)
-        assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
+        assertTensorAlmostEqual(self, relevance_default[0], relevance_inplace[0])
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
@@ -124,7 +123,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
-            self, relevance, torch.Tensor([[1 / 3, 1 / 3, 1 / 3]])
+            self, relevance[0], torch.Tensor([[0.0537, 0.0537, 0.0537]])
         )  # Result if tanh is skipped for propagation
 
     def test_lrp_simple_attributions_GammaRule(self):
@@ -137,7 +136,7 @@ class Test(BaseTest):
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
-            self, relevance.data, torch.tensor([0.2500, 0.3750, 0.3750])
+            self, relevance[0], torch.tensor([24, 36, 36])
         )
 
     def test_lrp_simple_attributions_AlphaBeta(self):
@@ -149,7 +148,7 @@ class Test(BaseTest):
         model.linear2.rule = Alpha1_Beta0_Rule()
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance, torch.tensor([0.2500, 0.3750, 0.3750]))
+        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24, 36, 36]))
 
     def test_lrp_simple_attributions_all_layers(self):
         model, inputs = _get_simple_model(inplace=False)
