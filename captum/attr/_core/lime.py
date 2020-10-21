@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import warnings
 from typing import Any, Callable, List, Optional, Tuple, Union, cast
-
+import math
 import torch
 from torch import Tensor
+from torch.nn import CosineSimilarity
 
 from captum._utils.common import (
     _expand_additional_forward_args,
@@ -574,8 +575,28 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
         )
 
 
-def default_similarity_kernel(original_inp, _, __, **kwargs):
-    return 1.0
+def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
+    if isinstance(inp, Tensor):
+        return inp.flatten()
+    return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def get_similarity_function(
+    distance_mode: str = "cosine", kernel_width: float = 1.0
+) -> Callable:
+    def default_exp_kernel(original_inp, perturbed_inp, __, **kwargs):
+        flattened_original_inp = _flatten_tensor_or_tuple(original_inp)
+        flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp)
+        if distance_mode == "cosine":
+            cos_sim = CosineSimilarity(dim=0)
+            distance = 1 - cos_sim(flattened_original_inp, flattened_perturbed_inp)
+        elif distance_mode == "euclidean":
+            distance = torch.norm(flattened_original_inp - flattened_perturbed_inp)
+        else:
+            raise ValueError("distance_mode must be either cosine or euclidean.")
+        return math.exp(-1 * (distance ** 2) / (kernel_width ** 2))
+
+    return default_exp_kernel
 
 
 def default_perturb_func(original_inp, **kwargs):
@@ -631,7 +652,7 @@ class Lime(LimeBase):
         self,
         forward_func: Callable,
         train_interpretable_model_func: Callable = lasso_interpretable_model_trainer,
-        similarity_func: Callable = default_similarity_kernel,
+        similarity_func: Callable = get_similarity_function(),
         perturb_func: Callable = default_perturb_func,
     ) -> None:
         r"""
