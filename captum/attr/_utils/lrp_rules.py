@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 import torch
 
+from ..._utils.common import _format_tensor_into_tuples
+
 
 class PropagationRule(ABC):
     """
@@ -16,6 +18,7 @@ class PropagationRule(ABC):
     def forward_hook(self, module, inputs, outputs):
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
+        inputs = _format_tensor_into_tuples(inputs)
         self._has_single_input = len(inputs) == 1
         self._handle_input_hooks = []
         self.relevance_input = []

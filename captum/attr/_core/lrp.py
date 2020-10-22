@@ -149,7 +149,7 @@ class LRP(GradientAttribution):
         self._original_state_dict = self.model.state_dict()
         self.layers = []
         self._get_layers(self.model)
-        self._get_rules()
+        self._check_and_attach_rules()
         self.backward_handles = []
         self.forward_handles = []
 
@@ -158,12 +158,13 @@ class LRP(GradientAttribution):
         gradient_mask = apply_gradient_requirements(inputs)
 
         try:
-            # 1. Forward pass
+            # 1. Forward pass: Change weights of layers according to selected rules.
             output = self._compute_output_and_change_weights(
                 inputs, target, additional_forward_args
             )
+            # 2. Forward pass + backward pass: Register hooks to configure relevance
+            # propagation and execute back-propagation.
             self._register_forward_hooks()
-            # 2. Forward pass + backward pass
             normalized_relevances = self.gradient_func(
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
             )
@@ -195,11 +196,9 @@ class LRP(GradientAttribution):
         Here, we use the completeness property of LRP: The relevance is conserved
         during the propagation through the models' layers. Therefore, the difference
         between the sum of attribution (relevance) values and model output is taken as
-        the convergence delta. In this implementation the values are normalized by the
-        output score. Therefore, the convergence delta is 1 - sum(relevance). It should
-        be zero for functional attribution. However, when rules with an epsilon value
-        are used for stability reasons, relevance is absorbed during propagation and
-        the convergence delta is non-zero.
+        the convergence delta. It should be zero for functional attribution. However,
+        when rules with an epsilon value are used for stability reasons, relevance is
+        absorbed during propagation and the convergence delta is non-zero.
 
         Args:
 
@@ -210,6 +209,10 @@ class LRP(GradientAttribution):
                         tensor's dimension 0 corresponds to the number of
                         examples, and if multiple input tensors are provided,
                         the examples must be aligned appropriately.
+
+            output (tensor with single element): The output value with respect to which
+                        the attribution values are computed. This value corresponds to
+                        the target score of a classification model.
 
         Returns:
             *tensor*:
@@ -236,7 +239,7 @@ class LRP(GradientAttribution):
             else:
                 self._get_layers(layer)
 
-    def _get_rules(self):
+    def _check_and_attach_rules(self):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 pass
@@ -303,7 +306,9 @@ class LRP(GradientAttribution):
             output = _run_forward(self.model, inputs, target, additional_forward_args)
         finally:
             self._remove_forward_hooks()
-        # pre_hooks for 2nd pass
+        # Register pre_hooks that pass the initial activations from before weight
+        # adjustments as inputs to the layers with adjusted weights. This procedure
+        # is important for graph generation in the 2nd forward pass.
         self._register_pre_hooks()
         return output
 
