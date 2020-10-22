@@ -79,6 +79,13 @@ class Test(BaseTest):
         )
         self.assertEqual(delta.item(), 0)
         self.assertEqual(relevance.shape, inputs.shape)
+        assertTensorAlmostEqual(
+            self,
+            relevance,
+            torch.Tensor(
+                [[[[0, 1, 2, 3], [0, 5, 6, 7], [0, 9, 10, 11], [0, 0, 0, 0]]]]
+            ),
+        )
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model()
@@ -101,6 +108,9 @@ class Test(BaseTest):
         )
         self.assertEqual(relevance.shape, inputs.shape)
         self.assertEqual(delta.shape[0], inputs.shape[0])
+        assertTensorAlmostEqual(
+            self, relevance, torch.Tensor([[18, 36, 54], [54, 108, 162]])
+        )
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()
@@ -140,14 +150,10 @@ class Test(BaseTest):
                 return self.linear2(self.tanh(self.linear(x)))
 
         model = Model()
-        _, inputs = _get_simple_model()
+        inputs = torch.tensor([[1.0, 2.0, 3.0]])
         _ = model(inputs)
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
-        # assertTensorAlmostEqual(
-        #   self, relevance, torch.Tensor([[0.1186, 0.2372, 0.3558]])
-        # )
-        # Result if gradient is used for propagation over tanh
         assertTensorAlmostEqual(
             self, relevance, torch.Tensor([[0.0269, 0.0537, 0.0806]])
         )  # Result if tanh is skipped for propagation

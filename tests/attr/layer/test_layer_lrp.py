@@ -15,15 +15,6 @@ def _get_basic_config():
     return BasicModel_ConvNet_One_Conv(), input
 
 
-def _get_rule_config():
-    relevance = torch.tensor([[[-0.0, 3.0]]])
-    layer = nn.modules.Conv1d(1, 1, 2, bias=False)
-    nn.init.constant_(layer.weight.data, 2)
-    activations = torch.tensor([[[1.0, 5.0, 7.0]]])
-    input = torch.tensor([2, 0, -2])
-    return relevance, layer, activations, input
-
-
 def _get_simple_model(inplace=False):
     model = SimpleLRPModel(inplace)
     inputs = torch.tensor([[1.0, 2.0, 3.0]])
@@ -68,7 +59,9 @@ class Test(BaseTest):
         relevance, delta = lrp.attribute(
             inputs, classIndex.item(), return_convergence_delta=True
         )
-        self.assertEqual(relevance[0].shape, torch.Size([2, 2, 2]))
+        assertTensorAlmostEqual(
+            self, relevance[0], torch.Tensor([[[0, 4], [31, 40]], [[0, 0], [-6, -15]]])
+        )
         assertTensorAlmostEqual(
             self, delta, torch.Tensor([-21, 75])
         )  # Due to bias in conv1 layer
@@ -174,3 +167,4 @@ class Test(BaseTest):
             inputs, attribute_to_layer_input=True, return_convergence_delta=True
         )
         self.assertEqual(len(relevance), len(delta))
+        # TODO: Assert values and check delta computation
