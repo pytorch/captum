@@ -132,7 +132,7 @@ class LRP(GradientAttribution):
             - **delta** (*tensor*, returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
-                        of examples in input.
+                        of examples in the inputs.
         Examples::
 
                 >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
@@ -216,20 +216,17 @@ class LRP(GradientAttribution):
             - **delta** Difference of relevance in output layer and input layer.
         """
 
-        def _single_attribution_delta(attributions, output):
+        def _attribution_delta(attributions, output):
             remaining_dims = tuple(range(1, len(attributions.shape)))
             sum_attributions = torch.sum(attributions, dim=remaining_dims)
             delta = output - sum_attributions
             return delta
 
         if isinstance(attributions, tuple):
-            delta = [
-                _single_attribution_delta(attribution, output)
-                for attribution in attributions
-            ]
-            delta = tuple(delta)
+            stacked_attributions = torch.stack(attributions, dim=1)
+            delta = _attribution_delta(stacked_attributions, output)
         else:
-            delta = _single_attribution_delta(attributions, output)
+            delta = _attribution_delta(attributions, output)
         return delta
 
     def _get_layers(self, model):

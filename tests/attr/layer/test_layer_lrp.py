@@ -69,6 +69,9 @@ class Test(BaseTest):
             inputs, classIndex.item(), return_convergence_delta=True
         )
         self.assertEqual(relevance[0].shape, torch.Size([2, 2, 2]))
+        assertTensorAlmostEqual(
+            self, delta, torch.Tensor([-21, 75])
+        )  # Due to bias in conv1 layer
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -76,10 +79,13 @@ class Test(BaseTest):
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
         lrp_upper = LayerLRP(model, model.linear2)
-        relevance_upper = lrp_upper.attribute(inputs, attribute_to_layer_input=True)
+        relevance_upper, delta = lrp_upper.attribute(
+            inputs, attribute_to_layer_input=True, return_convergence_delta=True
+        )
         lrp_lower = LayerLRP(model, model.linear)
         relevance_lower = lrp_lower.attribute(inputs)
         assertTensorAlmostEqual(self, relevance_lower[0], relevance_upper[0])
+        self.assertEqual(delta.item(), 0)
 
     def test_lrp_simple_repeat_attributions(self):
         model, inputs = _get_simple_model()
@@ -135,9 +141,7 @@ class Test(BaseTest):
         model.linear2.rule = GammaRule()
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(
-            self, relevance[0], torch.tensor([24, 36, 36])
-        )
+        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24, 36, 36]))
 
     def test_lrp_simple_attributions_AlphaBeta(self):
         model, inputs = _get_simple_model()
@@ -165,7 +169,7 @@ class Test(BaseTest):
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
         lrp = LayerLRP(model, None)
-        inputs = torch.stack((inputs, 2 * inputs))
+        inputs = torch.cat((inputs, 2 * inputs))
         relevance, delta = lrp.attribute(
             inputs, attribute_to_layer_input=True, return_convergence_delta=True
         )
