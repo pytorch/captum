@@ -227,14 +227,3 @@ class Normalize(nn.Module):
 
     def forward(self, x):
         return (x - self.mean) / self.std
-
-
-def test_transform():
-    from clarity.pytorch.fixtures import image
-    from clarity.pytorch.io import show
-
-    input_image = image()[None, ...]
-    show(input_image)
-    transform = GaussianSmoothing(channels=3, kernel_size=(5, 5), sigma=2)
-    transformed_image = transform(input_image)
-    show(transformed_image)
