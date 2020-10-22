@@ -8,9 +8,10 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm.auto import tqdm
 
-from .._param.image.images import ImageParameterization, NaturalImage
-from .._param.image.transform import RandomAffine
-from .._utils.typing import (
+from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
+from captum.optim._param.image.images import InputParameterization, NaturalImage
+from captum.optim._param.image.transform import RandomAffine
+from captum.optim._utils.typing import (
     LossFunction,
     ModuleOutputMapping,
     Objective,
@@ -18,13 +19,9 @@ from .._utils.typing import (
     SingleTargetLossFunction,
     StopCriteria,
 )
-from .output_hook import AbortForwardException, ModuleOutputsHook
 
 
 class InputOptimization(Objective, Parameterized):
-    model: nn.Module
-    input_param: ImageParameterization
-    input_transformation: nn.Module
     """
     Core function that optimizes an input to maximize a target (aka objective).
     This is similar to gradient-based methods for adversarial examples, such
@@ -37,25 +34,25 @@ class InputOptimization(Objective, Parameterized):
     def __init__(
         self,
         model: nn.Module,
-        input_param: Optional[nn.Module],
+        input_param: Optional[InputParameterization],
         transform: Optional[nn.Module],
-        targets: Iterable[nn.Module],
+        target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
     ):
         r"""
         Args:
             model (nn.Module):  The reference to PyTorch model instance.
-            input_param (nn.Module, optional):  A module that generates
-                        an input, consumed by the model.
-            transform (nn.Module, optional):  A module that transforms or
-                        preprocess the input before being passed to the model.
-            targets (iterable of nn.Module):  A list of targets, objectives
-                        that are used to compute the loss function.
-            loss_function (callable): The loss function to minimize during
+            input_param (nn.Module, optional):  A module that generates an input,
+                        consumed by the model.
+            transform (nn.Module, optional):  A module that transforms or preprocesses
+                        the input before being passed to the model.
+            target_modules (iterable of nn.Module):  A list of targets, objectives that
+                        are used to compute the loss function.
+            loss_function (callable): The loss function to minimize during optimization
                         optimization.
         """
         self.model = model
-        self.hooks = ModuleOutputsHook(targets)
+        self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
         self.transform = transform or RandomAffine(scale=True, translate=True)
         self.loss_function = loss_function

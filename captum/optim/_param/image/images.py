@@ -197,7 +197,12 @@ class ToRGB(nn.Module):
 #     return up
 
 
-class ImageParameterization(torch.nn.Module):
+class InputParameterization(torch.nn.Module):
+    def forward(self):
+        raise NotImplementedError
+
+
+class ImageParameterization(InputParameterization):
     def set_image(self, x: torch.Tensor):
         ...
 

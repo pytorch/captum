@@ -10,7 +10,7 @@ from torch import Tensor
 from torch.hub import load_state_dict_from_url
 from torch.jit.annotations import Optional, Tuple
 
-from .conv2d import Conv2dSame
+from captum.optim._models.conv2d import Conv2dSame
 
 # __all__ = ['GoogLeNet', 'googlenet', "GoogLeNetOutputs", "_GoogLeNetOutputs"]
 
