@@ -111,6 +111,7 @@ def rand_select(transform_values):
     return transform_values[n]
 
 
+
 class RandomAffine(nn.Module):
     """
     Apply random affine transforms on a 3d tensor.
@@ -124,9 +125,9 @@ class RandomAffine(nn.Module):
     def __init__(self, rotate=None, scale=None, shear=None, translate=None):
         super().__init__()
         self.rotate = rotate
-        self.scale = scale
-        self.shear = shear
-        self.translate = translate
+        self.scale = scale    
+        self.shear = shear if shear == None or len(shear) == 2 else [shear] * 2 
+        self.translate = translate if translate == None or len(translate) == 2 else [translate] * 2
 
     def get_rot_mat(self, theta, device, dtype):
         theta = torch.tensor(theta, device=device, dtype=dtype)
@@ -173,7 +174,7 @@ class RandomAffine(nn.Module):
             x = F.grid_sample(x, grid)
         return x
 
-    def translate_tensor(self, x: torch.Tensor, translation) -> torch.Tensor:
+    def translate_tensor(self, x: torch.Tensor, translation_x, translation_y) -> torch.Tensor:
         x = torch.roll(x, shifts=translation[0], dims=2)
         x = torch.roll(x, shifts=translation[1], dims=3)
         return x
@@ -188,11 +189,11 @@ class RandomAffine(nn.Module):
             logging.info(f"Scale: {scale_factor}")
             x = self.scale_tensor(x, scale_factor)
         if self.shear is not None:
-            shear_values = (rand_select(self.shear), rand_select(self.shear))
+            shear_values = (rand_select(self.shear[0]), rand_select(self.shear[1]))
             logging.info(f"Shear: {shear_values}")
             x = self.shear_tensor(x, shear_values)
         if self.translate is not None:
-            translations = (rand_select(self.translation), rand_select(self.translation))
+            translations = (rand_select(self.translation[0]), rand_select(self.translation[0]))
             logging.info(f"Translate: {translations}")
             x = self.translate(x, translations)
         return x
