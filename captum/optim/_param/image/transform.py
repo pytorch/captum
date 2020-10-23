@@ -5,7 +5,6 @@ import numbers
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from kornia.geometry.transform import rotate, scale, shear, translate
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -104,36 +103,98 @@ def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
 #         return cropped
 
 
+def rand_select(transform_values):
+    """
+    Randomly return a value from the provided tuple or list
+    """
+    n = torch.randint(low=0, high=len(transform_values)-1, size=[1]).item()
+    return transform_values[n]
+
+
 class RandomAffine(nn.Module):
     """
-    TODO: Can we look into Distributions more to give more control and
-    be more PyTorch-y?
+    Apply random affine transforms on a 3d tensor.
+    Arguments:
+        rotate (float, sequence): Tuple of degrees to randomly select from.
+        translate (int, sequence): Tuple of values to randomly select from.
+        scale (float, sequence): Tuple of scale factors to randomly select from.
+        shear (float, sequence): Tuple of shear values to randomly select from.
     """
-
-    def __init__(self, rotate=False, scale=False, shear=False, translate=False):
+    
+    def __init__(self, rotate=None, scale=None, shear=None, translate=None):
         super().__init__()
         self.rotate = rotate
         self.scale = scale
         self.shear = shear
         self.translate = translate
 
+    def get_rot_mat(self, theta, device, dtype):
+        theta = torch.tensor(theta, device=device, dtype=dtype)
+        rot_mat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
+                            [torch.sin(theta), torch.cos(theta), 0]], device=device, dtype=dtype)
+        return rot_mat
+
+    def rotate_tensor(self, x: torch.Tensor, theta) -> torch.Tensor:
+        theta = theta * 3.141592653589793 / 180
+        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+        grid = F.affine_grid(rot_matrix, x.size())
+        x = F.grid_sample(x, grid)
+        return x
+
+    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
+        scale_mat = torch.tensor([[m, 0., 0.],
+                                  [0., m, 0.]])
+        return scale_mat
+    
+    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
+        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)                                        
+        grid = F.affine_grid(scale_matrix, x.size())
+        x = F.grid_sample(x, grid)
+        return x
+
+    def get_shear_mat(self, theta, ax: int, device, dtype) -> torch.Tensor:
+        m = 1 / torch.tan(torch.tensor(theta, device=device, dtype=dtype))
+        if ax == 0:
+            shear_mat = torch.tensor([[1, m, 0],
+                                      [0, 1, 0]])
+        else:
+            shear_mat = torch.tensor([[1, 0, 0],
+                                      [m, 1, 0]])
+        return shear_mat
+
+    def shear_tensor(self, x: torch.Tensor, shear_vals) -> torch.Tensor:
+        if shear_vals[0] > 0:
+            shear_matrix = self.get_shear_mat(shear_vals[0], 0, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+            grid = F.affine_grid(shear_matrix, x.size())
+            x = F.grid_sample(x, grid) 
+        if shear_vals[1] > 0:
+            shear_matrix = self.get_shear_mat(shear_vals[1], 1, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+            grid = F.affine_grid(shear_matrix, x.size())
+            x = F.grid_sample(x, grid)
+        return x
+
+    def translate_tensor(self, x: torch.Tensor, translation) -> torch.Tensor:
+        x = torch.roll(x, shifts=translation[0], dims=2)
+        x = torch.roll(x, shifts=translation[1], dims=3)
+        return x
+
     def forward(self, x):
-        if self.rotate:
-            rotate_angle = torch.randn(1, device=x.device)  # >95% < 6deg
+        if self.rotate is not None:
+            rotate_angle = rand_select(self.rotate)
             logging.info(f"Rotate: {rotate_angle}")
-            x = rotate(x, rotate_angle)
-        if self.scale:
-            scale_factor = (torch.randn(1, device=x.device) / 40.0) + 1
+            x = self.rotate(x, rotate_angle)
+        if self.scale is not None:
+            scale_factor = rand_select(self.scale)
             logging.info(f"Scale: {scale_factor}")
-            x = scale(x, scale_factor)
-        if self.shear:
-            shear_matrix = torch.randn((1, 2), device=x.device) / 40.0  # >95% < 2deg
-            logging.info(f"Shear: {shear_matrix}")
-            x = shear(x, shear_matrix)
-        if self.translate:
-            translation = torch.randn((1, 2), device=x.device)
-            logging.info(f"Translate: {translation}")
-            x = translate(x, translation)
+            x = self.scale_tensor(x, scale_factor)
+        if self.shear is not None:
+            shear_values = (rand_select(self.shear), rand_select(self.shear))
+            logging.info(f"Shear: {shear_values}")
+            x = self.shear_tensor(x, shear_values)
+        if self.translate is not None:
+            translations = (rand_select(self.translation), rand_select(self.translation))
+            logging.info(f"Translate: {translations}")
+            x = self.translate(x, translations)
         return x
 
 
