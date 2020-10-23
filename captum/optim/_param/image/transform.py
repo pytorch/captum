@@ -54,6 +54,14 @@ def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
     )
 
 
+def rand_select(transform_values):
+    """
+    Randomly return a value from the provided tuple or list
+    """
+    n = torch.randint(low=0, high=len(transform_values)-1, size=[1]).item()
+    return transform_values[n]
+
+
 # class RandomSpatialJitter(nn.Module):
 #     def __init__(self, max_distance):
 #         super().__init__()
@@ -75,14 +83,22 @@ def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
 #         return cropped
 
 
-# class RandomScale(nn.Module):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__()
-#         self.scale = torch.distributions.Uniform(0.95, 1.05)
+class RandomScale(nn.Module):
+    """
+    Apply random rescaling on a NCHW tensor.
+    Arguments:
+        scale (float, sequence): Tuple of rescaling values to randomly select from.
+    """
+    def __init__(self, scale, align_corners=True):
+        super(RandomScale, self).__init__()
+        self.scale = scale
 
-#     def forward(self, x):
-#         by = self.scale.sample().item()
-#         return F.interpolate(x, scale_factor=by, mode="bilinear")
+    def rescale_tensor(self, input, scale):
+        return torch.nn.functional.interpolate(input, scale_factor=scale, mode='bilinear')
+
+    def forward(self, input):
+        scale = rand_select(self.scale)
+        return self.rescale_tensor(input, scale=scale)
 
 
 # class TransformationRobustness(nn.Module):
@@ -103,23 +119,14 @@ def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
 #         return cropped
 
 
-def rand_select(transform_values):
-    """
-    Randomly return a value from the provided tuple or list
-    """
-    n = torch.randint(low=0, high=len(transform_values)-1, size=[1]).item()
-    return transform_values[n]
-
-
-
 class RandomAffine(nn.Module):
     """
     Apply random affine transforms on a NCHW tensor.
     Arguments:
         rotate (float, sequence): Tuple of degrees to randomly select from.
         scale (float, sequence): Tuple of scale factors to randomly select from.
-        shear (float, sequence): Tuple of shear values to randomly select from. Optionally provide a tuple that contains a tuple for the x and a tuple for y translations.
-        translate (int, sequence): Tuple of values to randomly select from. Optionally provide a tuple that contains a tuple for the x and a tuple for y shear values. 
+        shear (float, sequence): Tuple of shear values to randomly select from. Optionally provide a tuple that contains a tuple for the x translation and a tuple for y translations.
+        translate (int, sequence): Tuple of values to randomly select from. Optionally provide a tuple that contains a tuple for the x shear values and a tuple for y shear values. 
     """
     
     def __init__(self, rotate=None, scale=None, shear=None, translate=None):
