@@ -110,18 +110,20 @@ class KernelShap(Lime):
         representation of the interpretable model.
 
         It is recommended to only provide a single example as input (tensors
-        with first dimension or batch size = 1). This is because LIME is generally
-        used for sample-based interpretability, training a separate interpretable
-        model to explain a model's prediction on each individual example.
+        with first dimension or batch size = 1). This is because LIME / KernelShap
+        is generally used for sample-based interpretability, training a separate
+        interpretable model to explain a model's prediction on each individual example.
 
-        Nevertheless, a batch of inputs can also be provided as inputs, similar to
-        other perturbation-based attribution methods. If forward_func returns
-        a single value per batch (e.g. loss), then an interpretable model is
-        trained with the batch output and corresponding interpretable feature
-        vector for the batch as input. If a scalar is returned per example,
-        then the interpretable feature vector for the batch is repeated and
-        included with each corresponding example output for interpretable
-        model training.
+        A batch of inputs can also be provided as inputs, similar to
+        other perturbation-based attribution methods. In this case, if forward_fn
+        returns a scalar per example, attributions will be computed for each
+        example independently, with a separate interpretable model trained for each
+        example. Note that provided similarity and perturbation functions will be
+        provided each example separately (first dimension = 1) in this case.
+        If forward_fn returns a scalar per batch (e.g. loss), attributions will
+        still be computed using a single interpretable model for the full batch.
+        In this case, similarity and perturbation functions will be provided the
+        same original input containing the full batch.
 
         The number of interpretable features is determined from the provided
         feature mask, or if none is provided, from the default feature mask,

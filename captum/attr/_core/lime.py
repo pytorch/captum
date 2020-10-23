@@ -11,13 +11,19 @@ from torch.nn import CosineSimilarity
 from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
+    _flatten_tensor_or_tuple,
     _format_input,
     _format_output,
     _is_tuple,
     _reduce_list,
     _run_forward,
 )
-from captum._utils.typing import BaselineType, Literal, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import (
+    BaselineType,
+    Literal,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
@@ -73,7 +79,9 @@ class LimeBase(PerturbationAttribution):
 
 
             forward_func (callable):  The forward function of the model or any
-                    modification of it.
+                    modification of it. If a batch is provided as input for
+                    attribution, it is expected that forward_func returns a scalar
+                    representing the entire batch.
             train_interpretable_model_func (callable): Function which trains
                     an interpretable model and returns some representation of the
                     interpretable model. The return type of this will match the
@@ -235,17 +243,12 @@ class LimeBase(PerturbationAttribution):
         used for sample-based interpretability, training a separate interpretable
         model to explain a model's prediction on each individual example.
 
-        Nevertheless, a batch of inputs can also be provided as inputs, similar to
-        other perturbation-based attribution methods. In this case, the
-        interpretable feature representation should still have shape
+        A batch of inputs can be provided as inputs only if forward_func
+        returns a single value per batch (e.g. loss).
+        The interpretable feature representation should still have shape
         1 x num_interp_features, corresponding to the interpretable
-        representation for the full batch. If forward_func returns
-        a single value per batch (e.g. loss), then an interpretable model is
-        trained with the batch output and corresponding interpretable feature
-        vector for the batch as input. If a scalar is returned per example,
-        then the interpretable feature vector for the batch is repeated and
-        included with each corresponding example output for interpretable
-        model training.
+        representation for the full batch, and perturbations_per_eval
+        must be set to 1.
 
         Args:
 
@@ -509,6 +512,10 @@ class LimeBase(PerturbationAttribution):
         return False
 
 
+# Default transformations and methods
+# for Lime child implementation.
+
+
 def lasso_interpretable_model_trainer(
     interpretable_inputs: Tensor, expected_outputs: Tensor, weights: Tensor, **kwargs
 ):
@@ -557,15 +564,40 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
         )
 
 
-def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
-    if isinstance(inp, Tensor):
-        return inp.flatten()
-    return torch.cat([single_inp.flatten() for single_inp in inp])
-
-
 def get_similarity_function(
     distance_mode: str = "cosine", kernel_width: float = 1.0
 ) -> Callable:
+    r"""
+    This method constructs an appropriate similarity function to compute
+    weights for perturbed sample in LIME. Distance between the original
+    and perturbed inputs is computed based on the provided distance mode,
+    and the distance is passed through an exponential kernel with given
+    kernel width to convert to a range between 0 and 1.
+
+    The callable returned can be provided as the similarity_fn for
+    Lime or LimeBase.
+
+    Args:
+
+        distance_mode (str, optional):  Distance mode can be either "cosine" or
+                    "euclidean" corresponding to either cosine distance
+                    or Euclidean distance respectively. Distance is computed
+                    by flattening the original inputs and perturbed inputs
+                    (concatenating tuples of inputs if necessary) and computing
+                    distances between the resulting vectors.
+                    Default: "cosine"
+        kernel_width (float, optional):
+                    Kernel width for exponential kernel applied to distance.
+                    Default: 1.0
+
+    Returns:
+
+        *Callable*:
+        - **similarity_fn** (*Callable*):
+            Similarity function. This callable can be provided as the
+            similarity_fn for Lime or LimeBase.
+    """
+
     def default_exp_kernel(original_inp, perturbed_inp, __, **kwargs):
         flattened_original_inp = _flatten_tensor_or_tuple(original_inp)
         flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp)
@@ -748,16 +780,15 @@ class Lime(LimeBase):
         model to explain a model's prediction on each individual example.
 
         A batch of inputs can also be provided as inputs, similar to
-        other perturbation-based attribution methods. In this case, the
-        interpretable feature representation should still have shape
-        1 x num_interp_features, corresponding to the interpretable
-        representation for the full batch. If forward_func returns
-        a single value per batch (e.g. loss), then an interpretable model is
-        trained with the batch output and corresponding interpretable feature
-        vector for the batch as input. If a scalar is returned per example,
-        then the interpretable feature vector for the batch is repeated and
-        included with each corresponding example output for interpretable
-        model training.
+        other perturbation-based attribution methods. In this case, if forward_fn
+        returns a scalar per example, attributions will be computed for each
+        example independently, with a separate interpretable model trained for each
+        example. Note that provided similarity and perturbation functions will be
+        provided each example separately (first dimension = 1) in this case.
+        If forward_fn returns a scalar per batch (e.g. loss), attributions will
+        still be computed using a single interpretable model for the full batch.
+        In this case, similarity and perturbation functions will be provided the
+        same original input containing the full batch.
 
         The number of interpretable features is determined from the provided
         feature mask, or if none is provided, from the default feature mask,
