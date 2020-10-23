@@ -136,9 +136,8 @@ class ToRGB(nn.Module):
     def klt_transform():
         """Karhunen-Loève transform (KLT) measured on ImageNet"""
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
-        transform = np.asarray(KLT, dtype=np.float32)
-        transform /= np.max(np.linalg.norm(transform, axis=0))
-        return torch.as_tensor(transform)
+        transform = torch.Tensor(KLT).float()
+        transform = transform / torch.max(torch.norm(transform, dim=0))
 
     @staticmethod
     def i1i2i3_transform():
@@ -210,7 +209,7 @@ class ImageParameterization(InputParameterization):
 class FFTImage(ImageParameterization):
     """Parameterize an image using inverse real 2D FFT"""
 
-    def __init__(self, size, channels=3):
+    def __init__(self, size, channels: int = 3):
         super().__init__()
         assert len(size) == 2
         self.size = size
@@ -222,20 +221,28 @@ class FFTImage(ImageParameterization):
         self.fourier_coeffs = nn.Parameter(random_coeffs / 50)
 
         frequencies = FFTImage.rfft2d_freqs(*size)
-        scale = 1.0 / np.maximum(frequencies, 1.0 / max(*size))
-        scale *= np.sqrt(size[0] * size[1])
-        spectrum_scale = torch.Tensor(scale[None, :, :, None].astype(np.float32))
+        scale = 1.0 / torch.max(frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1]))))
+        spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
 
     @staticmethod
-    def rfft2d_freqs(height, width):
+    def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
         """Computes 2D spectrum frequencies."""
-        f_y = np.fft.fftfreq(height)[:, None]
+        fy = FFTImage.pytorch_fftfreq(height)[:, None]
         # on odd input dimensions we need to keep one additional frequency
-        add = 2 if width % 2 == 1 else 1
-        f_x = np.fft.fftfreq(width)[: width // 2 + add]
-        return np.sqrt(f_x * f_x + f_y * f_y)
+        wadd = 2 if width % 2 == 1 else 1
+        fx = FFTImage.pytorch_fftfreq(width)[: width // 2 + wadd]
+        return torch.sqrt((fx * fx) + (fy * fy))
 
+    @staticmethod
+    def pytorch_fftfreq(v: int, d: float = 1.0) -> torch.Tensor:
+        """PyTorch version of np.fft.fftfreq"""
+        results = torch.empty(v)
+        s = (v - 1) // 2 + 1
+        results[:s] = torch.arange(0, s)
+        results[s:] = torch.arange(-(v // 2), 0)
+        return results * (1.0 / (v * d))
+    
     def set_image(self, correlated_image: torch.Tensor):
         coeffs = torch.rfft(correlated_image, signal_ndim=2)
         self.fourier_coeffs = coeffs / self.spectrum_scale
