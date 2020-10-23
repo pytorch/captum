@@ -265,6 +265,14 @@ class ShapleyValueSampling(PerturbationAttribution):
         # Keeps track whether original input is a tuple or not before
         # converting it into a tuple.
         is_inputs_tuple = _is_tuple(inputs)
+
+        # Inputs that are subtypes of float will cause errors further down.
+        # To allow such inputs, (i.e. torch.int64 token indices for NLP models), we convert immediately.
+        if is_inputs_tuple:
+            inputs = tuple([t.float() for t in inputs])
+        else:
+            inputs = inputs.float()
+
         inputs, baselines = _format_input_baseline(inputs, baselines)
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args

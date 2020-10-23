@@ -27,9 +27,31 @@ class Test(BaseTest):
             n_samples=250,
         )
 
+    def test_simple_shapley_sampling_with_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20, 50, 30]], dtype=torch.int64)
+        self._shapley_test_assert(
+            net,
+            inp,
+            [76.66666, 196.66666, 116.66666],
+            perturbations_per_eval=(1, 2, 3),
+            n_samples=250,
+        )
+
     def test_simple_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._shapley_test_assert(
+            net,
+            inp,
+            [275.0, 275.0, 115.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_with_mask_and_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20, 50, 30]], dtype=torch.int64)
         self._shapley_test_assert(
             net,
             inp,
@@ -50,6 +72,18 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
+    def test_simple_shapley_sampling_with_baselines_and_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20, 50, 30]], dtype=torch.int64)
+        self._shapley_test_assert(
+            net,
+            inp,
+            [248.0, 248.0, 104.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=4,
+            perturbations_per_eval=(1, 2, 3),
+        )
+
     def test_multi_sample_shapley_sampling(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]])
@@ -61,9 +95,32 @@ class Test(BaseTest):
             n_samples=200,
         )
 
+    def test_multi_sample_shapley_sampling_with_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2, 10, 3], [20, 50, 30]], dtype=torch.int64)
+        self._shapley_test_assert(
+            net,
+            inp,
+            [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
+            perturbations_per_eval=(1, 2, 3),
+            n_samples=200,
+        )
+
     def test_multi_sample_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [[39.5, 39.5, 10.5], [275.0, 275.0, 115.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_sample_shapley_sampling_with_mask_and_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2, 10, 3], [20, 50, 30]], dtype=torch.int64)
         mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
         self._shapley_test_assert(
             net,
@@ -92,11 +149,65 @@ class Test(BaseTest):
             test_true_shapley=False,
         )
 
+    def test_multi_input_shapley_sampling_without_mask_but_with_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[23, 0, 0], [20, 50, 30]], dtype=torch.int64)
+        inp2 = torch.tensor([[20, 0, 50], [0, 100, 0]], dtype=torch.int64)
+        inp3 = torch.tensor([[0, 100, 10], [0, 10, 0]], dtype=torch.int64)
+        expected = (
+            [[90, 0, 0], [78.0, 198.0, 118.0]],
+            [[78, 0, 198], [0.0, 398.0, 0.0]],
+            [[0, 398, 38], [0.0, 38.0, 0.0]],
+        )
+        self._shapley_test_assert(
+            net,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            n_samples=200,
+            test_true_shapley=False,
+        )
+
     def test_multi_input_shapley_sampling_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
         inp2 = torch.tensor([[20.0, 50.0, 30.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [2.0, 10.0, 3.0]])
+        mask1 = torch.tensor([[1, 1, 1], [0, 1, 0]])
+        mask2 = torch.tensor([[0, 1, 2]])
+        mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
+        expected = (
+            [[1088.6666, 1088.6666, 1088.6666], [255.0, 595.0, 255.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 595.0, 0.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 255.0, 255.0]],
+        )
+        self._shapley_test_assert(
+            net,
+            (inp1, inp2, inp3),
+            expected,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+        )
+        expected_with_baseline = (
+            [[1040, 1040, 1040], [184, 580.0, 184]],
+            [[52, 1040, 132], [184, 580.0, -12.0]],
+            [[52, 1040, 132], [184, 184, 184]],
+        )
+        self._shapley_test_assert(
+            net,
+            (inp1, inp2, inp3),
+            expected_with_baseline,
+            additional_input=(1,),
+            feature_mask=(mask1, mask2, mask3),
+            baselines=(2, 3.0, 4),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_multi_input_shapley_sampling_with_mask_and_long_tensor_inputs(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[23, 100, 0], [20, 50, 30]], dtype=torch.int64)
+        inp2 = torch.tensor([[20, 50, 30], [0, 100, 0]], dtype=torch.int64)
+        inp3 = torch.tensor([[0, 100, 10], [2, 10, 3]], dtype=torch.int64)
         mask1 = torch.tensor([[1, 1, 1], [0, 1, 0]])
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
