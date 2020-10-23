@@ -114,12 +114,12 @@ def rand_select(transform_values):
 
 class RandomAffine(nn.Module):
     """
-    Apply random affine transforms on a 3d tensor.
+    Apply random affine transforms on a NCHW tensor.
     Arguments:
         rotate (float, sequence): Tuple of degrees to randomly select from.
-        translate (int, sequence): Tuple of values to randomly select from.
         scale (float, sequence): Tuple of scale factors to randomly select from.
-        shear (float, sequence): Tuple of shear values to randomly select from.
+        shear (float, sequence): Tuple of shear values to randomly select from. Optionally provide a tuple that contains a tuple for the x and a tuple for y translations.
+        translate (int, sequence): Tuple of values to randomly select from. Optionally provide a tuple that contains a tuple for the x and a tuple for y shear values. 
     """
     
     def __init__(self, rotate=None, scale=None, shear=None, translate=None):
@@ -132,7 +132,7 @@ class RandomAffine(nn.Module):
     def get_rot_mat(self, theta, device, dtype):
         theta = torch.tensor(theta, device=device, dtype=dtype)
         rot_mat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
-                            [torch.sin(theta), torch.cos(theta), 0]], device=device, dtype=dtype)
+                                [torch.sin(theta), torch.cos(theta), 0]], device=device, dtype=dtype)
         return rot_mat
 
     def rotate_tensor(self, x: torch.Tensor, theta) -> torch.Tensor:
@@ -195,7 +195,7 @@ class RandomAffine(nn.Module):
         if self.translate is not None:
             translations = (rand_select(self.translation[0]), rand_select(self.translation[0]))
             logging.info(f"Translate: {translations}")
-            x = self.translate(x, translations)
+            x = self.translate_tensor(x, translations)
         return x
 
 
