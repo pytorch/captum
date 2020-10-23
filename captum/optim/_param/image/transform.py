@@ -136,7 +136,7 @@ class RandomAffine(nn.Module):
         self.shear = shear if shear == None or len(shear) == 2 else [shear] * 2 
         self.translate = translate if translate == None or len(translate) == 2 else [translate] * 2
 
-    def get_rot_mat(self, theta, device, dtype):
+    def get_rot_mat(self, theta, device, dtype) -> torch.Tensor:
         theta = torch.tensor(theta, device=device, dtype=dtype)
         rot_mat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
                                 [torch.sin(theta), torch.cos(theta), 0]], device=device, dtype=dtype)
