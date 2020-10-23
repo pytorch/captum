@@ -181,7 +181,7 @@ class RandomAffine(nn.Module):
             x = F.grid_sample(x, grid)
         return x
 
-    def translate_tensor(self, x: torch.Tensor, translation_x, translation_y) -> torch.Tensor:
+    def translate_tensor(self, x: torch.Tensor, translation_x: int, translation_y: int) -> torch.Tensor:
         x = torch.roll(x, shifts=translation[0], dims=2)
         x = torch.roll(x, shifts=translation[1], dims=3)
         return x
@@ -200,9 +200,9 @@ class RandomAffine(nn.Module):
             logging.info(f"Shear: {shear_values}")
             x = self.shear_tensor(x, shear_values)
         if self.translate is not None:
-            translations = (rand_select(self.translation[0]), rand_select(self.translation[0]))
+            translations = (rand_select(self.translation[0]), rand_select(self.translation[1]))
             logging.info(f"Translate: {translations}")
-            x = self.translate_tensor(x, translations)
+            x = self.translate_tensor(x, *translations)
         return x
 
 
