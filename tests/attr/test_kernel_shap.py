@@ -79,26 +79,26 @@ class Test(BaseTest):
 
     def test_simple_batch_kernel_shap(self) -> None:
         net = BasicModel_MultiLayer()
-        inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         self._kernel_shap_test_assert(
             net,
             inp,
-            [[56.1688, 124.1695, 65.6695], [56.1688, 124.1695, 65.6695]],
+            [[7.0, 32.5, 10.5], [76.66666, 196.66666, 116.66666]],
             perturbations_per_eval=(1, 2, 3),
             n_perturb_samples=20000,
         )
 
     def test_simple_batch_kernel_shap_with_mask(self) -> None:
         net = BasicModel_MultiLayer()
-        inp = torch.tensor([[20.0, 50.0, 30.0], [10.0, 14.0, 4.0]], requires_grad=True)
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
         self._kernel_shap_test_assert(
             net,
             inp,
-            [[162.9993, 162.9993, 83.0007], [162.9993, 83.0007, 162.9993]],
-            feature_mask=torch.tensor([[0, 0, 1], [0, 1, 0]]),
+            [[39.5, 39.5, 10.5], [275.0, 275.0, 115.0]],
+            feature_mask=torch.tensor([[0, 0, 1], [1, 1, 0]]),
             perturbations_per_eval=(1, 2, 3),
             n_perturb_samples=100,
-            expected_coefs=[162.9993, 83.0007],
+            expected_coefs=[[39.5, 10.5], [115.0, 275.0]],
         )
 
     def test_multi_input_kernel_shap_without_mask(self) -> None:
@@ -160,17 +160,20 @@ class Test(BaseTest):
         inp2 = torch.tensor([[20.0, 0.0, 50.0], [0.0, 100.0, 0.0]])
         inp3 = torch.tensor([[0.0, 100.0, 10.0], [0.0, 10.0, 0.0]])
         expected = (
-            [[84.0, 99.0, 59.0], [84.0, 99.0, 59.0]],
-            [[39.0, 199.0, 99.0], [39.0, 199.0, 99.0]],
-            [[0, 218.0, 19.0], [0.0, 218.0, 19.0]],
+            [[90, 0, 0], [78.0, 198.0, 118.0]],
+            [[78, 0, 198], [0.0, 398.0, 0.0]],
+            [[0, 398, 38], [0.0, 38.0, 0.0]],
         )
         self._kernel_shap_test_assert(
             net,
             (inp1, inp2, inp3),
             expected,
             additional_input=(1,),
-            n_perturb_samples=1000,
-            expected_coefs=[84.0, 99.0, 59.0, 39.0, 199.0, 99.0, 0.0, 218.0, 19.0],
+            n_perturb_samples=2500,
+            expected_coefs=[
+                [90.0, 0, 0, 78, 0, 198, 0, 398, 38],
+                [78.0, 198.0, 118.0, 0.0, 398.0, 0.0, 0.0, 38.0, 0.0],
+            ],
         )
 
     def test_multi_input_batch_kernel_shap(self) -> None:
@@ -182,9 +185,9 @@ class Test(BaseTest):
         mask2 = torch.tensor([[0, 1, 2]])
         mask3 = torch.tensor([[0, 1, 2], [0, 0, 0]])
         expected = (
-            [[841.83333, 841.83333, 841.83333], [165.83333, 841.83333, 165.83333]],
-            [[165.83333, 841.83333, 78.3333], [165.83333, 841.83333, 78.3333]],
-            [[165.83333, 841.83333, 78.3333], [165.83333, 165.83333, 165.83333]],
+            [[1088.6666, 1088.6666, 1088.6666], [255.0, 595.0, 255.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 595.0, 0.0]],
+            [[76.6666, 1088.6666, 156.6666], [255.0, 255.0, 255.0]],
         )
         self._kernel_shap_test_assert(
             net,
@@ -194,9 +197,9 @@ class Test(BaseTest):
             feature_mask=(mask1, mask2, mask3),
         )
         expected_with_baseline = (
-            [[810, 810, 810], [118, 810.0, 118]],
-            [[118, 810, 60], [118, 810.0, 60.0]],
-            [[118, 810, 60], [118, 118, 118]],
+            [[1040, 1040, 1040], [184, 580.0, 184]],
+            [[52, 1040, 132], [184, 580.0, -12.0]],
+            [[52, 1040, 132], [184, 184, 184]],
         )
         self._kernel_shap_test_assert(
             net,
@@ -303,7 +306,7 @@ class Test(BaseTest):
         target: Union[None, int] = 0,
         n_perturb_samples: int = 100,
         delta: float = 1.0,
-        expected_coefs: Union[None, List[float]] = None,
+        expected_coefs: Union[None, List[float], List[List[float]]] = None,
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)

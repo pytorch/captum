@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
 import math
+import typing
+import warnings
+from typing import Any, Callable, List, Literal, Optional, Tuple, Union, cast
+
 import torch
 from torch import Tensor
 from torch.nn import CosineSimilarity
@@ -17,6 +19,7 @@ from captum._utils.common import (
 )
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
+from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
     _format_input_baseline,
@@ -70,7 +73,7 @@ class LimeBase(PerturbationAttribution):
 
 
             forward_func (callable):  The forward function of the model or any
-                    modification of it
+                    modification of it.
             train_interpretable_model_func (callable): Function which trains
                     an interpretable model and returns some representation of the
                     interpretable model. The return type of this will match the
@@ -395,9 +398,7 @@ class LimeBase(PerturbationAttribution):
             inp_tensor = (
                 cast(Tensor, inputs) if isinstance(inputs, Tensor) else inputs[0]
             )
-            bsz = inp_tensor.shape[0]
             device = inp_tensor.device
-            expand_inputs = False
 
             interpretable_inps = []
             similarities = []
@@ -439,11 +440,10 @@ class LimeBase(PerturbationAttribution):
                     if expanded_target is None:
                         expanded_target = _expand_target(target, len(curr_model_inputs))
 
-                    model_out, expand_inputs = self._evaluate_batch(
+                    model_out = self._evaluate_batch(
                         curr_model_inputs,
                         expanded_target,
                         expanded_additional_args,
-                        bsz,
                         device,
                     )
                     outputs.append(model_out)
@@ -455,11 +455,10 @@ class LimeBase(PerturbationAttribution):
                     additional_forward_args, len(curr_model_inputs)
                 )
                 expanded_target = _expand_target(target, len(curr_model_inputs))
-                model_out, expand_inputs = self._evaluate_batch(
+                model_out = self._evaluate_batch(
                     curr_model_inputs,
                     expanded_target,
                     expanded_additional_args,
-                    bsz,
                     device,
                 )
                 outputs.append(model_out)
@@ -475,12 +474,6 @@ class LimeBase(PerturbationAttribution):
                 if len(similarities[0].shape) > 0
                 else torch.stack(similarities)
             )
-            if expand_inputs:
-                combined_interp_inps = torch.repeat_interleave(
-                    combined_interp_inps, bsz, 0
-                )
-                combined_sim = torch.repeat_interleave(combined_sim, bsz, 0)
-
             interp_model = self.train_interpretable_model_func(
                 combined_interp_inps, combined_outputs, combined_sim, **kwargs
             )
@@ -491,33 +484,22 @@ class LimeBase(PerturbationAttribution):
         curr_model_inputs: List[TensorOrTupleOfTensorsGeneric],
         expanded_target: TargetType,
         expanded_additional_args: Any,
-        batch_size: int,
         device: torch.device,
-    ) -> Tuple[Tensor, bool]:
+    ):
         model_out = _run_forward(
             self.forward_func,
             _reduce_list(curr_model_inputs),
             expanded_target,
             expanded_additional_args,
         )
-        expand_inputs = False
-        if isinstance(model_out, Tensor) and model_out.numel() != len(
-            curr_model_inputs
-        ):
-            assert model_out.numel() == batch_size * len(
-                curr_model_inputs
-            ), "Number of outputs is not appropriate, must return"
-            " one output per example. If forward function returns a"
-            " scalar per batch, ensure that perturbations_per_eval is"
-            " set to 1."
-            expand_inputs = True
-
-        return (
-            model_out.flatten()
-            if isinstance(model_out, Tensor)
-            else torch.tensor([model_out], device=device),
-            expand_inputs,
-        )
+        if isinstance(model_out, Tensor):
+            assert model_out.numel() == len(curr_model_inputs), (
+                "Number of outputs is not appropriate, must return "
+                "one output per perturbed input"
+            )
+        if isinstance(model_out, Tensor):
+            return model_out.flatten()
+        return torch.tensor([model_out], device=device)
 
     def has_convergence_delta(self) -> bool:
         return False
@@ -971,6 +953,7 @@ class Lime(LimeBase):
         """
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
+        bsz = formatted_inputs[0].shape[0]
 
         if feature_mask is None:
             feature_mask, num_interp_features = _construct_default_feature_mask(
@@ -1002,6 +985,75 @@ class Lime(LimeBase):
                 "features. "
             )
 
+        coefs: Tensor
+        if bsz > 1:
+            test_output = _run_forward(
+                self.forward_func, inputs, target, additional_forward_args
+            )
+            if isinstance(test_output, Tensor) and torch.numel(test_output) > 1:
+                if torch.numel(test_output) == bsz:
+                    warnings.warn(
+                        "You are providing multiple inputs for Lime / Kernel SHAP "
+                        "attributions. This trains a separate interpretable model "
+                        "for each example, which can be time consuming. It is "
+                        "recommended to compute attributions for one example at a time."
+                    )
+                    output_list = []
+                    for (
+                        curr_inps,
+                        curr_target,
+                        curr_additional_args,
+                        curr_baselines,
+                        curr_feature_mask,
+                    ) in _batch_example_iterator(
+                        bsz,
+                        formatted_inputs,
+                        target,
+                        additional_forward_args,
+                        baselines,
+                        feature_mask,
+                    ):
+                        coefs = super().attribute.__wrapped__(
+                            self,
+                            inputs=curr_inps if is_inputs_tuple else curr_inps[0],
+                            target=curr_target,
+                            additional_forward_args=curr_additional_args,
+                            n_perturb_samples=n_perturb_samples,
+                            perturbations_per_eval=perturbations_per_eval,
+                            baselines=curr_baselines
+                            if is_inputs_tuple
+                            else curr_baselines[0],
+                            feature_mask=curr_feature_mask
+                            if is_inputs_tuple
+                            else curr_feature_mask[0],
+                            num_interp_features=num_interp_features,
+                            alpha=alpha,
+                        )
+                        if return_input_shape:
+                            output_list.append(
+                                self._convert_output_shape(
+                                    curr_inps,
+                                    curr_feature_mask,
+                                    coefs,
+                                    num_interp_features,
+                                    is_inputs_tuple,
+                                )
+                            )
+                        else:
+                            output_list.append(coefs.reshape(1, -1))  # type: ignore
+
+                    return _reduce_list(output_list)
+                else:
+                    raise AssertionError(
+                        "Invalid number of outputs, forward function should return a"
+                        "scalar per example or a scalar per input batch."
+                    )
+            else:
+                assert perturbations_per_eval == 1, (
+                    "Perturbations per eval must be 1 when forward function"
+                    "returns single value per batch!"
+                )
+
         coefs = super().attribute.__wrapped__(
             self,
             inputs=inputs,
@@ -1015,14 +1067,51 @@ class Lime(LimeBase):
             alpha=alpha,
         )
         if return_input_shape:
-            attr = [torch.zeros_like(inp) for inp in formatted_inputs]
-            for tensor_ind in range(len(formatted_inputs)):
-                for single_feature in range(num_interp_features):
-                    attr[tensor_ind] += (
-                        coefs[single_feature].item()
-                        * (feature_mask[tensor_ind] == single_feature).float()
-                    )
-            return _format_output(is_inputs_tuple, tuple(attr))
-
+            return self._convert_output_shape(
+                formatted_inputs,
+                feature_mask,
+                coefs,
+                num_interp_features,
+                is_inputs_tuple,
+            )
         else:
             return coefs
+
+    @typing.overload
+    def _convert_output_shape(
+        self,
+        formatted_inp: Tuple[Tensor, ...],
+        feature_mask: Tuple[Tensor, ...],
+        coefs: Tensor,
+        num_interp_features: int,
+        is_inputs_tuple: Literal[True],
+    ) -> Tuple[Tensor, ...]:
+        ...
+
+    @typing.overload
+    def _convert_output_shape(
+        self,
+        formatted_inp: Tuple[Tensor, ...],
+        feature_mask: Tuple[Tensor, ...],
+        coefs: Tensor,
+        num_interp_features: int,
+        is_inputs_tuple: Literal[False],
+    ) -> Tensor:
+        ...
+
+    def _convert_output_shape(
+        self,
+        formatted_inp: Tuple[Tensor, ...],
+        feature_mask: Tuple[Tensor, ...],
+        coefs: Tensor,
+        num_interp_features: int,
+        is_inputs_tuple: bool,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+        attr = [torch.zeros_like(single_inp) for single_inp in formatted_inp]
+        for tensor_ind in range(len(formatted_inp)):
+            for single_feature in range(num_interp_features):
+                attr[tensor_ind] += (
+                    coefs[single_feature].item()
+                    * (feature_mask[tensor_ind] == single_feature).float()
+                )
+        return _format_output(is_inputs_tuple, tuple(attr))
