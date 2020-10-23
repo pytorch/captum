@@ -58,9 +58,9 @@ class Test(BaseTest):
     def test_simple_input_conv_fc_with_final_relu(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16).view(1, 1, 4, 4).float()
-        inp.requires_grad_()
         # Adding negative value to test final relu is applied
         inp[0, 0, 1, 1] = -4.0
+        inp.requires_grad_()
         exp = 0.5625 * inp
         exp[0, 0, 1, 1] = 0.0
         self._grad_cam_test_assert(
