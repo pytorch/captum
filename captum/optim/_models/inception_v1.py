@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 GS_SAVED_WEIGHTS_URL = (
-    "https://github.com/ProGamerGov/pytorch-old-tensorflow-models/raw/restructured-models/pt_inception5h.pth"
+    "https://github.com/pytorch/captum/tree/optim-wip/captum/optim/_models/inception5h.pth"
 )
 
 
