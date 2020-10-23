@@ -10,13 +10,18 @@ from torch.nn import Module
 from captum._utils.common import _format_additional_forward_args
 from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.lime import Lime
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 from ..helpers.basic_models import BasicModel_MultiLayer
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import (
+    gen_test_name,
+    parse_test_config,
+    should_create_generated_test,
+)
 from .helpers.test_config import config
 
 """
@@ -56,7 +61,9 @@ class TargetsMeta(type):
             for algorithm in algorithms:
                 # FeaturePermutation requires a batch of inputs
                 # so skipping tests
-                if issubclass(algorithm, FeaturePermutation):
+                if issubclass(
+                    algorithm, FeaturePermutation
+                ) or not should_create_generated_test(algorithm):
                     continue
                 test_method = cls.make_single_target_test(
                     algorithm,
@@ -98,7 +105,6 @@ class TargetsMeta(type):
         """
         This method creates a single target test for the given algorithm and parameters.
         """
-
         target_layer = _get_deep_layer_name(model, layer) if layer is not None else None
         # Obtains initial arguments to replace with each example
         # individually.
@@ -129,6 +135,7 @@ class TargetsMeta(type):
             if noise_tunnel:
                 attr_method = NoiseTunnel(attr_method)
             attributions_orig = attr_method.attribute(**args)
+            self.setUp()
             for i in range(num_examples):
                 args["target"] = (
                     original_targets[i]
@@ -159,7 +166,11 @@ class TargetsMeta(type):
                             else single_baseline
                             for single_baseline in original_baselines
                         )
-                self.setUp()
+                # Since Lime methods compute attributions for a batch
+                # sequentially, random seed should not be reset after
+                # each example after the first.
+                if not issubclass(algorithm, Lime):
+                    self.setUp()
                 single_attr = attr_method.attribute(**args)
                 current_orig_attributions = (
                     attributions_orig[i : i + 1]
@@ -175,7 +186,10 @@ class TargetsMeta(type):
                     delta=target_delta,
                     mode="max",
                 )
-                if len(original_targets) == num_examples:
+                if (
+                    not issubclass(algorithm, Lime)
+                    and len(original_targets) == num_examples
+                ):
                     # If original_targets contained multiple elements, then
                     # we also compare with setting targets to a list with
                     # a single element.

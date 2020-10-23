@@ -13,6 +13,8 @@ from captum.attr._core.feature_permutation import FeaturePermutation
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.kernel_shap import KernelShap
+from captum.attr._core.lime import Lime
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
@@ -20,7 +22,11 @@ from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, parse_test_config
+from .helpers.gen_test_utils import (
+    gen_test_name,
+    parse_test_config,
+    should_create_generated_test,
+)
 from .helpers.test_config import config
 
 JIT_SUPPORTED = [
@@ -32,6 +38,8 @@ JIT_SUPPORTED = [
     Occlusion,
     Saliency,
     ShapleyValueSampling,
+    Lime,
+    KernelShap,
 ]
 
 """
@@ -75,6 +83,8 @@ class JITMeta(type):
                 baseline_distr,
             ) = parse_test_config(test_config)
             for algorithm in algorithms:
+                if not should_create_generated_test(algorithm):
+                    continue
                 if algorithm in JIT_SUPPORTED:
                     for mode in JITCompareMode:
                         # Creates test case corresponding to each algorithm and

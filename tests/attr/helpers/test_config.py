@@ -540,7 +540,7 @@ config = [
             "target": 0,
             "perturbations_per_eval": 20,
         },
-        "dp_delta": 0.001,
+        "dp_delta": 0.008,
     },
     {
         "name": "basic_multiple_tuple_target_with_perturbations_per_eval",

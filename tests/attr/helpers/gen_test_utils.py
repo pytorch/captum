@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple, Type, cast
 
 from torch.nn import Module
 
+from captum.attr._core.lime import Lime
 from captum.attr._utils.attribution import Attribution
 
 
@@ -35,3 +36,14 @@ def parse_test_config(
         test_config["baseline_distr"] if "baseline_distr" in test_config else False
     )
     return algorithms, model, args, layer, noise_tunnel, baseline_distr
+
+
+def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
+    if issubclass(algorithm, Lime):
+        try:
+            import sklearn  # noqa: F401
+
+            return True
+        except ImportError:
+            return False
+    return True
