@@ -5,11 +5,8 @@ from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from torch.nn import Module
 
-<<<<<<< HEAD
 from captum.attr._core.lime import Lime
-=======
 from captum.attr._models.base import _get_deep_layer_name
->>>>>>> b9d88a9f0b65c25f55337ab8b6617abffe87acc7
 from captum.attr._utils.attribution import Attribution
 
 
