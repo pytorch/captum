@@ -221,7 +221,9 @@ class FFTImage(ImageParameterization):
         self.fourier_coeffs = nn.Parameter(random_coeffs / 50)
 
         frequencies = FFTImage.rfft2d_freqs(*size)
-        scale = 1.0 / torch.max(frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1]))))
+        scale = 1.0 / torch.max(
+            frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1])))
+        )
         spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
 
@@ -242,7 +244,7 @@ class FFTImage(ImageParameterization):
         results[:s] = torch.arange(0, s)
         results[s:] = torch.arange(-(v // 2), 0)
         return results * (1.0 / (v * d))
-    
+
     def set_image(self, correlated_image: torch.Tensor):
         coeffs = torch.rfft(correlated_image, signal_ndim=2)
         self.fourier_coeffs = coeffs / self.spectrum_scale

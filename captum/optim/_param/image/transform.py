@@ -58,7 +58,7 @@ def rand_select(transform_values):
     """
     Randomly return a value from the provided tuple or list
     """
-    n = torch.randint(low=0, high=len(transform_values)-1, size=[1]).item()
+    n = torch.randint(low=0, high=len(transform_values) - 1, size=[1]).item()
     return transform_values[n]
 
 
@@ -89,12 +89,15 @@ class RandomScale(nn.Module):
     Arguments:
         scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
+
     def __init__(self, scale):
         super(RandomScale, self).__init__()
         self.scale = scale
 
     def rescale_tensor(self, input, scale):
-        return torch.nn.functional.interpolate(input, scale_factor=scale, mode='bilinear')
+        return torch.nn.functional.interpolate(
+            input, scale_factor=scale, mode="bilinear"
+        )
 
     def forward(self, input):
         scale = rand_select(self.scale)
@@ -125,37 +128,52 @@ class RandomAffine(nn.Module):
     Arguments:
         rotate (float, sequence): Tuple of degrees to randomly select from.
         scale (float, sequence): Tuple of scale factors to randomly select from.
-        shear (float, sequence): Tuple of shear values to randomly select from. Optionally provide a tuple that contains a tuple for the x translation and a tuple for y translations.
-        translate (int, sequence): Tuple of values to randomly select from. Optionally provide a tuple that contains a tuple for the x shear values and a tuple for y shear values. 
+        shear (float, sequence): Tuple of shear values to randomly select from.
+            Optionally provide a tuple that contains a tuple for the x translation
+            and a tuple for y translations.
+        translate (int, sequence): Tuple of values to randomly select from.
+            Optionally provide a tuple that contains a tuple for the x shear values
+            and a tuple for y shear values.
     """
-    
+
     def __init__(self, rotate=None, scale=None, shear=None, translate=None):
         super().__init__()
         self.rotate = rotate
-        self.scale = scale    
-        self.shear = shear if shear == None or len(shear) == 2 else [shear] * 2 
-        self.translate = translate if translate == None or len(translate) == 2 else [translate] * 2
+        self.scale = scale
+        self.shear = shear if shear is None or len(shear) == 2 else [shear] * 2
+        self.translate = (
+            translate if translate is None or len(translate) == 2 else [translate] * 2
+        )
 
     def get_rot_mat(self, theta, device, dtype) -> torch.Tensor:
         theta = torch.tensor(theta, device=device, dtype=dtype)
-        rot_mat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
-                                [torch.sin(theta), torch.cos(theta), 0]], device=device, dtype=dtype)
+        rot_mat = torch.tensor(
+            [
+                [torch.cos(theta), -torch.sin(theta), 0],
+                [torch.sin(theta), torch.cos(theta), 0],
+            ],
+            device=device,
+            dtype=dtype,
+        )
         return rot_mat
 
     def rotate_tensor(self, x: torch.Tensor, theta) -> torch.Tensor:
         theta = theta * 3.141592653589793 / 180
-        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
+        )
         grid = F.affine_grid(rot_matrix, x.size())
         x = F.grid_sample(x, grid)
         return x
 
     def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
-        scale_mat = torch.tensor([[m, 0., 0.],
-                                  [0., m, 0.]])
+        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
         return scale_mat
-    
+
     def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
-        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)                                        
+        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
+        )
         grid = F.affine_grid(scale_matrix, x.size())
         x = F.grid_sample(x, grid)
         return x
@@ -163,27 +181,31 @@ class RandomAffine(nn.Module):
     def get_shear_mat(self, theta, ax: int, device, dtype) -> torch.Tensor:
         m = 1 / torch.tan(torch.tensor(theta, device=device, dtype=dtype))
         if ax == 0:
-            shear_mat = torch.tensor([[1, m, 0],
-                                      [0, 1, 0]])
+            shear_mat = torch.tensor([[1, m, 0], [0, 1, 0]])
         else:
-            shear_mat = torch.tensor([[1, 0, 0],
-                                      [m, 1, 0]])
+            shear_mat = torch.tensor([[1, 0, 0], [m, 1, 0]])
         return shear_mat
 
     def shear_tensor(self, x: torch.Tensor, shear_vals) -> torch.Tensor:
         if shear_vals[0] > 0:
-            shear_matrix = self.get_shear_mat(shear_vals[0], 0, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+            shear_matrix = self.get_shear_mat(shear_vals[0], 0, x.device, x.dtype)[
+                None, ...
+            ].repeat(x.shape[0], 1, 1)
             grid = F.affine_grid(shear_matrix, x.size())
-            x = F.grid_sample(x, grid) 
+            x = F.grid_sample(x, grid)
         if shear_vals[1] > 0:
-            shear_matrix = self.get_shear_mat(shear_vals[1], 1, x.device, x.dtype)[None, ...].repeat(x.shape[0],1,1)
+            shear_matrix = self.get_shear_mat(shear_vals[1], 1, x.device, x.dtype)[
+                None, ...
+            ].repeat(x.shape[0], 1, 1)
             grid = F.affine_grid(shear_matrix, x.size())
             x = F.grid_sample(x, grid)
         return x
 
-    def translate_tensor(self, x: torch.Tensor, translation_x: int, translation_y: int) -> torch.Tensor:
-        x = torch.roll(x, shifts=translation[0], dims=2)
-        x = torch.roll(x, shifts=translation[1], dims=3)
+    def translate_tensor(
+        self, x: torch.Tensor, translation_x: int, translation_y: int
+    ) -> torch.Tensor:
+        x = torch.roll(x, shifts=translation_x, dims=2)
+        x = torch.roll(x, shifts=translation_y, dims=3)
         return x
 
     def forward(self, x):
@@ -200,7 +222,10 @@ class RandomAffine(nn.Module):
             logging.info(f"Shear: {shear_values}")
             x = self.shear_tensor(x, shear_values)
         if self.translate is not None:
-            translations = (rand_select(self.translation[0]), rand_select(self.translation[1]))
+            translations = (
+                rand_select(self.translate[0]),
+                rand_select(self.translate[1]),
+            )
             logging.info(f"Translate: {translations}")
             x = self.translate_tensor(x, *translations)
         return x
@@ -292,13 +317,16 @@ class Normalize(nn.Module):
     """
     Apply random affine transforms on a NCHW tensor.
     Arguments:
-        mean (float, sequence): Tuple of mean values to use for input normalization.
-        std (float, sequence): Tuple of standard deviation to use for input normalization.
+        mean (float, sequence): Tuple of mean values to use for
+            input normalization.
+        std (float, sequence): Tuple of standard deviation to use for
+            input normalization.
         multiplier (int): The high end of the selected model's input range.
     Returns:
-        
+
     """
-    def __init__(self, mean, std=[1,1,1], multiplier=1):
+
+    def __init__(self, mean, std=[1, 1, 1], multiplier=1):
         super().__init__()
         self.mean = torch.as_tensor(mean).view(3, 1, 1).to(device)
         self.std = torch.as_tensor(std).view(3, 1, 1).to(device)
