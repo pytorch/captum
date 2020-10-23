@@ -1,14 +1,86 @@
-from typing import List, Union, Tuple
+import imageio
+import matplotlib.pyplot as plt
 import numpy as np
-
 import torch
 import torch.nn as nn
-import torchvision.models as models
-import torch.nn.functional as F
-from torchvision import transforms
-import torchvision.transforms.functional as TF
 
-from lucid.misc.io import load, save, show
+
+class ImageTensor(torch.Tensor):
+    def __init__(self, data, **kwargs):
+        if not isinstance(data, torch.Tensor):
+            data = torch.as_tensor(data, **kwargs)
+        self._t = data
+
+    @classmethod
+    def open(cls, path):
+        img_np = imageio.imread(path).astype(np.float32)
+        return cls(img_np.transpose(2, 0, 1) / 255)
+
+    @classmethod
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        args = [a._t if hasattr(a, "_t") else a for a in args]
+        ret = func(*args, **kwargs)
+        print(ret.dtype)
+        return ImageTensor(ret.float())
+
+    def __repr__(self):
+        return f"ImageTensor(value={self._t})"
+
+    def show(self, scale=255):
+        if len(self.shape) == 3:
+            numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
+        elif len(self.shape) == 4:
+            numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
+        plt.imshow(numpy_thing.astype(np.uint8))
+        plt.axis("off")
+        plt.show()
+
+    def export(self, filename, scale=255):
+        if len(self.shape) == 3:
+            numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
+        elif len(self.shape) == 4:
+            numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
+        plt.imshow(numpy_thing.astype(np.uint8), frameon=False)
+        plt.axis("off")
+        plt.savefig(filename)
+
+    def cpu(self):
+        return self
+
+    def cuda(self):
+        return CudaImageTensor(self._t, device="cuda")
+
+
+class CudaImageTensor(object):
+    def __init__(self, data, **kwargs):
+        self._t = torch.as_tensor(data, **kwargs)
+
+    @classmethod
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        args = [a._t if hasattr(a, "_t") else a for a in args]
+        ret = func(*args, **kwargs)
+        return CudaImageTensor(ret)
+
+    def __repr__(self):
+        return f"CudaImageTensor(value={self._t})"
+
+    @property
+    def shape(self):
+        return self._t.shape
+
+    def show(self):
+        self.cpu().show()
+
+    def cpu(self):
+        return ImageTensor(self._t.cpu())
+
+    def cuda(self):
+        return self
+
 
 # mean = [0.485, 0.456, 0.406]
 # std = [0.229, 0.224, 0.225]
@@ -46,16 +118,16 @@ def logit(p: torch.Tensor, epsilon=1e-6) -> torch.Tensor:
 
 
 class ToRGB(nn.Module):
-    """Transforms arbitrary channels to RGB. We use this to ensure our 
-    image parameteriation itself can be decorrelated. So this goes between 
+    """Transforms arbitrary channels to RGB. We use this to ensure our
+    image parameteriaztion itself can be decorrelated. So this goes between
     the image parameterization and the normalization/sigmoid step.
-    
+
     We offer two transforms: Karhunen-Loève (KLT) and I1I2I3.
-    
+
     KLT corresponds to the empirically measured channel correlations on imagenet.
     I1I2I3 corresponds to an aproximation for natural images from Ohta et al.[0]
 
-    [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation," 
+    [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
     Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
     """
@@ -85,7 +157,7 @@ class ToRGB(nn.Module):
         elif transform_name == "i1i2i3":
             self.register_buffer("transform", ToRGB.i1i2i3_transform())
         else:
-            raise ValueError(f"transform_name has to be either 'klt' or 'i1i2i3'")
+            raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
     def forward(self, x, inverse=False):
         assert x.dim() == 3
@@ -111,24 +183,9 @@ class ToRGB(nn.Module):
         return chw
 
 
-# def model(layer):
-#     net = models.googlenet(pretrained=True)
-#     net.train(False)
-
-#     def get_subnet_at_layer(lay_idx):
-#         subnet = nn.Sequential(*list(net._modules.values())[: lay_idx + 1])
-#         subnet
-#         for p in subnet.parameters():
-#             p.requires_grad = False
-#         return subnet
-
-#     subnet = get_subnet_at_layer(layer)
-#     subnet.train(False)
-#     return subnet
-
-
 # def upsample():
-#     upsample = torch.nn.Upsample(scale_factor=1.1, mode="bilinear", align_corners=True)
+#     upsample = torch.nn.Upsample(scale_factor=1.1, mode="bilinear",
+#        align_corners=True)
 
 #     def up(x):
 #         upsample.scale_factor = (
@@ -140,11 +197,12 @@ class ToRGB(nn.Module):
 #     return up
 
 
-class ImageTensor(torch.Tensor):
-    pass
+class InputParameterization(torch.nn.Module):
+    def forward(self):
+        raise NotImplementedError
 
 
-class ImageParameterization(torch.nn.Module):
+class ImageParameterization(InputParameterization):
     def set_image(self, x: torch.Tensor):
         ...
 
@@ -233,12 +291,12 @@ class LaplacianImage(ImageParameterization):
 
 class NaturalImage(ImageParameterization):
     r"""Outputs an optimizable input image.
-    
-    By convention, single images are CHW and float32s in [0,1]. 
+
+    By convention, single images are CHW and float32s in [0,1].
     The underlying parameterization is decorrelated via a ToRGB transform.
-    When used with the (default) FFT parameterization, this results in a fully 
+    When used with the (default) FFT parameterization, this results in a fully
     uncorrelated image parameterization. :-)
-    
+
     If a model requires a normalization step, such as normalizing imagenet RGB values,
     or rescaling to [0,255], it has to perform that step inside its computation.
     For example, our GoogleNet factory function has a `transform_input=True` argument.
@@ -254,10 +312,9 @@ class NaturalImage(ImageParameterization):
         image = self.parameterization()
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
-        return torch.sigmoid_(image)
+        return CudaImageTensor(torch.sigmoid_(image))
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)
         correlated = self.decorrelate(logits, inverse=True)
         self.parameterization.set_image(correlated)
-

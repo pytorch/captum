@@ -1,27 +1,8 @@
-from typing import Dict, Optional, Union, Callable, Iterable
-from typing_extensions import Protocol
+"""optim submodule."""
 
-import torch
-import torch.nn as nn
-
-ParametersForOptimizers = Iterable[Union[torch.Tensor, Dict[str, torch.tensor]]]
-
-
-class HasLoss(Protocol):
-    def loss(self) -> torch.Tensor:
-        ...
-
-
-class Parameterized(Protocol):
-    parameters: ParametersForOptimizers
-
-
-class Objective(Parameterized, HasLoss):
-    def cleanup(self):
-        pass
-
-
-ModuleOutputMapping = Dict[nn.Module, Optional[torch.Tensor]]
-
-StopCriteria = Callable[[int, Objective, torch.optim.Optimizer], bool]
-
+import captum.optim._core.objectives as objectives  # noqa: F401
+import captum.optim._param.image.images as images  # noqa: F401
+import captum.optim._param.image.transform as transform  # noqa: F401
+import captum.optim._utils.typing as typing  # noqa: F401
+from captum.optim._core.objectives import InputOptimization  # noqa: F401
+from captum.optim._param.image.images import ImageTensor  # noqa: F401

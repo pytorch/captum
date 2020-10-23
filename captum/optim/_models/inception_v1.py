@@ -2,14 +2,15 @@ from __future__ import division
 
 import warnings
 from collections import namedtuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.jit.annotations import Optional, Tuple
 from torch import Tensor
-from .conv2d import Conv2dSame
-
 from torch.hub import load_state_dict_from_url
+from torch.jit.annotations import Optional, Tuple
+
+from captum.optim._models.conv2d import Conv2dSame
 
 # __all__ = ['GoogLeNet', 'googlenet', "GoogLeNetOutputs", "_GoogLeNetOutputs"]
 
@@ -37,10 +38,11 @@ def googlenet(pretrained=False, progress=True, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        aux_logits (bool): If True, adds two auxiliary branches that can improve training.
+        aux_logits (bool): If True, adds two auxiliary branches that can improve
+            training.
             Default: *False* when pretrained is True otherwise *True*
-        transform_input (bool): If True, preprocesses the input according to the method with which it
-            was trained on ImageNet. Default: *False*
+        transform_input (bool): If True, preprocesses the input according to
+            the method with which it was trained on ImageNet. Default: *False*
     """
     if pretrained:
         if "transform_input" not in kwargs:
@@ -49,10 +51,10 @@ def googlenet(pretrained=False, progress=True, **kwargs):
             kwargs["aux_logits"] = False
         if kwargs["aux_logits"]:
             warnings.warn(
-                "auxiliary heads in the pretrained googlenet model are NOT pretrained, "
-                "so make sure to train them"
+                "auxiliary heads in the pretrained googlenet model are NOT "
+                "pretrained, so make sure to train them"
             )
-        original_aux_logits = kwargs["aux_logits"]
+        # original_aux_logits = kwargs["aux_logits"]
         kwargs["aux_logits"] = True
         kwargs["init_weights"] = False
         model = GoogLeNet(**kwargs)
@@ -120,7 +122,7 @@ def _tf_param_name_for_module(module, pt_param_name):
         elif int(sequence) == 1 or int(sequence) == 2:
             return pt_param_name[0]
         else:
-            raise NotImplementedError(f"cannot handle sequence blocks larger than 3")
+            raise NotImplementedError("cannot handle sequence blocks larger than 3")
     else:
         raise NotImplementedError(f"unknown module: {module}")
 
@@ -140,9 +142,9 @@ class GoogLeNet(nn.Module):
         if blocks is None:
             blocks = [BasicConv2d, Inception, InceptionAux]
         assert len(blocks) == 3
-        conv_block = blocks[0]
+        # conv_block = blocks[0]
         inception_block = blocks[1]
-        inception_aux_block = blocks[2]
+        # inception_aux_block = blocks[2]
 
         self.aux_logits = aux_logits
         self.transform_input = transform_input
@@ -189,7 +191,8 @@ class GoogLeNet(nn.Module):
     #         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
     #             import scipy.stats as stats
     #             X = stats.truncnorm(-2, 2, scale=0.01)
-    #             values = torch.as_tensor(X.rvs(m.weight.numel()), dtype=m.weight.dtype)
+    #             values = torch.as_tensor(X.rvs(m.weight.numel()),
+    #                 dtype=m.weight.dtype)
     #             values = values.view(m.weight.size())
     #             with torch.no_grad():
     #                 m.weight.copy_(values)
@@ -313,9 +316,9 @@ class GoogLeNet(nn.Module):
                     for param_name, pt_param in module.named_parameters(recurse=False):
                         tf_param_name = _tf_param_name_for_module(module, param_name)
                         tf_param_name = f"{prefix}{module_name}_{tf_param_name}"
-
                         print(
-                            f"Setting {module_name}.{param_name} to value of {tf_param_name} ({pt_param.shape})"
+                            f"Setting {module_name}.{param_name} to value of "
+                            f"{tf_param_name} ({pt_param.shape})"
                         )
                         _import_weight_into_module(pt_param, tf_param_name, graph, sess)
                 else:
@@ -399,9 +402,9 @@ class Inception(nn.Module):
                 for param_name, pt_param in module.named_parameters(recurse=True):
                     tf_param_name = _tf_param_name_for_module(module, param_name)
                     tf_param_name = f"{prefix}{own_name}{module_name}_{tf_param_name}"
-
                     print(
-                        f"Setting {module_name}.{param_name} to value of {tf_param_name} ({pt_param.shape})"
+                        f"Setting {module_name}.{param_name} to value of "
+                        f"{tf_param_name} ({pt_param.shape})"
                     )
                     _import_weight_into_module(pt_param, tf_param_name, graph, sess)
             else:
