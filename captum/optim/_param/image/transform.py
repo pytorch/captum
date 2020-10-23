@@ -315,7 +315,7 @@ class GaussianSmoothing(nn.Module):
 
 class Normalize(nn.Module):
     """
-    Apply random affine transforms on a NCHW tensor.
+    Normalize and optionally change the value range of a NCHW tensor.
     Arguments:
         mean (float, sequence): Tuple of mean values to use for
             input normalization.
