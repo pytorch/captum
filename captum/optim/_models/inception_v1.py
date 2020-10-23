@@ -3,8 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-GS_SAVED_WEIGHTS_URL = "https://github.com/pytorch/captum" + \
-    "/tree/optim-wip/captum/optim/_models/inception5h.pth"
+GS_SAVED_WEIGHTS_URL = (
+    "https://github.com/pytorch/captum"
+    + "/tree/optim-wip/captum/optim/_models/inception5h.pth"
+)
 
 
 def googlenet(pretrained=False, progress=True, model_path=None, **kwargs):
