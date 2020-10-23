@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 
-import torch
+from typing import Any, Callable, Tuple, Union, cast
 
-from ..._utils.common import (
+import torch
+from torch import Tensor
+
+from captum._utils.common import (
     ExpansionTypes,
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
+    _format_baseline,
     _format_input,
     _format_tensor_into_tuples,
-    _is_tuple,
     _run_forward,
     safe_div,
 )
-from .._utils.batching import _divide_and_aggregate_metrics
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 
 
-def infidelity_perturb_func_decorator(multipy_by_inputs=True):
+def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callable:
     r"""An auxiliary, decorator function that helps with computing
     perturbations given perturbed inputs. It can be useful for cases
     when `pertub_func` returns only perturbed inputs and we
@@ -37,7 +41,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs=True):
 
     """
 
-    def sub_infidelity_perturb_func_decorator(pertub_func):
+    def sub_infidelity_perturb_func_decorator(pertub_func: Callable) -> Callable:
         r"""
         Args:
 
@@ -61,16 +65,18 @@ def infidelity_perturb_func_decorator(multipy_by_inputs=True):
 
         """
 
-        def default_perturb_func(inputs, baselines=None):
+        def default_perturb_func(
+            inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
+        ):
             r""""""
             inputs_perturbed = (
                 pertub_func(inputs, baselines)
                 if baselines is not None
                 else pertub_func(inputs)
             )
-            inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
-            inputs = _format_tensor_into_tuples(inputs)
-            baselines = _format_tensor_into_tuples(baselines)
+            inputs_perturbed = _format_input(inputs_perturbed)
+            inputs = _format_input(inputs)
+            baselines = _format_baseline(baselines, inputs)
             if baselines is None:
                 perturbations = tuple(
                     safe_div(
@@ -103,16 +109,16 @@ def infidelity_perturb_func_decorator(multipy_by_inputs=True):
 
 
 def infidelity(
-    forward_func,
-    perturb_func,
-    inputs,
-    attributions,
-    baselines=None,
-    additional_forward_args=None,
-    target=None,
-    n_perturb_samples=10,
-    max_examples_per_batch=None,
-):
+    forward_func: Callable,
+    perturb_func: Callable,
+    inputs: TensorOrTupleOfTensorsGeneric,
+    attributions: TensorOrTupleOfTensorsGeneric,
+    baselines: BaselineType = None,
+    additional_forward_args: Any = None,
+    target: TargetType = None,
+    n_perturb_samples: int = 10,
+    max_examples_per_batch: int = None,
+) -> Tensor:
     r"""
     Explanation infidelity represents the expected mean-squared error
     between the explanation multiplied by a meaningful input perturbation
@@ -361,7 +367,9 @@ def infidelity(
         >>> infid = infidelity(net, perturb_fn, input, attribution)
     """
 
-    def _generate_perturbations(current_n_perturb_samples):
+    def _generate_perturbations(
+        current_n_perturb_samples: int,
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]:
         r"""
         The perturbations are generated for each example
         `current_n_perturb_samples` times.
@@ -374,14 +382,14 @@ def infidelity(
         def call_perturb_func():
             r""""""
             baselines_pert = None
+            inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
             if len(inputs_expanded) == 1:
                 inputs_pert = inputs_expanded[0]
                 if baselines_expanded is not None:
-                    baselines_pert = baselines_expanded[0]
+                    baselines_pert = cast(Tuple, baselines_expanded)[0]
             else:
                 inputs_pert = inputs_expanded
                 baselines_pert = baselines_expanded
-
             return (
                 perturb_func(inputs_pert, baselines_pert)
                 if baselines_pert is not None
@@ -393,6 +401,7 @@ def infidelity(
             for input in inputs
         )
 
+        baselines_expanded = baselines
         if baselines is not None:
             baselines_expanded = tuple(
                 baseline.repeat_interleave(current_n_perturb_samples, dim=0)
@@ -400,14 +409,16 @@ def infidelity(
                 and baseline.shape[0] == input.shape[0]
                 and baseline.shape[0] > 1
                 else baseline
-                for input, baseline in zip(inputs, baselines)
+                for input, baseline in zip(inputs, cast(Tuple, baselines))
             )
-        else:
-            baselines_expanded = None
 
         return call_perturb_func()
 
-    def _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations):
+    def _validate_inputs_and_perturbations(
+        inputs: Tuple[Tensor, ...],
+        inputs_perturbed: Tuple[Tensor, ...],
+        perturbations: Tuple[Tensor, ...],
+    ) -> None:
         # asserts the sizes of the perturbations and inputs
         assert len(perturbations) == len(inputs), (
             """The number of perturbed
@@ -425,16 +436,19 @@ def infidelity(
                 is: {}"""
             ).format(perturb[0].shape, input_perturbed[0].shape)
 
-    def _next_infidelity(current_n_perturb_samples):
+    def _next_infidelity(current_n_perturb_samples: int) -> Tensor:
         perturbations, inputs_perturbed = _generate_perturbations(
             current_n_perturb_samples
         )
 
-        if not is_input_tpl:
-            perturbations = _format_tensor_into_tuples(perturbations)
-            inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
+        perturbations = _format_tensor_into_tuples(perturbations)
+        inputs_perturbed = _format_tensor_into_tuples(inputs_perturbed)
 
-        _validate_inputs_and_perturbations(inputs, inputs_perturbed, perturbations)
+        _validate_inputs_and_perturbations(
+            cast(Tuple[Tensor, ...], inputs),
+            cast(Tuple[Tensor, ...], inputs_perturbed),
+            cast(Tuple[Tensor, ...], perturbations),
+        )
 
         targets_expanded = _expand_target(
             target,
@@ -483,16 +497,12 @@ def infidelity(
             dim=1,
         )
 
-    is_input_tpl = _is_tuple(inputs)
-
     # perform argument formattings
-    inputs = _format_input(inputs)
-    baselines = _format_tensor_into_tuples(baselines)
+    inputs = _format_input(inputs)  # type: ignore
+    if baselines is not None:
+        baselines = _format_baseline(baselines, cast(Tuple[Tensor, ...], inputs))
     additional_forward_args = _format_additional_forward_args(additional_forward_args)
-    attributions = _format_tensor_into_tuples(attributions)
-
-    # TODO validate input and baselines ? Reuse the validator
-    # from the attribution package ?
+    attributions = _format_tensor_into_tuples(attributions)  # type: ignore
 
     # Make sure that inputs and corresponding attributions have matching sizes.
     assert len(inputs) == len(attributions), (
@@ -510,7 +520,7 @@ def infidelity(
     bsz = inputs[0].size(0)
     with torch.no_grad():
         metrics_sum = _divide_and_aggregate_metrics(
-            inputs,
+            cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
             _next_infidelity,
             max_examples_per_batch=max_examples_per_batch,

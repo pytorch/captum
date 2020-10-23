@@ -41,6 +41,17 @@ class Test(BaseTest):
         ]
         self._neuron_deconv_test_assert(net, net.fc1, (0,), (inp,), (exp,))
 
+    def test_simple_input_conv_neuron_deconv_agg_neurons(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
+        exp = [
+            [2.0, 3.0, 3.0, 1.0],
+            [3.0, 5.0, 5.0, 2.0],
+            [3.0, 5.0, 5.0, 2.0],
+            [1.0, 2.0, 2.0, 1.0],
+        ]
+        self._neuron_deconv_test_assert(net, net.fc1, (slice(0, 1, 1),), (inp,), (exp,))
+
     def test_simple_multi_input_conv_deconv(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
         inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
@@ -90,7 +101,7 @@ class Test(BaseTest):
         self,
         model: Module,
         layer: Module,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,

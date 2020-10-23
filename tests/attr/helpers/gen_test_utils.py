@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-from typing import Any, Dict, List, Tuple, Type, cast
+import typing
+from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from torch.nn import Module
 
+<<<<<<< HEAD
 from captum.attr._core.lime import Lime
+=======
+from captum.attr._models.base import _get_deep_layer_name
+>>>>>>> b9d88a9f0b65c25f55337ab8b6617abffe87acc7
 from captum.attr._utils.attribution import Attribution
 
 
@@ -47,3 +52,25 @@ def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
         except ImportError:
             return False
     return True
+
+
+@typing.overload
+def get_target_layer(model: Module, layer_name: str) -> Module:
+    ...
+
+
+@typing.overload
+def get_target_layer(model: Module, layer_name: List[str]) -> List[Module]:
+    ...
+
+
+def get_target_layer(
+    model: Module, layer_name: Union[str, List[str]]
+) -> Union[Module, List[Module]]:
+    if isinstance(layer_name, str):
+        return _get_deep_layer_name(model, layer_name)
+    else:
+        return [
+            _get_deep_layer_name(model, single_layer_name)
+            for single_layer_name in layer_name
+        ]

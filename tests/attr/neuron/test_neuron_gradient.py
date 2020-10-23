@@ -57,6 +57,13 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
 
+    def test_simple_gradient_input_relu2_agg_neurons(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(
+            net, net.relu, inp, (slice(0, 2, 1),), [1.0, 1.0, 1.0]
+        )
+
     def test_simple_gradient_multi_input_linear2(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 100.0, 0.0]])
@@ -100,7 +107,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron_index: Union[int, Tuple[int, ...]],
+        test_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
@@ -117,7 +124,7 @@ class Test(BaseTest):
     def _gradient_matching_test_assert(
         self, model: Module, output_layer: Module, test_input: Tensor
     ) -> None:
-        out, _ = _forward_layer_eval(model, test_input, output_layer)
+        out = _forward_layer_eval(model, test_input, output_layer)
         # Select first element of tuple
         out = out[0]
         gradient_attrib = NeuronGradient(model, output_layer)
@@ -129,7 +136,7 @@ class Test(BaseTest):
             input_attrib = Saliency(
                 lambda x: _forward_layer_eval(
                     model, x, output_layer, grad_enabled=True
-                )[0][0][(slice(None), *neuron)]
+                )[0][(slice(None), *neuron)]
             )
             sal_vals = input_attrib.attribute(test_input, abs=False)
             grad_vals = gradient_attrib.attribute(test_input, neuron)

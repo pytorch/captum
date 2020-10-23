@@ -209,7 +209,7 @@ class ReLULinearModel(nn.Module):
         return self.l3(self.relu(torch.cat([self.l1(x1), x3 * self.l2(x2)], dim=1)))
 
 
-class Conv1dDeepLiftModel(nn.Module):
+class Conv1dSeqModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.seq = nn.Sequential(nn.Conv1d(4, 2, 1), nn.ReLU(), nn.Linear(1000, 1))
