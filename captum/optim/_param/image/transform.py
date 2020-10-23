@@ -89,7 +89,7 @@ class RandomScale(nn.Module):
     Arguments:
         scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
-    def __init__(self, scale, align_corners=True):
+    def __init__(self, scale):
         super(RandomScale, self).__init__()
         self.scale = scale
 
