@@ -2,7 +2,7 @@
 import math
 import typing
 import warnings
-from typing import Any, Callable, List, Literal, Optional, Tuple, Union, cast
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -17,7 +17,7 @@ from captum._utils.common import (
     _reduce_list,
     _run_forward,
 )
-from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum._utils.typing import BaselineType, Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
