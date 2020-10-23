@@ -289,10 +289,21 @@ class GaussianSmoothing(nn.Module):
 
 
 class Normalize(nn.Module):
-    def __init__(self, mean, std):
+    """
+    Apply random affine transforms on a NCHW tensor.
+    Arguments:
+        mean (float, sequence): Tuple of mean values to use for input normalization.
+        std (float, sequence): Tuple of standard deviation to use for input normalization.
+        multiplier (int): The high end of the selected model's input range.
+    Returns:
+        
+    """
+    def __init__(self, mean, std=[1,1,1], multiplier=1):
         super().__init__()
         self.mean = torch.as_tensor(mean).view(3, 1, 1).to(device)
         self.std = torch.as_tensor(std).view(3, 1, 1).to(device)
+        self.multiplier = multiplier
 
     def forward(self, x):
+        x = x * self.multiplier
         return (x - self.mean) / self.std
