@@ -15,7 +15,7 @@ class ImageTensor(torch.Tensor):
     def open(cls, path):
         img_np = Image.open(path).convert("RGB")
         img_np = np.array(img_np).astype(np.float32)
-        return cls(img_np)
+        return cls(img_np.transpose(2, 0, 1))
 
     @classmethod
     def __torch_function__(self, func, types, args=(), kwargs=None):
