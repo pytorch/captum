@@ -312,17 +312,19 @@ class NaturalImage(ImageParameterization):
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size, channels=3, Parameterization=FFTImage):
+    def __init__(self, size, channels=3, Parameterization=FFTImage, self.multiplier = 1):
         super().__init__()
 
         self.parameterization = Parameterization(size=size, channels=channels)
         self.decorrelate = ToRGB(transform_name="klt")
+        self.squash_func = lambda x: torch.sigmoid(x)
+        self.multiplier = 1
 
     def forward(self):
         image = self.parameterization()
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
-        return CudaImageTensor(torch.sigmoid_(image))
+        return CudaImageTensor(self.squash_func(image) * self.multiplier)
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)
