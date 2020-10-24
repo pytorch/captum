@@ -312,7 +312,7 @@ class NaturalImage(ImageParameterization):
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size, channels=3, Parameterization=FFTImage, self.multiplier = 1):
+    def __init__(self, size, channels=3, Parameterization=FFTImage, multiplier=1):
         super().__init__()
 
         self.parameterization = Parameterization(size=size, channels=channels)
