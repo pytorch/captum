@@ -54,7 +54,9 @@ class InputOptimization(Objective, Parameterized):
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
-        self.transform = transform or RandomAffine(scale=True, translate=True)
+        self.transform = transform or RandomAffine(
+            scale=(1, 0.975, 1.025, 0.95, 1.05), translate=tuple(range(-16, 16))
+        )
         self.loss_function = loss_function
 
     def loss(self) -> torch.Tensor:
