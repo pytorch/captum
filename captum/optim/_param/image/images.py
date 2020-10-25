@@ -139,6 +139,7 @@ class ToRGB(nn.Module):
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
         transform = torch.Tensor(KLT).float()
         transform = transform / torch.max(torch.norm(transform, dim=0))
+        return transform
 
     @staticmethod
     def i1i2i3_transform():
@@ -153,9 +154,11 @@ class ToRGB(nn.Module):
         super().__init__()
 
         if transform_name == "klt":
-            self.register_buffer("transform", ToRGB.klt_transform())
+            #self.register_buffer("transform", ToRGB.klt_transform())
+            self.transform = ToRGB.klt_transform()
         elif transform_name == "i1i2i3":
-            self.register_buffer("transform", ToRGB.i1i2i3_transform())
+            #self.register_buffer("transform", ToRGB.i1i2i3_transform())
+            self.transform = ToRGB.i1i2i3_transform()
         else:
             raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
