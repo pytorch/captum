@@ -67,7 +67,7 @@ class LocalResponseNormLayer(nn.Module):
 
 # Better version of Inception V1/GoogleNet for Inception5h
 class InceptionV1(nn.Module):
-    def __init__(self, out_features=1008, aux_logits=False):
+    def __init__(self, out_features=1008, aux_logits=False, transform_input=False):
         super(InceptionV1, self).__init__()
         self.aux_logits = aux_logits
         lrn_vals = (9, 9.99999974738e-05, 0.5, 1)
