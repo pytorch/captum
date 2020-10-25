@@ -38,6 +38,7 @@ class InputOptimization(Objective, Parameterized):
         transform: Optional[nn.Module],
         target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
+        lr: float = 0.025,
     ):
         r"""
         Args:
@@ -50,6 +51,7 @@ class InputOptimization(Objective, Parameterized):
                         are used to compute the loss function.
             loss_function (callable): The loss function to minimize during optimization
                         optimization.
+            lr (float): The learning rate to use with the Adam optimizer.
         """
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
@@ -58,6 +60,7 @@ class InputOptimization(Objective, Parameterized):
             scale=(1, 0.975, 1.025, 0.95, 1.05), translate=tuple(range(-16, 16))
         )
         self.loss_function = loss_function
+        self.lr = lr
 
     def loss(self) -> torch.Tensor:
         r"""Compute loss value for current iteration.
@@ -116,7 +119,7 @@ class InputOptimization(Objective, Parameterized):
                         Length of the list corresponds to the number of iterations
         """
         stop_criteria = stop_criteria or n_steps(1024)
-        optimizer = optimizer or optim.Adam(self.parameters(), lr=0.025)
+        optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
         assert isinstance(optimizer, optim.Optimizer)
 
         history = []
