@@ -24,7 +24,7 @@ def googlenet(pretrained=False, progress=True, model_path=None, **kwargs):
     """
     if pretrained:
         if "transform_input" not in kwargs:
-            kwargs["transform_input"] = True
+            kwargs["transform_input"] = False
         if "aux_logits" not in kwargs:
             kwargs["aux_logits"] = False
         if "out_features" not in kwargs:
