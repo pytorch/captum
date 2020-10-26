@@ -226,6 +226,7 @@ class FFTImage(ImageParameterization):
         scale = 1.0 / torch.max(
             frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1])))
         )
+        scale = scale * ((size[0] * size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
 
