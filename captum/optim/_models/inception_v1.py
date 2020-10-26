@@ -170,7 +170,7 @@ class InceptionV1(nn.Module):
         if self.transform_input:
             assert x.min() >= 0.0 and x.max() <= 1.0
             x = x * 255 - 117
-            x = x.clone()[:, [2,1,0]] if x.dim() == 4 else x # RGB to BGR
+            x = x.clone()[:, [2, 1, 0]] if x.dim() == 4 else x  # RGB to BGR
         return x
 
     def forward(self, x):
