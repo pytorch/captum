@@ -202,7 +202,6 @@ def neuron_activation(
 
 
 def deepdream(target: nn.Module) -> LossFunction:
-
     def inner(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return activations ** 2
