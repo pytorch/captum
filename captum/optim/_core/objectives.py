@@ -206,9 +206,11 @@ def deepdream(target: nn.Module) -> LossFunction:
     Maximize 'interestingness' at some layer.
     See Mordvintsev et al., 2015.
     """
+
     def inner(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
-        return activations**2
+        return activations ** 2
+
     return inner
 
 
