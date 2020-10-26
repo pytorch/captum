@@ -44,6 +44,39 @@ def googlenet(pretrained=False, progress=True, model_path=None, **kwargs):
     return InceptionV1(**kwargs)
 
 
+# RedirectedReLU autograd function
+class RedirectedReLU(torch.autograd.Function):
+    @staticmethod
+    def forward(self, input_tensor):
+        self.save_for_backward(input_tensor)
+        return input_tensor.clamp(min=0)
+
+    @staticmethod
+    def backward(self, grad_output):
+        (input_tensor,) = self.saved_tensors
+        grad_input = grad_output.clone()
+        grad_input[input_tensor < 0] = grad_input[input_tensor < 0] * 1e-1
+        return grad_input
+
+
+# RedirectedReLU layer
+class RedirectedReluLayer(nn.Module):
+    def forward(self, input):
+        if F.relu(input.detach().sum()) != 0:
+            return F.relu(input, inplace=True)
+        else:
+            return RedirectedReLU.apply(input)
+
+
+# Replace all ReLU layers with RedirectedReLU
+def relu_to_redirected_relu(model):
+    for name, child in model.named_children():
+        if isinstance(child, ReluLayer):
+            setattr(model, name, RedirectedReluLayer())
+        else:
+            relu_to_redirected_relu(child)
+
+
 # Basic Hookable & Replaceable ReLU layer
 class ReluLayer(nn.Module):
     def forward(self, input):
