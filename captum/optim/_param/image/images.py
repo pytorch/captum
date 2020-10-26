@@ -268,7 +268,7 @@ class PixelImage(ImageParameterization):
             init = torch.randn([channels, size[0], size[1]]) / 10 + 0.5
         else:
             assert init.shape[0] == 3
-        self.image = nn.Parameter(init)
+        self.image = nn.Parameter(init).refine_names("C", "H", "W")
 
     def forward(self):
         return self.image
