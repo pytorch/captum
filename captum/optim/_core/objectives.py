@@ -201,6 +201,31 @@ def neuron_activation(
     return loss_function
 
 
+def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        assert activations is not None
+        # ensure channel_index is valid
+        assert channel_index < activations.shape[1]
+        # assume NCHW
+        # NOTE: not necessarily true e.g. for Linear layers
+        # assert len(activations.shape) == 4
+        return activations[:, channel_index, ...]
+
+    return loss_function
+
+
+def deepdream(target: nn.Module) -> LossFunction:
+    """
+    Maximize 'interestingness' at some layer.
+    See Mordvintsev et al., 2015.
+    """
+    def inner(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return activations**2
+    return inner
+
+
 def single_target_objective(
     target: nn.Module, loss_function: SingleTargetLossFunction
 ) -> LossFunction:
