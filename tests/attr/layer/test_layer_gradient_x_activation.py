@@ -104,8 +104,8 @@ class Test(BaseTest):
         input2 = torch.tensor([3, 0, 0, 2])
         model = BasicEmbeddingModel()
         layer_act = LayerGradientXActivation(model, model.embedding1)
-        self.assertEqual(tuple(layer_act.attribute(inputs=(input1,
-            input2)).shape), (4, 100))
+        self.assertEqual(list(layer_act.attribute(inputs=(input1,
+            input2)).shape), [4, 100])
 
     def _layer_activation_test_assert(
         self,
