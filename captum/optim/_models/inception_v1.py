@@ -39,6 +39,7 @@ def googlenet(pretrained=False, progress=True, model_path=None, **kwargs):
         else:
             state_dict = torch.load(model_path, map_location="cpu")
         model.load_state_dict(state_dict)
+        relu_to_redirected_relu(model)
         return model
 
     return InceptionV1(**kwargs)
