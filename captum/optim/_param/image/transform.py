@@ -212,7 +212,7 @@ class RandomAffine(nn.Module):
         if self.rotate is not None:
             rotate_angle = rand_select(self.rotate)
             logging.info(f"Rotate: {rotate_angle}")
-            x = self.rotate(x, rotate_angle)
+            x = self.rotate_tensor(x, rotate_angle)
         if self.scale is not None:
             scale_factor = rand_select(self.scale)
             logging.info(f"Scale: {scale_factor}")
