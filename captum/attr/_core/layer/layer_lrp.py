@@ -31,7 +31,8 @@ class LayerLRP(LRP, LayerAttribution):
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
-            layer (torch.nn.Module, None): Layer for which attributions are computed.
+            layer (torch.nn.Module or list(torch.nn.Module)): Layer or layers
+                          for which attributions are computed.
                           The size and dimensionality of the attributions
                           corresponds to the size and dimensionality of the layer's
                           input or output depending on whether we attribute to the
@@ -40,8 +41,6 @@ class LayerLRP(LRP, LayerAttribution):
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
-
-        self._check_rules()
 
     def attribute(
         self,
@@ -174,7 +173,7 @@ class LayerLRP(LRP, LayerAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            if self.layer is None:
+            if isinstance(self.layer, list):
                 delta = []
                 for relevance_layer in relevances:
                     delta.append(
@@ -187,12 +186,9 @@ class LayerLRP(LRP, LayerAttribution):
             return relevances
 
     def _get_output_relevance(self, output):
-        if self.layer is None:
+        if isinstance(self.layer, list):
             relevances = []
-            relevance_layers = [
-                layer for layer in self.layers if layer.rule is not None
-            ]
-            for layer in relevance_layers:
+            for layer in self.layer:
                 if self.attribute_to_layer_input:
                     normalized_relevances = layer.rule.relevance_input
                 else:

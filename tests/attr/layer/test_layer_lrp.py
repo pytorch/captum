@@ -152,19 +152,22 @@ class Test(BaseTest):
         model.eval()
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
-        lrp = LayerLRP(model, None)
+        layers = [model.linear, model.linear2]
+        lrp = LayerLRP(model, layers)
         relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
         self.assertEqual(len(relevance), 2)
+        assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([[[18, 36, 54]]]))
 
     def test_lrp_simple_attributions_all_layers_delta(self):
         model, inputs = _get_simple_model(inplace=False)
         model.eval()
         model.linear.rule = EpsilonRule()
         model.linear2.rule = EpsilonRule()
-        lrp = LayerLRP(model, None)
+        layers = [model.linear, model.linear2]
+        lrp = LayerLRP(model, layers)
         inputs = torch.cat((inputs, 2 * inputs))
         relevance, delta = lrp.attribute(
             inputs, attribute_to_layer_input=True, return_convergence_delta=True
         )
         self.assertEqual(len(relevance), len(delta))
-        # TODO: Assert values and check delta computation
+        assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([[[18, 36, 54]]]))
