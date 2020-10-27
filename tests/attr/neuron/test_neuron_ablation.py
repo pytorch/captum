@@ -58,6 +58,20 @@ class Test(BaseTest):
             neuron_selector=lambda x: torch.sum(x, dim=1),
         )
 
+    def test_multi_sample_ablation_with_slice(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1], [1, 1, 0]])
+        self._ablation_test_assert(
+            net,
+            net.linear2,
+            inp,
+            [[82.0, 82.0, 24.0], [560.0, 560.0, 240.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1, 2, 3),
+            neuron_selector=(slice(0, 2, 1),),
+        )
+
     def test_multi_input_ablation_with_mask(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[23.0, 100.0, 0.0], [20.0, 50.0, 30.0]])
@@ -236,7 +250,7 @@ class Test(BaseTest):
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
-        neuron_selector: Union[int, Tuple[int, ...], Callable] = 0,
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable] = 0,
         attribute_to_neuron_input: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:

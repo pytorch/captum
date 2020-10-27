@@ -109,6 +109,23 @@ class Test(BaseTest):
             (inp3, 0.5),
         )
 
+    def test_simple_ig_multi_input_relu_batch_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            lambda x: torch.sum(x),
+            (
+                [[0.0, 10.5, 24.5], [0.0, 160.0, 0.0]],
+                [[0.0, 10.5, 24.5], [0.0, 40.0, 0.0]],
+            ),
+            (inp3, 0.5),
+        )
+
     def test_matching_output_gradient(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)

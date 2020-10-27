@@ -358,7 +358,7 @@ def neuron_index_deprecation_decorator(func):
             kwargs["neuron_selector"] = kwargs["neuron_index"]
             warnings.warn(
                 "neuron_index is being deprecated and replaced with neuron_selector "
-                "to support more general functionality, please update the parameter "
+                "to support more general functionality. Please update the parameter "
                 "name to neuron_selector. Support for neuron_index will be removed "
                 "in Captum 0.4.0",
                 DeprecationWarning,
