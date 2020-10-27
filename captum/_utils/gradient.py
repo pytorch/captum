@@ -33,8 +33,8 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
         grad_required.append(input.requires_grad)
         inputs_dtype = input.dtype
-        # Note: torch 1.2 doesn't support is_complex for dtype, this we check on the
-        # existance of is_complex method.
+        # Note: torch 1.2 doesn't support is_complex for dtype that's why we check
+        # on the existance of is_complex method.
         if not inputs_dtype.is_floating_point and not (
             hasattr(inputs_dtype, "is_complex") and inputs_dtype.is_complex
         ):
