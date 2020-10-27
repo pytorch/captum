@@ -49,6 +49,10 @@ class LRP(GradientAttribution):
 
         self._check_rules()
 
+    @property
+    def multiplies_by_inputs(self):
+        return True
+
     def attribute(
         self,
         inputs,
