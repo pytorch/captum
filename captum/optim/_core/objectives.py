@@ -202,11 +202,34 @@ def neuron_activation(
 
 
 def deepdream(target: nn.Module) -> LossFunction:
-    def inner(targets_to_values: ModuleOutputMapping):
+    def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return activations ** 2
 
-    return inner
+    return loss_function
+
+
+def diversity(target: nn.Module) -> LossFunction:
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return -sum(
+            [
+                sum(
+                    [
+                        (
+                            torch.cosine_similarity(
+                                activations[j].view(1, -1), activations[i].view(1, -1)
+                            )
+                        ).sum()
+                        for i in range(activations.size(0))
+                        if i != j
+                    ]
+                )
+                for j in range(activations.size(0))
+            ]
+        ) / activations.size(0)
+
+    return loss_function
 
 
 def single_target_objective(
