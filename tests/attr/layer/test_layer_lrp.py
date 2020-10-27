@@ -170,4 +170,6 @@ class Test(BaseTest):
             inputs, attribute_to_layer_input=True, return_convergence_delta=True
         )
         self.assertEqual(len(relevance), len(delta))
-        assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([[[18, 36, 54]]]))
+        assertTensorAlmostEqual(
+            self, relevance[0][0], torch.tensor([[[18, 36, 54]], [[36, 72, 108]]])
+        )
