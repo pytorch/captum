@@ -22,10 +22,12 @@ class ImageTensor(torch.Tensor):
         if kwargs is None:
             kwargs = {}
         args = [a._t if hasattr(a, "_t") else a for a in args]
-        ret = func(*args, **kwargs)
-        print(ret.dtype)
-        return ImageTensor(ret.float())
+        ret = super().__torch_function__(func, types, args, **kwargs)
+        return ret
 
+    def tensor(self):
+        return self._value * torch.eye(self._N)
+    
     def __repr__(self):
         return f"ImageTensor(value={self._t})"
 
