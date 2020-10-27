@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Callable, Union
+from typing import Callable, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -36,6 +36,17 @@ class Test(BaseTest):
 
         self._assert_attributions(model, model.linear1, inputs, baselines, 0, 60)
 
+    def test_basic_multilayer_wo_mult_by_inputs_agg_neurons(self) -> None:
+        model = BasicModel_MultiLayer(inplace=True)
+        model.eval()
+
+        inputs = torch.tensor([[1.0, 20.0, 10.0]])
+        baselines = torch.randn(2, 3)
+
+        self._assert_attributions(
+            model, model.linear1, inputs, baselines, (slice(0, 1, 1),), 60
+        )
+
     def test_classification(self) -> None:
         def custom_baseline_fn(inputs: Tensor) -> Tensor:
             num_in = inputs.shape[1]  # type: ignore
@@ -59,7 +70,7 @@ class Test(BaseTest):
         layer: Module,
         inputs: Tensor,
         baselines: Union[Tensor, Callable[..., Tensor]],
-        neuron_ind: Union[int, tuple],
+        neuron_ind: Union[int, Tuple[Union[int, slice], ...]],
         n_samples: int = 5,
     ) -> None:
         ngs = NeuronGradientShap(model, layer)

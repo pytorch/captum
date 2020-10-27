@@ -57,6 +57,13 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
 
+    def test_simple_gradient_input_relu2_agg_neurons(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(
+            net, net.relu, inp, (slice(0, 2, 1),), [1.0, 1.0, 1.0]
+        )
+
     def test_simple_gradient_multi_input_linear2(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
         inp1 = torch.tensor([[0.0, 100.0, 0.0]])
@@ -100,7 +107,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron_index: Union[int, Tuple[int, ...]],
+        test_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
         expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,

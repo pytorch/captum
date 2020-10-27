@@ -1,6 +1,23 @@
 # Contributing to Captum
 
-We want to make contributing to Captum as easy and transparent as possible.
+Thank you for your interest in contributing to Captum! We want to make contributing to Captum as easy and transparent as possible.
+Before you begin writing code, it is important that you share your intention to contribute with the team, based on the type of contribution:
+
+
+1. You want to propose and implement a new algorithm, add a new feature or fix a bug. This can be both code and documentation proposals.
+    1. For all non-outstanding features, bug-fixes and algorithms in the Captum issue list (https://github.com/pytorch/captum/issues) please create an issue first.
+    2. If the implementation requires API or any other major code changes (new files, packages or algorithms), we will likely request a design document to review and discuss the design and implementation before making changes. An example design document for LIME can be found here (https://github.com/pytorch/captum/issues/467).
+    3. Once we agree that the plan looks good or confirmed that the change is small enough to not require a detailed design discussion, go ahead and implement it!
+
+2. You want to implement a feature or bug-fix for an outstanding issue.
+
+    1. Search for your issue in the Captum issue list (https://github.com/pytorch/captum/issues).
+    2. Pick an issue and comment that you'd like to work on the feature or bug-fix.
+    3. If you need more context on a particular issue, please ask and we’ll be happy to help.
+
+Once you implement and test your feature or bug-fix, please submit a Pull Request to https://github.com/pytorch/captum (https://github.com/pytorch/pytorch).
+
+This document covers some of the techical aspects of contributing to Captum. More details on what we are looking for in the contributions can be found in the [Contributing Guidelines](https://captum.ai/docs/contribution_guide).
 
 
 ## Development installation
@@ -29,7 +46,7 @@ from the repository root. No additional configuration should be needed (see the
 [black documentation](https://black.readthedocs.io/en/stable/installation_and_usage.html#usage)
 for advanced usage).
 
-Captum also uses [isort](https://github.com/timothycrosley/isort) to sort imports 
+Captum also uses [isort](https://github.com/timothycrosley/isort) to sort imports
 alphabetically and separate into sections. isort is installed easily via
 pip using `pip install isort`, and run locally by calling
 ```bash
@@ -45,18 +62,18 @@ CircleCI will fail on your PR if it does not adhere to the black or flake8 forma
 
 Captum is fully typed using python 3.6+
 [type hints](https://www.python.org/dev/peps/pep-0484/).
-We expect any contributions to also use proper type annotations, and we enforce 
-consistency of these in our continuous integration tests. 
+We expect any contributions to also use proper type annotations, and we enforce
+consistency of these in our continuous integration tests.
 
-To type check your code locally, install [mypy](https://github.com/python/mypy), 
+To type check your code locally, install [mypy](https://github.com/python/mypy),
 which can be done with pip using `pip install "mypy>=0.760"`
 Then run this script from the repository root:
 ```bash
 ./scripts/run_mypy.sh
 ```
-Note that we expect mypy to have version 0.760 or higher, and when type checking, use PyTorch 1.4 or 
-higher due to fixes to PyTorch type hints available in 1.4. We also use the Literal feature which is 
-available only in Python 3.8 or above. If type-checking using a previous version of Python, you will 
+Note that we expect mypy to have version 0.760 or higher, and when type checking, use PyTorch 1.4 or
+higher due to fixes to PyTorch type hints available in 1.4. We also use the Literal feature which is
+available only in Python 3.8 or above. If type-checking using a previous version of Python, you will
 need to install the typing-extension package which can be done with pip using `pip install typing-extensions`.
 
 #### Unit Tests

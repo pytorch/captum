@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
+import typing
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
+from torch import Tensor
 
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr import (
     DeepLift,
     GradientShap,
@@ -12,7 +16,7 @@ from captum.attr import (
 from captum.metrics import sensitivity_max
 from captum.metrics._core.sensitivity import default_perturb_func
 
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
+from ..helpers.basic import BaseTest, assertTensorAlmostEqual
 from ..helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
@@ -21,7 +25,19 @@ from ..helpers.basic_models import (
 )
 
 
-def _perturb_func(inputs):
+@typing.overload
+def _perturb_func(inputs: Tensor) -> Tensor:
+    ...
+
+
+@typing.overload
+def _perturb_func(inputs: Tuple[Tensor, ...]) -> Tuple[Tensor, ...]:
+    ...
+
+
+def _perturb_func(
+    inputs: TensorOrTupleOfTensorsGeneric,
+) -> Union[Tensor, Tuple[Tensor, ...]]:
     def perturb_ratio(input):
         return (
             torch.arange(-torch.numel(input[0]) // 2, torch.numel(input[0]) // 2)
@@ -30,12 +46,12 @@ def _perturb_func(inputs):
             / 100
         )
 
+    input2 = None
     if isinstance(inputs, tuple):
         input1 = inputs[0]
         input2 = inputs[1]
     else:
-        input1 = inputs
-        input2 = None
+        input1 = cast(Tensor, inputs)
 
     perturbed_input1 = input1 + perturb_ratio(input1)
 
@@ -46,30 +62,33 @@ def _perturb_func(inputs):
 
 
 class Test(BaseTest):
-    def test_basic_sensitivity_max_single(self):
+    def test_basic_sensitivity_max_single(self) -> None:
         model = BasicModel2()
         sa = Saliency(model)
 
         input1 = torch.tensor([3.0])
         input2 = torch.tensor([1.0])
         self.sensitivity_max_assert(
-            sa.attribute, (input1, input2), [0.0], perturb_func=default_perturb_func
+            sa.attribute,
+            (input1, input2),
+            torch.zeros(1),
+            perturb_func=default_perturb_func,
         )
 
-    def test_basic_sensitivity_max_multiple(self):
+    def test_basic_sensitivity_max_multiple(self) -> None:
         model = BasicModel2()
         sa = Saliency(model)
 
         input1 = torch.tensor([3.0] * 20)
         input2 = torch.tensor([1.0] * 20)
         self.sensitivity_max_assert(
-            sa.attribute, (input1, input2), [0.0] * 20, max_examples_per_batch=21
+            sa.attribute, (input1, input2), torch.zeros(20), max_examples_per_batch=21
         )
         self.sensitivity_max_assert(
-            sa.attribute, (input1, input2), [0.0] * 20, max_examples_per_batch=60
+            sa.attribute, (input1, input2), torch.zeros(20), max_examples_per_batch=60
         )
 
-    def test_basic_sensitivity_max_multiple_gradshap(self):
+    def test_basic_sensitivity_max_multiple_gradshap(self) -> None:
         model = BasicModel2()
         gs = GradientShap(model)
 
@@ -82,7 +101,7 @@ class Test(BaseTest):
         self.sensitivity_max_assert(
             gs.attribute,
             (input1, input2),
-            [0.0] * 5,
+            torch.zeros(5),
             baselines=(baseline1, baseline2),
             max_examples_per_batch=2,
         )
@@ -90,12 +109,12 @@ class Test(BaseTest):
         self.sensitivity_max_assert(
             gs.attribute,
             (input1, input2),
-            [0.0] * 5,
+            torch.zeros(5),
             baselines=(baseline1, baseline2),
             max_examples_per_batch=20,
         )
 
-    def test_convnet_multi_target(self):
+    def test_convnet_multi_target(self) -> None:
         r"""
         Another test with Saliency, local sensitivity and more
         complex model with higher dimensional input.
@@ -108,13 +127,13 @@ class Test(BaseTest):
         self.sensitivity_max_assert(
             sa.attribute,
             input,
-            [0.0] * 20,
+            torch.zeros(20),
             target=torch.tensor([1] * 20),
             n_perturb_samples=10,
             max_examples_per_batch=40,
         )
 
-    def test_convnet_multi_target_and_default_pert_func(self):
+    def test_convnet_multi_target_and_default_pert_func(self) -> None:
         r"""
         Similar to previous example but here we also test default
         perturbation function.
@@ -127,7 +146,7 @@ class Test(BaseTest):
         sens1 = self.sensitivity_max_assert(
             gbp.attribute,
             input,
-            [0.0] * 20,
+            torch.zeros(20),
             perturb_func=default_perturb_func,
             target=torch.tensor([1] * 20),
             n_perturb_samples=10,
@@ -137,7 +156,7 @@ class Test(BaseTest):
         sens2 = self.sensitivity_max_assert(
             gbp.attribute,
             input,
-            [0.0] * 20,
+            torch.zeros(20),
             perturb_func=default_perturb_func,
             target=torch.tensor([1] * 20),
             n_perturb_samples=10,
@@ -145,19 +164,19 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, sens1, sens2)
 
-    def test_sensitivity_max_multi_dim(self):
+    def test_sensitivity_max_multi_dim(self) -> None:
         model = BasicModel_MultiLayer()
 
         input = torch.arange(1.0, 13.0).view(4, 3)
 
         additional_forward_args = (None, True)
-        targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
 
         ig = IntegratedGradients(model)
         self.sensitivity_max_assert(
             ig.attribute,
             input,
-            [0.006, 0.01, 0.001, 0.008],
+            torch.tensor([0.006, 0.01, 0.001, 0.008]),
             n_perturb_samples=1,
             max_examples_per_batch=4,
             perturb_func=_perturb_func,
@@ -165,20 +184,20 @@ class Test(BaseTest):
             additional_forward_args=additional_forward_args,
         )
 
-    def test_sensitivity_max_multi_dim_batching(self):
+    def test_sensitivity_max_multi_dim_batching(self) -> None:
         model = BasicModel_MultiLayer()
 
         input = torch.arange(1.0, 16.0).view(5, 3)
 
         additional_forward_args = (torch.ones(5, 3).float(), False)
-        targets = [0, 0, 0, 0, 0]
+        targets: List = [0, 0, 0, 0, 0]
 
         sa = Saliency(model)
 
         sensitivity1 = self.sensitivity_max_assert(
             sa.attribute,
             input,
-            [0.0] * 5,
+            torch.zeros(5),
             n_perturb_samples=1,
             max_examples_per_batch=None,
             perturb_func=_perturb_func,
@@ -188,7 +207,7 @@ class Test(BaseTest):
         sensitivity2 = self.sensitivity_max_assert(
             sa.attribute,
             input,
-            [0.0] * 5,
+            torch.zeros(5),
             n_perturb_samples=10,
             max_examples_per_batch=10,
             perturb_func=_perturb_func,
@@ -197,7 +216,7 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, sensitivity1, sensitivity2, 0.0)
 
-    def test_sensitivity_additional_forward_args_multi_args(self):
+    def test_sensitivity_additional_forward_args_multi_args(self) -> None:
         model = BasicModel4_MultiArgs()
 
         input1 = torch.tensor([[1.5, 2.0, 3.3]])
@@ -209,7 +228,7 @@ class Test(BaseTest):
         sensitivity1 = self.sensitivity_max_assert(
             ig.attribute,
             (input1, input2),
-            [0.0],
+            torch.zeros(1),
             additional_forward_args=args,
             n_perturb_samples=1,
             max_examples_per_batch=1,
@@ -219,7 +238,7 @@ class Test(BaseTest):
         sensitivity2 = self.sensitivity_max_assert(
             ig.attribute,
             (input1, input2),
-            [0.0],
+            torch.zeros(1),
             additional_forward_args=args,
             n_perturb_samples=4,
             max_examples_per_batch=2,
@@ -227,18 +246,18 @@ class Test(BaseTest):
         )
         assertTensorAlmostEqual(self, sensitivity1, sensitivity2, 0.0)
 
-    def test_classification_sensitivity_tpl_target_w_baseline(self):
+    def test_classification_sensitivity_tpl_target_w_baseline(self) -> None:
         model = BasicModel_MultiLayer()
         input = torch.arange(1.0, 13.0).view(4, 3)
         baseline = torch.ones(4, 3)
         additional_forward_args = (torch.arange(1, 13).view(4, 3).float(), True)
-        targets = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
+        targets: List = [(0, 1, 1), (0, 1, 1), (1, 1, 1), (0, 1, 1)]
         dl = DeepLift(model)
 
         sens1 = self.sensitivity_max_assert(
             dl.attribute,
             input,
-            [0.01, 0.003, 0.001, 0.001],
+            torch.tensor([0.01, 0.003, 0.001, 0.001]),
             additional_forward_args=additional_forward_args,
             baselines=baseline,
             target=targets,
@@ -248,7 +267,7 @@ class Test(BaseTest):
         sens2 = self.sensitivity_max_assert(
             dl.attribute,
             input,
-            [0.0, 0.0, 0.0, 0.0],
+            torch.zeros(4),
             additional_forward_args=additional_forward_args,
             baselines=baseline,
             target=targets,
@@ -260,16 +279,16 @@ class Test(BaseTest):
 
     def sensitivity_max_assert(
         self,
-        expl_func,
-        inputs,
-        expected_sensitivity,
-        perturb_func=_perturb_func,
-        n_perturb_samples=5,
-        max_examples_per_batch=None,
-        baselines=None,
-        target=None,
-        additional_forward_args=None,
-    ):
+        expl_func: Callable,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        expected_sensitivity: Tensor,
+        perturb_func: Callable = _perturb_func,
+        n_perturb_samples: int = 5,
+        max_examples_per_batch: int = None,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+    ) -> Tensor:
         if baselines is None:
             sens = sensitivity_max(
                 expl_func,
@@ -291,5 +310,5 @@ class Test(BaseTest):
                 n_perturb_samples=n_perturb_samples,
                 max_examples_per_batch=max_examples_per_batch,
             )
-        assertArraysAlmostEqual(sens, expected_sensitivity)
+        assertTensorAlmostEqual(self, sens, expected_sensitivity, 0.05)
         return sens
