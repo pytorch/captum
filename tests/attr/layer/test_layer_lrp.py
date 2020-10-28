@@ -134,7 +134,7 @@ class Test(BaseTest):
         model.linear2.rule = GammaRule()
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24., 36., 36.]))
+        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24.0, 36.0, 36.0]))
 
     def test_lrp_simple_attributions_AlphaBeta(self):
         model, inputs = _get_simple_model()
@@ -145,7 +145,7 @@ class Test(BaseTest):
         model.linear2.rule = Alpha1_Beta0_Rule()
         lrp = LayerLRP(model, model.linear)
         relevance = lrp.attribute(inputs)
-        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24., 36., 36.]))
+        assertTensorAlmostEqual(self, relevance[0], torch.tensor([24.0, 36.0, 36.0]))
 
     def test_lrp_simple_attributions_all_layers(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -156,7 +156,9 @@ class Test(BaseTest):
         lrp = LayerLRP(model, layers)
         relevance = lrp.attribute(inputs, attribute_to_layer_input=True)
         self.assertEqual(len(relevance), 2)
-        assertTensorAlmostEqual(self, relevance[0][0], torch.tensor([[[18., 36., 54.]]]))
+        assertTensorAlmostEqual(
+            self, relevance[0][0], torch.tensor([[[18.0, 36.0, 54.0]]])
+        )
 
     def test_lrp_simple_attributions_all_layers_delta(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -171,5 +173,7 @@ class Test(BaseTest):
         )
         self.assertEqual(len(relevance), len(delta))
         assertTensorAlmostEqual(
-            self, relevance[0][0], torch.tensor([[[18., 36., 54.]], [[36., 72., 108.]]])
+            self,
+            relevance[0][0],
+            torch.tensor([[[18.0, 36.0, 54.0]], [[36.0, 72.0, 108.0]]]),
         )
