@@ -309,21 +309,21 @@ class NaturalImage(ImageParameterization):
 
     If a model requires a normalization step, such as normalizing imagenet RGB values,
     or rescaling to [0,255], it has to perform that step inside its computation.
+    For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size, channels=3, Parameterization=FFTImage, multiplier=1):
+    def __init__(self, size, channels=3, Parameterization=FFTImage):
         super().__init__()
 
         self.parameterization = Parameterization(size=size, channels=channels)
         self.decorrelate = ToRGB(transform_name="klt")
         self.squash_func = lambda x: torch.sigmoid(x)
-        self.multiplier = 1
 
     def forward(self):
         image = self.parameterization()
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
-        return CudaImageTensor(self.squash_func(image) * self.multiplier)
+        return CudaImageTensor(self.squash_func(image))
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)
