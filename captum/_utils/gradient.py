@@ -32,7 +32,19 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
     for index, input in enumerate(inputs):
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
         grad_required.append(input.requires_grad)
-        if not input.requires_grad:
+        inputs_dtype = input.dtype
+        # Note: torch 1.2 doesn't support is_complex for dtype that's why we check
+        # on the existance of is_complex method.
+        if not inputs_dtype.is_floating_point and not (
+            hasattr(inputs_dtype, "is_complex") and inputs_dtype.is_complex
+        ):
+            warnings.warn(
+                """Input Tensor %d has a dtype of %s.
+                Gradients cannot be activated
+                for these data types."""
+                % (index, str(inputs_dtype))
+            )
+        elif not input.requires_grad:
             warnings.warn(
                 "Input Tensor %d did not already require gradients, "
                 "required_grads has been set automatically." % index

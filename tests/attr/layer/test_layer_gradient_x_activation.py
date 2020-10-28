@@ -12,6 +12,7 @@ from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXAc
 
 from ...helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from ...helpers.basic_models import (
+    BasicEmbeddingModel,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
@@ -96,6 +97,15 @@ class Test(BaseTest):
         inp3 = torch.tensor([[0.0, 0.0, 0.0]])
         self._layer_activation_test_assert(
             net, net.model.relu, (inp1, inp2), [90.0, 101.0, 101.0, 101.0], (inp3, 5)
+        )
+
+    def test_gradient_activation_embedding(self) -> None:
+        input1 = torch.tensor([2, 5, 0, 1])
+        input2 = torch.tensor([3, 0, 0, 2])
+        model = BasicEmbeddingModel()
+        layer_act = LayerGradientXActivation(model, model.embedding1)
+        self.assertEqual(
+            list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
         )
 
     def _layer_activation_test_assert(
