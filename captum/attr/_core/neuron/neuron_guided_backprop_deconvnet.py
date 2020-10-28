@@ -213,6 +213,7 @@ class NeuronGuidedBackprop(NeuronAttribution, GradientAttribution):
         self.guided_backprop = GuidedBackprop(model)
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
