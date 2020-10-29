@@ -320,13 +320,13 @@ neuron_cond = NeuronConductance(net, net.sigmoid1)
 # In[26]:
 
 
-neuron_cond_vals_10 = neuron_cond.attribute(test_input_tensor, neuron_index=10, target=1)
+neuron_cond_vals_10 = neuron_cond.attribute(test_input_tensor, neuron_selector=10, target=1)
 
 
 # In[27]:
 
 
-neuron_cond_vals_0 = neuron_cond.attribute(test_input_tensor, neuron_index=0, target=1)
+neuron_cond_vals_0 = neuron_cond.attribute(test_input_tensor, neuron_selector=0, target=1)
 
 
 # In[28]:

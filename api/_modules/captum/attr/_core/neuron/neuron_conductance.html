@@ -47,7 +47,12 @@
 <span class="kn">from</span> <span class="nn">..._utils.approximation_methods</span> <span class="kn">import</span> <span class="n">approximation_parameters</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
 <span class="kn">from</span> <span class="nn">..._utils.batching</span> <span class="kn">import</span> <span class="n">_batch_attribution</span>
-<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span><span class="p">,</span> <span class="n">_reshape_and_sum</span><span class="p">,</span> <span class="n">_validate_input</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+    <span class="n">_reshape_and_sum</span><span class="p">,</span>
+    <span class="n">_validate_input</span><span class="p">,</span>
+    <span class="n">neuron_index_deprecation_decorator</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="NeuronConductance"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronConductance">[docs]</a><span class="k">class</span> <span class="nc">NeuronConductance</span><span class="p">(</span><span class="n">NeuronAttribution</span><span class="p">,</span> <span class="n">GradientAttribution</span><span class="p">):</span>
@@ -73,7 +78,7 @@
 <span class="sd">                        modification of it</span>
 <span class="sd">            layer (torch.nn.Module): Layer for which neuron attributions are computed.</span>
 <span class="sd">                        Attributions for a particular neuron in the input or output</span>
-<span class="sd">                        of this layer are computed using the argument neuron_index</span>
+<span class="sd">                        of this layer are computed using the argument neuron_selector</span>
 <span class="sd">                        in the attribute method.</span>
 <span class="sd">                        Currently, only layers with a single tensor input or output</span>
 <span class="sd">                        are supported.</span>
@@ -112,10 +117,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
 <div class="viewcode-block" id="NeuronConductance.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronConductance.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="nd">@neuron_index_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">neuron_selector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -135,7 +141,7 @@
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            neuron_index (int or tuple): Index of neuron in output of given</span>
+<span class="sd">            neuron_selector (int or tuple): Index of neuron in output of given</span>
 <span class="sd">                            layer for which attribution is desired. Length of</span>
 <span class="sd">                            this tuple must be one less than the number of</span>
 <span class="sd">                            dimensions in the output of the given layer (since</span>
@@ -287,7 +293,7 @@
                 <span class="n">n_steps</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
                 <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
-                <span class="n">neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
+                <span class="n">neuron_selector</span><span class="o">=</span><span class="n">neuron_selector</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
                 <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
@@ -296,7 +302,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute</span><span class="p">(</span>
                 <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-                <span class="n">neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
+                <span class="n">neuron_selector</span><span class="o">=</span><span class="n">neuron_selector</span><span class="p">,</span>
                 <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
@@ -309,7 +315,7 @@
     <span class="k">def</span> <span class="nf">_attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">neuron_selector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -360,7 +366,7 @@
             <span class="n">inputs</span><span class="o">=</span><span class="n">scaled_features_tpl</span><span class="p">,</span>
             <span class="n">target_ind</span><span class="o">=</span><span class="n">expanded_target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">input_additional_args</span><span class="p">,</span>
-            <span class="n">gradient_neuron_index</span><span class="o">=</span><span class="n">neuron_index</span><span class="p">,</span>
+            <span class="n">gradient_neuron_selector</span><span class="o">=</span><span class="n">neuron_selector</span><span class="p">,</span>
             <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_neuron_input</span><span class="p">,</span>
         <span class="p">)</span>
@@ -375,7 +381,7 @@
         <span class="c1"># Multiplies by appropriate gradient of output with respect to hidden neurons</span>
         <span class="c1"># mid_grads is a 1D Tensor of length num_steps*internal_batch_size,</span>
         <span class="c1"># containing mid layer gradient for each input step.</span>
-        <span class="n">mid_grads</span> <span class="o">=</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">layer_gradients</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">)</span>
+        <span class="n">mid_grads</span> <span class="o">=</span> <span class="n">_verify_select_column</span><span class="p">(</span><span class="n">layer_gradients</span><span class="p">,</span> <span class="n">neuron_selector</span><span class="p">)</span>
 
         <span class="n">scaled_input_gradients</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">input_grad</span>

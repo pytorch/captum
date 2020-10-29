@@ -36,6 +36,7 @@
 <span class="kn">from</span> <span class="nn">...._utils.gradient</span> <span class="kn">import</span> <span class="n">construct_neuron_grad_fn</span>
 <span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">NeuronAttribution</span>
+<span class="kn">from</span> <span class="nn">..._utils.common</span> <span class="kn">import</span> <span class="n">neuron_index_deprecation_decorator</span>
 <span class="kn">from</span> <span class="nn">..integrated_gradients</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
 
 
@@ -99,10 +100,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_multiply_by_inputs</span> <span class="o">=</span> <span class="n">multiply_by_inputs</span>
 
 <div class="viewcode-block" id="NeuronIntegratedGradients.attribute"><a class="viewcode-back" href="../../../../../neuron.html#captum.attr.NeuronIntegratedGradients.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="nd">@neuron_index_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="n">neuron_index</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">],</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">neuron_selector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">Callable</span><span class="p">],</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
@@ -121,21 +123,39 @@
 <span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
 <span class="sd">                        to the number of examples, and if multiple input tensors</span>
 <span class="sd">                        are provided, the examples must be aligned appropriately.</span>
-<span class="sd">            neuron_index (int or tuple): Index of neuron or neurons in output of</span>
-<span class="sd">                            given layer for which attribution is desired. Length</span>
-<span class="sd">                            of this tuple must be one less than the number of</span>
-<span class="sd">                            dimensions in the output of the given layer (since</span>
-<span class="sd">                            dimension 0 corresponds to number of examples).</span>
-<span class="sd">                            The elements of the tuple can be either integers or</span>
-<span class="sd">                            slice objects (slice object also allows indexing a</span>
-<span class="sd">                            range of neurons rather individual ones).</span>
-<span class="sd">                            An integer may be provided instead of a tuple of</span>
-<span class="sd">                            length 1.</span>
-<span class="sd">                            If any of the tuple elements is a slice object, the</span>
-<span class="sd">                            indexed output tensor is used for attribution. Note</span>
-<span class="sd">                            that specifying a slice of a tesnor would amount to</span>
-<span class="sd">                            computing the attribution of the sum of the specified</span>
-<span class="sd">                            neurons, and not the individual neurons independantly.</span>
+<span class="sd">            neuron_selector (int, callable, or tuple of ints or slices):</span>
+<span class="sd">                        Selector for neuron</span>
+<span class="sd">                        in given layer for which attribution is desired.</span>
+<span class="sd">                        Neuron selector can be provided as:</span>
+
+<span class="sd">                        - a single integer, if the layer output is 2D. This integer</span>
+<span class="sd">                          selects the appropriate neuron column in the layer input</span>
+<span class="sd">                          or output</span>
+
+<span class="sd">                        - a tuple of integers or slice objects. Length of this</span>
+<span class="sd">                          tuple must be one less than the number of dimensions</span>
+<span class="sd">                          in the input / output of the given layer (since</span>
+<span class="sd">                          dimension 0 corresponds to number of examples).</span>
+<span class="sd">                          The elements of the tuple can be either integers or</span>
+<span class="sd">                          slice objects (slice object allows indexing a</span>
+<span class="sd">                          range of neurons rather individual ones).</span>
+
+<span class="sd">                          If any of the tuple elements is a slice object, the</span>
+<span class="sd">                          indexed output tensor is used for attribution. Note</span>
+<span class="sd">                          that specifying a slice of a tensor would amount to</span>
+<span class="sd">                          computing the attribution of the sum of the specified</span>
+<span class="sd">                          neurons, and not the individual neurons independantly.</span>
+
+<span class="sd">                        - a callable, which should</span>
+<span class="sd">                          take the target layer as input (single tensor or tuple</span>
+<span class="sd">                          if multiple tensors are in layer) and return a neuron or</span>
+<span class="sd">                          aggregate of the layer's neurons for attribution.</span>
+<span class="sd">                          For example, this function could return the</span>
+<span class="sd">                          sum of the neurons in the layer or sum of neurons with</span>
+<span class="sd">                          activations in a particular range. It is expected that</span>
+<span class="sd">                          this function returns either a tensor with one element</span>
+<span class="sd">                          or a 1D tensor with length equal to batch_size (one scalar</span>
+<span class="sd">                          per input example)</span>
 <span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
 <span class="sd">                        Baselines define the starting point from which integral</span>
 <span class="sd">                        is computed.</span>
@@ -244,7 +264,7 @@
 <span class="sd">        """</span>
         <span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiplies_by_inputs</span><span class="p">)</span>
         <span class="n">ig</span><span class="o">.</span><span class="n">gradient_func</span> <span class="o">=</span> <span class="n">construct_neuron_grad_fn</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">neuron_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="n">attribute_to_neuron_input</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">neuron_selector</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="n">attribute_to_neuron_input</span>
         <span class="p">)</span>
         <span class="c1"># NOTE: using __wrapped__ to not log</span>
         <span class="c1"># Return only attributions and not delta</span>
