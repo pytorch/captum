@@ -461,7 +461,7 @@ class NeuronAttribution(InternalAttribution):
     Args:
 
             inputs:     A single high dimensional input tensor or a tuple of them.
-            neuron_index (int or tuple): Tuple providing index of neuron in output
+            neuron_selector (int or tuple): Tuple providing index of neuron in output
                     of given layer for which attribution is desired. Length of
                     this tuple must be one less than the number of
                     dimensions in the output of the given layer (since

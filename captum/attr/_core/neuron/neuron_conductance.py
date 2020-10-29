@@ -20,7 +20,12 @@ from ...._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGe
 from ..._utils.approximation_methods import approximation_parameters
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
 from ..._utils.batching import _batch_attribution
-from ..._utils.common import _format_input_baseline, _reshape_and_sum, _validate_input
+from ..._utils.common import (
+    _format_input_baseline,
+    _reshape_and_sum,
+    _validate_input,
+    neuron_index_deprecation_decorator,
+)
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
@@ -46,7 +51,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         modification of it
             layer (torch.nn.Module): Layer for which neuron attributions are computed.
                         Attributions for a particular neuron in the input or output
-                        of this layer are computed using the argument neuron_index
+                        of this layer are computed using the argument neuron_selector
                         in the attribute method.
                         Currently, only layers with a single tensor input or output
                         are supported.
@@ -85,10 +90,11 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[int, ...]],
         baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
@@ -108,7 +114,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron in output of given
+            neuron_selector (int or tuple): Index of neuron in output of given
                             layer for which attribution is desired. Length of
                             this tuple must be one less than the number of
                             dimensions in the output of the given layer (since
@@ -260,7 +266,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 n_steps,
                 inputs=inputs,
                 baselines=baselines,
-                neuron_index=neuron_index,
+                neuron_selector=neuron_selector,
                 target=target,
                 additional_forward_args=additional_forward_args,
                 method=method,
@@ -269,7 +275,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         else:
             attrs = self._attribute(
                 inputs=inputs,
-                neuron_index=neuron_index,
+                neuron_selector=neuron_selector,
                 baselines=baselines,
                 target=target,
                 additional_forward_args=additional_forward_args,
@@ -282,7 +288,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[int, ...]],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
         additional_forward_args: Any = None,
@@ -333,7 +339,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             inputs=scaled_features_tpl,
             target_ind=expanded_target,
             additional_forward_args=input_additional_args,
-            gradient_neuron_index=neuron_index,
+            gradient_neuron_selector=neuron_selector,
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )
@@ -348,7 +354,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         # Multiplies by appropriate gradient of output with respect to hidden neurons
         # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
         # containing mid layer gradient for each input step.
-        mid_grads = _verify_select_column(layer_gradients, neuron_index)
+        mid_grads = _verify_select_column(layer_gradients, neuron_selector)
 
         scaled_input_gradients = tuple(
             input_grad

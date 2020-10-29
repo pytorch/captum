@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import functools
 import typing
+import warnings
 from inspect import signature
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 
@@ -343,3 +345,25 @@ def _find_output_mode_and_verify(
             isinstance(initial_eval, torch.Tensor) and initial_eval[0].numel() == 1
         ), "Target should identify a single element in the model output."
     return agg_output_mode
+
+
+def neuron_index_deprecation_decorator(func):
+    r"""
+    Decorator to deprecate neuron_index parameter for Neuron Attribution methods.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if "neuron_index" in kwargs:
+            kwargs["neuron_selector"] = kwargs["neuron_index"]
+            warnings.warn(
+                "neuron_index is being deprecated and replaced with neuron_selector "
+                "to support more general functionality. Please update the parameter "
+                "name to neuron_selector. Support for neuron_index will be removed "
+                "in Captum 0.4.0",
+                DeprecationWarning,
+            )
+            del kwargs["neuron_index"]
+        return func(*args, **kwargs)
+
+    return wrapper

@@ -9,6 +9,7 @@ from captum.log import log_usage
 from ...._utils.gradient import construct_neuron_grad_fn
 from ...._utils.typing import TensorOrTupleOfTensorsGeneric
 from ..._utils.attribution import GradientAttribution, NeuronAttribution
+from ..._utils.common import neuron_index_deprecation_decorator
 from ..integrated_gradients import IntegratedGradients
 
 
@@ -72,10 +73,11 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
+    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         baselines: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -94,21 +96,39 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_index (int or tuple): Index of neuron or neurons in output of
-                            given layer for which attribution is desired. Length
-                            of this tuple must be one less than the number of
-                            dimensions in the output of the given layer (since
-                            dimension 0 corresponds to number of examples).
-                            The elements of the tuple can be either integers or
-                            slice objects (slice object also allows indexing a
-                            range of neurons rather individual ones).
-                            An integer may be provided instead of a tuple of
-                            length 1.
-                            If any of the tuple elements is a slice object, the
-                            indexed output tensor is used for attribution. Note
-                            that specifying a slice of a tesnor would amount to
-                            computing the attribution of the sum of the specified
-                            neurons, and not the individual neurons independantly.
+            neuron_selector (int, callable, or tuple of ints or slices):
+                        Selector for neuron
+                        in given layer for which attribution is desired.
+                        Neuron selector can be provided as:
+
+                        - a single integer, if the layer output is 2D. This integer
+                          selects the appropriate neuron column in the layer input
+                          or output
+
+                        - a tuple of integers or slice objects. Length of this
+                          tuple must be one less than the number of dimensions
+                          in the input / output of the given layer (since
+                          dimension 0 corresponds to number of examples).
+                          The elements of the tuple can be either integers or
+                          slice objects (slice object allows indexing a
+                          range of neurons rather individual ones).
+
+                          If any of the tuple elements is a slice object, the
+                          indexed output tensor is used for attribution. Note
+                          that specifying a slice of a tensor would amount to
+                          computing the attribution of the sum of the specified
+                          neurons, and not the individual neurons independantly.
+
+                        - a callable, which should
+                          take the target layer as input (single tensor or tuple
+                          if multiple tensors are in layer) and return a neuron or
+                          aggregate of the layer's neurons for attribution.
+                          For example, this function could return the
+                          sum of the neurons in the layer or sum of neurons with
+                          activations in a particular range. It is expected that
+                          this function returns either a tensor with one element
+                          or a 1D tensor with length equal to batch_size (one scalar
+                          per input example)
             baselines (scalar, tensor, tuple of scalars or tensors, optional):
                         Baselines define the starting point from which integral
                         is computed.
@@ -217,7 +237,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         """
         ig = IntegratedGradients(self.forward_func, self.multiplies_by_inputs)
         ig.gradient_func = construct_neuron_grad_fn(
-            self.layer, neuron_index, self.device_ids, attribute_to_neuron_input
+            self.layer, neuron_selector, self.device_ids, attribute_to_neuron_input
         )
         # NOTE: using __wrapped__ to not log
         # Return only attributions and not delta

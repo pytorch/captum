@@ -140,6 +140,13 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], [[-0.0, 0.0, -0.0]])
         assertTensorAlmostEqual(self, attributions[1], [[2.0, 3.0, 0.0]])
 
+        attributions = neuron_dl.attribute(
+            inputs, lambda x: x[:, 0], baselines, attribute_to_neuron_input=False
+        )
+
+        assertTensorAlmostEqual(self, attributions[0], [[-0.0, 0.0, -0.0]])
+        assertTensorAlmostEqual(self, attributions[1], [[2.0, 3.0, 0.0]])
+
     def test_relu_deepliftshap_with_custom_attr_func(self) -> None:
         model = ReLULinearModel()
         (
@@ -176,12 +183,12 @@ class Test(BaseTest):
 
         model = LinearMaxPoolLinearModel()
         ndl = NeuronDeepLift(model, model.pool1)
-        attr = ndl.attribute(inputs, neuron_index=(0), baselines=baselines)
+        attr = ndl.attribute(inputs, neuron_selector=(0), baselines=baselines)
 
         ndl2 = NeuronDeepLift(model, model.lin2)
         attr2 = ndl2.attribute(
             inputs,
-            neuron_index=(0),
+            neuron_selector=(0),
             baselines=baselines,
             attribute_to_neuron_input=True,
         )
@@ -192,11 +199,11 @@ class Test(BaseTest):
         model = BasicModel_ConvNet()
 
         ndl = NeuronDeepLift(model, model.pool1)
-        attr = ndl.attribute(inputs, neuron_index=(0, 0, 0))
+        attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0))
 
         ndl2 = NeuronDeepLift(model, model.conv2)
         attr2 = ndl2.attribute(
-            inputs, neuron_index=(0, 0, 0), attribute_to_neuron_input=True
+            inputs, neuron_selector=(0, 0, 0), attribute_to_neuron_input=True
         )
 
         assertTensorAlmostEqual(self, attr.sum(), attr2.sum())
@@ -206,11 +213,11 @@ class Test(BaseTest):
         model = BasicModel_ConvNet_MaxPool3d()
 
         ndl = NeuronDeepLift(model, model.pool1)
-        attr = ndl.attribute(inputs, neuron_index=(0, 0, 0, 0))
+        attr = ndl.attribute(inputs, neuron_selector=(0, 0, 0, 0))
 
         ndl2 = NeuronDeepLift(model, model.conv2)
         attr2 = ndl2.attribute(
-            inputs, neuron_index=(0, 0, 0, 0), attribute_to_neuron_input=True
+            inputs, neuron_selector=(0, 0, 0, 0), attribute_to_neuron_input=True
         )
 
         assertTensorAlmostEqual(self, attr.sum(), attr2.sum())

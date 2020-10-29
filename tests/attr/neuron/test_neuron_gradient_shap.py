@@ -46,6 +46,9 @@ class Test(BaseTest):
         self._assert_attributions(
             model, model.linear1, inputs, baselines, (slice(0, 1, 1),), 60
         )
+        self._assert_attributions(
+            model, model.linear1, inputs, baselines, lambda x: x[:, 0:1], 60
+        )
 
     def test_classification(self) -> None:
         def custom_baseline_fn(inputs: Tensor) -> Tensor:
@@ -70,7 +73,7 @@ class Test(BaseTest):
         layer: Module,
         inputs: Tensor,
         baselines: Union[Tensor, Callable[..., Tensor]],
-        neuron_ind: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_ind: Union[int, Tuple[Union[int, slice], ...], Callable],
         n_samples: int = 5,
     ) -> None:
         ngs = NeuronGradientShap(model, layer)
