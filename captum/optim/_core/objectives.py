@@ -209,6 +209,14 @@ def deepdream(target: nn.Module) -> LossFunction:
     return loss_function
 
 
+def l1(target: nn.Module, constant: float = 0) -> LossFunction:
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return torch.abs(activations - constant)
+
+    return loss_function
+
+
 def diversity(target: nn.Module) -> LossFunction:
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
