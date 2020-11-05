@@ -225,8 +225,8 @@ def total_variation(target: nn.Module) -> LossFunction:
     """
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
-        x_diff = activations[:, :, 1:, :] - activations[:, :, :-1, :]
-        y_diff = activations[:, :, :, 1:] - activations[:, :, :, :-1]
+        x_diff = activations[..., 1:, :] - activations[..., :-1, :]
+        y_diff = activations[..., :, 1:] - activations[..., :, :-1]
         return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
 
     return loss_function
