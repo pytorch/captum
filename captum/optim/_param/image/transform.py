@@ -40,17 +40,14 @@ class CenterCrop(torch.nn.Module):
     """
     Center crop the specified amount of pixels from the edges.
     Arguments:
-        size (int, sequence) or (int): Tuple of pixels to center crop away
+        size (int, sequence) or (int): Number of pixels to center crop away.
     """
     def __init__(self, size = 0):
         super(CenterCrop, self).__init__()
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
     def forward(self, input):
-        if input.dim() == 4:
-            h, w = input.size(2), input.size(3)         
-        elif input.dim() == 3:
-            h, w = input.size(1), input.size(2)          
+        h, w = input.size(2), input.size(3)      
         h_crop = h - self.crop_val[0]
         w_crop = w - self.crop_val[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
@@ -94,7 +91,11 @@ class RandomScale(nn.Module):
 
 
 class RandomSpatialJitter(torch.nn.Module):
-
+    """
+    Apply random spatial translations on a NCHW tensor.
+    Arguments:
+        translate (int): 
+    """
     def __init__(self, translate, mode='roll'):
         super(Jitter, self).__init__()
         if self.mode == 'roll':
