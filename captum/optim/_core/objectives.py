@@ -56,7 +56,8 @@ class InputOptimization(Objective, Parameterized):
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
-        self.transform = transform or torch.nn.Sequential((RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16))
+        self.transform = transform or torch.nn.Sequential(
+            (RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16))
         )
         self.loss_function = loss_function
         self.lr = lr
@@ -204,7 +205,7 @@ def neuron_activation(
     return loss_function
 
 
-def deepdream(target: nn.Module, power: float=2) -> LossFunction:
+def deepdream(target: nn.Module, power: float = 2) -> LossFunction:
     """
     Maximize activations at the target layer.
     Mordvintsev et al., 2015.
