@@ -42,7 +42,8 @@ class CenterCrop(torch.nn.Module):
     Arguments:
         size (int, sequence) or (int): Number of pixels to center crop away.
     """
-    def __init__(self, size = 0):
+
+    def __init__(self, size=0):
         super(CenterCrop, self).__init__()
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
@@ -54,9 +55,9 @@ class CenterCrop(torch.nn.Module):
         h_crop = h - self.crop_val[0]
         w_crop = w - self.crop_val[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
-        return input[..., sh:sh + h_crop, sw:sw + w_crop]
+        return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
-    
+
 def rand_select(transform_values):
     """
     Randomly return a value from the provided tuple or list
@@ -75,7 +76,7 @@ class RandomScale(nn.Module):
     def __init__(self, scale):
         super(RandomScale, self).__init__()
         self.scale = scale
-       
+
     def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
         scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
         return scale_mat
@@ -89,7 +90,7 @@ class RandomScale(nn.Module):
         return x
 
     def forward(self, input):
-        scale = rand_select(self.scale)        
+        scale = rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
 
@@ -97,20 +98,25 @@ class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
     Arguments:
-        translate (int): 
+        translate (int):
     """
-    def __init__(self, translate, mode='reflect'):
+
+    def __init__(self, translate, mode="reflect"):
         super(RandomSpatialJitter, self).__init__()
         self.mode = mode
-        if self.mode == 'roll':
+        if self.mode == "roll":
             self.jitter_val = translate
-        elif self.mode == 'reflect': 
+        elif self.mode == "reflect":
             self.pad_range = 2 * translate
             self.pad = nn.ReflectionPad2d(translate)
-    
+
     def roll_tensor(self, x):
-        h_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
-        w_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
+        h_shift = torch.randint(
+            low=-self.jitter_val, high=self.jitter_val, size=[1]
+        ).item()
+        w_shift = torch.randint(
+            low=-self.jitter_val, high=self.jitter_val, size=[1]
+        ).item()
         return torch.roll(torch.roll(x, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
 
     def translate_tensor(self, x):
@@ -124,12 +130,12 @@ class RandomSpatialJitter(torch.nn.Module):
         ]
         cropped = F.pad(padded, pad=tblr)
         assert cropped.shape == x.shape
-        return cropped   
-    
+        return cropped
+
     def forward(self, input):
-        if self.mode == 'roll':
-            return self.roll_tensor(input)        
-        elif self.mode == 'reflect':
+        if self.mode == "roll":
+            return self.roll_tensor(input)
+        elif self.mode == "reflect":
             return self.translate_tensor(input)
 
 
