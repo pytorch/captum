@@ -96,7 +96,7 @@ class RandomSpatialJitter(torch.nn.Module):
     Arguments:
         translate (int): 
     """
-    def __init__(self, translate, mode='roll'):
+    def __init__(self, translate, mode='reflect'):
         super(Jitter, self).__init__()
         if self.mode == 'roll':
             self.jitter_val = translate
