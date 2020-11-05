@@ -159,6 +159,10 @@ def n_steps(n: int) -> StopCriteria:
 
 
 def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
+    """
+    Maximize activations at the target layer and target channel.
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         assert activations is not None
