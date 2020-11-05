@@ -159,6 +159,10 @@ def n_steps(n: int) -> StopCriteria:
 
 
 def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
+    """
+    Maximize activations at the target layer and target channel.
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         assert activations is not None
@@ -202,6 +206,11 @@ def neuron_activation(
 
 
 def deepdream(target: nn.Module) -> LossFunction:
+    """
+    Maximize activations at the target layer.
+    Mordvintsev et al., 2015.
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return activations ** 2
@@ -210,6 +219,10 @@ def deepdream(target: nn.Module) -> LossFunction:
 
 
 def l1(target: nn.Module, constant: float = 0) -> LossFunction:
+    """
+    L1 norm of the target layer, generally used as a penalty. 
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return torch.abs(activations - constant).sum()
@@ -218,6 +231,12 @@ def l1(target: nn.Module, constant: float = 0) -> LossFunction:
 
 
 def diversity(target: nn.Module) -> LossFunction:
+    """
+    Use a cosine similarity penalty to extract features from a polysemantic neuron.
+    Olah, Mordvintsev & Schubert, 2017.
+    https://distill.pub/2017/feature-visualization/#diversity
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return -sum(
