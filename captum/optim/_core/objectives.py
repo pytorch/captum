@@ -218,6 +218,21 @@ def deepdream(target: nn.Module, power: float = 2) -> LossFunction:
     return loss_function
 
 
+def total_variation(target: nn.Module) -> LossFunction:
+    """
+    Total variation denoising penalty for activations.
+    See Simonyan, et al., 2014.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        x_diff = activations[..., 1:, :] - activations[..., :-1, :]
+        y_diff = activations[..., :, 1:] - activations[..., :, :-1]
+        return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
+
+    return loss_function
+
+
 def l1(target: nn.Module, constant: float = 0) -> LossFunction:
     """
     L1 norm of the target layer, generally used as a penalty.
@@ -226,6 +241,19 @@ def l1(target: nn.Module, constant: float = 0) -> LossFunction:
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return torch.abs(activations - constant).sum()
+
+    return loss_function
+
+
+def l2(target: nn.Module, constant: float = 0, epsilon: float = 1e-6) -> LossFunction:
+    """
+    L2 norm of the target layer, generally used as a penalty.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        activations = (activations - constant).sum()
+        return torch.sqrt(epsilon + activations)
 
     return loss_function
 
