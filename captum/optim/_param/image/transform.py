@@ -36,6 +36,20 @@ class IgnoreAlpha(nn.Module):
         return rgb
 
 
+class CenterCrop(torch.nn.Module):
+
+    def __init__(self, size = 0):
+        super(CenterCrop, self).__init__()
+        self.crop_val = [size] * 2 if size is not list and size is not tuple else size
+
+    def forward(self, input):
+        h, w = input.size(2), input.size(3)
+        h_crop = input.size(2) - self.crop_val[0]
+        w_crop = input.size(3) - self.crop_val[1]
+        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
+        return input[:, :, sh:sh + h_crop, sw:sw + w_crop]
+
+    
 def rand_select(transform_values):
     """
     Randomly return a value from the provided tuple or list
@@ -44,26 +58,54 @@ def rand_select(transform_values):
     return transform_values[n]
 
 
-# class RandomSpatialJitter(nn.Module):
-#     def __init__(self, max_distance):
-#         super().__init__()
+class RandomScale(nn.Module):
+    """
+    Apply random rescaling on a NCHW tensor.
+    Arguments:
+        scale (float, sequence): Tuple of rescaling values to randomly select from.
+        mode (str): What rescaling method to use.
+    """
 
-#         self.pad_range = 2 * max_distance
-#         self.pad = nn.ReflectionPad2d(max_distance)
+    def __init__(self, scale, mode='interpolate'):
+        super(RandomScale, self).__init__()
+        self.scale = scale
+        self.mode = mode
+       
+    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
+        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
+        return scale_mat
 
-#     def forward(self, x):
-#         padded = self.pad(x)
-#         insets = torch.randint(high=self.pad_range, size=(2,))
-#         tblr = [
-#             -insets[0],
-#             -(self.pad_range - insets[0]),
-#             -insets[1],
-#             -(self.pad_range - insets[1]),
-#         ]
-#         cropped = F.pad(padded, pad=tblr)
-#         assert cropped.shape == x.shape
-#         return cropped
+    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
+        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
+        )
+        grid = F.affine_grid(scale_matrix, x.size())
+        x = F.grid_sample(x, grid)
+        return x
+ 
+    def interpolate_tensor(self, input, scale):
+        return torch.nn.functional.interpolate(
+            input, scale_factor=scale, mode="bilinear"
+        )
 
+    def forward(self, input):
+        scale = rand_select(self.scale)
+        if self.mode == 'interpolate':
+            return self.interpolate_tensor(input, scale=scale)        
+        elif self.mode == 'affine_grid':
+            return self.scale_tensor(input, scale=scale)
+
+    
+class RandomSpatialJitter(torch.nn.Module):
+
+    def __init__(self, jitter_val):
+        super(Jitter, self).__init__()
+        self.jitter_val = jitter_val
+
+    def forward(self, input):
+        h_shift = = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
+        w_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
+        return torch.roll(torch.roll(input, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
 
 
 # class TransformationRobustness(nn.Module):
@@ -113,7 +155,7 @@ class GaussianSmoothing(nn.Module):
             Default value is 2 (spatial).
     """
 
-    def __init__(self, channels, kernel_size, sigma, dim=2):
+    def __init__(self, channels, kernel_size, sigma, dim: int = 2):
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim
