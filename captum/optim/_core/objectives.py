@@ -203,6 +203,7 @@ def neuron_activation(
 
 def deepdream(target: nn.Module) -> LossFunction:
     """
+    Maximize activations at the target layer.
     Mordvintsev et al., 2015.
     """
 
