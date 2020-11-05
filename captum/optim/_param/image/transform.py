@@ -101,14 +101,37 @@ class RandomScale(nn.Module):
     
 class RandomSpatialJitter(torch.nn.Module):
 
-    def __init__(self, jitter_val):
+    def __init__(self, translate, mode='roll'):
         super(Jitter, self).__init__()
-        self.jitter_val = jitter_val
-
-    def forward(self, input):
+        if self.mode == 'roll':
+            self.jitter_val = translate
+        elif self.mode == 'reflect': 
+            self.pad_range = 2 * translate
+            self.pad = nn.ReflectionPad2d(translate)
+    
+    def roll_tensor(self, x):
         h_shift = = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
         w_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
-        return torch.roll(torch.roll(input, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
+        return torch.roll(torch.roll(x, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
+
+    def translate_tensor(self, x):
+        padded = self.pad(x)
+        insets = torch.randint(high=self.pad_range, size=(2,))
+        tblr = [
+            -insets[0],
+            -(self.pad_range - insets[0]),
+            -insets[1],
+            -(self.pad_range - insets[1]),
+        ]
+        cropped = F.pad(padded, pad=tblr)
+        assert cropped.shape == x.shape
+        return cropped   
+    
+    def forward(self, input):
+        if self.mode == 'roll':
+            return self.roll_tensor(input)        
+        elif self.mode == 'reflect':
+            return self.translate_tensor(input)
 
 
 # class TransformationRobustness(nn.Module):
