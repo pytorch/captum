@@ -110,7 +110,7 @@ class RandomSpatialJitter(torch.nn.Module):
             self.pad = nn.ReflectionPad2d(translate)
     
     def roll_tensor(self, x):
-        h_shift = = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
+        h_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
         w_shift = torch.randint(low=-self.jitter_val, high=self.jitter_val, size=[1]).item()
         return torch.roll(torch.roll(x, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
 
