@@ -202,6 +202,9 @@ def neuron_activation(
 
 
 def deepdream(target: nn.Module) -> LossFunction:
+    """
+    Mordvintsev et al., 2015.
+    """
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return activations ** 2
@@ -218,6 +221,10 @@ def l1(target: nn.Module, constant: float = 0) -> LossFunction:
 
 
 def diversity(target: nn.Module) -> LossFunction:
+    """
+    https://distill.pub/2017/feature-visualization/ (Olah, Mordvintsev & Schubert, 2017)
+    Use a cosine similarity penatly to extract features from a polysemantic neuron.
+    """
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return -sum(
