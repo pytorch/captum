@@ -36,22 +36,26 @@ class IgnoreAlpha(nn.Module):
         return rgb
 
 
-def center_crop(input: torch.Tensor, output_size) -> torch.Tensor:
-    if isinstance(output_size, numbers.Number):
-        output_size = (int(output_size), int(output_size))
-    if len(output_size) == 4:  # assume NCHW
-        output_size = output_size[2:]
+class CenterCrop(torch.nn.Module):
+    """
+    Center crop the specified amount of pixels from the edges.
+    Arguments:
+        size (int, sequence) or (int): Number of pixels to center crop away.
+    """
 
-    assert len(output_size) == 2 and len(input.shape) == 4
+    def __init__(self, size=0):
+        super(CenterCrop, self).__init__()
+        self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
-    image_width, image_height = input.shape[2:]
-    height, width = output_size
-    top = int(round((image_height - height) / 2.0))
-    left = int(round((image_width - width) / 2.0))
-
-    return F.pad(
-        input, [top, height - image_height - top, left, width - image_width - left]
-    )
+    def forward(self, input):
+        if input.dim() == 4:
+            h, w = input.size(2), input.size(3)
+        elif input.dim() == 3:
+            h, w = input.size(1), input.size(2)
+        h_crop = h - self.crop_val[0]
+        w_crop = w - self.crop_val[1]
+        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
+        return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
 
 def rand_select(transform_values):
@@ -60,27 +64,6 @@ def rand_select(transform_values):
     """
     n = torch.randint(low=0, high=len(transform_values) - 1, size=[1]).item()
     return transform_values[n]
-
-
-# class RandomSpatialJitter(nn.Module):
-#     def __init__(self, max_distance):
-#         super().__init__()
-
-#         self.pad_range = 2 * max_distance
-#         self.pad = nn.ReflectionPad2d(max_distance)
-
-#     def forward(self, x):
-#         padded = self.pad(x)
-#         insets = torch.randint(high=self.pad_range, size=(2,))
-#         tblr = [
-#             -insets[0],
-#             -(self.pad_range - insets[0]),
-#             -insets[1],
-#             -(self.pad_range - insets[1]),
-#         ]
-#         cropped = F.pad(padded, pad=tblr)
-#         assert cropped.shape == x.shape
-#         return cropped
 
 
 class RandomScale(nn.Module):
@@ -94,14 +77,66 @@ class RandomScale(nn.Module):
         super(RandomScale, self).__init__()
         self.scale = scale
 
-    def rescale_tensor(self, input, scale):
-        return torch.nn.functional.interpolate(
-            input, scale_factor=scale, mode="bilinear"
+    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
+        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
+        return scale_mat
+
+    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
+        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
         )
+        grid = F.affine_grid(scale_matrix, x.size())
+        x = F.grid_sample(x, grid)
+        return x
 
     def forward(self, input):
         scale = rand_select(self.scale)
-        return self.rescale_tensor(input, scale=scale)
+        return self.scale_tensor(input, scale=scale)
+
+
+class RandomSpatialJitter(torch.nn.Module):
+    """
+    Apply random spatial translations on a NCHW tensor.
+    Arguments:
+        translate (int):
+    """
+
+    def __init__(self, translate, mode="reflect"):
+        super(RandomSpatialJitter, self).__init__()
+        self.mode = mode
+        if self.mode == "roll":
+            self.jitter_val = translate
+        elif self.mode == "reflect":
+            self.pad_range = 2 * translate
+            self.pad = nn.ReflectionPad2d(translate)
+
+    def roll_tensor(self, x):
+        h_shift = torch.randint(
+            low=-self.jitter_val, high=self.jitter_val, size=[1]
+        ).item()
+        w_shift = torch.randint(
+            low=-self.jitter_val, high=self.jitter_val, size=[1]
+        ).item()
+        return torch.roll(torch.roll(x, shifts=h_shift, dims=2), shifts=w_shift, dims=3)
+
+    def translate_tensor(self, x):
+        padded = self.pad(x)
+        insets = torch.randint(high=self.pad_range, size=(2,))
+        tblr = [
+            -insets[0],
+            -(self.pad_range - insets[0]),
+            -insets[1],
+            -(self.pad_range - insets[1]),
+        ]
+        cropped = F.pad(padded, pad=tblr)
+        assert cropped.shape == x.shape
+        return cropped
+
+    def forward(self, input):
+        if self.mode == "roll":
+            return self.roll_tensor(input)
+        elif self.mode == "reflect":
+            return self.translate_tensor(input)
 
 
 # class TransformationRobustness(nn.Module):
@@ -120,115 +155,6 @@ class RandomScale(nn.Module):
 #             x = self.scale(x)
 #         cropped = center_crop(x, original_shape)
 #         return cropped
-
-
-class RandomAffine(nn.Module):
-    """
-    Apply random affine transforms on a NCHW tensor.
-    Arguments:
-        rotate (float, sequence): Tuple of degrees to randomly select from.
-        scale (float, sequence): Tuple of scale factors to randomly select from.
-        shear (float, sequence): Tuple of shear values to randomly select from.
-            Optionally provide a tuple that contains a tuple for the x translation
-            and a tuple for y translations.
-        translate (int, sequence): Tuple of values to randomly select from.
-            Optionally provide a tuple that contains a tuple for the x shear values
-            and a tuple for y shear values.
-    """
-
-    def __init__(self, rotate=None, scale=None, shear=None, translate=None):
-        super().__init__()
-        self.rotate = rotate
-        self.scale = scale
-        self.shear = shear if shear is None or len(shear) == 2 else [shear] * 2
-        self.translate = (
-            translate if translate is None or len(translate) == 2 else [translate] * 2
-        )
-
-    def get_rot_mat(self, theta, device, dtype) -> torch.Tensor:
-        theta = torch.tensor(theta, device=device, dtype=dtype)
-        rot_mat = torch.tensor(
-            [
-                [torch.cos(theta), -torch.sin(theta), 0],
-                [torch.sin(theta), torch.cos(theta), 0],
-            ],
-            device=device,
-            dtype=dtype,
-        )
-        return rot_mat
-
-    def rotate_tensor(self, x: torch.Tensor, theta) -> torch.Tensor:
-        theta = theta * 3.141592653589793 / 180
-        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
-            x.shape[0], 1, 1
-        )
-        grid = F.affine_grid(rot_matrix, x.size())
-        x = F.grid_sample(x, grid)
-        return x
-
-    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
-        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
-        return scale_mat
-
-    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
-        scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
-            x.shape[0], 1, 1
-        )
-        grid = F.affine_grid(scale_matrix, x.size())
-        x = F.grid_sample(x, grid)
-        return x
-
-    def get_shear_mat(self, theta, ax: int, device, dtype) -> torch.Tensor:
-        m = 1 / torch.tan(torch.tensor(theta, device=device, dtype=dtype))
-        if ax == 0:
-            shear_mat = torch.tensor([[1, m, 0], [0, 1, 0]])
-        else:
-            shear_mat = torch.tensor([[1, 0, 0], [m, 1, 0]])
-        return shear_mat
-
-    def shear_tensor(self, x: torch.Tensor, shear_vals) -> torch.Tensor:
-        if shear_vals[0] > 0:
-            shear_matrix = self.get_shear_mat(shear_vals[0], 0, x.device, x.dtype)[
-                None, ...
-            ].repeat(x.shape[0], 1, 1)
-            grid = F.affine_grid(shear_matrix, x.size())
-            x = F.grid_sample(x, grid)
-        if shear_vals[1] > 0:
-            shear_matrix = self.get_shear_mat(shear_vals[1], 1, x.device, x.dtype)[
-                None, ...
-            ].repeat(x.shape[0], 1, 1)
-            grid = F.affine_grid(shear_matrix, x.size())
-            x = F.grid_sample(x, grid)
-        return x
-
-    def translate_tensor(
-        self, x: torch.Tensor, translation_x: int, translation_y: int
-    ) -> torch.Tensor:
-        x = torch.roll(x, shifts=translation_x, dims=2)
-        x = torch.roll(x, shifts=translation_y, dims=3)
-        return x
-
-    def forward(self, x):
-        if self.rotate is not None:
-            rotate_angle = rand_select(self.rotate)
-            logging.info(f"Rotate: {rotate_angle}")
-            x = self.rotate_tensor(x, rotate_angle)
-        if self.scale is not None:
-            scale_factor = rand_select(self.scale)
-            logging.info(f"Scale: {scale_factor}")
-            x = self.scale_tensor(x, scale_factor)
-        if self.shear is not None:
-            shear_values = (rand_select(self.shear[0]), rand_select(self.shear[1]))
-            logging.info(f"Shear: {shear_values}")
-            x = self.shear_tensor(x, shear_values)
-        if self.translate is not None:
-            translations = (
-                rand_select(self.translate[0]),
-                rand_select(self.translate[1]),
-            )
-            logging.info(f"Translate: {translations}")
-            x = self.translate_tensor(x, *translations)
-        return x
 
 
 # class RandomHomography(nn.Module):
@@ -260,7 +186,7 @@ class GaussianSmoothing(nn.Module):
             Default value is 2 (spatial).
     """
 
-    def __init__(self, channels, kernel_size, sigma, dim=2):
+    def __init__(self, channels, kernel_size, sigma, dim: int = 2):
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim
@@ -311,24 +237,3 @@ class GaussianSmoothing(nn.Module):
             filtered (torch.Tensor): Filtered output.
         """
         return self.conv(input, weight=self.weight, groups=self.groups)
-
-
-class Normalize(nn.Module):
-    """
-    Normalize and optionally change the value range of a NCHW tensor.
-    Arguments:
-        mean (float, sequence): Tuple of mean values to use for
-            input normalization.
-        std (float, sequence): Tuple of standard deviation to use for
-            input normalization.
-    Returns:
-        normalized tensor
-    """
-
-    def __init__(self, mean, std=[1, 1, 1]):
-        super().__init__()
-        self.mean = torch.as_tensor(mean).view(3, 1, 1).to(device)
-        self.std = torch.as_tensor(std).view(3, 1, 1).to(device)
-
-    def forward(self, x):
-        return (x - self.mean) / self.std

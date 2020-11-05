@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
-from captum.optim._param.image.transform import RandomAffine
+from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
     ModuleOutputMapping,
@@ -56,8 +56,8 @@ class InputOptimization(Objective, Parameterized):
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
-        self.transform = transform or RandomAffine(
-            scale=(1, 0.975, 1.025, 0.95, 1.05), translate=tuple(range(-16, 16))
+        self.transform = transform or torch.nn.Sequential(
+            (RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16))
         )
         self.loss_function = loss_function
         self.lr = lr
@@ -205,7 +205,7 @@ def neuron_activation(
     return loss_function
 
 
-def deepdream(target: nn.Module) -> LossFunction:
+def deepdream(target: nn.Module, power: float = 2) -> LossFunction:
     """
     Maximize activations at the target layer.
     Mordvintsev et al., 2015.
@@ -213,7 +213,7 @@ def deepdream(target: nn.Module) -> LossFunction:
 
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
-        return activations ** 2
+        return activations ** power
 
     return loss_function
 
