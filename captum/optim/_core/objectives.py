@@ -244,6 +244,18 @@ def l1(target: nn.Module, constant: float = 0) -> LossFunction:
     return loss_function
 
 
+def l2(target: nn.Module, constant: float = 0, epsilon: float = 1e-6) -> LossFunction:
+    """
+    L2 norm of the target layer, generally used as a penalty.
+    """
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        activations = (activations - constant).sum()
+        return torch.sqrt(epsilon + activations)
+
+    return loss_function
+
+
 def diversity(target: nn.Module) -> LossFunction:
     """
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
