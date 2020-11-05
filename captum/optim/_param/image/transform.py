@@ -66,13 +66,11 @@ class RandomScale(nn.Module):
     Apply random rescaling on a NCHW tensor.
     Arguments:
         scale (float, sequence): Tuple of rescaling values to randomly select from.
-        mode (str): What rescaling method to use.
     """
 
-    def __init__(self, scale, mode='interpolate'):
+    def __init__(self, scale):
         super(RandomScale, self).__init__()
         self.scale = scale
-        self.mode = mode
        
     def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
         scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
@@ -85,20 +83,12 @@ class RandomScale(nn.Module):
         grid = F.affine_grid(scale_matrix, x.size())
         x = F.grid_sample(x, grid)
         return x
- 
-    def interpolate_tensor(self, input, scale):
-        return torch.nn.functional.interpolate(
-            input, scale_factor=scale, mode="bilinear"
-        )
 
     def forward(self, input):
-        scale = rand_select(self.scale)
-        if self.mode == 'interpolate':
-            return self.interpolate_tensor(input, scale=scale)        
-        elif self.mode == 'affine_grid':
-            return self.scale_tensor(input, scale=scale)
+        scale = rand_select(self.scale)        
+        return self.scale_tensor(input, scale=scale)
 
-    
+
 class RandomSpatialJitter(torch.nn.Module):
 
     def __init__(self, translate, mode='roll'):
