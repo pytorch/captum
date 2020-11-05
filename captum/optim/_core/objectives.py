@@ -219,6 +219,10 @@ def deepdream(target: nn.Module) -> LossFunction:
 
 
 def l1(target: nn.Module, constant: float = 0) -> LossFunction:
+    """
+    L1 norm of the target layer, generally used as a penalty. 
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         return torch.abs(activations - constant).sum()
