@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
-from captum.optim._param.image.transform import RandomAffine
+from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
     ModuleOutputMapping,
@@ -56,8 +56,7 @@ class InputOptimization(Objective, Parameterized):
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
-        self.transform = transform or RandomAffine(
-            scale=(1, 0.975, 1.025, 0.95, 1.05), translate=tuple(range(-16, 16))
+        self.transform = transform or torch.nn.Sequential((RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16))
         )
         self.loss_function = loss_function
         self.lr = lr
