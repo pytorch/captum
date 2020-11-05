@@ -37,7 +37,11 @@ class IgnoreAlpha(nn.Module):
 
 
 class CenterCrop(torch.nn.Module):
-
+    """
+    Center crop the specified amount of pixels from the edges.
+    Arguments:
+        size (int, sequence) or (int): Tuple of pixels to center crop away
+    """
     def __init__(self, size = 0):
         super(CenterCrop, self).__init__()
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
