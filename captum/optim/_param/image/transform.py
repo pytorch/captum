@@ -43,9 +43,12 @@ class CenterCrop(torch.nn.Module):
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
     def forward(self, input):
-        h, w = input.size(2), input.size(3)
-        h_crop = input.size(2) - self.crop_val[0]
-        w_crop = input.size(3) - self.crop_val[1]
+        if input.dim() == 4:
+            h, w = input.size(2), input.size(3)         
+        elif input.dim() == 3:
+            h, w = input.size(1), input.size(2)          
+        h_crop = h - self.crop_val[0]
+        w_crop = w - self.crop_val[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         return input[:, :, sh:sh + h_crop, sw:sw + w_crop]
 
