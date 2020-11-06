@@ -4,13 +4,12 @@ from typing import Any, Callable, List, Tuple, Union
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.gradient import construct_neuron_grad_fn
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
+from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
-
-from ...._utils.gradient import construct_neuron_grad_fn
-from ...._utils.typing import TensorOrTupleOfTensorsGeneric
-from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.common import neuron_index_deprecation_decorator
-from ..integrated_gradients import IntegratedGradients
 
 
 class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):

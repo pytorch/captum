@@ -3,22 +3,21 @@ from typing import Any, Callable, List, Tuple, Union
 
 from torch.nn import Module
 
-from captum.log import log_usage
-
-from ...._utils.common import (
+from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
     _format_output,
     _is_tuple,
 )
-from ...._utils.gradient import (
+from captum._utils.gradient import (
     _forward_layer_eval_with_neuron_grads,
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
-from ...._utils.typing import TensorOrTupleOfTensorsGeneric
-from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.common import neuron_index_deprecation_decorator
+from captum._utils.typing import TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
+from captum.attr._utils.common import neuron_index_deprecation_decorator
+from captum.log import log_usage
 
 
 class NeuronGradient(NeuronAttribution, GradientAttribution):

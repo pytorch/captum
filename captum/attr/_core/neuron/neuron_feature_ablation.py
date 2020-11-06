@@ -4,14 +4,13 @@ from typing import Any, Callable, List, Tuple, Union
 import torch
 from torch.nn import Module
 
+from captum._utils.common import _verify_select_neuron
+from captum._utils.gradient import _forward_layer_eval
+from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._utils.attribution import NeuronAttribution, PerturbationAttribution
+from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
-
-from ...._utils.common import _verify_select_neuron
-from ...._utils.gradient import _forward_layer_eval
-from ...._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from ..._utils.attribution import NeuronAttribution, PerturbationAttribution
-from ..._utils.common import neuron_index_deprecation_decorator
-from ..feature_ablation import FeatureAblation
 
 
 class NeuronFeatureAblation(NeuronAttribution, PerturbationAttribution):

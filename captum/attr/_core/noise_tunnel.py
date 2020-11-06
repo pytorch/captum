@@ -5,9 +5,7 @@ from typing import Any, Tuple, Union
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
     _expand_and_update_target,
@@ -16,8 +14,9 @@ from ..._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
 )
-from .._utils.attribution import Attribution, GradientAttribution
-from .._utils.common import _validate_noise_tunnel_type
+from captum.attr._utils.attribution import Attribution, GradientAttribution
+from captum.attr._utils.common import _validate_noise_tunnel_type
+from captum.log import log_usage
 
 
 class NoiseTunnelType(Enum):

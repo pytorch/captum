@@ -7,9 +7,7 @@ from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
@@ -18,13 +16,14 @@ from ..._utils.common import (
     _is_tuple,
     _run_forward,
 )
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import PerturbationAttribution
-from .._utils.common import (
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import PerturbationAttribution
+from captum.attr._utils.common import (
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
 )
+from captum.log import log_usage
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:

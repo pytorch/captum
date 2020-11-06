@@ -9,7 +9,7 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .._utils.typing import (
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
