@@ -4,12 +4,14 @@ from typing import Any, Callable
 
 import torch
 
+from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.gradient import (
+    apply_gradient_requirements,
+    undo_gradient_requirements,
+)
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import GradientAttribution
 from captum.log import log_usage
-
-from ..._utils.common import _format_input, _format_output, _is_tuple
-from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
-from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import GradientAttribution
 
 
 class Saliency(GradientAttribution):
@@ -30,10 +32,6 @@ class Saliency(GradientAttribution):
                         any modification of it
         """
         GradientAttribution.__init__(self, forward_func)
-
-    @property
-    def uses_input_marginal_effects(self):
-        return False
 
     @log_usage()
     def attribute(

@@ -6,13 +6,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from captum._utils.common import _format_input, _format_output, _is_tuple
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
+from captum.attr._core.layer.grad_cam import LayerGradCam
+from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.log import log_usage
-
-from ..._utils.common import _format_input, _format_output, _is_tuple
-from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import GradientAttribution, LayerAttribution
-from .guided_backprop_deconvnet import GuidedBackprop
-from .layer.grad_cam import LayerGradCam
 
 
 class GuidedGradCam(GradientAttribution):
