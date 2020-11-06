@@ -1,54 +1,72 @@
 #!/usr/bin/env python3
 
-from ._core.deep_lift import DeepLift, DeepLiftShap  # noqa
-from ._core.feature_ablation import FeatureAblation  # noqa
-from ._core.feature_permutation import FeaturePermutation  # noqa
-from ._core.gradient_shap import GradientShap  # noqa
-from ._core.guided_backprop_deconvnet import Deconvolution  # noqa
-from ._core.guided_backprop_deconvnet import GuidedBackprop
-from ._core.guided_grad_cam import GuidedGradCam  # noqa
-from ._core.input_x_gradient import InputXGradient  # noqa
-from ._core.integrated_gradients import IntegratedGradients  # noqa
-from ._core.layer.grad_cam import LayerGradCam  # noqa
-from ._core.layer.internal_influence import InternalInfluence  # noqa
-from ._core.layer.layer_activation import LayerActivation  # noqa
-from ._core.layer.layer_conductance import LayerConductance  # noqa
-from ._core.layer.layer_deep_lift import LayerDeepLift  # noqa
-from ._core.layer.layer_deep_lift import LayerDeepLiftShap
-from ._core.layer.layer_feature_ablation import LayerFeatureAblation  # noqa
-from ._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
-from ._core.layer.layer_gradient_x_activation import LayerGradientXActivation  # noqa
-from ._core.layer.layer_integrated_gradients import LayerIntegratedGradients  # noqa
-from ._core.neuron.neuron_conductance import NeuronConductance  # noqa
-from ._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
-from ._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
-from ._core.neuron.neuron_feature_ablation import NeuronFeatureAblation  # noqa
-from ._core.neuron.neuron_gradient import NeuronGradient  # noqa
-from ._core.neuron.neuron_gradient_shap import NeuronGradientShap  # noqa
-from ._core.neuron.neuron_guided_backprop_deconvnet import (  # noqa
+from captum.attr._core.deep_lift import DeepLift, DeepLiftShap  # noqa
+from captum.attr._core.feature_ablation import FeatureAblation  # noqa
+from captum.attr._core.feature_permutation import FeaturePermutation  # noqa
+from captum.attr._core.gradient_shap import GradientShap  # noqa
+from captum.attr._core.guided_backprop_deconvnet import Deconvolution  # noqa
+from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
+from captum.attr._core.guided_grad_cam import GuidedGradCam  # noqa
+from captum.attr._core.input_x_gradient import InputXGradient  # noqa
+from captum.attr._core.integrated_gradients import IntegratedGradients  # noqa
+from captum.attr._core.layer.grad_cam import LayerGradCam  # noqa
+from captum.attr._core.layer.internal_influence import InternalInfluence  # noqa
+from captum.attr._core.layer.layer_activation import LayerActivation  # noqa
+from captum.attr._core.layer.layer_conductance import LayerConductance  # noqa
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLift  # noqa
+from captum.attr._core.layer.layer_deep_lift import LayerDeepLiftShap
+from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation  # noqa
+from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap  # noqa
+from captum.attr._core.layer.layer_gradient_x_activation import (  # noqa
+    LayerGradientXActivation,
+)
+from captum.attr._core.layer.layer_integrated_gradients import (  # noqa
+    LayerIntegratedGradients,
+)
+from captum.attr._core.neuron.neuron_conductance import NeuronConductance  # noqa
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
+from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
+from captum.attr._core.neuron.neuron_feature_ablation import (  # noqa
+    NeuronFeatureAblation,
+)
+from captum.attr._core.neuron.neuron_gradient import NeuronGradient  # noqa
+from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap  # noqa
+from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (  # noqa
     NeuronDeconvolution,
     NeuronGuidedBackprop,
 )
-from ._core.neuron.neuron_integrated_gradients import NeuronIntegratedGradients  # noqa
-from ._core.noise_tunnel import NoiseTunnel  # noqa
-from ._core.occlusion import Occlusion  # noqa
-from ._core.saliency import Saliency  # noqa
-from ._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
-from ._models.base import InterpretableEmbeddingBase  # noqa
-from ._models.base import (
+from captum.attr._core.neuron.neuron_integrated_gradients import (  # noqa
+    NeuronIntegratedGradients,
+)
+from captum.attr._core.noise_tunnel import NoiseTunnel  # noqa
+from captum.attr._core.occlusion import Occlusion  # noqa
+from captum.attr._core.saliency import Saliency  # noqa
+from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling  # noqa
+from captum.attr._models.base import InterpretableEmbeddingBase  # noqa
+from captum.attr._models.base import (
     TokenReferenceBase,
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-from ._utils import visualization  # noqa
-from ._utils.attribution import Attribution  # noqa
-from ._utils.attribution import GradientAttribution  # noqa
-from ._utils.attribution import LayerAttribution  # noqa
-from ._utils.attribution import NeuronAttribution  # noqa
-from ._utils.attribution import PerturbationAttribution  # noqa
-from ._utils.class_summarizer import ClassSummarizer
-from ._utils.stat import MSE, CommonStats, Count, Max, Mean, Min, StdDev, Sum, Var
-from ._utils.summarizer import Summarizer
+from captum.attr._utils import visualization  # noqa
+from captum.attr._utils.attribution import Attribution  # noqa
+from captum.attr._utils.attribution import GradientAttribution  # noqa
+from captum.attr._utils.attribution import LayerAttribution  # noqa
+from captum.attr._utils.attribution import NeuronAttribution  # noqa
+from captum.attr._utils.attribution import PerturbationAttribution  # noqa
+from captum.attr._utils.class_summarizer import ClassSummarizer
+from captum.attr._utils.stat import (
+    MSE,
+    CommonStats,
+    Count,
+    Max,
+    Mean,
+    Min,
+    StdDev,
+    Sum,
+    Var,
+)
+from captum.attr._utils.summarizer import Summarizer
 
 __all__ = [
     "Attribution",

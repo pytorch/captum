@@ -9,8 +9,13 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_neuron
-from .typing import (
+from captum._utils.common import (
+    _reduce_list,
+    _run_forward,
+    _sort_key_list,
+    _verify_select_neuron,
+)
+from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
     TargetType,

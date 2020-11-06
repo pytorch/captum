@@ -5,15 +5,14 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
-from ..._utils.common import _format_input
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.common import (
+from captum._utils.common import _format_input
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._utils.common import (
     _format_and_verify_sliding_window_shapes,
     _format_and_verify_strides,
 )
-from .feature_ablation import FeatureAblation
+from captum.log import log_usage
 
 
 class Occlusion(FeatureAblation):
