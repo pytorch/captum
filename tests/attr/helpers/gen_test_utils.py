@@ -45,8 +45,12 @@ def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
         try:
             import sklearn  # noqa: F401
 
+            assert (
+                sklearn.__version__ >= "0.23.0"
+            ), "Must have sklearn version 0.23.0 or higher to use "
+            "sample_weight in Lasso regression."
             return True
-        except ImportError:
+        except (ImportError, AssertionError):
             return False
     return True
 

@@ -564,7 +564,7 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
         )
 
 
-def get_similarity_function(
+def get_exp_kernel_similarity_function(
     distance_mode: str = "cosine", kernel_width: float = 1.0
 ) -> Callable:
     r"""
@@ -608,7 +608,7 @@ def get_similarity_function(
             distance = torch.norm(flattened_original_inp - flattened_perturbed_inp)
         else:
             raise ValueError("distance_mode must be either cosine or euclidean.")
-        return math.exp(-1 * (distance ** 2) / (kernel_width ** 2))
+        return math.exp(-1 * (distance ** 2) / (2 * (kernel_width ** 2)))
 
     return default_exp_kernel
 
@@ -666,7 +666,7 @@ class Lime(LimeBase):
         self,
         forward_func: Callable,
         train_interpretable_model_func: Callable = lasso_interpretable_model_trainer,
-        similarity_func: Callable = get_similarity_function(),
+        similarity_func: Callable = get_exp_kernel_similarity_function(),
         perturb_func: Callable = default_perturb_func,
     ) -> None:
         r"""

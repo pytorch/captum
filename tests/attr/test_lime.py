@@ -10,7 +10,7 @@ from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import (
     Lime,
     LimeBase,
-    get_similarity_function,
+    get_exp_kernel_similarity_function,
     lasso_interpretable_model_trainer,
 )
 from captum.attr._utils.batching import _batch_example_iterator
@@ -390,7 +390,10 @@ class Test(BaseTest):
         batch_attr: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
-            lime = Lime(model, similarity_func=get_similarity_function("cosine", 10.0))
+            lime = Lime(
+                model,
+                similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
+            )
             attributions = lime.attribute(
                 test_input,
                 target=target,
@@ -424,7 +427,7 @@ class Test(BaseTest):
                 lime_alt = LimeBase(
                     model,
                     lasso_interpretable_model_trainer,
-                    get_similarity_function("cosine", 10.0),
+                    get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_func,
                     False,
                     None,
