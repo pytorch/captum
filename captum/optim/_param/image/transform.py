@@ -77,7 +77,7 @@ class RandomScale(nn.Module):
         self.scale = scale
 
     def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
-        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]])
+        scale_mat = torch.tensor([[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype)
         return scale_mat
 
     def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
