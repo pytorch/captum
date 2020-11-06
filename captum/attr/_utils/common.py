@@ -8,18 +8,18 @@ from typing import TYPE_CHECKING, Any, Callable, List, Tuple, Union
 import torch
 from torch import Tensor
 
-from ..._utils.common import _format_baseline, _format_input, _format_output
-from ..._utils.common import _validate_input as _validate_input_basic
-from ..._utils.typing import (
+from captum._utils.common import _format_baseline, _format_input, _format_output
+from captum._utils.common import _validate_input as _validate_input_basic
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
     TensorOrTupleOfTensorsGeneric,
 )
-from .approximation_methods import SUPPORTED_METHODS
+from captum.attr._utils.approximation_methods import SUPPORTED_METHODS
 
 if TYPE_CHECKING:
-    from .attribution import GradientAttribution
+    from captum.attr._utils.attribution import GradientAttribution
 
 
 def _validate_target(num_samples: int, target: TargetType) -> None:

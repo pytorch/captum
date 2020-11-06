@@ -5,9 +5,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from captum.log import log_usage
-
-from ...._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
@@ -15,17 +13,18 @@ from ...._utils.common import (
     _is_tuple,
     _verify_select_column,
 )
-from ...._utils.gradient import compute_layer_gradients_and_eval
-from ...._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from ..._utils.approximation_methods import approximation_parameters
-from ..._utils.attribution import GradientAttribution, NeuronAttribution
-from ..._utils.batching import _batch_attribution
-from ..._utils.common import (
+from captum._utils.gradient import compute_layer_gradients_and_eval
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.approximation_methods import approximation_parameters
+from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
+from captum.attr._utils.batching import _batch_attribution
+from captum.attr._utils.common import (
     _format_input_baseline,
     _reshape_and_sum,
     _validate_input,
     neuron_index_deprecation_decorator,
 )
+from captum.log import log_usage
 
 
 class NeuronConductance(NeuronAttribution, GradientAttribution):
