@@ -57,7 +57,7 @@ class InputOptimization(Objective, Parameterized):
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
         self.transform = transform or torch.nn.Sequential(
-            RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05), RandomSpatialJitter(16))
+            RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
         self.loss_function = loss_function
         self.lr = lr
