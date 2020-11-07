@@ -102,12 +102,12 @@ class RandomSpatialJitter(torch.nn.Module):
         translate (int):
     """
 
-    def __init__(self, translate):
+    def __init__(self, translate: int):
         super(RandomSpatialJitter, self).__init__()
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
-    def translate_tensor(self, x):
+    def translate_tensor(self, x: torch.Tensor) -> torch.Tensor:
         padded = self.pad(x)
         insets = torch.randint(high=self.pad_range, size=(2,))
         tblr = [
