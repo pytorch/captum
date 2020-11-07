@@ -41,9 +41,8 @@ class ImageTensor(torch.Tensor):
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        plt.imshow(numpy_thing.astype(np.uint8), frameon=False)
-        plt.axis("off")
-        plt.savefig(filename)
+        im = Image.fromarray(numpy_thing.astype('uint8'), 'RGB')
+        im.save(filename)
 
     def cpu(self):
         return self
@@ -73,6 +72,9 @@ class CudaImageTensor(object):
 
     def show(self):
         self.cpu().show()
+
+    def export(self, filename):
+        self.cpu().export(filename)
 
     def cpu(self):
         return ImageTensor(self._t.cpu())
