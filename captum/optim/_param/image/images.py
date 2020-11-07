@@ -73,6 +73,9 @@ class CudaImageTensor(object):
     def show(self):
         self.cpu().show()
 
+    def export(self, filename):
+        self.cpu().export(filename)
+
     def cpu(self):
         return ImageTensor(self._t.cpu())
 
