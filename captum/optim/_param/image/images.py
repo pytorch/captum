@@ -41,7 +41,7 @@ class ImageTensor(torch.Tensor):
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        im = Image.fromarray(numpy_thing.astype('uint8'), 'RGB')
+        im = Image.fromarray(numpy_thing.astype("uint8"), "RGB")
         im.save(filename)
 
     def cpu(self):
