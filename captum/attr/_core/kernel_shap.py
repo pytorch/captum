@@ -233,7 +233,7 @@ class KernelShap(Lime):
                         each scalar within a tensor as a separate feature.
                         Default: None
             n_perturb_samples (int, optional):  The number of samples of the original
-                        model used to train the surrogate interpretabe model.
+                        model used to train the surrogate interpretable model.
                         Default: `50` if `n_perturb_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
