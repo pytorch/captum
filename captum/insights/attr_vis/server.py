@@ -74,13 +74,20 @@ def get_free_tcp_port():
     return port
 
 
-def run_app(debug: bool = True):
-    app.run(port=port, use_reloader=False, debug=debug)
+def run_app(debug: bool = True, bind_all: bool = False):
+    if bind_all:
+        app.run(port=port, use_reloader=False, debug=debug, host="0.0.0.0")
+    else:
+        app.run(port=port, use_reloader=False, debug=debug)
 
 
 @log_usage()
 def start_server(
-    _viz, blocking: bool = False, debug: bool = False, _port: Optional[int] = None
+    _viz,
+    blocking: bool = False,
+    debug: bool = False,
+    _port: Optional[int] = None,
+    bind_all: bool = False,
 ):
     global visualizer
     visualizer = _viz
@@ -95,7 +102,9 @@ def start_server(
 
         port = _port or get_free_tcp_port()
         # Start in a new thread to not block notebook execution
-        t = threading.Thread(target=run_app, kwargs={"debug": debug})
+        t = threading.Thread(
+            target=run_app, kwargs={"debug": debug, "bind_all": bind_all}
+        )
         t.start()
         sleep(0.01)  # add a short delay to allow server to start up
         if blocking:

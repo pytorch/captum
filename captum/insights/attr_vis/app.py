@@ -231,17 +231,21 @@ class AttributionVisualizer(object):
             display(widget.out)
 
     @log_usage()
-    def serve(self, blocking=False, debug=False, port=None):
+    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
         else:
-            return self._serve(blocking=blocking, debug=debug, port=port)
+            return self._serve(
+                blocking=blocking, debug=debug, port=port, bind_all=bind_all
+            )
 
-    def _serve(self, blocking=False, debug=False, port=None):
+    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
         from captum.insights.attr_vis.server import start_server
 
-        return start_server(self, blocking=blocking, debug=debug, _port=port)
+        return start_server(
+            self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
+        )
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
