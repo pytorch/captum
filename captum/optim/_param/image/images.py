@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from captum.optim._param.image.transform import ToRGB
 from PIL import Image
+
+from captum.optim._param.image.transform import ToRGB
 
 
 class ImageTensor(torch.Tensor):
