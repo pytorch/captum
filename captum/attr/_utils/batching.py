@@ -6,17 +6,17 @@ from typing import Any, Callable, Iterator, Tuple, Union
 import torch
 from torch import Tensor
 
-from ..._utils.common import (
+from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
     _reduce_list,
 )
-from ..._utils.typing import (
+from captum._utils.typing import (
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
-from .approximation_methods import approximation_parameters
+from captum.attr._utils.approximation_methods import approximation_parameters
 
 
 def _batch_attribution(

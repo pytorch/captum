@@ -848,7 +848,7 @@ config = [
         ],
         "model": BasicModel_MultiLayer(),
         "layer": "relu",
-        "attribute_args": {"inputs": torch.randn(4, 3), "neuron_index": 3},
+        "attribute_args": {"inputs": torch.randn(4, 3), "neuron_selector": 3},
     },
     {
         "name": "conv_neuron",
@@ -864,7 +864,7 @@ config = [
         "layer": "conv2",
         "attribute_args": {
             "inputs": 100 * torch.randn(4, 1, 10, 10),
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -882,7 +882,7 @@ config = [
         "attribute_args": {
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
         },
     },
     # Neuron Conductance (with target)
@@ -891,7 +891,11 @@ config = [
         "algorithms": [NeuronConductance],
         "model": BasicModel_MultiLayer(),
         "layer": "relu",
-        "attribute_args": {"inputs": torch.randn(4, 3), "target": 1, "neuron_index": 3},
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": 1,
+            "neuron_selector": 3,
+        },
     },
     {
         "name": "basic_neuron_multiple_target",
@@ -901,7 +905,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [0, 1, 1, 0],
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -912,7 +916,7 @@ config = [
         "attribute_args": {
             "inputs": 100 * torch.randn(4, 1, 10, 10),
             "target": 1,
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -924,7 +928,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -935,7 +939,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -947,7 +951,7 @@ config = [
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     # Neuron Conductance with Internal Batching
@@ -961,7 +965,7 @@ config = [
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
             "internal_batch_size": 2,
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     {
@@ -974,7 +978,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
             "internal_batch_size": 2,
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
     },
     # Neuron Gradient SHAP
@@ -986,7 +990,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": torch.randn(1, 3),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "target_delta": 0.6,
         "baseline_distr": True,
@@ -1000,7 +1004,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "baselines": (10 * torch.randn(1, 3), 5 * torch.randn(1, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "target_delta": 0.6,
         "baseline_distr": True,
@@ -1014,7 +1018,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "baselines": 0.5 * torch.randn(6, 3),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
         },
         "baseline_distr": True,
     },
@@ -1027,7 +1031,7 @@ config = [
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "baselines": (torch.randn(4, 3), torch.randn(4, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": 3,
+            "neuron_selector": 3,
         },
         "baseline_distr": True,
     },
@@ -1040,7 +1044,7 @@ config = [
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
             "perturbations_per_eval": 20,
-            "neuron_index": (0, 1, 0),
+            "neuron_selector": (0, 1, 0),
         },
     },
     {
@@ -1052,8 +1056,45 @@ config = [
             "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "baselines": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
-            "neuron_index": (3,),
+            "neuron_selector": (3,),
             "perturbations_per_eval": 2,
+        },
+    },
+    # Neuron Attribution with Functional Selector
+    {
+        "name": "basic_neuron_multi_input_function_selector",
+        "algorithms": [
+            NeuronGradient,
+            NeuronIntegratedGradients,
+            NeuronGuidedBackprop,
+            NeuronDeconvolution,
+            NeuronDeepLift,
+            NeuronFeatureAblation,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "layer": "model.relu",
+        "attribute_args": {
+            "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
+            "additional_forward_args": (2 * torch.randn(12, 3), 5),
+            "neuron_selector": lambda x: torch.sum(x, 1),
+        },
+    },
+    # Neuron Attribution with slice Selector
+    {
+        "name": "conv_neuron_slice_selector",
+        "algorithms": [
+            NeuronGradient,
+            NeuronIntegratedGradients,
+            NeuronGuidedBackprop,
+            NeuronDeconvolution,
+            NeuronDeepLift,
+            NeuronFeatureAblation,
+        ],
+        "model": BasicModel_ConvNet(),
+        "layer": "conv2",
+        "attribute_args": {
+            "inputs": 100 * torch.randn(4, 1, 10, 10),
+            "neuron_selector": (slice(0, 2, 1), 1, slice(0, 2, 1)),
         },
     },
     # Layer Attribution with Multiple Layers

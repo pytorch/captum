@@ -9,8 +9,13 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .common import _reduce_list, _run_forward, _sort_key_list, _verify_select_column
-from .typing import (
+from captum._utils.common import (
+    _reduce_list,
+    _run_forward,
+    _sort_key_list,
+    _verify_select_neuron,
+)
+from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
     TargetType,
@@ -32,7 +37,19 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
     for index, input in enumerate(inputs):
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
         grad_required.append(input.requires_grad)
-        if not input.requires_grad:
+        inputs_dtype = input.dtype
+        # Note: torch 1.2 doesn't support is_complex for dtype that's why we check
+        # on the existance of is_complex method.
+        if not inputs_dtype.is_floating_point and not (
+            hasattr(inputs_dtype, "is_complex") and inputs_dtype.is_complex
+        ):
+            warnings.warn(
+                """Input Tensor %d has a dtype of %s.
+                Gradients cannot be activated
+                for these data types."""
+                % (index, str(inputs_dtype))
+            )
+        elif not input.requires_grad:
             warnings.warn(
                 "Input Tensor %d did not already require gradients, "
                 "required_grads has been set automatically." % index
@@ -113,22 +130,20 @@ def _neuron_gradients(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     saved_layer: Dict[device, Tuple[Tensor, ...]],
     key_list: List[device],
-    gradient_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
 ) -> Tuple[Tensor, ...]:
     with torch.autograd.set_grad_enabled(True):
         gradient_tensors = []
         for key in key_list:
-            assert (
-                len(saved_layer[key]) == 1
-            ), "Cannot compute neuron gradients for layer with multiple tensors."
-            current_out_tensor = _verify_select_column(
-                saved_layer[key][0], gradient_neuron_index
+            current_out_tensor = _verify_select_neuron(
+                saved_layer[key], gradient_neuron_selector
             )
             gradient_tensors.append(
                 torch.autograd.grad(
-                    torch.unbind(current_out_tensor),
+                    torch.unbind(current_out_tensor)
+                    if current_out_tensor.numel() > 1
+                    else current_out_tensor,
                     inputs,
-                    grad_outputs=torch.unbind(torch.ones_like(current_out_tensor)),
                 )
             )
         _total_gradients = _reduce_list(gradient_tensors, sum)
@@ -175,7 +190,7 @@ def _forward_layer_eval(
         inputs,
         layer,
         additional_forward_args=additional_forward_args,
-        gradient_neuron_index=None,
+        gradient_neuron_selector=None,
         grad_enabled=grad_enabled,
         device_ids=device_ids,
         attribute_to_layer_input=attribute_to_layer_input,
@@ -357,7 +372,7 @@ def _forward_layer_eval_with_neuron_grads(
     layer: Module,
     additional_forward_args: Any = None,
     *,
-    gradient_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -371,7 +386,7 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: Module,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -385,7 +400,7 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: List[Module],
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -398,7 +413,9 @@ def _forward_layer_eval_with_neuron_grads(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     layer: ModuleOrModuleList,
     additional_forward_args: Any = None,
-    gradient_neuron_index: Union[None, int, Tuple[Union[int, slice], ...]] = None,
+    gradient_neuron_selector: Union[
+        None, int, Tuple[Union[int, slice], ...], Callable
+    ] = None,
     grad_enabled: bool = False,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
@@ -409,7 +426,7 @@ def _forward_layer_eval_with_neuron_grads(
 ]:
     """
     This method computes forward evaluation for a particular layer using a
-    forward hook. If a gradient_neuron_index is provided, then gradients with
+    forward hook. If a gradient_neuron_selector is provided, then gradients with
     respect to that neuron in the layer output are also returned.
 
     These functionalities are combined due to the behavior of DataParallel models
@@ -423,7 +440,7 @@ def _forward_layer_eval_with_neuron_grads(
     evals in a dictionary protected by a lock, analogous to the gather implementation
     for the core PyTorch DataParallel implementation.
     """
-    grad_enabled = True if gradient_neuron_index is not None or grad_enabled else False
+    grad_enabled = True if gradient_neuron_selector is not None else grad_enabled
 
     with torch.autograd.set_grad_enabled(grad_enabled):
         saved_layer = _forward_layer_distributed_eval(
@@ -438,12 +455,12 @@ def _forward_layer_eval_with_neuron_grads(
     # key_list is a list of devices in appropriate ordering for concatenation.
     # If only one key exists (standard model), key list simply has one element.
     key_list = _sort_key_list(list(next(iter(saved_layer.values())).keys()), device_ids)
-    if gradient_neuron_index is not None:
+    if gradient_neuron_selector is not None:
         assert isinstance(
             layer, Module
         ), "Cannot compute neuron gradients for multiple layers simultaneously!"
         inp_grads = _neuron_gradients(
-            inputs, saved_layer[layer], key_list, gradient_neuron_index
+            inputs, saved_layer[layer], key_list, gradient_neuron_selector
         )
         return (
             _gather_distributed_tensors(saved_layer[layer], key_list=key_list),
@@ -467,7 +484,7 @@ def compute_layer_gradients_and_eval(
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
     *,
-    gradient_neuron_index: Union[int, Tuple[int, ...]],
+    gradient_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -482,7 +499,7 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -497,7 +514,7 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: None = None,
+    gradient_neuron_selector: None = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -511,7 +528,9 @@ def compute_layer_gradients_and_eval(
     inputs: Union[Tensor, Tuple[Tensor, ...]],
     target_ind: TargetType = None,
     additional_forward_args: Any = None,
-    gradient_neuron_index: Union[None, int, Tuple[int, ...]] = None,
+    gradient_neuron_selector: Union[
+        None, int, Tuple[Union[int, slice], ...], Callable
+    ] = None,
     device_ids: Union[None, List[int]] = None,
     attribute_to_layer_input: bool = False,
     output_fn: Union[None, Callable] = None,
@@ -647,12 +666,12 @@ def compute_layer_gradients_and_eval(
         if isinstance(layer, Module):
             layer_grads = all_grads[0]
 
-        if gradient_neuron_index is not None:
+        if gradient_neuron_selector is not None:
             assert isinstance(
                 layer, Module
             ), "Cannot compute neuron gradients for multiple layers simultaneously!"
             inp_grads = _neuron_gradients(
-                inputs, saved_layer[layer], key_list, gradient_neuron_index
+                inputs, saved_layer[layer], key_list, gradient_neuron_selector
             )
             return (
                 cast(Tuple[Tensor, ...], layer_grads),
@@ -664,7 +683,7 @@ def compute_layer_gradients_and_eval(
 
 def construct_neuron_grad_fn(
     layer: Module,
-    neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+    neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
     device_ids: Union[None, List[int]] = None,
     attribute_to_neuron_input: bool = False,
 ) -> Callable:
@@ -679,7 +698,7 @@ def construct_neuron_grad_fn(
             inputs,
             layer,
             additional_forward_args,
-            gradient_neuron_index=neuron_index,
+            gradient_neuron_selector=neuron_selector,
             device_ids=device_ids,
             attribute_to_layer_input=attribute_to_neuron_input,
         )

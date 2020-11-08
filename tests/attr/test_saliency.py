@@ -75,7 +75,7 @@ class Test(BaseTest):
     ) -> None:
         saliency = Saliency(model)
 
-        self.assertFalse(saliency.uses_input_marginal_effects)
+        self.assertFalse(saliency.multiplies_by_inputs)
 
         if nt_type == "vanilla":
             attributions = saliency.attribute(

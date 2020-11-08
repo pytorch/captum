@@ -324,7 +324,7 @@ In this case, we choose to analyze the first neuron in the linear layer.
 
 ```python
 nc = NeuronConductance(model, model.lin1)
-attributions = nc.attribute(input, neuron_index=1, target=0)
+attributions = nc.attribute(input, neuron_selector=1, target=0)
 print('Neuron Attributions:', attributions)
 ```
 Output

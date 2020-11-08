@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -25,6 +25,17 @@ from ...helpers.basic_models import (
 
 
 class Test(BaseTest):
+    def test_neuron_index_deprecated_warning(self) -> None:
+        net = BasicModel_MultiLayer()
+        grad = NeuronGradient(net, net.linear2)
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        with self.assertWarns(DeprecationWarning):
+            attributions = grad.attribute(
+                inp,
+                neuron_index=(0,),
+            )
+        assertTensorTuplesAlmostEqual(self, attributions, [4.0, 4.0, 4.0])
+
     def test_simple_gradient_input_linear2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
@@ -56,6 +67,13 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._gradient_input_test_assert(net, net.relu, inp, 1, [1.0, 1.0, 1.0])
+
+    def test_simple_gradient_input_relu_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._gradient_input_test_assert(
+            net, net.relu, inp, lambda x: torch.sum(x), [3.0, 3.0, 3.0]
+        )
 
     def test_simple_gradient_input_relu2_agg_neurons(self) -> None:
         net = BasicModel_MultiLayer()
@@ -107,7 +125,7 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron_index: Union[int, Tuple[Union[int, slice], ...]],
+        test_neuron_selector: Union[int, Tuple[Union[int, slice], ...], Callable],
         expected_input_gradient: Union[List[float], Tuple[List[float], ...]],
         additional_input: Any = None,
         attribute_to_neuron_input: bool = False,
@@ -115,7 +133,7 @@ class Test(BaseTest):
         grad = NeuronGradient(model, target_layer)
         attributions = grad.attribute(
             test_input,
-            test_neuron_index,
+            test_neuron_selector,
             additional_forward_args=additional_input,
             attribute_to_neuron_input=attribute_to_neuron_input,
         )

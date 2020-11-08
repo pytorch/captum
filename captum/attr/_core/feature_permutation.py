@@ -4,10 +4,9 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._core.feature_ablation import FeatureAblation
 from captum.log import log_usage
-
-from ..._utils.typing import TargetType, TensorOrTupleOfTensorsGeneric
-from .feature_ablation import FeatureAblation
 
 
 def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
