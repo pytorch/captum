@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 try:
-    from PIL import ImageSFAE
+    from PIL import Image
 except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
