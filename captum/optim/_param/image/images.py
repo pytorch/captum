@@ -2,7 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from PIL import Image
+
+try:
+    from PIL import ImageSFAE
+except (ImportError, AssertionError):
+    print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import ToRGB
 
