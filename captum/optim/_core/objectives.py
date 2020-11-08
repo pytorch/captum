@@ -316,14 +316,14 @@ class SingleTargetObjective(Objective):
         return loss_value
 
 
-class MultiObjective(Objective):
+class MultiTargetObjective(Objective):
     def __init__(
         self, objectives: List[Objective], weights: Optional[Iterable[float]] = None
     ):
         model = objectives[0].model
         assert all(o.model == model for o in objectives)
         targets = (target for objective in objectives for target in objective.targets)
-        super(MultiObjective, self).__init__(model=model, targets=targets)
+        super(MultiTargetObjective, self).__init__(model=model, targets=targets)
         self.objectives = objectives
         self.weights = weights or len(objectives) * [1]
 
