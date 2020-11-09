@@ -13,7 +13,7 @@ The attribution algorithms in Captum are separated into three groups, primary at
 Below is a short summary of the various methods currently implemented for primary, layer, and neuron attribution within Captum, as well as noise tunnel, which can be used to smooth the results of any attribution method.
 
 Beside attribution algorithms Captum also offers metrics to estimate the trustworthiness of the explanations and model predictions.
-Currently we offer infidelity and maximum sensitivity metrics that help us to estimate the goodness of explanations from two different angles.
+Currently we offer infidelity and sensitivity metrics that help us to estimate the goodness of explanations.
 
 ## Primary Attribution
 ### Integrated Gradients
@@ -243,14 +243,13 @@ To learn more about Noise Tunnel methods, visit the following resources:
 ### Infidelity
 Infidelity measures the mean squared error between model explanations in the magnitudes of input perturbations and predictor function's changes to those input perturbtaions. Infidelity is defined as follows:
 ![infidelity_eq](/img/infidelity_eq.png)
-It is derived from the completeness property of well-known attribution algorithms, such as Integrated Gradients, and is a computationally more efficient and generalized notion of Sensitivy-n. The latter measures correlations between the sum of the attributions and the differences of the predictor function at
-its input and fixed baseline. More details about the Sensitivity-n can be found here:
+It is derived from the completeness property of well-known attribution algorithms, such as Integrated Gradients, and is a computationally more efficient and generalized notion of Sensitivy-n. The latter measures correlations between the sum of the attributions and the differences of the predictor function at its input and fixed baseline. More details about the Sensitivity-n can be found here:
 https://arxiv.org/pdf/1711.06104.pdfs
 More details about infidelity measure can be found here:
 - [Original paper](https://arxiv.org/pdf/1901.09392.pdf)
 
 ### Sensitivity
-Sensitivity measures the degree of explanation change to suble input perturbations using Monte Carlo sampling-based approximation and is defined
+Sensitivity measures the degree of explanation changes to subtle input perturbations using Monte Carlo sampling-based approximation and is defined
 as follows:
 ![sensitivity_eq](/img/sensitivity_eq.png)
 In order to opproximate sensitivity measure, by default, we sample from a sub-space of an L-Infinity ball with a default radius.
