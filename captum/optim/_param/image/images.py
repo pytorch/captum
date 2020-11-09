@@ -1,8 +1,14 @@
-import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+
+try:
+    from PIL import Image
+except (ImportError, AssertionError):
+    print("The Pillow/PIL library is required to use Captum's Optim library")
+
+from captum.optim._param.image.transform import ToRGB
 
 
 class ImageTensor(torch.Tensor):
@@ -13,7 +19,8 @@ class ImageTensor(torch.Tensor):
 
     @classmethod
     def open(cls, path):
-        img_np = imageio.imread(path).astype(np.float32)
+        img_np = Image.open(path).convert("RGB")
+        img_np = np.array(img_np).astype(np.float32)
         return cls(img_np.transpose(2, 0, 1) / 255)
 
     @classmethod
@@ -21,9 +28,7 @@ class ImageTensor(torch.Tensor):
         if kwargs is None:
             kwargs = {}
         args = [a._t if hasattr(a, "_t") else a for a in args]
-        ret = func(*args, **kwargs)
-        print(ret.dtype)
-        return ImageTensor(ret.float())
+        return super().__torch_function__(func, types, args, **kwargs)
 
     def __repr__(self):
         return f"ImageTensor(value={self._t})"
@@ -42,9 +47,8 @@ class ImageTensor(torch.Tensor):
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        plt.imshow(numpy_thing.astype(np.uint8), frameon=False)
-        plt.axis("off")
-        plt.savefig(filename)
+        im = Image.fromarray(numpy_thing.astype("uint8"), "RGB")
+        im.save(filename)
 
     def cpu(self):
         return self
@@ -62,8 +66,7 @@ class CudaImageTensor(object):
         if kwargs is None:
             kwargs = {}
         args = [a._t if hasattr(a, "_t") else a for a in args]
-        ret = func(*args, **kwargs)
-        return CudaImageTensor(ret)
+        return super().__torch_function__(func, types, args, **kwargs)
 
     def __repr__(self):
         return f"CudaImageTensor(value={self._t})"
@@ -74,6 +77,9 @@ class CudaImageTensor(object):
 
     def show(self):
         self.cpu().show()
+
+    def export(self, filename):
+        self.cpu().export(filename)
 
     def cpu(self):
         return ImageTensor(self._t.cpu())
@@ -117,72 +123,6 @@ def logit(p: torch.Tensor, epsilon=1e-6) -> torch.Tensor:
 #     return C.transpose(0, 1)
 
 
-class ToRGB(nn.Module):
-    """Transforms arbitrary channels to RGB. We use this to ensure our
-    image parameteriaztion itself can be decorrelated. So this goes between
-    the image parameterization and the normalization/sigmoid step.
-
-    We offer two transforms: Karhunen-Loève (KLT) and I1I2I3.
-
-    KLT corresponds to the empirically measured channel correlations on imagenet.
-    I1I2I3 corresponds to an aproximation for natural images from Ohta et al.[0]
-
-    [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
-    Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
-    https://www.sciencedirect.com/science/article/pii/0146664X80900477
-    """
-
-    @staticmethod
-    def klt_transform():
-        """Karhunen-Loève transform (KLT) measured on ImageNet"""
-        KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
-        transform = np.asarray(KLT, dtype=np.float32)
-        transform /= np.max(np.linalg.norm(transform, axis=0))
-        return torch.as_tensor(transform)
-
-    @staticmethod
-    def i1i2i3_transform():
-        i1i2i3_matrix = [
-            [1 / 3, 1 / 3, 1 / 3],
-            [1 / 2, 0, -1 / 2],
-            [-1 / 4, 1 / 2, -1 / 4],
-        ]
-        return torch.Tensor(i1i2i3_matrix)
-
-    def __init__(self, transform_name="klt"):
-        super().__init__()
-
-        if transform_name == "klt":
-            self.register_buffer("transform", ToRGB.klt_transform())
-        elif transform_name == "i1i2i3":
-            self.register_buffer("transform", ToRGB.i1i2i3_transform())
-        else:
-            raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
-
-    def forward(self, x, inverse=False):
-        assert x.dim() == 3
-
-        # alpha channel is taken off...
-        has_alpha = x.size("C") == 4
-        if has_alpha:
-            x, alpha_channel = x[:3], x[3:]
-            assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
-
-        h, w = x.size("H"), x.size("W")
-        flat = x.flatten(("H", "W"), "spatials")
-        if inverse:
-            correct = self.transform.t() @ flat
-        else:
-            correct = self.transform @ flat
-        chw = correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", ...)
-
-        # ...alpha channel is concatenated on again.
-        if has_alpha:
-            chw = torch.cat([chw, alpha_channel], 0)
-
-        return chw
-
-
 # def upsample():
 #     upsample = torch.nn.Upsample(scale_factor=1.1, mode="bilinear",
 #        align_corners=True)
@@ -210,7 +150,7 @@ class ImageParameterization(InputParameterization):
 class FFTImage(ImageParameterization):
     """Parameterize an image using inverse real 2D FFT"""
 
-    def __init__(self, size, channels=3):
+    def __init__(self, size, channels: int = 3):
         super().__init__()
         assert len(size) == 2
         self.size = size
@@ -222,19 +162,30 @@ class FFTImage(ImageParameterization):
         self.fourier_coeffs = nn.Parameter(random_coeffs / 50)
 
         frequencies = FFTImage.rfft2d_freqs(*size)
-        scale = 1.0 / np.maximum(frequencies, 1.0 / max(*size))
-        scale *= np.sqrt(size[0] * size[1])
-        spectrum_scale = torch.Tensor(scale[None, :, :, None].astype(np.float32))
+        scale = 1.0 / torch.max(
+            frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1])))
+        )
+        scale = scale * ((size[0] * size[1]) ** (1 / 2))
+        spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
 
     @staticmethod
-    def rfft2d_freqs(height, width):
+    def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
         """Computes 2D spectrum frequencies."""
-        f_y = np.fft.fftfreq(height)[:, None]
+        fy = FFTImage.pytorch_fftfreq(height)[:, None]
         # on odd input dimensions we need to keep one additional frequency
-        add = 2 if width % 2 == 1 else 1
-        f_x = np.fft.fftfreq(width)[: width // 2 + add]
-        return np.sqrt(f_x * f_x + f_y * f_y)
+        wadd = 2 if width % 2 == 1 else 1
+        fx = FFTImage.pytorch_fftfreq(width)[: width // 2 + wadd]
+        return torch.sqrt((fx * fx) + (fy * fy))
+
+    @staticmethod
+    def pytorch_fftfreq(v: int, d: float = 1.0) -> torch.Tensor:
+        """PyTorch version of np.fft.fftfreq"""
+        results = torch.empty(v)
+        s = (v - 1) // 2 + 1
+        results[:s] = torch.arange(0, s)
+        results[s:] = torch.arange(-(v // 2), 0)
+        return results * (1.0 / (v * d))
 
     def set_image(self, correlated_image: torch.Tensor):
         coeffs = torch.rfft(correlated_image, signal_ndim=2)
@@ -255,7 +206,7 @@ class PixelImage(ImageParameterization):
             init = torch.randn([channels, size[0], size[1]]) / 10 + 0.5
         else:
             assert init.shape[0] == 3
-        self.image = nn.Parameter(init)
+        self.image = nn.Parameter(init).refine_names("C", "H", "W")
 
     def forward(self):
         return self.image
@@ -307,12 +258,13 @@ class NaturalImage(ImageParameterization):
 
         self.parameterization = Parameterization(size=size, channels=channels)
         self.decorrelate = ToRGB(transform_name="klt")
+        self.squash_func = lambda x: torch.sigmoid(x)
 
     def forward(self):
         image = self.parameterization()
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
-        return CudaImageTensor(torch.sigmoid_(image))
+        return CudaImageTensor(self.squash_func(image))
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)

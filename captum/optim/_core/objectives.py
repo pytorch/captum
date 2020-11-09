@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
-from captum.optim._param.image.transform import RandomAffine
+from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
     ModuleOutputMapping,
@@ -38,6 +38,7 @@ class InputOptimization(Objective, Parameterized):
         transform: Optional[nn.Module],
         target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
+        lr: float = 0.025,
     ):
         r"""
         Args:
@@ -50,12 +51,16 @@ class InputOptimization(Objective, Parameterized):
                         are used to compute the loss function.
             loss_function (callable): The loss function to minimize during optimization
                         optimization.
+            lr (float): The learning rate to use with the Adam optimizer.
         """
         self.model = model
         self.hooks = ModuleOutputsHook(target_modules)
         self.input_param = input_param or NaturalImage((224, 224))
-        self.transform = transform or RandomAffine(scale=True, translate=True)
+        self.transform = transform or torch.nn.Sequential(
+            RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
+        )
         self.loss_function = loss_function
+        self.lr = lr
 
     def loss(self) -> torch.Tensor:
         r"""Compute loss value for current iteration.
@@ -114,7 +119,7 @@ class InputOptimization(Objective, Parameterized):
                         Length of the list corresponds to the number of iterations
         """
         stop_criteria = stop_criteria or n_steps(1024)
-        optimizer = optimizer or optim.Adam(self.parameters(), lr=0.025)
+        optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
         assert isinstance(optimizer, optim.Optimizer)
 
         history = []
@@ -154,6 +159,10 @@ def n_steps(n: int) -> StopCriteria:
 
 
 def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
+    """
+    Maximize activations at the target layer and target channel.
+    """
+
     def loss_function(targets_to_values: ModuleOutputMapping):
         activations = targets_to_values[target]
         assert activations is not None
@@ -196,6 +205,88 @@ def neuron_activation(
     return loss_function
 
 
+def deepdream(target: nn.Module) -> LossFunction:
+    """
+    Maximize 'interestingness' at the target layer.
+    Mordvintsev et al., 2015.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return activations ** 2
+
+    return loss_function
+
+
+def total_variation(target: nn.Module) -> LossFunction:
+    """
+    Total variation denoising penalty for activations.
+    See Simonyan, et al., 2014.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        x_diff = activations[..., 1:, :] - activations[..., :-1, :]
+        y_diff = activations[..., :, 1:] - activations[..., :, :-1]
+        return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
+
+    return loss_function
+
+
+def l1(target: nn.Module, constant: float = 0) -> LossFunction:
+    """
+    L1 norm of the target layer, generally used as a penalty.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return torch.abs(activations - constant).sum()
+
+    return loss_function
+
+
+def l2(target: nn.Module, constant: float = 0, epsilon: float = 1e-6) -> LossFunction:
+    """
+    L2 norm of the target layer, generally used as a penalty.
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        activations = (activations - constant).sum()
+        return torch.sqrt(epsilon + activations)
+
+    return loss_function
+
+
+def diversity(target: nn.Module) -> LossFunction:
+    """
+    Use a cosine similarity penalty to extract features from a polysemantic neuron.
+    Olah, Mordvintsev & Schubert, 2017.
+    https://distill.pub/2017/feature-visualization/#diversity
+    """
+
+    def loss_function(targets_to_values: ModuleOutputMapping):
+        activations = targets_to_values[target]
+        return -sum(
+            [
+                sum(
+                    [
+                        (
+                            torch.cosine_similarity(
+                                activations[j].view(1, -1), activations[i].view(1, -1)
+                            )
+                        ).sum()
+                        for i in range(activations.size(0))
+                        if i != j
+                    ]
+                )
+                for j in range(activations.size(0))
+            ]
+        ) / activations.size(0)
+
+    return loss_function
+
+
 def single_target_objective(
     target: nn.Module, loss_function: SingleTargetLossFunction
 ) -> LossFunction:
@@ -225,14 +316,14 @@ class SingleTargetObjective(Objective):
         return loss_value
 
 
-class MultiObjective(Objective):
+class MultiTargetObjective(Objective):
     def __init__(
         self, objectives: List[Objective], weights: Optional[Iterable[float]] = None
     ):
         model = objectives[0].model
         assert all(o.model == model for o in objectives)
         targets = (target for objective in objectives for target in objective.targets)
-        super(MultiObjective, self).__init__(model=model, targets=targets)
+        super(MultiTargetObjective, self).__init__(model=model, targets=targets)
         self.objectives = objectives
         self.weights = weights or len(objectives) * [1]
 
