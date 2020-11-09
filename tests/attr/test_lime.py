@@ -93,7 +93,12 @@ class Test(BaseTest):
         super().setUp()
         try:
             import sklearn  # noqa: F401
-        except ImportError:
+
+            assert (
+                sklearn.__version__ >= "0.23.0"
+            ), "Must have sklearn version 0.23.0 or higher to use "
+            "sample_weight in Lasso regression."
+        except (ImportError, AssertionError):
             raise unittest.SkipTest("Skipping Lime tests, sklearn not available.")
 
     def test_simple_lime(self) -> None:
