@@ -32,12 +32,11 @@
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span>
+<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">ModuleOrModuleList</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
-
-<span class="kn">from</span> <span class="nn">...._utils.common</span> <span class="kn">import</span> <span class="n">_format_output</span>
-<span class="kn">from</span> <span class="nn">...._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span>
-<span class="kn">from</span> <span class="nn">...._utils.typing</span> <span class="kn">import</span> <span class="n">ModuleOrModuleList</span>
-<span class="kn">from</span> <span class="nn">..._utils.attribution</span> <span class="kn">import</span> <span class="n">LayerAttribution</span>
 
 
 <div class="viewcode-block" id="LayerActivation"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerActivation">[docs]</a><span class="k">class</span> <span class="nc">LayerActivation</span><span class="p">(</span><span class="n">LayerAttribution</span><span class="p">):</span>
