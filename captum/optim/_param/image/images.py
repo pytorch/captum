@@ -206,10 +206,10 @@ class PixelImage(ImageParameterization):
             init = torch.randn([channels, size[0], size[1]]) / 10 + 0.5
         else:
             assert init.shape[0] == 3
-        self.image = nn.Parameter(init).refine_names("C", "H", "W")
+        self.image = nn.Parameter(init)
 
     def forward(self):
-        return self.image
+        return self.image.refine_names("C", "H", "W")
 
     def set_image(self, correlated_image: torch.Tensor):
         self.image = nn.Parameter(correlated_image)
