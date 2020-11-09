@@ -19,6 +19,7 @@ from captum._utils.common import (
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
+    _construct_default_feature_mask,
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
@@ -278,7 +279,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             num_examples = inputs[0].shape[0]
 
             if feature_mask is None:
-                feature_mask, total_features = self.construct_feature_mask(inputs)
+                feature_mask, total_features = _construct_default_feature_mask(inputs)
             else:
                 total_features = int(
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
@@ -444,25 +445,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                 target_repeated,
                 combined_masks,
             )
-
-    def construct_feature_mask(
-        self, inputs: Tuple[Tensor, ...]
-    ) -> Tuple[Tuple[Tensor, ...], int]:
-        feature_mask = []
-        current_num_features = 0
-        for i in range(len(inputs)):
-            num_features = torch.numel(inputs[i][0])
-            feature_mask.append(
-                current_num_features
-                + torch.reshape(
-                    torch.arange(num_features, device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-            )
-            current_num_features += num_features
-        total_features = current_num_features
-        feature_mask = tuple(feature_mask)
-        return feature_mask, total_features
 
 
 class ShapleyValues(PerturbationAttribution):

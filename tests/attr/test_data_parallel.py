@@ -20,7 +20,12 @@ from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._utils.attribution import Attribution, InternalAttribution
 
 from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
+from .helpers.gen_test_utils import (
+    gen_test_name,
+    get_target_layer,
+    parse_test_config,
+    should_create_generated_test,
+)
 from .helpers.test_config import config
 
 """
@@ -66,6 +71,8 @@ class DataParallelMeta(type):
             dp_delta = test_config["dp_delta"] if "dp_delta" in test_config else 0.0001
 
             for algorithm in algorithms:
+                if not should_create_generated_test(algorithm):
+                    continue
                 for mode in DataParallelCompareMode:
                     # Creates test case corresponding to each algorithm and
                     # DataParallelCompareMode

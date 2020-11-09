@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Tuple, Type, Union, cast
 
 from torch.nn import Module
 
+from captum.attr._core.lime import Lime
 from captum.attr._models.base import _get_deep_layer_name
 from captum.attr._utils.attribution import Attribution
 
@@ -37,6 +38,21 @@ def parse_test_config(
         test_config["baseline_distr"] if "baseline_distr" in test_config else False
     )
     return algorithms, model, args, layer, noise_tunnel, baseline_distr
+
+
+def should_create_generated_test(algorithm: Type[Attribution]) -> bool:
+    if issubclass(algorithm, Lime):
+        try:
+            import sklearn  # noqa: F401
+
+            assert (
+                sklearn.__version__ >= "0.23.0"
+            ), "Must have sklearn version 0.23.0 or higher to use "
+            "sample_weight in Lasso regression."
+            return True
+        except (ImportError, AssertionError):
+            return False
+    return True
 
 
 @typing.overload
