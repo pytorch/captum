@@ -122,7 +122,6 @@ Lime is an interpretability method that trains an interpretable surrogate model 
 We offer two implementation variants of this method, LimeBase and Lime.
  LimeBase provides a generic framework to train a surrogate interpretable model. This differs from most API of other attribution methods, since the method returns a representation of the interpretable model (e.g. coefficients of the linear model). On the other hand, Lime provides a more specific implementation than LimeBase in order to expose a consistent API with other perturbation-based algorithms.
 
-
 To learn more about Lime, visit the following resources:
 - [Original paper](https://arxiv.org/abs/1602.04938)
 
