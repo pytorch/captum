@@ -66,8 +66,7 @@ class CudaImageTensor(object):
         if kwargs is None:
             kwargs = {}
         args = [a._t if hasattr(a, "_t") else a for a in args]
-        ret = func(*args, **kwargs)
-        return CudaImageTensor(ret)
+        return super().__torch_function__(func, types, args, **kwargs)
 
     def __repr__(self):
         return f"CudaImageTensor(value={self._t})"
