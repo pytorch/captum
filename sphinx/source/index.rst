@@ -15,6 +15,7 @@ Captum API Reference
    noise_tunnel
    layer
    neuron
+   metrics
    utilities
    base_classes
 
