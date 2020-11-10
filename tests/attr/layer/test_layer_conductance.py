@@ -9,18 +9,17 @@ from torch.nn import Module
 
 from captum._utils.typing import BaselineType
 from captum.attr._core.layer.layer_conductance import LayerConductance
-
-from ...helpers.basic import (
+from tests.attr.helpers.conductance_reference import ConductanceReference
+from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
-from ..helpers.conductance_reference import ConductanceReference
 
 
 class Test(BaseTest):

@@ -11,9 +11,8 @@ from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
 
 
 class Test(BaseTest):

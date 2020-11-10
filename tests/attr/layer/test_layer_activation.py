@@ -9,13 +9,12 @@ from torch import Tensor
 from torch.nn import Module
 
 from captum.attr._core.layer.layer_activation import LayerActivation
-
-from ...helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
     Conv1dSeqModel,

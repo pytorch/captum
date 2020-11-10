@@ -14,13 +14,12 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-
-from ...helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
+from tests.helpers.basic_models import BasicEmbeddingModel, BasicModel_MultiLayer
 
 
 class Test(BaseTest):
