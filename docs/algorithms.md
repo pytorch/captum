@@ -12,7 +12,7 @@ The attribution algorithms in Captum are separated into three groups, primary at
 
 Below is a short summary of the various methods currently implemented for primary, layer, and neuron attribution within Captum, as well as noise tunnel, which can be used to smooth the results of any attribution method.
 
-Beside attribution algorithms Captum also offers metrics to estimate the trustworthiness of the explanations and model predictions.
+Beside attribution algorithms Captum also offers metrics to estimate the trustworthiness of model explanations.
 Currently we offer infidelity and sensitivity metrics that help us to estimate the goodness of explanations.
 
 ## Primary Attribution
