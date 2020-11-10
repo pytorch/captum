@@ -225,5 +225,5 @@ class TestIgnoreAlpha(BaseTest):
     def test_ignore_alpha():
         ignore_alpha = IgnoreAlpha()
         test_input = torch.ones(1, 4, 3, 3)
-        rgb_tensor = ignore_alpha(test_input) * 5
+        rgb_tensor = ignore_alpha(test_input)
         assert rgb_tensor.size(1) == 3
