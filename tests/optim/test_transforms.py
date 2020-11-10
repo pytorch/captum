@@ -14,7 +14,7 @@ from tests.helpers.basic import BaseTest
 
 
 class TestRandSelect(BaseTest):
-    def test_rand_select(self):
+    def test_rand_select(self) -> None:
         a = (1, 2, 3, 4, 5)
         b = torch.Tensor([0.1, -5, 56.7, 99.0])
 
@@ -23,7 +23,7 @@ class TestRandSelect(BaseTest):
 
 
 class TestRandomScale(BaseTest):
-    def test_random_scale(self):
+    def test_random_scale(self) -> None:
         scale_module = RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05))
         test_tensor = torch.ones(1, 3, 3, 3)
 
@@ -67,6 +67,7 @@ class TestRandomScale(BaseTest):
             )
         )
 
+     def test_random_scale_matrix(self) -> None:       
         # Test scale matrices
         assert torch.all(
             scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype).eq(
@@ -81,7 +82,7 @@ class TestRandomScale(BaseTest):
 
 
 class TestRandomSpatialJitter(BaseTest):
-    def test_random_spatial_jitter(self):
+    def test_random_spatial_jitter(self) -> None:
 
         spatialjitter = RandomSpatialJitter(3)
         test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
@@ -147,7 +148,7 @@ class TestRandomSpatialJitter(BaseTest):
         )
 
 class TestCenterCrop(BaseTest):
-    def test_center_crop(self):
+    def test_center_crop(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
@@ -198,7 +199,7 @@ class TestCenterCrop(BaseTest):
 
 
 class TestBlendAlpha(BaseTest):
-    def test_blend_alpha(self):
+    def test_blend_alpha(self) -> None:
         rgb_tensor = torch.ones(3, 3, 3)
         alpha_tensor = ((torch.eye(3, 3) + torch.eye(3, 3).flip(1)) / 2).repeat(1, 1, 1)
         test_tensor = torch.cat([rgb_tensor, alpha_tensor]).unsqueeze(0)
@@ -222,7 +223,7 @@ class TestBlendAlpha(BaseTest):
 
 
 class TestIgnoreAlpha(BaseTest):
-    def test_ignore_alpha():
+    def test_ignore_alpha(self) -> None:
         ignore_alpha = IgnoreAlpha()
         test_input = torch.ones(1, 4, 3, 3)
         rgb_tensor = ignore_alpha(test_input)
@@ -230,7 +231,7 @@ class TestIgnoreAlpha(BaseTest):
 
 
 class TestGaussianSmoothing(BaseTest):
-    def test_gaussian_smoothing(self):
+    def test_gaussian_smoothing(self) -> None:
         channels = 3
         kernel_size = 3
         sigma = 2
