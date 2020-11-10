@@ -21,7 +21,7 @@ class BlendAlpha(nn.Module):
     def forward(self, x):
         assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
-        background = self.background or torch.rand_like(rgb)
+        background = self.background if self.background is not None else torch.rand_like(rgb)
         blended = alpha * rgb + (1 - alpha) * background
         return blended
 
