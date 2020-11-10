@@ -117,7 +117,7 @@ To learn more about Shapley Value Sampling, visit the following resources:
 - [Interpretable ML Book](https://christophm.github.io/interpretable-ml-book/shapley.html)
 
 ### Lime
-Lime is an interpretability method that trains an interpretable surrogate model by sampling points around a specified input example and using model evaluations at these points to train a simpler interpretable 'surrogate' model, such as a linear model.
+Lime is an interpretability method that trains an interpretable surrogate model by sampling data points around a specified input example and using model evaluations at these points to train a simpler interpretable 'surrogate' model, such as a linear model.
 
 We offer two implementation variants of this method, LimeBase and Lime.
  LimeBase provides a generic framework to train a surrogate interpretable model. This differs from most API of other attribution methods, since the method returns a representation of the interpretable model (e.g. coefficients of the linear model). On the other hand, Lime provides a more specific implementation than LimeBase in order to expose a consistent API with other perturbation-based algorithms.
