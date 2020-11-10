@@ -227,3 +227,48 @@ class TestIgnoreAlpha(BaseTest):
         test_input = torch.ones(1, 4, 3, 3)
         rgb_tensor = ignore_alpha(test_input)
         assert rgb_tensor.size(1) == 3
+
+
+class TestGaussianSmoothing(BaseTest):
+    def test_gaussian_smoothing(self):
+        channels = 3
+        kernel_size = 3
+        sigma = 2
+        smoothening_module = GaussianSmoothing(channels, kernel_size, sigma)
+
+        test_tensor = (
+            torch.tensor([1.0, 5.0, 1.0, 5.0, 1.0, 5.0])
+            .unsqueeze(0)
+            .rot90(1)
+            .repeat(3, 1, 4)
+            .unsqueeze(0)
+        )
+
+        assert torch.all(
+            smoothening_module(test_tensor).eq(
+                torch.tensor(
+                    [
+                        [
+                            [
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                            ],
+                            [
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                            ],
+                            [
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                                [3.5533, 3.5533],
+                                [2.4467, 2.4467],
+                            ],
+                        ]
+                    ]
+                )
+            )
+        )
