@@ -11,5 +11,5 @@ Infidelity
 Sensitivity
 ^^^^^^^^^^^^^^^^
 
-.. autoclass:: from captum.metrics.sensitivity_max
+.. autoclass:: captum.metrics.sensitivity_max
     :members:
