@@ -1,7 +1,15 @@
 import torch
 import torch.nn as nn
-from captum.optim.transform import (RandomScale, CenterCrop, RandomSpatialJitter,
-                                    rand_select)
+from captum.optim.transform import (
+    BlendAlpha,
+    CenterCrop,
+    GaussianSmoothing,
+    IgnoreAlpha,
+    RandomScale,
+    RandomSpatialJitter,
+    ToRGB,
+    rand_select,
+)
 from tests.helpers.basic import BaseTest
 
 
@@ -187,3 +195,35 @@ class TestCenterCrop(BaseTest):
                 )
             )
         )
+
+
+class TestBlendAlpha(BaseTest):
+    def test_blend_alpha(self):
+        rgb_tensor = torch.ones(3, 3, 3)
+        alpha_tensor = ((torch.eye(3, 3) + torch.eye(3, 3).flip(1)) / 2).repeat(1, 1, 1)
+        test_tensor = torch.cat([rgb_tensor, alpha_tensor]).unsqueeze(0)
+
+        background_tensor = torch.ones_like(rgb_tensor) * 5
+        blend_alpha = BlendAlpha(background=background_tensor)
+
+        assert torch.all(
+            blend_alpha(test_tensor).eq(
+                torch.tensor(
+                    [
+                        [
+                            [[3.0, 5.0, 3.0], [5.0, 1.0, 5.0], [3.0, 5.0, 3.0]],
+                            [[3.0, 5.0, 3.0], [5.0, 1.0, 5.0], [3.0, 5.0, 3.0]],
+                            [[3.0, 5.0, 3.0], [5.0, 1.0, 5.0], [3.0, 5.0, 3.0]],
+                        ]
+                    ]
+                )
+            )
+        )
+
+
+class TestIgnoreAlpha(BaseTest):
+    def test_ignore_alpha():
+        ignore_alpha = IgnoreAlpha()
+        test_input = torch.ones(1, 4, 3, 3)
+        rgb_tensor = ignore_alpha(test_input) * 5
+        assert rgb_tensor.size(1) == 3
