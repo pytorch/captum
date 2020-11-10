@@ -107,9 +107,18 @@ class CenterCrop(torch.nn.Module):
 
     def __init__(self, size=0):
         super(CenterCrop, self).__init__()
-        self.crop_val = [size] * 2 if size is not list and size is not tuple else size
+        if type(size) is list or type(size) is tuple:
+            assert (
+                len(size) == 2
+            ), "CenterCrop requires a single crop value or a tuple of (height,width) in pixels for cropping."
+            self.crop_val = size
+        else:
+            self.crop_val = [size] * 2
 
     def forward(self, input):
+        assert (
+            input.dim() == 3 or input.dim() == 4
+        ), "Input to CenterCrop must be 3D or 4D"
         if input.dim() == 4:
             h, w = input.size(2), input.size(3)
         elif input.dim() == 3:
