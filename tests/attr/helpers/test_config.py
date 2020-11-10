@@ -36,9 +36,8 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
-
-from ...helpers.basic import set_all_random_seeds
-from ...helpers.basic_models import (
+from tests.helpers.basic import set_all_random_seeds
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

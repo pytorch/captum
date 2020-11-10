@@ -11,9 +11,8 @@ from captum._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel4_MultiArgs,

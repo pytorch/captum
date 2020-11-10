@@ -3,8 +3,7 @@
 import unittest
 
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
-
-from ..helpers.basic import assertArraysAlmostEqual
+from tests.helpers.basic import assertArraysAlmostEqual
 
 
 class Test(unittest.TestCase):

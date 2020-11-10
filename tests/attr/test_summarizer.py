@@ -2,8 +2,7 @@
 import torch
 
 from captum.attr import CommonStats, Summarizer
-
-from ..helpers.basic import BaseTest
+from tests.helpers.basic import BaseTest
 
 
 class Test(BaseTest):

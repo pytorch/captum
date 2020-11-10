@@ -15,9 +15,12 @@ from captum.attr import (
     Saliency,
 )
 from captum.metrics import infidelity, infidelity_perturb_func_decorator
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
+from tests.helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
     BasicModel_ConvNet_One_Conv,
