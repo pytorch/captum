@@ -194,8 +194,9 @@ def infidelity(
                    of perturbations and perturbed input such as:
                    perturb, perturbed_input and only perturbed_input in case
                    `infidelity_perturb_func_decorator` is used.
-                 - is a tuple of tensors, corresponding perturbations and perturbed inputs
-                   must be computed and returned as tuples in the following format:
+                 - is a tuple of tensors, corresponding perturbations and perturbed
+                   inputs must be computed and returned as tuples in the
+                   following format:
 
                    (perturb1, perturb2, ... perturbN), (perturbed_input1,
                    perturbed_input2, ... perturbed_inputN)
