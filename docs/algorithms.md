@@ -119,6 +119,21 @@ To learn more about Shapley Value Sampling, visit the following resources:
 - [Original paper](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 - [Interpretable ML Book](https://christophm.github.io/interpretable-ml-book/shapley.html)
 
+### Lime
+Lime is an interpretability method that trains an interpretable surrogate model by sampling data points around a specified input example and using model evaluations at these points to train a simpler interpretable 'surrogate' model, such as a linear model.
+
+We offer two implementation variants of this method, LimeBase and Lime.
+ LimeBase provides a generic framework to train a surrogate interpretable model. This differs from most API of other attribution methods, since the method returns a representation of the interpretable model (e.g. coefficients of the linear model). On the other hand, Lime provides a more specific implementation than LimeBase in order to expose a consistent API with other perturbation-based algorithms.
+
+To learn more about Lime, visit the following resources:
+- [Original paper](https://arxiv.org/abs/1602.04938)
+
+### KernelSHAP
+Kernel SHAP is a method that uses the LIME framework to compute Shapley Values. Setting the loss function, weighting kernel and regularization terms appropriately in the LIME framework allows theoretically obtaining Shapley Values more efficiently than directly computing Shapley Values.
+
+To learn more about KernelSHAP, visit the following resources:
+- [Original paper](https://arxiv.org/abs/1705.07874)
+
 ## Layer Attribution
 ### Layer Conductance
 Conductance combines the neuron activation with the partial derivatives of both the neuron with respect to the input and the output with respect to the neuron to build a more complete picture of neuron importance.
