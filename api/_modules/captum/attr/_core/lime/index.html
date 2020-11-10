@@ -1,0 +1,1250 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<h1>Source code for captum.attr._core.lime</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+
+<span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
+    <span class="n">_expand_target</span><span class="p">,</span>
+    <span class="n">_flatten_tensor_or_tuple</span><span class="p">,</span>
+    <span class="n">_format_input</span><span class="p">,</span>
+    <span class="n">_format_output</span><span class="p">,</span>
+    <span class="n">_is_tuple</span><span class="p">,</span>
+    <span class="n">_reduce_list</span><span class="p">,</span>
+    <span class="n">_run_forward</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaselineType</span><span class="p">,</span>
+    <span class="n">Literal</span><span class="p">,</span>
+    <span class="n">TargetType</span><span class="p">,</span>
+    <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.batching</span> <span class="kn">import</span> <span class="n">_batch_example_iterator</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_construct_default_feature_mask</span><span class="p">,</span>
+    <span class="n">_format_input_baseline</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
+
+
+<div class="viewcode-block" id="LimeBase"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase">[docs]</a><span class="k">class</span> <span class="nc">LimeBase</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
+<span class="sd">    by sampling points around a specified input example and using model evaluations</span>
+<span class="sd">    at these points to train a simpler interpretable 'surrogate' model, such as a</span>
+<span class="sd">    linear model.</span>
+
+<span class="sd">    LimeBase provides a generic framework to train a surrogate interpretable model.</span>
+<span class="sd">    This differs from most other attribution methods, since the method returns a</span>
+<span class="sd">    representation of the interpretable model (e.g. coefficients of the linear model).</span>
+<span class="sd">    For a similar interface to other perturbation-based attribution methods, please use</span>
+<span class="sd">    the Lime child class, which defines specific transformations for the interpretable</span>
+<span class="sd">    model.</span>
+
+<span class="sd">    LimeBase allows sampling points in either the interpretable space or the original</span>
+<span class="sd">    input space to train the surrogate model. The interpretable space is a feature</span>
+<span class="sd">    vector used to train the surrogate interpretable model; this feature space is often</span>
+<span class="sd">    of smaller dimensionality than the original feature space in order for the surrogate</span>
+<span class="sd">    model to be more interpretable.</span>
+
+<span class="sd">    If sampling in the interpretable space, a transformation function must be provided</span>
+<span class="sd">    to define how a vector sampled in the interpretable space can be transformed into</span>
+<span class="sd">    an example in the original input space. If sampling in the original input space, a</span>
+<span class="sd">    transformation function must be provided to define how the input can be transformed</span>
+<span class="sd">    into its interpretable vector representation.</span>
+
+<span class="sd">    More details regarding LIME can be found in the original paper:</span>
+<span class="sd">    https://arxiv.org/abs/1602.04938</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">train_interpretable_model_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">perturb_interpretable_space</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">from_interp_rep_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
+        <span class="n">to_interp_rep_transform</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+
+<span class="sd">        Args:</span>
+
+
+<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+<span class="sd">                    modification of it. If a batch is provided as input for</span>
+<span class="sd">                    attribution, it is expected that forward_func returns a scalar</span>
+<span class="sd">                    representing the entire batch.</span>
+<span class="sd">            train_interpretable_model_func (callable): Function which trains</span>
+<span class="sd">                    an interpretable model and returns some representation of the</span>
+<span class="sd">                    interpretable model. The return type of this will match the</span>
+<span class="sd">                    returned type when calling attribute.</span>
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    train_interpretable_model_func(</span>
+<span class="sd">                        interpretable_inputs: Tensor</span>
+<span class="sd">                                            [2D num_samples x num_interp_features],</span>
+<span class="sd">                        expected_outputs: Tensor [1D num_samples],</span>
+<span class="sd">                        weights: Tensor [1D num_samples]</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Any (Representation of interpretable model)</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+<span class="sd">            similarity_func (callable): Function which takes a single sample</span>
+<span class="sd">                    along with its corresponding interpretable representation</span>
+<span class="sd">                    and returns the weight of the interpretable sample for</span>
+<span class="sd">                    training interpretable model. Weight is generally</span>
+<span class="sd">                    determined based on similarity to the original input.</span>
+<span class="sd">                    The original paper refers to this as a similarity kernel.</span>
+
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    similarity_func(</span>
+<span class="sd">                        original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        perturbed_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        perturbed_interpretable_input:</span>
+<span class="sd">                            Tensor [2D 1 x num_interp_features],</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; float or Tensor containing float scalar</span>
+
+<span class="sd">                    perturbed_input and original_input will be the same type and</span>
+<span class="sd">                    contain tensors of the same shape (regardless of whether</span>
+<span class="sd">                    the sampling function returns inputs in the interpretable</span>
+<span class="sd">                    space). original_input is the same as the input provided</span>
+<span class="sd">                    when calling attribute.</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+<span class="sd">            perturb_func (callable): Function which returns a single</span>
+<span class="sd">                    sampled input, generally a perturbation of the original</span>
+<span class="sd">                    input, which is used to train the interpretable surrogate</span>
+<span class="sd">                    model. Function can return samples in either</span>
+<span class="sd">                    the original input space (matching type and tensor shapes</span>
+<span class="sd">                    of original input) or in the interpretable input space,</span>
+<span class="sd">                    which is a vector containing the intepretable features.</span>
+
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    perturb_func(</span>
+<span class="sd">                        original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Tensor or tuple of Tensors</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+
+<span class="sd">                    Returned sampled input should match the input type (Tensor</span>
+<span class="sd">                    or Tuple of Tensor and corresponding shapes) if</span>
+<span class="sd">                    perturb_interpretable_space = False. If</span>
+<span class="sd">                    perturb_interpretable_space = True, the return type should</span>
+<span class="sd">                    be a single tensor of shape 1 x num_interp_features,</span>
+<span class="sd">                    corresponding to the representation of the</span>
+<span class="sd">                    sample to train the interpretable model.</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+<span class="sd">            perturb_interpretable_space (bool): Indicates whether</span>
+<span class="sd">                    perturb_func returns a sample in the interpretable space</span>
+<span class="sd">                    (tensor of shape 1 x num_interp_features) or a sample</span>
+<span class="sd">                    in the original space, matching the format of the original</span>
+<span class="sd">                    input. Once sampled, inputs can be converted to / from</span>
+<span class="sd">                    the interpretable representation with either</span>
+<span class="sd">                    to_interp_rep_transform or from_interp_rep_transform.</span>
+<span class="sd">            from_interp_rep_transform (callable): Function which takes a</span>
+<span class="sd">                    single sampled interpretable representation (tensor</span>
+<span class="sd">                    of shape 1 x num_interp_features) and returns</span>
+<span class="sd">                    the corresponding representation in the input space</span>
+<span class="sd">                    (matching shapes of original input to attribute).</span>
+
+<span class="sd">                    This argument is necessary if perturb_interpretable_space</span>
+<span class="sd">                    is True, otherwise None can be provided for this argument.</span>
+
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    from_interp_rep_transform(</span>
+<span class="sd">                        curr_sample: Tensor [2D 1 x num_interp_features]</span>
+<span class="sd">                        original_input: Tensor or Tuple of Tensors,</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Tensor or tuple of Tensors</span>
+
+<span class="sd">                    Returned sampled input should match the type of original_input</span>
+<span class="sd">                    and corresponding tensor shapes.</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+
+<span class="sd">            to_interp_rep_transform (callable): Function which takes a</span>
+<span class="sd">                    sample in the original input space and converts to</span>
+<span class="sd">                    its interpretable representation (tensor</span>
+<span class="sd">                    of shape 1 x num_interp_features).</span>
+
+<span class="sd">                    This argument is necessary if perturb_interpretable_space</span>
+<span class="sd">                    is False, otherwise None can be provided for this argument.</span>
+
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    to_interp_rep_transform(</span>
+<span class="sd">                        curr_sample: Tensor or Tuple of Tensors,</span>
+<span class="sd">                        original_input: Tensor or Tuple of Tensors,</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Tensor [2D 1 x num_interp_features]</span>
+
+<span class="sd">                    curr_sample will match the type of original_input</span>
+<span class="sd">                    and corresponding tensor shapes.</span>
+
+<span class="sd">                    All kwargs passed to the attribute method are</span>
+<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+<span class="sd">        """</span>
+        <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_interpretable_model_func</span> <span class="o">=</span> <span class="n">train_interpretable_model_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">similarity_func</span> <span class="o">=</span> <span class="n">similarity_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span> <span class="o">=</span> <span class="n">perturb_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span> <span class="o">=</span> <span class="n">perturb_interpretable_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_interp_rep_transform</span> <span class="o">=</span> <span class="n">from_interp_rep_transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span> <span class="o">=</span> <span class="n">to_interp_rep_transform</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">from_interp_rep_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">"Must provide transform from interpretable space to original input space"</span>
+            <span class="s2">" when sampling from interpretable space."</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">"Must provide transform from original input space to interpretable space"</span>
+
+<div class="viewcode-block" id="LimeBase.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method attributes the output of the model with given target index</span>
+<span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>
+<span class="sd">        scalar) to the inputs of the model using the approach described above.</span>
+<span class="sd">        It trains an interpretable model and returns a representation of the</span>
+<span class="sd">        interpretable model.</span>
+
+<span class="sd">        It is recommended to only provide a single example as input (tensors</span>
+<span class="sd">        with first dimension or batch size = 1). This is because LIME is generally</span>
+<span class="sd">        used for sample-based interpretability, training a separate interpretable</span>
+<span class="sd">        model to explain a model's prediction on each individual example.</span>
+
+<span class="sd">        A batch of inputs can be provided as inputs only if forward_func</span>
+<span class="sd">        returns a single value per batch (e.g. loss).</span>
+<span class="sd">        The interpretable feature representation should still have shape</span>
+<span class="sd">        1 x num_interp_features, corresponding to the interpretable</span>
+<span class="sd">        representation for the full batch, and perturbations_per_eval</span>
+<span class="sd">        must be set to 1.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which LIME</span>
+<span class="sd">                        is computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which surrogate model is trained</span>
+<span class="sd">                        (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
+
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
+
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
+
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
+
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                        correspond to the number of examples. For all other types,</span>
+<span class="sd">                        the given argument is used for all forward evaluations.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            n_perturb_samples (int, optional):  The number of samples of the original</span>
+<span class="sd">                        model used to train the surrogate interpretable model.</span>
+<span class="sd">                        Default: `50` if `n_perturb_samples` is not provided.</span>
+<span class="sd">            perturbations_per_eval (int, optional): Allows multiple samples</span>
+<span class="sd">                        to be processed simultaneously in one call to forward_fn.</span>
+<span class="sd">                        Each forward pass will contain a maximum of</span>
+<span class="sd">                        perturbations_per_eval * #examples samples.</span>
+<span class="sd">                        For DataParallel models, each batch is split among the</span>
+<span class="sd">                        available devices, so evaluations on each available</span>
+<span class="sd">                        device contain at most</span>
+<span class="sd">                        (perturbations_per_eval * #examples) / num_devices</span>
+<span class="sd">                        samples.</span>
+<span class="sd">                        If the forward function returns a single scalar per batch,</span>
+<span class="sd">                        perturbations_per_eval must be set to 1.</span>
+<span class="sd">                        Default: 1</span>
+<span class="sd">            **kwargs (Any, optional): Any additional arguments necessary for</span>
+<span class="sd">                        sampling and transformation functions (provided to</span>
+<span class="sd">                        constructor).</span>
+<span class="sd">                        Default: None</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            **interpretable model representation**:</span>
+<span class="sd">            - **interpretable model representation* (*Any*):</span>
+<span class="sd">                    A representation of the interpretable model trained. The return</span>
+<span class="sd">                    type matches the return type of train_interpretable_model_func.</span>
+<span class="sd">                    For example, this could contain coefficients of a</span>
+<span class="sd">                    linear surrogate model.</span>
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of</span>
+<span class="sd">            &gt;&gt;&gt; # float features with size N x 5,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # We will train an interpretable model with the same</span>
+<span class="sd">            &gt;&gt;&gt; # features by simply sampling with added Gaussian noise</span>
+<span class="sd">            &gt;&gt;&gt; # to the inputs and training a model to predict the</span>
+<span class="sd">            &gt;&gt;&gt; # score of the target class.</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # For interpretable model training, we will use sklearn</span>
+<span class="sd">            &gt;&gt;&gt; # in this example</span>
+<span class="sd">            &gt;&gt;&gt; from sklearn import linear_model</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Define interpretable model training function</span>
+<span class="sd">            &gt;&gt;&gt; def linear_regression_interpretable_model_trainer(</span>
+<span class="sd">            &gt;&gt;&gt;     interpretable_inputs: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     expected_outputs: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     weights: Tensor, **kwargs):</span>
+<span class="sd">            &gt;&gt;&gt;         clf = linear_model.LinearRegression()</span>
+<span class="sd">            &gt;&gt;&gt;         clf.fit(</span>
+<span class="sd">            &gt;&gt;&gt;             interpretable_inputs.cpu().numpy(),</span>
+<span class="sd">            &gt;&gt;&gt;             expected_outputs.cpu().numpy(),</span>
+<span class="sd">            &gt;&gt;&gt;             weights.cpu().numpy())</span>
+<span class="sd">            &gt;&gt;&gt;         return clf.coef_</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Define similarity kernel (exponential kernel based on L2 norm)</span>
+<span class="sd">            &gt;&gt;&gt; def similarity_kernel(</span>
+<span class="sd">            &gt;&gt;&gt;     original_input: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     perturbed_input: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     perturbed_interpretable_input: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     **kwargs)-&gt;Tensor:</span>
+<span class="sd">            &gt;&gt;&gt;         # kernel_width will be provided to attribute as a kwarg</span>
+<span class="sd">            &gt;&gt;&gt;         kernel_width = kwargs["kernel_width"]</span>
+<span class="sd">            &gt;&gt;&gt;         l2_dist = torch.norm(original_input - perturbed_input)</span>
+<span class="sd">            &gt;&gt;&gt;         return torch.exp(- (l2_dist**2) / (kernel_width**2))</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Define sampling function</span>
+<span class="sd">            &gt;&gt;&gt; # This function samples in original input space</span>
+<span class="sd">            &gt;&gt;&gt; def perturb_func(</span>
+<span class="sd">            &gt;&gt;&gt;     original_input: Tensor,</span>
+<span class="sd">            &gt;&gt;&gt;     **kwargs)-&gt;Tensor:</span>
+<span class="sd">            &gt;&gt;&gt;         return original_input + torch.randn_like(original_input)</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # For this example, we are setting the interpretable input to</span>
+<span class="sd">            &gt;&gt;&gt; # match the model input, so the to_interp_rep_transform</span>
+<span class="sd">            &gt;&gt;&gt; # function simply returns the input. In most cases, the interpretable</span>
+<span class="sd">            &gt;&gt;&gt; # input will be different and may have a smaller feature set, so</span>
+<span class="sd">            &gt;&gt;&gt; # an appropriate transformation function should be provided.</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 2 x 5</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 5)</span>
+<span class="sd">            &gt;&gt;&gt; # Defining LimeBase interpreter</span>
+<span class="sd">            &gt;&gt;&gt; lime_attr = LimeBase(net,</span>
+<span class="sd">                                     linear_regression_interpretable_model_trainer,</span>
+<span class="sd">                                     similarity_func=similarity_kernel,</span>
+<span class="sd">                                     perturb_func=perturb_func,</span>
+<span class="sd">                                     perturb_interpretable_space=False,</span>
+<span class="sd">                                     from_interp_rep_transform=None,</span>
+<span class="sd">                                     to_interp_rep_transform=lambda x: x)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes interpretable model, returning coefficients of linear</span>
+<span class="sd">            &gt;&gt;&gt; # model.</span>
+<span class="sd">            &gt;&gt;&gt; attr_coefs = lime_attr.attribute(input, target=1, kernel_width=1.1)</span>
+<span class="sd">        """</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">inp_tensor</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">inp_tensor</span><span class="o">.</span><span class="n">device</span>
+
+            <span class="n">interpretable_inps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">similarities</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">expanded_target</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_perturb_samples</span><span class="p">):</span>
+                <span class="n">curr_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span><span class="p">:</span>
+                    <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">)</span>
+                    <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">from_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                            <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">)</span>
+                    <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">to_interp_rep_transform</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                            <span class="n">curr_sample</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">curr_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">similarity_func</span><span class="p">(</span>
+                    <span class="n">inputs</span><span class="p">,</span> <span class="n">curr_model_inputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">interpretable_inps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+                <span class="n">similarities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">curr_sim</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr_sim</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">curr_sim</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">expanded_additional_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                            <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">expanded_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
+
+                    <span class="n">model_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
+                        <span class="n">curr_model_inputs</span><span class="p">,</span>
+                        <span class="n">expanded_target</span><span class="p">,</span>
+                        <span class="n">expanded_additional_args</span><span class="p">,</span>
+                        <span class="n">device</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
+
+                    <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="n">_expand_additional_forward_args</span><span class="p">(</span>
+                    <span class="n">additional_forward_args</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">expanded_target</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">))</span>
+                <span class="n">model_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate_batch</span><span class="p">(</span>
+                    <span class="n">curr_model_inputs</span><span class="p">,</span>
+                    <span class="n">expanded_target</span><span class="p">,</span>
+                    <span class="n">expanded_additional_args</span><span class="p">,</span>
+                    <span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
+
+            <span class="n">combined_interp_inps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">interpretable_inps</span><span class="p">)</span>
+            <span class="n">combined_outputs</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">combined_sim</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">similarities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">interp_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_interpretable_model_func</span><span class="p">(</span>
+                <span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">interp_model</span></div>
+
+    <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">curr_model_inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
+        <span class="n">expanded_target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+        <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">model_out</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">_reduce_list</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">),</span>
+            <span class="n">expanded_target</span><span class="p">,</span>
+            <span class="n">expanded_additional_args</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_out</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">model_out</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr_model_inputs</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"Number of outputs is not appropriate, must return "</span>
+                <span class="s2">"one output per perturbed input"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_out</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">model_out</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">model_out</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LimeBase.has_convergence_delta"><a class="viewcode-back" href="../../../../lime.html#captum.attr.LimeBase.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">multiplies_by_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="c1"># Default transformations and methods</span>
+<span class="c1"># for Lime child implementation.</span>
+
+
+<span class="k">def</span> <span class="nf">lasso_interpretable_model_trainer</span><span class="p">(</span>
+    <span class="n">interpretable_inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">expected_outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">sklearn</span>
+        <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">sklearn</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">"0.23.0"</span>
+        <span class="p">),</span> <span class="s2">"Must have sklearn version 0.23.0 or higher to use "</span>
+        <span class="s2">"sample_weight in Lasso regression."</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+            <span class="s2">"Requires sklearn for default interpretable model training with"</span>
+            <span class="s2">" Lasso regression. Please install sklearn or use a custom interpretable"</span>
+            <span class="s2">" model training function."</span>
+        <span class="p">)</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">Lasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">"alpha"</span><span class="p">]</span> <span class="k">if</span> <span class="s2">"alpha"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+        <span class="n">interpretable_inputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+        <span class="n">expected_outputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">default_from_interp_rep_transform</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">,</span> <span class="n">original_inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="s2">"feature_mask"</span> <span class="ow">in</span> <span class="n">kwargs</span>
+    <span class="p">),</span> <span class="s2">"Must provide feature_mask to use default interpretable representation transform"</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="s2">"baselines"</span> <span class="ow">in</span> <span class="n">kwargs</span>
+    <span class="p">),</span> <span class="s2">"Must provide baselines to use default interpretable representation transfrom"</span>
+    <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"feature_mask"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">binary_mask</span> <span class="o">=</span> <span class="n">curr_sample</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">feature_mask</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">binary_mask</span> <span class="o">*</span> <span class="n">original_inputs</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">binary_mask</span><span class="p">)</span> <span class="o">*</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">binary_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">curr_sample</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">feature_mask</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">binary_mask</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">original_inputs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">binary_mask</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">*</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">))</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_exp_kernel_similarity_function</span><span class="p">(</span>
+    <span class="n">distance_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cosine"</span><span class="p">,</span> <span class="n">kernel_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    This method constructs an appropriate similarity function to compute</span>
+<span class="sd">    weights for perturbed sample in LIME. Distance between the original</span>
+<span class="sd">    and perturbed inputs is computed based on the provided distance mode,</span>
+<span class="sd">    and the distance is passed through an exponential kernel with given</span>
+<span class="sd">    kernel width to convert to a range between 0 and 1.</span>
+
+<span class="sd">    The callable returned can be provided as the similarity_fn for</span>
+<span class="sd">    Lime or LimeBase.</span>
+
+<span class="sd">    Args:</span>
+
+<span class="sd">        distance_mode (str, optional):  Distance mode can be either "cosine" or</span>
+<span class="sd">                    "euclidean" corresponding to either cosine distance</span>
+<span class="sd">                    or Euclidean distance respectively. Distance is computed</span>
+<span class="sd">                    by flattening the original inputs and perturbed inputs</span>
+<span class="sd">                    (concatenating tuples of inputs if necessary) and computing</span>
+<span class="sd">                    distances between the resulting vectors.</span>
+<span class="sd">                    Default: "cosine"</span>
+<span class="sd">        kernel_width (float, optional):</span>
+<span class="sd">                    Kernel width for exponential kernel applied to distance.</span>
+<span class="sd">                    Default: 1.0</span>
+
+<span class="sd">    Returns:</span>
+
+<span class="sd">        *Callable*:</span>
+<span class="sd">        - **similarity_fn** (*Callable*):</span>
+<span class="sd">            Similarity function. This callable can be provided as the</span>
+<span class="sd">            similarity_fn for Lime or LimeBase.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="nf">default_exp_kernel</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="n">perturbed_inp</span><span class="p">,</span> <span class="n">__</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">flattened_original_inp</span> <span class="o">=</span> <span class="n">_flatten_tensor_or_tuple</span><span class="p">(</span><span class="n">original_inp</span><span class="p">)</span>
+        <span class="n">flattened_perturbed_inp</span> <span class="o">=</span> <span class="n">_flatten_tensor_or_tuple</span><span class="p">(</span><span class="n">perturbed_inp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">distance_mode</span> <span class="o">==</span> <span class="s2">"cosine"</span><span class="p">:</span>
+            <span class="n">cos_sim</span> <span class="o">=</span> <span class="n">CosineSimilarity</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cos_sim</span><span class="p">(</span><span class="n">flattened_original_inp</span><span class="p">,</span> <span class="n">flattened_perturbed_inp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">distance_mode</span> <span class="o">==</span> <span class="s2">"euclidean"</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">flattened_original_inp</span> <span class="o">-</span> <span class="n">flattened_perturbed_inp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"distance_mode must be either cosine or euclidean."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">distance</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">kernel_width</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">default_exp_kernel</span>
+
+
+<span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="s2">"num_interp_features"</span> <span class="ow">in</span> <span class="n">kwargs</span>
+    <span class="p">),</span> <span class="s2">"Must provide num_interp_features to use default interpretable sampling function"</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">original_inp</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">original_inp</span><span class="o">.</span><span class="n">device</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">original_inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"num_interp_features"</span><span class="p">])</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Lime"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime">[docs]</a><span class="k">class</span> <span class="nc">Lime</span><span class="p">(</span><span class="n">LimeBase</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
+<span class="sd">    by sampling points around a specified input example and using model evaluations</span>
+<span class="sd">    at these points to train a simpler interpretable 'surrogate' model, such as a</span>
+<span class="sd">    linear model.</span>
+
+<span class="sd">    Lime provides a more specific implementation than LimeBase in order to expose</span>
+<span class="sd">    a consistent API with other perturbation-based algorithms. For more general</span>
+<span class="sd">    use of the LIME framework, consider using the LimeBase class directly and</span>
+<span class="sd">    defining custom sampling and transformation to / from interpretable</span>
+<span class="sd">    representation functions.</span>
+
+<span class="sd">    Lime assumes that the interpretable representation is a binary vector,</span>
+<span class="sd">    corresponding to some elements in the input being set to their baseline value</span>
+<span class="sd">    if the corresponding binary interpretable feature value is 0 or being set</span>
+<span class="sd">    to the original input value if the corresponding binary interpretable</span>
+<span class="sd">    feature value is 1. Input values can be grouped to correspond to the same</span>
+<span class="sd">    binary interpretable feature using a feature mask provided when calling</span>
+<span class="sd">    attribute, similar to other perturbation-based attribution methods.</span>
+
+<span class="sd">    One example of this setting is when applying Lime to an image classifier.</span>
+<span class="sd">    Pixels in an image can be grouped into super-pixels or segments, which</span>
+<span class="sd">    correspond to interpretable features, provided as a feature_mask when</span>
+<span class="sd">    calling attribute. Sampled binary vectors convey whether a super-pixel</span>
+<span class="sd">    is on (retains the original input values) or off (set to the corresponding</span>
+<span class="sd">    baseline value, e.g. black image). An interpretable linear model is trained</span>
+<span class="sd">    with input being the binary vectors and outputs as the corresponding scores</span>
+<span class="sd">    of the image classifier with the appropriate super-pixels masked based on the</span>
+<span class="sd">    binary vector. Coefficients of the trained surrogate</span>
+<span class="sd">    linear model convey the importance of each super-pixel.</span>
+
+<span class="sd">    More details regarding LIME can be found in the original paper:</span>
+<span class="sd">    https://arxiv.org/abs/1602.04938</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">train_interpretable_model_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">lasso_interpretable_model_trainer</span><span class="p">,</span>
+        <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">get_exp_kernel_similarity_function</span><span class="p">(),</span>
+        <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">default_perturb_func</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+
+<span class="sd">        Args:</span>
+
+
+<span class="sd">            forward_func (callable):  The forward function of the model or any</span>
+<span class="sd">                    modification of it</span>
+<span class="sd">            train_interpretable_model_func (optional, callable): Function which</span>
+<span class="sd">                    trains an interpretable model and returns coefficients</span>
+<span class="sd">                    of the interpretable model.</span>
+<span class="sd">                    This function is optional, and the default function trains</span>
+<span class="sd">                    an interpretable model using Lasso regression, using the</span>
+<span class="sd">                    alpha parameter provided when calling attribute.</span>
+<span class="sd">                    Using the default function requires having sklearn version</span>
+<span class="sd">                    0.23.0 or higher installed.</span>
+
+<span class="sd">                    If a custom function is provided, the expected signature of this</span>
+<span class="sd">                    callable is:</span>
+
+<span class="sd">                    train_interpretable_model_func(</span>
+<span class="sd">                        interpretable_inputs: Tensor</span>
+<span class="sd">                                            [2D num_samples x num_interp_features],</span>
+<span class="sd">                        expected_outputs: Tensor [1D num_samples],</span>
+<span class="sd">                        weights: Tensor [1D num_samples]</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Tensor [1D num_interp_features]</span>
+<span class="sd">                    The return type must be a 1D tensor containing the importance</span>
+<span class="sd">                    or attribution of each input feature.</span>
+
+<span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
+<span class="sd">                    (integer, determined from feature mask), and</span>
+<span class="sd">                    alpha (for Lasso regression).</span>
+<span class="sd">            similarity_func (callable): Function which takes a single sample</span>
+<span class="sd">                    along with its corresponding interpretable representation</span>
+<span class="sd">                    and returns the weight of the interpretable sample for</span>
+<span class="sd">                    training the interpretable model.</span>
+<span class="sd">                    This is often referred to as a similarity kernel.</span>
+
+<span class="sd">                    The expected signature of this callable is:</span>
+
+<span class="sd">                    similarity_func(</span>
+<span class="sd">                        original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        perturbed_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        perturbed_interpretable_input:</span>
+<span class="sd">                            Tensor [2D 1 x num_interp_features],</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; float or Tensor containing float scalar</span>
+
+<span class="sd">                    perturbed_input and original_input will be the same type and</span>
+<span class="sd">                    contain tensors of the same shape, with original_input</span>
+<span class="sd">                    being the same as the input provided when calling attribute.</span>
+
+<span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
+<span class="sd">                    (integer, determined from feature mask), and</span>
+<span class="sd">                    alpha (for Lasso regression).</span>
+<span class="sd">            perturb_func (callable): Function which returns a single</span>
+<span class="sd">                    sampled input, which is a binary vector of length</span>
+<span class="sd">                    num_interp_features. The default function returns</span>
+<span class="sd">                    a binary vector where each element is selected</span>
+<span class="sd">                    independently and uniformly at random. Custom</span>
+<span class="sd">                    logic for selecting sampled binary vectors can</span>
+<span class="sd">                    be implemented by providing a function with the</span>
+<span class="sd">                    following expected signature:</span>
+
+<span class="sd">                    perturb_func(</span>
+<span class="sd">                        original_input: Tensor or tuple of Tensors,</span>
+<span class="sd">                        **kwargs: Any</span>
+<span class="sd">                    ) -&gt; Tensor [Binary 2D Tensor 1 x num_interp_features]</span>
+
+<span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
+<span class="sd">                    (integer, determined from feature mask), and</span>
+<span class="sd">                    alpha (for Lasso regression).</span>
+
+<span class="sd">        """</span>
+        <span class="n">LimeBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">forward_func</span><span class="p">,</span>
+            <span class="n">train_interpretable_model_func</span><span class="p">,</span>
+            <span class="n">similarity_func</span><span class="p">,</span>
+            <span class="n">perturb_func</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+            <span class="n">default_from_interp_rep_transform</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Lime.attribute"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        This method attributes the output of the model with given target index</span>
+<span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>
+<span class="sd">        scalar) to the inputs of the model using the approach described above,</span>
+<span class="sd">        training an interpretable model and returning a representation of the</span>
+<span class="sd">        interpretable model.</span>
+
+<span class="sd">        It is recommended to only provide a single example as input (tensors</span>
+<span class="sd">        with first dimension or batch size = 1). This is because LIME is generally</span>
+<span class="sd">        used for sample-based interpretability, training a separate interpretable</span>
+<span class="sd">        model to explain a model's prediction on each individual example.</span>
+
+<span class="sd">        A batch of inputs can also be provided as inputs, similar to</span>
+<span class="sd">        other perturbation-based attribution methods. In this case, if forward_fn</span>
+<span class="sd">        returns a scalar per example, attributions will be computed for each</span>
+<span class="sd">        example independently, with a separate interpretable model trained for each</span>
+<span class="sd">        example. Note that provided similarity and perturbation functions will be</span>
+<span class="sd">        provided each example separately (first dimension = 1) in this case.</span>
+<span class="sd">        If forward_fn returns a scalar per batch (e.g. loss), attributions will</span>
+<span class="sd">        still be computed using a single interpretable model for the full batch.</span>
+<span class="sd">        In this case, similarity and perturbation functions will be provided the</span>
+<span class="sd">        same original input containing the full batch.</span>
+
+<span class="sd">        The number of interpretable features is determined from the provided</span>
+<span class="sd">        feature mask, or if none is provided, from the default feature mask,</span>
+<span class="sd">        which considers each scalar input as a separate feature. It is</span>
+<span class="sd">        generally recommended to provide a feature mask which groups features</span>
+<span class="sd">        into a small number of interpretable features / components (e.g.</span>
+<span class="sd">        superpixels in images).</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            inputs (tensor or tuple of tensors):  Input for which LIME</span>
+<span class="sd">                        is computed. If forward_func takes a single</span>
+<span class="sd">                        tensor as input, a single input tensor should be provided.</span>
+<span class="sd">                        If forward_func takes multiple tensors as input, a tuple</span>
+<span class="sd">                        of the input tensors should be provided. It is assumed</span>
+<span class="sd">                        that for all given input tensors, dimension 0 corresponds</span>
+<span class="sd">                        to the number of examples, and if multiple input tensors</span>
+<span class="sd">                        are provided, the examples must be aligned appropriately.</span>
+<span class="sd">            baselines (scalar, tensor, tuple of scalars or tensors, optional):</span>
+<span class="sd">                        Baselines define reference value which replaces each</span>
+<span class="sd">                        feature when the corresponding interpretable feature</span>
+<span class="sd">                        is set to 0.</span>
+<span class="sd">                        Baselines can be provided as:</span>
+
+<span class="sd">                        - a single tensor, if inputs is a single tensor, with</span>
+<span class="sd">                            exactly the same dimensions as inputs or the first</span>
+<span class="sd">                            dimension is one and the remaining dimensions match</span>
+<span class="sd">                            with inputs.</span>
+
+<span class="sd">                        - a single scalar, if inputs is a single tensor, which will</span>
+<span class="sd">                            be broadcasted for each input value in input tensor.</span>
+
+<span class="sd">                        - a tuple of tensors or scalars, the baseline corresponding</span>
+<span class="sd">                            to each tensor in the inputs' tuple can be:</span>
+
+<span class="sd">                            - either a tensor with matching dimensions to</span>
+<span class="sd">                            corresponding tensor in the inputs' tuple</span>
+<span class="sd">                            or the first dimension is one and the remaining</span>
+<span class="sd">                            dimensions match with the corresponding</span>
+<span class="sd">                            input tensor.</span>
+
+<span class="sd">                            - or a scalar, corresponding to a tensor in the</span>
+<span class="sd">                            inputs' tuple. This scalar value is broadcasted</span>
+<span class="sd">                            for corresponding input tensor.</span>
+<span class="sd">                        In the cases when `baselines` is not provided, we internally</span>
+<span class="sd">                        use zero corresponding to each input tensor.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            target (int, tuple, tensor or list, optional):  Output indices for</span>
+<span class="sd">                        which surrogate model is trained</span>
+<span class="sd">                        (for classification cases,</span>
+<span class="sd">                        this is usually the target class).</span>
+<span class="sd">                        If the network returns a scalar value per example,</span>
+<span class="sd">                        no target index is necessary.</span>
+<span class="sd">                        For general 2D outputs, targets can be either:</span>
+
+<span class="sd">                        - a single integer or a tensor containing a single</span>
+<span class="sd">                          integer, which is applied to all input examples</span>
+
+<span class="sd">                        - a list of integers or a 1D tensor, with length matching</span>
+<span class="sd">                          the number of examples in inputs (dim 0). Each integer</span>
+<span class="sd">                          is applied as the target for the corresponding example.</span>
+
+<span class="sd">                        For outputs with &gt; 2 dimensions, targets can be either:</span>
+
+<span class="sd">                        - A single tuple, which contains #output_dims - 1</span>
+<span class="sd">                          elements. This target index is applied to all examples.</span>
+
+<span class="sd">                        - A list of tuples with length equal to the number of</span>
+<span class="sd">                          examples in inputs (dim 0), and each tuple containing</span>
+<span class="sd">                          #output_dims - 1 elements. Each tuple is applied as the</span>
+<span class="sd">                          target for the corresponding example.</span>
+
+<span class="sd">                        Default: None</span>
+<span class="sd">            additional_forward_args (any, optional): If the forward function</span>
+<span class="sd">                        requires additional arguments other than the inputs for</span>
+<span class="sd">                        which attributions should not be computed, this argument</span>
+<span class="sd">                        can be provided. It must be either a single additional</span>
+<span class="sd">                        argument of a Tensor or arbitrary (non-tuple) type or a</span>
+<span class="sd">                        tuple containing multiple additional arguments including</span>
+<span class="sd">                        tensors or any arbitrary python types. These arguments</span>
+<span class="sd">                        are provided to forward_func in order following the</span>
+<span class="sd">                        arguments in inputs.</span>
+<span class="sd">                        For a tensor, the first dimension of the tensor must</span>
+<span class="sd">                        correspond to the number of examples. It will be</span>
+<span class="sd">                        repeated for each of `n_steps` along the integrated</span>
+<span class="sd">                        path. For all other types, the given argument is used</span>
+<span class="sd">                        for all forward evaluations.</span>
+<span class="sd">                        Note that attributions are not computed with respect</span>
+<span class="sd">                        to these arguments.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            feature_mask (tensor or tuple of tensors, optional):</span>
+<span class="sd">                        feature_mask defines a mask for the input, grouping</span>
+<span class="sd">                        features which correspond to the same</span>
+<span class="sd">                        interpretable feature. feature_mask</span>
+<span class="sd">                        should contain the same number of tensors as inputs.</span>
+<span class="sd">                        Each tensor should</span>
+<span class="sd">                        be the same size as the corresponding input or</span>
+<span class="sd">                        broadcastable to match the input tensor. Values across</span>
+<span class="sd">                        all tensors should be integers in the range 0 to</span>
+<span class="sd">                        num_interp_features - 1, and indices corresponding to the</span>
+<span class="sd">                        same feature should have the same value.</span>
+<span class="sd">                        Note that features are grouped across tensors</span>
+<span class="sd">                        (unlike feature ablation and occlusion), so</span>
+<span class="sd">                        if the same index is used in different tensors, those</span>
+<span class="sd">                        features are still grouped and added simultaneously.</span>
+<span class="sd">                        If None, then a feature mask is constructed which assigns</span>
+<span class="sd">                        each scalar within a tensor as a separate feature.</span>
+<span class="sd">                        Default: None</span>
+<span class="sd">            n_perturb_samples (int, optional):  The number of samples of the original</span>
+<span class="sd">                        model used to train the surrogate interpretable model.</span>
+<span class="sd">                        Default: `50` if `n_perturb_samples` is not provided.</span>
+<span class="sd">            perturbations_per_eval (int, optional): Allows multiple samples</span>
+<span class="sd">                        to be processed simultaneously in one call to forward_fn.</span>
+<span class="sd">                        Each forward pass will contain a maximum of</span>
+<span class="sd">                        perturbations_per_eval * #examples samples.</span>
+<span class="sd">                        For DataParallel models, each batch is split among the</span>
+<span class="sd">                        available devices, so evaluations on each available</span>
+<span class="sd">                        device contain at most</span>
+<span class="sd">                        (perturbations_per_eval * #examples) / num_devices</span>
+<span class="sd">                        samples.</span>
+<span class="sd">                        If the forward function returns a single scalar per batch,</span>
+<span class="sd">                        perturbations_per_eval must be set to 1.</span>
+<span class="sd">                        Default: 1</span>
+<span class="sd">            alpha (float, optional):  Alpha used for training interpretable surrogate</span>
+<span class="sd">                        model in Lasso Regression. This parameter is used only</span>
+<span class="sd">                        if using default interpretable model trainer (Lasso).</span>
+<span class="sd">                        Default: 1.0</span>
+<span class="sd">            return_input_shape (bool, optional): Determines whether the returned</span>
+<span class="sd">                        tensor(s) only contain the coefficients for each interp-</span>
+<span class="sd">                        retable feature from the trained surrogate model, or</span>
+<span class="sd">                        whether the returned attributions match the input shape.</span>
+<span class="sd">                        When return_input_shape is True, the return type of attribute</span>
+<span class="sd">                        matches the input shape, with each element containing the</span>
+<span class="sd">                        coefficient of the corresponding interpretale feature.</span>
+<span class="sd">                        All elements with the same value in the feature mask</span>
+<span class="sd">                        will contain the same coefficient in the returned</span>
+<span class="sd">                        attributions. If return_input_shape is False, a 1D</span>
+<span class="sd">                        tensor is returned, containing only the coefficients</span>
+<span class="sd">                        of the trained interpreatable models, with length</span>
+<span class="sd">                        num_interp_features.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
+<span class="sd">            - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                        The attributions with respect to each input feature.</span>
+<span class="sd">                        If return_input_shape = True, attributions will be</span>
+<span class="sd">                        the same size as the provided inputs, with each value</span>
+<span class="sd">                        providing the coefficient of the corresponding</span>
+<span class="sd">                        interpretale feature.</span>
+<span class="sd">                        If return_input_shape is False, a 1D</span>
+<span class="sd">                        tensor is returned, containing only the coefficients</span>
+<span class="sd">                        of the trained interpreatable models, with length</span>
+<span class="sd">                        num_interp_features.</span>
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; # SimpleClassifier takes a single input tensor of size Nx4x4,</span>
+<span class="sd">            &gt;&gt;&gt; # and returns an Nx3 tensor of class probabilities.</span>
+<span class="sd">            &gt;&gt;&gt; net = SimpleClassifier()</span>
+
+<span class="sd">            &gt;&gt;&gt; # Generating random input with size 1 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; input = torch.randn(1, 4, 4)</span>
+
+<span class="sd">            &gt;&gt;&gt; # Defining Lime interpreter</span>
+<span class="sd">            &gt;&gt;&gt; lime = Lime(net)</span>
+<span class="sd">            &gt;&gt;&gt; # Computes attribution, with each of the 4 x 4 = 16</span>
+<span class="sd">            &gt;&gt;&gt; # features as a separate interpretable feature</span>
+<span class="sd">            &gt;&gt;&gt; attr = lime.attribute(input, target=1, n_perturb_samples=200)</span>
+
+<span class="sd">            &gt;&gt;&gt; # Alternatively, we can group each 2x2 square of the inputs</span>
+<span class="sd">            &gt;&gt;&gt; # as one 'interpretable' feature and perturb them together.</span>
+<span class="sd">            &gt;&gt;&gt; # This can be done by creating a feature mask as follows, which</span>
+<span class="sd">            &gt;&gt;&gt; # defines the feature groups, e.g.:</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 0 | 0 | 1 | 1 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # | 2 | 2 | 3 | 3 |</span>
+<span class="sd">            &gt;&gt;&gt; # +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; # With this mask, all inputs with the same value are set to their</span>
+<span class="sd">            &gt;&gt;&gt; # baseline value, when the corresponding binary interpretable</span>
+<span class="sd">            &gt;&gt;&gt; # feature is set to 0.</span>
+<span class="sd">            &gt;&gt;&gt; # The attributions can be calculated as follows:</span>
+<span class="sd">            &gt;&gt;&gt; # feature mask has dimensions 1 x 4 x 4</span>
+<span class="sd">            &gt;&gt;&gt; feature_mask = torch.tensor([[[0,0,1,1],[0,0,1,1],</span>
+<span class="sd">            &gt;&gt;&gt;                             [2,2,3,3],[2,2,3,3]]])</span>
+
+<span class="sd">            &gt;&gt;&gt; # Computes interpretable model and returning attributions</span>
+<span class="sd">            &gt;&gt;&gt; # matching input shape.</span>
+<span class="sd">            &gt;&gt;&gt; attr = lime.attribute(input, target=1, feature_mask=feature_mask)</span>
+<span class="sd">        """</span>
+        <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
+        <span class="n">bsz</span> <span class="o">=</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">_construct_default_feature_mask</span><span class="p">(</span>
+                <span class="n">formatted_inputs</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
+            <span class="n">min_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="nb">min</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">min_interp_features</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">"Minimum element in feature mask is not 0, shifting indices to"</span>
+                    <span class="s2">" start at 0."</span>
+                <span class="p">)</span>
+                <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="n">single_inp</span> <span class="o">+</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+                <span class="p">)</span>
+
+            <span class="n">num_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_interp_features</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Attempting to construct interpretable model with &gt; 10000 features."</span>
+                <span class="s2">"This can be very slow or lead to OOM issues. Please provide a feature"</span>
+                <span class="s2">"mask which groups input features to reduce the number of interpretable"</span>
+                <span class="s2">"features. "</span>
+            <span class="p">)</span>
+
+        <span class="n">coefs</span><span class="p">:</span> <span class="n">Tensor</span>
+        <span class="k">if</span> <span class="n">bsz</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">test_output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_output</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">test_output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">test_output</span><span class="p">)</span> <span class="o">==</span> <span class="n">bsz</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s2">"You are providing multiple inputs for Lime / Kernel SHAP "</span>
+                        <span class="s2">"attributions. This trains a separate interpretable model "</span>
+                        <span class="s2">"for each example, which can be time consuming. It is "</span>
+                        <span class="s2">"recommended to compute attributions for one example at a time."</span>
+                    <span class="p">)</span>
+                    <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="p">(</span>
+                        <span class="n">curr_inps</span><span class="p">,</span>
+                        <span class="n">curr_target</span><span class="p">,</span>
+                        <span class="n">curr_additional_args</span><span class="p">,</span>
+                        <span class="n">curr_baselines</span><span class="p">,</span>
+                        <span class="n">curr_feature_mask</span><span class="p">,</span>
+                    <span class="p">)</span> <span class="ow">in</span> <span class="n">_batch_example_iterator</span><span class="p">(</span>
+                        <span class="n">bsz</span><span class="p">,</span>
+                        <span class="n">formatted_inputs</span><span class="p">,</span>
+                        <span class="n">target</span><span class="p">,</span>
+                        <span class="n">additional_forward_args</span><span class="p">,</span>
+                        <span class="n">baselines</span><span class="p">,</span>
+                        <span class="n">feature_mask</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">coefs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="p">,</span>
+                            <span class="n">inputs</span><span class="o">=</span><span class="n">curr_inps</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">curr_inps</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">target</span><span class="o">=</span><span class="n">curr_target</span><span class="p">,</span>
+                            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">curr_additional_args</span><span class="p">,</span>
+                            <span class="n">n_perturb_samples</span><span class="o">=</span><span class="n">n_perturb_samples</span><span class="p">,</span>
+                            <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+                            <span class="n">baselines</span><span class="o">=</span><span class="n">curr_baselines</span>
+                            <span class="k">if</span> <span class="n">is_inputs_tuple</span>
+                            <span class="k">else</span> <span class="n">curr_baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">feature_mask</span><span class="o">=</span><span class="n">curr_feature_mask</span>
+                            <span class="k">if</span> <span class="n">is_inputs_tuple</span>
+                            <span class="k">else</span> <span class="n">curr_feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                            <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
+                            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
+                            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_shape</span><span class="p">(</span>
+                                    <span class="n">curr_inps</span><span class="p">,</span>
+                                    <span class="n">curr_feature_mask</span><span class="p">,</span>
+                                    <span class="n">coefs</span><span class="p">,</span>
+                                    <span class="n">num_interp_features</span><span class="p">,</span>
+                                    <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coefs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
+
+                    <span class="k">return</span> <span class="n">_reduce_list</span><span class="p">(</span><span class="n">output_list</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                        <span class="s2">"Invalid number of outputs, forward function should return a"</span>
+                        <span class="s2">"scalar per example or a scalar per input batch."</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">perturbations_per_eval</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="s2">"Perturbations per eval must be 1 when forward function"</span>
+                    <span class="s2">"returns single value per batch!"</span>
+                <span class="p">)</span>
+
+        <span class="n">coefs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">n_perturb_samples</span><span class="o">=</span><span class="n">n_perturb_samples</span><span class="p">,</span>
+            <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_shape</span><span class="p">(</span>
+                <span class="n">formatted_inputs</span><span class="p">,</span>
+                <span class="n">feature_mask</span><span class="p">,</span>
+                <span class="n">coefs</span><span class="p">,</span>
+                <span class="n">num_interp_features</span><span class="p">,</span>
+                <span class="n">is_inputs_tuple</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">coefs</span></div>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">_convert_output_shape</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">formatted_inp</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">coefs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">num_interp_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="k">def</span> <span class="nf">_convert_output_shape</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">formatted_inp</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">coefs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">num_interp_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">_convert_output_shape</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">formatted_inp</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">coefs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">num_interp_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">formatted_inp</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">tensor_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">formatted_inp</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">single_feature</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_interp_features</span><span class="p">):</span>
+                <span class="n">attr</span><span class="p">[</span><span class="n">tensor_ind</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                    <span class="n">coefs</span><span class="p">[</span><span class="n">single_feature</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="n">feature_mask</span><span class="p">[</span><span class="n">tensor_ind</span><span class="p">]</span> <span class="o">==</span> <span class="n">single_feature</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span></div>
+</pre></div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../metrics.html">Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="../../../../index.html">Documentation overview</a><ul>
+<li><a href="../../../index.html">Module code</a><ul>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="../../../../search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
