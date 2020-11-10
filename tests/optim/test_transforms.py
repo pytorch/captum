@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from captum.optim.transform import (RandomScale, RandomSpatialJitter,
+from captum.optim.transform import (RandomScale, CenterCrop, RandomSpatialJitter,
                                     rand_select)
 from tests.helpers.basic import BaseTest
 
@@ -109,7 +109,7 @@ class TestRandomSpatialJitter(BaseTest):
 
         spatialjitter = RandomSpatialJitter(2)
 
-        torch.all(
+        assert torch.all(
             spatialjitter.translate_tensor(test_input, [0, 3]).eq(
                 torch.tensor(
                     [
@@ -131,6 +131,56 @@ class TestRandomSpatialJitter(BaseTest):
                                 [1.0, 0.0, 0.0, 0.0],
                                 [0.0, 0.0, 0.0, 0.0],
                                 [1.0, 0.0, 0.0, 0.0],
+                            ],
+                        ]
+                    ]
+                )
+            )
+        )
+
+class TestCenterCrop(BaseTest):
+    def test_center_crop(self):
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_tensor = CenterCrop(size=3)
+
+        assert torch.all(
+            crop_tensor(test_tensor).eq(
+                torch.tensor(
+                    [
+                        [
+                            [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]],
+                            [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]],
+                            [[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 0.0]],
+                        ]
+                    ]
+                )
+            )
+        )
+
+        crop_tensor = CenterCrop(size=(4, 0))
+
+        assert torch.all(
+            crop_tensor(test_tensor).eq(
+                torch.tensor(
+                    [
+                        [
+                            [
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                            ],
+                            [
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                            ],
+                            [
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                                [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
                             ],
                         ]
                     ]
