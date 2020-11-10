@@ -1,0 +1,485 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Captum · Model Interpretability for PyTorch</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Model Interpretability for PyTorch"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Captum · Model Interpretability for PyTorch"/><meta property="og:type" content="website"/><meta property="og:url" content="https://captum.ai/"/><meta property="og:description" content="Model Interpretability for PyTorch"/><meta property="og:image" content="https://captum.ai/img/captum-icon.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://captum.ai/img/captum.png"/><link rel="shortcut icon" href="/img/captum.ico"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-44373548-48', 'auto');
+              ga('send', 'pageview');
+            </script><link rel="stylesheet" href="/css/code_block_buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="/js/code_block_buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/mathjax.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script><script src="https://unpkg.com/vanilla-back-to-top@7.1.14/dist/vanilla-back-to-top.min.js"></script><script>
+        document.addEventListener('DOMContentLoaded', function() {
+          addBackToTop(
+            {"zIndex":100}
+          )
+        });
+        </script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/captum_logo.svg" alt="Captum"/></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/tutorials/" target="_self">Tutorials</a></li><li class=""><a href="/api/" target="_self">API Reference</a></li><li class=""><a href="https://github.com/pytorch/captum" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div>
+<script type="text/javascript" id="documentation_options" data-url_root="./"
+  src="/js/documentation_options.js"></script>
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/underscore.js"></script>
+<script type="text/javascript" src="/js/doctools.js"></script>
+<script type="text/javascript" src="/js/language_data.js"></script>
+<script type="text/javascript" src="/js/searchtools.js"></script>
+<div class="sphinx"><div class="document">
+<div class="documentwrapper">
+<div class="bodywrapper">
+<div class="body" role="main">
+<div class="section" id="metrics">
+<h1>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="infidelity">
+<h2>Infidelity<a class="headerlink" href="#infidelity" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="captum.metrics.infidelity">
+<em class="property">class </em><code class="sig-prename descclassname">captum.metrics.</code><code class="sig-name descname">infidelity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">perturb_func</span></em>, <em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">attributions</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_perturb_samples</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">max_examples_per_batch</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/infidelity.html#infidelity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.metrics.infidelity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explanation infidelity represents the expected mean-squared error
+between the explanation multiplied by a meaningful input perturbation
+and the differences between the predictor function at its input
+and perturbed input.
+More details about the measure can be found in the following paper:
+<a class="reference external" href="https://arxiv.org/pdf/1901.09392.pdf">https://arxiv.org/pdf/1901.09392.pdf</a></p>
+<p>It is derived from the completeness property of well-known attribution
+algorithms and is a computationally more efficient and generalized
+notion of Sensitivy-n. The latter measures correlations between the sum
+of the attributions and the differences of the predictor function at
+its input and fixed baseline. More details about the Sensitivity-n can
+be found here:
+<a class="reference external" href="https://arxiv.org/pdf/1711.06104.pdfs">https://arxiv.org/pdf/1711.06104.pdfs</a></p>
+<p>The users can perturb the inputs any desired way by providing any
+perturbation function that takes the inputs (and optionally baselines)
+and returns perturbed inputs or perturbed inputs and corresponding
+perturbations.</p>
+<p>This specific implementation is primarily tested for attribution-based
+explanation methods but the idea can be expanded to use for non
+attribution-based interpretability methods as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any modification of it.</p></li>
+<li><p><strong>perturb_func</strong> (<em>callable</em>) – <p>The perturbation function of model inputs. This function takes
+model inputs and optionally baselines as input arguments and returns
+either a tuple of perturbations and perturbed inputs or just
+perturbed inputs. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>  <span class="o">&lt;</span><span class="n">MY</span><span class="o">-</span><span class="n">LOGIC</span><span class="o">-</span><span class="n">HERE</span><span class="o">&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>  <span class="k">return</span> <span class="n">perturbations</span><span class="p">,</span> <span class="n">perturbed_inputs</span>
+</pre></div>
+</div>
+<p>If we want to only return perturbed inputs and compute
+perturbations internally then we can wrap perturb_func with
+<cite>infidelity_perturb_func_decorator</cite> decorator such as:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">captum.metrics</span> <span class="kn">import</span> <span class="n">infidelity_perturb_func_decorator</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@infidelity_perturb_func_decorator</span><span class="p">(</span><span class="o">&lt;</span><span class="n">multipy_by_inputs</span> <span class="n">flag</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>  <span class="o">&lt;</span><span class="n">MY</span><span class="o">-</span><span class="n">LOGIC</span><span class="o">-</span><span class="n">HERE</span><span class="o">&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>  <span class="k">return</span> <span class="n">perturbed_inputs</span>
+</pre></div>
+</div>
+<p>In case <cite>multipy_by_inputs</cite> is False we compute perturbations by
+<cite>input - perturbed_input</cite> difference and in case <cite>multipy_by_inputs</cite>
+flag is True we compute it by dividing
+(input - perturbed_input) by (input - baselines).
+The user needs to only return perturbed inputs in <cite>perturb_func</cite>
+as described above.</p>
+<p><cite>infidelity_perturb_func_decorator</cite> needs to be used with
+<cite>multipy_by_inputs</cite> flag set to False in case infidelity
+score is being computed for attribution maps that are local aka
+that do not factor in inputs in the final attribution score.
+Such attribution algorithms include Saliency, GradCam, Guided Backprop,
+or Integrated Gradients and DeepLift attribution scores that are already
+computed with <cite>multipy_by_inputs=False</cite> flag.</p>
+<p>If there are more than one inputs passed to infidelity function those
+will be passed to <cite>perturb_func</cite> as tuples in the same order as they
+are passed to infidelity function.</p>
+<dl>
+<dt>If inputs</dt><dd><ul>
+<li><p>is a single tensor, the function needs to return a tuple
+of perturbations and perturbed input such as:
+perturb, perturbed_input and only perturbed_input in case
+<cite>infidelity_perturb_func_decorator</cite> is used.</p></li>
+<li><p>is a tuple of tensors, corresponding perturbations and perturbed
+inputs must be computed and returned as tuples in the
+following format:</p>
+<p>(perturb1, perturb2, … perturbN), (perturbed_input1,
+perturbed_input2, … perturbed_inputN)</p>
+<p>Similar to previous case here as well we need to return only
+perturbed inputs in case <cite>infidelity_perturb_func_decorator</cite>
+decorates out <cite>perturb_func</cite>.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<p>It is important to note that for performance reasons <cite>perturb_func</cite>
+isn’t called for each example individually but on a batch of
+input examples that are repeated <cite>max_examples_per_batch / batch_size</cite>
+times within the batch.</p>
+</p></li>
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
+attributions are computed. If forward_func takes a single
+tensor as input, a single input tensor should be provided.
+If forward_func takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples (aka batch size), and if
+multiple input tensors are provided, the examples must
+be aligned appropriately.</p></li>
+<li><p><strong>baselines</strong> (<em>scalar</em><em>, </em><em>tensor</em><em>, </em><em>tuple of scalars</em><em> or </em><em>tensors</em><em>, </em><em>optional</em>) – <p>Baselines define reference values which sometimes represent ablated
+values and are used to compare with the actual inputs to compute
+importance scores in attribution algorithms. They can be represented
+as:</p>
+<ul>
+<li><p>a single tensor, if inputs is a single tensor, with
+exactly the same dimensions as inputs or the first
+dimension is one and the remaining dimensions match
+with inputs.</p></li>
+<li><p>a single scalar, if inputs is a single tensor, which will
+be broadcasted for each input value in input tensor.</p></li>
+<li><p>a tuple of tensors or scalars, the baseline corresponding
+to each tensor in the inputs’ tuple can be:</p></li>
+<li><p>either a tensor with matching dimensions to
+corresponding tensor in the inputs’ tuple
+or the first dimension is one and the remaining
+dimensions match with the corresponding
+input tensor.</p></li>
+<li><p>or a scalar, corresponding to a tensor in the
+inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p></li>
+</ul>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>attributions</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – <p>Attribution scores computed based on an attribution algorithm.
+This attribution scores can be computed using the implementations
+provided in the <cite>captum.attr</cite> package. Some of those attribution
+approaches are so called global methods, which means that
+they factor in model inputs’ multiplier, as described in:
+<a class="reference external" href="https://arxiv.org/pdf/1711.06104.pdf">https://arxiv.org/pdf/1711.06104.pdf</a>
+Many global attribution algorithms can be used in local modes,
+meaning that the inputs multiplier isn’t factored in the
+attribution scores.
+This can be done duing the definition of the attribution algorithm
+by passing <cite>multipy_by_inputs=False</cite> flag.
+For example in case of Integrated Gradients (IG) we can obtain
+local attribution scores if we define the constructor of IG as:
+ig = IntegratedGradients(multipy_by_inputs=False)</p>
+<p>Some attribution algorithms are inherently local.
+Examples of inherently local attribution methods include:
+Saliency, Guided GradCam, Guided Backprop and Deconvolution.</p>
+<p>For local attributions we can use real-valued perturbations
+whereas for global attributions that perturbation is binary.
+<a class="reference external" href="https://arxiv.org/pdf/1901.09392.pdf">https://arxiv.org/pdf/1901.09392.pdf</a></p>
+<p>If we want to compute the infidelity of global attributions we
+can use a binary perturbation matrix that will allow us to select
+a subset of features from <cite>inputs</cite> or <cite>inputs - baselines</cite> space.
+This will allow us to approximate sensitivity-n for a global
+attribution algorithm.</p>
+<p><cite>infidelity_perturb_func_decorator</cite> function decorator is a helper
+function that computes perturbations under the hood if perturbed
+inputs are provided.</p>
+<p>For more details about how to use <cite>infidelity_perturb_func_decorator</cite>,
+please, read the documentation about <cite>perturb_func</cite></p>
+<p>Attributions have the same shape and dimensionality as the inputs.
+If inputs is a single tensor then the attributions is a single
+tensor as well. If inputs is provided as a tuple of tensors
+then attributions will be tuples of tensors as well.</p>
+</p></li>
+<li><p><strong>additional_forward_args</strong> (<em>any</em><em>, </em><em>optional</em>) – <p>If the forward function
+requires additional arguments other than the inputs for
+which attributions should not be computed, this argument
+can be provided. It must be either a single additional
+argument of a Tensor or arbitrary (non-tuple) type or a tuple
+containing multiple additional arguments including tensors
+or any arbitrary python types. These arguments are provided to
+forward_func in order, following the arguments in inputs.
+Note that the perturbations are not computed with respect
+to these arguments. This means that these arguments aren’t
+being passed to <cite>perturb_func</cite> as an input argument.</p>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Indices for selecting
+predictions from output(for classification cases,
+this is usually the target class).
+If the network returns a scalar value per example, no target
+index is necessary.
+For general 2D outputs, targets can be either:</p>
+<ul>
+<li><p>A single integer or a tensor containing a single
+integer, which is applied to all input examples</p></li>
+<li><p>A list of integers or a 1D tensor, with length matching
+the number of examples in inputs (dim 0). Each integer
+is applied as the target for the corresponding example.</p>
+<p>For outputs with &gt; 2 dimensions, targets can be either:</p>
+</li>
+<li><p>A single tuple, which contains #output_dims - 1
+elements. This target index is applied to all examples.</p></li>
+<li><p>A list of tuples with length equal to the number of
+examples in inputs (dim 0), and each tuple containing
+#output_dims - 1 elements. Each tuple is applied as the
+target for the corresponding example.</p></li>
+</ul>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+are perturbed. Each input example in the inputs tensor is expanded
+<cite>n_perturb_samples</cite>
+times before calling <cite>perturb_func</cite> function.</p>
+<p>Default: 10</p>
+</p></li>
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of maximum input
+examples that are processed together. In case the number of
+examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
+<cite>max_examples_per_batch</cite>, they will be sliced
+into batches of <cite>max_examples_per_batch</cite> examples and processed
+in a sequential order. If <cite>max_examples_per_batch</cite> is None, all
+examples are processed together. <cite>max_examples_per_batch</cite> should
+at least be equal <cite>input batch size</cite> and at most
+<cite>input batch size * n_perturb_samples</cite>.</p>
+<p>Default: None</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tensor of scalar infidelity scores per</dt><dd><p>input example. The first dimension is equal to the
+number of examples in the input batch and the second
+dimension is one.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>infidelities (tensor)</p>
+</dd>
+</dl>
+<dl>
+<dt>Examples::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saliency</span> <span class="o">=</span> <span class="n">Saliency</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes saliency maps for class 3.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribution</span> <span class="o">=</span> <span class="n">saliency</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># define a perturbation function for the input</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">perturb_fn</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">,</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="k">return</span> <span class="n">noise</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">-</span> <span class="n">noise</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes infidelity score for saliency maps</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">infid</span> <span class="o">=</span> <span class="n">infidelity</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">perturb_fn</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">attribution</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+</div>
+<div class="section" id="sensitivity">
+<h2>Sensitivity<a class="headerlink" href="#sensitivity" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="captum.metrics.sensitivity_max">
+<em class="property">class </em><code class="sig-prename descclassname">captum.metrics.</code><code class="sig-name descname">sensitivity_max</code><span class="sig-paren">(</span><em class="sig-param">explanation_func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">perturb_func=&lt;function default_perturb_func&gt;</em>, <em class="sig-param">perturb_radius=0.02</em>, <em class="sig-param">n_perturb_samples=10</em>, <em class="sig-param">norm_ord='fro'</em>, <em class="sig-param">max_examples_per_batch=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/sensitivity.html#sensitivity_max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.metrics.sensitivity_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explanation sensitivity measures the extent of explanation change when
+the input is slightly perturbed. It has been shown that the models that
+have high explanation sensitivity are prone to adversarial attacks:
+<cite>Interpretation of Neural Networks is Fragile</cite>
+<a class="reference external" href="https://www.aaai.org/ojs/index.php/AAAI/article/view/4252">https://www.aaai.org/ojs/index.php/AAAI/article/view/4252</a></p>
+<p><cite>sensitivity_max</cite> metric measures maximum sensitivity of an explanation
+using Monte Carlo sampling-based approximation. By default in order to
+do so it samples multiple data points from a sub-space of an L-Infinity
+ball that has a <cite>perturb_radius</cite> radius using <cite>default_perturb_func</cite>
+default perturbation function. In a general case users can
+use any L_p ball or any other custom sampling technique that they
+prefer by providing a custom <cite>perturb_func</cite>.</p>
+<p>Note that max sensitivity is similar to Lipschitz Continuity metric
+however it is more robust and easier to estimate.
+Since the explanation, for instance an attribution function,
+may not always be continuous, can lead to unbounded
+Lipschitz continuity. Therefore the latter isn’t always appropriate.</p>
+<p>More about the Lipschitz Continuity Metric can also be found here
+<cite>On the Robustness of Interpretability Methods</cite>
+<a class="reference external" href="https://arxiv.org/pdf/1806.08049.pdf">https://arxiv.org/pdf/1806.08049.pdf</a>
+and
+<cite>Towards Robust Interpretability with Self-Explaining Neural Networks</cite>
+<a class="reference external" href="https://papers.nips.cc/paper">https://papers.nips.cc/paper</a>8003-towards-robust-interpretability-
+with-self-explaining-neural-networks.pdf</p>
+<p>More details about sensitivity max can be found here:
+<cite>On the (In)fidelity and Sensitivity of Explanations</cite>
+<a class="reference external" href="https://arxiv.org/pdf/1901.09392.pdf">https://arxiv.org/pdf/1901.09392.pdf</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>explanation_func</strong> (<em>callable</em>) – This function can be the <cite>attribute</cite> method of an
+attribution algorithm or any other explanation method
+that returns the explanations.</p></li>
+<li><p><strong>inputs</strong> (<em>tensor</em><em> or </em><em>tuple of tensors</em>) – Input for which
+explanations are computed. If <cite>explanation_func</cite> takes a
+single tensor as input, a single input tensor should
+be provided.
+If <cite>explanation_func</cite> takes multiple tensors as input, a tuple
+of the input tensors should be provided. It is assumed
+that for all given input tensors, dimension 0 corresponds
+to the number of examples (aka batch size), and if
+multiple input tensors are provided, the examples must
+be aligned appropriately.</p></li>
+<li><p><strong>perturb_func</strong> (<em>callable</em>) – <dl>
+<dt>The perturbation function of model inputs. This function takes</dt><dd><p>model inputs and optionally <cite>perturb_radius</cite> if
+the function takes more than one argument and returns
+perturbed inputs.</p>
+<p>If there are more than one inputs passed to sensitivity function those
+will be passed to <cite>perturb_func</cite> as tuples in the same order as they
+are passed to sensitivity function.</p>
+<p>It is important to note that for performance reasons <cite>perturb_func</cite>
+isn’t called for each example individually but on a batch of
+input examples that are repeated <cite>max_examples_per_batch / batch_size</cite>
+times within the batch.</p>
+</dd>
+</dl>
+<p>Default: default_perturb_func</p>
+</p></li>
+<li><p><strong>perturb_radius</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – <p>The epsilon radius used for sampling.
+In the <cite>default_perturb_func</cite> it is used as the radius of
+the L-Infinity ball. In a general case it can serve as a radius of
+any L_p nom.
+This argument is passed to <cite>perturb_func</cite> if it takes more than
+one argument.</p>
+<p>Default: 0.02</p>
+</p></li>
+<li><p><strong>n_perturb_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <p>The number of times input tensors
+are perturbed. Each input example in the inputs tensor is
+expanded <cite>n_perturb_samples</cite> times before calling
+<cite>perturb_func</cite> function.</p>
+<p>Default: 10</p>
+</p></li>
+<li><p><strong>norm_ord</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>inf</em><em>, </em><em>-inf</em><em>, </em><em>'fro'</em><em>, </em><em>'nuc'</em><em>, </em><em>optional</em>) – <p>The type of norm
+that is used to compute the
+norm of the sensitivity matrix which is defined as the difference
+between the explanation function at its input and perturbed input.</p>
+<p>Default: ‘fro’</p>
+</p></li>
+<li><p><strong>max_examples_per_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – <dl>
+<dt>The number of maximum input</dt><dd><p>examples that are processed together. In case the number of
+examples (<cite>input batch size * n_perturb_samples</cite>) exceeds
+<cite>max_examples_per_batch</cite>, they will be sliced
+into batches of <cite>max_examples_per_batch</cite> examples and processed
+in a sequential order. If <cite>max_examples_per_batch</cite> is None, all
+examples are processed together. <cite>max_examples_per_batch</cite> should
+at least be equal <cite>input batch size</cite> and at most
+<cite>input batch size * n_perturb_samples</cite>.</p>
+<p>Default: None</p>
+</dd>
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs (Any, optional): Contains a list of arguments that are passed</dt><dd><p>to <cite>explanation_func</cite> explanation function which in some cases
+could be the <cite>attribute</cite> function of an attribution algorithm.
+Any additional arguments that need be passed to the explanation
+function should be included here.
+For instance, such arguments include:
+<cite>additional_forward_args</cite>, <cite>baselines</cite> and <cite>target</cite>.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tensor of scalar sensitivity scores per</dt><dd><p>input example. The first dimension is equal to the
+number of examples in the input batch and the second
+dimension is one. Returned sensitivities are normalized by
+the magnitudes of the input explanations.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>sensitivities (tensor)</p>
+</dd>
+</dl>
+<dl>
+<dt>Examples::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># ImageClassifier takes a single input tensor of images Nx3x32x32,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and returns an Nx10 tensor of class probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">saliency</span> <span class="o">=</span> <span class="n">Saliency</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes sensitivity score for saliency maps</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sens</span> <span class="o">=</span> <span class="n">sensitivity_max</span><span class="p">(</span><span class="n">saliency</span><span class="o">.</span><span class="n">attribute</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div aria-label="main navigation" class="sphinxsidebar" role="navigation">
+<div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Captum</a></h1>
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="attribution.html">Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="noise_tunnel.html">NoiseTunnel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer.html">Layer Attribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="neuron.html">Neuron Attribution</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metrics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#infidelity">Infidelity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sensitivity">Sensitivity</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Insights API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="insights.html">Insights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="insights.html#features">Features</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+<li><a href="index.html">Documentation overview</a><ul>
+<li>Previous: <a href="neuron.html" title="previous chapter">Neuron Attribution</a></li>
+<li>Next: <a href="utilities.html" title="next chapter">Utilities</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="searchbox" role="search" style="display: none">
+<h3 id="searchlabel">Quick search</h3>
+<div class="searchformwrapper">
+<form action="search.html" class="search" method="get">
+<input aria-labelledby="searchlabel" name="q" type="text"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+</div>
+<script>$('#searchbox').show(0);</script>
+</div>
+</div>
+<div class="clearer"></div>
+</div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+            (function() {
+              var BAD_BASE = '/captum/';
+              if (window.location.origin !== 'https://captum.ai') {
+                var pathname = window.location.pathname;
+                var newPathname = pathname.slice(pathname.indexOf(BAD_BASE) === 0 ? BAD_BASE.length : 1);
+                var newLocation = 'https://captum.ai/' + newPathname;
+                console.log('redirecting to ' + newLocation);
+                window.location.href = newLocation;
+              }
+            })();
+          </script></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '207c27d819f967749142d8611de7cb19',
+                indexName: 'captum',
+                inputSelector: '#search_input_react'
+              });
+            </script></body></html>
