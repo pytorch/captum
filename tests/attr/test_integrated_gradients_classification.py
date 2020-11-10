@@ -8,9 +8,8 @@ from torch.nn import Module
 from captum._utils.typing import BaselineType, Tensor
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.noise_tunnel import NoiseTunnel
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.classification_models import SigmoidModel, SoftmaxModel
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.classification_models import SigmoidModel, SoftmaxModel
 
 
 class Test(BaseTest):

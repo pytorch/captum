@@ -12,13 +12,12 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-
-from ...helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,

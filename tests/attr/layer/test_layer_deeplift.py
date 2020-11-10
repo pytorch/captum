@@ -8,15 +8,14 @@ import torch
 from torch import Tensor
 
 from captum.attr._core.layer.layer_deep_lift import LayerDeepLift, LayerDeepLiftShap
-
-from ...helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assert_delta,
     assertArraysAlmostEqual,
     assertTensorAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_ConvNet_MaxPool3d,
     BasicModel_MaxPool_ReLU,

@@ -155,19 +155,20 @@ def infidelity(
                 either a tuple of perturbations and perturbed inputs or just
                 perturbed inputs. For example:
 
-                 def my_perturb_func(inputs):
-                    <MY-LOGIC-HERE>
-                    return perturbations, perturbed_inputs
+                >>> def my_perturb_func(inputs):
+                >>>   <MY-LOGIC-HERE>
+                >>>   return perturbations, perturbed_inputs
 
                 If we want to only return perturbed inputs and compute
                 perturbations internally then we can wrap perturb_func with
                 `infidelity_perturb_func_decorator` decorator such as:
 
-                from captum.metrics import infidelity_perturb_func_decorator
-                @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
-                def my_perturb_func(inputs):
-                    <MY-LOGIC-HERE>
-                    return perturbed_inputs
+                >>> from captum.metrics import infidelity_perturb_func_decorator
+
+                >>> @infidelity_perturb_func_decorator(<multipy_by_inputs flag>)
+                >>> def my_perturb_func(inputs):
+                >>>   <MY-LOGIC-HERE>
+                >>>   return perturbed_inputs
 
                 In case `multipy_by_inputs` is False we compute perturbations by
                 `input - perturbed_input` difference and in case `multipy_by_inputs`
@@ -190,20 +191,19 @@ def infidelity(
 
                 If inputs
                  - is a single tensor, the function needs to return a tuple
-                    of perturbations and perturbed input such as:
-                      perturb, perturbed_input
+                   of perturbations and perturbed input such as:
+                   perturb, perturbed_input and only perturbed_input in case
+                   `infidelity_perturb_func_decorator` is used.
+                 - is a tuple of tensors, corresponding perturbations and perturbed
+                   inputs must be computed and returned as tuples in the
+                   following format:
 
-                      and only perturbed_input in case
-                      `infidelity_perturb_func_decorator`
-                      is used.
-                 - is a tuple of tensors,
-                    corresponding perturbations and perturbed inputs must be computed
-                    and returned as tuples in the following format:
-                        (perturb1, perturb2, ... perturbN), (perturbed_input1,
-                         perturbed_input2, ... perturbed_inputN)
-                    Similar to previous case here as well we need to return only
-                    perturbed inputs in case `infidelity_perturb_func_decorator`
-                    decorates out perturb_func
+                   (perturb1, perturb2, ... perturbN), (perturbed_input1,
+                   perturbed_input2, ... perturbed_inputN)
+
+                   Similar to previous case here as well we need to return only
+                   perturbed inputs in case `infidelity_perturb_func_decorator`
+                   decorates out `perturb_func`.
                 It is important to note that for performance reasons `perturb_func`
                 isn't called for each example individually but on a batch of
                 input examples that are repeated `max_examples_per_batch / batch_size`
@@ -224,26 +224,27 @@ def infidelity(
                 values and are used to compare with the actual inputs to compute
                 importance scores in attribution algorithms. They can be represented
                 as:
-                    - a single tensor, if inputs is a single tensor, with
-                      exactly the same dimensions as inputs or the first
-                      dimension is one and the remaining dimensions match
-                      with inputs.
 
-                    - a single scalar, if inputs is a single tensor, which will
-                      be broadcasted for each input value in input tensor.
+                - a single tensor, if inputs is a single tensor, with
+                  exactly the same dimensions as inputs or the first
+                  dimension is one and the remaining dimensions match
+                  with inputs.
 
-                    - a tuple of tensors or scalars, the baseline corresponding
-                      to each tensor in the inputs' tuple can be:
+                - a single scalar, if inputs is a single tensor, which will
+                  be broadcasted for each input value in input tensor.
 
-                    - either a tensor with matching dimensions to
-                      corresponding tensor in the inputs' tuple
-                      or the first dimension is one and the remaining
-                      dimensions match with the corresponding
-                      input tensor.
+                - a tuple of tensors or scalars, the baseline corresponding
+                  to each tensor in the inputs' tuple can be:
 
-                    - or a scalar, corresponding to a tensor in the
-                      inputs' tuple. This scalar value is broadcasted
-                      for corresponding input tensor.
+                - either a tensor with matching dimensions to
+                  corresponding tensor in the inputs' tuple
+                  or the first dimension is one and the remaining
+                  dimensions match with the corresponding
+                  input tensor.
+
+                - or a scalar, corresponding to a tensor in the
+                  inputs' tuple. This scalar value is broadcasted
+                  for corresponding input tensor.
 
                 Default: None
 

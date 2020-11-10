@@ -5,12 +5,15 @@ title: Algorithm Descriptions
 
 Captum is a library within which different interpretability methods can be implemented.  The Captum team welcomes any contributions in the form of algorithms, methods or library extensions!
 
-The algorithms in Captum are separated into three groups, primary attribution, layer attribution and neuron attribution, which are defined as follows:
+The attribution algorithms in Captum are separated into three groups, primary attribution, layer attribution and neuron attribution, which are defined as follows:
 * Primary Attribution: Evaluates contribution of each input feature to the output of a model.
 * Layer Attribution: Evaluates contribution of each neuron in a given layer to the output of the model.
 * Neuron Attribution: Evaluates contribution of each input feature on the activation of a particular hidden neuron.
 
 Below is a short summary of the various methods currently implemented for primary, layer, and neuron attribution within Captum, as well as noise tunnel, which can be used to smooth the results of any attribution method.
+
+Beside attribution algorithms Captum also offers metrics to estimate the trustworthiness of model explanations.
+Currently we offer infidelity and sensitivity metrics that help us to estimate the goodness of explanations.
 
 ## Primary Attribution
 ### Integrated Gradients
@@ -250,3 +253,21 @@ Noise Tunnel is a method that can be used on top of any of the attribution metho
 To learn more about Noise Tunnel methods, visit the following resources:
 - [SmoothGrad Original paper](https://arxiv.org/abs/1706.03825)
 - [VarGrad Original paper](https://arxiv.org/abs/1810.03307)
+
+## Metrics
+### Infidelity
+Infidelity measures the mean squared error between model explanations in the magnitudes of input perturbations and predictor function's changes to those input perturbtaions. Infidelity is defined as follows:
+![infidelity_eq](/img/infidelity_eq.png)
+It is derived from the completeness property of well-known attribution algorithms, such as Integrated Gradients, and is a computationally more efficient and generalized notion of Sensitivy-n. The latter measures correlations between the sum of the attributions and the differences of the predictor function at its input and fixed baseline. More details about the Sensitivity-n can be found here:
+https://arxiv.org/pdf/1711.06104.pdfs
+More details about infidelity measure can be found here:
+- [Original paper](https://arxiv.org/pdf/1901.09392.pdf)
+
+### Sensitivity
+Sensitivity measures the degree of explanation changes to subtle input perturbations using Monte Carlo sampling-based approximation and is defined
+as follows:
+![sensitivity_eq](/img/sensitivity_eq.png)
+In order to opproximate sensitivity measure, by default, we sample from a sub-space of an L-Infinity ball with a default radius.
+The users can modify both the radius of the ball and the sampling function.
+More details about seensitivity measure can be found here:
+- [Original paper](https://arxiv.org/pdf/1901.09392.pdf)

@@ -20,14 +20,13 @@ from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
 from captum.attr._utils.attribution import Attribution
-
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
-from .helpers.gen_test_utils import (
+from tests.attr.helpers.gen_test_utils import (
     gen_test_name,
     parse_test_config,
     should_create_generated_test,
 )
-from .helpers.test_config import config
+from tests.attr.helpers.test_config import config
+from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual, deep_copy_args
 
 JIT_SUPPORTED = [
     IntegratedGradients,

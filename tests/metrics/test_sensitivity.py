@@ -15,9 +15,8 @@ from captum.attr import (
 )
 from captum.metrics import sensitivity_max
 from captum.metrics._core.sensitivity import default_perturb_func
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel2,
     BasicModel4_MultiArgs,
     BasicModel_ConvNet_One_Conv,
