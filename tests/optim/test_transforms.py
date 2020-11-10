@@ -1,3 +1,5 @@
+import unittest
+
 import torch
 import torch.nn as nn
 from captum.optim.transform import (
@@ -67,7 +69,7 @@ class TestRandomScale(BaseTest):
             )
         )
 
-     def test_random_scale_matrix(self) -> None:       
+    def test_random_scale_matrix(self) -> None:
         # Test scale matrices
         assert torch.all(
             scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype).eq(
@@ -146,6 +148,7 @@ class TestRandomSpatialJitter(BaseTest):
                 )
             )
         )
+
 
 class TestCenterCrop(BaseTest):
     def test_center_crop(self) -> None:
@@ -273,3 +276,7 @@ class TestGaussianSmoothing(BaseTest):
                 )
             )
         )
+
+
+if __name__ == "__main__":
+    unittest.main()
