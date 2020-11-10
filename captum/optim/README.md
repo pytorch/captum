@@ -1,7 +1,7 @@
 # Captum "optim" module
 
 This is a WIP PR to integrate existing feature visualization code from the authors of `tensorflow/lucid` into captum.
-It is also an opportunity to review which parts of such interpretability tools still feel rough to implement in a system like PyTorch, and to make suggetsions to the core PyTorch team for how to improve these aspects.
+It is also an opportunity to review which parts of such interpretability tools still feel rough to implement in a system like PyTorch, and to make suggestions to the core PyTorch team for how to improve these aspects.
 
 ## Roadmap
 
