@@ -294,7 +294,9 @@ class ShapleyValueSampling(PerturbationAttribution):
 
             # Initialize attribution totals and counts
             total_attrib = [
-                torch.zeros_like(input[0:1] if agg_output_mode else input)
+                torch.zeros_like(
+                    input[0:1] if agg_output_mode else input, dtype=torch.float
+                )
                 for input in inputs
             ]
 
