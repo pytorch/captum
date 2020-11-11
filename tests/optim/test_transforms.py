@@ -9,7 +9,6 @@ from captum.optim.transform import (
     IgnoreAlpha,
     RandomScale,
     RandomSpatialJitter,
-    ToRGB,
     rand_select,
 )
 from tests.helpers.basic import BaseTest
