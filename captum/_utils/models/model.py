@@ -13,6 +13,8 @@ class Model(ABC):
     r"""
     Abstract Class to describe the interface of a trainable model to be used
     within the algorithms of captum.
+
+    Please note that this is an experimental feature.
     """
 
     @abstractmethod

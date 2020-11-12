@@ -1,4 +1,4 @@
-from captum._utils.models.linear_model import (
+from captum._utils.models.linear_model.model import (
     LinearModel,
     SGDLasso,
     SGDLinearModel,
@@ -9,10 +9,8 @@ from captum._utils.models.linear_model import (
     SkLearnLinearRegression,
     SkLearnRidge,
 )
-from captum._utils.models.model import Model
 
 __all__ = [
-    "Model",
     "LinearModel",
     "SGDLinearModel",
     "SGDLasso",
