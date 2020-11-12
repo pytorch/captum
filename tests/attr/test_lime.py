@@ -6,13 +6,9 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum._utils.models.linear_model import SkLearnLasso
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from captum.attr._core.lime import (
-    Lime,
-    LimeBase,
-    get_exp_kernel_similarity_function,
-    lasso_interpretable_model_trainer,
-)
+from captum.attr._core.lime import Lime, LimeBase, get_exp_kernel_similarity_function
 from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
@@ -202,6 +198,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
+            n_perturb_samples=500,
             expected_coefs_only=[251.0, 591.0, 0.0],
         )
         expected_with_baseline = (
@@ -390,7 +387,6 @@ class Test(BaseTest):
         baselines: BaselineType = None,
         target: Union[None, int] = 0,
         n_perturb_samples: int = 100,
-        alpha: float = 1.0,
         delta: float = 1.0,
         batch_attr: bool = False,
     ) -> None:
@@ -407,7 +403,6 @@ class Test(BaseTest):
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
                 n_perturb_samples=n_perturb_samples,
-                alpha=alpha,
             )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -422,7 +417,6 @@ class Test(BaseTest):
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
                     n_perturb_samples=n_perturb_samples,
-                    alpha=alpha,
                     return_input_shape=False,
                 )
                 assertTensorAlmostEqual(
@@ -431,7 +425,7 @@ class Test(BaseTest):
 
                 lime_alt = LimeBase(
                     model,
-                    lasso_interpretable_model_trainer,
+                    SkLearnLasso(alpha=1.0),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
                     alt_perturb_func,
                     False,
@@ -465,7 +459,6 @@ class Test(BaseTest):
                         baselines=baselines,
                         perturbations_per_eval=batch_size,
                         n_perturb_samples=n_perturb_samples,
-                        alpha=alpha,
                         num_interp_features=num_interp_features,
                     )
                     assertTensorAlmostEqual(
@@ -500,7 +493,6 @@ class Test(BaseTest):
                         baselines=curr_baselines,
                         perturbations_per_eval=batch_size,
                         n_perturb_samples=n_perturb_samples,
-                        alpha=alpha,
                         num_interp_features=num_interp_features,
                     )
                     assertTensorAlmostEqual(

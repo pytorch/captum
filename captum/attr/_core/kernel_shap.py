@@ -6,29 +6,10 @@ from typing import Any, Callable, Tuple, Union
 import torch
 from torch import Tensor
 
+from captum._utils.models.linear_model import SkLearnLinearRegression
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import Lime
 from captum.log import log_usage
-
-
-def linear_regression_interpretable_model_trainer(
-    interpretable_inputs: Tensor, expected_outputs: Tensor, weights: Tensor, **kwargs
-):
-    try:
-        from sklearn import linear_model
-    except ImportError:
-        raise AssertionError(
-            "Requires sklearn for default interpretable model training with linear "
-            "regression. Please install sklearn or use a custom interpretable model "
-            "training function."
-        )
-    clf = linear_model.LinearRegression()
-    clf.fit(
-        interpretable_inputs.cpu().numpy(),
-        expected_outputs.cpu().numpy(),
-        weights.cpu().numpy(),
-    )
-    return torch.from_numpy(clf.coef_)
 
 
 def combination(n: int, k: int) -> int:
@@ -86,7 +67,7 @@ class KernelShap(Lime):
         Lime.__init__(
             self,
             forward_func,
-            linear_regression_interpretable_model_trainer,
+            SkLearnLinearRegression(),
             kernel_shap_similarity_kernel,
         )
 

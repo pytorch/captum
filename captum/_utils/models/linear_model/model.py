@@ -279,6 +279,9 @@ class SkLearnRidge(SkLearnLinearModel):
     def __init__(self, **kwargs):
         r"""
         Factory class. Trains a model with `sklearn.linear_model.Ridge`.
+
+        Any arguments provided to the sklearn constructor can be provided
+        as kwargs here.
         """
         super().__init__(**kwargs, sklearn_module="linear_model.Ridge")
 
@@ -290,6 +293,9 @@ class SkLearnLinearRegression(SkLearnLinearModel):
     def __init__(self, **kwargs):
         r"""
         Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.
+
+        Any arguments provided to the sklearn constructor can be provided
+        as kwargs here.
         """
         super().__init__(**kwargs, sklearn_module="linear_model.LinearRegression")
 
