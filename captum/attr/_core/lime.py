@@ -88,10 +88,11 @@ class LimeBase(PerturbationAttribution):
             interpretable_model (Model): Model object to train interpretable model.
                     A Model object provides a `fit` method to train the model,
                     given a dataloader, with batches containing three tensors:
-                        interpretable_inputs: Tensor
-                                            [2D num_samples x num_interp_features],
-                        expected_outputs: Tensor [1D num_samples],
-                        weights: Tensor [1D num_samples]
+
+                    - interpretable_inputs: Tensor
+                      [2D num_samples x num_interp_features],
+                    - expected_outputs: Tensor [1D num_samples],
+                    - weights: Tensor [1D num_samples]
 
                     The model object must also provide a `representation` method to
                     access the appropriate coefficients or representation of the
@@ -113,13 +114,13 @@ class LimeBase(PerturbationAttribution):
 
                     The expected signature of this callable is:
 
-                    similarity_func(
-                        original_input: Tensor or tuple of Tensors,
-                        perturbed_input: Tensor or tuple of Tensors,
-                        perturbed_interpretable_input:
-                            Tensor [2D 1 x num_interp_features],
-                        **kwargs: Any
-                    ) -> float or Tensor containing float scalar
+                    >>> similarity_func(
+                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    perturbed_input: Tensor or tuple of Tensors,
+                    >>>    perturbed_interpretable_input:
+                    >>>        Tensor [2D 1 x num_interp_features],
+                    >>>    **kwargs: Any
+                    >>> ) -> float or Tensor containing float scalar
 
                     perturbed_input and original_input will be the same type and
                     contain tensors of the same shape (regardless of whether or not
@@ -139,10 +140,10 @@ class LimeBase(PerturbationAttribution):
 
                     The expected signature of this callable is:
 
-                    perturb_func(
-                        original_input: Tensor or tuple of Tensors,
-                        **kwargs: Any
-                    ) -> Tensor or tuple of Tensors
+                    >>> perturb_func(
+                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    **kwargs: Any
+                    >>> ) -> Tensor or tuple of Tensors
 
                     All kwargs passed to the attribute method are
                     provided as keyword arguments (kwargs) to this callable.
@@ -175,11 +176,11 @@ class LimeBase(PerturbationAttribution):
 
                     The expected signature of this callable is:
 
-                    from_interp_rep_transform(
-                        curr_sample: Tensor [2D 1 x num_interp_features]
-                        original_input: Tensor or Tuple of Tensors,
-                        **kwargs: Any
-                    ) -> Tensor or tuple of Tensors
+                    >>> from_interp_rep_transform(
+                    >>>    curr_sample: Tensor [2D 1 x num_interp_features]
+                    >>>    original_input: Tensor or Tuple of Tensors,
+                    >>>    **kwargs: Any
+                    >>> ) -> Tensor or tuple of Tensors
 
                     Returned sampled input should match the type of original_input
                     and corresponding tensor shapes.
@@ -197,11 +198,11 @@ class LimeBase(PerturbationAttribution):
 
                     The expected signature of this callable is:
 
-                    to_interp_rep_transform(
-                        curr_sample: Tensor or Tuple of Tensors,
-                        original_input: Tensor or Tuple of Tensors,
-                        **kwargs: Any
-                    ) -> Tensor [2D 1 x num_interp_features]
+                    >>> to_interp_rep_transform(
+                    >>>    curr_sample: Tensor or Tuple of Tensors,
+                    >>>    original_input: Tensor or Tuple of Tensors,
+                    >>>    **kwargs: Any
+                    >>> ) -> Tensor [2D 1 x num_interp_features]
 
                     curr_sample will match the type of original_input
                     and corresponding tensor shapes.
@@ -664,10 +665,11 @@ class Lime(LimeBase):
                     Alternatively, a custom model object must provide a `fit` method to
                     train the model, given a dataloader, with batches containing
                     three tensors:
-                        interpretable_inputs: Tensor
-                                            [2D num_samples x num_interp_features],
-                        expected_outputs: Tensor [1D num_samples],
-                        weights: Tensor [1D num_samples]
+
+                    - interpretable_inputs: Tensor
+                      [2D num_samples x num_interp_features],
+                    - expected_outputs: Tensor [1D num_samples],
+                    - weights: Tensor [1D num_samples]
 
                     The model object must also provide a `representation` method to
                     access the appropriate coefficients or representation of the
@@ -720,10 +722,10 @@ class Lime(LimeBase):
                     be implemented by providing a function with the
                     following expected signature:
 
-                    perturb_func(
-                        original_input: Tensor or tuple of Tensors,
-                        **kwargs: Any
-                    ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
+                    >>> perturb_func(
+                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    **kwargs: Any
+                    >>> ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask).
