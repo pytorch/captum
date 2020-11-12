@@ -34,6 +34,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">TensorDataset</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_expand_additional_forward_args</span><span class="p">,</span>
@@ -45,6 +46,8 @@
     <span class="n">_reduce_list</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLasso</span>
+<span class="kn">from</span> <span class="nn">captum._utils.models.model</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
@@ -93,7 +96,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">train_interpretable_model_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">interpretable_model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
         <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">perturb_interpretable_space</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -109,22 +112,25 @@
 <span class="sd">                    modification of it. If a batch is provided as input for</span>
 <span class="sd">                    attribution, it is expected that forward_func returns a scalar</span>
 <span class="sd">                    representing the entire batch.</span>
-<span class="sd">            train_interpretable_model_func (callable): Function which trains</span>
-<span class="sd">                    an interpretable model and returns some representation of the</span>
-<span class="sd">                    interpretable model. The return type of this will match the</span>
-<span class="sd">                    returned type when calling attribute.</span>
-<span class="sd">                    The expected signature of this callable is:</span>
-
-<span class="sd">                    train_interpretable_model_func(</span>
+<span class="sd">            interpretable_model (Model): Model object to train interpretable model.</span>
+<span class="sd">                    A Model object provides a `fit` method to train the model,</span>
+<span class="sd">                    given a dataloader, with batches containing three tensors:</span>
 <span class="sd">                        interpretable_inputs: Tensor</span>
 <span class="sd">                                            [2D num_samples x num_interp_features],</span>
 <span class="sd">                        expected_outputs: Tensor [1D num_samples],</span>
 <span class="sd">                        weights: Tensor [1D num_samples]</span>
-<span class="sd">                        **kwargs: Any</span>
-<span class="sd">                    ) -&gt; Any (Representation of interpretable model)</span>
 
-<span class="sd">                    All kwargs passed to the attribute method are</span>
-<span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
+<span class="sd">                    The model object must also provide a `representation` method to</span>
+<span class="sd">                    access the appropriate coefficients or representation of the</span>
+<span class="sd">                    interpretable model after fitting.</span>
+<span class="sd">                    Some predefined interpretable linear models are provided in</span>
+<span class="sd">                    captum._utils.models.linear_model including wrappers around</span>
+<span class="sd">                    SkLearn linear models as well as SGD-based PyTorch linear</span>
+<span class="sd">                    models.</span>
+
+<span class="sd">                    Note that calling fit multiple times should retrain the</span>
+<span class="sd">                    interpretable model, each attribution call reuses</span>
+<span class="sd">                    the same given interpretable model object.</span>
 <span class="sd">            similarity_func (callable): Function which takes a single sample</span>
 <span class="sd">                    along with its corresponding interpretable representation</span>
 <span class="sd">                    and returns the weight of the interpretable sample for</span>
@@ -231,7 +237,7 @@
 <span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
 <span class="sd">        """</span>
         <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">train_interpretable_model_func</span> <span class="o">=</span> <span class="n">train_interpretable_model_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span> <span class="o">=</span> <span class="n">interpretable_model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">similarity_func</span> <span class="o">=</span> <span class="n">similarity_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span> <span class="o">=</span> <span class="n">perturb_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span> <span class="o">=</span> <span class="n">perturb_interpretable_space</span>
@@ -257,7 +263,7 @@
         <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
 <span class="sd">        (in case it is provided, otherwise it assumes that output is a</span>
@@ -369,20 +375,12 @@
 <span class="sd">            &gt;&gt;&gt; # score of the target class.</span>
 <span class="sd">            &gt;&gt;&gt;</span>
 <span class="sd">            &gt;&gt;&gt; # For interpretable model training, we will use sklearn</span>
-<span class="sd">            &gt;&gt;&gt; # in this example</span>
-<span class="sd">            &gt;&gt;&gt; from sklearn import linear_model</span>
-<span class="sd">            &gt;&gt;&gt;</span>
-<span class="sd">            &gt;&gt;&gt; # Define interpretable model training function</span>
-<span class="sd">            &gt;&gt;&gt; def linear_regression_interpretable_model_trainer(</span>
-<span class="sd">            &gt;&gt;&gt;     interpretable_inputs: Tensor,</span>
-<span class="sd">            &gt;&gt;&gt;     expected_outputs: Tensor,</span>
-<span class="sd">            &gt;&gt;&gt;     weights: Tensor, **kwargs):</span>
-<span class="sd">            &gt;&gt;&gt;         clf = linear_model.LinearRegression()</span>
-<span class="sd">            &gt;&gt;&gt;         clf.fit(</span>
-<span class="sd">            &gt;&gt;&gt;             interpretable_inputs.cpu().numpy(),</span>
-<span class="sd">            &gt;&gt;&gt;             expected_outputs.cpu().numpy(),</span>
-<span class="sd">            &gt;&gt;&gt;             weights.cpu().numpy())</span>
-<span class="sd">            &gt;&gt;&gt;         return clf.coef_</span>
+<span class="sd">            &gt;&gt;&gt; # linear model in this example. We have provided wrappers</span>
+<span class="sd">            &gt;&gt;&gt; # around sklearn linear models to fit the Model interface.</span>
+<span class="sd">            &gt;&gt;&gt; # Any arguments provided to the sklearn constructor can also</span>
+<span class="sd">            &gt;&gt;&gt; # be provided to the wrapper, e.g.:</span>
+<span class="sd">            &gt;&gt;&gt; # SkLearnLinearModel("linear_model.Ridge", alpha=2.0)</span>
+<span class="sd">            &gt;&gt;&gt; from captum._utils.models.linear_model import SkLearnLinearModel</span>
 <span class="sd">            &gt;&gt;&gt;</span>
 <span class="sd">            &gt;&gt;&gt;</span>
 <span class="sd">            &gt;&gt;&gt; # Define similarity kernel (exponential kernel based on L2 norm)</span>
@@ -414,7 +412,7 @@
 <span class="sd">            &gt;&gt;&gt; input = torch.randn(2, 5)</span>
 <span class="sd">            &gt;&gt;&gt; # Defining LimeBase interpreter</span>
 <span class="sd">            &gt;&gt;&gt; lime_attr = LimeBase(net,</span>
-<span class="sd">                                     linear_regression_interpretable_model_trainer,</span>
+<span class="sd">                                     SkLearnLinearModel("linear_model.Ridge"),</span>
 <span class="sd">                                     similarity_func=similarity_kernel,</span>
 <span class="sd">                                     perturb_func=perturb_func,</span>
 <span class="sd">                                     perturb_interpretable_space=False,</span>
@@ -504,10 +502,13 @@
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">similarities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
                 <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">similarities</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="n">interp_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_interpretable_model_func</span><span class="p">(</span>
-                <span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span>
+                <span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">interp_model</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">n_perturb_samples</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -541,32 +542,6 @@
 
 <span class="c1"># Default transformations and methods</span>
 <span class="c1"># for Lime child implementation.</span>
-
-
-<span class="k">def</span> <span class="nf">lasso_interpretable_model_trainer</span><span class="p">(</span>
-    <span class="n">interpretable_inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">expected_outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">sklearn</span>
-        <span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
-
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">sklearn</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s2">"0.23.0"</span>
-        <span class="p">),</span> <span class="s2">"Must have sklearn version 0.23.0 or higher to use "</span>
-        <span class="s2">"sample_weight in Lasso regression."</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
-            <span class="s2">"Requires sklearn for default interpretable model training with"</span>
-            <span class="s2">" Lasso regression. Please install sklearn or use a custom interpretable"</span>
-            <span class="s2">" model training function."</span>
-        <span class="p">)</span>
-    <span class="n">clf</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">Lasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">"alpha"</span><span class="p">]</span> <span class="k">if</span> <span class="s2">"alpha"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
-    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-        <span class="n">interpretable_inputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
-        <span class="n">expected_outputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
-        <span class="n">weights</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">default_from_interp_rep_transform</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">,</span> <span class="n">original_inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -692,7 +667,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">train_interpretable_model_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">lasso_interpretable_model_trainer</span><span class="p">,</span>
+        <span class="n">train_interpretable_model_func</span><span class="p">:</span> <span class="n">Model</span> <span class="o">=</span> <span class="n">SkLearnLasso</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
         <span class="n">similarity_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">get_exp_kernel_similarity_function</span><span class="p">(),</span>
         <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">default_perturb_func</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -703,31 +678,31 @@
 
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
 <span class="sd">                    modification of it</span>
-<span class="sd">            train_interpretable_model_func (optional, callable): Function which</span>
-<span class="sd">                    trains an interpretable model and returns coefficients</span>
-<span class="sd">                    of the interpretable model.</span>
-<span class="sd">                    This function is optional, and the default function trains</span>
-<span class="sd">                    an interpretable model using Lasso regression, using the</span>
-<span class="sd">                    alpha parameter provided when calling attribute.</span>
-<span class="sd">                    Using the default function requires having sklearn version</span>
-<span class="sd">                    0.23.0 or higher installed.</span>
+<span class="sd">            interpretable_model (optional, Model): Model object to train</span>
+<span class="sd">                    interpretable model.</span>
 
-<span class="sd">                    If a custom function is provided, the expected signature of this</span>
-<span class="sd">                    callable is:</span>
+<span class="sd">                    This argument is optional and defaults to SkLearnLasso(alpha=1.0),</span>
+<span class="sd">                    which is a wrapper around the Lasso linear model in SkLearn.</span>
+<span class="sd">                    This requires having sklearn version &gt;= 0.23 available.</span>
 
-<span class="sd">                    train_interpretable_model_func(</span>
+<span class="sd">                    Other predefined interpretable linear models are provided in</span>
+<span class="sd">                    captum._utils.models.linear_model.</span>
+
+<span class="sd">                    Alternatively, a custom model object must provide a `fit` method to</span>
+<span class="sd">                    train the model, given a dataloader, with batches containing</span>
+<span class="sd">                    three tensors:</span>
 <span class="sd">                        interpretable_inputs: Tensor</span>
 <span class="sd">                                            [2D num_samples x num_interp_features],</span>
 <span class="sd">                        expected_outputs: Tensor [1D num_samples],</span>
 <span class="sd">                        weights: Tensor [1D num_samples]</span>
-<span class="sd">                        **kwargs: Any</span>
-<span class="sd">                    ) -&gt; Tensor [1D num_interp_features]</span>
-<span class="sd">                    The return type must be a 1D tensor containing the importance</span>
-<span class="sd">                    or attribution of each input feature.</span>
 
-<span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
-<span class="sd">                    (integer, determined from feature mask), and</span>
-<span class="sd">                    alpha (for Lasso regression).</span>
+<span class="sd">                    The model object must also provide a `representation` method to</span>
+<span class="sd">                    access the appropriate coefficients or representation of the</span>
+<span class="sd">                    interpretable model after fitting.</span>
+
+<span class="sd">                    Note that calling fit multiple times should retrain the</span>
+<span class="sd">                    interpretable model, each attribution call reuses</span>
+<span class="sd">                    the same given interpretable model object.</span>
 <span class="sd">            similarity_func (callable): Function which takes a single sample</span>
 <span class="sd">                    along with its corresponding interpretable representation</span>
 <span class="sd">                    and returns the weight of the interpretable sample for</span>
@@ -791,7 +766,6 @@
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -1085,7 +1059,6 @@
                             <span class="k">if</span> <span class="n">is_inputs_tuple</span>
                             <span class="k">else</span> <span class="n">curr_feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
-                            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
                             <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1122,7 +1095,6 @@
             <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_shape</span><span class="p">(</span>
@@ -1165,6 +1137,7 @@
         <span class="n">num_interp_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">is_inputs_tuple</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">formatted_inp</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">tensor_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">formatted_inp</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">single_feature</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_interp_features</span><span class="p">):</span>

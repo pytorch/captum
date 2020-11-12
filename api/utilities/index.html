@@ -437,6 +437,190 @@ be created.</p></li>
 </dd></dl>
 </dd></dl>
 </div>
+<div class="section" id="linear-models">
+<h2>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="captum._utils.models.model.Model">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.model.</code><code class="sig-name descname">Model</code><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract Class to describe the interface of a trainable model to be used
+within the algorithms of captum.</p>
+<p>Please note that this is an experimental feature.</p>
+<dl class="py method">
+<dt id="captum._utils.models.model.Model.fit">
+<em class="property">abstract </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to actually train your model.</p>
+<p>The specification of the dataloader will be supplied by the algorithm
+you are using within captum. This will likely be a supervised learning
+task, thus you should expect batched (x, y) pairs or (x, y, w) triples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>train_data</strong> (<em>DataLoader</em>) – The data to train on</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.7.0a0+0bc39c0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Optional statistics about training, e.g.  iterations it took to
+train, training loss, etc.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="captum._utils.models.model.Model.representation">
+<em class="property">abstract </em><code class="sig-name descname">representation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the underlying representation of the interpretable model. For a
+linear model this is simply a tensor (the concatenation of weights
+and bias). For something slightly more complicated, such as a decision
+tree, this could be the nodes of a decision tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch vmaster (1.7.0a0+0bc39c0 ))"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A Tensor describing the representation of the model.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SkLearnLinearModel">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SkLearnLinearModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sklearn_module</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class to construct a <cite>LinearModel</cite> with sklearn training method.</p>
+<p>Please note that this assumes:</p>
+<ol class="arabic simple" start="0">
+<li><p>You have sklearn and numpy installed</p></li>
+<li><p>The dataset can fit into memory</p></li>
+</ol>
+<p>SkLearn support does introduce some slight overhead as we convert the
+tensors to numpy and then convert the resulting trained model to a
+<cite>LinearModel</cite> object. However, this conversion should be negligible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sklearn_module</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The module under sklearn to construct and use for training, e.g.
+use “svm.LinearSVC” for an SVM or “linear_model.Lasso” for Lasso.</p>
+<p>There are factory classes defined for you for common use cases,
+such as <cite>SkLearnLasso</cite>.</p>
+</p></li>
+<li><p><strong>kwargs</strong> – The kwargs to pass to the construction of the sklearn model</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SkLearnLinearModel.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel.fit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_data</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>) – Train data to use</p></li>
+<li><p><strong>kwargs</strong> – Arguments to feed to <cite>.fit</cite> method for sklearn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SkLearnLinearRegression">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SkLearnLinearRegression</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.LinearRegression</cite>.</p>
+<p>Any arguments provided to the sklearn constructor can be provided
+as kwargs here.</p>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SkLearnLinearRegression.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args:
+train_data</p>
+<blockquote>
+<div><p>Train data to use</p>
+</div></blockquote>
+<dl class="simple">
+<dt>kwargs</dt><dd><p>Arguments to feed to <cite>.fit</cite> method for sklearn</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SkLearnLasso">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SkLearnLasso</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class. Trains a <cite>LinearModel</cite> model with
+<cite>sklearn.linear_model.Lasso</cite>. You will need sklearn version &gt;= 0.23 to
+support sample weights.</p>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SkLearnLasso.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args:
+train_data</p>
+<blockquote>
+<div><p>Train data to use</p>
+</div></blockquote>
+<dl class="simple">
+<dt>kwargs</dt><dd><p>Arguments to feed to <cite>.fit</cite> method for sklearn</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SkLearnRidge">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SkLearnRidge</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.Ridge</cite>.</p>
+<p>Any arguments provided to the sklearn constructor can be provided
+as kwargs here.</p>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SkLearnRidge.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Args:
+train_data</p>
+<blockquote>
+<div><p>Train data to use</p>
+</div></blockquote>
+<dl class="simple">
+<dt>kwargs</dt><dd><p>Arguments to feed to <cite>.fit</cite> method for sklearn</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SGDLinearModel">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SGDLinearModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class. Construct a a <cite>LinearModel</cite> with the
+<cite>sgd_train_linear_model</cite> as the train method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Arguments send to <cite>self._construct_model_params</cite> after
+<cite>self.fit</cite> is called. Please refer to that method for parameter
+documentation.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SGDLasso">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SGDLasso</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
+(<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
+optimize for ridge regression loss. This optimizes L2 loss + alpha * L1
+regularization.</p>
+<p>Please note that with SGD it is not guaranteed that weights will
+converge to 0.</p>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SGDLasso.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <cite>self.train_fn</cite></p>
+</dd></dl>
+</dd></dl>
+<dl class="py class">
+<dt id="captum._utils.models.linear_model.SGDRidge">
+<em class="property">class </em><code class="sig-prename descclassname">captum._utils.models.linear_model.</code><code class="sig-name descname">SGDRidge</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
+(<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
+optimize for ridge regression loss. This optimizes L2 loss + alpha *
+L2 regularization.</p>
+<dl class="py method">
+<dt id="captum._utils.models.linear_model.SGDRidge.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">train_data</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <cite>self.train_fn</cite></p>
+</dd></dl>
+</dd></dl>
+</div>
 </div>
 </div>
 </div>
@@ -456,6 +640,7 @@ be created.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="#visualization">Visualization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#interpretable-embeddings">Interpretable Embeddings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#token-reference-base">Token Reference Base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linear-models">Linear Models</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="base_classes.html">Base Classes</a></li>

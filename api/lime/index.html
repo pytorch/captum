@@ -28,7 +28,7 @@
 <h1>Lime<a class="headerlink" href="#lime" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="captum.attr.LimeBase">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LimeBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">train_interpretable_model_func</span></em>, <em class="sig-param"><span class="n">similarity_func</span></em>, <em class="sig-param"><span class="n">perturb_func</span></em>, <em class="sig-param"><span class="n">perturb_interpretable_space</span></em>, <em class="sig-param"><span class="n">from_interp_rep_transform</span></em>, <em class="sig-param"><span class="n">to_interp_rep_transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#LimeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LimeBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">LimeBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">interpretable_model</span></em>, <em class="sig-param"><span class="n">similarity_func</span></em>, <em class="sig-param"><span class="n">perturb_func</span></em>, <em class="sig-param"><span class="n">perturb_interpretable_space</span></em>, <em class="sig-param"><span class="n">from_interp_rep_transform</span></em>, <em class="sig-param"><span class="n">to_interp_rep_transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#LimeBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.LimeBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lime is an interpretability method that trains an interpretable surrogate model
 by sampling points around a specified input example and using model evaluations
 at these points to train a simpler interpretable ‘surrogate’ model, such as a
@@ -58,24 +58,27 @@ into its interpretable vector representation.</p>
 modification of it. If a batch is provided as input for
 attribution, it is expected that forward_func returns a scalar
 representing the entire batch.</p></li>
-<li><p><strong>train_interpretable_model_func</strong> (<em>callable</em>) – <p>Function which trains
-an interpretable model and returns some representation of the
-interpretable model. The return type of this will match the
-returned type when calling attribute.
-The expected signature of this callable is:</p>
-<dl>
-<dt>train_interpretable_model_func(</dt><dd><dl class="simple">
+<li><p><strong>interpretable_model</strong> (<a class="reference internal" href="utilities.html#captum._utils.models.model.Model" title="captum._utils.models.model.Model"><em>Model</em></a>) – <p>Model object to train interpretable model.
+A Model object provides a <cite>fit</cite> method to train the model,
+given a dataloader, with batches containing three tensors:</p>
+<blockquote>
+<div><dl class="simple">
 <dt>interpretable_inputs: Tensor</dt><dd><p>[2D num_samples x num_interp_features],</p>
 </dd>
 </dl>
 <p>expected_outputs: Tensor [1D num_samples],
-weights: Tensor [1D num_samples]
-<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Any (Representation of interpretable model)</p>
-<p>All kwargs passed to the attribute method are
-provided as keyword arguments (kwargs) to this callable.</p>
+weights: Tensor [1D num_samples]</p>
+</div></blockquote>
+<p>The model object must also provide a <cite>representation</cite> method to
+access the appropriate coefficients or representation of the
+interpretable model after fitting.
+Some predefined interpretable linear models are provided in
+captum._utils.models.linear_model including wrappers around
+SkLearn linear models as well as SGD-based PyTorch linear
+models.</p>
+<p>Note that calling fit multiple times should retrain the
+interpretable model, each attribution call reuses
+the same given interpretable model object.</p>
 </p></li>
 <li><p><strong>similarity_func</strong> (<em>callable</em>) – <p>Function which takes a single sample
 along with its corresponding interpretable representation
@@ -91,7 +94,7 @@ perturbed_interpretable_input:</p>
 <blockquote>
 <div><p>Tensor [2D 1 x num_interp_features],</p>
 </div></blockquote>
-<p><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Any</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; float or Tensor containing float scalar</p>
@@ -113,7 +116,7 @@ which is a vector containing the intepretable features.</p>
 <p>The expected signature of this callable is:</p>
 <dl class="simple">
 <dt>perturb_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-<a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs: Any</p>
+<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; Tensor or tuple of Tensors</p>
@@ -147,7 +150,7 @@ is True, otherwise None can be provided for this argument.</p>
 <dl class="simple">
 <dt>from_interp_rep_transform(</dt><dd><p>curr_sample: Tensor [2D 1 x num_interp_features]
 original_input: Tensor or Tuple of Tensors,
-<a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs: Any</p>
+<a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; Tensor or tuple of Tensors</p>
@@ -166,7 +169,7 @@ is False, otherwise None can be provided for this argument.</p>
 <dl class="simple">
 <dt>to_interp_rep_transform(</dt><dd><p>curr_sample: Tensor or Tuple of Tensors,
 original_input: Tensor or Tuple of Tensors,
-<a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs: Any</p>
+<a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; Tensor [2D 1 x num_interp_features]</p>
@@ -271,7 +274,7 @@ Default: None</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><a href="#id11"><span class="problematic" id="id12">**</span></a>interpretable model representation* (<em>Any</em>):</dt><dd><p>A representation of the interpretable model trained. The return
+<dt><a href="#id9"><span class="problematic" id="id10">**</span></a>interpretable model representation* (<em>Any</em>):</dt><dd><p>A representation of the interpretable model trained. The return
 type matches the return type of train_interpretable_model_func.
 For example, this could contain coefficients of a
 linear surrogate model.</p>
@@ -297,20 +300,12 @@ linear surrogate model.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># score of the target class.</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># For interpretable model training, we will use sklearn</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># in this example</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define interpretable model training function</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">linear_regression_interpretable_model_trainer</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">interpretable_inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">expected_outputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">weights</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">clf</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LinearRegression</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>            <span class="n">interpretable_inputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
-<span class="gp">&gt;&gt;&gt; </span>            <span class="n">expected_outputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
-<span class="gp">&gt;&gt;&gt; </span>            <span class="n">weights</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="n">clf</span><span class="o">.</span><span class="n">coef_</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># linear model in this example. We have provided wrappers</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># around sklearn linear models to fit the Model interface.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Any arguments provided to the sklearn constructor can also</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># be provided to the wrapper, e.g.:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># SkLearnLinearModel("linear_model.Ridge", alpha=2.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLinearModel</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define similarity kernel (exponential kernel based on L2 norm)</span>
@@ -342,7 +337,7 @@ linear surrogate model.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Defining LimeBase interpreter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lime_attr</span> <span class="o">=</span> <span class="n">LimeBase</span><span class="p">(</span><span class="n">net</span><span class="p">,</span>
-<span class="go">                         linear_regression_interpretable_model_trainer,</span>
+<span class="go">                         SkLearnLinearModel("linear_model.Ridge"),</span>
 <span class="go">                         similarity_func=similarity_kernel,</span>
 <span class="go">                         perturb_func=perturb_func,</span>
 <span class="go">                         perturb_interpretable_space=False,</span>
@@ -376,7 +371,7 @@ provides a convergence delta (aka approximation error) or not.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="captum.attr.Lime">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Lime</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">train_interpretable_model_func=&lt;function lasso_interpretable_model_trainer&gt;</em>, <em class="sig-param">similarity_func=&lt;function get_exp_kernel_similarity_function.&lt;locals&gt;.default_exp_kernel&gt;</em>, <em class="sig-param">perturb_func=&lt;function default_perturb_func&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Lime</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">train_interpretable_model_func=SkLearnLasso()</em>, <em class="sig-param">similarity_func=&lt;function get_exp_kernel_similarity_function.&lt;locals&gt;.default_exp_kernel&gt;</em>, <em class="sig-param">perturb_func=&lt;function default_perturb_func&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lime is an interpretability method that trains an interpretable surrogate model
 by sampling points around a specified input example and using model evaluations
 at these points to train a simpler interpretable ‘surrogate’ model, such as a
@@ -410,32 +405,30 @@ linear model convey the importance of each super-pixel.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forward_func</strong> (<em>callable</em>) – The forward function of the model or any
 modification of it</p></li>
-<li><p><strong>train_interpretable_model_func</strong> (<em>optional</em><em>, </em><em>callable</em>) – <p>Function which
-trains an interpretable model and returns coefficients
-of the interpretable model.
-This function is optional, and the default function trains
-an interpretable model using Lasso regression, using the
-alpha parameter provided when calling attribute.
-Using the default function requires having sklearn version
-0.23.0 or higher installed.</p>
-<p>If a custom function is provided, the expected signature of this
-callable is:</p>
-<dl>
-<dt>train_interpretable_model_func(</dt><dd><dl class="simple">
+<li><p><strong>interpretable_model</strong> (<em>optional</em><em>, </em><a class="reference internal" href="utilities.html#captum._utils.models.model.Model" title="captum._utils.models.model.Model"><em>Model</em></a>) – <p>Model object to train
+interpretable model.</p>
+<p>This argument is optional and defaults to SkLearnLasso(alpha=1.0),
+which is a wrapper around the Lasso linear model in SkLearn.
+This requires having sklearn version &gt;= 0.23 available.</p>
+<p>Other predefined interpretable linear models are provided in
+captum._utils.models.linear_model.</p>
+<p>Alternatively, a custom model object must provide a <cite>fit</cite> method to
+train the model, given a dataloader, with batches containing
+three tensors:</p>
+<blockquote>
+<div><dl class="simple">
 <dt>interpretable_inputs: Tensor</dt><dd><p>[2D num_samples x num_interp_features],</p>
 </dd>
 </dl>
 <p>expected_outputs: Tensor [1D num_samples],
-weights: Tensor [1D num_samples]
-<a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Tensor [1D num_interp_features]
-The return type must be a 1D tensor containing the importance
-or attribution of each input feature.</p>
-<p>kwargs includes baselines, feature_mask, num_interp_features
-(integer, determined from feature mask), and
-alpha (for Lasso regression).</p>
+weights: Tensor [1D num_samples]</p>
+</div></blockquote>
+<p>The model object must also provide a <cite>representation</cite> method to
+access the appropriate coefficients or representation of the
+interpretable model after fitting.</p>
+<p>Note that calling fit multiple times should retrain the
+interpretable model, each attribution call reuses
+the same given interpretable model object.</p>
 </p></li>
 <li><p><strong>similarity_func</strong> (<em>callable</em>) – <p>Function which takes a single sample
 along with its corresponding interpretable representation
@@ -450,7 +443,7 @@ perturbed_interpretable_input:</p>
 <blockquote>
 <div><p>Tensor [2D 1 x num_interp_features],</p>
 </div></blockquote>
-<p><a href="#id15"><span class="problematic" id="id16">**</span></a>kwargs: Any</p>
+<p><a href="#id11"><span class="problematic" id="id12">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; float or Tensor containing float scalar</p>
@@ -471,7 +464,7 @@ be implemented by providing a function with the
 following expected signature:</p>
 <dl class="simple">
 <dt>perturb_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-<a href="#id17"><span class="problematic" id="id18">**</span></a>kwargs: Any</p>
+<a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs: Any</p>
 </dd>
 </dl>
 <p>) -&gt; Tensor [Binary 2D Tensor 1 x num_interp_features]</p>
@@ -484,7 +477,7 @@ alpha (for Lasso regression).</p>
 </dl>
 <dl class="py method">
 <dt id="captum.attr.Lime.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_perturb_samples</span><span class="o">=</span><span class="default_value">25</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">return_input_shape</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_perturb_samples</span><span class="o">=</span><span class="default_value">25</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">return_input_shape</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method attributes the output of the model with given target index
 (in case it is provided, otherwise it assumes that output is a
 scalar) to the inputs of the model using the approach described above,
