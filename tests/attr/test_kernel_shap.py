@@ -23,10 +23,12 @@ class Test(BaseTest):
         super().setUp()
         try:
             import sklearn  # noqa: F401
-        except ImportError:
-            raise unittest.SkipTest(
-                "Skipping Kernel Shap tests, sklearn not available."
-            )
+
+            assert (
+                sklearn.__version__ >= "0.23.0"
+            ), "Must have sklearn version 0.23.0 or higher"
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest("Skipping KernelShap tests, sklearn not available.")
 
     def test_linear_kernel_shap(self) -> None:
         net = BasicModel_MultiLayer()
