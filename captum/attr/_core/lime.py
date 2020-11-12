@@ -678,7 +678,7 @@ class Lime(LimeBase):
                     Note that calling fit multiple times should retrain the
                     interpretable model, each attribution call reuses
                     the same given interpretable model object.
-            similarity_func (callable): Function which takes a single sample
+            similarity_func (optional, callable): Function which takes a single sample
                     along with its corresponding interpretable representation
                     and returns the weight of the interpretable sample for
                     training the interpretable model.
