@@ -122,7 +122,7 @@ class LimeBase(PerturbationAttribution):
                     ) -> float or Tensor containing float scalar
 
                     perturbed_input and original_input will be the same type and
-                    contain tensors of the same shape (regardless of whether or notß
+                    contain tensors of the same shape (regardless of whether or not
                     the sampling function returns inputs in the interpretable
                     space). original_input is the same as the input provided
                     when calling attribute.
