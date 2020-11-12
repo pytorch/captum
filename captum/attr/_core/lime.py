@@ -642,7 +642,7 @@ class Lime(LimeBase):
         forward_func: Callable,
         interpretable_model: Optional[Model] = None,
         similarity_func: Optional[Callable] = None,
-        perturb_func: Optional[Callable] = default_perturb_func,
+        perturb_func: Optional[Callable] = None,
     ) -> None:
         r"""
 
