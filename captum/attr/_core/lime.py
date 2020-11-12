@@ -122,7 +122,7 @@ class LimeBase(PerturbationAttribution):
                     ) -> float or Tensor containing float scalar
 
                     perturbed_input and original_input will be the same type and
-                    contain tensors of the same shape (regardless of whether
+                    contain tensors of the same shape (regardless of whether or notß
                     the sampling function returns inputs in the interpretable
                     space). original_input is the same as the input provided
                     when calling attribute.
@@ -640,9 +640,9 @@ class Lime(LimeBase):
     def __init__(
         self,
         forward_func: Callable,
-        train_interpretable_model_func: Model = SkLearnLasso(alpha=1.0),
-        similarity_func: Callable = get_exp_kernel_similarity_function(),
-        perturb_func: Callable = default_perturb_func,
+        interpretable_model: Optional[Model] = None,
+        similarity_func: Optional[Callable] = None,
+        perturb_func: Optional[Callable] = default_perturb_func,
     ) -> None:
         r"""
 
@@ -682,26 +682,38 @@ class Lime(LimeBase):
                     training the interpretable model.
                     This is often referred to as a similarity kernel.
 
+                    This argument is optional and defaults to a function which
+                    applies an exponential kernel to the consine distance between
+                    the original input and perturbed input, with a kernel width
+                    of 1.0.
+
+                    A similarity function applying an exponential
+                    kernel to cosine / euclidean distances can be constructed
+                    using the provided get_exp_kernel_similarity_function in
+                    captum.attr._core.lime.
+
+                    Alternately, a custom callable can also be provided.
                     The expected signature of this callable is:
 
-                    similarity_func(
-                        original_input: Tensor or tuple of Tensors,
-                        perturbed_input: Tensor or tuple of Tensors,
-                        perturbed_interpretable_input:
-                            Tensor [2D 1 x num_interp_features],
-                        **kwargs: Any
-                    ) -> float or Tensor containing float scalar
+                    >>> def similarity_func(
+                    >>>    original_input: Tensor or tuple of Tensors,
+                    >>>    perturbed_input: Tensor or tuple of Tensors,
+                    >>>    perturbed_interpretable_input:
+                    >>>        Tensor [2D 1 x num_interp_features],
+                    >>>    **kwargs: Any
+                    >>> ) -> float or Tensor containing float scalar
 
                     perturbed_input and original_input will be the same type and
                     contain tensors of the same shape, with original_input
                     being the same as the input provided when calling attribute.
 
                     kwargs includes baselines, feature_mask, num_interp_features
-                    (integer, determined from feature mask), and
-                    alpha (for Lasso regression).
-            perturb_func (callable): Function which returns a single
+                    (integer, determined from feature mask).
+            perturb_func (optional, callable): Function which returns a single
                     sampled input, which is a binary vector of length
-                    num_interp_features. The default function returns
+                    num_interp_features.
+
+                    This function is optional, the default function returns
                     a binary vector where each element is selected
                     independently and uniformly at random. Custom
                     logic for selecting sampled binary vectors can
@@ -714,14 +726,22 @@ class Lime(LimeBase):
                     ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
 
                     kwargs includes baselines, feature_mask, num_interp_features
-                    (integer, determined from feature mask), and
-                    alpha (for Lasso regression).
+                    (integer, determined from feature mask).
 
         """
+        if interpretable_model is None:
+            interpretable_model = SkLearnLasso(alpha=1.0)
+
+        if similarity_func is None:
+            similarity_func = get_exp_kernel_similarity_function()
+
+        if perturb_func is None:
+            perturb_func = default_perturb_func
+
         LimeBase.__init__(
             self,
             forward_func,
-            train_interpretable_model_func,
+            interpretable_model,
             similarity_func,
             perturb_func,
             True,
@@ -788,27 +808,27 @@ class Lime(LimeBase):
                         Baselines can be provided as:
 
                         - a single tensor, if inputs is a single tensor, with
-                            exactly the same dimensions as inputs or the first
-                            dimension is one and the remaining dimensions match
-                            with inputs.
+                          exactly the same dimensions as inputs or the first
+                          dimension is one and the remaining dimensions match
+                          with inputs.
 
                         - a single scalar, if inputs is a single tensor, which will
-                            be broadcasted for each input value in input tensor.
+                          be broadcasted for each input value in input tensor.
 
                         - a tuple of tensors or scalars, the baseline corresponding
-                            to each tensor in the inputs' tuple can be:
+                          to each tensor in the inputs' tuple can be:
 
-                            - either a tensor with matching dimensions to
+                          - either a tensor with matching dimensions to
                             corresponding tensor in the inputs' tuple
                             or the first dimension is one and the remaining
                             dimensions match with the corresponding
                             input tensor.
 
-                            - or a scalar, corresponding to a tensor in the
+                          - or a scalar, corresponding to a tensor in the
                             inputs' tuple. This scalar value is broadcasted
                             for corresponding input tensor.
                         In the cases when `baselines` is not provided, we internally
-                        use zero corresponding to each input tensor.
+                        use zero scalar corresponding to each input tensor.
                         Default: None
             target (int, tuple, tensor or list, optional):  Output indices for
                         which surrogate model is trained
@@ -886,10 +906,6 @@ class Lime(LimeBase):
                         If the forward function returns a single scalar per batch,
                         perturbations_per_eval must be set to 1.
                         Default: 1
-            alpha (float, optional):  Alpha used for training interpretable surrogate
-                        model in Lasso Regression. This parameter is used only
-                        if using default interpretable model trainer (Lasso).
-                        Default: 1.0
             return_input_shape (bool, optional): Determines whether the returned
                         tensor(s) only contain the coefficients for each interp-
                         retable feature from the trained surrogate model, or
