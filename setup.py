@@ -54,9 +54,9 @@ def report(*args):
 INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
 
 INSIGHTS_FILE_SUBDIRS = [
-    "insights/frontend/build",
-    "insights/models",
-    "insights/widget/static",
+    "insights/attr_vis/frontend/build",
+    "insights/attr_vis/models",
+    "insights/attr_vis/widget/static",
 ]
 
 TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
