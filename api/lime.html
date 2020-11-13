@@ -61,14 +61,12 @@ representing the entire batch.</p></li>
 <li><p><strong>interpretable_model</strong> (<a class="reference internal" href="utilities.html#captum._utils.models.model.Model" title="captum._utils.models.model.Model"><em>Model</em></a>) – <p>Model object to train interpretable model.
 A Model object provides a <cite>fit</cite> method to train the model,
 given a dataloader, with batches containing three tensors:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>interpretable_inputs: Tensor</dt><dd><p>[2D num_samples x num_interp_features],</p>
-</dd>
-</dl>
-<p>expected_outputs: Tensor [1D num_samples],
-weights: Tensor [1D num_samples]</p>
-</div></blockquote>
+<ul>
+<li><p>interpretable_inputs: Tensor
+[2D num_samples x num_interp_features],</p></li>
+<li><p>expected_outputs: Tensor [1D num_samples],</p></li>
+<li><p>weights: Tensor [1D num_samples]</p></li>
+</ul>
 <p>The model object must also provide a <cite>representation</cite> method to
 access the appropriate coefficients or representation of the
 interpretable model after fitting.
@@ -87,19 +85,17 @@ training interpretable model. Weight is generally
 determined based on similarity to the original input.
 The original paper refers to this as a similarity kernel.</p>
 <p>The expected signature of this callable is:</p>
-<dl>
-<dt>similarity_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-perturbed_input: Tensor or tuple of Tensors,
-perturbed_interpretable_input:</p>
-<blockquote>
-<div><p>Tensor [2D 1 x num_interp_features],</p>
-</div></blockquote>
-<p><a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; float or Tensor containing float scalar</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">similarity_func</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_interpretable_input</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>       <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">Tensor</span> <span class="n">containing</span> <span class="nb">float</span> <span class="n">scalar</span>
+</pre></div>
+</div>
 <p>perturbed_input and original_input will be the same type and
-contain tensors of the same shape (regardless of whether
+contain tensors of the same shape (regardless of whether or not
 the sampling function returns inputs in the interpretable
 space). original_input is the same as the input provided
 when calling attribute.</p>
@@ -114,12 +110,12 @@ the original input space (matching type and tensor shapes
 of original input) or in the interpretable input space,
 which is a vector containing the intepretable features.</p>
 <p>The expected signature of this callable is:</p>
-<dl class="simple">
-<dt>perturb_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Tensor or tuple of Tensors</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">perturb_func</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span>
+</pre></div>
+</div>
 <p>All kwargs passed to the attribute method are
 provided as keyword arguments (kwargs) to this callable.</p>
 <p>Returned sampled input should match the input type (Tensor
@@ -147,13 +143,13 @@ the corresponding representation in the input space
 <p>This argument is necessary if perturb_interpretable_space
 is True, otherwise None can be provided for this argument.</p>
 <p>The expected signature of this callable is:</p>
-<dl class="simple">
-<dt>from_interp_rep_transform(</dt><dd><p>curr_sample: Tensor [2D 1 x num_interp_features]
-original_input: Tensor or Tuple of Tensors,
-<a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Tensor or tuple of Tensors</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">from_interp_rep_transform</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">curr_sample</span><span class="p">:</span> <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="n">Tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span>
+</pre></div>
+</div>
 <p>Returned sampled input should match the type of original_input
 and corresponding tensor shapes.</p>
 <p>All kwargs passed to the attribute method are
@@ -166,13 +162,13 @@ of shape 1 x num_interp_features).</p>
 <p>This argument is necessary if perturb_interpretable_space
 is False, otherwise None can be provided for this argument.</p>
 <p>The expected signature of this callable is:</p>
-<dl class="simple">
-<dt>to_interp_rep_transform(</dt><dd><p>curr_sample: Tensor or Tuple of Tensors,
-original_input: Tensor or Tuple of Tensors,
-<a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Tensor [2D 1 x num_interp_features]</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">to_interp_rep_transform</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">curr_sample</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="n">Tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="n">Tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">]</span>
+</pre></div>
+</div>
 <p>curr_sample will match the type of original_input
 and corresponding tensor shapes.</p>
 <p>All kwargs passed to the attribute method are
@@ -274,7 +270,7 @@ Default: None</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><dl class="simple">
-<dt><a href="#id9"><span class="problematic" id="id10">**</span></a>interpretable model representation* (<em>Any</em>):</dt><dd><p>A representation of the interpretable model trained. The return
+<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>interpretable model representation* (<em>Any</em>):</dt><dd><p>A representation of the interpretable model trained. The return
 type matches the return type of train_interpretable_model_func.
 For example, this could contain coefficients of a
 linear surrogate model.</p>
@@ -371,7 +367,7 @@ provides a convergence delta (aka approximation error) or not.</p>
 </dd></dl>
 <dl class="py class">
 <dt id="captum.attr.Lime">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Lime</code><span class="sig-paren">(</span><em class="sig-param">forward_func</em>, <em class="sig-param">train_interpretable_model_func=SkLearnLasso()</em>, <em class="sig-param">similarity_func=&lt;function get_exp_kernel_similarity_function.&lt;locals&gt;.default_exp_kernel&gt;</em>, <em class="sig-param">perturb_func=&lt;function default_perturb_func&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">Lime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em>, <em class="sig-param"><span class="n">interpretable_model</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">similarity_func</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">perturb_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#Lime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.Lime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Lime is an interpretability method that trains an interpretable surrogate model
 by sampling points around a specified input example and using model evaluations
 at these points to train a simpler interpretable ‘surrogate’ model, such as a
@@ -415,14 +411,12 @@ captum._utils.models.linear_model.</p>
 <p>Alternatively, a custom model object must provide a <cite>fit</cite> method to
 train the model, given a dataloader, with batches containing
 three tensors:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>interpretable_inputs: Tensor</dt><dd><p>[2D num_samples x num_interp_features],</p>
-</dd>
-</dl>
-<p>expected_outputs: Tensor [1D num_samples],
-weights: Tensor [1D num_samples]</p>
-</div></blockquote>
+<ul>
+<li><p>interpretable_inputs: Tensor
+[2D num_samples x num_interp_features],</p></li>
+<li><p>expected_outputs: Tensor [1D num_samples],</p></li>
+<li><p>weights: Tensor [1D num_samples]</p></li>
+</ul>
 <p>The model object must also provide a <cite>representation</cite> method to
 access the appropriate coefficients or representation of the
 interpretable model after fitting.</p>
@@ -430,47 +424,53 @@ interpretable model after fitting.</p>
 interpretable model, each attribution call reuses
 the same given interpretable model object.</p>
 </p></li>
-<li><p><strong>similarity_func</strong> (<em>callable</em>) – <p>Function which takes a single sample
+<li><p><strong>similarity_func</strong> (<em>optional</em><em>, </em><em>callable</em>) – <p>Function which takes a single sample
 along with its corresponding interpretable representation
 and returns the weight of the interpretable sample for
 training the interpretable model.
 This is often referred to as a similarity kernel.</p>
-<p>The expected signature of this callable is:</p>
-<dl>
-<dt>similarity_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-perturbed_input: Tensor or tuple of Tensors,
-perturbed_interpretable_input:</p>
-<blockquote>
-<div><p>Tensor [2D 1 x num_interp_features],</p>
-</div></blockquote>
-<p><a href="#id11"><span class="problematic" id="id12">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; float or Tensor containing float scalar</p>
+<p>This argument is optional and defaults to a function which
+applies an exponential kernel to the consine distance between
+the original input and perturbed input, with a kernel width
+of 1.0.</p>
+<p>A similarity function applying an exponential
+kernel to cosine / euclidean distances can be constructed
+using the provided get_exp_kernel_similarity_function in
+captum.attr._core.lime.</p>
+<p>Alternately, a custom callable can also be provided.
+The expected signature of this callable is:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">similarity_func</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">perturbed_interpretable_input</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>       <span class="n">Tensor</span> <span class="p">[</span><span class="mi">2</span><span class="n">D</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="ow">or</span> <span class="n">Tensor</span> <span class="n">containing</span> <span class="nb">float</span> <span class="n">scalar</span>
+</pre></div>
+</div>
 <p>perturbed_input and original_input will be the same type and
 contain tensors of the same shape, with original_input
 being the same as the input provided when calling attribute.</p>
 <p>kwargs includes baselines, feature_mask, num_interp_features
-(integer, determined from feature mask), and
-alpha (for Lasso regression).</p>
+(integer, determined from feature mask).</p>
 </p></li>
-<li><p><strong>perturb_func</strong> (<em>callable</em>) – <p>Function which returns a single
+<li><p><strong>perturb_func</strong> (<em>optional</em><em>, </em><em>callable</em>) – <p>Function which returns a single
 sampled input, which is a binary vector of length
-num_interp_features. The default function returns
+num_interp_features.</p>
+<p>This function is optional, the default function returns
 a binary vector where each element is selected
 independently and uniformly at random. Custom
 logic for selecting sampled binary vectors can
 be implemented by providing a function with the
 following expected signature:</p>
-<dl class="simple">
-<dt>perturb_func(</dt><dd><p>original_input: Tensor or tuple of Tensors,
-<a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs: Any</p>
-</dd>
-</dl>
-<p>) -&gt; Tensor [Binary 2D Tensor 1 x num_interp_features]</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">perturb_func</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">original_input</span><span class="p">:</span> <span class="n">Tensor</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="n">of</span> <span class="n">Tensors</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span> <span class="p">[</span><span class="n">Binary</span> <span class="mi">2</span><span class="n">D</span> <span class="n">Tensor</span> <span class="mi">1</span> <span class="n">x</span> <span class="n">num_interp_features</span><span class="p">]</span>
+</pre></div>
+</div>
 <p>kwargs includes baselines, feature_mask, num_interp_features
-(integer, determined from feature mask), and
-alpha (for Lasso regression).</p>
+(integer, determined from feature mask).</p>
 </p></li>
 </ul>
 </dd>
@@ -519,38 +519,28 @@ feature when the corresponding interpretable feature
 is set to 0.
 Baselines can be provided as:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+<li><p>a single tensor, if inputs is a single tensor, with
+exactly the same dimensions as inputs or the first
 dimension is one and the remaining dimensions match
-with inputs.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:</p>
-<ul class="simple">
-<li><p>either a tensor with matching dimensions to</p></li>
-</ul>
-<p>corresponding tensor in the inputs’ tuple
+with inputs.</p></li>
+<li><p>a single scalar, if inputs is a single tensor, which will
+be broadcasted for each input value in input tensor.</p></li>
+<li><p>a tuple of tensors or scalars, the baseline corresponding
+to each tensor in the inputs’ tuple can be:</p>
+<ul>
+<li><p>either a tensor with matching dimensions to
+corresponding tensor in the inputs’ tuple
 or the first dimension is one and the remaining
 dimensions match with the corresponding
-input tensor.</p>
-<ul class="simple">
-<li><p>or a scalar, corresponding to a tensor in the</p></li>
+input tensor.</p></li>
+<li><p>or a scalar, corresponding to a tensor in the
+inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p></li>
 </ul>
-<p>inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p>
-</dd>
-</dl>
 </li>
 </ul>
 <p>In the cases when <cite>baselines</cite> is not provided, we internally
-use zero corresponding to each input tensor.
+use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
@@ -627,10 +617,6 @@ samples.
 If the forward function returns a single scalar per batch,
 perturbations_per_eval must be set to 1.
 Default: 1</p></li>
-<li><p><strong>alpha</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Alpha used for training interpretable surrogate
-model in Lasso Regression. This parameter is used only
-if using default interpretable model trainer (Lasso).
-Default: 1.0</p></li>
 <li><p><strong>return_input_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Determines whether the returned
 tensor(s) only contain the coefficients for each interp-
 retable feature from the trained surrogate model, or
@@ -709,6 +695,46 @@ num_interp_features.</p>
 </pre></div>
 </div>
 </dd></dl>
+</dd></dl>
+<dl class="py function">
+<dt id="captum.attr._core.lime.get_exp_kernel_similarity_function">
+<code class="sig-prename descclassname">captum.attr._core.lime.</code><code class="sig-name descname">get_exp_kernel_similarity_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">distance_mode</span><span class="o">=</span><span class="default_value">'cosine'</span></em>, <em class="sig-param"><span class="n">kernel_width</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/lime.html#get_exp_kernel_similarity_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr._core.lime.get_exp_kernel_similarity_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method constructs an appropriate similarity function to compute
+weights for perturbed sample in LIME. Distance between the original
+and perturbed inputs is computed based on the provided distance mode,
+and the distance is passed through an exponential kernel with given
+kernel width to convert to a range between 0 and 1.</p>
+<p>The callable returned can be provided as the similarity_fn for
+Lime or LimeBase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distance_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Distance mode can be either “cosine” or
+“euclidean” corresponding to either cosine distance
+or Euclidean distance respectively. Distance is computed
+by flattening the original inputs and perturbed inputs
+(concatenating tuples of inputs if necessary) and computing
+distances between the resulting vectors.
+Default: “cosine”</p></li>
+<li><p><strong>kernel_width</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – Kernel width for exponential kernel applied to distance.
+Default: 1.0</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt><strong>similarity_fn</strong> (<em>Callable</em>):</dt><dd><p>Similarity function. This callable can be provided as the
+similarity_fn for Lime or LimeBase.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
 </dd></dl>
 </div>
 </div>

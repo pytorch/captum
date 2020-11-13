@@ -87,38 +87,28 @@ feature when the corresponding interpretable feature
 is set to 0.
 Baselines can be provided as:</p>
 <ul>
-<li><dl class="simple">
-<dt>a single tensor, if inputs is a single tensor, with</dt><dd><p>exactly the same dimensions as inputs or the first
+<li><p>a single tensor, if inputs is a single tensor, with
+exactly the same dimensions as inputs or the first
 dimension is one and the remaining dimensions match
-with inputs.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>a single scalar, if inputs is a single tensor, which will</dt><dd><p>be broadcasted for each input value in input tensor.</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>a tuple of tensors or scalars, the baseline corresponding</dt><dd><p>to each tensor in the inputs’ tuple can be:</p>
-<ul class="simple">
-<li><p>either a tensor with matching dimensions to</p></li>
-</ul>
-<p>corresponding tensor in the inputs’ tuple
+with inputs.</p></li>
+<li><p>a single scalar, if inputs is a single tensor, which will
+be broadcasted for each input value in input tensor.</p></li>
+<li><p>a tuple of tensors or scalars, the baseline corresponding
+to each tensor in the inputs’ tuple can be:</p>
+<ul>
+<li><p>either a tensor with matching dimensions to
+corresponding tensor in the inputs’ tuple
 or the first dimension is one and the remaining
 dimensions match with the corresponding
-input tensor.</p>
-<ul class="simple">
-<li><p>or a scalar, corresponding to a tensor in the</p></li>
+input tensor.</p></li>
+<li><p>or a scalar, corresponding to a tensor in the
+inputs’ tuple. This scalar value is broadcasted
+for corresponding input tensor.</p></li>
 </ul>
-<p>inputs’ tuple. This scalar value is broadcasted
-for corresponding input tensor.</p>
-</dd>
-</dl>
 </li>
 </ul>
 <p>In the cases when <cite>baselines</cite> is not provided, we internally
-use zero corresponding to each input tensor.
+use zero scalar corresponding to each input tensor.
 Default: None</p>
 </p></li>
 <li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><em>tuple</em></a><em>, </em><em>tensor</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em>, </em><em>optional</em>) – <p>Output indices for
