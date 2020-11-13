@@ -100,7 +100,7 @@ class TotalVariation(Loss):
         return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
 
 
-class l1(Loss):
+class L1(Loss):
     """
     L1 norm of the target layer, generally used as a penalty.
     """
@@ -115,7 +115,7 @@ class l1(Loss):
         return torch.abs(activations - self.constant).sum()
 
 
-class l2(Loss):
+class L2(Loss):
     """
     L2 norm of the target layer, generally used as a penalty.
     """
@@ -131,7 +131,7 @@ class l2(Loss):
         return torch.sqrt(self.epsilon + activations)
 
 
-class diversity(Loss):
+class Diversity(Loss):
     """
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
     Olah, Mordvintsev & Schubert, 2017.
