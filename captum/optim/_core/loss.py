@@ -31,7 +31,7 @@ class ChannelActivation(Loss):
         self.target = target
         self.channel_index = channel_index
 
-    def __call__(self, targets_to_values: ModuleOutputMapping):
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         assert activations is not None
         # ensure channel_index is valid
@@ -55,7 +55,7 @@ class NeuronActivation(Loss):
         # ensure channel_index will be valid
         assert self.channel_index < self.target.out_channels
 
-    def _call__(self, targets_to_values: ModuleOutputMapping):
+    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         assert activations is not None
         assert len(activations.shape) == 4  # assume NCHW
@@ -82,7 +82,7 @@ class DeepDream(Loss):
     Mordvintsev et al., 2015.
     """
 
-    def __call__(self, targets_to_values: ModuleOutputMapping):
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return activations ** 2
 
@@ -93,7 +93,7 @@ class TotalVariation(Loss):
     See Simonyan, et al., 2014.
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping):
+    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         x_diff = activations[..., 1:, :] - activations[..., :-1, :]
         y_diff = activations[..., :, 1:] - activations[..., :, :-1]
@@ -110,7 +110,7 @@ class L1(Loss):
         self.target = target
         self.constant = constant
 
-    def _call__(self, targets_to_values: ModuleOutputMapping):
+    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return torch.abs(activations - self.constant).sum()
 
@@ -125,7 +125,7 @@ class L2(Loss):
         self.constant = constant
         self.epsilon = epsilon
 
-    def _call__(self, targets_to_values: ModuleOutputMapping):
+    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         activations = (activations - self.constant).sum()
         return torch.sqrt(self.epsilon + activations)
@@ -138,7 +138,7 @@ class Diversity(Loss):
     https://distill.pub/2017/feature-visualization/#diversity
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping):
+    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return -sum(
             [
