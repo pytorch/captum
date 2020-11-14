@@ -11,7 +11,6 @@ class Loss(ABC):
     Abstract Class to describe loss.
     """
 
-    @abstractmethod
     def __init__(self, target: nn.Module):
         super(Loss, self).__init__()
         self.target = target
