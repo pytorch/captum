@@ -150,24 +150,33 @@ class ImageParameterization(InputParameterization):
 class FFTImage(ImageParameterization):
     """Parameterize an image using inverse real 2D FFT"""
 
-    def __init__(self, size, channels: int = 3):
+    def __init__(self, size, channels: int = 3, init: torch.Tensor = None):
         super().__init__()
-        assert len(size) == 2
-        self.size = size
+        if init is None:
+            assert len(size) == 2
+            self.size = size
+        else:
+            assert init.shape[0] == 3
+            self.size = (init.size(1), init.size(2))
 
-        coeffs_shape = (channels, size[0], size[1] // 2 + 1, 2)
-        random_coeffs = torch.randn(
-            coeffs_shape
-        )  # names=["C", "H_f", "W_f", "complex"]
-        self.fourier_coeffs = nn.Parameter(random_coeffs / 50)
-
-        frequencies = FFTImage.rfft2d_freqs(*size)
+        frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
-            frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1])))
+            frequencies, torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1])))
         )
-        scale = scale * ((size[0] * size[1]) ** (1 / 2))
+        scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
+
+        if init is None:
+            coeffs_shape = (channels, size[0], size[1] // 2 + 1, 2)
+            random_coeffs = torch.randn(
+                coeffs_shape
+            )  # names=["C", "H_f", "W_f", "complex"]
+            self.fourier_coeffs = nn.Parameter(random_coeffs / 50)
+        else:
+            self.fourier_coeffs = nn.Parameter(
+                torch.rfft(init, signal_ndim=2) / spectrum_scale
+            )
 
     @staticmethod
     def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
@@ -216,28 +225,29 @@ class PixelImage(ImageParameterization):
 
 
 class LaplacianImage(ImageParameterization):
-    def __init__(self):
+    def __init__(self, size=None, channels: int = 3, init: torch.Tensor = None):
         super().__init__()
         power = 0.1
-        X = []
-        scaler = []
+        self.tensor_params = []
+        self.scaler = []
         for scale in [1, 2, 4, 8, 16, 32]:
+            h, w = int(size[0] // scale), int(size[1] // scale)
+            if init is None:
+                x = torch.randn([1, channels, h, w]) / 10
+            else:
+                x = init.clone()
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = torch.randn([1, 3, 224 // scale, 224 // scale]) / 10
-            x = x.cuda()
             x = x * (scale ** power) / (32 ** power)
-            x.requires_grad = True
-            X.append(x)
-            scaler.append(upsample)
-
-        self.parameters = X
-        self.scaler = scaler
+            x = torch.nn.Parameter(x)
+            self.tensor_params.append(x)
+            self.scaler.append(upsample)
+        self.tensor_params = torch.nn.ParameterList(self.tensor_params)
 
     def forward(self):
         A = []
-        for xi, upsamplei in zip(self.X, self.scaler):
+        for xi, upsamplei in zip(self.tensor_params, self.scaler):
             A.append(upsamplei(xi))
-        return torch.sum(torch.cat(A), 0) + 0.5
+        return (torch.sum(torch.cat(A), 0) + 0.5).refine_names("C", "H", "W")
 
 
 class NaturalImage(ImageParameterization):
@@ -253,10 +263,10 @@ class NaturalImage(ImageParameterization):
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size, channels=3, Parameterization=FFTImage):
+    def __init__(self, size=None, channels=3, Parameterization=FFTImage, init: torch.Tensor = None):
         super().__init__()
 
-        self.parameterization = Parameterization(size=size, channels=channels)
+        self.parameterization = Parameterization(size=size, channels=channels, init=init)
         self.decorrelate = ToRGB(transform_name="klt")
         self.squash_func = lambda x: torch.sigmoid(x)
 
