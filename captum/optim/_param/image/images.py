@@ -161,7 +161,8 @@ class FFTImage(ImageParameterization):
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
-            frequencies, torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1])))
+            frequencies,
+            torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1]))),
         )
         scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None].float()
@@ -263,10 +264,18 @@ class NaturalImage(ImageParameterization):
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size=None, channels=3, Parameterization=FFTImage, init: torch.Tensor = None):
+    def __init__(
+        self,
+        size=None,
+        channels=3,
+        Parameterization=FFTImage,
+        init: torch.Tensor = None,
+    ):
         super().__init__()
 
-        self.parameterization = Parameterization(size=size, channels=channels, init=init)
+        self.parameterization = Parameterization(
+            size=size, channels=channels, init=init
+        )
         self.decorrelate = ToRGB(transform_name="klt")
         self.squash_func = lambda x: torch.sigmoid(x)
 
