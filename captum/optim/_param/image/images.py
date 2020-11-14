@@ -228,7 +228,7 @@ class LaplacianImage(ImageParameterization):
     def __init__(self, size=None, channels: int = 3, init: torch.Tensor = None):
         super().__init__()
         power = 0.1
-        self.parameters = []
+        self.tensor_params = []
         self.scaler = []
         for scale in [1, 2, 4, 8, 16, 32]:
             h, w = int(size[0] // scale), int(size[1] // scale)
@@ -239,12 +239,13 @@ class LaplacianImage(ImageParameterization):
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
             x = x * (scale ** power) / (32 ** power)
             x = torch.nn.Parameter(x)
-            self.parameters.append(x)
+            self.tensor_params.append(x)
             self.scaler.append(upsample)
+        self.tensor_params = torch.nn.ParameterList(self.tensor_params)
 
     def forward(self):
         A = []
-        for xi, upsamplei in zip(self.parameters, self.scaler):
+        for xi, upsamplei in zip(self.tensor_params, self.scaler):
             A.append(upsamplei(xi))
         return (torch.sum(torch.cat(A), 0) + 0.5).refine_names("C", "H", "W")
 
