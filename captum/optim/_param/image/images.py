@@ -159,11 +159,11 @@ class FFTImage(ImageParameterization):
             assert init.shape[0] == 3
             self.size = (init.size(1), init.size(2))
 
-        frequencies = FFTImage.rfft2d_freqs(*size)
+        frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
-            frequencies, torch.full_like(frequencies, 1.0 / (max(size[0], size[1])))
+            frequencies, torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1])))
         )
-        scale = scale * ((size[0] * size[1]) ** (1 / 2))
+        scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None].float()
         self.register_buffer("spectrum_scale", spectrum_scale)
 
