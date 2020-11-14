@@ -237,7 +237,6 @@ class LaplacianImage(ImageParameterization):
             else:
                 x = init.clone()
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = x.cuda()
             x = x * (scale ** power) / (32 ** power)
             x = torch.nn.Parameter(x)
             self.parameters.append(x)
