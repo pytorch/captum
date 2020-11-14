@@ -262,7 +262,7 @@ class NaturalImage(ImageParameterization):
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
-    def __init__(self, size, channels=3, Parameterization=FFTImage, init: torch.Tensor = None):
+    def __init__(self, size=None, channels=3, Parameterization=FFTImage, init: torch.Tensor = None):
         super().__init__()
 
         self.parameterization = Parameterization(size=size, channels=channels, init=init)
