@@ -273,11 +273,15 @@ class NaturalImage(ImageParameterization):
     ):
         super().__init__()
 
+        self.decorrelate = ToRGB(transform_name="klt")
+        if init is not None:
+            init = self.decorrelate.decorrelate_init(init)
+            self.squash_func = lambda x: x.clamp(0, 1)
+        else:
+            self.squash_func = lambda x: torch.sigmoid(x)
         self.parameterization = Parameterization(
             size=size, channels=channels, init=init
         )
-        self.decorrelate = ToRGB(transform_name="klt")
-        self.squash_func = lambda x: torch.sigmoid(x)
 
     def forward(self):
         image = self.parameterization()
