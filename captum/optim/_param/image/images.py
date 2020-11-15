@@ -275,7 +275,7 @@ class NaturalImage(ImageParameterization):
 
         self.decorrelate = ToRGB(transform_name="klt")
         if init is not None:
-            init = self.decorrelate_tensor(init, self.decorrelate.transform)
+            init = self.decorrelate_init(init)
             self.squash_func = lambda x: x.clamp(0, 1)
         else:
             self.squash_func = lambda x: torch.sigmoid(x)
@@ -293,10 +293,3 @@ class NaturalImage(ImageParameterization):
         logits = logit(image, epsilon=1e-4)
         correlated = self.decorrelate(logits, inverse=True)
         self.parameterization.set_image(correlated)
-
-    def decorrelate_tensor(self, x, transform):
-        x = x.refine_names("C", "H", "W")
-        h, w = x.size("H"), x.size("W")
-        flat = x.flatten(("H", "W"), "spatials")
-        correct = torch.inverse(transform) @ flat
-        return correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", ...).rename(None)
