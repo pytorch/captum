@@ -78,7 +78,7 @@ class ToRGB(nn.Module):
         h, w = x.size("H"), x.size("W")
         flat = x.flatten(("H", "W"), "spatials")
         correct = torch.inverse(self.transform) @ flat
-        return correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", ...)
+        return correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", "H", "W")
 
     def forward(self, x, inverse=False):
         assert x.dim() == 3
