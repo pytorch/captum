@@ -163,7 +163,7 @@ class Diversity(Loss):
 
 class Direction(Loss):
     """
-    Visualize a neuron direction.
+    Visualize a direction.
     """
 
     def __init__(self, target: nn.Module, vec: torch.Tensor):
