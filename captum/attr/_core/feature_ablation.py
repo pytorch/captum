@@ -348,7 +348,7 @@ class FeatureAblation(PerturbationAttribution):
                         ).reshape((-1, num_outputs) + (len(inputs[i].shape) - 1) * (1,))
                     if self.use_weights:
                         weights[i] += current_mask.float().sum(dim=0)
-                    total_attrib[i] += (eval_diff * current_mask.to(attrib_type)).sum(
+                    total_attrib[i] += (eval_diff.to(total_attrib[i].device) * current_mask.to(attrib_type)).sum(
                         dim=0
                     )
 
