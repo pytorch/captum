@@ -178,7 +178,7 @@ class Direction(Loss):
 
 class DirectionNeuron(Loss):
     """
-    Visualize a direction.
+    Visualize a neuron direction.
     """
 
     def __init__(
