@@ -34,6 +34,15 @@ class Loss(ABC):
         return _x, _y
 
 
+class LayerActivation(Loss):
+    """
+    Maximize activations at the target layer.
+    """
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        return targets_to_values[self.target]
+
+
 class ChannelActivation(Loss):
     """
     Maximize activations at the target layer and target channel.
