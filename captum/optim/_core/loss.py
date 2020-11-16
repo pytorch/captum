@@ -200,7 +200,9 @@ class ActivationInterpolation(Loss):
         batch_weights = torch.arange(B, device=activations_one.device) / (B - 1)
         sum_tensor = torch.zeros(1, device=activations_one.device)
         for n in range(B):
-            sum_tensor = sum_tensor + ((1 - batch_weights[n]) * activations_one[n]).mean()
+            sum_tensor = (
+                sum_tensor + ((1 - batch_weights[n]) * activations_one[n]).mean()
+            )
             sum_tensor = sum_tensor + (batch_weights[n] * activations_two[n]).mean()
         return sum_tensor
 
