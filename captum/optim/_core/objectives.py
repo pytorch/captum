@@ -124,14 +124,16 @@ class InputOptimization(Objective, Parameterized):
 
         history = []
         step = 0
-        while stop_criteria(step, self, history, optimizer):
-            optimizer.zero_grad()
-            loss_value = self.loss()
-            history.append(loss_value.cpu().detach().numpy())
-            (-1 * loss_value.mean()).backward()
-            optimizer.step()
-            step += 1
-
+        try:
+            while stop_criteria(step, self, history, optimizer):
+                optimizer.zero_grad()
+                loss_value = self.loss()
+                history.append(loss_value.cpu().detach().numpy())
+                (-1 * loss_value.mean()).backward()
+                optimizer.step()
+                step += 1
+        except (Exception, BaseException):
+            self.cleanup()
         self.cleanup()
         return history
 
