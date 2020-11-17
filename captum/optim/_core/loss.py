@@ -7,7 +7,7 @@ from captum.optim._utils.typing import ModuleOutputMapping
 
 
 class Loss(ABC):
-    r"""
+    """
     Abstract Class to describe loss.
     """
 
