@@ -177,16 +177,16 @@ class ActivationInterpolation(Loss):
 
     def __init__(
         self,
-        target1: nn.Module = None,
-        channel_index1: int = -1,
-        target2: nn.Module = None,
-        channel_index2: int = -1,
+        target1: nn.Module,
+        channel_index1: int,
+        target2: nn.Module,
+        channel_index2: int,
     ):
         super(Loss, self).__init__()
         self.target_one = target1
-        self.channel_index_one = channel_index1
+        self.channel_index_one = channel_index1 or -1
         self.target_two = target2
-        self.channel_index_two = channel_index2
+        self.channel_index_two = channel_index2 or -1
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_one = targets_to_values[self.target_one]
