@@ -216,6 +216,33 @@ class ActivationInterpolation(Loss):
         return sum_tensor
 
 
+class Alignment(Loss):
+    """
+    Penalize the L2 distance between tensors in the batch to encourage visual
+    similarity between them.
+    """
+
+    def __init__(self, target: nn.Module, decay_ratio: float = 2):
+        super(Loss, self).__init__()
+        self.target = target
+        self.decay_ratio = decay_ratio
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target]
+        B = activations.size(0)
+
+        sum_tensor = torch.zeros(1, device=activations.device)
+        for d in [1, 2, 3, 4]:
+            for i in range(B - d):
+                a, b = i, i + d
+                activ_a, activ_b = activations[a], activations[b]
+                sum_tensor = sum_tensor + (
+                    (activ_a - activ_b) ** 2
+                ).mean() / self.decay_ratio ** float(d)
+
+        return sum_tensor
+
+
 class Direction(Loss):
     """
     Visualize a direction.
