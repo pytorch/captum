@@ -6,7 +6,7 @@ Over successive layers, deep neural networks transform the data space so that it
 
 ### Idea: Probing the embedding space interactively
 
-PCA helps us understand the major features that shape the embedding space. Probing samples along each Principal Component, in particular at its extremities, gives us ideas about what this component represents. Below is an example of the embedding space at an intermediate layer in AlexNet, trained to classify scenes from [MIT Places365](http://places2.csail.mit.edu/). 
+PCA helps us understand the major features that shape the embedding space. Probing samples along each Principal Component, in particular at its extremities, gives us ideas about what this component represents. Below is an example of the embedding space at the 3rd convolutional layer in AlexNet, trained to classify scenes from [MIT Places365](http://places2.csail.mit.edu/). Each column represents a principle component, and depicts samples at the extremities of its axis. The percentages are portions of the variance it explains.
 
 <p align="center">
 <img src="/sample_imgs/PCA_on_Places365_AlexNet.jpg" alt="drawing" width="700"/>
