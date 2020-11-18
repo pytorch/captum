@@ -281,6 +281,8 @@ class DirectionNeuron(Loss):
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
 
+        assert activations.dim() == 4
+
         _x, _y = self.get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
@@ -301,6 +303,8 @@ class TensorDirection(Loss):
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
 
+        assert activations.dim() == 4
+
         H_vec, W_vec = self.direction.size(2), self.direction.size(3)
         H_activ, W_activ = activations.size(2), activations.size(3)
 
@@ -309,3 +313,53 @@ class TensorDirection(Loss):
 
         activations = activations[:, :, H : H + H_vec, W : W + W_vec]
         return torch.cosine_similarity(self.direction, activations)
+
+
+class ActivationWeights(Loss):
+    """
+    Apply weights to channels, neurons, or spots in the target.
+    """
+
+    def __init__(
+        self,
+        target: nn.Module,
+        weights: torch.Tensor = None,
+        neuron: bool = False,
+        x: int = None,
+        y: int = None,
+        wx: int = None,
+        wy: int = None,
+    ):
+        super(Loss, self).__init__()
+        self.target = target
+        self.x = x
+        self.y = y
+        self.wx = wx
+        self.wy = wy
+        self.weights = weights
+        self.neuron = x is not None or y is not None or neuron
+        assert (
+            wx is None
+            and wy is None
+            or wx is not None
+            and wy is not None
+            and x is not None
+            and y is not None
+        )
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        activations = targets_to_values[self.target]
+        if self.neuron:
+            assert activations.dim() == 4
+            if self.wx is None and self.wy is None:
+                _x, _y = self.get_neuron_pos(
+                    activations.size(2), activations.size(3), self.x, self.y
+                )
+                activations = activations[..., _x, _y].squeeze() * self.weights
+            else:
+                activations = activations[
+                    ..., self.y: self.y + self.wy, self.x: self.x + self.wx
+                ] * self.weights.view(1, -1, 1, 1)
+        else:
+            activations = activations * self.weights.view(1, -1, 1, 1)
+        return activations
