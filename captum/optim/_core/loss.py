@@ -358,7 +358,7 @@ class ActivationWeights(Loss):
                 activations = activations[..., _x, _y].squeeze() * self.weights
             else:
                 activations = activations[
-                    ..., self.y: self.y + self.wy, self.x: self.x + self.wx
+                    ..., self.y : self.y + self.wy, self.x : self.x + self.wx
                 ] * self.weights.view(1, -1, 1, 1)
         else:
             activations = activations * self.weights.view(1, -1, 1, 1)
