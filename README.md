@@ -9,7 +9,7 @@ Over successive layers, deep neural networks transform the data space so that it
 PCA helps us understand the major features that shape the embedding space. Probing samples along each Principal Component, in particular at its extremities, gives us ideas about what this component represents. Below is an example of the embedding space at an intermediate layer in AlexNet, trained to classify scenes from [MIT Places365](http://places2.csail.mit.edu/). 
 
 <p align="center">
-<img src="/sample_imgs/PCA_on_Places365_AlexNet" alt="drawing" width="700"/>
+<img src="/sample_imgs/PCA_on_Places365_AlexNet.jpg" alt="drawing" width="700"/>
 </p>
 
 The first component explains 15.6% of the variance. At one extreme of this component we can see vegetation scenes, while at the other extreme we can see indoor scenes containing horizontal and vertical edges. These two subsets are at odds of each other: Vegetation scenes are mainly outdoors and are composed primarily of edgeless texture.
