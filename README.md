@@ -22,13 +22,13 @@ Explore the embedding space of a protoypical image classifier.
 
 
 ### How can it help?
-* Understand the learned features - globally <br>
+* **Understand the learned features - globally <br>
 There are numerous attribution methods that reveal which input features in a given sample activate a given neuron. These methods, however, do not expose collectively dominant input features, learned across multiple neurons. Dataset-level analysis is useful to surface these features by probing the activation space over the entire dataset.
-* Expose unreliable features and data deficiencies <br>
+* **Expose unreliable features and data deficiencies <br>
 Out of convenience or limited power, our model might propagate low-level input features to the final layer and rely on them in the task.
-* Model comparison <br>
+* **Model comparison <br>
 When comparing two architectures or two variations of the same models, it is informative to understand how the embeddings they compute differ. For example, Inception, ResNet, and VGGNet models deviate in the embeddings learned by early layers. Such analysis is helpful to shed light into why one model outperforms other models.  
-* Dataset comparison <br>
+* **Dataset comparison <br>
 Comparing the embedding space of two splits or two versions of a dataset is helpful to surface significant deviations in their distribution. It is possible to apply space probing using PCA directly to the dataset space, without having a model.
 
 
