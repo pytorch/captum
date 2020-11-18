@@ -1,8 +1,6 @@
-@misc{captum2019github,
-  author = {Kokhlikyan, Narine and Miglani, Vivek and Martin, Miguel and Wang, Edward and Reynolds, Jonathan and Melnikov, Alexander and Lunova, Natalia and Reblitz-Richardson, Orion},
-  title = {PyTorch Captum},
-  year = {2019},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/pytorch/captum}},
+@inprocessings{captum2019github,
+  author = {Junior Rojas and Bilal Alsallakh and Edward Wang and Sara Zhang and Jonathan Reynolds and Narine Kokhlikyan and Vivek Miglani and Carlos Araya and Reblitz-Richardson, Orion},
+  title = {Probing Embedding Spaces in Deep Neural Networks},
+  year = {2020},
+  booktitle = {NeurIPS 2020 Demos},
 }
