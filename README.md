@@ -25,7 +25,7 @@ Explore the embedding space of a protoypical image classifier.
 * Understand the learned features - globally
 There are numerous attribution methods that reveal which input features in a given sample activate a given neuron. These methods, however, do not expose collectively dominant input features, learned across multiple neurons. Dataset-level analysis is useful to surface these features by probing the activation space over the entire dataset.
 * Expose unreliable features and data deficiencies
-Out of convenience or limited power, our model might propagate low-level input features to the final layer and rely on them in the task. For example, when inspecting the embedding space of a Hateful Memes detector (see an overview in the teaser image), we could identify its reliance on image chromaticity and contrast in its decision. This indicates overfitting risk which can lead to mis-detection. For example most hateful content involving Nazi Germany is based on grayscale images, and might be mis-detected in colorful images. 
+Out of convenience or limited power, our model might propagate low-level input features to the final layer and rely on them in the task.
 * Model comparison 
 When comparing two architectures or two variations of the same models, it is informative to understand how the embeddings they compute differ. For example, Inception, ResNet, and VGGNet models deviate in the embeddings learned by early layers. Such analysis is helpful to shed light into why one model outperforms other models.  
 * Dataset comparison 
