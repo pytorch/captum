@@ -10,6 +10,7 @@ from captum.attr._core.guided_backprop_deconvnet import Deconvolution, GuidedBac
 from captum.attr._core.guided_grad_cam import GuidedGradCam
 from captum.attr._core.input_x_gradient import InputXGradient
 from captum.attr._core.integrated_gradients import IntegratedGradients
+from captum.attr._core.kernel_shap import KernelShap
 from captum.attr._core.layer.grad_cam import LayerGradCam
 from captum.attr._core.layer.internal_influence import InternalInfluence
 from captum.attr._core.layer.layer_activation import LayerActivation
@@ -19,6 +20,7 @@ from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.lime import Lime
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
@@ -34,9 +36,8 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
-
-from ...helpers.basic import set_all_random_seeds
-from ...helpers.basic_models import (
+from tests.helpers.basic import set_all_random_seeds
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -98,6 +99,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 1},
@@ -114,6 +117,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -135,6 +140,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": [0, 1, 1, 0]},
@@ -151,6 +158,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -171,6 +180,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -191,6 +202,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
@@ -207,6 +220,8 @@ config = [
             Deconvolution,
             ShapleyValueSampling,
             FeaturePermutation,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -222,6 +237,8 @@ config = [
             FeatureAblation,
             DeepLift,
             ShapleyValueSampling,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -238,6 +255,8 @@ config = [
             FeatureAblation,
             DeepLift,
             ShapleyValueSampling,
+            Lime,
+            KernelShap,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -508,17 +527,30 @@ config = [
     # Perturbation-Specific Configs
     {
         "name": "conv_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation],
+        "algorithms": [
+            FeatureAblation,
+            ShapleyValueSampling,
+            FeaturePermutation,
+            Lime,
+            KernelShap,
+        ],
         "model": BasicModel_ConvNet(),
         "attribute_args": {
             "inputs": torch.arange(400).view(4, 1, 10, 10).float(),
             "target": 0,
             "perturbations_per_eval": 20,
         },
+        "dp_delta": 0.008,
     },
     {
         "name": "basic_multiple_tuple_target_with_perturbations_per_eval",
-        "algorithms": [FeatureAblation, ShapleyValueSampling, FeaturePermutation],
+        "algorithms": [
+            FeatureAblation,
+            ShapleyValueSampling,
+            FeaturePermutation,
+            Lime,
+            KernelShap,
+        ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
             "inputs": torch.randn(4, 3),

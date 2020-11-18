@@ -5,8 +5,7 @@ from typing import List, Tuple, cast
 import torch
 
 from captum._utils.common import _reduce_list, _select_targets, _sort_key_list
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class Test(BaseTest):

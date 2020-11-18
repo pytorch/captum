@@ -8,9 +8,8 @@ from torch.nn import Module
 
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.guided_grad_cam import GuidedGradCam
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
 
 
 class Test(BaseTest):

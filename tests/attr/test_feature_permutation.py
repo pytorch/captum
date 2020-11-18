@@ -5,9 +5,12 @@ import torch
 from torch import Tensor
 
 from captum.attr._core.feature_permutation import FeaturePermutation, _permute_feature
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModelWithSparseInputs
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
+from tests.helpers.basic_models import BasicModelWithSparseInputs
 
 
 class Test(BaseTest):

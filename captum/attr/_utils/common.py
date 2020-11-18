@@ -347,6 +347,26 @@ def _find_output_mode_and_verify(
     return agg_output_mode
 
 
+def _construct_default_feature_mask(
+    inputs: Tuple[Tensor, ...]
+) -> Tuple[Tuple[Tensor, ...], int]:
+    feature_mask = []
+    current_num_features = 0
+    for i in range(len(inputs)):
+        num_features = torch.numel(inputs[i][0])
+        feature_mask.append(
+            current_num_features
+            + torch.reshape(
+                torch.arange(num_features, device=inputs[i].device),
+                inputs[i][0:1].shape,
+            )
+        )
+        current_num_features += num_features
+    total_features = current_num_features
+    feature_mask = tuple(feature_mask)
+    return feature_mask, total_features
+
+
 def neuron_index_deprecation_decorator(func):
     r"""
     Decorator to deprecate neuron_index parameter for Neuron Attribution methods.

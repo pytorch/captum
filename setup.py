@@ -54,9 +54,9 @@ def report(*args):
 INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
 
 INSIGHTS_FILE_SUBDIRS = [
-    "insights/frontend/build",
-    "insights/models",
-    "insights/widget/static",
+    "insights/attr_vis/frontend/build",
+    "insights/attr_vis/models",
+    "insights/attr_vis/widget/static",
 ]
 
 TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
@@ -66,7 +66,15 @@ TEST_REQUIRES = ["pytest", "pytest-cov"]
 DEV_REQUIRES = (
     INSIGHTS_REQUIRES
     + TEST_REQUIRES
-    + ["black", "flake8", "sphinx", "sphinx-autodoc-typehints", "mypy>=0.760", "isort"]
+    + [
+        "black",
+        "flake8",
+        "sphinx",
+        "sphinx-autodoc-typehints",
+        "mypy>=0.760",
+        "isort",
+        "scikit-learn",
+    ]
 )
 
 # get version string from module
