@@ -22,9 +22,9 @@ The Embedding Explorer facilitates exploring embedding spaces via an interactive
 <img src="/sample_imgs/PCA_on_ImageNet_ResNet_Layer1.png" alt="Embedding of Layer1 in ResNet trained on ImageNet" width="700" title="ProbingtheembeddingspacesofaResNet-18ImageNetclassifier.Directionsinthese spaces determined by PCA reveal significant features gradually learned by the model to discriminate between the classes. In the first layer the majority of the variance corresponds to image brightness, dominance of orange or blue pixels, and dominance of green or purple pixels."/>
 </p>
 
-## Example Notebook
-Explore the embedding space of a protoypical image classifier.
-[View Jupyter Notebook](https://colab.research.google.com/drive/1NdVAR4b1cwVeibxbh2_q6RVcO3ilaYca?usp=sharing#scrollTo=d4UkWTvB-B5N)
+### Example notebook
+Explore the embedding space of a protoypical image classifier -
+[view Colab notebook](https://colab.research.google.com/drive/1NdVAR4b1cwVeibxbh2_q6RVcO3ilaYca?usp=sharing#scrollTo=d4UkWTvB-B5N)
 
 
 ### What is the value of this analysis?
