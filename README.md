@@ -9,7 +9,8 @@ Over successive layers, deep neural networks transform the data space so that it
 PCA helps us understand the major features that shape the embedding space. Probing samples along each Principal Component, in particular at its extremities, gives us ideas about what this component represents. Below is an example of the embedding space at the 3rd convolutional layer in AlexNet, trained to classify scenes from [MIT Places365](http://places2.csail.mit.edu/). Each column represents a principle component, and depicts samples at the extremities of its axis. The percentages are portions of the variance it explains.
 
 <p align="center">
-<img src="/sample_imgs/PCA_on_Places365_AlexNet.jpg" alt="drawing" width="700"/>
+<img src="/sample_imgs/PCA_on_Places365_AlexNet.jpg" alt="Embedding of Layer3 in AlexNet trained on Places365" width="700" title="The top-5 Principal Components at the 3rd convolutional layer of AlexNet, trained to classify Places365 scenes. Each column represents a principle component, and depicts samples at the extremities of its axis. The percentages are portions of the variance it explains.
+"/>
 </p>
 
 * The first component explains 15.6% of the variance. At one extreme of this component we can see vegetation scenes, while at the other extreme we can see indoor scenes containing horizontal and vertical edges. These two subsets are at odds of each other: Vegetation scenes are mainly outdoors and are composed primarily of edgeless texture.
@@ -17,6 +18,9 @@ PCA helps us understand the major features that shape the embedding space. Probi
 * The fifth component seems sensitive to color saturation. 
 
 The Embedding Explorer facilitates exploring embedding spaces via an interactive UI.
+<p align="center">
+<img src="/sample_imgs/PCA_on_ImageNet_ResNet_Layer1.png" alt="Embedding of Layer1 in ResNet trained on ImageNet" width="700" title="ProbingtheembeddingspacesofaResNet-18ImageNetclassifier.Directionsinthese spaces determined by PCA reveal significant features gradually learned by the model to discriminate between the classes. In the first layer the majority of the variance corresponds to image brightness, dominance of orange or blue pixels, and dominance of green or purple pixels."/>
+</p>
 
 ## Example Notebook
 Explore the embedding space of a protoypical image classifier.
