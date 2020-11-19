@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from captum.attr._core.deep_lift import DeepLift, DeepLiftShap  # noqa
 from captum.attr._core.feature_ablation import FeatureAblation  # noqa
 from captum.attr._core.feature_permutation import FeaturePermutation  # noqa
@@ -24,7 +23,9 @@ from captum.attr._core.layer.layer_gradient_x_activation import (  # noqa
 from captum.attr._core.layer.layer_integrated_gradients import (  # noqa
     LayerIntegratedGradients,
 )
+from captum.attr._core.layer.layer_lrp import LayerLRP  # noqa
 from captum.attr._core.lime import Lime, LimeBase  # noqa
+from captum.attr._core.lrp import LRP  # noqa
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
@@ -91,6 +92,7 @@ __all__ = [
     "ShapleyValues",
     "LimeBase",
     "Lime",
+    "LRP",
     "KernelShap",
     "LayerConductance",
     "LayerGradientXActivation",
@@ -102,6 +104,7 @@ __all__ = [
     "LayerDeepLiftShap",
     "LayerGradientShap",
     "LayerIntegratedGradients",
+    "LayerLRP",
     "NeuronConductance",
     "NeuronFeatureAblation",
     "NeuronGradient",
