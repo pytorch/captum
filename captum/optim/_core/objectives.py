@@ -69,7 +69,11 @@ class InputOptimization(Objective, Parameterized):
             - **loss** (*tensor*):
                         Size of the tensor corresponds to the targets passed.
         """
-        image = self.input_param()._t[None, ...]
+        image = (
+            self.input_param()._t[None, ...]
+            if self.input_param()._t.dim() == 3
+            else self.input_param()._t
+        )
 
         if self.transform:
             image = self.transform(image)

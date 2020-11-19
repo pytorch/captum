@@ -82,7 +82,7 @@ class ToRGB(nn.Module):
         return correct.unflatten("spatials", (("H", h), ("W", w))).rename(None)
 
     def forward(self, x, inverse=False):
-        assert x.dim() == 3
+        assert x.dim() == 3 or x.dim() == 4
 
         # alpha channel is taken off...
         has_alpha = x.size("C") == 4
@@ -96,7 +96,12 @@ class ToRGB(nn.Module):
             correct = self.transform.t() @ flat
         else:
             correct = self.transform @ flat
-        chw = correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", ...)
+        chw = correct.unflatten("spatials", (("H", h), ("W", w)))
+
+        if x.dim() == 3:
+            chw = chw.refine_names("C", ...)
+        elif x.dim() == 4:
+            chw = chw.refine_names("B", "C", ...)
 
         # ...alpha channel is concatenated on again.
         if has_alpha:
