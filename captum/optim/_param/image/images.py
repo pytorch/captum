@@ -180,7 +180,7 @@ class FFTImage(ImageParameterization):
             torch.full_like(frequencies, 1.0 / (max(self.size[0], self.size[1]))),
         )
         scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
-        spectrum_scale = scale[None, :, :, None].float()
+        spectrum_scale = scale[None, :, :, None]
         self.register_buffer("spectrum_scale", spectrum_scale)
 
         if init is None:
