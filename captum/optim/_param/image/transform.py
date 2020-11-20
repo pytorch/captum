@@ -74,14 +74,7 @@ class ToRGB(nn.Module):
         else:
             raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
-    def decorrelate_init(self, x: torch.Tensor) -> torch.Tensor:
-        x = x.refine_names("C", "H", "W")
-        h, w = x.size("H"), x.size("W")
-        flat = x.flatten(("H", "W"), "spatials")
-        correct = torch.inverse(self.transform) @ flat
-        return correct.unflatten("spatials", (("H", h), ("W", w))).rename(None)
-
-    def forward(self, x, inverse=False):
+    def forward(self, x, op_func=None):
         assert x.dim() == 3 or x.dim() == 4
 
         # alpha channel is taken off...
@@ -92,9 +85,11 @@ class ToRGB(nn.Module):
 
         h, w = x.size("H"), x.size("W")
         flat = x.flatten(("H", "W"), "spatials")
-        if inverse:
+        if op_func == "transpose":
             correct = self.transform.t() @ flat
-        else:
+        if op_func == "inverse":
+            correct = torch.inverse(self.transform) @ flat
+        elif op_func is None:
             correct = self.transform @ flat
         chw = correct.unflatten("spatials", (("H", h), ("W", w)))
 
