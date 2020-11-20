@@ -304,7 +304,9 @@ class NaturalImage(ImageParameterization):
 
         self.decorrelate = ToRGB(transform_name="klt")
         if init is not None:
-            init = self.decorrelate.decorrelate_init(init)
+            assert init.dim() == 3 or init.dim() == 4
+            init = init.refine_names("B", "C", "H", "W") if init.dim() == 4 else init.refine_names("C", "H", "W")
+            init = self.decorrelate(init, op_func="inverse").rename(None) 
             self.squash_func = lambda x: x.clamp(0, 1)
         else:
             self.squash_func = lambda x: torch.sigmoid(x)
@@ -320,5 +322,5 @@ class NaturalImage(ImageParameterization):
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)
-        correlated = self.decorrelate(logits, inverse=True)
+        correlated = self.decorrelate(logits, , op_func="transpose")
         self.parameterization.set_image(correlated)
