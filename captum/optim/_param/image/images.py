@@ -12,6 +12,7 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import ToRGB
+from captum.optim._utils.typing import InitSize, SquashFunc
 
 
 class ImageTensor(torch.Tensor):
@@ -104,7 +105,7 @@ class CudaImageTensor(object):
 #     return std * x + mean
 
 
-def logit(p: torch.Tensor, epsilon=1e-6) -> torch.Tensor:
+def logit(p: torch.Tensor, epsilon: float = 1e-6) -> torch.Tensor:
     p = torch.clamp(p, min=epsilon, max=1.0 - epsilon)
     assert p.min() >= 0 and p.max() < 1
     return torch.log(p / (1 - p))
@@ -166,7 +167,11 @@ class FFTImage(ImageParameterization):
     """Parameterize an image using inverse real 2D FFT"""
 
     def __init__(
-        self, size, channels: int = 3, batch: int = 1, init: torch.Tensor = None
+        self,
+        size: InitSize,
+        channels: int = 3,
+        batch: int = 1,
+        init: torch.Tensor = None,
     ):
         super().__init__()
         if init is None:
@@ -219,7 +224,7 @@ class FFTImage(ImageParameterization):
         results[s:] = torch.arange(-(v // 2), 0)
         return results * (1.0 / (v * d))
 
-    def set_image(self, correlated_image: torch.Tensor):
+    def set_image(self, correlated_image: torch.Tensor) -> None:
         coeffs = torch.rfft(correlated_image, signal_ndim=2)
         self.fourier_coeffs = coeffs / self.spectrum_scale
 
@@ -232,7 +237,11 @@ class FFTImage(ImageParameterization):
 
 class PixelImage(ImageParameterization):
     def __init__(
-        self, size=None, channels: int = 3, batch: int = 1, init: torch.Tensor = None
+        self,
+        size: InitSize = None,
+        channels: int = 3,
+        batch: int = 1,
+        init: torch.Tensor = None,
     ):
         super().__init__()
         if init is None:
@@ -246,22 +255,23 @@ class PixelImage(ImageParameterization):
     def forward(self):
         return self.image.refine_names("B", "C", "H", "W")
 
-    def set_image(self, correlated_image: torch.Tensor):
+    def set_image(self, correlated_image: torch.Tensor) -> None:
         self.image = nn.Parameter(correlated_image)
 
 
 class LaplacianImage(ImageParameterization):
     def __init__(
-        self, size=None, channels: int = 3, batch: int = 1, init: torch.Tensor = None
+        self,
+        size: InitSize = None,
+        channels: int = 3,
+        batch: int = 1,
+        init: torch.Tensor = None,
     ):
         super().__init__()
         power = 0.1
-        scale_list = [1, 2, 4, 8, 16, 32]
 
         if init is None:
-            tensor_params, self.scaler = self.setup_input(
-                size, channels, scale_list, power, init
-            )
+            tensor_params, self.scaler = self.setup_input(size, channels, power, init)
 
             self.tensor_params = torch.nn.ModuleList(
                 [deepcopy(tensor_params) for b in range(batch)]
@@ -271,15 +281,20 @@ class LaplacianImage(ImageParameterization):
             P = []
             for b in range(init.size(0)):
                 tensor_params, self.scaler = self.setup_input(
-                    size, channels, scale_list, power, init[b].unsqueeze(0)
+                    size, channels, power, init[b].unsqueeze(0)
                 )
                 P.append(tensor_params)
             self.tensor_params = torch.nn.ModuleList(P)
 
     def setup_input(
-        self, size, channels, scale_list, power: float = 0.1, init: torch.tensor = None
+        self,
+        size: InitSize,
+        channels: int,
+        power: float = 0.1,
+        init: torch.tensor = None,
     ):
         tensor_params, scaler = [], []
+        scale_list = [1, 2, 4, 8, 16, 32]
         for scale in scale_list:
             h, w = int(size[0] // scale), int(size[1] // scale)
             if init is None:
@@ -324,26 +339,31 @@ class NaturalImage(ImageParameterization):
 
     def __init__(
         self,
-        size=None,
+        size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
         Parameterization=FFTImage,
         init: torch.Tensor = None,
+        decorrelate_init: bool = True,
+        squash_func: SquashFunc = None,
     ):
         super().__init__()
-
         self.decorrelate = ToRGB(transform_name="klt")
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
-            init = (
-                init.refine_names("B", "C", "H", "W")
-                if init.dim() == 4
-                else init.refine_names("C", "H", "W")
-            )
-            init = self.decorrelate(init, inverse=True).rename(None)
-            self.squash_func = lambda x: x.clamp(0, 1)
+            if decorrelate_init:
+                init = (
+                    init.refine_names("B", "C", "H", "W")
+                    if init.dim() == 4
+                    else init.refine_names("C", "H", "W")
+                )
+                init = self.decorrelate(init, inverse=True).rename(None)
+            if squash_func is None:
+                squash_func: SquashFunc = lambda x: x.clamp(0, 1)
         else:
-            self.squash_func = lambda x: torch.sigmoid(x)
+            if squash_func is None:
+                squash_func: SquashFunc = lambda x: torch.sigmoid(x)
+        self.squash_func = squash_func
         self.parameterization = Parameterization(
             size=size, channels=channels, batch=batch, init=init
         )
@@ -354,7 +374,7 @@ class NaturalImage(ImageParameterization):
         image = image.rename(None)  # TODO: the world is not yet ready
         return CudaImageTensor(self.squash_func(image))
 
-    def set_image(self, image):
+    def set_image(self, image) -> None:
         logits = logit(image, epsilon=1e-4)
         correlated = self.decorrelate(logits, inverse=True)
         self.parameterization.set_image(correlated)
