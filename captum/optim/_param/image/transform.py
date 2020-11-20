@@ -87,7 +87,7 @@ class ToRGB(nn.Module):
         flat = x.flatten(("H", "W"), "spatials")
         if op_func == "transpose":
             correct = self.transform.t() @ flat
-        if op_func == "inverse":
+        elif op_func == "inverse":
             correct = torch.inverse(self.transform) @ flat
         elif op_func is None:
             correct = self.transform @ flat
