@@ -322,5 +322,5 @@ class NaturalImage(ImageParameterization):
 
     def set_image(self, image):
         logits = logit(image, epsilon=1e-4)
-        correlated = self.decorrelate(logits, , op_func="transpose")
+        correlated = self.decorrelate(logits, op_func="transpose")
         self.parameterization.set_image(correlated)
