@@ -144,7 +144,9 @@ class InputParameterization(torch.nn.Module):
 
 
 class ImageParameterization(InputParameterization):
-    def setup_batch(self, x: torch.Tensor, batch: int = 1, dim: int = 3):
+    def setup_batch(
+        self, x: torch.Tensor, batch: int = 1, dim: int = 3
+    ) -> torch.Tensor:
         assert batch > 0
         x = x.unsqueeze(0) if x.dim() == dim and batch == 1 else x
         x = (
