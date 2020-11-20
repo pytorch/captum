@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -253,34 +255,41 @@ class LaplacianImage(ImageParameterization):
         self, size=None, channels: int = 3, batch: int = 1, init: torch.Tensor = None
     ):
         super().__init__()
-        power = 0.1
-        self.tensor_params = []
+        self.power = 0.1
+        tensor_params = []
         self.scaler = []
-        for scale in [1, 2, 4, 8, 16, 32]:
+        self.scale_list = [1, 2, 4, 8, 16, 32]
+        for scale in self.scale_list:
             h, w = int(size[0] // scale), int(size[1] // scale)
             if init is None:
                 x = torch.randn([1, channels, h, w]) / 10
             else:
-                x = F.interpolate(
-                    init.clone().unsqueeze(0), size=(h, w), mode="bilinear"
-                )
+                x = x.unsqueeze(0) if x.dim() == 3 else x
+                x = F.interpolate(init.clone(), size=(h, w), mode="bilinear")
                 x = x / 6  # Prevents output from being all white
             upsample = torch.nn.Upsample(scale_factor=scale, mode="nearest")
-            x = x * (scale ** power) / (32 ** power)
+            x = x * (scale ** self.power) / (32 ** self.power)
             x = torch.nn.Parameter(x)
-            self.tensor_params.append(x)
+            tensor_params.append(x)
             self.scaler.append(upsample)
-        self.tensor_params = torch.nn.ParameterList(self.tensor_params)
+
+        tensor_params = torch.nn.ParameterList(tensor_params)
+        self.tensor_params = torch.nn.ModuleList(
+            [deepcopy(tensor_params) for b in range(batch)]
+        )
+
+    def create_tensor(self, params_list):
+        A = []
+        for xi, upsamplei in zip(params_list, self.scaler):
+            A.append(upsamplei(xi))
+        return torch.sum(torch.cat(A), 0) + 0.5
 
     def forward(self):
         A = []
-        for xi, upsamplei in zip(self.tensor_params, self.scaler):
-            A.append(upsamplei(xi))
-        return (
-            (torch.sum(torch.cat(A), 0) + 0.5)
-            .unsqueeze(0)
-            .refine_names("B", "C", "H", "W")
-        )
+        for params_list in self.tensor_params:
+            tensor = self.create_tensor(params_list)
+            A.append(tensor)
+        return torch.stack(A).refine_names("B", "C", "H", "W")
 
 
 class NaturalImage(ImageParameterization):
