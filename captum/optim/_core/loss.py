@@ -19,7 +19,7 @@ class Loss(ABC):
     def __call__(self, x):
         pass
 
-    def get_neuron_pos(self, H: int, W: int, x: int =None, y: int=None):
+    def get_neuron_pos(self, H: int, W: int, x: int = None, y: int = None):
         if x is None:
             _x = W // 2
         else:
