@@ -171,7 +171,7 @@ class FFTImage(ImageParameterization):
             assert len(size) == 2
             self.size = size
         else:
-            assert init.shape[0] == 3
+            assert init.shape[0] == 3 or init.shape[0] == 4
             self.size = (init.size(1), init.size(2))
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
