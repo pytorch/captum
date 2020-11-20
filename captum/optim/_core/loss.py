@@ -11,7 +11,7 @@ class Loss(ABC):
     Abstract Class to describe loss.
     """
 
-    def __init__(self, target: nn.Module):
+    def __init__(self, target: nn.Module) -> None:
         super(Loss, self).__init__()
         self.target = target
 
@@ -19,7 +19,7 @@ class Loss(ABC):
     def __call__(self, x):
         pass
 
-    def get_neuron_pos(self, H, W, x=None, y=None):
+    def get_neuron_pos(self, H: int, W: int, x: int =None, y: int=None):
         if x is None:
             _x = W // 2
         else:
@@ -48,7 +48,7 @@ class ChannelActivation(Loss):
     Maximize activations at the target layer and target channel.
     """
 
-    def __init__(self, target: nn.Module, channel_index: int):
+    def __init__(self, target: nn.Module, channel_index: int) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.channel_index = channel_index
@@ -67,7 +67,7 @@ class ChannelActivation(Loss):
 class NeuronActivation(Loss):
     def __init__(
         self, target: nn.Module, channel_index: int, x: int = None, y: int = None
-    ):
+    ) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.channel_index = channel_index
@@ -117,7 +117,7 @@ class L1(Loss):
     L1 norm of the target layer, generally used as a penalty.
     """
 
-    def __init__(self, target: nn.Module, constant: float = 0):
+    def __init__(self, target: nn.Module, constant: float = 0) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.constant = constant
@@ -132,7 +132,9 @@ class L2(Loss):
     L2 norm of the target layer, generally used as a penalty.
     """
 
-    def __init__(self, target: nn.Module, constant: float = 0, epsilon: float = 1e-6):
+    def __init__(
+        self, target: nn.Module, constant: float = 0, epsilon: float = 1e-6
+    ) -> None:
         self.target = target
         self.constant = constant
         self.epsilon = epsilon
@@ -181,7 +183,7 @@ class ActivationInterpolation(Loss):
         channel_index1: int,
         target2: nn.Module,
         channel_index2: int,
-    ):
+    ) -> None:
         super(Loss, self).__init__()
         self.target_one = target1
         self.channel_index_one = channel_index1 or -1
@@ -222,7 +224,7 @@ class Alignment(Loss):
     similarity between them.
     """
 
-    def __init__(self, target: nn.Module, decay_ratio: float = 2):
+    def __init__(self, target: nn.Module, decay_ratio: float = 2) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.decay_ratio = decay_ratio
@@ -248,7 +250,7 @@ class Direction(Loss):
     Visualize a direction.
     """
 
-    def __init__(self, target: nn.Module, vec: torch.Tensor):
+    def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1, 1, 1))
@@ -270,7 +272,7 @@ class DirectionNeuron(Loss):
         channel_index: int,
         x: int = None,
         y: int = None,
-    ):
+    ) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1, 1, 1))
@@ -295,7 +297,7 @@ class TensorDirection(Loss):
     Visualize a tensor direction.
     """
 
-    def __init__(self, target: nn.Module, vec: torch.Tensor):
+    def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec
@@ -329,7 +331,7 @@ class ActivationWeights(Loss):
         y: int = None,
         wx: int = None,
         wy: int = None,
-    ):
+    ) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.x = x

@@ -172,7 +172,7 @@ class FFTImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: torch.Tensor = None,
-    ):
+    ) -> None:
         super().__init__()
         if init is None:
             assert len(size) == 2
@@ -228,7 +228,7 @@ class FFTImage(ImageParameterization):
         coeffs = torch.rfft(correlated_image, signal_ndim=2)
         self.fourier_coeffs = coeffs / self.spectrum_scale
 
-    def forward(self):
+    def forward(self) -> torch.Tensor:
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = torch.irfft(scaled_spectrum, signal_ndim=2)[:, :, :h, :w]
@@ -242,7 +242,7 @@ class PixelImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: torch.Tensor = None,
-    ):
+    ) -> None:
         super().__init__()
         if init is None:
             assert size is not None and channels is not None and batch is not None
@@ -252,7 +252,7 @@ class PixelImage(ImageParameterization):
         init = self.setup_batch(init, batch)
         self.image = nn.Parameter(init)
 
-    def forward(self):
+    def forward(self) -> torch.Tensor:
         return self.image.refine_names("B", "C", "H", "W")
 
     def set_image(self, correlated_image: torch.Tensor) -> None:
@@ -266,7 +266,7 @@ class LaplacianImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: torch.Tensor = None,
-    ):
+    ) -> None:
         super().__init__()
         power = 0.1
 
@@ -291,7 +291,7 @@ class LaplacianImage(ImageParameterization):
         size: InitSize,
         channels: int,
         power: float = 0.1,
-        init: torch.tensor = None,
+        init: torch.Tensor = None,
     ):
         tensor_params, scaler = [], []
         scale_list = [1, 2, 4, 8, 16, 32]
@@ -316,7 +316,7 @@ class LaplacianImage(ImageParameterization):
             A.append(upsamplei(xi))
         return torch.sum(torch.cat(A), 0) + 0.5
 
-    def forward(self):
+    def forward(self) -> torch.Tensor:
         A = []
         for params_list in self.tensor_params:
             tensor = self.create_tensor(params_list)
@@ -346,7 +346,7 @@ class NaturalImage(ImageParameterization):
         init: torch.Tensor = None,
         decorrelate_init: bool = True,
         squash_func: SquashFunc = None,
-    ):
+    ) -> None:
         super().__init__()
         self.decorrelate = ToRGB(transform_name="klt")
         if init is not None:
@@ -368,13 +368,13 @@ class NaturalImage(ImageParameterization):
             size=size, channels=channels, batch=batch, init=init
         )
 
-    def forward(self):
+    def forward(self) -> torch.Tensor:
         image = self.parameterization()
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
         return CudaImageTensor(self.squash_func(image))
 
-    def set_image(self, image) -> None:
+    def set_image(self, image: torch.Tensor) -> None:
         logits = logit(image, epsilon=1e-4)
         correlated = self.decorrelate(logits, inverse=True)
         self.parameterization.set_image(correlated)
