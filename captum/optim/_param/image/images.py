@@ -184,7 +184,7 @@ class FFTImage(ImageParameterization):
         self.register_buffer("spectrum_scale", spectrum_scale)
 
         if init is None:
-            coeffs_shape = (channels, size[0], size[1] // 2 + 1, 2)
+            coeffs_shape = (channels, self.size[0], self.size[1] // 2 + 1, 2)
             random_coeffs = torch.randn(
                 coeffs_shape
             )  # names=["C", "H_f", "W_f", "complex"]
