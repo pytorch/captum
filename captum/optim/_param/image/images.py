@@ -188,12 +188,12 @@ class FFTImage(ImageParameterization):
             random_coeffs = torch.randn(
                 coeffs_shape
             )  # names=["C", "H_f", "W_f", "complex"]
-            self.fourier_coeffs = random_coeffs / 50
+            fourier_coeffs = random_coeffs / 50
         else:
-            self.fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
+            fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
 
-        self.fourier_coeffs = self.setup_batch(self.fourier_coeffs, batch, 4)
-        self.fourier_coeffs = nn.Parameter(self.fourier_coeffs)
+        fourier_coeffs = self.setup_batch(fourier_coeffs, batch, 4)
+        self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     @staticmethod
     def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
