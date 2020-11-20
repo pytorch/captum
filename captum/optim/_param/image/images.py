@@ -171,8 +171,12 @@ class FFTImage(ImageParameterization):
             assert len(size) == 2
             self.size = size
         else:
-            assert init.shape[0] == 3
-            self.size = (init.size(1), init.size(2))
+            assert init.dim() == 3 or init.dim() == 4
+            self.size = (
+                (init.size(1), init.size(2))
+                if init.dim() == 3
+                else (init.size(2), init.size(3))
+            )
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
@@ -188,12 +192,12 @@ class FFTImage(ImageParameterization):
             random_coeffs = torch.randn(
                 coeffs_shape
             )  # names=["C", "H_f", "W_f", "complex"]
-            self.fourier_coeffs = random_coeffs / 50
+            fourier_coeffs = random_coeffs / 50
         else:
-            self.fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
+            fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
 
-        self.fourier_coeffs = self.setup_batch(self.fourier_coeffs, batch, 4)
-        self.fourier_coeffs = nn.Parameter(self.fourier_coeffs)
+        fourier_coeffs = self.setup_batch(fourier_coeffs, batch, 4)
+        self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     @staticmethod
     def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
@@ -304,7 +308,13 @@ class NaturalImage(ImageParameterization):
 
         self.decorrelate = ToRGB(transform_name="klt")
         if init is not None:
-            init = self.decorrelate.decorrelate_init(init)
+            assert init.dim() == 3 or init.dim() == 4
+            init = (
+                init.refine_names("B", "C", "H", "W")
+                if init.dim() == 4
+                else init.refine_names("C", "H", "W")
+            )
+            init = self.decorrelate(init, inverse=True).rename(None)
             self.squash_func = lambda x: x.clamp(0, 1)
         else:
             self.squash_func = lambda x: torch.sigmoid(x)
