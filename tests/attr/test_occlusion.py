@@ -7,9 +7,8 @@ from torch import Tensor
 
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.occlusion import Occlusion
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel3,
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,

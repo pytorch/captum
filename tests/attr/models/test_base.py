@@ -12,9 +12,8 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-
-from ...helpers.basic import assertArraysAlmostEqual
-from ...helpers.basic_models import BasicEmbeddingModel, TextModule
+from tests.helpers.basic import assertArraysAlmostEqual
+from tests.helpers.basic_models import BasicEmbeddingModel, TextModule
 
 
 class Test(unittest.TestCase):

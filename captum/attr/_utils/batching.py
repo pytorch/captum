@@ -6,17 +6,18 @@ from typing import Any, Callable, Iterator, Tuple, Union
 import torch
 from torch import Tensor
 
-from ..._utils.common import (
+from captum._utils.common import (
     _format_additional_forward_args,
     _format_input,
+    _format_output,
     _reduce_list,
 )
-from ..._utils.typing import (
+from captum._utils.typing import (
     TargetType,
     TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
-from .approximation_methods import approximation_parameters
+from captum.attr._utils.approximation_methods import approximation_parameters
 
 
 def _batch_attribution(
@@ -196,3 +197,27 @@ def _batched_operator(
         )
     ]
     return _reduce_list(all_outputs)
+
+
+def _select_example(curr_arg: Any, index: int, bsz: int) -> Any:
+    if curr_arg is None:
+        return None
+    is_tuple = isinstance(curr_arg, tuple)
+    if not is_tuple:
+        curr_arg = (curr_arg,)
+    selected_arg = []
+    for i in range(len(curr_arg)):
+        if isinstance(curr_arg[i], (Tensor, list)) and len(curr_arg[i]) == bsz:
+            selected_arg.append(curr_arg[i][index : index + 1])
+        else:
+            selected_arg.append(curr_arg[i])
+    return _format_output(is_tuple, tuple(selected_arg))
+
+
+def _batch_example_iterator(bsz: int, *args) -> Iterator:
+    """
+    Batches the provided argument.
+    """
+    for i in range(bsz):
+        curr_args = [_select_example(args[j], i, bsz) for j in range(len(args))]
+        yield tuple(curr_args)

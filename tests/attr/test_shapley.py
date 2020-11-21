@@ -7,9 +7,8 @@ import torch
 
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.shapley_value import ShapleyValues, ShapleyValueSampling
-
-from ..helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
 )
@@ -153,6 +152,30 @@ class Test(BaseTest):
             lambda inp: int(torch.sum(net(inp)).item())
         )
 
+    def test_single_shapley_int_batch_scalar_float(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._single_int_input_multi_sample_batch_scalar_shapley_assert(
+            lambda inp: torch.sum(net(inp.float())).item()
+        )
+
+    def test_single_shapley_int_batch_scalar_tensor_0d(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._single_int_input_multi_sample_batch_scalar_shapley_assert(
+            lambda inp: torch.sum(net(inp.float()))
+        )
+
+    def test_single_shapley_int_batch_scalar_tensor_1d(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._single_int_input_multi_sample_batch_scalar_shapley_assert(
+            lambda inp: torch.sum(net(inp.float())).reshape(1)
+        )
+
+    def test_single_shapley_int_batch_scalar_tensor_int(self) -> None:
+        net = BasicModel_MultiLayer()
+        self._single_int_input_multi_sample_batch_scalar_shapley_assert(
+            lambda inp: int(torch.sum(net(inp.float())).item())
+        )
+
     def test_multi_sample_shapley_batch_scalar_float(self) -> None:
         net = BasicModel_MultiLayer()
         self._single_input_multi_sample_batch_scalar_shapley_assert(
@@ -218,6 +241,21 @@ class Test(BaseTest):
         self, func: Callable
     ) -> None:
         inp = torch.tensor([[2.0, 10.0, 3.0], [20.0, 50.0, 30.0]], requires_grad=True)
+        mask = torch.tensor([[0, 0, 1]])
+
+        self._shapley_test_assert(
+            func,
+            inp,
+            [[629.0, 629.0, 251.0]],
+            feature_mask=mask,
+            perturbations_per_eval=(1,),
+            target=None,
+        )
+
+    def _single_int_input_multi_sample_batch_scalar_shapley_assert(
+        self, func: Callable
+    ) -> None:
+        inp = torch.tensor([[2, 10, 3], [20, 50, 30]])
         mask = torch.tensor([[0, 0, 1]])
 
         self._shapley_test_assert(

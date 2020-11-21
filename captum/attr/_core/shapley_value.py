@@ -7,9 +7,7 @@ from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import torch
 from torch import Tensor
 
-from captum.log import log_usage
-
-from ..._utils.common import (
+from captum._utils.common import (
     _expand_additional_forward_args,
     _expand_target,
     _format_additional_forward_args,
@@ -18,13 +16,15 @@ from ..._utils.common import (
     _is_tuple,
     _run_forward,
 )
-from ..._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
-from .._utils.attribution import PerturbationAttribution
-from .._utils.common import (
+from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.attr._utils.attribution import PerturbationAttribution
+from captum.attr._utils.common import (
+    _construct_default_feature_mask,
     _find_output_mode_and_verify,
     _format_input_baseline,
     _tensorize_baseline,
 )
+from captum.log import log_usage
 
 
 def _all_perm_generator(num_features: int, num_samples: int) -> Iterable[Sequence[int]]:
@@ -279,7 +279,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             num_examples = inputs[0].shape[0]
 
             if feature_mask is None:
-                feature_mask, total_features = self.construct_feature_mask(inputs)
+                feature_mask, total_features = _construct_default_feature_mask(inputs)
             else:
                 total_features = int(
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
@@ -294,7 +294,9 @@ class ShapleyValueSampling(PerturbationAttribution):
 
             # Initialize attribution totals and counts
             total_attrib = [
-                torch.zeros_like(input[0:1] if agg_output_mode else input)
+                torch.zeros_like(
+                    input[0:1] if agg_output_mode else input, dtype=torch.float
+                )
                 for input in inputs
             ]
 
@@ -445,25 +447,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                 target_repeated,
                 combined_masks,
             )
-
-    def construct_feature_mask(
-        self, inputs: Tuple[Tensor, ...]
-    ) -> Tuple[Tuple[Tensor, ...], int]:
-        feature_mask = []
-        current_num_features = 0
-        for i in range(len(inputs)):
-            num_features = torch.numel(inputs[i][0])
-            feature_mask.append(
-                current_num_features
-                + torch.reshape(
-                    torch.arange(num_features, device=inputs[i].device),
-                    inputs[i][0:1].shape,
-                )
-            )
-            current_num_features += num_features
-        total_features = current_num_features
-        feature_mask = tuple(feature_mask)
-        return feature_mask, total_features
 
 
 class ShapleyValues(PerturbationAttribution):

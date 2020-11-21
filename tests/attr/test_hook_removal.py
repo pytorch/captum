@@ -8,10 +8,14 @@ from torch.nn import Module
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _set_deep_layer_value
 from captum.attr._utils.attribution import Attribution, InternalAttribution
-
-from ..helpers.basic import BaseTest, deep_copy_args
-from .helpers.gen_test_utils import gen_test_name, get_target_layer, parse_test_config
-from .helpers.test_config import config
+from tests.attr.helpers.gen_test_utils import (
+    gen_test_name,
+    get_target_layer,
+    parse_test_config,
+    should_create_generated_test,
+)
+from tests.attr.helpers.test_config import config
+from tests.helpers.basic import BaseTest, deep_copy_args
 
 """
 Tests in this file are dynamically generated based on the config
@@ -27,7 +31,7 @@ class HookRemovalMode(Enum):
     `normal` - Verifies no hooks remain after running an attribution method
     normally
     `incorrect_target_or_neuron` - Verifies no hooks remain after an incorrect
-    target and neuron_index are provided, which causes an assertion error
+    target and neuron_selector are provided, which causes an assertion error
     in the algorithm.
     `invalid_module` - Verifies no hooks remain after an invalid module
     is executed, which causes an assertion error in model execution.
@@ -63,6 +67,8 @@ class HookRemovalMeta(type):
             ) = parse_test_config(test_config)
 
             for algorithm in algorithms:
+                if not should_create_generated_test(algorithm):
+                    continue
                 for mode in HookRemovalMode:
                     if mode is HookRemovalMode.invalid_module and layer is None:
                         continue
@@ -137,8 +143,8 @@ class HookRemovalMeta(type):
                 if "target" in args:
                     args["target"] = (9999,) * 20
                     expect_error = True
-                if "neuron_index" in args:
-                    args["neuron_index"] = (9999,) * 20
+                if "neuron_selector" in args:
+                    args["neuron_selector"] = (9999,) * 20
                     expect_error = True
 
             if expect_error:

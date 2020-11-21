@@ -9,10 +9,9 @@ from captum.attr._core.neuron.neuron_gradient_shap import NeuronGradientShap
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-
-from ...helpers.basic import BaseTest, assertTensorAlmostEqual
-from ...helpers.basic_models import BasicModel_MultiLayer
-from ...helpers.classification_models import SoftmaxModel
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import BasicModel_MultiLayer
+from tests.helpers.classification_models import SoftmaxModel
 
 
 class Test(BaseTest):
@@ -46,6 +45,9 @@ class Test(BaseTest):
         self._assert_attributions(
             model, model.linear1, inputs, baselines, (slice(0, 1, 1),), 60
         )
+        self._assert_attributions(
+            model, model.linear1, inputs, baselines, lambda x: x[:, 0:1], 60
+        )
 
     def test_classification(self) -> None:
         def custom_baseline_fn(inputs: Tensor) -> Tensor:
@@ -70,7 +72,7 @@ class Test(BaseTest):
         layer: Module,
         inputs: Tensor,
         baselines: Union[Tensor, Callable[..., Tensor]],
-        neuron_ind: Union[int, Tuple[Union[int, slice], ...]],
+        neuron_ind: Union[int, Tuple[Union[int, slice], ...], Callable],
         n_samples: int = 5,
     ) -> None:
         ngs = NeuronGradientShap(model, layer)

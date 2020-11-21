@@ -22,11 +22,13 @@ from captum.insights.attr_vis.attribution_calculation import (
     AttributionCalculation,
     OutputScore,
 )
+from captum.insights.attr_vis.config import (
+    ATTRIBUTION_METHOD_CONFIG,
+    ATTRIBUTION_NAMES_TO_METHODS,
+)
+from captum.insights.attr_vis.features import BaseFeature
+from captum.insights.attr_vis.server import namedtuple_to_dict
 from captum.log import log_usage
-
-from .config import ATTRIBUTION_METHOD_CONFIG, ATTRIBUTION_NAMES_TO_METHODS
-from .features import BaseFeature
-from .server import namedtuple_to_dict
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -221,7 +223,7 @@ class AttributionVisualizer(object):
     def render(self, debug=True):
         from IPython.display import display
 
-        from .widget import CaptumInsights
+        from captum.insights.attr_vis.widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
@@ -229,23 +231,27 @@ class AttributionVisualizer(object):
             display(widget.out)
 
     @log_usage()
-    def serve(self, blocking=False, debug=False, port=None):
+    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
         else:
-            return self._serve(blocking=blocking, debug=debug, port=port)
+            return self._serve(
+                blocking=blocking, debug=debug, port=port, bind_all=bind_all
+            )
 
-    def _serve(self, blocking=False, debug=False, port=None):
-        from .server import start_server
+    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
+        from captum.insights.attr_vis.server import start_server
 
-        return start_server(self, blocking=blocking, debug=debug, _port=port)
+        return start_server(
+            self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
+        )
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
         from IPython.display import HTML, display
 
-        from .server import start_server
+        from captum.insights.attr_vis.server import start_server
 
         # TODO: Output widget only captures beginning of server logs. It seems
         # the context manager isn't respected when the web server is run on a
