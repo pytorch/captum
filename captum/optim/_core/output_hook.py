@@ -37,7 +37,7 @@ class ModuleReuseException(Exception):
 
 
 class ModuleOutputsHook:
-    def __init__(self, target_modules: Iterable[nn.Module]):
+    def __init__(self, target_modules: Iterable[nn.Module]) -> None:
         # self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.outputs = dict.fromkeys(target_modules, None)
         self.hooks = [
@@ -45,7 +45,7 @@ class ModuleOutputsHook:
             for module in target_modules
         ]
 
-    def _reset_outputs(self):
+    def _reset_outputs(self) -> None:
         self.outputs = dict.fromkeys(self.outputs.keys(), None)
 
     @property
@@ -81,10 +81,10 @@ class ModuleOutputsHook:
     def targets(self):
         return self.outputs.keys()
 
-    def remove_hooks(self):
+    def remove_hooks(self) -> None:
         for hook in self.hooks:
             hook.remove()
 
-    def __del__(self):
+    def __del__(self) -> None:
         # print(f"DEL HOOKS!: {list(self.outputs.keys())}")
         self.remove_hooks()

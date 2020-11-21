@@ -16,16 +16,16 @@ from captum.optim._utils.typing import InitSize, SquashFunc
 
 
 class ImageTensor(torch.Tensor):
-    def __init__(self, data, **kwargs):
+    def __init__(self, data, **kwargs) -> None:
         if not isinstance(data, torch.Tensor):
             data = torch.as_tensor(data, **kwargs)
         self._t = data
 
     @classmethod
-    def open(cls, path):
+    def open(cls, path, scale: float = 255.0):
         img_np = Image.open(path).convert("RGB")
         img_np = np.array(img_np).astype(np.float32)
-        return cls(img_np.transpose(2, 0, 1) / 255)
+        return cls(img_np.transpose(2, 0, 1) / scale)
 
     @classmethod
     def __torch_function__(self, func, types, args=(), kwargs=None):
@@ -37,7 +37,7 @@ class ImageTensor(torch.Tensor):
     def __repr__(self):
         return f"ImageTensor(value={self._t})"
 
-    def show(self, scale=255):
+    def show(self, scale: float = 255.0) -> None:
         if len(self.shape) == 3:
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
@@ -46,7 +46,7 @@ class ImageTensor(torch.Tensor):
         plt.axis("off")
         plt.show()
 
-    def export(self, filename, scale=255):
+    def export(self, filename, scale: float = 255.0) -> None:
         if len(self.shape) == 3:
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
@@ -62,7 +62,7 @@ class ImageTensor(torch.Tensor):
 
 
 class CudaImageTensor(object):
-    def __init__(self, data, **kwargs):
+    def __init__(self, data, **kwargs) -> None:
         self._t = torch.as_tensor(data, **kwargs)
 
     @classmethod
@@ -79,10 +79,10 @@ class CudaImageTensor(object):
     def shape(self):
         return self._t.shape
 
-    def show(self):
+    def show(self) -> None:
         self.cpu().show()
 
-    def export(self, filename):
+    def export(self, filename) -> None:
         self.cpu().export(filename)
 
     def cpu(self):
