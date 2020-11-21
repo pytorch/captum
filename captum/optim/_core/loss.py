@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -16,10 +17,12 @@ class Loss(ABC):
         self.target = target
 
     @abstractmethod
-    def __call__(self, x):
+    def __call__(self, targets_to_values: ModuleOutputMapping):
         pass
 
-    def get_neuron_pos(self, H: int, W: int, x: int = None, y: int = None):
+    def get_neuron_pos(
+        self, H: int, W: int, x: Optional[int] = None, y: Optional[int] = None
+    ):
         if x is None:
             _x = W // 2
         else:
@@ -66,7 +69,11 @@ class ChannelActivation(Loss):
 
 class NeuronActivation(Loss):
     def __init__(
-        self, target: nn.Module, channel_index: int, x: int = None, y: int = None
+        self,
+        target: nn.Module,
+        channel_index: int,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target = target
@@ -117,7 +124,7 @@ class L1(Loss):
     L1 norm of the target layer, generally used as a penalty.
     """
 
-    def __init__(self, target: nn.Module, constant: float = 0) -> None:
+    def __init__(self, target: nn.Module, constant: float = 0.0) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.constant = constant
@@ -133,7 +140,7 @@ class L2(Loss):
     """
 
     def __init__(
-        self, target: nn.Module, constant: float = 0, epsilon: float = 1e-6
+        self, target: nn.Module, constant: float = 0.0, epsilon: float = 1e-6
     ) -> None:
         self.target = target
         self.constant = constant
@@ -179,16 +186,16 @@ class ActivationInterpolation(Loss):
 
     def __init__(
         self,
-        target1: nn.Module,
-        channel_index1: int,
-        target2: nn.Module,
-        channel_index2: int,
+        target1: nn.Module = None,
+        channel_index1: Optional[int] = None,
+        target2: nn.Module = None,
+        channel_index2: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target_one = target1
-        self.channel_index_one = channel_index1 or -1
+        self.channel_index_one = channel_index1
         self.target_two = target2
-        self.channel_index_two = channel_index2 or -1
+        self.channel_index_two = channel_index2
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_one = targets_to_values[self.target_one]
@@ -202,9 +209,9 @@ class ActivationInterpolation(Loss):
         )
         assert activations_one.size(0) == activations_two.size(0)
 
-        if self.channel_index_one > -1:
+        if self.channel_index_one is not None:
             activations_one = activations_one[:, self.channel_index_one]
-        if self.channel_index_two > -1:
+        if self.channel_index_two is not None:
             activations_two = activations_two[:, self.channel_index_two]
         B = activations_one.size(0)
 
@@ -224,7 +231,7 @@ class Alignment(Loss):
     similarity between them.
     """
 
-    def __init__(self, target: nn.Module, decay_ratio: float = 2) -> None:
+    def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.decay_ratio = decay_ratio
@@ -270,8 +277,8 @@ class DirectionNeuron(Loss):
         target: nn.Module,
         vec: torch.Tensor,
         channel_index: int,
-        x: int = None,
-        y: int = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target = target
@@ -327,10 +334,10 @@ class ActivationWeights(Loss):
         target: nn.Module,
         weights: torch.Tensor = None,
         neuron: bool = False,
-        x: int = None,
-        y: int = None,
-        wx: int = None,
-        wy: int = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        wx: Optional[int] = None,
+        wy: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target = target

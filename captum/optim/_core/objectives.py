@@ -39,7 +39,7 @@ class InputOptimization(Objective, Parameterized):
         target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
         lr: float = 0.025,
-    ):
+    ) -> None:
         r"""
         Args:
             model (nn.Module):  The reference to PyTorch model instance.
@@ -86,7 +86,7 @@ class InputOptimization(Objective, Parameterized):
         loss_value = self.loss_function(module_outputs)
         return loss_value
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         r"""Garbage collection, mainly removing hooks."""
         self.hooks.remove_hooks()
 
@@ -96,7 +96,7 @@ class InputOptimization(Objective, Parameterized):
         return self.hooks.targets
 
     @targets.setter
-    def targets(self, value):
+    def targets(self, value) -> None:
         self.hooks.remove_hooks()
         self.hooks = ModuleOutputsHook(value)
 
@@ -152,7 +152,7 @@ def n_steps(n: int) -> StopCriteria:
     """
     pbar = tqdm(total=n, unit="step")
 
-    def continue_while(step, obj, history, optim):
+    def continue_while(step, obj, history, optim) -> bool:
         if len(history) > 0:
             pbar.set_postfix({"Objective": f"{history[-1].mean():.1f}"}, refresh=False)
         if step < n:
@@ -181,7 +181,7 @@ class SingleTargetObjective(Objective):
         model: nn.Module,
         target: nn.Module,
         loss_function: Callable[[torch.Tensor], torch.Tensor],
-    ):
+    ) -> None:
         super(SingleTargetObjective, self).__init__(model=model, targets=[target])
         self.loss_function = loss_function
 
@@ -197,7 +197,7 @@ class SingleTargetObjective(Objective):
 class MultiTargetObjective(Objective):
     def __init__(
         self, objectives: List[Objective], weights: Optional[Iterable[float]] = None
-    ):
+    ) -> None:
         model = objectives[0].model
         assert all(o.model == model for o in objectives)
         targets = (target for objective in objectives for target in objective.targets)

@@ -1,9 +1,12 @@
 import math
 import numbers
+from typing import Optional, Sequence, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from captum.optim._utils.typing import TransformSize, TransformVal, TransformValList
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -14,7 +17,7 @@ class BlendAlpha(nn.Module):
     You can specify a fixed background, or a random one will be used by default.
     """
 
-    def __init__(self, background: torch.Tensor = None) -> None:
+    def __init__(self, background: Optional[torch.Tensor] = None) -> None:
         super().__init__()
         self.background = background
 
@@ -110,7 +113,7 @@ class CenterCrop(torch.nn.Module):
         size (int, sequence) or (int): Number of pixels to center crop away.
     """
 
-    def __init__(self, size=0) -> None:
+    def __init__(self, size: TransformSize = 0) -> None:
         super(CenterCrop, self).__init__()
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
@@ -125,7 +128,7 @@ class CenterCrop(torch.nn.Module):
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
 
-def rand_select(transform_values):
+def rand_select(transform_values: TransformValList) -> TransformVal:
     """
     Randomly return a value from the provided tuple or list
     """
@@ -140,17 +143,19 @@ class RandomScale(nn.Module):
         scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
 
-    def __init__(self, scale) -> None:
+    def __init__(self, scale: TransformValList) -> None:
         super(RandomScale, self).__init__()
         self.scale = scale
 
-    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
+    def get_scale_mat(
+        self, m: TransformVal, device: torch.device, dtype: torch.dtype
+    ) -> torch.Tensor:
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
         )
         return scale_mat
 
-    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
+    def scale_tensor(self, x: torch.Tensor, scale: TransformVal) -> torch.Tensor:
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
@@ -239,7 +244,13 @@ class GaussianSmoothing(nn.Module):
             Default value is 2 (spatial).
     """
 
-    def __init__(self, channels, kernel_size, sigma, dim: int = 2) -> None:
+    def __init__(
+        self,
+        channels: int,
+        kernel_size: Union[int, Sequence[int]],
+        sigma: Union[float, Sequence[float]],
+        dim: int = 2,
+    ) -> None:
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim

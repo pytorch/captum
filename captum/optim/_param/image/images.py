@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -168,10 +169,10 @@ class FFTImage(ImageParameterization):
 
     def __init__(
         self,
-        size: InitSize,
+        size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        init: torch.Tensor = None,
+        init: Optional[torch.Tensor] = None,
     ) -> None:
         super().__init__()
         if init is None:
@@ -241,7 +242,7 @@ class PixelImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        init: torch.Tensor = None,
+        init: Optional[torch.Tensor] = None,
     ) -> None:
         super().__init__()
         if init is None:
@@ -265,7 +266,7 @@ class LaplacianImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        init: torch.Tensor = None,
+        init: Optional[torch.Tensor] = None,
     ) -> None:
         super().__init__()
         power = 0.1
@@ -291,7 +292,7 @@ class LaplacianImage(ImageParameterization):
         size: InitSize,
         channels: int,
         power: float = 0.1,
-        init: torch.Tensor = None,
+        init: Optional[torch.Tensor] = None,
     ):
         tensor_params, scaler = [], []
         scale_list = [1, 2, 4, 8, 16, 32]
@@ -343,9 +344,9 @@ class NaturalImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         Parameterization=FFTImage,
-        init: torch.Tensor = None,
+        init: Optional[torch.Tensor] = None,
         decorrelate_init: bool = True,
-        squash_func: SquashFunc = None,
+        squash_func: Optional[SquashFunc] = None,
     ) -> None:
         super().__init__()
         self.decorrelate = ToRGB(transform_name="klt")
