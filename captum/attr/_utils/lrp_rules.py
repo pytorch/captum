@@ -85,7 +85,7 @@ class EpsilonRule(PropagationRule):
         discriminator during propagation.
     """
 
-    def __init__(self, epsilon=1e-9):
+    def __init__(self, epsilon=1e-9) -> None:
         self.STABILITY_FACTOR = epsilon
 
     def _manipulate_weights(self, module, inputs, outputs):
@@ -104,7 +104,7 @@ class GammaRule(PropagationRule):
         the positive relevance is increased.
     """
 
-    def __init__(self, gamma=0.25, set_bias_to_zero=False):
+    def __init__(self, gamma=0.25, set_bias_to_zero=False) -> None:
         self.gamma = gamma
         self.set_bias_to_zero = set_bias_to_zero
 
@@ -130,7 +130,7 @@ class Alpha1_Beta0_Rule(PropagationRule):
     Use for lower layers.
     """
 
-    def __init__(self, set_bias_to_zero=False):
+    def __init__(self, set_bias_to_zero=False) -> None:
         self.set_bias_to_zero = set_bias_to_zero
 
     def _manipulate_weights(self, module, inputs, outputs):

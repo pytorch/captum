@@ -19,7 +19,7 @@ class InterpretableEmbeddingBase(Module):
     precomputed embedding vectors to the layers below.
     """
 
-    def __init__(self, embedding, full_name):
+    def __init__(self, embedding, full_name) -> None:
         Module.__init__(self)
         self.num_embeddings = getattr(embedding, "num_embeddings", None)
         self.embedding_dim = getattr(embedding, "embedding_dim", None)
@@ -99,7 +99,7 @@ class TokenReferenceBase:
     `TokenReferenceBase` class.
     """
 
-    def __init__(self, reference_token_idx=0):
+    def __init__(self, reference_token_idx=0) -> None:
         self.reference_token_idx = reference_token_idx
 
     def generate_reference(self, sequence_length, device):

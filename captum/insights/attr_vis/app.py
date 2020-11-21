@@ -102,7 +102,7 @@ class Batch:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         labels: Optional[Tensor],
         additional_args=None,
-    ):
+    ) -> None:
         r"""
         Constructs batch of inputs to be attributed and visualized.
 
@@ -145,7 +145,7 @@ class AttributionVisualizer(object):
         dataset: Iterable[Batch],
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 

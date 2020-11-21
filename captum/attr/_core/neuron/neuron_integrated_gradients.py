@@ -31,7 +31,7 @@ class NeuronIntegratedGradients(NeuronAttribution, GradientAttribution):
         layer: Module,
         device_ids: Union[None, List[int]] = None,
         multiply_by_inputs: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 

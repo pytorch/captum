@@ -32,7 +32,7 @@ except ImportError:
 
 
 class VocabStub:
-    def __init__(self):
+    def __init__(self) -> None:
         self.itos = []
         self.stoi = {}
 

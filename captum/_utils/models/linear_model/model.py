@@ -10,7 +10,7 @@ from captum._utils.models.model import Model
 class LinearModel(nn.Module, Model):
     SUPPORTED_NORMS: List[Optional[str]] = [None, "batch_norm", "layer_norm"]
 
-    def __init__(self, train_fn: Callable, **kwargs):
+    def __init__(self, train_fn: Callable, **kwargs) -> None:
         r"""
         Constructs a linear model with a training function and additional
         construction arguments that will be sent to
@@ -146,7 +146,7 @@ class LinearModel(nn.Module, Model):
 
 
 class SGDLinearModel(LinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Construct a a `LinearModel` with the
         `sgd_train_linear_model` as the train method
@@ -164,7 +164,7 @@ class SGDLinearModel(LinearModel):
 
 
 class SGDLasso(SGDLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
         (`sgd_train_linear_model`) whilst setting appropriate parameters to
@@ -184,7 +184,7 @@ class SGDLasso(SGDLinearModel):
 
 
 class SGDRidge(SGDLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
         (`sgd_train_linear_model`) whilst setting appropriate parameters to
@@ -201,7 +201,7 @@ class SGDRidge(SGDLinearModel):
 
 
 class SGDLinearRegression(SGDLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class to train a `LinearModel` with SGD
         (`sgd_train_linear_model`). For linear regression this assigns the loss
@@ -219,7 +219,7 @@ class SGDLinearRegression(SGDLinearModel):
 
 
 class SkLearnLinearModel(LinearModel):
-    def __init__(self, sklearn_module: str, **kwargs):
+    def __init__(self, sklearn_module: str, **kwargs) -> None:
         r"""
         Factory class to construct a `LinearModel` with sklearn training method.
 
@@ -263,7 +263,7 @@ class SkLearnLinearModel(LinearModel):
 
 
 class SkLearnLasso(SkLearnLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a `LinearModel` model with
         `sklearn.linear_model.Lasso`. You will need sklearn version >= 0.23 to
@@ -276,7 +276,7 @@ class SkLearnLasso(SkLearnLinearModel):
 
 
 class SkLearnRidge(SkLearnLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.Ridge`.
 
@@ -290,7 +290,7 @@ class SkLearnRidge(SkLearnLinearModel):
 
 
 class SkLearnLinearRegression(SkLearnLinearModel):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         r"""
         Factory class. Trains a model with `sklearn.linear_model.LinearRegression`.
 

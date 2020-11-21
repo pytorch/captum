@@ -70,7 +70,9 @@ class FeaturePermutation(FeatureAblation):
     https://christophm.github.io/interpretable-ml-book/feature-importance.html
     """
 
-    def __init__(self, forward_func: Callable, perm_func: Callable = _permute_feature):
+    def __init__(
+        self, forward_func: Callable, perm_func: Callable = _permute_feature
+    ) -> None:
         r"""
         Args:
 

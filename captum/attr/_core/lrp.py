@@ -26,7 +26,7 @@ class LRP(GradientAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model):
+    def __init__(self, model) -> None:
         """
         Args:
 

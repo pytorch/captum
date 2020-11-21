@@ -16,7 +16,7 @@ the relevant type hints.
 
 
 class BasicModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input):
@@ -32,7 +32,7 @@ class BasicModel2(nn.Module):
     f(x1, x2) = RELU(ReLU(x1) - 1 - ReLU(x2))
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -49,7 +49,7 @@ class BasicModel3(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2))
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -65,7 +65,7 @@ class BasicModel4_MultiArgs(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) - ReLU(x2) / x3)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2, additional_input1, additional_input2=0):
@@ -82,7 +82,7 @@ class BasicModel5_MultiArgs(nn.Module):
     f(x1, x2) = RELU(ReLU(x1 - 1) * x3[0] - ReLU(x2) * x3[1])
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2, additional_input1, additional_input2=0):
@@ -93,7 +93,7 @@ class BasicModel5_MultiArgs(nn.Module):
 
 
 class BasicModel6_MultiTensor(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def forward(self, input1, input2):
@@ -102,7 +102,7 @@ class BasicModel6_MultiTensor(nn.Module):
 
 
 class BasicLinearModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.linear = nn.Linear(7, 1)
 
@@ -115,7 +115,7 @@ class ReLUDeepLiftModel(nn.Module):
     https://www.youtube.com/watch?v=f_iAM0NPwnM
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
@@ -125,7 +125,7 @@ class ReLUDeepLiftModel(nn.Module):
 
 
 class LinearMaxPoolLinearModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         # kernel size -> 4
         self.lin1 = nn.Linear(4, 4, bias=False)
@@ -140,7 +140,7 @@ class LinearMaxPoolLinearModel(nn.Module):
 
 
 class BasicModelWithReusableModules(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 2)
         self.relu = nn.ReLU()
@@ -151,7 +151,7 @@ class BasicModelWithReusableModules(nn.Module):
 
 
 class BasicModelWithSparseInputs(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.lin1 = nn.Linear(3, 1)
         self.lin1.weight = nn.Parameter(torch.tensor([[3.0, 1.0, 2.0]]))
@@ -164,7 +164,7 @@ class BasicModelWithSparseInputs(nn.Module):
 
 
 class BasicModel_MaxPool_ReLU(nn.Module):
-    def __init__(self, inplace=False):
+    def __init__(self, inplace=False) -> None:
         super().__init__()
         self.maxpool = nn.MaxPool1d(3)
         self.relu = nn.ReLU(inplace=inplace)
@@ -179,7 +179,7 @@ class TanhDeepLiftModel(nn.Module):
     that can have negative outputs
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.tanh1 = nn.Tanh()
         self.tanh2 = nn.Tanh()
@@ -194,7 +194,7 @@ class ReLULinearModel(nn.Module):
     https://github.com/marcoancona/DeepExplain/blob/master/deepexplain/tests/test_tensorflow.py#L65
     """
 
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.l1 = nn.Linear(3, 1, bias=False)
         self.l2 = nn.Linear(3, 1, bias=False)
@@ -210,7 +210,7 @@ class ReLULinearModel(nn.Module):
 
 
 class SimpleLRPModel(nn.Module):
-    def __init__(self, inplace):
+    def __init__(self, inplace) -> None:
         super().__init__()
         self.linear = nn.Linear(3, 3, bias=False)
         self.linear.weight.data.fill_(2.0)
@@ -223,7 +223,7 @@ class SimpleLRPModel(nn.Module):
 
 
 class Conv1dSeqModel(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.seq = nn.Sequential(nn.Conv1d(4, 2, 1), nn.ReLU(), nn.Linear(1000, 1))
 
@@ -237,7 +237,7 @@ class TextModule(nn.Module):
     nested embedding layers
     """
 
-    def __init__(self, num_embeddings, embedding_dim, second_embedding=False):
+    def __init__(self, num_embeddings, embedding_dim, second_embedding=False) -> None:
         super().__init__()
         self.inner_embedding = nn.Embedding(num_embeddings, embedding_dim)
         self.second_embedding = second_embedding
@@ -277,7 +277,7 @@ class BasicEmbeddingModel(nn.Module):
         hidden_dim=256,
         output_dim=1,
         nested_second_embedding=False,
-    ):
+    ) -> None:
         super().__init__()
         self.embedding1 = nn.Embedding(num_embeddings, embedding_dim)
         self.embedding2 = TextModule(
@@ -297,7 +297,7 @@ class BasicEmbeddingModel(nn.Module):
 
 
 class MultiRelu(nn.Module):
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.relu1 = nn.ReLU(inplace=inplace)
         self.relu2 = nn.ReLU(inplace=inplace)
@@ -308,7 +308,7 @@ class MultiRelu(nn.Module):
 
 
 class BasicModel_MultiLayer(nn.Module):
-    def __init__(self, inplace=False, multi_input_module=False):
+    def __init__(self, inplace=False, multi_input_module=False) -> None:
         super().__init__()
         # Linear 0 is simply identity transform
         self.multi_input_module = multi_input_module
@@ -353,7 +353,7 @@ class BasicModel_MultiLayer(nn.Module):
 
 
 class BasicModel_MultiLayer_MultiInput(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.model = BasicModel_MultiLayer()
 
@@ -363,7 +363,7 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
 
 
 class BasicModel_ConvNet_One_Conv(nn.Module):
-    def __init__(self, inplace: bool = False):
+    def __init__(self, inplace: bool = False) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU(inplace=inplace)
@@ -386,7 +386,7 @@ class BasicModel_ConvNet_One_Conv(nn.Module):
 
 
 class BasicModel_ConvNet(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(1, 2, 3, 1)
         self.relu1 = nn.ReLU()
@@ -421,7 +421,7 @@ class BasicModel_ConvNet_MaxPool1d(nn.Module):
     of the DeepLift Attributions
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv1d(1, 2, 3)
         self.relu1 = nn.ReLU()
@@ -456,7 +456,7 @@ class BasicModel_ConvNet_MaxPool3d(nn.Module):
     of the DeepLift Attributions
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv3d(1, 2, 3)
         self.relu1 = nn.ReLU()

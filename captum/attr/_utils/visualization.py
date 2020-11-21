@@ -451,7 +451,7 @@ class VisualizationDataRecord:
         attr_score,
         raw_input,
         convergence_score,
-    ):
+    ) -> None:
         self.word_attributions = word_attributions
         self.pred_prob = pred_prob
         self.pred_class = pred_class

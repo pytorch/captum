@@ -24,7 +24,7 @@ def _get_simple_model(inplace=False):
 
 def _get_simple_model2(inplace=False):
     class MyModel(nn.Module):
-        def __init__(self, inplace):
+        def __init__(self, inplace) -> None:
             super().__init__()
             self.lin = nn.Linear(2, 2)
             self.lin.weight = nn.Parameter(torch.ones(2, 2))
@@ -106,7 +106,7 @@ class Test(BaseTest):
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super(Model, self).__init__()
                 self.linear = nn.Linear(3, 3, bias=False)
                 self.linear.weight.data.fill_(0.1)

@@ -17,7 +17,7 @@ class PyTextInterpretableEmbedding(EmbeddingBase):
     layer which passes precomputed embedding vectors to lower layers.
     """
 
-    def __init__(self, embeddings):
+    def __init__(self, embeddings) -> None:
         self.embedding_dims = [embedding.embedding_dim for embedding in embeddings]
         super().__init__(sum(self.embedding_dims))
         self.embeddings = embeddings
@@ -83,7 +83,7 @@ class BaselineGenerator(object):
     """
     PAD = "<pad>"
 
-    def __init__(self, model, data_handler, device):
+    def __init__(self, model, data_handler, device) -> None:
         self.model = model
         self.data_handler = data_handler
         if "dict_feat" in data_handler.features:

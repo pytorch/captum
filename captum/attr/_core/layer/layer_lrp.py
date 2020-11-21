@@ -23,7 +23,7 @@ class LayerLRP(LRP, LayerAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model, layer):
+    def __init__(self, model, layer) -> None:
         """
         Args:
 

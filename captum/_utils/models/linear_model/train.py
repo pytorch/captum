@@ -227,7 +227,7 @@ def sgd_train_linear_model(
 
 
 class NormLayer(nn.Module):
-    def __init__(self, mean, std, n=None, eps=1e-8):
+    def __init__(self, mean, std, n=None, eps=1e-8) -> None:
         super().__init__()
         self.mean = mean
         self.std = std

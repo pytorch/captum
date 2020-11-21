@@ -19,7 +19,7 @@ from captum.log import log_usage
 
 
 class ModifiedReluGradientAttribution(GradientAttribution):
-    def __init__(self, model: Module, use_relu_grad_output: bool = False):
+    def __init__(self, model: Module, use_relu_grad_output: bool = False) -> None:
         r"""
         Args:
 
@@ -113,7 +113,7 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
     If nn.functional.ReLU is used, gradients are not overridden appropriately.
     """
 
-    def __init__(self, model: Module):
+    def __init__(self, model: Module) -> None:
         r"""
         Args:
 
@@ -224,7 +224,7 @@ class Deconvolution(ModifiedReluGradientAttribution):
     If nn.functional.ReLU is used, gradients are not overridden appropriately.
     """
 
-    def __init__(self, model: Module):
+    def __init__(self, model: Module) -> None:
         r"""
         Args:
 
