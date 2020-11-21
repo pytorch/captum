@@ -118,6 +118,9 @@ class CenterCrop(torch.nn.Module):
         self.crop_val = [size] * 2 if size is not list and size is not tuple else size
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        assert (
+            input.dim() == 3 or input.dim() == 4
+        ), "Input to CenterCrop must be 3D or 4D"
         if input.dim() == 4:
             h, w = input.size(2), input.size(3)
         elif input.dim() == 3:
@@ -180,9 +183,8 @@ class RandomSpatialJitter(torch.nn.Module):
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
-    def translate_tensor(self, x: torch.Tensor) -> torch.Tensor:
+    def translate_tensor(self, x: torch.Tensor, insets: torch.Tensor) -> torch.Tensor:
         padded = self.pad(x)
-        insets = torch.randint(high=self.pad_range, size=(2,))
         tblr = [
             -insets[0],
             -(self.pad_range - insets[0]),
@@ -194,7 +196,8 @@ class RandomSpatialJitter(torch.nn.Module):
         return cropped
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self.translate_tensor(input)
+        insets = torch.randint(high=self.pad_range, size=(2,))
+        return self.translate_tensor(input, insets)
 
 
 # class TransformationRobustness(nn.Module):

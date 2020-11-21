@@ -187,9 +187,9 @@ class ActivationInterpolation(Loss):
     def __init__(
         self,
         target1: nn.Module = None,
-        channel_index1: Optional[int] = None,
+        channel_index1: int = -1,
         target2: nn.Module = None,
-        channel_index2: Optional[int] = None,
+        channel_index2: int = -1,
     ) -> None:
         super(Loss, self).__init__()
         self.target_one = target1
@@ -209,9 +209,9 @@ class ActivationInterpolation(Loss):
         )
         assert activations_one.size(0) == activations_two.size(0)
 
-        if self.channel_index_one is not None:
+        if self.channel_index_one > -1:
             activations_one = activations_one[:, self.channel_index_one]
-        if self.channel_index_two is not None:
+        if self.channel_index_two > -1:
             activations_two = activations_two[:, self.channel_index_two]
         B = activations_one.size(0)
 
