@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -22,7 +22,7 @@ class Loss(ABC):
 
     def get_neuron_pos(
         self, H: int, W: int, x: Optional[int] = None, y: Optional[int] = None
-    ):
+    ) -> Tuple[int, int]:
         if x is None:
             _x = W // 2
         else:

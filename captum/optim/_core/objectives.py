@@ -107,7 +107,7 @@ class InputOptimization(Objective, Parameterized):
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
-    ):
+    ) -> List:
         r"""Optimize input based on loss function and objectives.
         Args:
             stop_criteria (StopCriteria, optional):  A function that is called
@@ -185,7 +185,7 @@ class SingleTargetObjective(Objective):
         super(SingleTargetObjective, self).__init__(model=model, targets=[target])
         self.loss_function = loss_function
 
-    def loss(self, targets_to_values):
+    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         assert len(self.targets) == 1
         target = self.targets[0]
         target_value = targets_to_values[target]
@@ -205,7 +205,7 @@ class MultiTargetObjective(Objective):
         self.objectives = objectives
         self.weights = weights or len(objectives) * [1]
 
-    def loss(self, targets_to_values):
+    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         loss = (
             objective.loss_function(targets_to_values) for objective in self.objectives
         )

@@ -67,7 +67,7 @@ class ToRGB(nn.Module):
         ]
         return torch.Tensor(i1i2i3_matrix)
 
-    def __init__(self, transform_name: str = "klt"):
+    def __init__(self, transform_name: str = "klt") -> None:
         super().__init__()
 
         if transform_name == "klt":

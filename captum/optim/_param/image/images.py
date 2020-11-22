@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ class ImageTensor(torch.Tensor):
         self._t = data
 
     @classmethod
-    def open(cls, path, scale: float = 255.0):
+    def open(cls, path: str, scale: float = 255.0):
         img_np = Image.open(path).convert("RGB")
         img_np = np.array(img_np).astype(np.float32)
         return cls(img_np.transpose(2, 0, 1) / scale)
@@ -35,7 +35,7 @@ class ImageTensor(torch.Tensor):
         args = [a._t if hasattr(a, "_t") else a for a in args]
         return super().__torch_function__(func, types, args, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ImageTensor(value={self._t})"
 
     def show(self, scale: float = 255.0) -> None:
@@ -47,7 +47,7 @@ class ImageTensor(torch.Tensor):
         plt.axis("off")
         plt.show()
 
-    def export(self, filename, scale: float = 255.0) -> None:
+    def export(self, filename: str, scale: float = 255.0) -> None:
         if len(self.shape) == 3:
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
@@ -55,10 +55,10 @@ class ImageTensor(torch.Tensor):
         im = Image.fromarray(numpy_thing.astype("uint8"), "RGB")
         im.save(filename)
 
-    def cpu(self):
+    def cpu(self) -> "ImageTensor":
         return self
 
-    def cuda(self):
+    def cuda(self) -> "CudaImageTensor":
         return CudaImageTensor(self._t, device="cuda")
 
 
@@ -73,23 +73,23 @@ class CudaImageTensor(object):
         args = [a._t if hasattr(a, "_t") else a for a in args]
         return super().__torch_function__(func, types, args, **kwargs)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"CudaImageTensor(value={self._t})"
 
     @property
-    def shape(self):
+    def shape(self) -> torch.Size:
         return self._t.shape
 
     def show(self) -> None:
         self.cpu().show()
 
-    def export(self, filename) -> None:
+    def export(self, filename: str) -> None:
         self.cpu().export(filename)
 
-    def cpu(self):
+    def cpu(self) -> "ImageTensor":
         return ImageTensor(self._t.cpu())
 
-    def cuda(self):
+    def cuda(self) -> "CudaImageTensor":
         return self
 
 
@@ -293,7 +293,7 @@ class LaplacianImage(ImageParameterization):
         channels: int,
         power: float = 0.1,
         init: Optional[torch.Tensor] = None,
-    ):
+    ) -> Tuple[List[torch.Tensor], List[torch.nn.Upsample]]:
         tensor_params, scaler = [], []
         scale_list = [1, 2, 4, 8, 16, 32]
         for scale in scale_list:
