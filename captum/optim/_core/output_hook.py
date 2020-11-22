@@ -53,7 +53,7 @@ class ModuleOutputsHook:
         return all(value is not None for value in self.outputs.values())
 
     def _forward_hook(self):
-        def forward_hook(module, input, output):
+        def forward_hook(module, input, output) -> None:
             assert module in self.outputs.keys()
             if self.outputs[module] is None:
                 self.outputs[module] = output
