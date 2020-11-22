@@ -80,6 +80,10 @@ class CudaImageTensor(object):
     def shape(self) -> torch.Size:
         return self._t.shape
 
+    @property
+    def size(self) -> torch.Size:
+        return self._t.size()
+
     def show(self) -> None:
         self.cpu().show()
 
