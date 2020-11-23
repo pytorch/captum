@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,11 +29,17 @@ class ImageTensor(torch.Tensor):
         return cls(img_np.transpose(2, 0, 1) / scale)
 
     @classmethod
-    def __torch_function__(self, func, types, args=(), kwargs=None):
+    def __torch_function__(
+        self,
+        func: Callable,
+        types: Tuple,
+        args: Tuple = (),
+        kwargs: Optional[Dict] = None,
+    ) -> Any:
         if kwargs is None:
             kwargs = {}
-        args = [a._t if hasattr(a, "_t") else a for a in args]
-        return super().__torch_function__(func, types, args, **kwargs)
+        args_t = [a._t if hasattr(a, "_t") else a for a in args]
+        return super().__torch_function__(func, types, args_t, **kwargs)
 
     def __repr__(self) -> str:
         return f"ImageTensor(value={self._t})"
@@ -67,11 +73,17 @@ class CudaImageTensor(object):
         self._t = torch.as_tensor(data, **kwargs)
 
     @classmethod
-    def __torch_function__(self, func, types, args=(), kwargs=None):
+    def __torch_function__(
+        self,
+        func: Callable,
+        types: Tuple,
+        args: Tuple = (),
+        kwargs: Optional[Dict] = None,
+    ) -> Any:
         if kwargs is None:
             kwargs = {}
-        args = [a._t if hasattr(a, "_t") else a for a in args]
-        return super().__torch_function__(func, types, args, **kwargs)
+        args_t = [a._t if hasattr(a, "_t") else a for a in args]
+        return super().__torch_function__(func, types, args_t, **kwargs)
 
     def __repr__(self) -> str:
         return f"CudaImageTensor(value={self._t})"
