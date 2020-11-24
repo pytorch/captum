@@ -269,7 +269,7 @@ class SkLearnLasso(SkLearnLinearModel):
         `sklearn.linear_model.Lasso`. You will need sklearn version >= 0.23 to
         support sample weights.
         """
-        super().__init__(**kwargs, sklearn_module="linear_model.Lasso")
+        super().__init__(sklearn_module="linear_model.Lasso", **kwargs)
 
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
@@ -283,7 +283,7 @@ class SkLearnRidge(SkLearnLinearModel):
         Any arguments provided to the sklearn constructor can be provided
         as kwargs here.
         """
-        super().__init__(**kwargs, sklearn_module="linear_model.Ridge")
+        super().__init__(sklearn_module="linear_model.Ridge", **kwargs)
 
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
@@ -297,7 +297,7 @@ class SkLearnLinearRegression(SkLearnLinearModel):
         Any arguments provided to the sklearn constructor can be provided
         as kwargs here.
         """
-        super().__init__(**kwargs, sklearn_module="linear_model.LinearRegression")
+        super().__init__(sklearn_module="linear_model.LinearRegression", **kwargs)
 
     def fit(self, train_data: DataLoader, **kwargs):
         return super().fit(train_data=train_data, **kwargs)
