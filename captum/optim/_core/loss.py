@@ -94,7 +94,8 @@ class DeepDream(Loss):
 class TotalVariation(Loss):
     """
     Total variation denoising penalty for activations.
-    See Simonyan, et al., 2014.
+    See Mahendran, V. 2014. Understanding Deep Image Representations by Inverting Them.
+    https://arxiv.org/abs/1412.0035
     """
 
     def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
