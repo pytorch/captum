@@ -61,10 +61,10 @@ class ImageTensor(torch.Tensor):
         im = Image.fromarray(numpy_thing.astype("uint8"), "RGB")
         im.save(filename)
 
-    def cpu(self) -> ImageTensor:
+    def cpu(self) -> "ImageTensor":
         return self
 
-    def cuda(self) -> CudaImageTensor:
+    def cuda(self) -> "CudaImageTensor":
         return CudaImageTensor(self._t, device="cuda")
 
 
@@ -102,10 +102,10 @@ class CudaImageTensor(object):
     def export(self, filename: str) -> None:
         self.cpu().export(filename)
 
-    def cpu(self) -> ImageTensor:
+    def cpu(self) -> "ImageTensor":
         return ImageTensor(self._t.cpu())
 
-    def cuda(self) -> CudaImageTensor:
+    def cuda(self) -> "CudaImageTensor":
         return self
 
 
