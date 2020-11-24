@@ -33,7 +33,7 @@ class Test(BaseTest):
     def test_multi_layer_linear_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
-        module_list: ModuleOrModuleList = [net.linear0, net.linear1]
+        module_list: List[Module] = [net.linear0, net.linear1]
         self._layer_activation_test_assert(
             net,
             module_list,
@@ -69,7 +69,7 @@ class Test(BaseTest):
     def test_multi_layer_multi_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer(multi_input_module=True)
         inp = torch.tensor([[3.0, 4.0, 0.0]])
-        module_list: ModuleOrModuleList = [net.multi_relu, net.linear0]
+        module_list: List[Module] = [net.multi_relu, net.linear0]
         self._layer_activation_test_assert(
             net,
             module_list,
