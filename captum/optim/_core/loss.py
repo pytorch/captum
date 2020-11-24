@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
+from captum.optim._utils.images import get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -19,22 +20,6 @@ class Loss(ABC):
     @abstractmethod
     def __call__(self, targets_to_values: ModuleOutputMapping):
         pass
-
-    def get_neuron_pos(
-        self, H: int, W: int, x: Optional[int] = None, y: Optional[int] = None
-    ) -> Tuple[int, int]:
-        if x is None:
-            _x = W // 2
-        else:
-            assert x < W
-            _x = x
-
-        if y is None:
-            _y = H // 2
-        else:
-            assert y < W
-            _y = y
-        return _x, _y
 
 
 class LayerActivation(Loss):
@@ -88,7 +73,7 @@ class NeuronActivation(Loss):
         activations = targets_to_values[self.target]
         assert activations is not None
         assert len(activations.shape) == 4  # assume NCHW
-        _x, _y = self.get_neuron_pos(
+        _x, _y = get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
 
@@ -181,7 +166,9 @@ class Diversity(Loss):
 
 class ActivationInterpolation(Loss):
     """
-    Interpolate between two different layers & channels
+    Interpolate between two different layers & channels.
+    Olah, Mordvintsev & Schubert, 2017.
+    https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
     """
 
     def __init__(
@@ -229,6 +216,8 @@ class Alignment(Loss):
     """
     Penalize the L2 distance between tensors in the batch to encourage visual
     similarity between them.
+    Olah, Mordvintsev & Schubert, 2017.
+    https://distill.pub/2017/feature-visualization/#Interaction-between-Neurons
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
@@ -254,7 +243,9 @@ class Alignment(Loss):
 
 class Direction(Loss):
     """
-    Visualize a direction.
+    Visualize a general direction vector.
+    Carter, et al., "Activation Atlas", Distill, 2019.
+    https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     """
 
     def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
@@ -269,7 +260,9 @@ class Direction(Loss):
 
 class DirectionNeuron(Loss):
     """
-    Visualize a neuron direction.
+    Visualize a single (x, y) position for a direction vector.
+    Carter, et al., "Activation Atlas", Distill, 2019.
+    https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     """
 
     def __init__(
@@ -292,7 +285,7 @@ class DirectionNeuron(Loss):
 
         assert activations.dim() == 4
 
-        _x, _y = self.get_neuron_pos(
+        _x, _y = get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
         activations = activations[:, self.channel_index, _x, _y]
@@ -301,7 +294,9 @@ class DirectionNeuron(Loss):
 
 class TensorDirection(Loss):
     """
-    Visualize a tensor direction.
+    Visualize a tensor direction vector.
+    Carter, et al., "Activation Atlas", Distill, 2019.
+    https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     """
 
     def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
@@ -314,13 +309,13 @@ class TensorDirection(Loss):
 
         assert activations.dim() == 4
 
-        H_vec, W_vec = self.direction.size(2), self.direction.size(3)
+        H_direction, W_direction = self.direction.size(2), self.direction.size(3)
         H_activ, W_activ = activations.size(2), activations.size(3)
 
-        H = (H_activ - W_vec) // 2
-        W = (W_activ - W_vec) // 2
+        H = (H_activ - H_direction) // 2
+        W = (W_activ - W_direction) // 2
 
-        activations = activations[:, :, H : H + H_vec, W : W + W_vec]
+        activations = activations[:, :, H : H + H_direction, W : W + W_direction]
         return torch.cosine_similarity(self.direction, activations)
 
 
@@ -361,7 +356,7 @@ class ActivationWeights(Loss):
         if self.neuron:
             assert activations.dim() == 4
             if self.wx is None and self.wy is None:
-                _x, _y = self.get_neuron_pos(
+                _x, _y = get_neuron_pos(
                     activations.size(2), activations.size(3), self.x, self.y
                 )
                 activations = activations[..., _x, _y].squeeze() * self.weights
