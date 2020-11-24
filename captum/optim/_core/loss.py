@@ -255,6 +255,7 @@ class Direction(Loss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        assert activations.size(1) == self.direction.size(1)
         return torch.cosine_similarity(self.direction, activations)
 
 
