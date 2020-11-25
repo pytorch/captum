@@ -83,7 +83,10 @@ class ToRGB(nn.Module):
         # alpha channel is taken off...
         has_alpha = x.size("C") == 4
         if has_alpha:
-            x, alpha_channel = x[:3], x[3:]
+            if x.dim() == 3:
+                x, alpha_channel = x[:3], x[3:]
+            elif x.dim() == 4:
+                x, alpha_channel = x[:, :3], x[:, 3:]
             assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
 
         h, w = x.size("H"), x.size("W")
@@ -101,7 +104,8 @@ class ToRGB(nn.Module):
 
         # ...alpha channel is concatenated on again.
         if has_alpha:
-            chw = torch.cat([chw, alpha_channel], 0)
+            d = 0 if x.dim() == 3 else 1
+            chw = torch.cat([chw, alpha_channel], d)
 
         return chw
 

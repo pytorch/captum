@@ -54,11 +54,12 @@ class ImageTensor(torch.Tensor):
         plt.show()
 
     def export(self, filename: str, scale: float = 255.0) -> None:
+        colorspace = "RGB" if self.size(1) == 3 else "RGBA"
         if len(self.shape) == 3:
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        im = Image.fromarray(numpy_thing.astype("uint8"), "RGB")
+        im = Image.fromarray(numpy_thing.astype("uint8"), colorspace)
         im.save(filename)
 
     def cpu(self) -> "ImageTensor":
