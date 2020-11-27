@@ -1,9 +1,12 @@
 import math
 import numbers
+from typing import Optional, Sequence, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from captum.optim._utils.typing import TransformSize, TransformVal, TransformValList
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -14,11 +17,11 @@ class BlendAlpha(nn.Module):
     You can specify a fixed background, or a random one will be used by default.
     """
 
-    def __init__(self, background: torch.Tensor = None):
+    def __init__(self, background: Optional[torch.Tensor] = None) -> None:
         super().__init__()
         self.background = background
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
         background = self.background if self.background is not None else torch.rand_like(rgb)
@@ -29,7 +32,7 @@ class BlendAlpha(nn.Module):
 class IgnoreAlpha(nn.Module):
     r"""Ignores a 4th channel"""
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.size(1) == 4
         rgb = x[:, :3, ...]
         return rgb
@@ -48,7 +51,7 @@ class ToRGB(nn.Module):
     """
 
     @staticmethod
-    def klt_transform():
+    def klt_transform() -> torch.Tensor:
         """Karhunen-Loève transform (KLT) measured on ImageNet"""
         KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
         transform = torch.Tensor(KLT).float()
@@ -56,7 +59,7 @@ class ToRGB(nn.Module):
         return transform
 
     @staticmethod
-    def i1i2i3_transform():
+    def i1i2i3_transform() -> torch.Tensor:
         i1i2i3_matrix = [
             [1 / 3, 1 / 3, 1 / 3],
             [1 / 2, 0, -1 / 2],
@@ -64,7 +67,7 @@ class ToRGB(nn.Module):
         ]
         return torch.Tensor(i1i2i3_matrix)
 
-    def __init__(self, transform_name="klt"):
+    def __init__(self, transform_name: str = "klt") -> None:
         super().__init__()
 
         if transform_name == "klt":
@@ -74,26 +77,35 @@ class ToRGB(nn.Module):
         else:
             raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
-    def forward(self, x, inverse=False):
-        assert x.dim() == 3
+    def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+        assert x.dim() == 3 or x.dim() == 4
 
         # alpha channel is taken off...
         has_alpha = x.size("C") == 4
         if has_alpha:
-            x, alpha_channel = x[:3], x[3:]
+            if x.dim() == 3:
+                x, alpha_channel = x[:3], x[3:]
+            elif x.dim() == 4:
+                x, alpha_channel = x[:, :3], x[:, 3:]
             assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
 
         h, w = x.size("H"), x.size("W")
         flat = x.flatten(("H", "W"), "spatials")
         if inverse:
-            correct = self.transform.t() @ flat
+            correct = torch.inverse(self.transform) @ flat
         else:
             correct = self.transform @ flat
-        chw = correct.unflatten("spatials", (("H", h), ("W", w))).refine_names("C", ...)
+        chw = correct.unflatten("spatials", (("H", h), ("W", w)))
+
+        if x.dim() == 3:
+            chw = chw.refine_names("C", ...)
+        elif x.dim() == 4:
+            chw = chw.refine_names("B", "C", ...)
 
         # ...alpha channel is concatenated on again.
         if has_alpha:
-            chw = torch.cat([chw, alpha_channel], 0)
+            d = 0 if x.dim() == 3 else 1
+            chw = torch.cat([chw, alpha_channel], d)
 
         return chw
 
@@ -105,7 +117,7 @@ class CenterCrop(torch.nn.Module):
         size (int, sequence) or (int): Number of pixels to center crop away.
     """
 
-    def __init__(self, size=0):
+    def __init__(self, size: TransformSize = 0) -> None:
         super(CenterCrop, self).__init__()
         if type(size) is list or type(size) is tuple:
             assert (
@@ -115,7 +127,8 @@ class CenterCrop(torch.nn.Module):
         else:
             self.crop_val = [size] * 2
 
-    def forward(self, input):
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         assert (
             input.dim() == 3 or input.dim() == 4
         ), "Input to CenterCrop must be 3D or 4D"
@@ -129,7 +142,7 @@ class CenterCrop(torch.nn.Module):
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
 
-def rand_select(transform_values):
+def rand_select(transform_values: TransformValList) -> TransformVal:
     """
     Randomly return a value from the provided tuple or list
     """
@@ -144,17 +157,19 @@ class RandomScale(nn.Module):
         scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
 
-    def __init__(self, scale):
+    def __init__(self, scale: TransformValList) -> None:
         super(RandomScale, self).__init__()
         self.scale = scale
 
-    def get_scale_mat(self, m, device, dtype) -> torch.Tensor:
+    def get_scale_mat(
+        self, m: TransformVal, device: torch.device, dtype: torch.dtype
+    ) -> torch.Tensor:
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
         )
         return scale_mat
 
-    def scale_tensor(self, x: torch.Tensor, scale) -> torch.Tensor:
+    def scale_tensor(self, x: torch.Tensor, scale: TransformVal) -> torch.Tensor:
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
@@ -162,7 +177,7 @@ class RandomScale(nn.Module):
         x = F.grid_sample(x, grid)
         return x
 
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         scale = rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
@@ -174,12 +189,13 @@ class RandomSpatialJitter(torch.nn.Module):
         translate (int):
     """
 
-    def __init__(self, translate: int):
+    def __init__(self, translate: int) -> None:
         super(RandomSpatialJitter, self).__init__()
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
-    def translate_tensor(self, x: torch.Tensor, insets: int) -> torch.Tensor:
+
+    def translate_tensor(self, x: torch.Tensor, insets: torch.Tensor) -> torch.Tensor:
         padded = self.pad(x)
         tblr = [
             -insets[0],
@@ -191,7 +207,8 @@ class RandomSpatialJitter(torch.nn.Module):
         assert cropped.shape == x.shape
         return cropped
 
-    def forward(self, input):
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         insets = torch.randint(high=self.pad_range, size=(2,))
         return self.translate_tensor(input, insets)
 
@@ -243,7 +260,13 @@ class GaussianSmoothing(nn.Module):
             Default value is 2 (spatial).
     """
 
-    def __init__(self, channels, kernel_size, sigma, dim: int = 2):
+    def __init__(
+        self,
+        channels: int,
+        kernel_size: Union[int, Sequence[int]],
+        sigma: Union[float, Sequence[float]],
+        dim: int = 2,
+    ) -> None:
         super().__init__()
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim
@@ -285,7 +308,7 @@ class GaussianSmoothing(nn.Module):
                 "Only 1, 2 and 3 dimensions are supported. Received {}.".format(dim)
             )
 
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         """
         Apply gaussian filter to input.
         Arguments:

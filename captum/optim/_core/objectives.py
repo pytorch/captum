@@ -39,7 +39,7 @@ class InputOptimization(Objective, Parameterized):
         target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
         lr: float = 0.025,
-    ):
+    ) -> None:
         r"""
         Args:
             model (nn.Module):  The reference to PyTorch model instance.
@@ -69,7 +69,11 @@ class InputOptimization(Objective, Parameterized):
             - **loss** (*tensor*):
                         Size of the tensor corresponds to the targets passed.
         """
-        image = self.input_param()._t[None, ...]
+        image = (
+            self.input_param()._t[None, ...]
+            if self.input_param()._t.dim() == 3
+            else self.input_param()._t
+        )
 
         if self.transform:
             image = self.transform(image)
@@ -82,7 +86,7 @@ class InputOptimization(Objective, Parameterized):
         loss_value = self.loss_function(module_outputs)
         return loss_value
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         r"""Garbage collection, mainly removing hooks."""
         self.hooks.remove_hooks()
 
@@ -92,7 +96,7 @@ class InputOptimization(Objective, Parameterized):
         return self.hooks.targets
 
     @targets.setter
-    def targets(self, value):
+    def targets(self, value) -> None:
         self.hooks.remove_hooks()
         self.hooks = ModuleOutputsHook(value)
 
@@ -103,7 +107,7 @@ class InputOptimization(Objective, Parameterized):
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
-    ):
+    ) -> List:
         r"""Optimize input based on loss function and objectives.
         Args:
             stop_criteria (StopCriteria, optional):  A function that is called
@@ -124,14 +128,17 @@ class InputOptimization(Objective, Parameterized):
 
         history = []
         step = 0
-        while stop_criteria(step, self, history, optimizer):
-            optimizer.zero_grad()
-            loss_value = self.loss()
-            history.append(loss_value.cpu().detach().numpy())
-            (-1 * loss_value.mean()).backward()
-            optimizer.step()
-            step += 1
-
+        try:
+            while stop_criteria(step, self, history, optimizer):
+                optimizer.zero_grad()
+                loss_value = self.loss()
+                history.append(loss_value.cpu().detach().numpy())
+                (-1 * loss_value.mean()).backward()
+                optimizer.step()
+                step += 1
+        except (Exception, BaseException) as e:
+            self.cleanup()
+            raise e
         self.cleanup()
         return history
 
@@ -145,7 +152,7 @@ def n_steps(n: int) -> StopCriteria:
     """
     pbar = tqdm(total=n, unit="step")
 
-    def continue_while(step, obj, history, optim):
+    def continue_while(step, obj, history, optim) -> bool:
         if len(history) > 0:
             pbar.set_postfix({"Objective": f"{history[-1].mean():.1f}"}, refresh=False)
         if step < n:
@@ -156,135 +163,6 @@ def n_steps(n: int) -> StopCriteria:
             return False
 
     return continue_while
-
-
-def channel_activation(target: nn.Module, channel_index: int) -> LossFunction:
-    """
-    Maximize activations at the target layer and target channel.
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        assert activations is not None
-        # ensure channel_index is valid
-        assert channel_index < activations.shape[1]
-        # assume NCHW
-        # NOTE: not necessarily true e.g. for Linear layers
-        # assert len(activations.shape) == 4
-        return activations[:, channel_index, ...]
-
-    return loss_function
-
-
-def neuron_activation(
-    target: nn.Module, channel_index: int, x: int = None, y: int = None
-) -> LossFunction:
-    # ensure channel_index will be valid
-    assert channel_index < target.out_channels
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        assert activations is not None
-        assert len(activations.shape) == 4  # assume NCHW
-        _, _, H, W = activations.shape
-
-        if x is None:
-            _x = W // 2
-        else:
-            assert x < W
-            _x = x
-
-        if y is None:
-            _y = H // 2
-        else:
-            assert y < W
-            _y = y
-
-        return activations[:, channel_index, _x, _y]
-
-    return loss_function
-
-
-def deepdream(target: nn.Module) -> LossFunction:
-    """
-    Maximize 'interestingness' at the target layer.
-    Mordvintsev et al., 2015.
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        return activations ** 2
-
-    return loss_function
-
-
-def total_variation(target: nn.Module) -> LossFunction:
-    """
-    Total variation denoising penalty for activations.
-    See Simonyan, et al., 2014.
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        x_diff = activations[..., 1:, :] - activations[..., :-1, :]
-        y_diff = activations[..., :, 1:] - activations[..., :, :-1]
-        return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
-
-    return loss_function
-
-
-def l1(target: nn.Module, constant: float = 0) -> LossFunction:
-    """
-    L1 norm of the target layer, generally used as a penalty.
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        return torch.abs(activations - constant).sum()
-
-    return loss_function
-
-
-def l2(target: nn.Module, constant: float = 0, epsilon: float = 1e-6) -> LossFunction:
-    """
-    L2 norm of the target layer, generally used as a penalty.
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        activations = (activations - constant).sum()
-        return torch.sqrt(epsilon + activations)
-
-    return loss_function
-
-
-def diversity(target: nn.Module) -> LossFunction:
-    """
-    Use a cosine similarity penalty to extract features from a polysemantic neuron.
-    Olah, Mordvintsev & Schubert, 2017.
-    https://distill.pub/2017/feature-visualization/#diversity
-    """
-
-    def loss_function(targets_to_values: ModuleOutputMapping):
-        activations = targets_to_values[target]
-        return -sum(
-            [
-                sum(
-                    [
-                        (
-                            torch.cosine_similarity(
-                                activations[j].view(1, -1), activations[i].view(1, -1)
-                            )
-                        ).sum()
-                        for i in range(activations.size(0))
-                        if i != j
-                    ]
-                )
-                for j in range(activations.size(0))
-            ]
-        ) / activations.size(0)
-
-    return loss_function
 
 
 def single_target_objective(
@@ -303,11 +181,11 @@ class SingleTargetObjective(Objective):
         model: nn.Module,
         target: nn.Module,
         loss_function: Callable[[torch.Tensor], torch.Tensor],
-    ):
+    ) -> None:
         super(SingleTargetObjective, self).__init__(model=model, targets=[target])
         self.loss_function = loss_function
 
-    def loss(self, targets_to_values):
+    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         assert len(self.targets) == 1
         target = self.targets[0]
         target_value = targets_to_values[target]
@@ -319,7 +197,7 @@ class SingleTargetObjective(Objective):
 class MultiTargetObjective(Objective):
     def __init__(
         self, objectives: List[Objective], weights: Optional[Iterable[float]] = None
-    ):
+    ) -> None:
         model = objectives[0].model
         assert all(o.model == model for o in objectives)
         targets = (target for objective in objectives for target in objective.targets)
@@ -327,7 +205,7 @@ class MultiTargetObjective(Objective):
         self.objectives = objectives
         self.weights = weights or len(objectives) * [1]
 
-    def loss(self, targets_to_values):
+    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         loss = (
             objective.loss_function(targets_to_values) for objective in self.objectives
         )
