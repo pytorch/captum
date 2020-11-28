@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -342,6 +342,73 @@ class LaplacianImage(ImageParameterization):
         return torch.stack(A).refine_names("B", "C", "H", "W")
 
 
+class SharedImage(ImageParameterization):
+    """
+    Share some image parameters across the batch.
+    Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
+    https://distill.pub/2018/differentiable-parameterizations/
+    """
+
+    def __init__(
+        self,
+        shared_shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
+        parameterization=None,
+    ) -> None:
+        super().__init__()
+        A = []
+        shared_shapes = (
+            [shared_shapes] if type(shared_shapes[0]) is not tuple else shared_shapes
+        )
+        for shape in shared_shapes:
+            assert len(shape) >= 2 and len(shape) <= 4
+            if len(shape) == 2:
+                shape = (1, 1, shape[0], shape[1])
+            if len(shape) == 3:
+                shape = (1, shape[0], shape[1], shape[2])
+            batch, channels, height, width = shape[0], shape[1], shape[2], shape[3]
+            A.append(torch.nn.Parameter(torch.randn([batch, channels, height, width])))
+        self.shared_init = torch.nn.ParameterList(A)
+        self.parameterization = parameterization
+
+    def interpolate_tensor(
+        self, x: torch.Tensor, size: InitSize, batch: int, channels: int
+    ) -> torch.Tensor:
+        """
+        Linear interpolation for 4D, 5D, and 6D tensors.
+        """
+
+        if x.size(1) == channels:
+            mode = "bilinear"
+        else:
+            mode = "trilinear"
+            x = x.unsqueeze(0)
+            size = (channels, size[0], size[1])
+        x = F.interpolate(x, size=size, mode=mode)
+        x = x.squeeze(0) if len(size) == 3 else x
+        if x.size(0) != batch:
+            x = x.permute(1, 0, 2, 3)
+            x = F.interpolate(
+                x.unsqueeze(0),
+                size=(batch, x.size(2), x.size(3)),
+                mode="trilinear",
+            ).squeeze(0)
+            x = x.permute(1, 0, 2, 3)
+        return x
+
+    def forward(self) -> torch.Tensor:
+        image = self.parameterization()
+        x = [
+            self.interpolate_tensor(
+                shared_tensor,
+                (image.size(2), image.size(3)),
+                image.size(0),
+                image.size(1),
+            )
+            for shared_tensor in self.shared_init
+        ]
+        return (image + sum(x)).refine_names("B", "C", "H", "W")
+
+
 class NaturalImage(ImageParameterization):
     r"""Outputs an optimizable input image.
 
@@ -351,7 +418,8 @@ class NaturalImage(ImageParameterization):
     uncorrelated image parameterization. :-)
 
     If a model requires a normalization step, such as normalizing imagenet RGB values,
-    or rescaling to [0,255], it has to perform that step inside its computation.
+    or rescaling to [0,255], it can perform those steps with the provided transforms or
+    inside its computation.
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 

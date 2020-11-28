@@ -24,7 +24,7 @@ class BlendAlpha(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
-        background = self.background or torch.rand_like(rgb)
+        background = self.background if self.background is not None else torch.rand_like(rgb)
         blended = alpha * rgb + (1 - alpha) * background
         return blended
 
@@ -119,7 +119,14 @@ class CenterCrop(torch.nn.Module):
 
     def __init__(self, size: TransformSize = 0) -> None:
         super(CenterCrop, self).__init__()
-        self.crop_val = [size] * 2 if size is not list and size is not tuple else size
+        if type(size) is list or type(size) is tuple:
+            assert (
+                len(size) == 2
+            ), "CenterCrop requires a single crop value or a tuple of (height,width) in pixels for cropping."
+            self.crop_val = size
+        else:
+            self.crop_val = [size] * 2
+
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         assert (
@@ -187,6 +194,7 @@ class RandomSpatialJitter(torch.nn.Module):
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
+
     def translate_tensor(self, x: torch.Tensor, insets: torch.Tensor) -> torch.Tensor:
         padded = self.pad(x)
         tblr = [
@@ -199,9 +207,34 @@ class RandomSpatialJitter(torch.nn.Module):
         assert cropped.shape == x.shape
         return cropped
 
+
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         insets = torch.randint(high=self.pad_range, size=(2,))
         return self.translate_tensor(input, insets)
+
+
+class ScaleInputRange(nn.Module):
+    """
+    Multiplies the input by a specified multiplier for models with input ranges other
+    than [0,1].
+    """
+
+    def __init__(self, multiplier: float = 1.0) -> None:
+        super().__init__()
+        self.multiplier = multiplier
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x * self.multiplier
+
+
+class RGBToBGR(nn.Module):
+    """
+    Converts RGB images to BGR by switching the red and blue channels.
+    """
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        return x[:, [2, 1, 0]]
 
 
 # class TransformationRobustness(nn.Module):
