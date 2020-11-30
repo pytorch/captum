@@ -25,7 +25,9 @@ class BlendAlpha(nn.Module):
         assert x.size(1) == 4
         assert x.dim() == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
-        background = self.background if self.background is not None else torch.rand_like(rgb)
+        background = (
+            self.background if self.background is not None else torch.rand_like(rgb)
+        )
         blended = alpha * rgb + (1 - alpha) * background
         return blended
 
@@ -122,9 +124,10 @@ class CenterCrop(torch.nn.Module):
     def __init__(self, size: TransformSize = 0) -> None:
         super(CenterCrop, self).__init__()
         if type(size) is list or type(size) is tuple:
-            assert (
-                len(size) == 2
-            ), "CenterCrop requires a single crop value or a tuple of (height,width) in pixels for cropping."
+            assert len(size) == 2, (
+                "CenterCrop requires a single crop value or a tuple of (height,width)"
+                + "in pixels for cropping."
+            )
             self.crop_val = size
         else:
             self.crop_val = [size] * 2
