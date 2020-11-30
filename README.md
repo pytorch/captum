@@ -14,7 +14,8 @@ PCA helps us understand the major features that shape the embedding space. Probi
 </p>
 
 * The first component explains 15.6% of the variance. At one extreme of this component we can see vegetation scenes, while at the other extreme we can see indoor scenes containing horizontal and vertical edges. These two subsets are at odds of each other: Vegetation scenes are mainly outdoors and are composed primarily of edgeless texture.
-* The second and third components seem to separate between different types of textures. The fourth component seems to separate scenes dominated by horizontal edges and those dominated by vertical ones.
+* The second and third components seem to separate between different types of textures.
+* The fourth component seems to separate scenes dominated by horizontal edges and those dominated by vertical ones.
 * The fifth component seems sensitive to color saturation. 
 
 The Embedding Explorer facilitates exploring embedding spaces via an interactive UI.
@@ -23,7 +24,7 @@ The Embedding Explorer facilitates exploring embedding spaces via an interactive
 </p>
 
 ### Example notebook
-Explore the embedding space of a protoypical image classifier -
+Explore the embedding space of a prototypical image classifier -
 [view Colab notebook](https://colab.research.google.com/drive/1NdVAR4b1cwVeibxbh2_q6RVcO3ilaYca?usp=sharing#scrollTo=d4UkWTvB-B5N)
 
 
