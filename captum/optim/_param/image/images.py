@@ -353,6 +353,7 @@ class SharedImage(ImageParameterization):
         self,
         shared_shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
         parameterization=None,
+        offset: Optional[int, Tuple[int]] = None,
     ) -> None:
         super().__init__()
         A = []
@@ -366,6 +367,32 @@ class SharedImage(ImageParameterization):
             A.append(torch.nn.Parameter(torch.randn([batch, channels, height, width])))
         self.shared_init = torch.nn.ParameterList(A)
         self.parameterization = parameterization
+        self.offset = self.get_offset(offset, len(A)) if offset is not None else None
+
+    def get_offset(self, offset: Union[int, Tuple[int]], n: int):
+        if type(offset) is tuple or type(offset) is list:
+            if type(offset[0]) is tuple or type(offset[0]) is list:
+                assert len(offset) == n and all(
+                    [len(o) == 4 for o in t] for t in offset
+                )
+            else:
+                assert len(offset) >= 1 and len(offset) <= 4
+                offset = [([0] * (4 - len(offset))) + list(offset)] * n
+        else:
+            offset = [[offset] * 4] * n
+        offset = [[int(o) for o in v] for v in offset]
+        return offset
+
+    def apply_offset(
+        self, x_list: List[torch.Tensor], size: Tuple[int]
+    ) -> List[torch.Tensor]:
+        assert len(size) == 4
+        A = []
+        for x, offset in zip(x_list, self.offset):
+            x = F.pad(x, offset, "reflect")
+            x = x[:size[0], :size[1], :size[2], :size[3]]
+            A.append(x)
+        return A
 
     def interpolate_tensor(
         self, x: torch.Tensor, size: InitSize, batch: int, channels: int
@@ -403,6 +430,8 @@ class SharedImage(ImageParameterization):
             )
             for shared_tensor in self.shared_init
         ]
+        if self.offset is not None:
+            x = self.apply_offset(x, tuple(image.size()))
         return (image + sum(x)).refine_names("B", "C", "H", "W")
 
 
