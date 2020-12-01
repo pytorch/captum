@@ -369,7 +369,7 @@ class SharedImage(ImageParameterization):
         self.parameterization = parameterization
         self.offset = self.get_offset(offset, len(A)) if offset is not None else None
 
-    def get_offset(self, offset: Union[int, Tuple[int]], n: int):
+    def get_offset(self, offset: Union[int, Tuple[int]], n: int) -> Tuple[Tuple[int]]:
         if type(offset) is tuple or type(offset) is list:
             if type(offset[0]) is tuple or type(offset[0]) is list:
                 assert len(offset) == n and all(
@@ -390,7 +390,7 @@ class SharedImage(ImageParameterization):
         A = []
         for x, offset in zip(x_list, self.offset):
             x = F.pad(x, offset, "reflect")
-            x = x[:size[0], :size[1], :size[2], :size[3]]
+            x = x[: size[0], : size[1], : size[2], : size[3]]
             A.append(x)
         return A
 
