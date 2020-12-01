@@ -390,7 +390,7 @@ class SharedImage(ImageParameterization):
         A = []
         for x, offset in zip(x_list, self.offset):
             x = F.pad(x, offset, "reflect")
-            x = x[: size[0], : size[1], : size[2], : size[3]]
+            x = x[:size[0], :size[1], :size[2], :size[3]]
             A.append(x)
         return A
 
