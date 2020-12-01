@@ -353,7 +353,7 @@ class SharedImage(ImageParameterization):
         self,
         shared_shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
         parameterization=None,
-        offset: Optional[int, Tuple[int], Tuple[Tuple[int]]] = None,
+        offset: Union[int, Tuple[int], Tuple[Tuple[int]], None] = None,
     ) -> None:
         super().__init__()
         A = []
