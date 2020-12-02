@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 import captum.optim._utils.models as model_utils
 from captum.optim._models.inception_v1 import googlenet
-from tests.helpers.basic import BaseTest
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestLocalResponseNormLayer(BaseTest):
@@ -21,10 +21,11 @@ class TestLocalResponseNormLayer(BaseTest):
             size=size, alpha=alpha, beta=beta, k=k
         )
 
-        assert torch.all(
-            lrn_layer(x).eq(
-                F.local_response_norm(x, size=size, alpha=alpha, beta=beta, k=k)
-            )
+        assertTensorAlmostEqual(
+            self,
+            lrn_layer(x),
+            F.local_response_norm(x, size=size, alpha=alpha, beta=beta, k=k),
+            0,
         )
 
 
@@ -32,14 +33,14 @@ class TestReluLayer(BaseTest):
     def test_relu_layer(self) -> None:
         x = torch.randn(1, 3, 4, 4)
         relu_layer = model_utils.ReluLayer()
-        assert torch.all(relu_layer(x).eq(F.relu(x)))
+        assertTensorAlmostEqual(self, relu_layer(x), F.relu(x), 0)
 
 
 class TestRedirectedReluLayer(BaseTest):
     def test_forward_redirected_relu_layer(self) -> None:
         x = torch.randn(1, 3, 4, 4)
         layer = model_utils.RedirectedReluLayer()
-        assert torch.all(layer(x).eq(F.relu(x)))
+        assertTensorAlmostEqual(self, layer(x), F.relu(x), 0)
 
     def test_backward_redirected_relu_layer(self) -> None:
         t_grad_input, t_grad_output = [], []
@@ -54,7 +55,7 @@ class TestRedirectedReluLayer(BaseTest):
         rr_loss = rr_layer(x * 1).mean()
         rr_loss.backward()
 
-        assert torch.all(t_grad_input[0].eq(t_grad_output[0]))
+        assertTensorAlmostEqual(self, t_grad_input[0], t_grad_output[0], 0)
 
 
 class TestReplaceLayers(BaseTest):
@@ -82,11 +83,12 @@ class TestReplaceLayers(BaseTest):
         model_utils.replace_layers(toy_model, old_layer, new_layer)
         # Unittest can't run replace_layers correctly?
         model_utils.replace_layers(toy_model.relu2, old_layer, new_layer)
-        assert type(toy_model.relu1) != old_layer and type(toy_model.relu1) == new_layer
-        assert (
-            type(toy_model.relu2.relu) != old_layer
-            and type(toy_model.relu2.relu) == new_layer
-        )
+
+        self.assertNotIsInstance(toy_model.relu1, old_layer())
+        self.assertIsInstance(toy_model.relu1, new_layer())
+
+        self.assertNotIsInstance(toy_model.relu2.relu, old_layer())
+        self.assertIsInstance(toy_model.relu2.relu, new_layer())
 
 
 class TestGetLayers(BaseTest):
@@ -240,7 +242,7 @@ class TestGetLayers(BaseTest):
         ]
         model = googlenet(pretrained=True)
         collected_layers = model_utils.get_model_layers(model)
-        assert collected_layers == expected_list
+        self.assertEqual(collected_layers, expected_list)
 
 
 if __name__ == "__main__":

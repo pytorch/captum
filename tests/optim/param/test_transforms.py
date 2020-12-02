@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 
 from captum.optim._param.image import transform
-from tests.helpers.basic import BaseTest
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestRandSelect(BaseTest):
@@ -13,8 +13,8 @@ class TestRandSelect(BaseTest):
         a = (1, 2, 3, 4, 5)
         b = torch.Tensor([0.1, -5, 56.7, 99.0])
 
-        assert transform.rand_select(a) in a
-        assert transform.rand_select(b) in b
+        self.assertIn(transform.rand_select(a), a)
+        self.assertIn(transform.rand_select(b), b)
 
 
 class TestRandomScale(BaseTest):
@@ -23,38 +23,45 @@ class TestRandomScale(BaseTest):
         test_tensor = torch.ones(1, 3, 3, 3)
 
         # Test rescaling
-        assert torch.all(
-            scale_module.scale_tensor(test_tensor, 0.5).eq(
-                torch.ones(3, 1).repeat(3, 1, 3).unsqueeze(0)
-            )
+        assertTensorAlmostEqual(
+            self,
+            scale_module.scale_tensor(test_tensor, 0.5),
+            torch.ones(3, 1).repeat(3, 1, 3).unsqueeze(0),
+            0,
         )
-        assert torch.all(
-            scale_module.scale_tensor(test_tensor, 1.5).eq(
-                torch.tensor(
-                    [
-                        [0.2500, 0.5000, 0.2500],
-                        [0.5000, 1.0000, 0.5000],
-                        [0.2500, 0.5000, 0.2500],
-                    ]
-                )
-                .repeat(3, 1, 1)
-                .unsqueeze(0)
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module.scale_tensor(test_tensor, 1.5),
+            torch.tensor(
+                [
+                    [0.2500, 0.5000, 0.2500],
+                    [0.5000, 1.0000, 0.5000],
+                    [0.2500, 0.5000, 0.2500],
+                ]
             )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
+            0,
         )
 
     def test_random_scale_matrix(self) -> None:
         scale_module = transform.RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05))
         test_tensor = torch.ones(1, 3, 3, 3)
         # Test scale matrices
-        assert torch.all(
-            scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype).eq(
-                torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]])
-            )
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module.get_scale_mat(0.5, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[0.5000, 0.0000, 0.0000], [0.0000, 0.5000, 0.0000]]),
+            0,
         )
-        assert torch.all(
-            scale_module.get_scale_mat(1.24, test_tensor.device, test_tensor.dtype).eq(
-                torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]])
-            )
+
+        assertTensorAlmostEqual(
+            self,
+            scale_module.get_scale_mat(1.24, test_tensor.device, test_tensor.dtype),
+            torch.tensor([[1.2400, 0.0000, 0.0000], [0.0000, 1.2400, 0.0000]]),
+            0,
         )
 
 
@@ -64,36 +71,38 @@ class TestRandomSpatialJitter(BaseTest):
         spatialjitter = transform.RandomSpatialJitter(3)
         test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
 
-        assert torch.all(
-            spatialjitter.translate_tensor(test_input, torch.tensor([4, 4])).eq(
-                torch.tensor(
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 1.0],
-                        [0.0, 0.0, 1.0, 0.0],
-                        [0.0, 1.0, 0.0, 1.0],
-                    ]
-                )
-                .repeat(3, 1, 1)
-                .unsqueeze(0)
+        assertTensorAlmostEqual(
+            self,
+            spatialjitter.translate_tensor(test_input, torch.tensor([4, 4])),
+            torch.tensor(
+                [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 1.0],
+                    [0.0, 0.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0, 1.0],
+                ]
             )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
+            0,
         )
 
         spatialjitter = transform.RandomSpatialJitter(2)
 
-        assert torch.all(
-            spatialjitter.translate_tensor(test_input, torch.tensor([0, 3])).eq(
-                torch.tensor(
-                    [
-                        [0.0, 1.0, 0.0, 1.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ]
-                )
-                .repeat(3, 1, 1)
-                .unsqueeze(0)
+        assertTensorAlmostEqual(
+            self,
+            spatialjitter.translate_tensor(test_input, torch.tensor([0, 3])),
+            torch.tensor(
+                [
+                    [0.0, 1.0, 0.0, 1.0],
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0, 0.0],
+                ]
             )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
+            0,
         )
 
 
@@ -108,32 +117,34 @@ class TestCenterCrop(BaseTest):
 
         crop_tensor = transform.CenterCrop(size=3)
 
-        assert torch.all(
-            crop_tensor(test_tensor).eq(
-                torch.tensor(
-                    [
-                        [1.0, 1.0, 0.0],
-                        [1.0, 1.0, 0.0],
-                        [0.0, 0.0, 0.0],
-                    ]
-                )
-                .repeat(3, 1, 1)
-                .unsqueeze(0)
+        assertTensorAlmostEqual(
+            self,
+            crop_tensor(test_tensor),
+            torch.tensor(
+                [
+                    [1.0, 1.0, 0.0],
+                    [1.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ]
             )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
+            0,
         )
 
         crop_tensor = transform.CenterCrop(size=(4, 0))
 
-        assert torch.all(
-            crop_tensor(test_tensor).eq(
-                torch.tensor(
-                    [
-                        [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
-                    ]
-                )
-                .repeat(3, 2, 1)
-                .unsqueeze(0)
+        assertTensorAlmostEqual(
+            self,
+            crop_tensor(test_tensor),
+            torch.tensor(
+                [
+                    [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+                ]
             )
+            .repeat(3, 2, 1)
+            .unsqueeze(0),
+            0,
         )
 
 
@@ -146,18 +157,19 @@ class TestBlendAlpha(BaseTest):
         background_tensor = torch.ones_like(rgb_tensor) * 5
         blend_alpha = transform.BlendAlpha(background=background_tensor)
 
-        assert torch.all(
-            blend_alpha(test_tensor).eq(
-                torch.tensor(
-                    [
-                        [3.0, 5.0, 3.0],
-                        [5.0, 1.0, 5.0],
-                        [3.0, 5.0, 3.0],
-                    ]
-                )
-                .repeat(3, 1, 1)
-                .unsqueeze(0)
+        assertTensorAlmostEqual(
+            self,
+            blend_alpha(test_tensor),
+            torch.tensor(
+                [
+                    [3.0, 5.0, 3.0],
+                    [5.0, 1.0, 5.0],
+                    [3.0, 5.0, 3.0],
+                ]
             )
+            .repeat(3, 1, 1)
+            .unsqueeze(0),
+            0,
         )
 
 
@@ -186,11 +198,11 @@ class TestToRGB(BaseTest):
 
     def test_to_rgb_i1i2i3(self) -> None:
         to_rgb = transform.ToRGB(transform_name="i1i2i3")
-        assert torch.all(to_rgb.transform.eq(self.get_matrix("i1i2i3")))
+        assertTensorAlmostEqual(self, to_rgb.transform, self.get_matrix("i1i2i3"), 0)
 
     def test_to_rgb_klt(self) -> None:
         to_rgb = transform.ToRGB(transform_name="klt")
-        assert torch.all(to_rgb.transform.eq(self.get_matrix("klt")))
+        assertTensorAlmostEqual(self, to_rgb.transform, self.get_matrix("klt"), 0)
 
     def test_to_rgb(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -208,7 +220,8 @@ class TestToRGB(BaseTest):
         expected_rgb = torch.stack([r, b, g])
 
         diff_rgb = rgb_tensor.clone() - expected_rgb
-        assert diff_rgb.max() < 4.8340e-05 and diff_rgb.min() > -7.7189e-06
+        self.assertLessEqual(diff_rgb.max().item(), 4.8340e-05)
+        self.assertGreaterEqual(diff_rgb.min().item(), -7.7189e-06)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
 
@@ -217,7 +230,7 @@ class TestToRGB(BaseTest):
         color_matrix = self.get_matrix("klt")
         rgb_correct = torch.inverse(color_matrix) @ rgb_flat
         rgb_output = rgb_correct.unflatten("spatials", (("H", h), ("W", w)))
-        assert torch.all(inverse_tensor.eq(rgb_output))
+        assertTensorAlmostEqual(self, inverse_tensor, rgb_output, 0)
 
     def test_to_rgb_alpha(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -236,7 +249,8 @@ class TestToRGB(BaseTest):
         expected_rgb = torch.stack([r, b, g, alpha]).unsqueeze(0)
 
         diff_rgb = rgb_tensor - expected_rgb
-        assert diff_rgb.max() < 4.8340e-05 and diff_rgb.min() > -7.7189e-06
+        self.assertLessEqual(diff_rgb.max().item(), 4.8340e-05)
+        self.assertGreaterEqual(diff_rgb.min().item(), -7.7189e-06)
 
         inverse_tensor = to_rgb(rgb_tensor, inverse=True)
 
@@ -247,7 +261,7 @@ class TestToRGB(BaseTest):
         rgb_correct = torch.inverse(color_matrix) @ rgb_flat
         rgb_output = rgb_correct.unflatten("spatials", (("H", h), ("W", w)))
         rgb_output = torch.cat([rgb_output, alpha_channel], 1)
-        assert torch.all(inverse_tensor.eq(rgb_output))
+        assertTensorAlmostEqual(self, inverse_tensor, rgb_output, 0)
 
 
 class TestGaussianSmoothing(BaseTest):
@@ -265,7 +279,8 @@ class TestGaussianSmoothing(BaseTest):
         diff_tensor = smoothening_module(test_tensor) - torch.tensor(
             [2.4467, 3.5533]
         ).repeat(6, 1).unsqueeze(0)
-        assert diff_tensor.max() < 4.268e-05 and diff_tensor.min() > -4.197e-05
+        self.assertLessEqual(diff_tensor.max().item(), 4.268e-05)
+        self.assertGreaterEqual(diff_tensor.min().item(), -4.197e-05)
 
     def test_gaussian_smoothing_2d(self) -> None:
         channels = 3
@@ -281,7 +296,8 @@ class TestGaussianSmoothing(BaseTest):
         diff_tensor = smoothening_module(test_tensor) - torch.tensor(
             [2.4467, 3.5533]
         ).repeat(3, 4, 2).unsqueeze(0)
-        assert diff_tensor.max() < 4.5539e-05 and diff_tensor.min() > -4.5539e-05
+        self.assertLessEqual(diff_tensor.max().item(), 4.5539e-05)
+        self.assertGreaterEqual(diff_tensor.min().item(), -4.5539e-05)
 
     def test_gaussian_smoothing_3d(self) -> None:
         channels = 4
@@ -299,7 +315,8 @@ class TestGaussianSmoothing(BaseTest):
         ).repeat(4, 4, 4, 1).unsqueeze(0)
         t_max = diff_tensor.max().item()
         t_min = diff_tensor.min().item()
-        assert t_max < 4.8162e-05 and t_min > 3.3377e-06
+        self.assertLessEqual(t_max, 4.8162e-05)
+        self.assertGreaterEqual(t_min, 3.3377e-06)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,9 @@ def get_model_layers(model) -> List[str]:
             for name, layer in net._modules.items():
                 if layer is None:
                     continue
-                layers.append(".".join(prefix + [name]))
+                separator = "" if str(name).isdigit() else "."
+                name = "[" + str(name) + "]" if str(name).isdigit() else name
+                layers.append(separator.join(prefix + [name]))
                 get_layers(layer, prefix=prefix + [name])
 
     get_layers(model)
@@ -26,6 +28,7 @@ def get_model_layers(model) -> List[str]:
 class RedirectedReLU(torch.autograd.Function):
     """
     A workaround when there is no gradient flow from an initial random input.
+    See https://github.com/tensorflow/lucid/blob/master/lucid/misc/redirected_relu_grad.py
     """
 
     @staticmethod

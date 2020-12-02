@@ -4,7 +4,7 @@ import unittest
 import torch
 
 from captum.optim._models.inception_v1 import googlenet
-from tests.helpers.basic import BaseTest
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestInceptionV1(BaseTest):
@@ -19,7 +19,7 @@ class TestInceptionV1(BaseTest):
             test = True
         except Exception:
             test = False
-        assert test
+        self.assertTrue(test)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -31,7 +31,7 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=True)
         output = model._transform_input(x)
         expected_output = x[:, [2, 1, 0]] * 255 - 117
-        assert torch.all(output.eq(expected_output))
+        assertTensorAlmostEqual(output, expected_output, 0)
 
     def test_load_and_forward_basic_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -46,7 +46,7 @@ class TestInceptionV1(BaseTest):
             test = True
         except Exception:
             test = False
-        assert test
+        self.assertTrue(test)
 
     def test_load_and_forward_diff_sizes_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -63,7 +63,7 @@ class TestInceptionV1(BaseTest):
             test = True
         except Exception:
             test = False
-        assert test
+        self.assertTrue(test)
 
     def test_forward_aux_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -74,7 +74,7 @@ class TestInceptionV1(BaseTest):
         x = torch.randn(1, 3, 224, 224).clamp(0, 1)
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
-        assert len(outputs) == 3
+        self.assertEqual(len(outputs), 3)
 
 
 if __name__ == "__main__":
