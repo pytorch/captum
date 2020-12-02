@@ -31,7 +31,7 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=True)
         output = model._transform_input(x)
         expected_output = x[:, [2, 1, 0]] * 255 - 117
-        assertTensorAlmostEqual(output, expected_output, 0)
+        assertTensorAlmostEqual(self, output, expected_output, 0)
 
     def test_load_and_forward_basic_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
