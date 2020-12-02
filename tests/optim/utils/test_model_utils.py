@@ -84,11 +84,11 @@ class TestReplaceLayers(BaseTest):
         # Unittest can't run replace_layers correctly?
         model_utils.replace_layers(toy_model.relu2, old_layer, new_layer)
 
-        self.assertNotIsInstance(toy_model.relu1, old_layer())
-        self.assertIsInstance(toy_model.relu1, new_layer())
+        self.assertNotIsInstance(toy_model.relu1, old_layer)
+        self.assertIsInstance(toy_model.relu1, new_layer)
 
-        self.assertNotIsInstance(toy_model.relu2.relu, old_layer())
-        self.assertIsInstance(toy_model.relu2.relu, new_layer())
+        self.assertNotIsInstance(toy_model.relu2.relu, old_layer)
+        self.assertIsInstance(toy_model.relu2.relu, new_layer)
 
 
 class TestGetLayers(BaseTest):
