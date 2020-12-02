@@ -28,6 +28,10 @@ def get_model_layers(model) -> List[str]:
 class RedirectedReLU(torch.autograd.Function):
     """
     A workaround when there is no gradient flow from an initial random input.
+    ReLU layers will block the gradient flow during backpropagation when their
+    input is less than 0. This means that it can be impossible to visualize a
+    target without allowing negative values to pass through ReLU layers during
+    backpropagation.
     See:
     https://github.com/tensorflow/lucid/blob/master/lucid/misc/redirected_relu_grad.py
     """
@@ -69,7 +73,7 @@ class ReluLayer(nn.Module):
 def replace_layers(model, old_layer=ReluLayer, new_layer=RedirectedReluLayer) -> None:
     """
     Replace all target layers with new layers.
-    The most common use case is replacing activation layers with activation layers 
+    The most common use case is replacing activation layers with activation layers
     that can handle gradient flow issues.
     """
 
