@@ -28,7 +28,8 @@ def get_model_layers(model) -> List[str]:
 class RedirectedReLU(torch.autograd.Function):
     """
     A workaround when there is no gradient flow from an initial random input.
-    See https://github.com/tensorflow/lucid/blob/master/lucid/misc/redirected_relu_grad.py
+    See:
+    https://github.com/tensorflow/lucid/blob/master/lucid/misc/redirected_relu_grad.py
     """
 
     @staticmethod
@@ -68,6 +69,8 @@ class ReluLayer(nn.Module):
 def replace_layers(model, old_layer=ReluLayer, new_layer=RedirectedReluLayer) -> None:
     """
     Replace all target layers with new layers.
+    The most common use case is replacing activation layers with activation layers 
+    that can handle gradient flow issues.
     """
 
     for name, child in model._modules.items():
