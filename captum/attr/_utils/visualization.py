@@ -513,8 +513,10 @@ def format_word_importances(words, importances):
 
 
 def visualize_text(
-    datarecords: Iterable[VisualizationDataRecord], legend: bool = True
-) -> None:
+    datarecords: Iterable[VisualizationDataRecord],
+    legend: bool = True,
+    return_html: bool = False,
+) -> Union[None, HTML]:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -567,4 +569,7 @@ def visualize_text(
 
     dom.append("".join(rows))
     dom.append("</table>")
-    display(HTML("".join(dom)))
+    html = HTML("".join(dom))
+    display(html)
+    if return_html:
+        return html
