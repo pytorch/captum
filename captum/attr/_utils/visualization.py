@@ -573,3 +573,5 @@ def visualize_text(
     display(html)
     if return_html:
         return html
+    else:
+        return None
