@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 import unittest
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
 from captum.optim._param.image import transform
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
+from tests.optim.helpers import numpy_transforms
 
 
 class TestRandSelect(BaseTest):
@@ -66,86 +72,100 @@ class TestRandomScale(BaseTest):
 
 
 class TestRandomSpatialJitter(BaseTest):
-    def test_random_spatial_jitter(self) -> None:
+    def test_random_spatial_jitter_hw(self) -> None:
+        translate_vals = [4, 4]
+        t_val = 3
 
-        spatialjitter = transform.RandomSpatialJitter(3)
+        spatialjitter = transform.RandomSpatialJitter(t_val)
         test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        jittered_tensor = spatialjitter.translate_tensor(
+            test_input, torch.tensor(translate_vals)
+        ).squeeze(0)
 
-        assertTensorAlmostEqual(
-            self,
-            spatialjitter.translate_tensor(test_input, torch.tensor([4, 4])),
-            torch.tensor(
-                [
-                    [1.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 1.0],
-                    [0.0, 0.0, 1.0, 0.0],
-                    [0.0, 1.0, 0.0, 1.0],
-                ]
-            )
-            .repeat(3, 1, 1)
-            .unsqueeze(0),
-            0,
-        )
+        spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
+        jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
 
-        spatialjitter = transform.RandomSpatialJitter(2)
+        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
 
-        assertTensorAlmostEqual(
-            self,
-            spatialjitter.translate_tensor(test_input, torch.tensor([0, 3])),
-            torch.tensor(
-                [
-                    [0.0, 1.0, 0.0, 1.0],
-                    [1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0],
-                    [1.0, 0.0, 0.0, 0.0],
-                ]
-            )
-            .repeat(3, 1, 1)
-            .unsqueeze(0),
-            0,
-        )
+    def test_random_spatial_jitter_w(self) -> None:
+        translate_vals = [0, 3]
+        t_val = 3
+
+        spatialjitter = transform.RandomSpatialJitter(t_val)
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        jittered_tensor = spatialjitter.translate_tensor(
+            test_input, torch.tensor(translate_vals)
+        ).squeeze(0)
+
+        spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
+        jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
+
+        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
+
+    def test_random_spatial_jitter_h(self) -> None:
+        translate_vals = [3, 0]
+        t_val = 3
+
+        spatialjitter = transform.RandomSpatialJitter(t_val)
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        jittered_tensor = spatialjitter.translate_tensor(
+            test_input, torch.tensor(translate_vals)
+        ).squeeze(0)
+
+        spatial_mod_np = numpy_transforms.RandomSpatialJitter(t_val)
+        jittered_array = spatial_mod_np.translate_array(np.eye(4, 4), translate_vals)
+
+        assertArraysAlmostEqual(jittered_tensor[0].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[1].numpy(), jittered_array, 0)
+        assertArraysAlmostEqual(jittered_tensor[2].numpy(), jittered_array, 0)
 
 
 class TestCenterCrop(BaseTest):
-    def test_center_crop(self) -> None:
+    def test_center_crop_one_number(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
             F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
             .repeat(3, 1, 1)
             .unsqueeze(0)
         )
+        test_array = np.pad(
+            np.pad(np.ones((2, 2)), pad_width=1), pad_width=1, constant_values=(1)
+        )[None, None, :]
 
-        crop_tensor = transform.CenterCrop(size=3)
+        crop_vals = 3
 
-        assertTensorAlmostEqual(
-            self,
-            crop_tensor(test_tensor),
-            torch.tensor(
-                [
-                    [1.0, 1.0, 0.0],
-                    [1.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0],
-                ]
-            )
+        crop_tensor = transform.CenterCrop(size=crop_vals)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
+        cropped_array = crop_mod_np.crop(test_array)
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+
+    def test_center_crop_two_numbers(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
             .repeat(3, 1, 1)
-            .unsqueeze(0),
-            0,
+            .unsqueeze(0)
         )
+        test_array = np.pad(
+            np.pad(np.ones((2, 2)), pad_width=1), pad_width=1, constant_values=(1)
+        )[None, None, :]
 
-        crop_tensor = transform.CenterCrop(size=(4, 0))
+        crop_vals = (4, 0)
 
-        assertTensorAlmostEqual(
-            self,
-            crop_tensor(test_tensor),
-            torch.tensor(
-                [
-                    [1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
-                ]
-            )
-            .repeat(3, 2, 1)
-            .unsqueeze(0),
-            0,
-        )
+        crop_tensor = transform.CenterCrop(size=crop_vals)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
+        cropped_array = crop_mod_np.crop(test_array)
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
 
 class TestBlendAlpha(BaseTest):
@@ -156,21 +176,17 @@ class TestBlendAlpha(BaseTest):
 
         background_tensor = torch.ones_like(rgb_tensor) * 5
         blend_alpha = transform.BlendAlpha(background=background_tensor)
+        blended_tensor = blend_alpha(test_tensor)
 
-        assertTensorAlmostEqual(
-            self,
-            blend_alpha(test_tensor),
-            torch.tensor(
-                [
-                    [3.0, 5.0, 3.0],
-                    [5.0, 1.0, 5.0],
-                    [3.0, 5.0, 3.0],
-                ]
-            )
-            .repeat(3, 1, 1)
-            .unsqueeze(0),
-            0,
-        )
+        rgb_array = np.ones((3, 3, 3))
+        alpha_array = (np.add(np.eye(3, 3), np.flip(np.eye(3, 3), 1)) / 2)[None, :]
+        test_array = np.concatenate([rgb_array, alpha_array])[None, :]
+
+        background_array = np.ones(rgb_array.shape) * 5
+        blend_alpha_np = numpy_transforms.BlendAlpha(background=background_array)
+        blended_array = blend_alpha_np.blend_alpha(test_array)
+
+        assertArraysAlmostEqual(blended_tensor.numpy(), blended_array, 0)
 
 
 class TestIgnoreAlpha(BaseTest):
@@ -182,86 +198,95 @@ class TestIgnoreAlpha(BaseTest):
 
 
 class TestToRGB(BaseTest):
-    def get_matrix(self, matrix: str = "klt") -> torch.Tensor:
-        if matrix == "klt":
-            KLT = [[0.26, 0.09, 0.02], [0.27, 0.00, -0.05], [0.27, -0.09, 0.03]]
-            transform = torch.Tensor(KLT).float()
-            transform = transform / torch.max(torch.norm(transform, dim=0))
-        else:
-            i1i2i3_matrix = [
-                [1 / 3, 1 / 3, 1 / 3],
-                [1 / 2, 0, -1 / 2],
-                [-1 / 4, 1 / 2, -1 / 4],
-            ]
-            transform = torch.Tensor(i1i2i3_matrix)
-        return transform
-
     def test_to_rgb_i1i2i3(self) -> None:
         to_rgb = transform.ToRGB(transform_name="i1i2i3")
-        assertTensorAlmostEqual(self, to_rgb.transform, self.get_matrix("i1i2i3"), 0)
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="i1i2i3")
+        assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
 
     def test_to_rgb_klt(self) -> None:
         to_rgb = transform.ToRGB(transform_name="klt")
-        assertTensorAlmostEqual(self, to_rgb.transform, self.get_matrix("klt"), 0)
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="klt")
+        assertArraysAlmostEqual(to_rgb.transform.numpy(), to_rgb_np.transform)
 
-    def test_to_rgb(self) -> None:
+    def test_to_rgb_klt_forward(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
                 "Skipping ToRGB forward due to insufficient Torch version."
             )
         to_rgb = transform.ToRGB(transform_name="klt")
         test_tensor = torch.ones(3, 4, 4).unsqueeze(0).refine_names("B", "C", "H", "W")
-
         rgb_tensor = to_rgb(test_tensor)
 
-        r = torch.ones(4).repeat(4, 1) * 0.8009
-        b = torch.ones(4).repeat(4, 1) * 0.4762
-        g = torch.ones(4).repeat(4, 1) * 0.4546
-        expected_rgb = torch.stack([r, b, g])
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="klt")
+        test_array = np.ones((1, 3, 4, 4))
+        rgb_array = to_rgb_np.to_rgb(test_array)
 
-        diff_rgb = rgb_tensor.clone() - expected_rgb
-        self.assertLessEqual(diff_rgb.max().item(), 4.8340e-05)
-        self.assertGreaterEqual(diff_rgb.min().item(), -7.7189e-06)
+        assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
+        inverse_array = to_rgb_np.to_rgb(rgb_array, inverse=True)
 
-        h, w = rgb_tensor.size("H"), rgb_tensor.size("W")
-        rgb_flat = rgb_tensor.flatten(("H", "W"), "spatials")
-        color_matrix = self.get_matrix("klt")
-        rgb_correct = torch.inverse(color_matrix) @ rgb_flat
-        rgb_output = rgb_correct.unflatten("spatials", (("H", h), ("W", w)))
-        assertTensorAlmostEqual(self, inverse_tensor, rgb_output, 0)
+        assertArraysAlmostEqual(inverse_tensor.numpy(), inverse_array)
 
-    def test_to_rgb_alpha(self) -> None:
+    def test_to_rgb_alpha_klt_forward(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
                 "Skipping ToRGB with Alpha forward due to insufficient Torch version."
             )
         to_rgb = transform.ToRGB(transform_name="klt")
         test_tensor = torch.ones(4, 4, 4).unsqueeze(0).refine_names("B", "C", "H", "W")
-
         rgb_tensor = to_rgb(test_tensor)
 
-        alpha = torch.ones(4).repeat(4, 1)
-        r = torch.ones(4).repeat(4, 1) * 0.8009
-        b = torch.ones(4).repeat(4, 1) * 0.4762
-        g = torch.ones(4).repeat(4, 1) * 0.4546
-        expected_rgb = torch.stack([r, b, g, alpha]).unsqueeze(0)
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="klt")
+        test_array = np.ones((1, 4, 4, 4))
+        rgb_array = to_rgb_np.to_rgb(test_array)
 
-        diff_rgb = rgb_tensor - expected_rgb
-        self.assertLessEqual(diff_rgb.max().item(), 4.8340e-05)
-        self.assertGreaterEqual(diff_rgb.min().item(), -7.7189e-06)
+        assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
 
         inverse_tensor = to_rgb(rgb_tensor, inverse=True)
+        inverse_array = to_rgb_np.to_rgb(rgb_array, inverse=True)
 
-        rgb_only, alpha_channel = rgb_tensor[:, :3], rgb_tensor[:, 3:]
-        h, w = rgb_only.size("H"), rgb_only.size("W")
-        rgb_flat = rgb_only.flatten(("H", "W"), "spatials")
-        color_matrix = self.get_matrix("klt")
-        rgb_correct = torch.inverse(color_matrix) @ rgb_flat
-        rgb_output = rgb_correct.unflatten("spatials", (("H", h), ("W", w)))
-        rgb_output = torch.cat([rgb_output, alpha_channel], 1)
-        assertTensorAlmostEqual(self, inverse_tensor, rgb_output, 0)
+        assertArraysAlmostEqual(inverse_tensor.numpy(), inverse_array)
+
+    def test_to_rgb_i1i2i3_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping ToRGB forward due to insufficient Torch version."
+            )
+        to_rgb = transform.ToRGB(transform_name="i1i2i3")
+        test_tensor = torch.ones(3, 4, 4).unsqueeze(0).refine_names("B", "C", "H", "W")
+        rgb_tensor = to_rgb(test_tensor)
+
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="i1i2i3")
+        test_array = np.ones((1, 3, 4, 4))
+        rgb_array = to_rgb_np.to_rgb(test_array)
+
+        assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
+
+        inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
+        inverse_array = to_rgb_np.to_rgb(rgb_array, inverse=True)
+
+        assertArraysAlmostEqual(inverse_tensor.numpy(), inverse_array)
+
+    def test_to_rgb_alpha_i1i2i3_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping ToRGB with Alpha forward due to insufficient Torch version."
+            )
+        to_rgb = transform.ToRGB(transform_name="i1i2i3")
+        test_tensor = torch.ones(4, 4, 4).unsqueeze(0).refine_names("B", "C", "H", "W")
+        rgb_tensor = to_rgb(test_tensor)
+
+        to_rgb_np = numpy_transforms.ToRGB(transform_name="i1i2i3")
+        test_array = np.ones((1, 4, 4, 4))
+        rgb_array = to_rgb_np.to_rgb(test_array)
+
+        assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
+
+        inverse_tensor = to_rgb(rgb_tensor, inverse=True)
+        inverse_array = to_rgb_np.to_rgb(rgb_array, inverse=True)
+
+        assertArraysAlmostEqual(inverse_tensor.numpy(), inverse_array)
 
 
 class TestGaussianSmoothing(BaseTest):
