@@ -349,6 +349,24 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
         return self.model(scale * (x1 + x2 + x3))
 
 
+class BasicModel_MultiLayer_TrueMultiInput(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.m1 = BasicModel_MultiLayer()
+        self.m234 = BasicModel_MultiLayer_MultiInput()
+
+    @no_type_check
+    def forward(
+        self, x1: Tensor, x2: Tensor, x3: Tensor, x4: Optional[Tensor] = None
+    ) -> Tensor:
+        a = self.m1(x1)
+        if x4 is None:
+            b = self.m234(x2, x3, x1, scale=1)
+        else:
+            b = self.m234(x2, x3, x4, scale=1)
+        return a + b
+
+
 class BasicModel_ConvNet_One_Conv(nn.Module):
     def __init__(self, inplace: bool = False):
         super().__init__()
