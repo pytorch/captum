@@ -41,6 +41,7 @@ from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_TrueMultiInput,
     ReLULinearModel,
 )
 
@@ -1143,5 +1144,20 @@ config = [
         "model": BasicModel_MultiLayer(multi_input_module=True),
         "layer": ["multi_relu", "linear1", "linear0"],
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output",
+        "algorithms": [LayerIntegratedGradients],
+        "model": BasicModel_MultiLayer_TrueMultiInput(),
+        "layer": ["m1", "m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
     },
 ]
