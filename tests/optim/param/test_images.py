@@ -1,28 +1,159 @@
 #!/usr/bin/env python3
 import unittest
 
+import numpy as np
 import torch
 
 from captum.optim._param.image import images
-from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorAlmostEqual,
+)
+from tests.optim.helpers import numpy_image
+
+
+class TestSetupBatch(BaseTest):
+    def test_setup_batch_chw(self) -> None:
+        init = torch.randn(3, 4, 4)
+
+        batch_test = images.ImageParameterization()
+        tensor_wbatch = batch_test.setup_batch(init)
+        array_wbatch = numpy_image.setup_batch(init.numpy())
+
+        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
+
+    def test_setup_batch_chwr(self) -> None:
+        init = torch.randn(3, 4, 4, 2)
+
+        batch_test = images.ImageParameterization()
+        tensor_wbatch = batch_test.setup_batch(init, dim=4)
+        array_wbatch = numpy_image.setup_batch(init.numpy(), dim=4)
+
+        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
+
+    def test_setup_batch_init(self) -> None:
+        init = torch.randn(5, 3, 4, 4)
+
+        batch_test = images.ImageParameterization()
+        tensor_wbatch = batch_test.setup_batch(init, dim=3)
+        array_wbatch = numpy_image.setup_batch(init.numpy(), dim=3)
+
+        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
 
 
 class TestFFTImage(BaseTest):
     def test_pytorch_fftfreq(self) -> None:
-        assertTensorAlmostEqual(
-            self,
-            images.FFTImage.pytorch_fftfreq(4, 4),
-            torch.tensor([0.0000, 0.0625, -0.1250, -0.0625]),
-            0,
+        assertArraysAlmostEqual(
+            images.FFTImage.pytorch_fftfreq(4, 4).numpy(), np.fft.fftfreq(4, 4)
         )
 
     def test_rfft2d_freqs(self) -> None:
-        assertTensorAlmostEqual(
-            self,
-            images.FFTImage.rfft2d_freqs(height=2, width=3),
-            torch.tensor([[0.0000, 0.3333, 0.3333], [0.5000, 0.6009, 0.6009]]),
-            delta=0.0002,
+        height = 2
+        width = 3
+        assertArraysAlmostEqual(
+            images.FFTImage.rfft2d_freqs(height, width).numpy(),
+            numpy_image.FFTImage.rfft2d_freqs(height, width),
         )
+
+    def test_fftimage_forward_randn_init(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+
+        fftimage = images.FFTImage(size=size)
+        fftimage_np = numpy_image.FFTImage(size=size)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_init_randn_batch(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+        batch = 5
+
+        fftimage = images.FFTImage(size=size, batch=batch)
+        fftimage_np = numpy_image.FFTImage(size=size, batch=batch)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_init_randn_channels(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+        channels = 4
+
+        fftimage = images.FFTImage(size=size, channels=channels)
+        fftimage_np = numpy_image.FFTImage(size=size, channels=channels)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_init_chw(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+        init_tensor = torch.randn(3, 224, 224)
+        init_array = init_tensor.numpy()
+
+        fftimage = images.FFTImage(size=size, init=init_tensor)
+        fftimage_np = numpy_image.FFTImage(size=size, init=init_array)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_init_bchw(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+        init_tensor = torch.randn(1, 3, 224, 224)
+        init_array = init_tensor.numpy()
+
+        fftimage = images.FFTImage(size=size, init=init_tensor)
+        fftimage_np = numpy_image.FFTImage(size=size, init=init_array)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_init_batch(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        size = (224, 224)
+        batch = 5
+        init_tensor = torch.randn(1, 3, 224, 224)
+        init_array = init_tensor.numpy()
+
+        fftimage = images.FFTImage(size=size, batch=batch, init=init_tensor)
+        fftimage_np = numpy_image.FFTImage(size=size, batch=batch, init=init_array)
+
+        fftimage_tensor = fftimage.forward()
+        fftimage_array = fftimage_np.forward()
+
+        self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
 
 
 class TestPixelImage(BaseTest):
