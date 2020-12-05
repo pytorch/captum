@@ -244,6 +244,42 @@ class TestGetLayers(BaseTest):
         collected_layers = model_utils.get_model_layers(model)
         self.assertEqual(collected_layers, expected_list)
 
+    def test_get_layers_torchvision_alexnet(self) -> None:
+        try:
+            from torchvision import alexnet  # noqa: F401
+
+        except ImportError:
+            raise unittest.SkipTest("Skipping alexnet test, torchvision not available.")
+
+        expected_list = [
+            "features",
+            "features[0]",
+            "features[1]",
+            "features[2]",
+            "features[3]",
+            "features[4]",
+            "features[5]",
+            "features[6]",
+            "features[7]",
+            "features[8]",
+            "features[9]",
+            "features[10]",
+            "features[11]",
+            "features[12]",
+            "avgpool",
+            "classifier",
+            "classifier[0]",
+            "classifier[1]",
+            "classifier[2]",
+            "classifier[3]",
+            "classifier[4]",
+            "classifier[5]",
+            "classifier[6]",
+        ]
+        model = alexnet(pretrained=True)
+        collected_layers = model_utils.get_model_layers(model)
+        self.assertEqual(collected_layers, expected_list)
+
 
 if __name__ == "__main__":
     unittest.main()
