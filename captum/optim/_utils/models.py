@@ -1,4 +1,5 @@
-from typing import List
+import math
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -105,4 +106,48 @@ class LocalResponseNormLayer(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return F.local_response_norm(
             input, size=self.size, alpha=self.alpha, beta=self.beta, k=self.k
+        )
+
+
+class Conv2dSame(nn.Conv2d):
+    """
+    Tensorflow like 'SAME' convolution wrapper for 2D convolutions.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Union[int, Tuple[int, int]] = 1,
+        padding: Union[int, Tuple[int, int]] = 0,
+        dilation: Union[int, Tuple[int, int]] = 1,
+        groups: int = 1,
+        bias: bool = True,
+    ) -> None:
+        super(Conv2dSame, self).__init__(
+            in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
+        )
+
+    def calc_same_pad(self, i: int, k: int, s: int, d: int) -> int:
+        return max((math.ceil(i / s) - 1) * s + (k - 1) * d + 1 - i, 0)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        ih, iw = x.size()[-2:]
+        kh, kw = self.weight.size()[-2:]
+        pad_h = self.calc_same_pad(ih, kh, self.stride[0], self.dilation[0])
+        pad_w = self.calc_same_pad(iw, kw, self.stride[1], self.dilation[1])
+
+        if pad_h > 0 or pad_w > 0:
+            x = F.pad(
+                x, [pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2]
+            )
+        return F.conv2d(
+            x,
+            self.weight,
+            self.bias,
+            self.stride,
+            self.padding,
+            self.dilation,
+            self.groups,
         )

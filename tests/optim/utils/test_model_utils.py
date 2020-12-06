@@ -9,6 +9,19 @@ from captum.optim._models.inception_v1 import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
+class TestConv2dSame(BaseTest):
+    def test_conv2d_same(self) -> None:
+        x = torch.ones(64, 32, 100, 20)
+
+        expected_conv = torch.nn.Conv2d(32, 32, (4, 1))
+        x_expected = expected_conv(F.pad(x, (0, 0, 2, 1)))
+
+        conv2d_same = model_utils.Conv2dSame(32, 32, (3, 1))
+        x_output = conv2d_same(x)
+
+        self.assertEqual(tuple(x_output.size()), tuple(x_expected.size()))
+
+
 class TestLocalResponseNormLayer(BaseTest):
     def test_local_response_norm_layer(self) -> None:
         size = 5
