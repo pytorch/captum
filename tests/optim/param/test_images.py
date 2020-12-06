@@ -228,7 +228,7 @@ class TestLaplacianImage(BaseTest):
     def test_laplacianimage_random_forward(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
-                "Skipping PixelImage random due to insufficient Torch version."
+                "Skipping LaplacianImage random due to insufficient Torch version."
             )
         size = (224, 224)
         channels = 3
