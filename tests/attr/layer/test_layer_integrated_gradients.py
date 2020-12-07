@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, Generic, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -262,7 +262,7 @@ class Test(BaseTest):
         emb_layers = (
             [model.embedding1, model.embedding2] if multiple_emb else model.embedding1
         )
-        emb_layers = cast(ModuleOrModuleList, emb_layers)
+        emb_layers = cast(Generic[ModuleOrModuleList], emb_layers)
         lig = LayerIntegratedGradients(
             model, emb_layers, multiply_by_inputs=multiply_by_inputs
         )
