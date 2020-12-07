@@ -146,11 +146,12 @@ class GammaRule(PropagationRule):
                 module.bias.data = torch.zeros_like(module.bias.data)
 
 
-class Alpha1_Beta0_Rule(PropagationRule):
+class ZPlusRule(PropagationRule):
     """
-    Alpha1_Beta0 rule for relevance backpropagation, also known
-    as Deep-Taylor. Only positive relevance is propagated, resulting
-    in stable results, therefore recommended as the initial choice.
+    Z^+ rule for relevance backpropagation closely related to
+    Deep-Taylor Decomposition cf. https://doi.org/10.1016/j.patcog.2016.11.008.
+    Only positive relevance is propagated, resulting in stable results,
+    therefore recommended as the initial choice.
 
     Warning: Does not work for BatchNorm modules because weight and bias
     are defined differently.

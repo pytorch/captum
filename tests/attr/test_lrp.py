@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from captum.attr import LRP, InputXGradient
 from captum.attr._utils.lrp_rules import (
-    Alpha1_Beta0_Rule,
+    ZPlusRule,
     EpsilonRule,
     GammaRule,
     IdentityRule,
@@ -116,7 +116,7 @@ class Test(BaseTest):
         model, inputs = _get_simple_model()
         model.eval()
         model.linear.rule = GammaRule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear2.rule = ZPlusRule()
         output = model(inputs)
         lrp = LRP(model)
         _ = lrp.attribute(inputs)
@@ -176,8 +176,8 @@ class Test(BaseTest):
         with torch.no_grad():
             model.linear.weight.data[0][0] = -2
         model.eval()
-        model.linear.rule = Alpha1_Beta0_Rule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = ZPlusRule()
+        model.linear2.rule = ZPlusRule()
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([[12, 33.6, 50.4]]))
