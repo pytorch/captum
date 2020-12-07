@@ -3,6 +3,8 @@
 
 Over successive layers, deep neural networks transform the data space so that its dimensions fit the task. Applying component analysis to the intermediate data spaces sheds light into the major features captured by the layers, and can visually surface potential deficiencies of the model or of the training data. 
 
+### NeurIPS 2020
+[Run the demo](https://mbx.juniorrojas.com/)
 
 ### Idea: Probing the embedding space interactively
 
@@ -25,7 +27,25 @@ The Embedding Explorer facilitates exploring embedding spaces via an interactive
 
 ### Example notebook
 Explore the embedding space of a prototypical image classifier -
-[view Colab notebook](https://colab.research.google.com/drive/1NdVAR4b1cwVeibxbh2_q6RVcO3ilaYca?usp=sharing#scrollTo=d4UkWTvB-B5N)
+[Run on Colab](https://colab.research.google.com/drive/1NdVAR4b1cwVeibxbh2_q6RVcO3ilaYca?usp=sharing#scrollTo=d4UkWTvB-B5N)
+
+### Installation instruction
+
+```sh
+git clone --single-branch --branch embedding_explorer https://github.com/pytorch/captum.git
+cd captum/insights/lenses/lenses/frontend
+yarn install
+yarn build
+```
+
+To test the installation:
+
+```sh
+cd captum/insights/lenses
+export PYTHONPATH=.
+python examples/cifar10_embeddings.py
+```
+The application should now be accessible at http://localhost:8031
 
 
 ### What is the value of this analysis?
@@ -38,6 +58,9 @@ When comparing two architectures or two variations of the same models, it is inf
 * **Dataset comparison** <br>
 Comparing the embedding space of two splits or two versions of a dataset is helpful to surface significant deviations in their distribution. It is possible to apply space probing using PCA directly to the dataset space, without having a model.
 
+![output](https://user-images.githubusercontent.com/2767767/90686463-9683a300-e228-11ea-96c7-ecda74981ced.gif)
+
+![corr-pc](https://user-images.githubusercontent.com/2767767/90686933-49ec9780-e229-11ea-8268-98b120c02015.gif)
 
 ## Thank You
 
