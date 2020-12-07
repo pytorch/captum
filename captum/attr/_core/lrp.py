@@ -278,6 +278,18 @@ class LRP(GradientAttribution):
                         )
                     )
 
+    @staticmethod
+    def _no_op_pre_hook(
+        module: Module, inputs: TensorOrTupleOfTensorsGeneric
+    ) -> TensorOrTupleOfTensorsGeneric:
+        """Pre hook for inserting nop node in between modules, used for fixing the hook
+        ordering ambiguity issues.
+        """
+        if isinstance(inputs, tuple):
+            return tuple(x + 0.0 for x in inputs)
+        elif isinstance(inputs, Tensor):
+            return inputs + 0.0
+
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
@@ -286,6 +298,10 @@ class LRP(GradientAttribution):
                 )
                 self.backward_handles.append(backward_handle)
             else:
+                # adding no op node as workaround for hook ordering issues
+                no_op_handle = layer.register_forward_pre_hook(self._no_op_pre_hook)
+                self.forward_handles.append(no_op_handle)
+
                 forward_handle = layer.register_forward_hook(layer.rule.forward_hook)
                 self.forward_handles.append(forward_handle)
                 if self.verbose:
