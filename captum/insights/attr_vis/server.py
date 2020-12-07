@@ -42,7 +42,9 @@ def attribute():
     r = request.get_json(force=True)
     return jsonify(
         namedtuple_to_dict(
-            visualizer._calculate_attribution_from_cache(r["instance"], r["labelIndex"])
+            visualizer._calculate_attribution_from_cache(
+                r["inputIndex"], r["modelIndex"], r["labelIndex"]
+            )
         )
     )
 

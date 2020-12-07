@@ -7,6 +7,7 @@ import { FeatureOutput } from "../models/visualizationOutput";
 
 interface FeatureProps<T> {
   data: T;
+  hideHeaders?: boolean;
 }
 
 type ImageFeatureProps = FeatureProps<{
@@ -18,10 +19,13 @@ type ImageFeatureProps = FeatureProps<{
 function ImageFeature(props: ImageFeatureProps) {
   return (
     <>
-      <div className={styles["panel__column__title"]}>
-        {props.data.name} (Image)
-      </div>
+      {props.hideHeaders && (
+        <div className={styles["panel__column__title"]}>
+          {props.data.name} (Image)
+        </div>
+      )}
       <div className={styles["panel__column__body"]}>
+        <div className={styles["model-number-spacer"]} />
         <div className={styles.gallery}>
           <div className={styles["gallery__item"]}>
             <div className={styles["gallery__item__image"]}>
@@ -73,10 +77,15 @@ function TextFeature(props: TextFeatureProps) {
   });
   return (
     <>
-      <div className={styles["panel__column__title"]}>
-        {props.data.name} (Text)
+      {props.hideHeaders && (
+        <div className={styles["panel__column__title"]}>
+          {props.data.name} (Text)
+        </div>
+      )}
+      <div className={styles["panel__column__body"]}>
+        <div className={styles["model-number-spacer"]} />
+        {color_words}
       </div>
-      <div className={styles["panel__column__body"]}>{color_words}</div>
     </>
   );
 }
@@ -123,13 +132,13 @@ function GeneralFeature(props: GeneralFeatureProps) {
   );
 }
 
-function Feature(props: {data: FeatureOutput}) {
+function Feature(props: { data: FeatureOutput; hideHeaders: boolean }) {
   const data = props.data;
   switch (data.type) {
     case "image":
-      return <ImageFeature data={data} />;
+      return <ImageFeature data={data} hideHeaders={props.hideHeaders} />;
     case "text":
-      return <TextFeature data={data} />;
+      return <TextFeature data={data} hideHeaders={props.hideHeaders} />;
     case "general":
       return <GeneralFeature data={data} />;
     case "empty":
