@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 from abc import ABC, abstractmethod
+from typing import Tuple, Callable
 
 import torch
 
 from ..._utils.common import _format_tensor_into_tuples
+from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Tensor, Module
 
 
 class PropagationRule(ABC):
@@ -15,7 +17,9 @@ class PropagationRule(ABC):
 
     STABILITY_FACTOR = 1e-9
 
-    def forward_hook(self, module, inputs, outputs):
+    def forward_hook(
+        self, module: Module, inputs: TensorOrTupleOfTensorsGeneric, outputs: Tensor
+    ) -> Tensor:
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
         inputs = _format_tensor_into_tuples(inputs)
@@ -32,12 +36,14 @@ class PropagationRule(ABC):
         return outputs.clone()
 
     @staticmethod
-    def backward_hook_activation(module, grad_input, grad_output):
+    def backward_hook_activation(
+        module: Module, grad_input: Tensor, grad_output: Tensor
+    ) -> Tensor:
         """Backward hook to propagate relevance over non-linear activations."""
         return grad_output
 
-    def _create_backward_hook_input(self, inputs):
-        def _backward_hook_input(grad):
+    def _create_backward_hook_input(self, inputs: Tensor) -> Callable[[Tensor], Tensor]:
+        def _backward_hook_input(grad: Tensor) -> Tensor:
             relevance = grad * inputs
             if self._has_single_input:
                 self.relevance_input = relevance.data
@@ -47,8 +53,10 @@ class PropagationRule(ABC):
 
         return _backward_hook_input
 
-    def _create_backward_hook_output(self, outputs):
-        def _backward_hook_output(grad):
+    def _create_backward_hook_output(
+        self, outputs: Tensor
+    ) -> Callable[[Tensor], Tensor]:
+        def _backward_hook_output(grad: Tensor) -> Tensor:
             sign = torch.sign(outputs)
             sign[sign == 0] = 1
             relevance = grad / (outputs + sign * self.STABILITY_FACTOR)
@@ -57,16 +65,26 @@ class PropagationRule(ABC):
 
         return _backward_hook_output
 
-    def forward_hook_weights(self, module, inputs, outputs):
+    def forward_hook_weights(
+        self,
+        module: Module,
+        inputs: Tuple[Tensor, ...],
+        outputs: TensorOrTupleOfTensorsGeneric,
+    ) -> None:
         """Save initial activations a_j before modules are changed"""
         module.activations = tuple(input.data for input in inputs)
         self._manipulate_weights(module, inputs, outputs)
 
     @abstractmethod
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(
+        self,
+        module: Module,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        outputs: TensorOrTupleOfTensorsGeneric,
+    ) -> None:
         raise NotImplementedError
 
-    def forward_pre_hook_activations(self, module, inputs):
+    def forward_pre_hook_activations(self, module: Module, inputs: Tuple[Tensor, ...]):
         """Pass initial activations to graph generation pass"""
         for input, activation in zip(inputs, module.activations):
             input.data = activation
@@ -85,10 +103,15 @@ class EpsilonRule(PropagationRule):
         discriminator during propagation.
     """
 
-    def __init__(self, epsilon=1e-9):
+    def __init__(self, epsilon: float = 1e-9) -> None:
         self.STABILITY_FACTOR = epsilon
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(
+        self,
+        module: Module,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        outputs: TensorOrTupleOfTensorsGeneric,
+    ) -> None:
         pass
 
 
@@ -104,11 +127,16 @@ class GammaRule(PropagationRule):
         the positive relevance is increased.
     """
 
-    def __init__(self, gamma=0.25, set_bias_to_zero=False):
+    def __init__(self, gamma: float = 0.25, set_bias_to_zero: bool = False) -> None:
         self.gamma = gamma
         self.set_bias_to_zero = set_bias_to_zero
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(
+        self,
+        module: Module,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        outputs: TensorOrTupleOfTensorsGeneric,
+    ) -> None:
         if hasattr(module, "weight"):
             module.weight.data = (
                 module.weight.data + self.gamma * module.weight.data.clamp(min=0)
@@ -130,10 +158,15 @@ class Alpha1_Beta0_Rule(PropagationRule):
     Use for lower layers.
     """
 
-    def __init__(self, set_bias_to_zero=False):
+    def __init__(self, set_bias_to_zero: bool = False) -> None:
         self.set_bias_to_zero = set_bias_to_zero
 
-    def _manipulate_weights(self, module, inputs, outputs):
+    def _manipulate_weights(
+        self,
+        module: Module,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        outputs: TensorOrTupleOfTensorsGeneric,
+    ) -> None:
         if hasattr(module, "weight"):
             module.weight.data = module.weight.data.clamp(min=0)
         if self.set_bias_to_zero and hasattr(module, "bias"):
@@ -150,8 +183,8 @@ class IdentityRule(EpsilonRule):
     Can be used for BatchNorm2D.
     """
 
-    def _create_backward_hook_input(self, inputs):
-        def _backward_hook_input(grad):
+    def _create_backward_hook_input(self, inputs: Tensor) -> Callable[[Tensor], Tensor]:
+        def _backward_hook_input(grad: Tensor) -> Tensor:
             return self.relevance_output
 
         return _backward_hook_input

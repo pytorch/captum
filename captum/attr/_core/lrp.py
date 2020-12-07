@@ -2,6 +2,8 @@
 
 import warnings
 
+from typing import Any
+
 import torch
 import torch.nn as nn
 
@@ -10,6 +12,7 @@ from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requir
 from .._utils.attribution import GradientAttribution
 from .._utils.custom_modules import Addition_Module
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
+from ..._utils.typing import Tensor, Module, TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class LRP(GradientAttribution):
@@ -26,7 +29,7 @@ class LRP(GradientAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model):
+    def __init__(self, model: Module) -> None:
         """
         Args:
 
@@ -50,17 +53,17 @@ class LRP(GradientAttribution):
         self._check_rules()
 
     @property
-    def multiplies_by_inputs(self):
+    def multiplies_by_inputs(self) -> bool:
         return True
 
     def attribute(
         self,
-        inputs,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        verbose=False,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        verbose: bool = False,
+    ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
             inputs (tensor or tuple of tensors):  Input for which relevance is
@@ -192,10 +195,12 @@ class LRP(GradientAttribution):
         else:
             return _format_output(is_inputs_tuple, relevances)
 
-    def has_convergence_delta(self):
+    def has_convergence_delta(self) -> bool:
         return True
 
-    def compute_convergence_delta(self, attributions, output):
+    def compute_convergence_delta(
+        self, attributions: TensorOrTupleOfTensorsGeneric, output: Tensor
+    ) -> Tensor:
         """
         Here, we use the completeness property of LRP: The relevance is conserved
         during the propagation through the models' layers. Therefore, the difference
@@ -223,7 +228,7 @@ class LRP(GradientAttribution):
             - **delta** Difference of relevance in output layer and input layer.
         """
 
-        def _attribution_delta(attributions, output):
+        def _attribution_delta(attributions: Tensor, output: Tensor) -> Tensor:
             remaining_dims = tuple(range(1, len(attributions.shape)))
             sum_attributions = torch.sum(attributions, dim=remaining_dims)
             delta = output - sum_attributions
@@ -236,14 +241,14 @@ class LRP(GradientAttribution):
             delta = _attribution_delta(attributions, output)
         return delta
 
-    def _get_layers(self, model):
+    def _get_layers(self, model: Module) -> None:
         for layer in model.children():
             if len(list(layer.children())) == 0:
                 self.layers.append(layer)
             else:
                 self._get_layers(layer)
 
-    def _check_and_attach_rules(self):
+    def _check_and_attach_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 pass
@@ -259,7 +264,7 @@ class LRP(GradientAttribution):
                     )
                 )
 
-    def _check_rules(self):
+    def _check_rules(self) -> None:
         for module in self.model.modules():
             if hasattr(module, "rule"):
                 if (
@@ -273,7 +278,7 @@ class LRP(GradientAttribution):
                         )
                     )
 
-    def _register_forward_hooks(self):
+    def _register_forward_hooks(self) -> None:
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 backward_handle = layer.register_backward_hook(
@@ -286,7 +291,7 @@ class LRP(GradientAttribution):
                 if self.verbose:
                     print(f"Applied {layer.rule} on layer {layer}")
 
-    def _register_weight_hooks(self):
+    def _register_weight_hooks(self) -> None:
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_hook(
@@ -294,7 +299,7 @@ class LRP(GradientAttribution):
                 )
                 self.forward_handles.append(forward_handle)
 
-    def _register_pre_hooks(self):
+    def _register_pre_hooks(self) -> None:
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_pre_hook(
@@ -303,8 +308,11 @@ class LRP(GradientAttribution):
                 self.forward_handles.append(forward_handle)
 
     def _compute_output_and_change_weights(
-        self, inputs, target, additional_forward_args
-    ):
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType,
+        additional_forward_args: Any,
+    ) -> Tensor:
         try:
             self._register_weight_hooks()
             output = _run_forward(self.model, inputs, target, additional_forward_args)
@@ -316,11 +324,11 @@ class LRP(GradientAttribution):
         self._register_pre_hooks()
         return output
 
-    def _remove_forward_hooks(self):
+    def _remove_forward_hooks(self) -> None:
         for forward_handle in self.forward_handles:
             forward_handle.remove()
 
-    def _remove_backward_hooks(self):
+    def _remove_backward_hooks(self) -> None:
         for backward_handle in self.backward_handles:
             backward_handle.remove()
         for layer in self.layers:
@@ -330,27 +338,27 @@ class LRP(GradientAttribution):
             if hasattr(layer.rule, "_handle_output_hook"):
                 layer.rule._handle_output_hook.remove()
 
-    def _remove_rules(self):
+    def _remove_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 del layer.rule
 
-    def _clear_properties(self):
+    def _clear_properties(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "activation"):
                 del layer.activation
 
-    def _restore_state(self):
+    def _restore_state(self) -> None:
         self.model.load_state_dict(self._original_state_dict)
 
-    def _restore_model(self):
+    def _restore_model(self) -> None:
         self._restore_state()
         self._remove_backward_hooks()
         self._remove_forward_hooks()
         self._remove_rules()
         self._clear_properties()
 
-    def _forward_fn_wrapper(self, *inputs):
+    def _forward_fn_wrapper(self, *inputs: Tensor) -> Tensor:
         """
         Wraps a forward function with addition of zero as a workaround to
         https://github.com/pytorch/pytorch/issues/35802 discussed in
