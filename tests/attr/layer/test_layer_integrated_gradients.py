@@ -261,6 +261,7 @@ class Test(BaseTest):
         emb_layers = (
             [model.embedding1, model.embedding2] if multiple_emb else model.embedding1
         )
+        emb_layers = cast(Union[Module, List[Module]], emb_layers)
         lig = LayerIntegratedGradients(
             model, emb_layers, multiply_by_inputs=multiply_by_inputs
         )
