@@ -202,6 +202,7 @@ class FFTImage(ImageParameterization):
                 if init.dim() == 3
                 else (init.size(2), init.size(3))
             )
+        self.torch_rfft, self.torch_irfft = self.get_fft_funcs()
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
@@ -219,7 +220,7 @@ class FFTImage(ImageParameterization):
             )  # names=["C", "H_f", "W_f", "complex"]
             fourier_coeffs = random_coeffs / 50
         else:
-            fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
+            fourier_coeffs = self.torch_rfft(init) / spectrum_scale
 
         fourier_coeffs = self.setup_batch(fourier_coeffs, batch, 4)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
@@ -243,13 +244,27 @@ class FFTImage(ImageParameterization):
         return results * (1.0 / (v * d))
 
     def set_image(self, correlated_image: torch.Tensor) -> None:
-        coeffs = torch.rfft(correlated_image, signal_ndim=2)
+        coeffs = self.torch_rfft(correlated_image, self.s)
         self.fourier_coeffs = coeffs / self.spectrum_scale
+
+    def get_fft_funcs(self) -> Tuple[Callable, Callable]:
+        """Support older versions of PyTorch"""
+        try:
+            import torch.fft
+
+            torch_rfft = lambda x: torch.fft.rfftn(x, s=self.size)  # type: ignore  # noqa: E731 E501
+            torch_irfft = lambda x: torch.fft.irfftn(  # type: ignore  # noqa: E731
+                torch.view_as_complex(x), s=self.size  # noqa: E731
+            )  # noqa: E731
+        except (ImportError, AssertionError):
+            torch_rfft = lambda x: torch.rfft(x, signal_ndim=2)  # noqa: E731
+            torch_irfft = lambda x: torch.irfft(x, signal_ndim=2)  # noqa: E731
+        return torch_rfft, torch_irfft
 
     def forward(self) -> torch.Tensor:
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
-        output = torch.irfft(scaled_spectrum, signal_ndim=2)[:, :, :h, :w]
+        output = self.torch_irfft(scaled_spectrum)[:, :, :h, :w]
         return output.refine_names("B", "C", "H", "W")
 
 
