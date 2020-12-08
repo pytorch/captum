@@ -3,13 +3,13 @@ import unittest
 
 import torch
 
-import captum.optim._utils.datasets as dataset_utils
+import captum.optim._utils.image_dataset as dataset_utils
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorAlmostEqual,
 )
-from tests.optim.helpers import datasets as dataset_helpers
+from tests.optim.helpers import image_dataset as dataset_helpers
 
 
 class TestImageCov(BaseTest):

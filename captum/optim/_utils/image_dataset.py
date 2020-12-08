@@ -44,7 +44,7 @@ def dataset_klt_matrix(
 ) -> torch.Tensor:
     """
     Calculate the color correlation matrix, also known as
-    a Karhunen-Loève transform (KLT), for a dataset.
+    a Karhunen-Loève transform (KLT) matrix, for a dataset.
     The color correlation matrix can then used in color decorrelation
     transforms for models trained on the dataset.
     """
