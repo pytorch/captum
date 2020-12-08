@@ -219,7 +219,16 @@ class FFTImage(ImageParameterization):
             )  # names=["C", "H_f", "W_f", "complex"]
             fourier_coeffs = random_coeffs / 50
         else:
-            fourier_coeffs = torch.rfft(init, signal_ndim=2) / spectrum_scale
+            fourier_coeffs = torch.rfft(init, signal_ndim=2)
+            w = (
+                spectrum_scale.size(2) - fourier_coeffs.size(3)
+                if init.dim() == 4
+                else spectrum_scale.size(2) - fourier_coeffs.size(2)
+            )
+            self.spectrum_scale = (
+                spectrum_scale[:, :, w:, :] if w > 0 else self.spectrum_scale
+            )
+            fourier_coeffs = fourier_coeffs / self.spectrum_scale
 
         fourier_coeffs = self.setup_batch(fourier_coeffs, batch, 4)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
