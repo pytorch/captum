@@ -1,7 +1,7 @@
 """captum.optim.objectives."""
 
 from contextlib import suppress
-from typing import Callable, Iterable, List, Optional
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -13,10 +13,8 @@ from captum.optim._param.image.images import InputParameterization, NaturalImage
 from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
-    ModuleOutputMapping,
     Objective,
     Parameterized,
-    SingleTargetLossFunction,
     StopCriteria,
 )
 

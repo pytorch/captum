@@ -1,9 +1,9 @@
 from copy import deepcopy
-import requests
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 import torch
 import torch.fft
 import torch.nn as nn
@@ -19,7 +19,6 @@ from captum.optim._utils.typing import InitSize, SquashFunc
 
 
 class ImageTensor(torch.Tensor):
-
     @classmethod
     def open(cls, path: str, scale: float = 255.0):
         if path.startswith("https://") or path.startswith("http://"):
@@ -35,10 +34,14 @@ class ImageTensor(torch.Tensor):
         indent = len(prefix)
         tensor_str = torch._tensor_str._tensor_str(self, indent)
         suffixes = []
-        if self.device.type != torch._C._get_default_device()\
-            or (self.device.type == 'cuda' and torch.cuda.current_device() != self.device.index):
-            suffixes.append('device=\'' + str(self.device) + '\'')
-        return torch._tensor_str._add_suffixes(prefix + tensor_str, suffixes, indent, force_newline=self.is_sparse)
+        if self.device.type != torch._C._get_default_device() or (
+            self.device.type == "cuda"
+            and torch.cuda.current_device() != self.device.index
+        ):
+            suffixes.append("device='" + str(self.device) + "'")
+        return torch._tensor_str._add_suffixes(
+            prefix + tensor_str, suffixes, indent, force_newline=self.is_sparse
+        )
 
     def show(self, scale: float = 255.0) -> None:
         if len(self.shape) == 3:
