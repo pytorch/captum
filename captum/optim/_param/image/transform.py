@@ -40,7 +40,7 @@ class IgnoreAlpha(nn.Module):
 
 class ToRGB(nn.Module):
     """Transforms arbitrary channels to RGB. We use this to ensure our
-    image parameteriaztion itself can be decorrelated. So this goes between
+    image parameterization itself can be decorrelated. So this goes between
     the image parameterization and the normalization/sigmoid step.
     We offer two transforms: Karhunen-Loève (KLT) and I1I2I3.
     KLT corresponds to the empirically measured channel correlations on imagenet.
@@ -162,8 +162,8 @@ class RandomScale(nn.Module):
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        grid = F.affine_grid(scale_matrix, x.size())
-        x = F.grid_sample(x, grid)
+        grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
+        x = F.grid_sample(x, grid, align_corners=False)
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:

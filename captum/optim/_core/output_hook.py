@@ -3,7 +3,7 @@ from warnings import warn
 
 import torch.nn as nn
 
-# from clarity.pytorch import ModuleOutputMapping
+from captum.optim._utils.typing import ModuleOutputMapping
 
 
 class AbortForwardException(Exception):
@@ -14,32 +14,9 @@ class ModuleReuseException(Exception):
     pass
 
 
-# class SingleTargetHook:
-#     def __init__(self, module: nn.Module):
-#         self.saved_output = None
-#         self.target_modules = [module]
-#         self.remove_forward = module.register_forward_hook(self._forward_hook())
-
-#     @property
-#     def is_ready(self) -> bool:
-#         return self.saved_output is not None
-
-#     def _forward_hook(self):
-#         def forward_hook(module, input, output):
-#             assert self.module == module
-#             self.saved_output = output
-#             raise AbortForwardException("Forward hook called, output saved.")
-
-#         return forward_hook
-
-#     def __del__(self):
-#         self.remove_forward()
-
-
 class ModuleOutputsHook:
     def __init__(self, target_modules: Iterable[nn.Module]) -> None:
-        # self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
-        self.outputs = dict.fromkeys(target_modules, None)
+        self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
             for module in target_modules
@@ -67,7 +44,7 @@ class ModuleOutputsHook:
 
         return forward_hook
 
-    def consume_outputs(self):  # -> ModuleOutputMapping:
+    def consume_outputs(self) -> ModuleOutputMapping:
         if not self.is_ready:
             warn(
                 "Consume captured outputs, but not all requested target outputs "

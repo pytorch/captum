@@ -11,6 +11,8 @@ from captum.optim._utils.typing import ModuleOutputMapping
 class Loss(ABC):
     """
     Abstract Class to describe loss.
+    Note: All Loss classes should expose self.target for hooking by
+    InputOptimization
     """
 
     def __init__(self, target: nn.Module) -> None:
@@ -18,7 +20,7 @@ class Loss(ABC):
         self.target = target
 
     @abstractmethod
-    def __call__(self, targets_to_values: ModuleOutputMapping):
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         pass
 
 
@@ -184,6 +186,7 @@ class ActivationInterpolation(Loss):
         self.channel_index_one = channel_index1
         self.target_two = target2
         self.channel_index_two = channel_index2
+        self.target = [target1, target2] # Exposing targets for InputOptimization
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_one = targets_to_values[self.target_one]
