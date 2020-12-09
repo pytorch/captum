@@ -23,8 +23,11 @@ class BlendAlpha(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.size(1) == 4
+        assert x.dim() == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
-        background = self.background or torch.rand_like(rgb)
+        background = (
+            self.background if self.background is not None else torch.rand_like(rgb)
+        )
         blended = alpha * rgb + (1 - alpha) * background
         return blended
 
@@ -83,7 +86,10 @@ class ToRGB(nn.Module):
         # alpha channel is taken off...
         has_alpha = x.size("C") == 4
         if has_alpha:
-            x, alpha_channel = x[:3], x[3:]
+            if x.dim() == 3:
+                x, alpha_channel = x[:3], x[3:]
+            elif x.dim() == 4:
+                x, alpha_channel = x[:, :3], x[:, 3:]
             assert x.dim() == alpha_channel.dim()  # ensure we "keep_dim"
 
         h, w = x.size("H"), x.size("W")
@@ -101,7 +107,8 @@ class ToRGB(nn.Module):
 
         # ...alpha channel is concatenated on again.
         if has_alpha:
-            chw = torch.cat([chw, alpha_channel], 0)
+            d = 0 if x.dim() == 3 else 1
+            chw = torch.cat([chw, alpha_channel], d)
 
         return chw
 
@@ -115,7 +122,14 @@ class CenterCrop(torch.nn.Module):
 
     def __init__(self, size: TransformSize = 0) -> None:
         super(CenterCrop, self).__init__()
-        self.crop_val = [size] * 2 if size is not list and size is not tuple else size
+        if type(size) is list or type(size) is tuple:
+            assert len(size) == 2, (
+                "CenterCrop requires a single crop value or a tuple of (height,width)"
+                + "in pixels for cropping."
+            )
+            self.crop_val = size
+        else:
+            self.crop_val = [size] * 2
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         assert (
