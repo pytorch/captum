@@ -75,4 +75,4 @@ class FFTImage(object):
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = np.fft.rfftn(scaled_spectrum, s=self.size)
-        return output
+        return output.view(dtype=np.complex128)[..., 0]
