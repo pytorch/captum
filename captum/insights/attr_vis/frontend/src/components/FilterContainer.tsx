@@ -28,7 +28,10 @@ interface FilterContainerState {
   method_arguments: MethodsArguments;
 }
 
-class FilterContainer extends React.Component<FilterContainerProps, FilterContainerState> {
+class FilterContainer extends React.Component<
+  FilterContainerProps,
+  FilterContainerState
+> {
   constructor(props: FilterContainerProps) {
     super(props);
     const suggested_classes = props.config.classes.map((c, classId) => ({
@@ -47,7 +50,10 @@ class FilterContainer extends React.Component<FilterContainerProps, FilterContai
   handleClassDelete = (classId: number) => {
     const classes = this.state.classes.slice(0);
     const removed_class = classes.splice(classId, 1);
-    const suggested_classes = [...this.state.suggested_classes, ...removed_class];
+    const suggested_classes = [
+      ...this.state.suggested_classes,
+      ...removed_class,
+    ];
     this.setState({ classes, suggested_classes });
   };
 
