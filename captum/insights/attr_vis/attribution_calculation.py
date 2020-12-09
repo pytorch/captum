@@ -49,11 +49,11 @@ class AttributionCalculation(object):
     ) -> Tuple[
         List[OutputScore], Optional[List[Tuple[Tensor, ...]]], Tuple[Tensor, ...]
     ]:
-        # Check to see if these inputs already have caches baselines and transformed inputs
-        hashableInputs = tuple(inputs)
-        if hashableInputs in self.baseline_cache:
-            baselines_group = self.baseline_cache[hashableInputs]
-            transformed_inputs = self.transformed_input_cache[hashableInputs]
+        # Check if inputs have cached baselines and transformed inputs
+        hashable_inputs = tuple(inputs)
+        if hashable_inputs in self.baseline_cache:
+            baselines_group = self.baseline_cache[hashable_inputs]
+            transformed_inputs = self.transformed_input_cache[hashable_inputs]
         else:
             # Initialize baselines
             baseline_transforms_len = 1  # todo support multiple baselines
@@ -79,8 +79,8 @@ class AttributionCalculation(object):
 
             baselines = cast(List[List[Optional[Tensor]]], baselines)
             baselines_group = [tuple(b) for b in baselines]
-            self.baseline_cache[hashableInputs] = baselines_group
-            self.transformed_input_cache[hashableInputs] = transformed_inputs
+            self.baseline_cache[hashable_inputs] = baselines_group
+            self.transformed_input_cache[hashable_inputs] = transformed_inputs
 
         outputs = _run_forward(
             model,

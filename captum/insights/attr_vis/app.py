@@ -3,7 +3,6 @@ from collections import namedtuple
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     Iterable,
     List,
@@ -150,8 +149,8 @@ class AttributionVisualizer(object):
         r"""
         Args:
 
-            models (torch.nn.module): One or more PyTorch modules (models) for attribution
-                          visualization.
+            models (torch.nn.module): One or more PyTorch modules (models) for
+                          attribution visualization.
             classes (list of string): List of strings corresponding to the names of
                           classes for classification.
             features (list of BaseFeature): List of BaseFeatures, which correspond
@@ -399,27 +398,25 @@ class AttributionVisualizer(object):
             # *an input contains multiple features that represent it
             #   e.g. all the pixels that describe an image is an input
 
-            attrs_per_input_feature = (
-                self.attribution_calculation.calculate_attribution(
-                    baselines,
-                    transformed_inputs,
-                    additional_forward_args,
-                    target,
-                    self._config.attribution_method,
-                    self._config.attribution_arguments,
-                    model,
-                )
+            attrs_per_feature = self.attribution_calculation.calculate_attribution(
+                baselines,
+                transformed_inputs,
+                additional_forward_args,
+                target,
+                self._config.attribution_method,
+                self._config.attribution_arguments,
+                model,
             )
 
             net_contrib = self.attribution_calculation.calculate_net_contrib(
-                attrs_per_input_feature
+                attrs_per_feature
             )
 
             # the features per input given
             features_per_input = [
                 feature.visualize(attr, data, contrib)
                 for feature, attr, data, contrib in zip(
-                    self.features, attrs_per_input_feature, inputs, net_contrib
+                    self.features, attrs_per_feature, inputs, net_contrib
                 )
             ]
 
