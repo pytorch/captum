@@ -6,7 +6,11 @@ from typing import Callable, Iterable, List, Optional
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from tqdm.auto import tqdm
+
+try:
+    from tqdm.auto import tqdm
+except (ImportError, AssertionError):
+    print("The tqdm package is required to use Captum's Optim library")
 
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
