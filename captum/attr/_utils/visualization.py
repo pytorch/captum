@@ -516,7 +516,7 @@ def visualize_text(
     datarecords: Iterable[VisualizationDataRecord],
     legend: bool = True,
     return_html: bool = False,
-) -> Union[None, HTML]:
+) -> HTML:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -571,7 +571,5 @@ def visualize_text(
     dom.append("</table>")
     html = HTML("".join(dom))
     display(html)
-    if return_html:
-        return html
-    else:
-        return None
+
+    return html
