@@ -244,7 +244,7 @@ class FFTImage(ImageParameterization):
         return results * (1.0 / (v * d))
 
     def set_image(self, correlated_image: torch.Tensor) -> None:
-        coeffs = self.torch_rfft(correlated_image, self.s)
+        coeffs = self.torch_rfft(correlated_image)
         self.fourier_coeffs = coeffs / self.spectrum_scale
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable]:
@@ -252,19 +252,24 @@ class FFTImage(ImageParameterization):
         try:
             import torch.fft
 
-            torch_rfft = lambda x: torch.fft.rfftn(x, s=self.size)  # type: ignore  # noqa: E731 E501
-            torch_irfft = lambda x: torch.fft.irfftn(  # type: ignore  # noqa: E731
-                torch.view_as_complex(x), s=self.size  # noqa: E731
-            )  # noqa: E731
+            torch_rfft = lambda x: torch.view_as_real(torch.fft.rfftn(x, s=self.size))  # type: ignore  # noqa: E731 E501
+
+            def torch_irfft(x: torch.Tensor) -> torch.Tensor:
+                if type(x) is not torch.complex64:
+                    x = torch.view_as_complex(x)
+                return torch.fft.irfftn(x, s=self.size)  # type: ignore
+
         except (ImportError, AssertionError):
             torch_rfft = lambda x: torch.rfft(x, signal_ndim=2)  # noqa: E731
-            torch_irfft = lambda x: torch.irfft(x, signal_ndim=2)  # noqa: E731
+            torch_irfft = lambda x: torch.irfft(x, signal_ndim=2)[  # noqa: E731
+                :, :, : self.size[0], : self.size[1]  # noqa: E731
+            ]  # noqa: E731
         return torch_rfft, torch_irfft
 
     def forward(self) -> torch.Tensor:
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
-        output = self.torch_irfft(scaled_spectrum)[:, :, :h, :w]
+        output = self.torch_irfft(scaled_spectrum)
         return output.refine_names("B", "C", "H", "W")
 
 
