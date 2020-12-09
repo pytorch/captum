@@ -260,6 +260,8 @@ class FFTImage(ImageParameterization):
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         except (ImportError, AssertionError):
+            import torch
+
             torch_rfft = lambda x: torch.rfft(x, signal_ndim=2)  # noqa: E731
             torch_irfft = lambda x: torch.irfft(x, signal_ndim=2)[  # noqa: E731
                 :, :, : self.size[0], : self.size[1]  # noqa: E731

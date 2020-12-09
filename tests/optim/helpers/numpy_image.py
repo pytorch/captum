@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 
 def setup_batch(x: np.ndarray, batch: int = 1, dim: int = 3) -> np.ndarray:
@@ -52,8 +51,7 @@ class FFTImage(object):
             fourier_coeffs = random_coeffs / 50
         else:
             fourier_coeffs = (
-                torch.rfft(torch.from_numpy(init), signal_ndim=2).numpy()
-                / spectrum_scale
+                np.fft.rfftn(init, s=self.size).view("(2,)float") / spectrum_scale
             )
             fourier_coeffs = fourier_coeffs / spectrum_scale
 
@@ -70,13 +68,11 @@ class FFTImage(object):
         return np.sqrt((fx * fx) + (fy * fy))
 
     def set_image(self, correlated_image: np.ndarray) -> None:
-        coeffs = torch.rfft(torch.from_numpy(correlated_image), signal_ndim=2).numpy()
+        coeffs = np.fft.rfftn(correlated_image, s=self.size).view("(2,)float")
         self.fourier_coeffs = coeffs / self.spectrum_scale
 
     def forward(self) -> np.ndarray:
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
-        output = torch.irfft(torch.from_numpy(scaled_spectrum), signal_ndim=2)[
-            :, :, :h, :w
-        ]
-        return output.numpy()
+        output = np.fft.rfftn(scaled_spectrum, s=self.size)
+        return output
