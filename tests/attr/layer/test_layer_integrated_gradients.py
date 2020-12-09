@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-from typing import Any, Generic, List, Tuple, Union, cast
+from typing import Any, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from captum._utils.typing import ModuleOrModuleList
 from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.layer.layer_activation import LayerActivation
 from captum.attr._core.layer.layer_conductance import LayerConductance
@@ -262,7 +261,6 @@ class Test(BaseTest):
         emb_layers = (
             [model.embedding1, model.embedding2] if multiple_emb else model.embedding1
         )
-        emb_layers = cast(Generic[ModuleOrModuleList], emb_layers)
         lig = LayerIntegratedGradients(
             model, emb_layers, multiply_by_inputs=multiply_by_inputs
         )
