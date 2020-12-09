@@ -45,12 +45,9 @@ class RedirectedReLU(torch.autograd.Function):
     @staticmethod
     def backward(self, grad_output: torch.Tensor) -> torch.Tensor:
         (input_tensor,) = self.saved_tensors
-        relu_grad = grad_output.clone()
-        relu_grad[input_tensor < 0] = 0
-        if torch.equal(relu_grad, torch.zeros_like(relu_grad)):
-            # Let gradients flow without zeroing
-            return grad_output.clone()
-        return relu_grad
+        grad_input = grad_output.clone()
+        grad_input[input_tensor < 0] = grad_input[input_tensor < 0] * 1e-1
+        return grad_input
 
 
 class RedirectedReluLayer(nn.Module):
