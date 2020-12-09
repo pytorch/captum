@@ -513,9 +513,7 @@ def format_word_importances(words, importances):
 
 
 def visualize_text(
-    datarecords: Iterable[VisualizationDataRecord],
-    legend: bool = True,
-    return_html: bool = False,
+    datarecords: Iterable[VisualizationDataRecord], legend: bool = True
 ) -> HTML:
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
