@@ -176,8 +176,13 @@ class RandomScale(nn.Module):
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
-        x = F.grid_sample(x, grid, align_corners=False)
+        try:
+            # Pass align_corners explicitly for torch >= 1.3.0
+            grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
+            x = F.grid_sample(x, grid, align_corners=False)
+        except TypeError:
+            grid = F.affine_grid(scale_matrix, x.size())
+            x = F.grid_sample(x, grid)
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
