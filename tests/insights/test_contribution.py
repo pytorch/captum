@@ -167,7 +167,7 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            total_contrib = sum(abs(f.contribution) for f in output[0].feature_outputs)
             self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     def test_multi_features(self):
@@ -210,7 +210,7 @@ class Test(BaseTest):
         outputs = visualizer.visualize()
 
         for output in outputs:
-            total_contrib = sum(abs(f.contribution) for f in output.feature_outputs)
+            total_contrib = sum(abs(f.contribution) for f in output[0].feature_outputs)
             self.assertAlmostEqual(total_contrib, 1.0, places=6)
 
     # TODO: add test for multiple models (related to TODO in captum/insights/api.py)

@@ -354,6 +354,43 @@ def _format_output(
     return output if is_inputs_tuple else output[0]
 
 
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    ...
+
+
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    assert isinstance(outputs, list), "Outputs must be a list"
+    assert is_multiple_inputs or len(outputs) == 1, (
+        "outputs should contain multiple inputs or have a single output"
+        f"however the number of outputs is: {len(outputs)}"
+    )
+
+    return (
+        [_format_output(len(output) > 1, output) for output in outputs]
+        if is_multiple_inputs
+        else _format_output(len(outputs[0]) > 1, outputs[0])
+    )
+
+
 def _run_forward(
     forward_func: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],
