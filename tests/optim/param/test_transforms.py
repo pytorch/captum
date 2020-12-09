@@ -344,5 +344,22 @@ class TestGaussianSmoothing(BaseTest):
         self.assertGreaterEqual(t_min, 3.3377e-06)
 
 
+class TestScaleInputRange(BaseTest):
+    def test_scale_input_range(self) -> None:
+        x = torch.ones(1, 3, 4, 4)
+        scale_input = transform.ScaleInputRange(255)
+        output_tensor = scale_input(x)
+        self.assertEqual(output_tensor.mean(), 255.0)
+
+
+class TestRGBToBGR(BaseTest):
+    def test_rgb_to_bgr(self) -> None:
+        x = torch.randn(1, 3, 224, 224)
+        rgb_to_bgr = transform.RGBToBGR()
+        output_tensor = rgb_to_bgr(x)
+        expected_x = x[:, [2, 1, 0]]
+        assertTensorAlmostEqual(self, output_tensor, expected_x)
+
+
 if __name__ == "__main__":
     unittest.main()
