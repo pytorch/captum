@@ -257,13 +257,18 @@ class Test(BaseTest):
         multiple_emb: bool = False,
     ):
         model = BasicEmbeddingModel(nested_second_embedding=True)
+        if multiple_emb:
+            module_list: List[Module] = [model.embedding1, model.embedding2]
+            lig = LayerIntegratedGradients(
+                model,
+                module_list,
+                multiply_by_inputs=multiply_by_inputs,
+            )
+        else:
+            lig = LayerIntegratedGradients(
+                model, model.embedding1, multiply_by_inputs=multiply_by_inputs
+            )
 
-        emb_layers = (
-            [model.embedding1, model.embedding2] if multiple_emb else model.embedding1
-        )
-        lig = LayerIntegratedGradients(
-            model, emb_layers, multiply_by_inputs=multiply_by_inputs
-        )
         attributions, delta = lig.attribute(
             input,
             baselines=baseline,
