@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Tuple, cast
+from typing import Any, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -144,7 +144,7 @@ class Test(BaseTest):
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
         n_samples_batch_size=None,
-    ) -> TensorOrTupleOfTensorsGeneric:
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         saliency = Saliency(model)
 
         self.assertFalse(saliency.multiplies_by_inputs)
