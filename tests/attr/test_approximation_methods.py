@@ -7,7 +7,7 @@ from tests.helpers.basic import assertArraysAlmostEqual
 
 
 class Test(unittest.TestCase):
-    def __init__(self, methodName="runTest"):
+    def __init__(self, methodName="runTest") -> None:
         super().__init__(methodName)
 
     def test_riemann_0(self):

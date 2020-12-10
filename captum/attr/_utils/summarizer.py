@@ -27,7 +27,7 @@ class Summarizer:
     """
 
     @log_usage()
-    def __init__(self, stats: List[Stat]):
+    def __init__(self, stats: List[Stat]) -> None:
         r"""
         Args:
             stats (List[Stat]):
@@ -168,7 +168,7 @@ class SummarizerSingleTensor:
     If possible use `Summarizer` instead.
     """
 
-    def __init__(self, stats: List[Stat], summary_stats_indices: List[int]):
+    def __init__(self, stats: List[Stat], summary_stats_indices: List[int]) -> None:
         r"""
         Args:
             stats (list of Stat): A list of all the Stat objects that

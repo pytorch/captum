@@ -70,7 +70,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
         model: Module,
         layer: Module,
         multiply_by_inputs: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 

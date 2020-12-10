@@ -35,7 +35,7 @@ class AttributionCalculation(object):
         features: List[BaseFeature],
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
-    ):
+    ) -> None:
         self.models = models
         self.classes = classes
         self.features = features

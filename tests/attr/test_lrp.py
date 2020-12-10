@@ -42,7 +42,7 @@ def _get_simple_model(inplace=False):
 
 def _get_simple_model2(inplace=False):
     class MyModel(nn.Module):
-        def __init__(self, inplace):
+        def __init__(self, inplace) -> None:
             super().__init__()
             self.lin = nn.Linear(2, 2)
             self.lin.weight = nn.Parameter(torch.ones(2, 2))
@@ -138,7 +138,7 @@ class Test(BaseTest):
 
     def test_lrp_simple_tanh(self):
         class Model(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super(Model, self).__init__()
                 self.linear = nn.Linear(3, 3, bias=False)
                 self.linear.weight.data.fill_(0.1)
@@ -203,14 +203,14 @@ class Test(BaseTest):
         # A custom addition module needs to be used so that relevance is
         # propagated correctly.
         class Addition_Module(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
 
             def forward(self, x1, x2):
                 return x1 + x2
 
         class SkipConnection(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.linear = nn.Linear(2, 2, bias=False)
                 self.linear.weight.data.fill_(5)
@@ -229,7 +229,7 @@ class Test(BaseTest):
 
     def test_lrp_maxpool1D(self):
         class MaxPoolModel(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.linear = nn.Linear(2, 2, bias=False)
                 self.linear.weight.data.fill_(2.0)
@@ -246,7 +246,7 @@ class Test(BaseTest):
 
     def test_lrp_maxpool2D(self):
         class MaxPoolModel(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.maxpool = nn.MaxPool2d(2)
 
@@ -263,7 +263,7 @@ class Test(BaseTest):
 
     def test_lrp_maxpool3D(self):
         class MaxPoolModel(nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.maxpool = nn.MaxPool3d(2)
 

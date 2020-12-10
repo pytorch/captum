@@ -25,7 +25,7 @@ class CaptumInsights(widgets.DOMWidget):
     config = Dict().tag(sync=True)
     output = List().tag(sync=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super(CaptumInsights, self).__init__(**kwargs)
         self.insights_config = self.visualizer.get_insights_config()
         self.out = widgets.Output()
