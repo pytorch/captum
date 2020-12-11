@@ -373,15 +373,13 @@ class SharedImage(ImageParameterization):
 
     def __init__(
         self,
-        shared_shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
+        shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
         parameterization=None,
         offset: Union[int, Tuple[int], Tuple[Tuple[int]], None] = None,
     ) -> None:
         super().__init__()
         A = []
-        shared_shapes = (
-            [shared_shapes] if type(shared_shapes[0]) is not tuple else shared_shapes
-        )
+        shared_shapes = [shapes] if type(shapes[0]) is not tuple else shapes
         for shape in shared_shapes:
             assert len(shape) >= 2 and len(shape) <= 4
             shape = ([1] * (4 - len(shape))) + list(shape)
@@ -394,9 +392,7 @@ class SharedImage(ImageParameterization):
     def get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
         if type(offset) is tuple or type(offset) is list:
             if type(offset[0]) is tuple or type(offset[0]) is list:
-                assert len(offset) == n and all(
-                    [len(o) == 4 for o in t] for t in offset
-                )
+                assert len(offset) == n and all(len(t) == 4 for t in offset)
             else:
                 assert len(offset) >= 1 and len(offset) <= 4
                 offset = [([0] * (4 - len(offset))) + list(offset)] * n
