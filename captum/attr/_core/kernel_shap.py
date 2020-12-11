@@ -9,9 +9,8 @@ from torch import Tensor
 from captum._utils.models.linear_model import SkLearnLinearRegression
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._core.lime import Lime
-from captum.log import log_usage
-
 from captum.attr._utils.common import lime_n_perturb_samples_deprecation_decorator
+from captum.log import log_usage
 
 
 def combination(n: int, k: int) -> int:
