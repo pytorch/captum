@@ -11,6 +11,8 @@ from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensor
 from captum.attr._core.lime import Lime
 from captum.log import log_usage
 
+from captum.attr._utils.common import lime_n_perturb_samples_deprecation_decorator
+
 
 def combination(n: int, k: int) -> int:
     try:
@@ -72,6 +74,7 @@ class KernelShap(Lime):
         )
 
     @log_usage()
+    @lime_n_perturb_samples_deprecation_decorator
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -79,7 +82,7 @@ class KernelShap(Lime):
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_perturb_samples: int = 25,
+        n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -213,9 +216,9 @@ class KernelShap(Lime):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_perturb_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretable model.
-                        Default: `50` if `n_perturb_samples` is not provided.
+                        Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -266,7 +269,7 @@ class KernelShap(Lime):
             >>> ks = KernelShap(net)
             >>> # Computes attribution, with each of the 4 x 4 = 16
             >>> # features as a separate interpretable feature
-            >>> attr = ks.attribute(input, target=1, n_perturb_samples=200)
+            >>> attr = ks.attribute(input, target=1, n_samples=200)
 
             >>> # Alternatively, we can group each 2x2 square of the inputs
             >>> # as one 'interpretable' feature and perturb them together.
@@ -299,7 +302,7 @@ class KernelShap(Lime):
             target=target,
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
-            n_perturb_samples=n_perturb_samples,
+            n_samples=n_samples,
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
         )
