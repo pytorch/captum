@@ -8,7 +8,7 @@ from captum.optim._models.inception_v1 import googlenet
 from tests.helpers.basic import BaseTest
 
 
-class TestReplaceLayers(BaseTest):
+class TestActivationCatcher(BaseTest):
     def test_activation_catcher(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
