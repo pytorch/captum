@@ -310,5 +310,22 @@ class TestGetLayers(BaseTest):
         self.assertEqual(collected_layers, expected_list)
 
 
+class TestActivationCatcher(BaseTest):
+    def test_activation_catcher(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping ActivationCatcher test due to insufficient Torch version."
+            )
+        model = googlenet(pretrained=True)
+        try:
+            catch_activ = model_utils.ActivationCatcher(targets=[model.mixed4d])
+            activ_out = catch_activ(model, torch.zeros(1, 3, 224, 224))
+            self.assertIsInstance(activ_out, dict)
+            test = True
+        except Exception:
+            test = False
+        self.assertTrue(test)
+
+
 if __name__ == "__main__":
     unittest.main()
