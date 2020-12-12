@@ -234,7 +234,6 @@ class InceptionModule(nn.Module):
             out_channels=c5x5,
             kernel_size=(5, 5),
             stride=(1, 1),
-            padding=(2, 2),
             groups=1,
             bias=True,
         )
