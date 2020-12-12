@@ -262,6 +262,7 @@ class InceptionModule(nn.Module):
 
         c5x5 = self.conv_5x5_reduce(x)
         c5x5 = self.conv_5x5_reduce_relu(c5x5)
+        c5x5 = F.pad(c5x5, (2, 2, 2, 2))
         c5x5 = self.conv_5x5(c5x5)
         c5x5 = self.conv_5x5_relu(c5x5)
 
