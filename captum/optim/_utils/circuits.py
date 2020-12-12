@@ -3,7 +3,7 @@ from typing import List, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.circuits import ActivationCatcher
+from captum.optim._utils.models import ActivationCatcher
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
