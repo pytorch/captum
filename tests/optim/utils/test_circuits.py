@@ -25,17 +25,6 @@ class TestActivationCatcher(BaseTest):
         self.assertTrue(test)
 
 
-class TestMax2AvgPool(BaseTest):
-    def test_max2avg_pool(self) -> None:
-        if torch.__version__ == "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping max2avg_pool test due to insufficient Torch version."
-            )
-        model = googlenet(pretrained=True)
-        circuits.max2avg_pool(model)
-        check_is_not_instance(self, model, torch.nn.MaxPool2d)
-
-
 class TestGetExpandedWeights(BaseTest):
     def test_get_expanded_weights(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -47,13 +36,6 @@ class TestGetExpandedWeights(BaseTest):
             model, model.mixed4c, model.mixed4d
         )
         self.assertTrue(torch.is_tensor(output_tensor))
-
-
-def check_is_not_instance(self, model, layer) -> None:
-    for name, child in model._modules.items():
-        if child is not None:
-            self.assertNotIsInstance(child, layer)
-            check_is_not_instance(self, child, layer)
 
 
 if __name__ == "__main__":

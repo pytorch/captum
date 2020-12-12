@@ -7,3 +7,5 @@ from captum.optim._param.image import images  # noqa: F401
 from captum.optim._param.image import transform  # noqa: F401
 from captum.optim._param.image.images import ImageTensor  # noqa: F401
 from captum.optim._utils import models  # noqa: F401
+from captum.optim._utils.circuits import get_expanded_weights  # noqa: F401
+from captum.optim._utils.reducer import ChannelReducer  # noqa: F401

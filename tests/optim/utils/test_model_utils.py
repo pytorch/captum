@@ -71,6 +71,13 @@ class TestRedirectedReluLayer(BaseTest):
         assertTensorAlmostEqual(self, t_grad_input[0], t_grad_output[0], 0)
 
 
+def check_is_not_instance(self, model, layer) -> None:
+    for name, child in model._modules.items():
+        if child is not None:
+            self.assertNotIsInstance(child, layer)
+            check_is_not_instance(self, child, layer)
+
+
 class TestReplaceLayers(BaseTest):
     def test_replace_layers(self) -> None:
         class BasicReluModule(torch.nn.Module):
@@ -97,11 +104,20 @@ class TestReplaceLayers(BaseTest):
         # Unittest can't run replace_layers correctly?
         model_utils.replace_layers(toy_model.relu2, old_layer, new_layer)
 
-        self.assertNotIsInstance(toy_model.relu1, old_layer)
+        check_is_not_instance(self, toy_model, old_layer)
         self.assertIsInstance(toy_model.relu1, new_layer)
-
-        self.assertNotIsInstance(toy_model.relu2.relu, old_layer)
         self.assertIsInstance(toy_model.relu2.relu, new_layer)
+
+
+class TestMax2AvgPool(BaseTest):
+    def test_max2avg_pool(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping max2avg_pool test due to insufficient Torch version."
+            )
+        model = googlenet(pretrained=True)
+        model_utils.max2avg_pool(model)
+        check_is_not_instance(self, model, torch.nn.MaxPool2d)
 
 
 class TestGetLayers(BaseTest):
