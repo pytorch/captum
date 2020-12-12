@@ -1,11 +1,18 @@
+import functools
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
 
 from captum.optim._utils.images import get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
+
+
+def _make_arg_str(arg):
+    arg = str(arg)
+    too_big = len(arg) > 15 or "\n" in arg
+    return "..." if too_big else arg
 
 
 class Loss(ABC):
@@ -23,7 +30,88 @@ class Loss(ABC):
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         pass
 
+    def __repr__(self):
+        return self.__name__
 
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+
+            def loss_fn(module):
+                return other + self(module)
+
+            name = self.__name__
+            target = self.target
+        else:
+            # We take the mean of the output tensor to resolve shape mismatches
+            def loss_fn(module):
+                return torch.mean(self(module)) + torch.mean(other(module))
+
+            name = f"Compose({', '.join([self.__name__, other.__name__])})"
+            target = (
+                self.target if hasattr(self.target, "__iter__") else [self.target]
+            ) + (other.target if hasattr(other.target, "__iter__") else [other.target])
+        return CompositeLoss(loss_fn, name=name, target=target)
+
+    def __neg__(self):
+        return -1 * self
+
+    def __sub__(self, other):
+        return self + (-1 * other)
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+
+            def loss_fn(module):
+                return other * self(module)
+
+            return CompositeLoss(loss_fn, name=self.__name__, target=self.target)
+        else:
+            raise TypeError(
+                "Can only multiply by int or float. Received type " + str(type(other))
+            )
+
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return self.__mul__(1 / other)
+        else:
+            raise TypeError(
+                "Can only divide by int or float. Received type " + str(type(other))
+            )
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+
+class CompositeLoss(Loss):
+    def __init__(self, loss_fn: Callable, name: str = "", target: nn.Module = []):
+        super(Loss, self).__init__()
+        self.__name__ = name
+        self.loss_fn = loss_fn
+        self.target = target
+
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+        return self.loss_fn(targets_to_values)
+
+
+def loss_wrapper(cls):
+    """
+    Primarily for naming purposes.
+    """
+
+    @functools.wraps(cls)
+    def wrapper(*args, **kwargs):
+        obj = cls(*args, **kwargs)
+        args_str = " [" + ", ".join([_make_arg_str(arg) for arg in args]) + "]"
+        obj.__name__ = cls.__name__ + args_str
+        return obj
+
+    return wrapper
+
+
+@loss_wrapper
 class LayerActivation(Loss):
     """
     Maximize activations at the target layer.
@@ -33,6 +121,7 @@ class LayerActivation(Loss):
         return targets_to_values[self.target]
 
 
+@loss_wrapper
 class ChannelActivation(Loss):
     """
     Maximize activations at the target layer and target channel.
@@ -54,6 +143,7 @@ class ChannelActivation(Loss):
         return activations[:, self.channel_index, ...]
 
 
+@loss_wrapper
 class NeuronActivation(Loss):
     def __init__(
         self,
@@ -82,6 +172,7 @@ class NeuronActivation(Loss):
         return activations[:, self.channel_index, _x, _y]
 
 
+@loss_wrapper
 class DeepDream(Loss):
     """
     Maximize 'interestingness' at the target layer.
@@ -93,6 +184,7 @@ class DeepDream(Loss):
         return activations ** 2
 
 
+@loss_wrapper
 class TotalVariation(Loss):
     """
     Total variation denoising penalty for activations.
@@ -107,6 +199,7 @@ class TotalVariation(Loss):
         return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
 
 
+@loss_wrapper
 class L1(Loss):
     """
     L1 norm of the target layer, generally used as a penalty.
@@ -122,6 +215,7 @@ class L1(Loss):
         return torch.abs(activations - self.constant).sum()
 
 
+@loss_wrapper
 class L2(Loss):
     """
     L2 norm of the target layer, generally used as a penalty.
@@ -140,6 +234,7 @@ class L2(Loss):
         return torch.sqrt(self.epsilon + activations)
 
 
+@loss_wrapper
 class Diversity(Loss):
     """
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
@@ -167,6 +262,7 @@ class Diversity(Loss):
         ) / activations.size(0)
 
 
+@loss_wrapper
 class ActivationInterpolation(Loss):
     """
     Interpolate between two different layers & channels.
@@ -216,6 +312,7 @@ class ActivationInterpolation(Loss):
         return sum_tensor
 
 
+@loss_wrapper
 class Alignment(Loss):
     """
     Penalize the L2 distance between tensors in the batch to encourage visual
@@ -245,6 +342,7 @@ class Alignment(Loss):
         return sum_tensor
 
 
+@loss_wrapper
 class Direction(Loss):
     """
     Visualize a general direction vector.
@@ -263,6 +361,7 @@ class Direction(Loss):
         return torch.cosine_similarity(self.direction, activations)
 
 
+@loss_wrapper
 class DirectionNeuron(Loss):
     """
     Visualize a single (x, y) position for a direction vector.
@@ -297,6 +396,7 @@ class DirectionNeuron(Loss):
         return torch.cosine_similarity(self.direction, activations[None, None, None])
 
 
+@loss_wrapper
 class TensorDirection(Loss):
     """
     Visualize a tensor direction vector.
@@ -324,6 +424,7 @@ class TensorDirection(Loss):
         return torch.cosine_similarity(self.direction, activations)
 
 
+@loss_wrapper
 class ActivationWeights(Loss):
     """
     Apply weights to channels, neurons, or spots in the target.
