@@ -396,7 +396,7 @@ def noise_tunnel_n_samples_deprecation_decorator(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any):
-        if "n_samples" in kwargs:
+        if "nt_samples" not in kwargs and "n_samples" in kwargs:
             kwargs["nt_samples"] = kwargs["n_samples"]
             warnings.warn(
                 "n_samples is being depricated and replaced with nt_samples "
