@@ -139,7 +139,7 @@ class InceptionV1(nn.Module):
 
         x = self.conv2(x)
         x = self.conv2_relu(x)
-        x = F.pad(x, (1, 1, 1, 1)) 
+        x = F.pad(x, (1, 1, 1, 1))
         x = self.conv3(x)
         x = self.conv3_relu(x)
         x = self.localresponsenorm2(x)
@@ -255,8 +255,8 @@ class InceptionModule(nn.Module):
 
         c3x3 = self.conv_3x3_reduce(x)
         c3x3 = self.conv_3x3_reduce_relu(c3x3)
-        c3x3 = F.pad(c3x3, (1, 1, 1, 1))  
-        c3x3 = self.conv_3x3(c3x3)      
+        c3x3 = F.pad(c3x3, (1, 1, 1, 1))
+        c3x3 = self.conv_3x3(c3x3)
         c3x3 = self.conv_3x3_relu(c3x3)
 
         c5x5 = self.conv_5x5_reduce(x)
