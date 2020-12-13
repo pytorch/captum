@@ -40,15 +40,15 @@ class ChannelReducer(object):
         orig_shape = x.shape
         return func(x.reshape([-1, x.shape[-1]])).reshape(list(orig_shape[:-1]) + [-1])
 
-    def fit_transform(self, x: torch.Tensor) -> torch.Tensor:
+    def fit_transform(self, x: torch.Tensor, reshape: bool = True) -> torch.Tensor:
         """
         Move channels to channels last NumPy format
         Assume first dimension is batch size except for shape CHW
         """
 
-        if x.dim() == 3:
+        if x.dim() == 3 and reshape:
             x = x.permute(2, 1, 0)
-        elif x.dim() > 3:
+        elif x.dim() > 3 and reshape:
             permute_vals = [0] + list(range(x.dim()))[2:] + [1]
             x = x.permute(*permute_vals)
 
@@ -56,9 +56,9 @@ class ChannelReducer(object):
             ChannelReducer._apply_flat(self._reducer.fit_transform, x)
         )
 
-        if x.dim() == 3:
+        if x.dim() == 3 and reshape:
             x_out = x_out.permute(2, 1, 0)
-        elif x.dim() > 3:
+        elif x.dim() > 3 and reshape:
             permute_vals = (
                 [0]
                 + [x.dim() - 1]
