@@ -22,8 +22,8 @@ class BlendAlpha(nn.Module):
         self.background = background
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.size(1) == 4
         assert x.dim() == 4
+        assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
         background = (
             self.background if self.background is not None else torch.rand_like(rgb)
@@ -36,8 +36,8 @@ class IgnoreAlpha(nn.Module):
     r"""Ignores a 4th channel"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.size(1) == 4
         assert x.dim() == 4
+        assert x.size(1) == 4
         rgb = x[:, :3, ...]
         return rgb
 
