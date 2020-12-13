@@ -109,17 +109,6 @@ class TestReplaceLayers(BaseTest):
         self.assertIsInstance(toy_model.relu2.relu, new_layer)
 
 
-class TestMax2AvgPool(BaseTest):
-    def test_max2avg_pool(self) -> None:
-        if torch.__version__ == "1.2.0":
-            raise unittest.SkipTest(
-                "Skipping max2avg_pool test due to insufficient Torch version."
-            )
-        model = googlenet(pretrained=True)
-        model_utils.max2avg_pool(model)
-        check_is_not_instance(self, model, torch.nn.MaxPool2d)
-
-
 class TestGetLayers(BaseTest):
     def test_get_layers_pretrained_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
