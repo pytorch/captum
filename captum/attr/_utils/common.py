@@ -399,7 +399,7 @@ def noise_tunnel_n_samples_deprecation_decorator(func: Callable) -> Callable:
         if "nt_samples" not in kwargs and "n_samples" in kwargs:
             kwargs["nt_samples"] = kwargs["n_samples"]
             warnings.warn(
-                "n_samples is being depricated and replaced with nt_samples "
+                "n_samples is being deprecated and replaced with nt_samples "
                 "to avoid argument naming conflicts in the attribute method. "
                 "Please, update the parameter name to nt_samples. Support for "
                 "n_samples will be removed in Captum 0.4.0.",
@@ -422,7 +422,7 @@ def lime_n_perturb_samples_deprecation_decorator(func: Callable) -> Callable:
         if "n_perturb_samples" in kwargs:
             kwargs["n_samples"] = kwargs["n_perturb_samples"]
             warnings.warn(
-                "n_perturb_samples is being depricated and replaced with n_samples "
+                "n_perturb_samples is being deprecated and replaced with n_samples "
                 "to avoid argument naming conflics in the attribute method. "
                 "Please, update the parameter name to n_samples. Support for "
                 "n_perturb_samples will be removed in Captum 0.4.0.",
