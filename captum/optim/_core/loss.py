@@ -96,7 +96,7 @@ class TotalVariation(Loss):
     https://arxiv.org/abs/1412.0035
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         x_diff = activations[..., 1:, :] - activations[..., :-1, :]
         y_diff = activations[..., :, 1:] - activations[..., :, :-1]
@@ -113,7 +113,7 @@ class L1(Loss):
         self.target = target
         self.constant = constant
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return torch.abs(activations - self.constant).sum()
 
@@ -130,7 +130,7 @@ class L2(Loss):
         self.constant = constant
         self.epsilon = epsilon
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         activations = (activations - self.constant).sum()
         return torch.sqrt(self.epsilon + activations)
@@ -143,7 +143,7 @@ class Diversity(Loss):
     https://distill.pub/2017/feature-visualization/#diversity
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return -sum(
             [
