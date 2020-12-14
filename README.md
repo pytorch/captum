@@ -3,8 +3,6 @@
 
 Over successive layers, deep neural networks transform the data space so that its dimensions fit the task. Applying component analysis to the intermediate data spaces sheds light into the major features captured by the layers, and can visually surface potential deficiencies of the model or of the training data. 
 
-### NeurIPS 2020
-[Run the demo](https://mbx.juniorrojas.com/)
 
 ### Idea: Probing the embedding space interactively
 
