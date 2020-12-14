@@ -411,7 +411,7 @@ class LimeBase(PerturbationAttribution):
             curr_model_inputs = []
             expanded_additional_args = None
             expanded_target = None
-            for i in range(n_samples):
+            for _ in range(n_samples):
                 curr_sample = self.perturb_func(inputs, **kwargs)
                 if self.perturb_interpretable_space:
                     interpretable_inps.append(curr_sample)
