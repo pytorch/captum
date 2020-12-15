@@ -312,15 +312,16 @@ class Test(BaseTest):
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
-            attributions = kernel_shap.attribute(
-                test_input,
-                target=target,
-                feature_mask=feature_mask,
-                additional_forward_args=additional_input,
-                baselines=baselines,
-                perturbations_per_eval=batch_size,
-                n_perturb_samples=n_perturb_samples,
-            )
+            with self.assertWarns(DeprecationWarning):
+                attributions = kernel_shap.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                    n_perturb_samples=n_perturb_samples,
+                )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
@@ -334,7 +335,7 @@ class Test(BaseTest):
                     additional_forward_args=additional_input,
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
-                    n_perturb_samples=n_perturb_samples,
+                    n_samples=n_perturb_samples,
                     return_input_shape=False,
                 )
                 assertTensorAlmostEqual(
