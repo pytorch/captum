@@ -295,7 +295,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,

@@ -111,19 +111,20 @@ class Test(BaseTest):
         attributions_wo_mutliplying_by_inputs = nt_wo_mutliplying_by_inputs.attribute(
             inputs,
             nt_type=type,
-            n_samples=n_samples,
+            nt_samples=n_samples,
             stdevs=0.0,
             target=target,
             n_steps=500,
         )
-        attributions = nt.attribute(
-            inputs,
-            nt_type=type,
-            n_samples=n_samples,
-            stdevs=0.0,
-            target=target,
-            n_steps=500,
-        )
+        with self.assertWarns(DeprecationWarning):
+            attributions = nt.attribute(
+                inputs,
+                nt_type=type,
+                n_samples=n_samples,
+                stdevs=0.0,
+                target=target,
+                n_steps=500,
+            )
         assertTensorAlmostEqual(
             self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
@@ -392,7 +393,7 @@ class Test(BaseTest):
             attributions, delta = nt.attribute(
                 inputs,
                 nt_type=type,
-                n_samples=n_samples,
+                nt_samples=n_samples,
                 stdevs=0.00000002,
                 baselines=baselines,
                 target=target,
@@ -401,17 +402,18 @@ class Test(BaseTest):
                 n_steps=500,
                 return_convergence_delta=True,
             )
-            attributions_without_delta = nt.attribute(
-                inputs,
-                nt_type=type,
-                n_samples=n_samples,
-                stdevs=0.00000002,
-                baselines=baselines,
-                target=target,
-                additional_forward_args=additional_forward_args,
-                method=approximation_method,
-                n_steps=500,
-            )
+            with self.assertWarns(DeprecationWarning):
+                attributions_without_delta = nt.attribute(
+                    inputs,
+                    nt_type=type,
+                    n_samples=n_samples,
+                    stdevs=0.00000002,
+                    baselines=baselines,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                    method=approximation_method,
+                    n_steps=500,
+                )
             self.assertEquals(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 

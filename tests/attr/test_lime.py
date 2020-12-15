@@ -395,15 +395,16 @@ class Test(BaseTest):
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
             )
-            attributions = lime.attribute(
-                test_input,
-                target=target,
-                feature_mask=feature_mask,
-                additional_forward_args=additional_input,
-                baselines=baselines,
-                perturbations_per_eval=batch_size,
-                n_perturb_samples=n_perturb_samples,
-            )
+            with self.assertWarns(DeprecationWarning):
+                attributions = lime.attribute(
+                    test_input,
+                    target=target,
+                    feature_mask=feature_mask,
+                    additional_forward_args=additional_input,
+                    baselines=baselines,
+                    perturbations_per_eval=batch_size,
+                    n_perturb_samples=n_perturb_samples,
+                )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
             )
@@ -416,7 +417,7 @@ class Test(BaseTest):
                     additional_forward_args=additional_input,
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
-                    n_perturb_samples=n_perturb_samples,
+                    n_samples=n_perturb_samples,
                     return_input_shape=False,
                 )
                 assertTensorAlmostEqual(
@@ -458,7 +459,7 @@ class Test(BaseTest):
                         additional_forward_args=additional_input,
                         baselines=baselines,
                         perturbations_per_eval=batch_size,
-                        n_perturb_samples=n_perturb_samples,
+                        n_samples=n_perturb_samples,
                         num_interp_features=num_interp_features,
                     )
                     assertTensorAlmostEqual(
@@ -492,7 +493,7 @@ class Test(BaseTest):
                         additional_forward_args=curr_additional_args,
                         baselines=curr_baselines,
                         perturbations_per_eval=batch_size,
-                        n_perturb_samples=n_perturb_samples,
+                        n_samples=n_perturb_samples,
                         num_interp_features=num_interp_features,
                     )
                     assertTensorAlmostEqual(
