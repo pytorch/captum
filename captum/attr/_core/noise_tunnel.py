@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from copy import deepcopy
 from enum import Enum
 from typing import Any, List, Tuple, Union, cast
 
@@ -345,7 +344,7 @@ class NoiseTunnel(Attribution):
 
             _validate_noise_tunnel_type(nt_type, SUPPORTED_NOISE_TUNNEL_TYPES)
 
-            kwargs_copy = deepcopy(kwargs)
+            kwargs_copy = kwargs.copy()
             expand_partial(nt_samples_batch_size, kwargs_copy)
 
             attr_func = self.attribution_method.attribute
