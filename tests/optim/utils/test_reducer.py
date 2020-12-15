@@ -22,19 +22,6 @@ class TestReductionAlgorithm(object):
         return x[..., 0:3]
 
 
-class TestReductionAlgorithm(object):
-    """
-    Fake reduction algorithm for testing
-    """
-
-    def __init__(self, n_components=3, **kwargs) -> None:
-        self.n_components = n_components
-
-    def fit_transform(self, x: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
-        x = x.numpy() if torch.is_tensor(x) else x
-        return x[..., 0:3]
-
-
 class TestChannelReducer(BaseTest):
     def test_channelreducer_pytorch(self) -> None:
         try:
