@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union
+from typing import Any, Callable, List, Union
 
 import numpy as np
 
@@ -95,13 +95,13 @@ class ChannelReducer(object):
 
         return x_out
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name in self.__dict__:
             return self.__dict__[name]
         elif name + "_" in self._reducer.__dict__:
             return self._reducer.__dict__[name + "_"]
 
-    def __dir__(self):
+    def __dir__(self) -> List:
         dynamic_attrs = [
             name[:-1]
             for name in dir(self._reducer)
