@@ -84,6 +84,19 @@ class Loss(ABC):
     def __radd__(self, other):
         return self.__add__(other)
 
+    def __pow__(self, other):
+        if isinstance(other, (int, float)):
+
+            def loss_fn(module):
+                return self(module) ** other
+
+            return CompositeLoss(loss_fn, name=self.__name__, target=self.target)
+        else:
+            raise TypeError(
+                "Can only take to the power of int or float. Received type "
+                + str(type(other))
+            )
+
 
 class CompositeLoss(Loss):
     def __init__(self, loss_fn: Callable, name: str = "", target: nn.Module = []):
