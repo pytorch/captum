@@ -111,8 +111,8 @@ class NoiseTunnel(Attribution):
                         Default: `5` if `nt_samples` is not provided.
             nt_samples_batch_size (int, optional):  The size of the slice, the number
                         of `nt_samples`, that will be processed together. With the help
-                        of this parameter we can avoid out of memory situation and reduce
-                        the number of randomly generated examples per sample in
+                        of this parameter we can avoid out of memory situation and
+                        reduce the number of randomly generated examples per sample in
                         one batch.
                         Default: None if `nt_samples_batch_size` is not provided. In
                         this case all `nt_samples` will be processed together.
