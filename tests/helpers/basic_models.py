@@ -15,6 +15,16 @@ the relevant type hints.
 """
 
 
+class MixedKwargsAndArgsModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, y=None):
+        if y is not None:
+            return x + y
+        return x
+
+
 class BasicModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
