@@ -147,14 +147,15 @@ class InputOptimization(Objective, Parameterized):
         return history
 
 
-def n_steps(n: int) -> StopCriteria:
+def n_steps(n: int, hidebar: bool = False) -> StopCriteria:
     """StopCriteria generator that uses number of steps as a stop criteria.
     Args:
         n (int):  Number of steps to run optimization.
+        hidebar (bool):  Whether or not hide progress bar.
     Returns:
         *StopCriteria* callable
     """
-    pbar = tqdm(total=n, unit="step")
+    pbar = tqdm(total=n, unit="step", disable=hidebar)
 
     def continue_while(step, obj, history, optim) -> bool:
         if len(history) > 0:
