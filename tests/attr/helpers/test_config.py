@@ -36,6 +36,7 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
 from tests.helpers.basic import set_all_random_seeds
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
@@ -1150,6 +1151,21 @@ config = [
         "algorithms": [LayerIntegratedGradients],
         "model": BasicModel_MultiLayer_TrueMultiInput(),
         "layer": ["m1", "m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output_with_input_wrapper",
+        "algorithms": [LayerIntegratedGradients],
+        "model": ModelInputWrapper(BasicModel_MultiLayer_TrueMultiInput()),
+        "layer": ["module.m1", "module.m234"],
         "attribute_args": {
             "inputs": (
                 torch.randn(5, 3),

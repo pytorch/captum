@@ -362,6 +362,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
 
         if self.device_ids is None:
             self.device_ids = getattr(self.forward_func, "device_ids", None)
+
         inputs_layer = _forward_layer_eval(
             self.forward_func,
             inps,
@@ -398,7 +399,7 @@ class LayerIntegratedGradients(LayerAttribution, GradientAttribution):
             target_ind: TargetType = None,
             additional_forward_args: Any = None,
         ) -> Tuple[Tensor, ...]:
-            if self.device_ids is None:
+            if self.device_ids is None or len(self.device_ids) == 0:
                 scattered_inputs = (inputs,)
             else:
                 # scatter method does not have a precise enough return type in its
