@@ -26,21 +26,21 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.layer.layer_integrated_gradients</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="kn">import</span> <span class="nn">typing</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">overload</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">Module</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">scatter</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_extract_device</span><span class="p">,</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
-    <span class="n">_format_output</span><span class="p">,</span>
+    <span class="n">_format_outputs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">_forward_layer_eval</span><span class="p">,</span> <span class="n">_run_forward</span>
-<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TargetType</span>
+<span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span> <span class="n">TargetType</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.integrated_gradients</span> <span class="kn">import</span> <span class="n">IntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">GradientAttribution</span><span class="p">,</span> <span class="n">LayerAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -75,7 +75,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">layer</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">ModuleOrModuleList</span><span class="p">,</span>
         <span class="n">device_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">multiply_by_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -83,12 +83,25 @@
 <span class="sd">        Args:</span>
 <span class="sd">            forward_func (callable):  The forward function of the model or any</span>
 <span class="sd">                        modification of it</span>
-<span class="sd">            layer (torch.nn.Module): Layer for which attributions are computed.</span>
-<span class="sd">                        Output size of attribute matches this layer's input or</span>
-<span class="sd">                        output dimensions, depending on whether we attribute to</span>
-<span class="sd">                        the inputs or outputs of the layer, corresponding to</span>
-<span class="sd">                        the attribution of each neuron in the input or output</span>
-<span class="sd">                        of this layer.</span>
+<span class="sd">            layer (ModuleOrModuleList):</span>
+<span class="sd">                        Layer or list of layers for which attributions are computed.</span>
+<span class="sd">                        For each layer the output size of the attribute matches</span>
+<span class="sd">                        this layer's input or output dimensions, depending on</span>
+<span class="sd">                        whether we attribute to the inputs or outputs of the</span>
+<span class="sd">                        layer, corresponding to the attribution of each neuron</span>
+<span class="sd">                        in the input or output of this layer.</span>
+
+<span class="sd">                        Please note that layers to attribute on cannot be</span>
+<span class="sd">                        dependent on each other. That is, a subset of layers in</span>
+<span class="sd">                        `layer` cannot produce the inputs for another layer.</span>
+
+<span class="sd">                        For example, if your model is of a simple linked-list</span>
+<span class="sd">                        based graph structure (think nn.Sequence), e.g. x -&gt; l1</span>
+<span class="sd">                        -&gt; l2 -&gt; l3 -&gt; output. If you pass in any one of those</span>
+<span class="sd">                        layers, you cannot pass in another due to the</span>
+<span class="sd">                        dependence, e.g.  if you pass in l2 you cannot pass in</span>
+<span class="sd">                        l1 or l3.</span>
+
 <span class="sd">            device_ids (list(int)): Device ID list, necessary only if forward_func</span>
 <span class="sd">                        applies a DataParallel model. This allows reconstruction of</span>
 <span class="sd">                        intermediate outputs from batched results across devices.</span>
@@ -113,22 +126,48 @@
         <span class="n">GradientAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">multiply_by_inputs</span><span class="p">)</span>
 
-    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Multiple layers provided. Please ensure that each layer is"</span>
+                <span class="s2">"**not** solely solely dependent on the outputs of"</span>
+                <span class="s2">"another layer. Please refer to the documentation for more"</span>
+                <span class="s2">"detail."</span>
+            <span class="p">)</span>
+
+    <span class="nd">@overload</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"gausslegendre"</span><span class="p">,</span>
-        <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]:</span>
         <span class="o">...</span>
 
-    <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
+        <span class="n">Tensor</span><span class="p">,</span>
+    <span class="p">]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
@@ -138,10 +177,15 @@
         <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
         <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"gausslegendre"</span><span class="p">,</span>
         <span class="n">internal_batch_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+        <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
+        <span class="n">Tuple</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
+            <span class="n">Tensor</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">]:</span>
         <span class="o">...</span>
 
 <div class="viewcode-block" id="LayerIntegratedGradients.attribute"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
@@ -157,7 +201,11 @@
         <span class="n">return_convergence_delta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">attribute_to_layer_input</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">Tensor</span><span class="p">]</span>
+        <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
+        <span class="n">Tuple</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]],</span>
+            <span class="n">Tensor</span><span class="p">,</span>
+        <span class="p">],</span>
     <span class="p">]:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
@@ -284,16 +332,25 @@
 <span class="sd">                        Default: False</span>
 <span class="sd">            Returns:</span>
 <span class="sd">                **attributions** or 2-element tuple of **attributions**, **delta**:</span>
-<span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
+<span class="sd">                - **attributions** (*tensor*, tuple of *tensors* or tuple of *tensors*):</span>
 <span class="sd">                        Integrated gradients with respect to `layer`'s inputs or</span>
 <span class="sd">                        outputs. Attributions will always be the same size and</span>
 <span class="sd">                        dimensionality as the input or output of the given layer,</span>
 <span class="sd">                        depending on whether we attribute to the inputs or outputs</span>
 <span class="sd">                        of the layer which is decided by the input flag</span>
 <span class="sd">                        `attribute_to_layer_input`.</span>
-<span class="sd">                        Attributions are returned in a tuple if</span>
+
+<span class="sd">                        For a single layer, attributions are returned in a tuple if</span>
 <span class="sd">                        the layer inputs / outputs contain multiple tensors,</span>
 <span class="sd">                        otherwise a single tensor is returned.</span>
+
+<span class="sd">                        For multiple layers, attributions will always be</span>
+<span class="sd">                        returned as a list. Each element in this list will be</span>
+<span class="sd">                        equivalent to that of a single layer output, i.e. in the</span>
+<span class="sd">                        case that one layer, in the given layers, inputs / outputs</span>
+<span class="sd">                        multiple tensors: the corresponding output element will be</span>
+<span class="sd">                        a tuple of tensors. The ordering of the outputs will be</span>
+<span class="sd">                        the same order as the layers given in the constructor.</span>
 <span class="sd">                - **delta** (*tensor*, returned if return_convergence_delta=True):</span>
 <span class="sd">                        The difference between the total approximated and true</span>
 <span class="sd">                        integrated gradients. This is computed using the property</span>
@@ -325,8 +382,14 @@
             <span class="n">additional_forward_args</span>
         <span class="p">)</span>
 
+        <span class="k">def</span> <span class="nf">flatten_tuple</span><span class="p">(</span><span class="n">tup</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">sum</span><span class="p">((</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="k">else</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tup</span><span class="p">),</span> <span class="p">[])</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="s2">"device_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
         <span class="n">inputs_layer</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">inps</span><span class="p">,</span>
@@ -336,6 +399,16 @@
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># if we have one output</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">inputs_layer</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputs_layer</span><span class="p">,)</span>
+
+        <span class="n">num_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs_layer</span><span class="p">]</span>
+        <span class="n">num_outputs_cumsum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">num_outputs</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>
+        <span class="n">inputs_layer</span> <span class="o">=</span> <span class="n">flatten_tuple</span><span class="p">(</span><span class="n">inputs_layer</span><span class="p">)</span>
+
         <span class="n">baselines_layer</span> <span class="o">=</span> <span class="n">_forward_layer_eval</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span>
             <span class="n">baselines</span><span class="p">,</span>
@@ -344,6 +417,7 @@
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">attribute_to_layer_input</span><span class="o">=</span><span class="n">attribute_to_layer_input</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">baselines_layer</span> <span class="o">=</span> <span class="n">flatten_tuple</span><span class="p">(</span><span class="n">baselines_layer</span><span class="p">)</span>
 
         <span class="c1"># inputs -&gt; these inputs are scaled</span>
         <span class="k">def</span> <span class="nf">gradient_func</span><span class="p">(</span>
@@ -352,7 +426,7 @@
             <span class="n">target_ind</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">scattered_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputs</span><span class="p">,)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># scatter method does not have a precise enough return type in its</span>
@@ -368,30 +442,60 @@
 
             <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
 
-                <span class="k">def</span> <span class="nf">layer_forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">layer_forward_hook</span><span class="p">(</span>
+                    <span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_idx</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">):</span>
                     <span class="n">device</span> <span class="o">=</span> <span class="n">_extract_device</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">hook_inputs</span><span class="p">,</span> <span class="n">hook_outputs</span><span class="p">)</span>
                     <span class="n">is_layer_tuple</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="nb">isinstance</span><span class="p">(</span><span class="n">hook_outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                        <span class="c1"># hook_outputs is None if attribute_to_layer_input == True</span>
                         <span class="k">if</span> <span class="n">hook_outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                         <span class="k">else</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hook_inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">is_layer_tuple</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">]</span>
-                    <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
-                <span class="n">hook</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">if</span> <span class="n">is_layer_tuple</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span>
+                            <span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="p">:</span> <span class="n">num_outputs_cumsum</span><span class="p">[</span>
+                                <span class="n">layer_idx</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="p">]</span>
+                        <span class="p">]</span>
+
+                    <span class="k">return</span> <span class="n">scattered_inputs_dict</span><span class="p">[</span><span class="n">device</span><span class="p">][</span><span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]]</span>
+
+                <span class="n">hooks</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">attribute_to_layer_input</span><span class="p">:</span>
-                        <span class="n">hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">layer_forward_hook</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">layer_forward_hook</span><span class="p">)</span>
+
+                    <span class="n">layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">]</span>
+
+                    <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+                        <span class="n">hook</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="c1"># TODO:</span>
+                        <span class="c1"># Allow multiple attribute_to_layer_input flags for</span>
+                        <span class="c1"># each layer, i.e. attribute_to_layer_input[layer_idx]</span>
+                        <span class="k">if</span> <span class="n">attribute_to_layer_input</span><span class="p">:</span>
+                            <span class="n">hook</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span>
+                                <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                                    <span class="n">layer_forward_hook</span><span class="p">,</span> <span class="n">layer_idx</span><span class="o">=</span><span class="n">layer_idx</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">hook</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span>
+                                <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                                    <span class="n">layer_forward_hook</span><span class="p">,</span> <span class="n">layer_idx</span><span class="o">=</span><span class="n">layer_idx</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                        <span class="n">hooks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hook</span><span class="p">)</span>
 
                     <span class="n">output</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="n">target_ind</span><span class="p">,</span> <span class="n">additional_forward_args</span>
                     <span class="p">)</span>
                 <span class="k">finally</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">hook</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">hook</span> <span class="ow">in</span> <span class="n">hooks</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">hook</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">hook</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
 
                 <span class="k">assert</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
                     <span class="s2">"Target not provided when necessary, cannot"</span>
@@ -408,6 +512,7 @@
             <span class="k">if</span> <span class="n">additional_forward_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="n">inps</span>
         <span class="p">)</span>
+
         <span class="n">attributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ig</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ig</span><span class="p">,</span>  <span class="c1"># self</span>
             <span class="n">inputs_layer</span><span class="p">,</span>
@@ -420,6 +525,16 @@
             <span class="n">return_convergence_delta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># handle multiple outputs</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">attributions</span><span class="p">[</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_outputs_cumsum</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">num_outputs</span><span class="p">))</span>
+        <span class="p">]</span>
+
         <span class="k">if</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
             <span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span> <span class="o">=</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">inps</span>
             <span class="c1"># computes approximation error based on the completeness axiom</span>
@@ -430,8 +545,8 @@
                 <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
                 <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">attributions</span><span class="p">),</span> <span class="n">delta</span>
-        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attributions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">attributions</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">_format_outputs</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">output</span><span class="p">),</span> <span class="n">delta</span>
+        <span class="k">return</span> <span class="n">_format_outputs</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">output</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="LayerIntegratedGradients.has_convergence_delta"><a class="viewcode-back" href="../../../../../layer.html#captum.attr.LayerIntegratedGradients.has_convergence_delta">[docs]</a>    <span class="k">def</span> <span class="nf">has_convergence_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span></div>

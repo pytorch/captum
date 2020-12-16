@@ -36,6 +36,7 @@
 <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLinearRegression</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">Lime</span>
+<span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">lime_n_perturb_samples_deprecation_decorator</span>
 <span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 
 
@@ -99,6 +100,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="KernelShap.attribute"><a class="viewcode-back" href="../../../../kernel_shap.html#captum.attr.KernelShap.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
+    <span class="nd">@lime_n_perturb_samples_deprecation_decorator</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -106,7 +108,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
@@ -240,9 +242,9 @@
 <span class="sd">                        If None, then a feature mask is constructed which assigns</span>
 <span class="sd">                        each scalar within a tensor as a separate feature.</span>
 <span class="sd">                        Default: None</span>
-<span class="sd">            n_perturb_samples (int, optional):  The number of samples of the original</span>
+<span class="sd">            n_samples (int, optional):  The number of samples of the original</span>
 <span class="sd">                        model used to train the surrogate interpretable model.</span>
-<span class="sd">                        Default: `50` if `n_perturb_samples` is not provided.</span>
+<span class="sd">                        Default: `50` if `n_samples` is not provided.</span>
 <span class="sd">            perturbations_per_eval (int, optional): Allows multiple samples</span>
 <span class="sd">                        to be processed simultaneously in one call to forward_fn.</span>
 <span class="sd">                        Each forward pass will contain a maximum of</span>
@@ -293,7 +295,7 @@
 <span class="sd">            &gt;&gt;&gt; ks = KernelShap(net)</span>
 <span class="sd">            &gt;&gt;&gt; # Computes attribution, with each of the 4 x 4 = 16</span>
 <span class="sd">            &gt;&gt;&gt; # features as a separate interpretable feature</span>
-<span class="sd">            &gt;&gt;&gt; attr = ks.attribute(input, target=1, n_perturb_samples=200)</span>
+<span class="sd">            &gt;&gt;&gt; attr = ks.attribute(input, target=1, n_samples=200)</span>
 
 <span class="sd">            &gt;&gt;&gt; # Alternatively, we can group each 2x2 square of the inputs</span>
 <span class="sd">            &gt;&gt;&gt; # as one 'interpretable' feature and perturb them together.</span>
@@ -326,7 +328,7 @@
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
-            <span class="n">n_perturb_samples</span><span class="o">=</span><span class="n">n_perturb_samples</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="n">return_input_shape</span><span class="o">=</span><span class="n">return_input_shape</span><span class="p">,</span>
         <span class="p">)</span></div></div>

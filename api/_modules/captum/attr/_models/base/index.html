@@ -46,7 +46,7 @@
 <span class="sd">    precomputed embedding vectors to the layers below.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">,</span> <span class="n">full_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_embeddings</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"num_embeddings"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">embedding_dim</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">"embedding_dim"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -126,7 +126,7 @@
 <span class="sd">    `TokenReferenceBase` class.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_token_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_token_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_token_idx</span> <span class="o">=</span> <span class="n">reference_token_idx</span>
 
 <div class="viewcode-block" id="TokenReferenceBase.generate_reference"><a class="viewcode-back" href="../../../../utilities.html#captum.attr.TokenReferenceBase.generate_reference">[docs]</a>    <span class="k">def</span> <span class="nf">generate_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>

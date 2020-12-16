@@ -97,7 +97,9 @@
 <span class="sd">    https://christophm.github.io/interpretable-ml-book/feature-importance.html</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">perm_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_permute_feature</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">perm_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_permute_feature</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
 
