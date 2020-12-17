@@ -157,6 +157,20 @@ class Conv2dSame(nn.Conv2d):
         )
 
 
+def collect_activations(
+    model,
+    targets: Union[nn.Module, List[nn.Module]],
+    model_input: torch.Tensor = torch.zeros(1, 3, 224, 224),
+) -> ModuleOutputMapping:
+    """
+    Collect target activations for a model.
+    """
+
+    catch_activ = ActivationCatcher(targets)
+    activ_out = catch_activ(model, model_input)
+    return activ_out
+
+
 class ActivationCatcher(object):
     """
     Simple module for collecting activations from model targets.

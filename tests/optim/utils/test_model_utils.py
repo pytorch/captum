@@ -316,5 +316,23 @@ class TestActivationCatcher(BaseTest):
         self.assertTrue(test)
 
 
+class TestCollectActivations(BaseTest):
+    def test_collect_activations(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping collect_activations test due to insufficient Torch version."
+            )
+        model = googlenet(pretrained=True)
+        try:
+            activations = model_utils.collect_activations(
+                model, [model.mixed4d], torch.zeros(1, 3, 224, 224)
+            )
+            self.assertIsInstance(activ_out, dict)
+            test = True
+        except Exception:
+            test = False
+        self.assertTrue(test)
+
+
 if __name__ == "__main__":
     unittest.main()

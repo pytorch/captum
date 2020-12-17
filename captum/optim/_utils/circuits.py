@@ -3,7 +3,7 @@ from typing import List, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.models import ActivationCatcher
+from captum.optim._utils.models import ActivationCatcher, collect_activations
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -22,14 +22,7 @@ def get_expanded_weights(
     See: https://distill.pub/2020/circuits/visualizing-weights/
     """
 
-    def get_activations(
-        model, targets: Union[nn.Module, List[nn.Module]]
-    ) -> ModuleOutputMapping:
-        catch_activ = ActivationCatcher(targets)
-        activ_out = catch_activ(model, model_input)
-        return activ_out
-
-    activations = get_activations(model, [target1, target2])
+    activations = collect_activations(model, [target1, target2], model_input)
     activ1 = activations[target1]
     activ2 = activations[target2]
 

@@ -72,7 +72,7 @@ class ChannelReducer(object):
         x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
 
         if is_tensor:
-            x_out = torch.as_tensor(x_out)
+            x_out = torch.as_tensor(x_out, device=x.device)
             if x.dim() == 3 and reshape:
                 x_out = x_out.permute(2, 1, 0)
             elif x.dim() > 3 and reshape:
@@ -97,9 +97,12 @@ class ChannelReducer(object):
 
     def __getattr__(self, name: str) -> Any:
         if name in self.__dict__:
-            return self.__dict__[name]
+            out = self.__dict__[name]
         elif name + "_" in self._reducer.__dict__:
-            return self._reducer.__dict__[name + "_"]
+            out = self._reducer.__dict__[name + "_"]
+        if type(out) == np.ndarray:
+            out = torch.as_tensor(out)
+        return out
 
     def __dir__(self) -> List:
         dynamic_attrs = [

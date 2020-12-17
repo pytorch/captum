@@ -16,6 +16,7 @@ class TestReductionAlgorithm(object):
 
     def __init__(self, n_components=3, **kwargs) -> None:
         self.n_components = n_components
+        self.components_ = np.ones(2, 64)
 
     def fit_transform(self, x: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
         x = x.numpy() if torch.is_tensor(x) else x
@@ -63,6 +64,31 @@ class TestChannelReducer(BaseTest):
         )
         test_output = c_reducer.fit_transform(test_input, reshape=True)
         self.assertEquals(test_output.size(1), 3)
+
+    def test_channelreducer_pytorch_custom_alg_components(self) -> None:
+        test_input = torch.randn(1, 32, 224, 224).abs()
+        reduction_alg = TestReductionAlgorithm
+        c_reducer = reducer.ChannelReducer(
+            n_components=3, reduction_alg=reduction_alg, max_iter=100
+        )
+        components = c_reducer.components
+        self.assertTrue(torch.is_tensor(components))
+
+    def test_channelreducer_pytorch_components(self) -> None:
+        try:
+            import sklearn  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module sklearn not found, skipping ChannelReducer"
+                + " PyTorch reshape test"
+            )
+
+        test_input = torch.randn(1, 32, 224, 224).abs()
+        c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
+        test_output = c_reducer.fit_transform(test_input, reshape=True)
+        components = c_reducer.components
+        self.assertTrue(torch.is_tensor(components))
 
     def test_channelreducer_numpy(self) -> None:
         try:
