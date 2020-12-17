@@ -161,7 +161,7 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     """
 
     if show_progress:
-        pbar = tqdm(total=n, unit="step")
+        pbar = tqdm(total=n, unit=" step")
 
     def continue_while(step, obj, history, optim) -> bool:
         if len(history) > 0:

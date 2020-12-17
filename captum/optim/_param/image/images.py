@@ -472,7 +472,7 @@ class NaturalImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        Parameterization=FFTImage,
+        parameterization=FFTImage,
         init: Optional[torch.Tensor] = None,
         decorrelate_init: bool = True,
         squash_func: Optional[SquashFunc] = None,
@@ -494,7 +494,7 @@ class NaturalImage(ImageParameterization):
             if squash_func is None:
                 squash_func: SquashFunc = lambda x: torch.sigmoid(x)
         self.squash_func = squash_func
-        self.parameterization = Parameterization(
+        self.parameterization = parameterization(
             size=size, channels=channels, batch=batch, init=init
         )
 
