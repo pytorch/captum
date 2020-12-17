@@ -154,7 +154,8 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     """StopCriteria generator that uses number of steps as a stop criteria.
     Args:
         n (int):  Number of steps to run optimization.
-        show_progress (bool):  Whether or not to show progress bar.
+        show_progress (bool, optional):  Whether or not to show progress bar.
+            Default: True
     Returns:
         *StopCriteria* callable
     """
