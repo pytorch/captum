@@ -16,7 +16,7 @@ class TestReductionAlgorithm(object):
 
     def __init__(self, n_components=3, **kwargs) -> None:
         self.n_components = n_components
-        self.components_ = np.ones(2, 64)
+        self.components_ = np.ones((2, 64))
 
     def fit_transform(self, x: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
         x = x.numpy() if torch.is_tensor(x) else x
