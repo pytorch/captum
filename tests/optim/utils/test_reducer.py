@@ -66,7 +66,6 @@ class TestChannelReducer(BaseTest):
         self.assertEquals(test_output.size(1), 3)
 
     def test_channelreducer_pytorch_custom_alg_components(self) -> None:
-        test_input = torch.randn(1, 32, 224, 224).abs()
         reduction_alg = TestReductionAlgorithm
         c_reducer = reducer.ChannelReducer(
             n_components=3, reduction_alg=reduction_alg, max_iter=100
@@ -89,6 +88,7 @@ class TestChannelReducer(BaseTest):
         test_output = c_reducer.fit_transform(test_input, reshape=True)
         components = c_reducer.components
         self.assertTrue(torch.is_tensor(components))
+        self.assertTrue(torch.is_tensor(test_output))
 
     def test_channelreducer_numpy(self) -> None:
         try:

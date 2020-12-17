@@ -1,10 +1,7 @@
-from typing import List, Union
-
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.models import ActivationCatcher, collect_activations
-from captum.optim._utils.typing import ModuleOutputMapping
+from captum.optim._utils.models import collect_activations
 
 
 def get_expanded_weights(

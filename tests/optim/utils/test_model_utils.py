@@ -324,7 +324,7 @@ class TestCollectActivations(BaseTest):
             )
         model = googlenet(pretrained=True)
         try:
-            activations = model_utils.collect_activations(
+            activ_out = model_utils.collect_activations(
                 model, [model.mixed4d], torch.zeros(1, 3, 224, 224)
             )
             self.assertIsInstance(activ_out, dict)
