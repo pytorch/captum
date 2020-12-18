@@ -144,5 +144,17 @@ class TestPosNeg(BaseTest):
         )
 
 
+class TestNChannelsToRGB(BaseTest):
+    def test_nchannels_to_rgb_collapse(self) -> None:
+        test_input = torch.randn(1, 6, 224, 224)
+        test_output = reducer.nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
+    def test_nchannels_to_rgb_increase(self) -> None:
+        test_input = torch.randn(1, 2, 224, 224)
+        test_output = reducer.nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
+
 if __name__ == "__main__":
     unittest.main()
