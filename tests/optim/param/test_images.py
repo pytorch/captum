@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 
 from captum.optim._param.image import images
+from captum.optim._utils.models import pad_reflective_a4d
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
@@ -280,7 +281,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[int(o) for o in v] for v in offset_vals])
 
-    def test_sharedimage_apply_offset_single_set_four_numbers(self) -> None:
+    def test_sharedimage_get_offset_single_set_four_numbers(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
                 "Skipping SharedImage test due to insufficient Torch version."
@@ -297,7 +298,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [list(offset_vals)] * 3)
 
-    def test_sharedimage_apply_offset_single_set_three_numbers(self) -> None:
+    def test_sharedimage_get_offset_single_set_three_numbers(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
                 "Skipping SharedImage test due to insufficient Torch version."
@@ -314,7 +315,7 @@ class TestSharedImage(BaseTest):
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[0] + list(offset_vals)] * 3)
 
-    def test_sharedimage_apply_offset_single_set_two_numbers(self) -> None:
+    def test_sharedimage_get_offset_single_set_two_numbers(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
                 "Skipping SharedImage test due to insufficient Torch version."
@@ -331,6 +332,29 @@ class TestSharedImage(BaseTest):
         self.assertEqual(len(offset), 3)
         self.assertEqual(offset, [[0, 0] + list(offset_vals)] * 3)
 
+    def apply_offset_compare(
+        self, x_list: List[torch.Tensor], offset_list: List[List[int]]
+    ) -> List[torch.Tensor]:
+        A = []
+        for x, offset in zip(x_list, offset_list):
+            size = list(x.size())
+            offset_pad = (
+                [abs(offset[0])] * 2
+                + [abs(offset[1])] * 2
+                + [abs(offset[2])] * 2
+                + [abs(offset[3])] * 2
+            )
+            offset_pad.reverse()
+
+            x = pad_reflective_a4d(x, offset_pad)
+
+            for o, s in zip(offset, range(x.dim())):
+                x = torch.roll(x, shifts=o, dims=s)
+
+            x = x[: size[0], : size[1], : size[2], : size[3]]
+            A.append(x)
+        return A
+
     def test_apply_offset(self):
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
@@ -345,15 +369,13 @@ class TestSharedImage(BaseTest):
         )
 
         test_x_list = [torch.ones(*size) for x in range(size[0])]
-        output_A = image_param.apply_offset(test_x_list, size)
+        output_A = image_param.apply_offset(test_x_list)
 
         x_list = [torch.ones(*size) for x in range(size[0])]
+        self.assertEqual(image_param.offset, [list(offset_vals)])
+
         offset_list = image_param.offset
-        expected_A = []
-        for x, offset in zip(x_list, offset_list):
-            x = F.pad(x, offset, "reflect")
-            x = x[: size[0], : size[1], : size[2], : size[3]]
-            expected_A.append(x)
+        expected_A = self.apply_offset_compare(x_list, offset_list)
 
         for t_expected, t_output in zip(expected_A, output_A):
             assertTensorAlmostEqual(self, t_expected, t_output)
@@ -375,7 +397,7 @@ class TestSharedImage(BaseTest):
 
         test_tensor = torch.ones(6, 4, 128, 128)
         output_tensor = image_param.interpolate_tensor(
-            test_tensor, size, batch, channels
+            test_tensor, batch, channels, size[0], size[1]
         )
 
         self.assertEqual(output_tensor.dim(), 4)
@@ -400,8 +422,11 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
-        self.assertEqual(image_param.shared_init.dim(), 4)
-        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(
+            list(image_param.shared_init[0].shape), [1, 1] + list(shared_shapes)
+        )
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -424,8 +449,11 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
-        self.assertEqual(image_param.shared_init.dim(), 4)
-        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(
+            list(image_param.shared_init[0].shape), [1] + list(shared_shapes)
+        )
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -448,8 +476,9 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
-        self.assertEqual(image_param.shared_init.dim(), 4)
-        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(list(image_param.shared_init[0].shape), list(shared_shapes))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -479,8 +508,12 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
-        self.assertEqual(image_param.shared_init.dim(), 4)
-        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
+        self.assertIsNone(image_param.offset)
+        for i in range(len(shared_shapes)):
+            self.assertEqual(image_param.shared_init[i].dim(), 4)
+            self.assertEqual(
+                list(image_param.shared_init[i].shape), list(shared_shapes[i])
+            )
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -510,8 +543,13 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
-        self.assertEqual(image_param.shared_init.dim(), 4)
-        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
+        self.assertIsNone(image_param.offset)
+        for i in range(len(shared_shapes)):
+            self.assertEqual(image_param.shared_init[i].dim(), 4)
+            s_shape = list(shared_shapes[i])
+            s_shape = ([1] * (4 - len(s_shape))) + list(s_shape)
+            self.assertEqual(list(image_param.shared_init[i].shape), s_shape)
+
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)

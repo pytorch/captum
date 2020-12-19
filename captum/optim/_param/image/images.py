@@ -13,6 +13,7 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import ToRGB
+from captum.optim._utils.models import pad_reflective_a4d
 from captum.optim._utils.typing import InitSize, SquashFunc
 
 
@@ -356,7 +357,13 @@ class LaplacianImage(ImageParameterization):
 
 class SharedImage(ImageParameterization):
     """
-    Share some image parameters across the batch.
+    Share some image parameters across the batch to increase spatial alignment,
+    by using interpolated lower resolution tensors.
+    This is sort of like a laplacian pyramid but more general.
+
+    Offsets are similar to phase in Fourier transforms, and can be applied to
+    any dimension.
+
     Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
     https://distill.pub/2018/differentiable-parameterizations/
     """
@@ -389,16 +396,29 @@ class SharedImage(ImageParameterization):
                 offset = [([0] * (4 - len(offset))) + list(offset)] * n
         else:
             offset = [[offset] * 4] * n
+        offset = [list(v) for v in offset]
         assert all([all([type(o) is int for o in v]) for v in offset])
         return offset
 
-    def apply_offset(
-        self, x_list: List[torch.Tensor], size: Tuple[int]
-    ) -> List[torch.Tensor]:
-        assert len(size) == 4
+    def apply_offset(self, x_list: List[torch.Tensor]) -> List[torch.Tensor]:
         A = []
         for x, offset in zip(x_list, self.offset):
-            x = F.pad(x, offset, "reflect")
+            assert x.dim() == 4
+            size = list(x.size())
+
+            offset_pad = (
+                [abs(offset[0])] * 2
+                + [abs(offset[1])] * 2
+                + [abs(offset[2])] * 2
+                + [abs(offset[3])] * 2
+            )
+            offset_pad.reverse()
+
+            x = pad_reflective_a4d(x, offset_pad)
+
+            for o, s in zip(offset, range(x.dim())):
+                x = torch.roll(x, shifts=o, dims=s)
+
             x = x[: size[0], : size[1], : size[2], : size[3]]
             A.append(x)
         return A
@@ -408,17 +428,18 @@ class SharedImage(ImageParameterization):
     ) -> torch.Tensor:
         """
         Linear interpolation for 4D, 5D, and 6D tensors.
-        If the batch dimension needs to be resized, 
+        If the batch dimension needs to be resized,
         we move it's location temporarily for F.interpolate.
         """
 
         if x.size(1) == channels:
             mode = "bilinear"
+            size = (height, width)
         else:
             mode = "trilinear"
             x = x.unsqueeze(0)
             size = (channels, height, width)
-        x = F.interpolate(x, size=(height, width), mode=mode)
+        x = F.interpolate(x, size=size, mode=mode)
         x = x.squeeze(0) if len(size) == 3 else x
         if x.size(0) != batch:
             x = x.permute(1, 0, 2, 3)
@@ -438,12 +459,12 @@ class SharedImage(ImageParameterization):
                 image.size(0),
                 image.size(1),
                 image.size(2),
-                image.size(3)),
+                image.size(3),
             )
             for shared_tensor in self.shared_init
         ]
         if self.offset is not None:
-            x = self.apply_offset(x, tuple(image.size()))
+            x = self.apply_offset(x)
         return (image + sum(x)).refine_names("B", "C", "H", "W")
 
 

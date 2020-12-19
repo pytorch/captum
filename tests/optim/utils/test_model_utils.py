@@ -9,6 +9,20 @@ from captum.optim._models.inception_v1 import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
+class TestPadReflectiveA4D(BaseTest):
+    def test_pad_reflective_a4d(self) -> None:
+        x = torch.ones(1, 3, 4, 4)
+        padding = [2] * 8
+        x_out = model_utils.pad_reflective_a4d(x, padding)
+        self.assertEqual(list(x_out.shape), [4, 7, 8, 8])
+
+    def test_pad_reflective_a4d_zeros(self) -> None:
+        x = torch.ones(1, 3, 4, 4)
+        padding = [0] * 8
+        x_out = model_utils.pad_reflective_a4d(x, padding)
+        self.assertEqual(x_out.shape, x.shape)
+
+
 class TestConv2dSame(BaseTest):
     def test_conv2d_same(self) -> None:
         x = torch.ones(64, 32, 100, 20)

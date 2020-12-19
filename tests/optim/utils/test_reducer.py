@@ -9,7 +9,7 @@ import captum.optim._utils.reducer as reducer
 from tests.helpers.basic import BaseTest
 
 
-class TestReductionAlgorithm(object):
+class FakeReductionAlgorithm(object):
     """
     Fake reduction algorithm for testing
     """
@@ -58,7 +58,7 @@ class TestChannelReducer(BaseTest):
 
     def test_channelreducer_pytorch_custom_alg(self) -> None:
         test_input = torch.randn(1, 32, 224, 224).abs()
-        reduction_alg = TestReductionAlgorithm
+        reduction_alg = FakeReductionAlgorithm
         c_reducer = reducer.ChannelReducer(
             n_components=3, reduction_alg=reduction_alg, max_iter=100
         )
@@ -66,7 +66,7 @@ class TestChannelReducer(BaseTest):
         self.assertEquals(test_output.size(1), 3)
 
     def test_channelreducer_pytorch_custom_alg_components(self) -> None:
-        reduction_alg = TestReductionAlgorithm
+        reduction_alg = FakeReductionAlgorithm
         c_reducer = reducer.ChannelReducer(
             n_components=3, reduction_alg=reduction_alg, max_iter=100
         )
