@@ -364,16 +364,17 @@ class SharedImage(ImageParameterization):
     def __init__(
         self,
         shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
-        parameterization=None,
+        parameterization: ImageParameterization = None,
         offset: Union[int, Tuple[int], Tuple[Tuple[int]], None] = None,
     ) -> None:
         super().__init__()
+        assert shapes is not None
         A = []
         shared_shapes = [shapes] if type(shapes[0]) is not tuple else shapes
         for shape in shared_shapes:
             assert len(shape) >= 2 and len(shape) <= 4
             shape = ([1] * (4 - len(shape))) + list(shape)
-            batch, channels, height, width = shape[0], shape[1], shape[2], shape[3]
+            batch, channels, height, width = shape
             A.append(torch.nn.Parameter(torch.randn([batch, channels, height, width])))
         self.shared_init = torch.nn.ParameterList(A)
         self.parameterization = parameterization
@@ -388,7 +389,7 @@ class SharedImage(ImageParameterization):
                 offset = [([0] * (4 - len(offset))) + list(offset)] * n
         else:
             offset = [[offset] * 4] * n
-        offset = [[int(o) for o in v] for v in offset]
+        assert all([all([type(o) is int for o in v]) for v in offset])
         return offset
 
     def apply_offset(
@@ -403,10 +404,12 @@ class SharedImage(ImageParameterization):
         return A
 
     def interpolate_tensor(
-        self, x: torch.Tensor, size: InitSize, batch: int, channels: int
+        self, x: torch.Tensor, batch: int, channels: int, height: int, width: int
     ) -> torch.Tensor:
         """
         Linear interpolation for 4D, 5D, and 6D tensors.
+        If the batch dimension needs to be resized, 
+        we move it's location temporarily for F.interpolate.
         """
 
         if x.size(1) == channels:
@@ -414,8 +417,8 @@ class SharedImage(ImageParameterization):
         else:
             mode = "trilinear"
             x = x.unsqueeze(0)
-            size = (channels, size[0], size[1])
-        x = F.interpolate(x, size=size, mode=mode)
+            size = (channels, height, width)
+        x = F.interpolate(x, size=(height, width), mode=mode)
         x = x.squeeze(0) if len(size) == 3 else x
         if x.size(0) != batch:
             x = x.permute(1, 0, 2, 3)
@@ -432,9 +435,10 @@ class SharedImage(ImageParameterization):
         x = [
             self.interpolate_tensor(
                 shared_tensor,
-                (image.size(2), image.size(3)),
                 image.size(0),
                 image.size(1),
+                image.size(2),
+                image.size(3)),
             )
             for shared_tensor in self.shared_init
         ]
@@ -462,7 +466,7 @@ class NaturalImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        parameterization=FFTImage,
+        parameterization: ImageParameterization = FFTImage,
         init: Optional[torch.Tensor] = None,
         decorrelate_init: bool = True,
         squash_func: Optional[SquashFunc] = None,

@@ -400,6 +400,8 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
+        self.assertEqual(image_param.shared_init.dim(), 4)
+        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -422,6 +424,8 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
+        self.assertEqual(image_param.shared_init.dim(), 4)
+        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -444,6 +448,8 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
+        self.assertEqual(image_param.shared_init.dim(), 4)
+        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -473,6 +479,8 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
+        self.assertEqual(image_param.shared_init.dim(), 4)
+        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
@@ -502,6 +510,8 @@ class TestSharedImage(BaseTest):
         )
         test_tensor = image_param.forward()
 
+        self.assertEqual(image_param.shared_init.dim(), 4)
+        self.assertEqual(image_param.shared_init.shape, (1, 1, 128 // 2, 128 // 2))
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
