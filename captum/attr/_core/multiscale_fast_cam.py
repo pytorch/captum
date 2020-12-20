@@ -31,12 +31,10 @@ class MultiscaleFastCam(GradientAttribution):
         self,
         forward_func: Callable,
         layers: ModuleOrModuleList,
-        norm: Any = "gamma",
         device_ids: Union[None, List[int]] = None,
     ) -> None:
         r"""
         Args:
-
             forward_func (callable): The forward function of the model or any
                           modification of it
             layers (torch.nn.Module or listt(torch.nn.Module)): A list of layers
@@ -51,123 +49,50 @@ class MultiscaleFastCam(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
         self.layer_act = LayerActivation(forward_func, layers, device_ids)
-        self.norm_func = self._set_norm_func(norm)
 
     @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
+        scale: str = 'smoe',
+        norm: str = 'gaussian',
+        weights: List[float] = None,
+        return_weighted=True,
+        resize_mode: str = "bilinear",
+        relu_attribution: bool = False,
         additional_forward_args: Any = None,
-        attribute_to_layer_input: bool = False,
-    ) -> Tuple[Tensor, ...]:
-        r"""
-        Args:
+        attribute_to_layer_input: bool = False
+    ) -> Tuple[Tensor, ...]:  
 
-            inputs (tensor): Input for which attributions
-                        are computed. Input should have dimensions BHWC.
-            additional_forward_args (any, optional): If the forward function
-                        requires additional arguments other than the inputs for
-                        which attributions should not be computed, this argument
-                        can be provided. It must be either a single additional
-                        argument of a Tensor or arbitrary (non-tuple) type or a
-                        tuple containing multiple additional arguments including
-                        tensors or any arbitrary python types. These arguments
-                        are provided to forward_func in order following the
-                        arguments in inputs.
-                        Note that attributions are not computed with respect
-                        to these arguments.
-                        Default: None
-            attribute_to_layer_input (bool, optional): Indicates whether to
-                        compute the attributions with respect to the layer input
-                        or output. If `attribute_to_layer_input` is set to True
-                        then the attributions will be computed with respect to the
-                        layer input, otherwise it will be computed with respect
-                        to layer output.
-                        Note that currently it is assumed that either the input
-                        or the outputs of internal layers, depending on whether we
-                        attribute to the input or output, are single tensors.
-                        Support for multiple tensors will be added later.
-                        Default: False
+        # pick out functions
+        self.scale_func = self.pick_scale_func(scale)
+        self.norm_func = self.pick_norm_func(norm)
+        if not weights:
+            weights = np.ones(len(self.layers))
 
-        Returns:
-            list of *tensors* of **attributions**:
-            - **attributions** (*tensor* or tuple of *tensors*):
-                        Attributions based on FastCAM method.
-                        Each element of the list is attributions computed from
-                        layer 0.
-        Examples::
-
-            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
-            >>> # and returns an Nx10 tensor of class probabilities.
-            >>> # It contains a layer conv4, which is an instance of nn.conv2d,
-            >>> # and the output of this layer has dimensions Nx50x8x8.
-            >>> input = torch.randn(1, 3, 32, 32)
-            >>> fastcam = MultiscaleFastCam(model,
-                                            layers=[model.relu,
-                                                    model.layer1[2].relu,
-                                                    model.layer2[3].relu,
-                                                    model.layer3[5].relu,
-                                                    model.layer4[2].relu],
-                                            norm="gamma")
-            >>> attributes = fastcam.attribute(transformed_img)
-            >>> combined_map, weighted_maps = fastcam.combine(attributes,
-                                weights=[1.0 for _ in range(5)],
-                                output_shape=(in_height, in_width))
-        """
         layer_attrs = self.layer_act.attribute(
             inputs, additional_forward_args, attribute_to_layer_input
         )
         attributes = []
         for layer_attr in layer_attrs:
-            smoe_attr = self._compute_smoe_scale(layer_attr)
-            scaled_attr = self.norm_func(smoe_attr)
-            attributes.append(scaled_attr)
-        return tuple(attributes)
+            scaled_attr = self.scale_func(layer_attr)
+            normed_attr = self.norm_func(scaled_attr)
+            attributes.append(normed_attr)
+        attributes = tuple(attributes)
 
-    @staticmethod
-    def combine(
-        saliency_maps: List[Tensor],
-        weights: List[float],
-        output_shape: Tuple,
-        resize_mode: str = "bilinear",
-        relu_attribution: bool = False,
-    ) -> Tuple[Tensor, Tensor]:
-        """Combine multi-scale saliency map (attributions) by taking in saliency
-                            maps from multiple layers of the network.
-        Args:
-            saliency_maps (list(Tensors)): A List of attributions with different
-                            size. The direct way to use this is to pass in the
-                            outputs of `attribute` function above.
-            weights (list(float)): Weights for each saliency map
-            output_shape (tuple): Specifies the output shape of saliency. In most
-                            cases, this should be the same as input image shape.
-            resize_mode (str): Resize mode for interpolation.
-            relu_attribution (bool): Apply relu to saliency maps before returning
-                            output.
-        Returns:
-            - **combined_map** (*tensor*): The combined and weighted saliency map
-            - **weighted_maps** (list of *tensors*): A List of weighted maps,
-                            interpolated to `output_shape`.
-        """
-
-        assert len(saliency_maps) > 1, "need more than 1 saliency map to combine."
-        assert len(weights) == len(
-            saliency_maps
-        ), "weights and saliency maps \
-            should have the same length."
-
-        bn = saliency_maps[0].size()[0]
+        ## Combine
+        bn, channels, height, width = inputs.shape
         combined_map = torch.zeros(
-            (bn, 1, output_shape[0], output_shape[1]),
-            dtype=saliency_maps[0].dtype,
-            device=saliency_maps[0].device,
+            (bn, 1, height, width),
+            dtype=attributes[0].dtype,
+            device=attributes[0].device,
         )
         weighted_maps = [[] for _ in range(bn)]  # type: List[List[Any]]
-        for m, smap in enumerate(saliency_maps):
+        for m, smap in enumerate(attributes):
             for i in range(bn):
                 w = F.interpolate(
                     smap[i].unsqueeze(0).unsqueeze(0),
-                    size=output_shape,
+                    size=(height, width),
                     mode=resize_mode,
                     align_corners=False,
                 ).squeeze()
@@ -175,33 +100,109 @@ class MultiscaleFastCam(GradientAttribution):
                 combined_map[i] += w * weights[m]
         combined_map = combined_map / np.sum(weights)
         weighted_maps = torch.stack([torch.stack(wmaps) for wmaps in weighted_maps])
+
         if relu_attribution:
             combined_map = F.relu(combined_map)
             weighted_maps = F.relu(weighted_maps)
-        return combined_map, weighted_maps
 
-    def _set_norm_func(self, scale):
-        if scale == "gamma":
-            return self._compute_gamma_norm
-        elif scale == "gaussian":
-            return self._compute_gaussian_norm
-        elif scale is None or scale == "None":
-            return lambda x: x.squeeze()
-        elif callable(scale):
-            return scale
+        if return_weighted:
+            return weighted_maps
+        return combined_map
+
+
+    def pick_norm_func(self, norm):
+        norm = norm.lower()
+        if norm == 'gamma':
+            norm_func = self._compute_gamma_norm
+        elif norm == 'gaussian':
+            norm_func = self._compute_gaussian_norm
+        elif norm is None or norm == 'None':
+            norm_func = lambda x: x.squeeze()
+        elif callable(norm):
+            norm_func = norm
         else:
             msg = (
-                f"{scale} scaling option not found or invalid. "
+                f"{norm} norming option not found or invalid. "
                 + "Available options: [gamma, normal, None]"
             )
             raise NameError(msg)
+        return norm_func
+
+
+    def pick_scale_func(self, scale):
+        scale = scale.lower()
+        if scale == 'smoe':
+            scale_func = self._compute_smoe_scale
+        elif scale == 'std':
+            scale_func = self._compute_std_scale
+        elif scale == 'mean':
+            scale_func = self._compute_mean_scale
+        elif scale == 'max':
+            scale_func = self._compute_max_scale
+        elif scale == 'normal':
+            scale_func = _compute_normal_entropy_scale
+        else:
+            msg = (
+                f"{scale} scaling option not found or invalid. "
+                + "Available options: [smoe, std, mean, normal]"
+            )
+            raise NameError(msg)
+        return scale_func
 
     def _compute_smoe_scale(self, inputs):
         x = inputs + 1e-7
-        m = x.mean(1, keepdims=True)
+        m = x.mean(dim=1, keepdims=True)
         k = torch.log2(m) - torch.log2(x).mean(dim=1, keepdims=True)
         th = k * m
         return th
+
+
+    def _compute_std_scale(self, inputs):
+        return torch.std(inputs, dim=1, keepdim=True)
+    
+
+    def _compute_mean_scale(self, inputs):
+        return torch.mean(inputs, dim=1, keepdim=True)
+
+
+    def _compute_max_scale(self, inputs):
+        return torch.max(inputs, dim=1, keepdim=True)
+
+
+    def _compute_normal_entropy_scale(self, inputs):
+        c1 = torch.tensor(0.3989422804014327)  # 1.0/math.sqrt(2.0*math.pi)
+        c2 = torch.tensor(1.4142135623730951)  # math.sqrt(2.0)
+        c3 = torch.tensor(4.1327313541224930)
+        def _compute_alpha(mean, std, a=0):
+            return (a - mean) / std
+
+        def _compute_pdf(eta):
+            return c1 * torch.exp(-0.5 * eta.pow(2.0))
+
+        def _compute_cdf(eta):
+            e = torch.erf(eta / c2)
+            return 0.5 * (1.0 + e) + 1e-7
+        m = torch.mean(inputs, dim=1)
+        s = torch.std(inputs, dim=1)
+        a = _compute_alpha(m, s)
+        pdf = _compute_pdf(a)  
+        cdf = _compute_cdf(a)
+        Z = 1.0 - cdf 
+        T1 = torch.log(c3 * s * Z)
+        T2 = (a * pdf) / (2.0 * Z)
+        ent = T1 + T2
+        return ent
+
+
+    def _compute_gaussian_norm(self, inputs):
+        b, _, h, w = inputs.size()
+        x = inputs.reshape(b, h * w)
+        m = x.mean(dim=1, keepdims=True)
+        s = x.std(dim=1, keepdims=True)
+        x = 0.5 * (1.0 + torch.erf((x - m) / (s * torch.sqrt(torch.tensor(2.0)))))
+        x = x.reshape(b, h, w)
+        return x
+
 
     def _compute_gamma_norm(self, inputs):
         def _gamma(z):
@@ -247,9 +248,8 @@ class MultiscaleFastCam(GradientAttribution):
 
         def _compute_ml_est(x, i=10):
             x = x + eps
-            s = torch.log(x.mean(dim=1, keepdims=True)) - torch.log(x).mean(
-                dim=1, keepdims=True
-            )
+            s = torch.log(x.mean(dim=1, keepdims=True)) 
+            s = s - torch.log(x).mean(dim=1, keepdims=True)
             s3 = s - 3.0
             rt = torch.sqrt(s3.pow(2.0) + 24.0 * s)
             nm = 3.0 - s + rt
@@ -273,23 +273,13 @@ class MultiscaleFastCam(GradientAttribution):
                 1.5056327351493116e-7,
             ]
         )
-        two_pi = torch.tensor(np.sqrt(2.0 * np.pi))
         eps = 1e-7
-
+        two_pi = torch.tensor(np.sqrt(2.0 * np.pi))
         b, _, h, w = inputs.size()
         x = inputs.reshape(b, h * w)
-        x = x - torch.min(x, dim=1, keepdims=True)[0] + eps
+        x = x - torch.min(x, dim=1, keepdims=True)[0] + 1e-7
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
         x = torch.where(torch.isfinite(x), x, torch.zeros_like(x))
         output = x.reshape(b, h, w)
         return output
-
-    def _compute_gaussian_norm(self, inputs):
-        b, _, h, w = inputs.size()
-        x = inputs.reshape(b, h * w)
-        m = x.mean(dim=1, keepdims=True)
-        s = x.std(dim=1, keepdims=True)
-        x = 0.5 * (1.0 + torch.erf((x - m) / (s * torch.sqrt(torch.tensor(2.0)))))
-        x = x.reshape(b, h, w)
-        return x
