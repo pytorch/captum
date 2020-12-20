@@ -75,7 +75,7 @@ class NeuronActivation(Loss):
             activations.size(2), activations.size(3), self.x, self.y
         )
 
-        return activations[:, self.channel_index, _x, _y]
+        return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1]
 
 
 class DeepDream(Loss):
@@ -269,16 +269,16 @@ class DirectionNeuron(Loss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        channel_index: int,
         x: Optional[int] = None,
         y: Optional[int] = None,
+        channel_index: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1, 1, 1))
-        self.channel_index = channel_index
         self.x = x
         self.y = y
+        self.channel_index = channel_index
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
@@ -288,8 +288,10 @@ class DirectionNeuron(Loss):
         _x, _y = get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
-        activations = activations[:, self.channel_index, _x, _y]
-        return torch.cosine_similarity(self.direction, activations[None, None, None])
+        activations = activations[:, :, _x : _x + 1, _y : _y + 1]
+        if self.channel_index is not None:
+            activations = activations[:, self.channel_index, ...][:, None, ...]
+        return torch.cosine_similarity(self.direction, activations)
 
 
 class TensorDirection(Loss):
@@ -359,7 +361,9 @@ class ActivationWeights(Loss):
                 _x, _y = get_neuron_pos(
                     activations.size(2), activations.size(3), self.x, self.y
                 )
-                activations = activations[..., _x, _y].squeeze() * self.weights
+                activations = (
+                    activations[..., _x : _x + 1, _y : _y + 1].squeeze() * self.weights
+                )
             else:
                 activations = activations[
                     ..., self.y : self.y + self.wy, self.x : self.x + self.wx
