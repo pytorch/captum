@@ -258,7 +258,7 @@ class Direction(Loss):
         return torch.cosine_similarity(self.direction, activations)
 
 
-class DirectionNeuron(Loss):
+class NeuronDirection(Loss):
     """
     Visualize a single (x, y) position for a direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
