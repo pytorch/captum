@@ -165,29 +165,63 @@ def pad_reflective_a4d(x: torch.Tensor, padding: List[int]) -> torch.Tensor:
     assert x.dim() == 4
     assert len(padding) == 8
 
-    # Pad width
-    if padding[0] != 0:
-        x = torch.cat([x, x.flip([3])[..., 0 : padding[0]]], dim=3)
-    if padding[1] != 0:
-        x = torch.cat([x.flip([3])[..., -padding[1] :], x], dim=3)
-
-    # Pad height
-    if padding[2] != 0:
-        x = torch.cat([x, x.flip([2])[..., 0 : padding[2], :]], dim=2)
-    if padding[3] != 0:
-        x = torch.cat([x.flip([2])[..., -padding[3] :, :], x], dim=2)
-
-    # Pad channels
-    if padding[4] != 0:
-        x = torch.cat([x, x.flip([1])[:, 0 : padding[4]]], dim=1)
-    if padding[5] != 0:
-        x = torch.cat([x.flip([1])[:, -padding[5] :], x], dim=1)
+    if x.size(0) == 2:
+        assert sum(padding[6:]) == 0
+    if x.size(1) == 2:
+        assert sum(padding[4:6]) == 0
 
     # Pad batch
-    if padding[6] != 0:
-        x = torch.cat([x, x.flip([0])[0 : padding[6]]], dim=0)
-    if padding[7] != 0:
-        x = torch.cat([x.flip([0])[-padding[7] :], x], dim=0)
+    if x.size(0) > 2:
+        if padding[6] != 0:
+            x = torch.cat([x, x.flip([0])[1 : (padding[6] + 1)]], dim=0)
+        if padding[7] != 0:
+            x = torch.cat([x.flip([0])[-(padding[7] + 1) : -1], x], dim=0)
+
+    elif x.size(0) == 1:
+        P = []
+        if padding[6] != 0:
+            P.append(
+                torch.cat(
+                    [x if (i + 1) % 2 == 0 else x.flip([0]) for i in range(padding[6])]
+                )
+            )
+        P.append(x)
+        if padding[7] != 0:
+            P.append(
+                torch.cat(
+                    [x if (i + 1) % 2 == 0 else x.flip([0]) for i in range(padding[7])]
+                )
+            )
+        x = torch.cat(P)
+
+    # Pad channels
+    if x.size(1) > 2:
+        if padding[4] != 0:
+            x = torch.cat([x, x.flip([1])[:, 1 : (padding[4] + 1)]], dim=1)
+        if padding[5] != 0:
+            x = torch.cat([x.flip([1])[:, -(padding[5] + 1) : -1], x], dim=1)
+
+    elif x.size(1) == 1:
+        P = []
+        if padding[4] != 0:
+            P.append(
+                torch.cat(
+                    [x if (i + 1) % 2 == 0 else x.flip([1]) for i in range(padding[4])],
+                    dim=1,
+                )
+            )
+        P.append(x)
+        if padding[5] != 0:
+            P.append(
+                torch.cat(
+                    [x if (i + 1) % 2 == 0 else x.flip([1]) for i in range(padding[5])],
+                    dim=1,
+                )
+            )
+        x = torch.cat(P, dim=1)
+
+    # Pad height and width
+    x = torch.nn.functional.pad(x, padding[:4], "reflect")
     return x
 
 

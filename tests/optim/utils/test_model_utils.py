@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import unittest
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -10,17 +11,37 @@ from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
 class TestPadReflectiveA4D(BaseTest):
-    def test_pad_reflective_a4d(self) -> None:
-        x = torch.ones(1, 3, 4, 4)
+    def test_pad_reflective_a4d_b1_c1(self) -> None:
+        b = 1
+        c = 1
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
         padding = [2] * 8
+
         x_out = model_utils.pad_reflective_a4d(x, padding)
-        self.assertEqual(list(x_out.shape), [4, 7, 8, 8])
+        x_out_np = torch.as_tensor(np.pad(x.numpy(), (2), mode="reflect"))
+
+        assertTensorAlmostEqual(self, x_out, x_out_np)
+
+    def test_pad_reflective_a4d_b3_c3(self) -> None:
+        b = 3
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
+        padding = [2] * 8
+
+        x_out = model_utils.pad_reflective_a4d(x, padding)
+        x_out_np = torch.as_tensor(np.pad(x.numpy(), (2), mode="reflect"))
+
+        assertTensorAlmostEqual(self, x_out, x_out_np)
 
     def test_pad_reflective_a4d_zeros(self) -> None:
-        x = torch.ones(1, 3, 4, 4)
+        b = 1
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
         padding = [0] * 8
+
         x_out = model_utils.pad_reflective_a4d(x, padding)
-        self.assertEqual(x_out.shape, x.shape)
+
+        assertTensorAlmostEqual(self, x_out, x)
 
 
 class TestConv2dSame(BaseTest):
