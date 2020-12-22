@@ -1,5 +1,4 @@
 import math
-from contextlib import suppress
 from typing import List, Tuple, Union
 
 import torch
@@ -234,6 +233,6 @@ def collect_activations(
     Collect target activations for a model.
     """
 
-    catch_activ = ActivationCatcher(model, targets)
+    catch_activ = ActivationFetcher(model, targets)
     activ_out = catch_activ(model_input)
     return activ_out

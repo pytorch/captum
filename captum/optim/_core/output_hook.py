@@ -1,10 +1,10 @@
-from typing import Iterable
+from contextlib import suppress
+from typing import Iterable, List, Union
 from warnings import warn
 
 import torch.nn as nn
 
-# from clarity.pytorch import ModuleOutputMapping
-from captum.optim._utils.typing import ModelInputType
+from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
 
 
 class AbortForwardException(Exception):
@@ -97,7 +97,7 @@ class ActivationFetcher:
     """
 
     def __init__(self, model, targets: Union[nn.Module, List[nn.Module]]) -> None:
-        super(ActivationCatcher, self).__init__()
+        super(ActivationFetcher, self).__init__()
         self.model = model
         self.layers = ModuleOutputsHook(targets)
 
