@@ -2,6 +2,7 @@ import math
 import numbers
 from typing import List, Optional, Sequence, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -367,3 +368,31 @@ class GaussianSmoothing(nn.Module):
             filtered (torch.Tensor): Filtered output.
         """
         return self.conv(input, weight=self.weight, groups=self.groups)
+
+
+class SymmetricPadding(torch.autograd.Function):
+    """
+    Autograd compatible symmetric padding that uses NumPy's pad function.
+    """
+
+    @staticmethod
+    def forward(self, x: torch.Tensor, padding) -> torch.Tensor:
+        self.padding = padding
+        x_device = x.device
+        x = x.cpu()
+        x.data = torch.as_tensor(
+            np.pad(x.data.numpy(), pad_width=padding, mode="symmetric")
+        )
+        x = x.to(x_device)
+        return x
+
+    @staticmethod
+    def backward(self, grad_output: torch.Tensor):
+        grad_input = grad_output.clone()
+        B, C, H, W = grad_input.size()
+        b1, b2 = self.padding[0]
+        c1, c2 = self.padding[1]
+        h1, h2 = self.padding[2]
+        w1, w2 = self.padding[3]
+        grad_input = grad_input[b1 : B - b2, c1 : C - c2, h1 : H - h2, w1 : W - w2]
+        return grad_input, None

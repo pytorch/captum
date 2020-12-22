@@ -11,40 +11,6 @@ from captum.optim._models.inception_v1 import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
-class TestPadReflectiveA4D(BaseTest):
-    def test_pad_reflective_a4d_b1_c1(self) -> None:
-        b = 1
-        c = 1
-        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
-        padding = [2] * 8
-
-        x_out = model_utils.pad_reflective_a4d(x, padding)
-        x_out_np = torch.as_tensor(np.pad(x.numpy(), (2), mode="reflect"))
-
-        assertTensorAlmostEqual(self, x_out, x_out_np)
-
-    def test_pad_reflective_a4d_b3_c3(self) -> None:
-        b = 3
-        c = 3
-        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
-        padding = [2] * 8
-
-        x_out = model_utils.pad_reflective_a4d(x, padding)
-        x_out_np = torch.as_tensor(np.pad(x.numpy(), (2), mode="reflect"))
-
-        assertTensorAlmostEqual(self, x_out, x_out_np)
-
-    def test_pad_reflective_a4d_zeros(self) -> None:
-        b = 1
-        c = 3
-        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
-        padding = [0] * 8
-
-        x_out = model_utils.pad_reflective_a4d(x, padding)
-
-        assertTensorAlmostEqual(self, x_out, x)
-
-
 class TestConv2dSame(BaseTest):
     def test_conv2d_same(self) -> None:
         x = torch.ones(64, 32, 100, 20)

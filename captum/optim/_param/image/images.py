@@ -12,8 +12,7 @@ try:
 except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
-from captum.optim._param.image.transform import ToRGB
-from captum.optim._utils.models import pad_reflective_a4d
+from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 from captum.optim._utils.typing import InitSize, SquashFunc
 
 
@@ -407,14 +406,13 @@ class SharedImage(ImageParameterization):
             size = list(x.size())
 
             offset_pad = (
-                [abs(offset[0])] * 2
-                + [abs(offset[1])] * 2
-                + [abs(offset[2])] * 2
-                + [abs(offset[3])] * 2
+                [[abs(offset[0])] * 2]
+                + [[abs(offset[1])] * 2]
+                + [[abs(offset[2])] * 2]
+                + [[abs(offset[3])] * 2]
             )
-            offset_pad.reverse()
 
-            x = pad_reflective_a4d(x, offset_pad)
+            x = SymmetricPadding.apply(x, offset_pad)
 
             for o, s in zip(offset, range(x.dim())):
                 x = torch.roll(x, shifts=o, dims=s)

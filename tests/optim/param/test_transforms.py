@@ -377,5 +377,20 @@ class TestRGBToBGR(BaseTest):
         assertTensorAlmostEqual(self, output_tensor, expected_x)
 
 
+class TestSymmetricPadding(BaseTest):
+    def test_symmetric_padding(self) -> None:
+        b = 2
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
+        offset_pad = [[3, 3], [4, 4], [2, 2], [5, 5]]
+
+        x_pt = torch.nn.Parameter(x)
+        x_out = transform.SymmetricPadding.apply(x_pt, offset_pad)
+        x_out_np = torch.as_tensor(
+            np.pad(x.detach().numpy(), pad_width=offset_pad, mode="symmetric")
+        )
+        assertTensorAlmostEqual(self, x_out, x_out_np)
+
+
 if __name__ == "__main__":
     unittest.main()
