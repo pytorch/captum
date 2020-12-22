@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
-from captum.optim._utils.typing import ModuleOutputMapping
+from captum.optim._core.output_hook import ActivationFetcher
+from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
 
 
 def get_model_layers(model) -> List[str]:
@@ -228,33 +228,12 @@ def pad_reflective_a4d(x: torch.Tensor, padding: List[int]) -> torch.Tensor:
 def collect_activations(
     model,
     targets: Union[nn.Module, List[nn.Module]],
-    model_input: torch.Tensor = torch.zeros(1, 3, 224, 224),
+    model_input: ModelInputType = torch.zeros(1, 3, 224, 224),
 ) -> ModuleOutputMapping:
     """
     Collect target activations for a model.
     """
 
-    catch_activ = ActivationCatcher(targets)
-    activ_out = catch_activ(model, model_input)
+    catch_activ = ActivationCatcher(model, targets)
+    activ_out = catch_activ(model_input)
     return activ_out
-
-
-class ActivationCatcher(object):
-    """
-    Simple module for collecting activations from model targets.
-    """
-
-    def __init__(self, targets: Union[nn.Module, List[nn.Module]]) -> None:
-        super(ActivationCatcher, self).__init__()
-        self.layers = ModuleOutputsHook(targets)
-
-    def __call__(self, model, input_t: torch.Tensor) -> ModuleOutputMapping:
-        try:
-            with suppress(AbortForwardException):
-                model(input_t)
-            activations = self.layers.consume_outputs()
-            self.layers.remove_hooks()
-            return activations
-        except (Exception, BaseException) as e:
-            self.layers.remove_hooks()
-            raise e

@@ -1,6 +1,6 @@
 import math
 import numbers
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 import torch
 import torch.nn as nn
@@ -144,6 +144,29 @@ class CenterCrop(torch.nn.Module):
         w_crop = w - self.crop_val[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
+
+
+def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tensor:
+    """
+    Crop NCHW & CHW outputs by specifying the desired output shape.
+    """
+
+    assert input.dim() == 4 or input.dim() == 3
+    output_size = [output_size] if not hasattr(output_size, "__iter__") else output_size
+    assert len(output_size) == 1 or len(output_size) == 2
+    output_size = output_size * 2 if len(output_size) == 1 else output_size
+
+    if input.dim() == 4:
+        h, w = input.size(2), input.size(3)
+    if input.dim() == 3:
+        h, w = input.size(1), input.size(2)
+
+    h_crop = h - int(round((h - output_size[0]) / 2.0))
+    w_crop = w - int(round((w - output_size[1]) / 2.0))
+
+    return input[
+        ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
+    ]
 
 
 def rand_select(transform_values: TransformValList) -> TransformVal:

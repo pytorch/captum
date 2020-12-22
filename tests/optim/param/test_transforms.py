@@ -168,6 +168,22 @@ class TestCenterCrop(BaseTest):
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
 
+class TestCenterCropShape(BaseTest):
+    def test_center_crop_shape_tuple(self) -> None:
+        x = torch.ones(32, 16, 28, 28)
+
+        x_out = transform.center_crop_shape(x, (5, 5))
+
+        self.AssertEqual(list(x_out.shape), [32, 16, 5, 5])
+
+    def test_center_crop_shape_int(self) -> None:
+        x = torch.ones(32, 16, 28, 28)
+
+        x_out = transform.center_crop_shape(x, 5)
+
+        self.AssertEqual(list(x_out.shape), [32, 16, 5, 5])
+
+
 class TestBlendAlpha(BaseTest):
     def test_blend_alpha(self) -> None:
         rgb_tensor = torch.ones(3, 3, 3)
