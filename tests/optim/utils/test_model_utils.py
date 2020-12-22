@@ -341,15 +341,14 @@ class TestCollectActivations(BaseTest):
                 "Skipping collect_activations test due to insufficient Torch version."
             )
         model = googlenet(pretrained=True)
-        try:
-            activ_out = model_utils.collect_activations(
-                model, [model.mixed4d], torch.zeros(1, 3, 224, 224)
-            )
-            self.assertIsInstance(activ_out, dict)
-            test = True
-        except Exception:
-            test = False
-        self.assertTrue(test)
+
+        activ_out = model_utils.collect_activations(
+            model, [model.mixed4d], torch.zeros(1, 3, 224, 224)
+        )
+
+        self.assertIsInstance(activ_out, dict)
+        m4d_activ = activ_out[model.mixed4d]
+        self.assertEqual(list(m4d_activ.shape), [1, 528, 14, 14])
 
 
 if __name__ == "__main__":

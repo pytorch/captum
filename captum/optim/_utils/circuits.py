@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from captum.optim._param.image.transform import center_crop_shape
 from captum.optim._utils.models import collect_activations
-from captum.optim._utils.typing import TransformSize
+from captum.optim._utils.typing import ModelInputType, TransformSize
 
 
 def get_expanded_weights(
@@ -13,7 +13,7 @@ def get_expanded_weights(
     target1: nn.Module,
     target2: nn.Module,
     crop_shape: Optional[TransformSize] = None,
-    model_input: torch.Tensor = torch.zeros(1, 3, 224, 224),
+    model_input: ModelInputType = torch.zeros(1, 3, 224, 224),
 ) -> torch.Tensor:
     """
     Extract meaningful weight interactions from between neurons which aren’t
@@ -21,6 +21,19 @@ def get_expanded_weights(
     represented in a single weight tensor.
     Schubert, et al., "Visualizing Weights", Distill, 2020.
     See: https://distill.pub/2020/circuits/visualizing-weights/
+
+    Args:
+        model:  PyTorch model instance.
+        target1 (nn.module):  The starting target. Must be below the layer specified for target2.
+        target2 (nn.module):  The end target. Must be above the layer specified for target1.
+        crop_shape (int or tuple of ints, optional):  Specify the output weight
+            size to enter crop away padding.
+        model_input (tensor or tuple of tensors, optional):  The input to use
+            with the specified model.
+
+    Returns:
+        *tensor*:  A tensor containing the expanded weights in the form of:
+            (output channels, input channels, y, x)
     """
 
     activations = collect_activations(model, [target1, target2], model_input)
