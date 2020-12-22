@@ -14,7 +14,7 @@ except (ImportError, AssertionError):
 import torch
 
 
-class ChannelReducer(object):
+class ChannelReducer:
     """
     Dimensionality reduction for the channel dimension of an input.
 
