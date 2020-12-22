@@ -24,13 +24,14 @@ def get_expanded_weights(
 
     Args:
         model:  PyTorch model instance.
-        target1 (nn.module):  The starting target. Must be below the layer specified for target2.
-        target2 (nn.module):  The end target. Must be above the layer specified for target1.
+        target1 (nn.module):  The starting target layer. Must be below the layer
+            specified for target2.
+        target2 (nn.module):  The end target layer. Must be above the layer
+            specified for target1.
         crop_shape (int or tuple of ints, optional):  Specify the output weight
             size to enter crop away padding.
         model_input (tensor or tuple of tensors, optional):  The input to use
             with the specified model.
-
     Returns:
         *tensor*:  A tensor containing the expanded weights in the form of:
             (output channels, input channels, y, x)
