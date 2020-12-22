@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import cast
 
 import numpy as np
 import torch
@@ -348,7 +349,7 @@ class TestCollectActivations(BaseTest):
 
         self.assertIsInstance(activ_out, dict)
         m4d_activ = activ_out[model.mixed4d]
-        self.assertEqual(list(m4d_activ.shape), [1, 528, 14, 14])
+        self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
 
 
 if __name__ == "__main__":
