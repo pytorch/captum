@@ -6,7 +6,6 @@ import numpy as np
 import torch
 
 from captum.optim._param.image import images
-from captum.optim._utils.models import pad_reflective_a4d
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
