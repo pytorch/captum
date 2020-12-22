@@ -599,7 +599,7 @@ def default_perturb_func(original_inp, **kwargs):
         device = original_inp[0].device
 
     probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
-    return torch.bernoulli(probs).to(device=device)
+    return torch.bernoulli(probs).to(device=device).long()
 
 
 class Lime(LimeBase):
