@@ -174,14 +174,14 @@ class TestCenterCropShape(BaseTest):
 
         x_out = transform.center_crop_shape(x, (5, 5))
 
-        self.AssertEqual(list(x_out.shape), [32, 16, 5, 5])
+        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
 
     def test_center_crop_shape_int(self) -> None:
         x = torch.ones(32, 16, 28, 28)
 
         x_out = transform.center_crop_shape(x, 5)
 
-        self.AssertEqual(list(x_out.shape), [32, 16, 5, 5])
+        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
 
 
 class TestBlendAlpha(BaseTest):
