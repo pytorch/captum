@@ -400,10 +400,11 @@ class TestSymmetricPadding(BaseTest):
 
         x_pt = torch.nn.Parameter(x) * 1
 
-        t_grad_input = []
+        t_grad_input, t_grad_output = [], []
 
         def check_grad(self, grad_input, grad_output):
             t_grad_input.append(grad_input[0].clone().detach())
+            t_grad_output.append(grad_output[0].clone().detach())
 
         class SymmetricPaddingLayer(torch.nn.Module):
             def forward(
@@ -417,6 +418,11 @@ class TestSymmetricPadding(BaseTest):
         (x_out.sum() * 1).backward()
 
         assertTensorAlmostEqual(self, x, t_grad_input[0])
+
+        x_out_np = torch.as_tensor(
+            np.pad(x.detach().numpy(), pad_width=offset_pad, mode="symmetric")
+        )
+        assertTensorAlmostEqual(self, x_out_np, t_grad_output[0])
 
 
 class TestNChannelsToRGB(BaseTest):

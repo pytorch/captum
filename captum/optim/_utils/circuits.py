@@ -26,7 +26,7 @@ def get_expanded_weights(
         model (nn.Module):  The reference to PyTorch model instance.
         target1 (nn.module):  The starting target layer. Must be below the layer
             specified for target2.
-        target2 (nn.module):  The end target layer. Must be above the layer
+        target2 (nn.Module):  The end target layer. Must be above the layer
             specified for target1.
         crop_shape (int or tuple of ints, optional):  Specify the output weight
             size to enter crop away padding.
