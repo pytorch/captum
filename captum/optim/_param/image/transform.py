@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import TransformSize, TransformVal, TransformValList
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -396,3 +397,17 @@ class SymmetricPadding(torch.autograd.Function):
         w1, w2 = self.padding[3]
         grad_input = grad_input[b1 : B - b2, c1 : C - c2, h1 : H - h2, w1 : W - w2]
         return grad_input, None
+
+
+class NChannelsToRGB(nn.Module):
+    """
+    Convert an NCHW image with n channels into a 3 channel RGB image.
+    """
+
+    def __init__(self, warp: bool = False) -> None:
+        super().__init__()
+        self.warp = warp
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        return nchannels_to_rgb(x, self.warp)
