@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -61,47 +61,3 @@ def get_expanded_weights(
     if crop_shape is not None:
         exapnded_weights = center_crop_shape(exapnded_weights, crop_shape)
     return exapnded_weights
-
-
-def tensor_heatmap(
-    tensor: torch.Tensor,
-    colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
-) -> torch.Tensor:
-    """
-    Create a color heatmap of an input weight tensor.
-    By default red represents excitatory values,
-    blue represents inhibitory values, and white represents
-    no excitation or inhibition.
-    """
-
-    assert tensor.dim() == 2
-    assert len(colors) == 5
-
-    def get_color(x: str) -> torch.Tensor:
-        def hex2base10(x: str) -> float:
-            return int(x, 16) / 255.0
-
-        return torch.tensor(
-            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
-        )
-
-    def color_scale(x: torch.Tensor) -> torch.Tensor:
-        if x < 0:
-            x = -x
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[1])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1]) + x * get_color(colors[0])
-        else:
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[3])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3]) + x * get_color(colors[4])
-
-    return torch.stack(
-        [torch.stack([color_scale(x) for x in t]) for t in tensor]
-    ).permute(2, 0, 1)

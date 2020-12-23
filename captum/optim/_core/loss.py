@@ -4,7 +4,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.images import get_neuron_pos
+from captum.optim._utils.image.common import get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
