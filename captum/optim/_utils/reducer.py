@@ -1,4 +1,3 @@
-import math
 from typing import Any, Callable, List, Union
 
 import numpy as np
@@ -25,23 +24,23 @@ class ChannelReducer:
     def __init__(
         self, n_components: int = 3, reduction_alg: Any = "NMF", **kwargs
     ) -> None:
-        if not callable(reduction_alg):
-            algorithm_map = {}
-            for name in dir(sklearn.decomposition):
-                obj = sklearn.decomposition.__getattribute__(name)
-                if isinstance(obj, type) and issubclass(obj, BaseEstimator):
-                    algorithm_map[name] = obj
-            if isinstance(reduction_alg, str):
-                if reduction_alg in algorithm_map:
-                    reduction_alg = algorithm_map[reduction_alg]
-                else:
-                    raise ValueError(
-                        "Unknown sklearn dimensionality reduction method '%s'."
-                        % reduction_alg
-                    )
+        if isinstance(reduction_alg, str):
+            reduction_alg = self._get_reduction_algo_instance(reduction_alg)
+            if reduction_alg is None:
+                raise ValueError(
+                    "Unknown sklearn dimensionality reduction method '%s'."
+                    % reduction_alg
+                )
 
         self.n_components = n_components
         self._reducer = reduction_alg(n_components=n_components, **kwargs)
+
+    def _get_reduction_algo_instance(self, name: str) -> Union[None, Callable]:
+        if hasattr(sklearn.decomposition, name):
+            obj = sklearn.decomposition.__getattribute__(name)
+            if issubclass(obj, BaseEstimator):
+                return obj
+        return None
 
     @classmethod
     def _apply_flat(cls, func: Callable, x: torch.Tensor) -> torch.Tensor:
@@ -49,50 +48,34 @@ class ChannelReducer:
         return func(x.reshape([-1, x.shape[-1]])).reshape(list(orig_shape[:-1]) + [-1])
 
     def fit_transform(
-        self, x: Union[torch.Tensor, np.ndarray], reshape: bool = True
-    ) -> Union[torch.Tensor, np.ndarray]:
+        self, x: torch.Tensor, swap_2nd_and_last_dims: bool = True
+    ) -> torch.Tensor:
         """
         Perform dimensionality reduction on an input tensor or NumPy array.
+
+        If swap_2nd_and_last_dims is true, input channels are expected to be in the
+        second dimension unless the input tensor has a shape of CHW.
         """
 
-        is_tensor = torch.is_tensor(x)
-
-        if is_tensor:
-            if x.dim() == 3 and reshape:
-                x = x.permute(2, 1, 0)
-            elif x.dim() > 3 and reshape:
-                permute_vals = [0] + list(range(x.dim()))[2:] + [1]
-                x = x.permute(*permute_vals)
-        else:
-            if x.ndim == 3 and reshape:
-                x = x.transpose(2, 1, 0)
-            elif x.ndim > 3 and reshape:
-                permute_vals = [0] + list(range(x.ndim))[2:] + [1]
-                x = x.transpose(*permute_vals)
+        if x.dim() == 3 and swap_2nd_and_last_dims:
+            x = x.permute(2, 1, 0)
+        elif x.dim() > 3 and swap_2nd_and_last_dims:
+            permute_vals = [0] + list(range(x.dim()))[2:] + [1]
+            x = x.permute(*permute_vals)
 
         x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
 
-        if is_tensor:
-            x_out = torch.as_tensor(x_out, device=x.device)
-            if x.dim() == 3 and reshape:
-                x_out = x_out.permute(2, 1, 0)
-            elif x.dim() > 3 and reshape:
-                permute_vals = (
-                    [0]
-                    + [x.dim() - 1]
-                    + list(range(x.dim()))[1 : len(list(range(x.dim()))) - 1]
-                )
-                x_out = x_out.permute(*permute_vals)
-        else:
-            if x.ndim == 3 and reshape:
-                x_out = x_out.permute(2, 1, 0)
-            elif x.ndim > 3 and reshape:
-                permute_vals = (
-                    [0]
-                    + [x.ndim - 1]
-                    + list(range(x.ndim))[1 : len(list(range(x.ndim))) - 1]
-                )
-                x_out = x_out.transpose(*permute_vals)
+        x_out = torch.as_tensor(x_out, device=x.device)
+
+        if x.dim() == 3 and swap_2nd_and_last_dims:
+            x_out = x_out.permute(2, 1, 0)
+        elif x.dim() > 3 and swap_2nd_and_last_dims:
+            permute_vals = (
+                [0]
+                + [x.dim() - 1]
+                + list(range(x.dim()))[1 : len(list(range(x.dim()))) - 1]
+            )
+            x_out = x_out.permute(*permute_vals)
 
         return x_out
 
