@@ -417,12 +417,12 @@ class TestSymmetricPadding(BaseTest):
         x_out = sym_pad(x_pt, offset_pad)
         (x_out.sum() * 1).backward()
 
-        self.assertEqual(self, x.shape, t_grad_input[0].shape)
+        self.assertEqual(x.shape, t_grad_input[0].shape)
 
         x_out_np = torch.as_tensor(
             np.pad(x.detach().numpy(), pad_width=offset_pad, mode="symmetric")
         )
-        aelf.assertEqual(self, x_out_np.shape, t_grad_output[0].shape)
+        aelf.assertEqual(x_out_np.shape, t_grad_output[0].shape)
 
 
 class TestNChannelsToRGB(BaseTest):
