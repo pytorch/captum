@@ -1,6 +1,7 @@
 from typing import Any, Callable, List, Union
 
 import numpy as np
+import torch.nn.functional as F
 
 try:
     import sklearn.decomposition
@@ -108,7 +109,4 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     one-sided NMF with regular NMF
     """
 
-    return torch.cat(
-        [torch.max(x, torch.full_like(x, 0)), torch.max(-x, torch.full_like(x, 0))],
-        dim=dim,
-    )
+    return torch.cat([F.relu(x), F.relu(-x)], dim=dim)
