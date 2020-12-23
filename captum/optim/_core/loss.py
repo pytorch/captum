@@ -4,7 +4,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.images import get_neuron_pos
+from captum.optim._utils.image.common import get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -66,18 +66,16 @@ class NeuronActivation(Loss):
         self.x = x
         self.y = y
 
-        # ensure channel_index will be valid
-        assert self.channel_index < self.target.out_channels
-
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         assert activations is not None
+        assert self.channel_index < activations.shape[1]
         assert len(activations.shape) == 4  # assume NCHW
         _x, _y = get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
 
-        return activations[:, self.channel_index, _x, _y]
+        return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1]
 
 
 class DeepDream(Loss):
@@ -98,7 +96,7 @@ class TotalVariation(Loss):
     https://arxiv.org/abs/1412.0035
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         x_diff = activations[..., 1:, :] - activations[..., :-1, :]
         y_diff = activations[..., :, 1:] - activations[..., :, :-1]
@@ -115,7 +113,7 @@ class L1(Loss):
         self.target = target
         self.constant = constant
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return torch.abs(activations - self.constant).sum()
 
@@ -132,7 +130,7 @@ class L2(Loss):
         self.constant = constant
         self.epsilon = epsilon
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         activations = (activations - self.constant).sum()
         return torch.sqrt(self.epsilon + activations)
@@ -145,7 +143,7 @@ class Diversity(Loss):
     https://distill.pub/2017/feature-visualization/#diversity
     """
 
-    def _call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
+    def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         return -sum(
             [
@@ -260,7 +258,7 @@ class Direction(Loss):
         return torch.cosine_similarity(self.direction, activations)
 
 
-class DirectionNeuron(Loss):
+class NeuronDirection(Loss):
     """
     Visualize a single (x, y) position for a direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
@@ -271,16 +269,16 @@ class DirectionNeuron(Loss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        channel_index: int,
         x: Optional[int] = None,
         y: Optional[int] = None,
+        channel_index: Optional[int] = None,
     ) -> None:
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1, 1, 1))
-        self.channel_index = channel_index
         self.x = x
         self.y = y
+        self.channel_index = channel_index
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
@@ -290,8 +288,10 @@ class DirectionNeuron(Loss):
         _x, _y = get_neuron_pos(
             activations.size(2), activations.size(3), self.x, self.y
         )
-        activations = activations[:, self.channel_index, _x, _y]
-        return torch.cosine_similarity(self.direction, activations[None, None, None])
+        activations = activations[:, :, _x : _x + 1, _y : _y + 1]
+        if self.channel_index is not None:
+            activations = activations[:, self.channel_index, ...][:, None, ...]
+        return torch.cosine_similarity(self.direction, activations)
 
 
 class TensorDirection(Loss):
@@ -361,7 +361,9 @@ class ActivationWeights(Loss):
                 _x, _y = get_neuron_pos(
                     activations.size(2), activations.size(3), self.x, self.y
                 )
-                activations = activations[..., _x, _y].squeeze() * self.weights
+                activations = (
+                    activations[..., _x : _x + 1, _y : _y + 1].squeeze() * self.weights
+                )
             else:
                 activations = activations[
                     ..., self.y : self.y + self.wy, self.x : self.x + self.wx

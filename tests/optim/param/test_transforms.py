@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List
 
 import numpy as np
 import torch
@@ -166,6 +167,22 @@ class TestCenterCrop(BaseTest):
         cropped_array = crop_mod_np.crop(test_array)
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+
+
+class TestCenterCropShape(BaseTest):
+    def test_center_crop_shape_tuple(self) -> None:
+        x = torch.ones(32, 16, 28, 28)
+
+        x_out = transform.center_crop_shape(x, (5, 5))
+
+        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
+
+    def test_center_crop_shape_int(self) -> None:
+        x = torch.ones(32, 16, 28, 28)
+
+        x_out = transform.center_crop_shape(x, 5)
+
+        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
 
 
 class TestBlendAlpha(BaseTest):
@@ -342,6 +359,84 @@ class TestGaussianSmoothing(BaseTest):
         t_min = diff_tensor.min().item()
         self.assertLessEqual(t_max, 4.8162e-05)
         self.assertGreaterEqual(t_min, 3.3377e-06)
+
+
+class TestScaleInputRange(BaseTest):
+    def test_scale_input_range(self) -> None:
+        x = torch.ones(1, 3, 4, 4)
+        scale_input = transform.ScaleInputRange(255)
+        output_tensor = scale_input(x)
+        self.assertEqual(output_tensor.mean(), 255.0)
+
+
+class TestRGBToBGR(BaseTest):
+    def test_rgb_to_bgr(self) -> None:
+        x = torch.randn(1, 3, 224, 224)
+        rgb_to_bgr = transform.RGBToBGR()
+        output_tensor = rgb_to_bgr(x)
+        expected_x = x[:, [2, 1, 0]]
+        assertTensorAlmostEqual(self, output_tensor, expected_x)
+
+
+class TestSymmetricPadding(BaseTest):
+    def test_symmetric_padding(self) -> None:
+        b = 2
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
+        offset_pad = [[3, 3], [4, 4], [2, 2], [5, 5]]
+
+        x_pt = torch.nn.Parameter(x)
+        x_out = transform.SymmetricPadding.apply(x_pt, offset_pad)
+        x_out_np = torch.as_tensor(
+            np.pad(x.detach().numpy(), pad_width=offset_pad, mode="symmetric")
+        )
+        assertTensorAlmostEqual(self, x_out, x_out_np)
+
+    def test_symmetric_padding_backward(self) -> None:
+        b = 2
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
+        offset_pad = [[3, 3], [4, 4], [2, 2], [5, 5]]
+
+        x_pt = torch.nn.Parameter(x) * 1
+
+        t_grad_input, t_grad_output = [], []
+
+        def check_grad(self, grad_input, grad_output):
+            t_grad_input.append(grad_input[0].clone().detach())
+            t_grad_output.append(grad_output[0].clone().detach())
+
+        class SymmetricPaddingLayer(torch.nn.Module):
+            def forward(
+                self, x: torch.Tensor, padding: List[List[int]]
+            ) -> torch.Tensor:
+                return transform.SymmetricPadding.apply(x_pt, padding)
+
+        sym_pad = SymmetricPaddingLayer()
+        sym_pad.register_backward_hook(check_grad)
+        x_out = sym_pad(x_pt, offset_pad)
+        (x_out.sum() * 1).backward()
+
+        self.assertEqual(x.shape, t_grad_input[0].shape)
+
+        x_out_np = torch.as_tensor(
+            np.pad(x.detach().numpy(), pad_width=offset_pad, mode="symmetric")
+        )
+        self.assertEqual(x_out_np.shape, t_grad_output[0].shape)
+
+
+class TestNChannelsToRGB(BaseTest):
+    def test_nchannels_to_rgb_collapse(self) -> None:
+        test_input = torch.randn(1, 6, 224, 224)
+        nchannels_to_rgb = transform.NChannelsToRGB()
+        test_output = nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
+    def test_nchannels_to_rgb_increase(self) -> None:
+        test_input = torch.randn(1, 2, 224, 224)
+        nchannels_to_rgb = transform.NChannelsToRGB()
+        test_output = nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +12,7 @@ try:
 except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
-from captum.optim._param.image.transform import ToRGB
+from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 from captum.optim._utils.typing import InitSize, SquashFunc
 
 
@@ -177,9 +177,6 @@ class ImageParameterization(InputParameterization):
         )
         return x
 
-    def set_image(self, x: torch.Tensor):
-        ...
-
 
 class FFTImage(ImageParameterization):
     """Parameterize an image using inverse real 2D FFT"""
@@ -243,10 +240,6 @@ class FFTImage(ImageParameterization):
         results[s:] = torch.arange(-(v // 2), 0)
         return results * (1.0 / (v * d))
 
-    def set_image(self, correlated_image: torch.Tensor) -> None:
-        coeffs = self.torch_rfft(correlated_image)
-        self.fourier_coeffs = coeffs / self.spectrum_scale
-
     def get_fft_funcs(self) -> Tuple[Callable, Callable]:
         """Support older versions of PyTorch"""
         try:
@@ -294,9 +287,6 @@ class PixelImage(ImageParameterization):
 
     def forward(self) -> torch.Tensor:
         return self.image.refine_names("B", "C", "H", "W")
-
-    def set_image(self, correlated_image: torch.Tensor) -> None:
-        self.image = nn.Parameter(correlated_image)
 
 
 class LaplacianImage(ImageParameterization):
@@ -364,6 +354,118 @@ class LaplacianImage(ImageParameterization):
         return torch.stack(A).refine_names("B", "C", "H", "W")
 
 
+class SharedImage(ImageParameterization):
+    """
+    Share some image parameters across the batch to increase spatial alignment,
+    by using interpolated lower resolution tensors.
+    This is sort of like a laplacian pyramid but more general.
+
+    Offsets are similar to phase in Fourier transforms, and can be applied to
+    any dimension.
+
+    Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
+    https://distill.pub/2018/differentiable-parameterizations/
+    """
+
+    def __init__(
+        self,
+        shapes: Union[Tuple[Tuple[int]], Tuple[int]] = None,
+        parameterization: ImageParameterization = None,
+        offset: Union[int, Tuple[int], Tuple[Tuple[int]], None] = None,
+    ) -> None:
+        super().__init__()
+        assert shapes is not None
+        A = []
+        shared_shapes = [shapes] if type(shapes[0]) is not tuple else shapes
+        for shape in shared_shapes:
+            assert len(shape) >= 2 and len(shape) <= 4
+            shape = ([1] * (4 - len(shape))) + list(shape)
+            batch, channels, height, width = shape
+            A.append(torch.nn.Parameter(torch.randn([batch, channels, height, width])))
+        self.shared_init = torch.nn.ParameterList(A)
+        self.parameterization = parameterization
+        self.offset = self.get_offset(offset, len(A)) if offset is not None else None
+
+    def get_offset(self, offset: Union[int, Tuple[int]], n: int) -> List[List[int]]:
+        if type(offset) is tuple or type(offset) is list:
+            if type(offset[0]) is tuple or type(offset[0]) is list:
+                assert len(offset) == n and all(len(t) == 4 for t in offset)
+            else:
+                assert len(offset) >= 1 and len(offset) <= 4
+                offset = [([0] * (4 - len(offset))) + list(offset)] * n
+        else:
+            offset = [[offset] * 4] * n
+        offset = [list(v) for v in offset]
+        assert all([all([type(o) is int for o in v]) for v in offset])
+        return offset
+
+    def apply_offset(self, x_list: List[torch.Tensor]) -> List[torch.Tensor]:
+        A = []
+        for x, offset in zip(x_list, self.offset):
+            assert x.dim() == 4
+            size = list(x.size())
+
+            offset_pad = (
+                [[abs(offset[0])] * 2]
+                + [[abs(offset[1])] * 2]
+                + [[abs(offset[2])] * 2]
+                + [[abs(offset[3])] * 2]
+            )
+
+            x = SymmetricPadding.apply(x, offset_pad)
+
+            for o, s in zip(offset, range(x.dim())):
+                x = torch.roll(x, shifts=o, dims=s)
+
+            x = x[: size[0], : size[1], : size[2], : size[3]]
+            A.append(x)
+        return A
+
+    def interpolate_tensor(
+        self, x: torch.Tensor, batch: int, channels: int, height: int, width: int
+    ) -> torch.Tensor:
+        """
+        Linear interpolation for 4D, 5D, and 6D tensors.
+        If the batch dimension needs to be resized,
+        we move it's location temporarily for F.interpolate.
+        """
+
+        if x.size(1) == channels:
+            mode = "bilinear"
+            size = (height, width)
+        else:
+            mode = "trilinear"
+            x = x.unsqueeze(0)
+            size = (channels, height, width)
+        x = F.interpolate(x, size=size, mode=mode)
+        x = x.squeeze(0) if len(size) == 3 else x
+        if x.size(0) != batch:
+            x = x.permute(1, 0, 2, 3)
+            x = F.interpolate(
+                x.unsqueeze(0),
+                size=(batch, x.size(2), x.size(3)),
+                mode="trilinear",
+            ).squeeze(0)
+            x = x.permute(1, 0, 2, 3)
+        return x
+
+    def forward(self) -> torch.Tensor:
+        image = self.parameterization()
+        x = [
+            self.interpolate_tensor(
+                shared_tensor,
+                image.size(0),
+                image.size(1),
+                image.size(2),
+                image.size(3),
+            )
+            for shared_tensor in self.shared_init
+        ]
+        if self.offset is not None:
+            x = self.apply_offset(x)
+        return (image + sum(x)).refine_names("B", "C", "H", "W")
+
+
 class NaturalImage(ImageParameterization):
     r"""Outputs an optimizable input image.
 
@@ -373,7 +475,8 @@ class NaturalImage(ImageParameterization):
     uncorrelated image parameterization. :-)
 
     If a model requires a normalization step, such as normalizing imagenet RGB values,
-    or rescaling to [0,255], it has to perform that step inside its computation.
+    or rescaling to [0,255], it can perform those steps with the provided transforms or
+    inside its computation.
     For example, our GoogleNet factory function has a `transform_input=True` argument.
     """
 
@@ -382,7 +485,7 @@ class NaturalImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        Parameterization=FFTImage,
+        parameterization: ImageParameterization = FFTImage,
         init: Optional[torch.Tensor] = None,
         decorrelate_init: bool = True,
         squash_func: Optional[SquashFunc] = None,
@@ -404,7 +507,7 @@ class NaturalImage(ImageParameterization):
             if squash_func is None:
                 squash_func: SquashFunc = lambda x: torch.sigmoid(x)
         self.squash_func = squash_func
-        self.parameterization = Parameterization(
+        self.parameterization = parameterization(
             size=size, channels=channels, batch=batch, init=init
         )
 
@@ -413,8 +516,3 @@ class NaturalImage(ImageParameterization):
         image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
         return CudaImageTensor(self.squash_func(image))
-
-    def set_image(self, image: torch.Tensor) -> None:
-        logits = logit(image, epsilon=1e-4)
-        correlated = self.decorrelate(logits, inverse=True)
-        self.parameterization.set_image(correlated)

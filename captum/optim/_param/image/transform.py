@@ -1,11 +1,13 @@
 import math
 import numbers
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import TransformSize, TransformVal, TransformValList
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -22,8 +24,8 @@ class BlendAlpha(nn.Module):
         self.background = background
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.size(1) == 4
         assert x.dim() == 4
+        assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
         background = (
             self.background if self.background is not None else torch.rand_like(rgb)
@@ -36,6 +38,7 @@ class IgnoreAlpha(nn.Module):
     r"""Ignores a 4th channel"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
         assert x.size(1) == 4
         rgb = x[:, :3, ...]
         return rgb
@@ -145,6 +148,29 @@ class CenterCrop(torch.nn.Module):
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
 
+def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tensor:
+    """
+    Crop NCHW & CHW outputs by specifying the desired output shape.
+    """
+
+    assert input.dim() == 4 or input.dim() == 3
+    output_size = [output_size] if not hasattr(output_size, "__iter__") else output_size
+    assert len(output_size) == 1 or len(output_size) == 2
+    output_size = output_size * 2 if len(output_size) == 1 else output_size
+
+    if input.dim() == 4:
+        h, w = input.size(2), input.size(3)
+    if input.dim() == 3:
+        h, w = input.size(1), input.size(2)
+
+    h_crop = h - int(round((h - output_size[0]) / 2.0))
+    w_crop = w - int(round((w - output_size[1]) / 2.0))
+
+    return input[
+        ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
+    ]
+
+
 def rand_select(transform_values: TransformValList) -> TransformVal:
     """
     Randomly return a value from the provided tuple or list
@@ -212,6 +238,31 @@ class RandomSpatialJitter(torch.nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         insets = torch.randint(high=self.pad_range, size=(2,))
         return self.translate_tensor(input, insets)
+
+
+class ScaleInputRange(nn.Module):
+    """
+    Multiplies the input by a specified multiplier for models with input ranges other
+    than [0,1].
+    """
+
+    def __init__(self, multiplier: float = 1.0) -> None:
+        super().__init__()
+        self.multiplier = multiplier
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x * self.multiplier
+
+
+class RGBToBGR(nn.Module):
+    """
+    Converts an NCHW RGB image tensor to BGR by switching the red and blue channels.
+    """
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        assert x.size(1) == 3
+        return x[:, [2, 1, 0]]
 
 
 # class TransformationRobustness(nn.Module):
@@ -318,3 +369,45 @@ class GaussianSmoothing(nn.Module):
             filtered (torch.Tensor): Filtered output.
         """
         return self.conv(input, weight=self.weight, groups=self.groups)
+
+
+class SymmetricPadding(torch.autograd.Function):
+    """
+    Autograd compatible symmetric padding that uses NumPy's pad function.
+    """
+
+    @staticmethod
+    def forward(ctx, x: torch.Tensor, padding: List[List[int]]) -> torch.Tensor:
+        ctx.padding = padding
+        x_device = x.device
+        x = x.cpu()
+        x.data = torch.as_tensor(
+            np.pad(x.data.numpy(), pad_width=padding, mode="symmetric")
+        )
+        x = x.to(x_device)
+        return x
+
+    @staticmethod
+    def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        grad_input = grad_output.clone()
+        B, C, H, W = grad_input.size()
+        b1, b2 = ctx.padding[0]
+        c1, c2 = ctx.padding[1]
+        h1, h2 = ctx.padding[2]
+        w1, w2 = ctx.padding[3]
+        grad_input = grad_input[b1 : B - b2, c1 : C - c2, h1 : H - h2, w1 : W - w2]
+        return grad_input, None
+
+
+class NChannelsToRGB(nn.Module):
+    """
+    Convert an NCHW image with n channels into a 3 channel RGB image.
+    """
+
+    def __init__(self, warp: bool = False) -> None:
+        super().__init__()
+        self.warp = warp
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        return nchannels_to_rgb(x, self.warp)
