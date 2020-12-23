@@ -392,5 +392,19 @@ class TestSymmetricPadding(BaseTest):
         assertTensorAlmostEqual(self, x_out, x_out_np)
 
 
+class TestNChannelsToRGB(BaseTest):
+    def test_nchannels_to_rgb_collapse(self) -> None:
+        test_input = torch.randn(1, 6, 224, 224)
+        nchannels_to_rgb = transform.NChannelsToRGB()
+        test_output = nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
+    def test_nchannels_to_rgb_increase(self) -> None:
+        test_input = torch.randn(1, 2, 224, 224)
+        nchannels_to_rgb = transform.NChannelsToRGB()
+        test_output = nchannels_to_rgb(test_input)
+        self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
+
+
 if __name__ == "__main__":
     unittest.main()
