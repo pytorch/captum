@@ -50,8 +50,8 @@ class TestNChannelsToRGB(BaseTest):
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
 
-class TestHeatMap(BaseTest):
-    def test_heatmap(self) -> None:
+class TestWeightsToHeatmap2D(BaseTest):
+    def test_weights_to_heatmap_2d(self) -> None:
         x = torch.ones(5, 4)
         x[0:1, 0:4] = x[0:1, 0:4] * 0.2
         x[1:2, 0:4] = x[1:2, 0:4] * 0.8
@@ -59,8 +59,8 @@ class TestHeatMap(BaseTest):
         x[3:4, 0:4] = x[3:4, 0:4] * -0.2
         x[4:5, 0:4] = x[4:5, 0:4] * -0.8
 
-        x_out = common.tensor_heatmap(x)
-        x_out_np = numpy_common.array_heatmap(x.numpy())
+        x_out = common.weights_to_heatmap_2d(x)
+        x_out_np = numpy_common.weights_to_heatmap_2d(x.numpy())
         assertTensorAlmostEqual(self, x_out, torch.as_tensor(x_out_np).float())
 
 

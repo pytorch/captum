@@ -84,8 +84,8 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     )
 
 
-def tensor_heatmap(
-    tensor: torch.Tensor,
+def weights_to_heatmap_2d(
+    weight: torch.Tensor,
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> torch.Tensor:
     """
@@ -93,6 +93,13 @@ def tensor_heatmap(
     By default red represents excitatory values,
     blue represents inhibitory values, and white represents
     no excitation or inhibition.
+
+    Args:
+        weight (torch.Tensor):  A 2d tensor to create the heatmap from.
+        colors (List of strings):  A list of strings containing color
+        hex values to use for coloring the heatmap.
+    Returns:
+        *tensor*:  A weight heatmap.
     """
 
     assert tensor.dim() == 2

@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 
-def array_heatmap(
+def weights_to_heatmap_2d(
     array: np.ndarray,
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> np.ndarray:

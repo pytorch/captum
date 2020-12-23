@@ -52,7 +52,7 @@ class ChannelReducer:
         self, x: torch.Tensor, swap_2nd_and_last_dims: bool = True
     ) -> torch.Tensor:
         """
-        Perform dimensionality reduction on an input tensor or NumPy array.
+        Perform dimensionality reduction on an input tensor.
 
         If swap_2nd_and_last_dims is true, input channels are expected to be in the
         second dimension unless the input tensor has a shape of CHW.

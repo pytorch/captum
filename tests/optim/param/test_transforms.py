@@ -391,6 +391,32 @@ class TestSymmetricPadding(BaseTest):
         )
         assertTensorAlmostEqual(self, x_out, x_out_np)
 
+    def test_symmetric_padding_backward(self) -> None:
+        b = 2
+        c = 3
+        x = torch.arange(0, b * c * 4 * 4).view(b, c, 4, 4).float()
+        offset_pad = [[3, 3], [4, 4], [2, 2], [5, 5]]
+
+        x_pt = torch.nn.Parameter(x) * 1
+
+        t_grad_input = []
+
+        def check_grad(self, grad_input, grad_output):
+            t_grad_input.append(grad_input[0].clone().detach())
+
+        class SymmetricPaddingLayer(torch.nn.Module):
+            def forward(
+                self, x: torch.Tensor, padding: List[List[int]]
+            ) -> torch.Tensor:
+                return transform.SymmetricPadding.apply(x_pt, padding)
+
+        sym_pad = SymmetricPaddingLayer()
+        sym_pad.register_backward_hook(check_grad)
+        x_out = sym_pad(x_pt, offset_pad)
+        (x_out.sum() * 1).backward()
+
+        assertTensorAlmostEqual(self, x, t_grad_input[0])
+
 
 class TestNChannelsToRGB(BaseTest):
     def test_nchannels_to_rgb_collapse(self) -> None:

@@ -23,7 +23,7 @@ def get_expanded_weights(
     See: https://distill.pub/2020/circuits/visualizing-weights/
 
     Args:
-        model:  PyTorch model instance.
+        model (nn.Module):  The reference to PyTorch model instance.
         target1 (nn.module):  The starting target layer. Must be below the layer
             specified for target2.
         target2 (nn.module):  The end target layer. Must be above the layer
