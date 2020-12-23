@@ -5,6 +5,7 @@ import torch
 
 from captum.optim._utils.reducer import posneg
 
+
 def get_neuron_pos(
     H: int, W: int, x: Optional[int] = None, y: Optional[int] = None
 ) -> Tuple[int, int]:
