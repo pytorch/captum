@@ -102,7 +102,7 @@ def weights_to_heatmap_2d(
         *tensor*:  A weight heatmap.
     """
 
-    assert tensor.dim() == 2
+    assert weight.dim() == 2
     assert len(colors) == 5
 
     def get_color(x: str) -> torch.Tensor:
@@ -131,5 +131,5 @@ def weights_to_heatmap_2d(
                 return (1 - x) * get_color(colors[3]) + x * get_color(colors[4])
 
     return torch.stack(
-        [torch.stack([color_scale(x) for x in t]) for t in tensor]
+        [torch.stack([color_scale(x) for x in t]) for t in weight]
     ).permute(2, 0, 1)

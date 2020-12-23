@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List
 
 import numpy as np
 import torch
