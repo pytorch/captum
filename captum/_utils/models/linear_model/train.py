@@ -1,4 +1,5 @@
 import time
+import warnings
 from typing import Any, Callable, Dict, List, Optional
 
 import torch
@@ -286,10 +287,11 @@ def sklearn_train_linear_model(
     except ImportError:
         raise ValueError("sklearn is not available. Please install sklearn >= 0.23")
 
-    assert (
-        sklearn.__version__ >= "0.23.0"
-    ), "Must have sklearn version 0.23.0 or higher to use "
-    "sample_weight in Lasso regression."
+    if not sklearn.__version__ >= "0.23.0":
+        warnings.warn(
+            "Must have sklearn version 0.23.0 or higher to use "
+            "sample_weight in Lasso regression."
+        )
 
     num_batches = 0
     xs, ys, ws = [], [], []
@@ -323,7 +325,16 @@ def sklearn_train_linear_model(
     sklearn_model = reduce(
         lambda val, el: getattr(val, el), [sklearn] + sklearn_trainer.split(".")
     )(**construct_kwargs)
-    sklearn_model.fit(x, y, sample_weight=w, **fit_kwargs)
+    try:
+        sklearn_model.fit(x, y, sample_weight=w, **fit_kwargs)
+    except TypeError:
+        sklearn_model.fit(x, y, **fit_kwargs)
+        warnings.warn(
+            "Sample weight is not supported for the provided linear model!"
+            " Trained model without weighting inputs. For Lasso, please"
+            " upgrade sklearn to a version >= 0.23.0."
+        )
+
     t2 = time.time()
 
     # Convert weights to pytorch
