@@ -66,7 +66,7 @@ class Test(BaseTest):
 
     def test_simple_ablation_int_to_int_nt(self) -> None:
         ablation_algo = NoiseTunnel(FeatureAblation(BasicModel()))
-        inp = torch.tensor([[-3, 1, 2]])
+        inp = torch.tensor([[-3, 1, 2]]).float()
         self._ablation_test_assert(
             ablation_algo,
             inp,
