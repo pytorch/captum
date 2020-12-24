@@ -12,6 +12,11 @@ from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
 def get_model_layers(model) -> List[str]:
     """
     Return a list of hookable layers for the target model.
+
+    Args:
+        model (nn.Module):  The reference to PyTorch model instance.
+    Returns:
+        *str*:  A list of all possible layer targets for the specified model.
     """
     layers = []
 
@@ -79,6 +84,12 @@ def replace_layers(model, old_layer=ReluLayer, new_layer=RedirectedReluLayer) ->
     Replace all target layers with new layers.
     The most common use case is replacing activation layers with activation layers
     that can handle gradient flow issues.
+
+    Args:
+        model (nn.Module):  The reference to PyTorch model instance.
+        old_layer (nn.module type):  The layer type you are looking to remove.
+        new_layer (nn.module type):  The layer type you are looking to replace
+            old_layer with.
     """
 
     for name, child in model._modules.items():
@@ -163,6 +174,15 @@ def collect_activations(
 ) -> ModuleOutputMapping:
     """
     Collect target activations for a model.
+
+    Args:
+        model (nn.Module):  The reference to PyTorch model instance.
+        targets (nn.module or list of nn.module):  The target layers to
+            collect activations from.
+        model_input (tensor or tuple of tensors, optional):  The input to use
+            with the specified model.
+    Returns:
+        *dict*:  An dict containing the collected activations.
     """
 
     catch_activ = ActivationFetcher(model, targets)

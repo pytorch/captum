@@ -94,6 +94,11 @@ class ModuleOutputsHook:
 class ActivationFetcher:
     """
     Simple module for collecting activations from model targets.
+
+    Args:
+        model (nn.Module):  The reference to PyTorch model instance.
+        targets (nn.module or list of nn.module):  The target layers to
+            collect activations from.
     """
 
     def __init__(self, model, targets: Union[nn.Module, List[nn.Module]]) -> None:
@@ -102,6 +107,14 @@ class ActivationFetcher:
         self.layers = ModuleOutputsHook(targets)
 
     def __call__(self, input_t: ModelInputType) -> ModuleOutputMapping:
+        """
+        Args:
+            input_t (tensor or tuple of tensors, optional):  The input to use
+                with the specified model.
+        Returns:
+            *dict*:  An dict containing the collected activations.
+        """
+
         try:
             with suppress(AbortForwardException):
                 self.model(input_t)

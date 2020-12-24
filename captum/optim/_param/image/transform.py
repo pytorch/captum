@@ -15,8 +15,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class BlendAlpha(nn.Module):
     r"""Blends a 4 channel input parameterization into an RGB image.
-
     You can specify a fixed background, or a random one will be used by default.
+
+    Args:
+        background (tensor, optional):  An NCHW image tensor to be used as the
+            Alpha channel's background.
     """
 
     def __init__(self, background: Optional[torch.Tensor] = None) -> None:
@@ -24,6 +27,13 @@ class BlendAlpha(nn.Module):
         self.background = background
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Blend the Alpha channel into the RGB channels.
+        Arguments:
+            x (torch.Tensor): RGBA image tensor to blend into an RGB image tensor.
+        Returns:
+            blended (torch.Tensor): RGB image tensor.
+        """
         assert x.dim() == 4
         assert x.size(1) == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
@@ -38,6 +48,13 @@ class IgnoreAlpha(nn.Module):
     r"""Ignores a 4th channel"""
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Ignore the alpha channel.
+        Arguments:
+            x (torch.Tensor): RGBA image tensor.
+        Returns:
+            rgb (torch.Tensor): RGB image tensor.
+        """
         assert x.dim() == 4
         assert x.size(1) == 4
         rgb = x[:, :3, ...]
@@ -84,6 +101,14 @@ class ToRGB(nn.Module):
             raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
+        """
+        Args:
+            x (tensor):  A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool):  Whether to recorrelate or decorrelate colors.
+        Returns:
+            *tensor*:  A tensor with it's colors recorrelated or decorrelated.
+        """
+
         assert x.dim() == 3 or x.dim() == 4
 
         # alpha channel is taken off...
@@ -135,6 +160,14 @@ class CenterCrop(torch.nn.Module):
             self.crop_val = [size] * 2
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Center crop an input.
+        Arguments:
+            input (torch.Tensor): Input to center crop.
+        Returns:
+            tensor (torch.Tensor): A center cropped tensor.
+        """
+
         assert (
             input.dim() == 3 or input.dim() == 4
         ), "Input to CenterCrop must be 3D or 4D"
@@ -151,6 +184,12 @@ class CenterCrop(torch.nn.Module):
 def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tensor:
     """
     Crop NCHW & CHW outputs by specifying the desired output shape.
+
+    Args:
+        tensor (tensor):  A CHW or NCHW image tensor to center crop.
+        output_size (int or list of int):  The desired H and W output dimensions.
+    Returns:
+        *tensor*:  A center cropped tensor.
     """
 
     assert input.dim() == 4 or input.dim() == 3
@@ -173,7 +212,12 @@ def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tens
 
 def rand_select(transform_values: TransformValList) -> TransformVal:
     """
-    Randomly return a value from the provided tuple or list
+    Randomly return a value from the provided tuple or list.
+
+    Args:
+        transform_values (sequence):  A sequence of values to randomly select from.
+    Returns:
+        *value*:  A single value from the specified sequence.
     """
     n = torch.randint(low=0, high=len(transform_values) - 1, size=[1]).item()
     return transform_values[n]
@@ -215,7 +259,8 @@ class RandomSpatialJitter(torch.nn.Module):
     """
     Apply random spatial translations on a NCHW tensor.
     Arguments:
-        translate (int):
+        translate (int):  The amount to translate the H and W dimensions
+            of an NCHW tensor.
     """
 
     def __init__(self, translate: int) -> None:
@@ -244,6 +289,9 @@ class ScaleInputRange(nn.Module):
     """
     Multiplies the input by a specified multiplier for models with input ranges other
     than [0,1].
+
+    Args:
+        multiplier (float):  A float value used to scale the input.
     """
 
     def __init__(self, multiplier: float = 1.0) -> None:
@@ -251,6 +299,13 @@ class ScaleInputRange(nn.Module):
         self.multiplier = multiplier
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Scale an input tensor's values.
+        Arguments:
+            x (torch.Tensor): Input to scale values of.
+        Returns:
+            tensor (torch.Tensor): tensor with it's values scaled.
+        """
         return x * self.multiplier
 
 
@@ -260,27 +315,16 @@ class RGBToBGR(nn.Module):
     """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Perform RGB to BGR conversion on an input
+        Arguments:
+            x (torch.Tensor): RGB image tensor to convert to BGR.
+        Returns:
+            BGR tensor (torch.Tensor): A BGR tensor.
+        """
         assert x.dim() == 4
         assert x.size(1) == 3
         return x[:, [2, 1, 0]]
-
-
-# class TransformationRobustness(nn.Module):
-#     def __init__(self, jitter=False, scale=False):
-#         super().__init__()
-#         if jitter:
-#             self.jitter = RandomSpatialJitter(4)
-#         if scale:
-#             self.scale = RandomScale()
-
-#     def forward(self, x):
-#         original_shape = x.shape
-#         if hasattr(self, "jitter"):
-#             x = self.jitter(x)
-#         if hasattr(self, "scale"):
-#             x = self.scale(x)
-#         cropped = center_crop(x, original_shape)
-#         return cropped
 
 
 # class RandomHomography(nn.Module):
@@ -378,6 +422,14 @@ class SymmetricPadding(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, x: torch.Tensor, padding: List[List[int]]) -> torch.Tensor:
+        """
+        Apply NumPy symmetric padding to an input tensor while preserving the gradient.
+        Arguments:
+            x (torch.Tensor): Input to apply symmetric padding on.
+        Returns:
+            tensor (torch.Tensor): Padded tensor.
+        """
+
         ctx.padding = padding
         x_device = x.device
         x = x.cpu()
@@ -389,6 +441,14 @@ class SymmetricPadding(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        """
+        Crop away symmetric padding.
+        Arguments:
+            grad_output (torch.Tensor): Input to remove symmetric padding from.
+        Returns:
+            grad_input (torch.Tensor): Unpadded tensor.
+        """
+
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
         b1, b2 = ctx.padding[0]
@@ -402,6 +462,10 @@ class SymmetricPadding(torch.autograd.Function):
 class NChannelsToRGB(nn.Module):
     """
     Convert an NCHW image with n channels into a 3 channel RGB image.
+
+    Args:
+        warp (bool):  Whether or not to make the resulting RGB colors more distict
+            from each other.
     """
 
     def __init__(self, warp: bool = False) -> None:
@@ -409,5 +473,12 @@ class NChannelsToRGB(nn.Module):
         self.warp = warp
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Reduce any number of channels down to 3.
+        Arguments:
+            x (torch.Tensor): Input to reduce channel dimensions on.
+        Returns:
+            3 channel RGB tensor (torch.Tensor): RGB image tensor.
+        """
         assert x.dim() == 4
         return nchannels_to_rgb(x, self.warp)
