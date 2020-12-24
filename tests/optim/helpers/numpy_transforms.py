@@ -5,7 +5,11 @@ import numpy as np
 
 class BlendAlpha(object):
     """
-    NumPy version of the BlendAlpha transform
+    NumPy version of the BlendAlpha transform.
+
+    Args:
+        background (array, optional):  An NCHW image array to be used as the
+            Alpha channel's background.
     """
 
     def __init__(self, background: Optional[np.ndarray] = None) -> None:
@@ -13,6 +17,13 @@ class BlendAlpha(object):
         self.background = background
 
     def blend_alpha(self, x: np.ndarray) -> np.ndarray:
+        """
+        Blend the Alpha channel into the RGB channels.
+        Arguments:
+            x (array): RGBA image array to blend into an RGB image array.
+        Returns:
+            blended (array): RGB image array.
+        """
         assert x.shape[1] == 4
         assert x.ndim == 4
         rgb, alpha = x[:, :3, ...], x[:, 3:4, ...]
@@ -27,7 +38,11 @@ class BlendAlpha(object):
 
 class RandomSpatialJitter(object):
     """
-    NumPy version of the RandomSpatialJitter transform
+    NumPy version of the RandomSpatialJitter transform.
+
+    Arguments:
+        translate (int):  The amount to translate the H and W dimensions
+            of an CHW or NCHW array.
     """
 
     def __init__(self, translate: int) -> None:
@@ -55,7 +70,10 @@ class RandomSpatialJitter(object):
 
 class CenterCrop(object):
     """
-    NumPy version of the CenterCrop transform
+    NumPy version of the CenterCrop transform.
+
+    Arguments:
+        size (int, sequence) or (int): Number of pixels to center crop away.
     """
 
     def __init__(self, size=0) -> None:
@@ -71,6 +89,14 @@ class CenterCrop(object):
         assert len(self.crop_val) == 2
 
     def crop(self, input: np.ndarray) -> np.ndarray:
+        """
+        Center crop an input.
+        Arguments:
+            input (array): Input to center crop.
+        Returns:
+            cropped input (array): A center cropped array.
+        """
+
         assert input.ndim == 3 or input.ndim == 4
         if input.ndim == 4:
             h, w = input.shape[2], input.shape[3]
@@ -114,6 +140,14 @@ class ToRGB(object):
             raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
 
     def to_rgb(self, x: np.ndarray, inverse: bool = False) -> np.ndarray:
+        """
+        Args:
+            x (array):  A CHW or NCHW RGB or RGBA image array.
+            inverse (bool):  Whether to recorrelate or decorrelate colors.
+        Returns:
+            *array*:  An array with it's colors recorrelated or decorrelated.
+        """
+
         assert x.ndim == 3 or x.ndim == 4
 
         # alpha channel is taken off...
