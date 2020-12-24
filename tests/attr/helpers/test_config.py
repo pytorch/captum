@@ -302,6 +302,28 @@ config = [
         "noise_tunnel": True,
     },
     {
+        "name": "basic_multi_input_multi_target_batched_nt",
+        "algorithms": [
+            IntegratedGradients,
+            InputXGradient,
+            FeatureAblation,
+            DeepLift,
+            Saliency,
+            GuidedBackprop,
+            Deconvolution,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "attribute_args": {
+            "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
+            "additional_forward_args": (2 * torch.randn(6, 3), 5),
+            "target": [0, 1, 1, 0, 0, 1],
+            "nt_samples": 20,
+            "nt_samples_batch_size": 2,
+            "stdevs": 0.0,
+        },
+        "noise_tunnel": True,
+    },
+    {
         "name": "basic_multiple_target_with_baseline_nt",
         "algorithms": [
             IntegratedGradients,

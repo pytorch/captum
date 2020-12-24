@@ -8,6 +8,7 @@ from torch import Tensor
 from captum._utils.common import (
     _expand_and_update_additional_forward_args,
     _expand_and_update_baselines,
+    _expand_and_update_feature_mask,
     _expand_and_update_target,
     _format_input,
     _format_output,
@@ -80,7 +81,7 @@ class NoiseTunnel(Attribution):
     @noise_tunnel_n_samples_deprecation_decorator
     def attribute(
         self,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Union[Tensor, Tuple[Tensor, ...]],
         nt_type: str = "smoothgrad",
         nt_samples: int = 5,
         nt_samples_batch_size: int = None,
@@ -88,7 +89,12 @@ class NoiseTunnel(Attribution):
         draw_baseline_from_distrib: bool = False,
         **kwargs: Any,
     ) -> Union[
-        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+        Union[
+            Tensor,
+            Tuple[Tensor, Tensor],
+            Tuple[Tensor, ...],
+            Tuple[Tuple[Tensor, ...], Tensor],
+        ]
     ]:
         r"""
         Args:
@@ -284,6 +290,7 @@ class NoiseTunnel(Attribution):
                 kwargs_partial,
                 draw_baseline_from_distrib=draw_baseline_from_distrib,
             )
+            _expand_and_update_feature_mask(nt_samples_partition, kwargs_partial)
 
         def compute_smoothing(
             expected_attributions: Tuple[Union[Tensor], ...],

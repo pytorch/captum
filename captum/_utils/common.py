@@ -249,6 +249,20 @@ def _expand_target(
     return target
 
 
+def _expand_feature_mask(
+    feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
+):
+    is_feature_mask_tuple = _is_tuple(feature_mask)
+    feature_mask = _format_tensor_into_tuples(feature_mask)
+    feature_mask_new = tuple(
+        feature_mask_elem.repeat_interleave(n_samples, dim=0)
+        if feature_mask_elem.size(0) > 1
+        else feature_mask_elem
+        for feature_mask_elem in feature_mask
+    )
+    return _format_output(is_feature_mask_tuple, feature_mask_new)
+
+
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
@@ -315,6 +329,18 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     )
     # update kwargs with expanded baseline
     kwargs["target"] = target
+
+
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+    if "feature_mask" not in kwargs:
+        return
+
+    feature_mask = kwargs["feature_mask"]
+    if feature_mask is None:
+        return
+
+    feature_mask = _expand_feature_mask(feature_mask, n_samples)
+    kwargs["feature_mask"] = feature_mask
 
 
 @typing.overload
