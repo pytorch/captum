@@ -478,6 +478,19 @@ class NaturalImage(ImageParameterization):
     or rescaling to [0,255], it can perform those steps with the provided transforms or
     inside its computation.
     For example, our GoogleNet factory function has a `transform_input=True` argument.
+
+    Arguments:
+        size (list of int): The height and width to use for the nn.Parameter tensor.
+        channels (list of int): The number of channels to use when creating the
+            nn.Parameter tensor.
+        batch (list of int): The number of channels to use when creating the
+            nn.Parameter tensor, or stacking init images.
+        parameterization (ImageParameterization): An image parameterization class.
+        squash_func (SquashFunc): The squash function to use after
+            color recorrelation. A funtion or lambda function.
+        decorrelation_module (nn.Module): A ToRGB instance.
+        decorrelate_init (bool): Whether or not to apply color decorrelation to the
+            init tensor input.
     """
 
     def __init__(
