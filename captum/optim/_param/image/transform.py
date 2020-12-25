@@ -251,6 +251,13 @@ class RandomScale(nn.Module):
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly scale / zoom in or out of a tensor.
+        Arguments:
+            input (torch.Tensor): Input to randomly scale.
+        Returns:
+            tensor (torch.Tensor): Scaled tensor.
+        """
         scale = rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
@@ -281,6 +288,13 @@ class RandomSpatialJitter(torch.nn.Module):
         return cropped
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """
+        Randomly translate an input tensor's height and width dimensions.
+        Arguments:
+            input (torch.Tensor): Input to randomly translate.
+        Returns:
+            tensor (torch.Tensor): A randomly translated tensor.
+        """
         insets = torch.randint(high=self.pad_range, size=(2,))
         return self.translate_tensor(input, insets)
 
