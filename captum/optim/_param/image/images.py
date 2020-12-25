@@ -485,13 +485,14 @@ class NaturalImage(ImageParameterization):
         size: InitSize = None,
         channels: int = 3,
         batch: int = 1,
-        parameterization: ImageParameterization = FFTImage,
         init: Optional[torch.Tensor] = None,
-        decorrelate_init: bool = True,
+        parameterization: ImageParameterization = FFTImage,
         squash_func: Optional[SquashFunc] = None,
+        decorrelation_module: nn.Module = ToRGB(transform_matrix="klt"),
+        decorrelate_init: bool = True,
     ) -> None:
         super().__init__()
-        self.decorrelate = ToRGB(transform_name="klt")
+        self.decorrelate = decorrelation_module
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
             if decorrelate_init:
@@ -513,6 +514,7 @@ class NaturalImage(ImageParameterization):
 
     def forward(self) -> torch.Tensor:
         image = self.parameterization()
-        image = self.decorrelate(image)
+        if self.decorrelate is not None:
+            image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
         return CudaImageTensor(self.squash_func(image))

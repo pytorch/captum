@@ -133,17 +133,13 @@ class TestCenterCrop(BaseTest):
             .repeat(3, 1, 1)
             .unsqueeze(0)
         )
-        test_array = np.pad(
-            np.pad(np.ones((2, 2)), pad_width=1), pad_width=1, constant_values=(1)
-        )[None, None, :]
-
         crop_vals = 3
 
         crop_tensor = transform.CenterCrop(size=crop_vals)
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
-        cropped_array = crop_mod_np.crop(test_array)
+        cropped_array = crop_mod_np.crop(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -154,35 +150,111 @@ class TestCenterCrop(BaseTest):
             .repeat(3, 1, 1)
             .unsqueeze(0)
         )
-        test_array = np.pad(
-            np.pad(np.ones((2, 2)), pad_width=1), pad_width=1, constant_values=(1)
-        )[None, None, :]
-
         crop_vals = (4, 0)
 
         crop_tensor = transform.CenterCrop(size=crop_vals)
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
-        cropped_array = crop_mod_np.crop(test_array)
+        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+
+    def test_center_crop_one_number_exact(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        crop_tensor = transform.CenterCrop(size=crop_vals, False)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
+        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+
+    def test_center_crop_two_numbers_exact(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = (4, 2)
+
+        crop_tensor = transform.CenterCrop(size=crop_vals, False)
+        cropped_tensor = crop_tensor(test_tensor)
+
+        crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
+        cropped_array = crop_mod_np.crop(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
 
-class TestCenterCropShape(BaseTest):
-    def test_center_crop_shape_tuple(self) -> None:
-        x = torch.ones(32, 16, 28, 28)
+class TestCenterCropFunction(BaseTest):
+    def test_center_crop_one_number(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = 3
 
-        x_out = transform.center_crop_shape(x, (5, 5))
+        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, True)
 
-        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
-    def test_center_crop_shape_int(self) -> None:
-        x = torch.ones(32, 16, 28, 28)
+    def test_center_crop_two_numbers(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        crop_vals = (4, 2)
 
-        x_out = transform.center_crop_shape(x, 5)
+        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, True)
 
-        self.assertEqual(list(x_out.shape), [32, 16, 5, 5])
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+        
+    def test_center_crop_one_number_exact(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = 5
+
+        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, False)
+        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, False)
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
+
+    def test_center_crop_two_numbers_exact(self) -> None:
+        pad = (1, 1, 1, 1)
+        test_tensor = (
+            F.pad(F.pad(torch.ones(2, 2), pad=pad), pad=pad, value=1)
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+
+        crop_vals = (4, 2)
+
+        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, False)
+        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, False)
+
+        assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
 
 class TestBlendAlpha(BaseTest):

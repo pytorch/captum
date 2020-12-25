@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._param.image.transform import center_crop_shape
+from captum.optim._param.image.transform import center_crop
 from captum.optim._utils.models import collect_activations
 from captum.optim._utils.typing import ModelInputType, TransformSize
 
@@ -59,5 +59,5 @@ def get_expanded_weights(
     exapnded_weights = torch.stack(A, 0)
 
     if crop_shape is not None:
-        exapnded_weights = center_crop_shape(exapnded_weights, crop_shape)
+        exapnded_weights = center_crop(exapnded_weights, crop_shape, False)
     return exapnded_weights

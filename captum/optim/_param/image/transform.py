@@ -73,15 +73,20 @@ class ToRGB(nn.Module):
         ]
         return torch.Tensor(i1i2i3_matrix)
 
-    def __init__(self, transform_name: str = "klt") -> None:
+    def __init__(self, transform_matrix: Union[str, torch.Tensor] = "klt") -> None:
         super().__init__()
 
-        if transform_name == "klt":
+        if transform_matrix == "klt":
             self.register_buffer("transform", ToRGB.klt_transform())
-        elif transform_name == "i1i2i3":
+        elif transform_matrix == "i1i2i3":
             self.register_buffer("transform", ToRGB.i1i2i3_transform())
+        elif torch.is_tensor(transform_matrix):
+            self.register_buffer("transform", transform_matrix)
         else:
-            raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
+            raise ValueError(
+                "transform_matrix has to be either 'klt', 'i1i2i3',"
+                + " or a matrix tensor."
+            )
 
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         assert x.dim() == 3 or x.dim() == 4
@@ -118,57 +123,82 @@ class ToRGB(nn.Module):
 
 class CenterCrop(torch.nn.Module):
     """
-    Center crop the specified amount of pixels from the edges.
+    Center crop a specified amount from a tensor
     Arguments:
         size (int, sequence) or (int): Number of pixels to center crop away.
+        pixels_from_edges (bool): Whether to treat crop size values as the number
+           of pixels from the tensor's edge, or an exact shape in the center.
     """
 
-    def __init__(self, size: TransformSize = 0) -> None:
+    def __init__(self, size: TransformSize = 0, pixels_from_edges: bool = True) -> None:
         super(CenterCrop, self).__init__()
-        if type(size) is list or type(size) is tuple:
-            assert len(size) == 2, (
-                "CenterCrop requires a single crop value or a tuple of (height,width)"
-                + "in pixels for cropping."
-            )
-            self.crop_val = size
-        else:
-            self.crop_val = [size] * 2
+        self.crop_vals = size
+        self.pixels_from_edges = pixels_from_edges
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        assert (
-            input.dim() == 3 or input.dim() == 4
-        ), "Input to CenterCrop must be 3D or 4D"
-        if input.dim() == 4:
-            h, w = input.size(2), input.size(3)
-        elif input.dim() == 3:
-            h, w = input.size(1), input.size(2)
-        h_crop = h - self.crop_val[0]
-        w_crop = w - self.crop_val[1]
+        """
+        Center crop an input.
+        Arguments:
+            input (torch.Tensor): Input to center crop.
+        Returns:
+            tensor (torch.Tensor): A center cropped tensor.
+        """
+
+        return center_crop(input, self.crop_vals, self.pixels_from_edges)
+
+
+def center_crop(
+    input: torch.Tensor, crop_vals: List[int], pixels_from_edges: bool = True
+) -> torch.Tensor:
+    """
+    Center crop a specified amount from a tensor
+    Arguments:
+        input (tensor):  A CHW or NCHW image tensor to center crop.
+        size (int, sequence) or (int): Number of pixels to center crop away.
+        pixels_from_edges (bool): Whether to treat crop size values as the number
+           of pixels from the tensor's edge, or an exact shape in the center.
+    Returns:
+        *tensor*:  A center cropped tensor.
+    """
+
+    def center_crop_check(
+        crop_vals: Union[Tuple[int, int], List[int]]
+    ) -> Union[Tuple[int, int], List[int]]:
+        crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
+        assert len(crop_vals) == 1 or len(crop_vals) == 2
+        crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
+        return crop_vals
+
+    def center_crop_pixel(
+        input: torch.Tensor, crop_vals: List[int], h: int, w: int
+    ) -> torch.Tensor:
+        h_crop = h - crop_vals[0]
+        w_crop = w - crop_vals[1]
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
+    def center_crop_shape(
+        input: torch.Tensor, output_size: List[int], h: int, w: int
+    ) -> torch.Tensor:
+        h_crop = h - int(round((h - output_size[0]) / 2.0))
+        w_crop = w - int(round((w - output_size[1]) / 2.0))
+        return input[
+            ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
+        ]
 
-def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tensor:
-    """
-    Crop NCHW & CHW outputs by specifying the desired output shape.
-    """
-
-    assert input.dim() == 4 or input.dim() == 3
-    output_size = [output_size] if not hasattr(output_size, "__iter__") else output_size
-    assert len(output_size) == 1 or len(output_size) == 2
-    output_size = output_size * 2 if len(output_size) == 1 else output_size
+    assert input.dim() == 3 or input.dim() == 4
 
     if input.dim() == 4:
         h, w = input.size(2), input.size(3)
     if input.dim() == 3:
         h, w = input.size(1), input.size(2)
 
-    h_crop = h - int(round((h - output_size[0]) / 2.0))
-    w_crop = w - int(round((w - output_size[1]) / 2.0))
-
-    return input[
-        ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
-    ]
+    crop_vals = center_crop_check(crop_vals)
+    if pixels_from_edges:
+        x = center_crop_pixel(input, crop_vals, h, w)
+    else:
+        x = center_crop_shape(input, crop_vals, h, w)
+    return x
 
 
 def rand_select(transform_values: TransformValList) -> TransformVal:
