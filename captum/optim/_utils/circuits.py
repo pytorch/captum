@@ -28,8 +28,8 @@ def get_expanded_weights(
             specified for target2.
         target2 (nn.Module):  The end target layer. Must be above the layer
             specified for target1.
-        crop_shape (int or tuple of ints, optional):  Specify the output weight
-            size to enter crop away padding.
+        crop_shape (int or tuple of ints, optional):  Specify the exact output size
+            to crop out.
         model_input (tensor or tuple of tensors, optional):  The input to use
             with the specified model.
     Returns:

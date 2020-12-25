@@ -179,7 +179,17 @@ class ImageParameterization(InputParameterization):
 
 
 class FFTImage(ImageParameterization):
-    """Parameterize an image using inverse real 2D FFT"""
+    """
+    Parameterize an image using inverse real 2D FFT
+
+    Arguments:
+        size (list of int): The H & W dimensions to use for creating
+            the nn.Parameter tensor.
+        channels (int): The number of channels to create.
+        batch (int): The number of batches to create.
+        init (torch.tensor, optional): Optionally specify a tensor to
+            use instead of creating one.
+    """
 
     def __init__(
         self,
@@ -224,7 +234,16 @@ class FFTImage(ImageParameterization):
 
     @staticmethod
     def rfft2d_freqs(height: int, width: int) -> torch.Tensor:
-        """Computes 2D spectrum frequencies."""
+        """
+        Computes 2D spectrum frequencies.
+
+        Arguments:
+            height (int): The h dimension of the 2d frequency scale.
+            width (int): The w dimension of the 2d frequency scale.
+        Returns:
+            tensor (tensor): A 2d frequency scale tensor.
+        """
+
         fy = FFTImage.pytorch_fftfreq(height)[:, None]
         # on odd input dimensions we need to keep one additional frequency
         wadd = 2 if width % 2 == 1 else 1
@@ -241,7 +260,14 @@ class FFTImage(ImageParameterization):
         return results * (1.0 / (v * d))
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable]:
-        """Support older versions of PyTorch"""
+        """
+        Support older versions of PyTorch.
+
+        Returns:
+            fft functions (tuple of Callable): A list of FFT functions
+                to use for irfft and rfft operations.
+        """
+
         try:
             import torch.fft
 
@@ -262,6 +288,11 @@ class FFTImage(ImageParameterization):
         return torch_rfft, torch_irfft
 
     def forward(self) -> torch.Tensor:
+        """
+        Returns:
+            spatially correlated tensor (tensor): A spatially recorrelated tensor.
+        """
+
         h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
@@ -269,6 +300,18 @@ class FFTImage(ImageParameterization):
 
 
 class PixelImage(ImageParameterization):
+    """
+    Parameterize a simple image tensor.
+
+    Arguments:
+        size (list of int): The H & W dimensions to use for creating
+            the nn.Parameter tensor.
+        channels (int): The number of channels to create.
+        batch (int): The number of batches to create.
+        init (torch.tensor, optional): Optionally specify a tensor to
+            use instead of creating one.
+    """
+
     def __init__(
         self,
         size: InitSize = None,
@@ -290,6 +333,18 @@ class PixelImage(ImageParameterization):
 
 
 class LaplacianImage(ImageParameterization):
+    """
+    Parameterize an image with a laplacian pyramid.
+
+    Arguments:
+        size (list of int): The H & W dimensions to use for creating
+            the nn.Parameter tensor.
+        channels (int): The number of channels to create.
+        batch (int): The number of batches to create.
+        init (torch.tensor, optional): Optionally specify a tensor to
+            use instead of creating one.
+    """
+
     def __init__(
         self,
         size: InitSize = None,
@@ -365,6 +420,13 @@ class SharedImage(ImageParameterization):
 
     Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
     https://distill.pub/2018/differentiable-parameterizations/
+
+    Arguments:
+        shapes (list of int or list of list of ints): The shapes of the shared tensors
+            to use for creating the nn.Parameter tensors.
+        parameterization (ImageParameterization):  An image parameterization instance.
+        offset (int or list of int or list of list of ints): The offsets to use for the
+            shared tensors.
     """
 
     def __init__(
@@ -400,6 +462,14 @@ class SharedImage(ImageParameterization):
         return offset
 
     def apply_offset(self, x_list: List[torch.Tensor]) -> List[torch.Tensor]:
+        """
+        Apply list of offsets to list of tensors.
+        Arguments:
+            x_list (list of torch.Tensor): list of tensors to offset.
+        Returns:
+            A (list of torch.Tensor): list of offset tensors.
+        """
+
         A = []
         for x, offset in zip(x_list, self.offset):
             assert x.dim() == 4

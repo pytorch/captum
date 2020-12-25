@@ -12,7 +12,7 @@ def setup_batch(x: np.ndarray, batch: int = 1, dim: int = 3) -> np.ndarray:
     return x
 
 
-class FFTImage(object):
+class FFTImage:
     """Parameterize an image using inverse real 2D FFT"""
 
     def __init__(

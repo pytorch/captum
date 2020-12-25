@@ -3,7 +3,7 @@ from typing import Optional
 import numpy as np
 
 
-class BlendAlpha(object):
+class BlendAlpha:
     """
     NumPy version of the BlendAlpha transform.
 
@@ -36,7 +36,7 @@ class BlendAlpha(object):
         return blended
 
 
-class RandomSpatialJitter(object):
+class RandomSpatialJitter:
     """
     NumPy version of the RandomSpatialJitter transform.
 
@@ -68,7 +68,7 @@ class RandomSpatialJitter(object):
         return self.translate_array(x, insets)
 
 
-class CenterCrop(object):
+class CenterCrop:
     """
     NumPy version of the CenterCrop transform.
 
@@ -108,7 +108,7 @@ class CenterCrop(object):
         return input[..., sh : sh + h_crop, sw : sw + w_crop]
 
 
-class ToRGB(object):
+class ToRGB:
     """
     NumPy version of the ToRGB transform
     """
