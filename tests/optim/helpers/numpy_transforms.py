@@ -162,6 +162,7 @@ class ToRGB(object):
         elif transform_matrix == "i1i2i3":
             self.transform = ToRGB.i1i2i3_transform()
         elif isinstance(transform_matrix, np.ndarray):
+            assert list(transform_matrix.shape) == [3, 3]
             self.transform = transform_matrix
         else:
             raise ValueError(

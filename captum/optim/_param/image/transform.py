@@ -81,6 +81,7 @@ class ToRGB(nn.Module):
         elif transform_matrix == "i1i2i3":
             self.register_buffer("transform", ToRGB.i1i2i3_transform())
         elif torch.is_tensor(transform_matrix):
+            assert list(transform_matrix.shape) == [3, 3]
             self.register_buffer("transform", transform_matrix)
         else:
             raise ValueError(
