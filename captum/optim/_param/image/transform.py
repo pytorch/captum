@@ -162,43 +162,25 @@ def center_crop(
         *tensor*:  A center cropped tensor.
     """
 
-    def center_crop_check(
-        crop_vals: Union[Tuple[int, int], List[int]]
-    ) -> Union[Tuple[int, int], List[int]]:
-        crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
-        assert len(crop_vals) == 1 or len(crop_vals) == 2
-        crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
-        return crop_vals
-
-    def center_crop_pixel(
-        input: torch.Tensor, crop_vals: List[int], h: int, w: int
-    ) -> torch.Tensor:
-        h_crop = h - crop_vals[0]
-        w_crop = w - crop_vals[1]
-        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
-        return input[..., sh : sh + h_crop, sw : sw + w_crop]
-
-    def center_crop_shape(
-        input: torch.Tensor, output_size: List[int], h: int, w: int
-    ) -> torch.Tensor:
-        h_crop = h - int(round((h - output_size[0]) / 2.0))
-        w_crop = w - int(round((w - output_size[1]) / 2.0))
-        return input[
-            ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
-        ]
-
     assert input.dim() == 3 or input.dim() == 4
+    crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
+    assert len(crop_vals) == 1 or len(crop_vals) == 2
+    crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
 
     if input.dim() == 4:
         h, w = input.size(2), input.size(3)
     if input.dim() == 3:
         h, w = input.size(1), input.size(2)
 
-    crop_vals = center_crop_check(crop_vals)
     if pixels_from_edges:
-        x = center_crop_pixel(input, crop_vals, h, w)
+        h_crop = h - crop_vals[0]
+        w_crop = w - crop_vals[1]
+        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
+        x = input[..., sh : sh + h_crop, sw : sw + w_crop]
     else:
-        x = center_crop_shape(input, crop_vals, h, w)
+        h_crop = h - int(round((h - crop_vals[0]) / 2.0))
+        w_crop = w - int(round((w - crop_vals[1]) / 2.0))
+        x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
     return x
 
 
