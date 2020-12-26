@@ -1,6 +1,6 @@
 import math
 import numbers
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import torch
@@ -75,14 +75,14 @@ class ToRGB(nn.Module):
 
     def __init__(self, transform_matrix: Union[str, torch.Tensor] = "klt") -> None:
         super().__init__()
-
-        if transform_matrix == "klt":
+        assert isinstance(transform_matrix, str) or torch.is_tensor(transform_matrix)
+        if torch.is_tensor(transform_matrix):
+            assert list(transform_matrix.shape) == [3, 3]
+            self.register_buffer("transform", transform_matrix)
+        elif transform_matrix == "klt":
             self.register_buffer("transform", ToRGB.klt_transform())
         elif transform_matrix == "i1i2i3":
             self.register_buffer("transform", ToRGB.i1i2i3_transform())
-        elif torch.is_tensor(transform_matrix):
-            assert list(transform_matrix.shape) == [3, 3]
-            self.register_buffer("transform", transform_matrix)
         else:
             raise ValueError(
                 "transform_matrix has to be either 'klt', 'i1i2i3',"
@@ -149,7 +149,7 @@ class CenterCrop(torch.nn.Module):
 
 
 def center_crop(
-    input: torch.Tensor, crop_vals: List[int], pixels_from_edges: bool = True
+    input: torch.Tensor, crop_vals: TransformSize, pixels_from_edges: bool = True
 ) -> torch.Tensor:
     """
     Center crop a specified amount from a tensor
@@ -164,6 +164,7 @@ def center_crop(
 
     assert input.dim() == 3 or input.dim() == 4
     crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
+    crop_vals = cast(Union[List[int], Tuple[int], Tuple[int, int]], crop_vals)
     assert len(crop_vals) == 1 or len(crop_vals) == 2
     crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
 

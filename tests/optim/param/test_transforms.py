@@ -135,11 +135,11 @@ class TestCenterCrop(BaseTest):
         )
         crop_vals = 3
 
-        crop_tensor = transform.CenterCrop(size=crop_vals)
+        crop_tensor = transform.CenterCrop(crop_vals)
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
-        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -156,7 +156,7 @@ class TestCenterCrop(BaseTest):
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals)
-        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -170,11 +170,11 @@ class TestCenterCrop(BaseTest):
 
         crop_vals = 5
 
-        crop_tensor = transform.CenterCrop(size=crop_vals, False)
+        crop_tensor = transform.CenterCrop(crop_vals, False)
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
-        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -188,11 +188,11 @@ class TestCenterCrop(BaseTest):
 
         crop_vals = (4, 2)
 
-        crop_tensor = transform.CenterCrop(size=crop_vals, False)
+        crop_tensor = transform.CenterCrop(crop_vals, False)
         cropped_tensor = crop_tensor(test_tensor)
 
         crop_mod_np = numpy_transforms.CenterCrop(crop_vals, False)
-        cropped_array = crop_mod_np.crop(test_tensor.numpy())
+        cropped_array = crop_mod_np.forward(test_tensor.numpy())
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -207,8 +207,10 @@ class TestCenterCropFunction(BaseTest):
         )
         crop_vals = 3
 
-        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, True)
-        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, True)
+        cropped_tensor = transform.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -221,11 +223,13 @@ class TestCenterCropFunction(BaseTest):
         )
         crop_vals = (4, 2)
 
-        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, True)
-        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, True)
+        cropped_tensor = transform.center_crop(test_tensor, crop_vals, True)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, True
+        )
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
-        
+
     def test_center_crop_one_number_exact(self) -> None:
         pad = (1, 1, 1, 1)
         test_tensor = (
@@ -236,8 +240,10 @@ class TestCenterCropFunction(BaseTest):
 
         crop_vals = 5
 
-        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, False)
-        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, False)
+        cropped_tensor = transform.center_crop(test_tensor, crop_vals, False)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, False
+        )
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -251,8 +257,10 @@ class TestCenterCropFunction(BaseTest):
 
         crop_vals = (4, 2)
 
-        cropped_tensor = transform.crop_tensor(test_tensor, crop_vals, False)
-        cropped_array = numpy_transforms.crop_tensor(test_tensor.numpy(), crop_vals, False)
+        cropped_tensor = transform.center_crop(test_tensor, crop_vals, False)
+        cropped_array = numpy_transforms.center_crop(
+            test_tensor.numpy(), crop_vals, False
+        )
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
 
@@ -401,6 +409,8 @@ class TestToRGB(BaseTest):
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
         inverse_array = to_rgb_np.to_rgb(rgb_array, inverse=True)
+
+        assertArraysAlmostEqual(inverse_tensor.numpy(), inverse_array)
 
 
 class TestGaussianSmoothing(BaseTest):

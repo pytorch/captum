@@ -1,6 +1,8 @@
-from typing import Optional, Union
+from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
+
+from captum.optim._utils.typing import TransformSize
 
 
 class BlendAlpha(object):
@@ -80,7 +82,7 @@ class CenterCrop:
 
 
 def center_crop(
-    input: np.ndarray, crop_vals: List[int], pixels_from_edges: bool = True
+    input: np.ndarray, crop_vals: TransformSize, pixels_from_edges: bool = True
 ) -> np.ndarray:
     """
     Center crop a specified amount from a array.
@@ -95,6 +97,7 @@ def center_crop(
 
     assert input.ndim == 3 or input.ndim == 4
     crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
+    crop_vals = cast(Union[List[int], Tuple[int], Tuple[int, int]], crop_vals)
     assert len(crop_vals) == 1 or len(crop_vals) == 2
     crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
 
@@ -138,14 +141,16 @@ class ToRGB(object):
 
     def __init__(self, transform_matrix: Union[str, np.ndarray] = "klt") -> None:
         super().__init__()
-
-        if transform_matrix == "klt":
+        assert isinstance(transform_matrix, str) or isinstance(
+            transform_matrix, np.ndarray
+        )
+        if isinstance(transform_matrix, np.ndarray):
+            assert list(transform_matrix.shape) == [3, 3]
+            self.transform = transform_matrix
+        elif transform_matrix == "klt":
             self.transform = ToRGB.klt_transform()
         elif transform_matrix == "i1i2i3":
             self.transform = ToRGB.i1i2i3_transform()
-        elif isinstance(transform_matrix, np.ndarray):
-            assert list(transform_matrix.shape) == [3, 3]
-            self.transform = transform_matrix
         else:
             raise ValueError(
                 "transform_matrix has to be either 'klt', 'i1i2i3',"
