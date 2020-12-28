@@ -27,7 +27,7 @@ from captum.insights.attr_vis.features import BaseFeature
 OutputScore = namedtuple("OutputScore", "score index label")
 
 
-class AttributionCalculation(object):
+class AttributionCalculation:
     def __init__(
         self,
         models: Sequence[Module],
