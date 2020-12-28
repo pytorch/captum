@@ -485,7 +485,7 @@ Predicted:    cat  ship  ship  ship
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we demonstrate how to use integrated gradients and noise tunnel with smoothgrad square option on the test image. Noise tunnel with <code>smoothgrad square</code> option adds gaussian noise with a standard deviation of <code>stdevs=0.2</code> to the input image <code>n_samples</code> times, computes the attributions for <code>n_samples</code> images and returns the mean of the squared attributions across <code>n_samples</code> images.</p>
+<p>Below we demonstrate how to use integrated gradients and noise tunnel with smoothgrad square option on the test image. Noise tunnel with <code>smoothgrad square</code> option adds gaussian noise with a standard deviation of <code>stdevs=0.2</code> to the input image <code>nt_samples</code> times, computes the attributions for <code>nt_samples</code> images and returns the mean of the squared attributions across <code>nt_samples</code> images.</p>
 </div>
 </div>
 </div>
@@ -497,7 +497,7 @@ Predicted:    cat  ship  ship  ship
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">ig</span> <span class="o">=</span> <span class="n">IntegratedGradients</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 <span class="n">nt</span> <span class="o">=</span> <span class="n">NoiseTunnel</span><span class="p">(</span><span class="n">ig</span><span class="p">)</span>
 <span class="n">attr_ig_nt</span> <span class="o">=</span> <span class="n">attribute_image_features</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">baselines</span><span class="o">=</span><span class="nb">input</span> <span class="o">*</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nt_type</span><span class="o">=</span><span class="s1">'smoothgrad_sq'</span><span class="p">,</span>
-                                      <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">stdevs</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+                                      <span class="n">nt_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">stdevs</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
 <span class="n">attr_ig_nt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">attr_ig_nt</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 </pre></div>
 </div>

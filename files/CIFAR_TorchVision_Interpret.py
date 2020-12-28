@@ -226,7 +226,7 @@ attr_ig = np.transpose(attr_ig.squeeze().cpu().detach().numpy(), (1, 2, 0))
 print('Approximation delta: ', abs(delta))
 
 
-# Below we demonstrate how to use integrated gradients and noise tunnel with smoothgrad square option on the test image. Noise tunnel with `smoothgrad square` option adds gaussian noise with a standard deviation of `stdevs=0.2` to the input image `n_samples` times, computes the attributions for `n_samples` images and returns the mean of the squared attributions across `n_samples` images.
+# Below we demonstrate how to use integrated gradients and noise tunnel with smoothgrad square option on the test image. Noise tunnel with `smoothgrad square` option adds gaussian noise with a standard deviation of `stdevs=0.2` to the input image `nt_samples` times, computes the attributions for `nt_samples` images and returns the mean of the squared attributions across `nt_samples` images.
 
 # In[12]:
 
@@ -234,7 +234,7 @@ print('Approximation delta: ', abs(delta))
 ig = IntegratedGradients(net)
 nt = NoiseTunnel(ig)
 attr_ig_nt = attribute_image_features(nt, input, baselines=input * 0, nt_type='smoothgrad_sq',
-                                      n_samples=100, stdevs=0.2)
+                                      nt_samples=100, stdevs=0.2)
 attr_ig_nt = np.transpose(attr_ig_nt.squeeze(0).cpu().detach().numpy(), (1, 2, 0))
 
 
