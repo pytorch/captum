@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Any, Tuple, cast
+from typing import Any, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -9,7 +9,11 @@ from captum._utils.gradient import compute_gradients
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._core.saliency import Saliency
-from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic import (
+    BaseTest,
+    assertArraysAlmostEqual,
+    assertTensorTuplesAlmostEqual,
+)
 from tests.helpers.basic_models import BasicModel, BasicModel5_MultiArgs
 from tests.helpers.classification_models import SoftmaxModel
 
@@ -36,6 +40,25 @@ def _get_multiargs_basic_config() -> Tuple[
     return model, inputs, grads, additional_forward_args
 
 
+def _get_multiargs_basic_config_large() -> Tuple[
+    Module, Tuple[Tensor, ...], Tuple[Tensor, ...], Any
+]:
+    model = BasicModel5_MultiArgs()
+    additional_forward_args = ([2, 3], 1)
+    inputs = (
+        torch.tensor(
+            [[10.5, 12.0, 34.3], [43.4, 51.2, 32.0]], requires_grad=True
+        ).repeat_interleave(3, dim=0),
+        torch.tensor(
+            [[1.0, 3.5, 23.2], [2.3, 1.2, 0.3]], requires_grad=True
+        ).repeat_interleave(3, dim=0),
+    )
+    grads = compute_gradients(
+        model, inputs, additional_forward_args=additional_forward_args
+    )
+    return model, inputs, grads, additional_forward_args
+
+
 class Test(BaseTest):
     def test_saliency_test_basic_vanilla(self) -> None:
         self._saliency_base_assert(*_get_basic_config())
@@ -51,6 +74,55 @@ class Test(BaseTest):
 
     def test_saliency_test_basic_multi_variable_smoothgrad(self) -> None:
         self._saliency_base_assert(*_get_multiargs_basic_config(), nt_type="smoothgrad")
+
+    def test_saliency_test_basic_multivar_sg_n_samples_batch_size_2(self) -> None:
+        attributions_batch_size = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad",
+            n_samples_batch_size=2,
+        )
+        attributions = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad",
+        )
+
+        assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
+
+    def test_saliency_test_basic_multivar_sg_n_samples_batch_size_3(self) -> None:
+        attributions_batch_size = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad_sq",
+            n_samples_batch_size=3,
+        )
+        attributions = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad_sq",
+        )
+        assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
+
+    def test_saliency_test_basic_multivar_vg_n_samples_batch_size_1(self) -> None:
+        attributions_batch_size = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
+            n_samples_batch_size=1,
+        )
+        attributions = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
+        )
+        assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
+
+    def test_saliency_test_basic_multivar_vg_n_samples_batch_size_6(self) -> None:
+        attributions_batch_size = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
+            n_samples_batch_size=6,
+        )
+        attributions = self._saliency_base_assert(
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
+        )
+        assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
 
     def test_saliency_test_basic_multi_vargrad(self) -> None:
         self._saliency_base_assert(*_get_multiargs_basic_config(), nt_type="vargrad")
@@ -71,7 +143,8 @@ class Test(BaseTest):
         expected: TensorOrTupleOfTensorsGeneric,
         additional_forward_args: Any = None,
         nt_type: str = "vanilla",
-    ) -> None:
+        n_samples_batch_size=None,
+    ) -> Union[Tensor, Tuple[Tensor, ...]]:
         saliency = Saliency(model)
 
         self.assertFalse(saliency.multiplies_by_inputs)
@@ -87,6 +160,7 @@ class Test(BaseTest):
                     inputs,
                     nt_type=nt_type,
                     n_samples=10,
+                    nt_samples_batch_size=n_samples_batch_size,
                     stdevs=0.0000002,
                     additional_forward_args=additional_forward_args,
                 )
@@ -95,6 +169,8 @@ class Test(BaseTest):
             if nt_type == "vanilla":
                 self._assert_attribution(attribution, expected_attr)
             self.assertEqual(input.shape, attribution.shape)
+
+        return attributions
 
     def _assert_attribution(self, attribution: Tensor, expected: Tensor) -> None:
         expected = torch.abs(expected)
