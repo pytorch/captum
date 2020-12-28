@@ -65,8 +65,8 @@ def get_expanded_weights(
 
 def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
     """
-    Replace all non-linear MaxPool2d layers with their linear AvgPool2d equivalents.
-    This allows us to ignore non-linear values when calculating expanded weights.
+    Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
+    This allows us to ignore nonlinear values when calculating expanded weights.
 
     Args:
         model (nn.Module): A PyTorch model instance.
