@@ -382,6 +382,27 @@ config = [
         },
         "noise_tunnel": True,
     },
+    {
+        "name": "basic_multi_tensor_target_batched_nt",
+        "algorithms": [
+            IntegratedGradients,
+            Saliency,
+            InputXGradient,
+            FeatureAblation,
+            DeepLift,
+            GuidedBackprop,
+            Deconvolution,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": torch.tensor([0, 1, 1, 0]),
+            "nt_samples": 20,
+            "nt_samples_batch_size": 2,
+            "stdevs": 0.0,
+        },
+        "noise_tunnel": True,
+    },
     # DeepLift SHAP
     {
         "name": "basic_dl_shap",
