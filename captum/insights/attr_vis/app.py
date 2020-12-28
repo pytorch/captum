@@ -136,7 +136,7 @@ class Batch:
         self.additional_args = additional_args
 
 
-class AttributionVisualizer(object):
+class AttributionVisualizer:
     def __init__(
         self,
         models: Union[List[Module], Module],

@@ -76,7 +76,7 @@ class PyTextInterpretableEmbedding(EmbeddingBase):
         return attribution_map
 
 
-class BaselineGenerator(object):
+class BaselineGenerator:
     r"""
     This is an example input baseline generator for DocNN model which uses
     word and dict features.
