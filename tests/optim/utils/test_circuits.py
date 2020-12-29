@@ -53,6 +53,11 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights nonlinear_top_connections test"
                 + " due to insufficient Torch version."
             )
+
+        if torch.__version__ == "1.3.0":
+            norm_func = torch.norm
+        else:
+            norm_func = torch.linalg.norm
         model = googlenet(pretrained=True)
         circuits.max2avg_pool2d(model)
         circuits.ignore_layer(model, RedirectedReluLayer)
@@ -64,7 +69,7 @@ class TestGetExpandedWeights(BaseTest):
         top_connected_neurons = torch.argsort(
             torch.stack(
                 [
-                    -torch.linalg.norm(output_tensor[i, 379, :, :])
+                    -norm_func(output_tensor[i, 379, :, :])
                     for i in range(output_tensor.shape[0])
                 ]
             )
