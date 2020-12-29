@@ -110,3 +110,26 @@ def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
             setattr(model, name, new_layer)
         elif child is not None:
             max2avg_pool2d(child)
+
+
+def ignore_layer(model, layer) -> None:
+    """
+    Replace target layers with layers that do nothing.
+    This is useful for removing the nonlinear ReLU
+    layers when creating expanded weights.
+
+    Args:
+        model (nn.Module): A PyTorch model instance.
+        layer (nn.Module): A layer class type.
+    """
+
+    class IgnoreLayer(torch.nn.Module):
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            return x
+
+    for name, child in model._modules.items():
+        if isinstance(child, layer):
+            new_layer = IgnoreLayer()
+            setattr(model, name, new_layer)
+        elif child is not None:
+            ignore_layer(child, layer)

@@ -70,8 +70,12 @@ class ReluLayer(nn.Module):
     Basic Hookable & Replaceable ReLU layer.
     """
 
+    def __init__(self, inplace: bool = True) -> None:
+        super(ReluLayer, self).__init__()
+        self.inplace = inplace
+
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.relu(input, inplace=True)
+        return F.relu(input, inplace=self.inplace)
 
 
 def replace_layers(model, old_layer=ReluLayer, new_layer=RedirectedReluLayer) -> None:
