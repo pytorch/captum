@@ -12,6 +12,8 @@ title: FAQ
 * [Can my model using functional non-linearities (E.g. nn.functional.ReLU) or reused modules be used with Captum?](#can-my-model-using-functional-non-linearities-eg-nnfunctionalrelu-or-reused-modules-be-used-with-captum)
 * [Do JIT models, DataParallel models, or DistributedDataParallel models work with Captum?](#do-jit-models-dataparallel-models-or-distributeddataparallel-models-work-with-captum)
 * [I am working on a new interpretability / attribution method and would like to add it to Captum. How do I proceed?](#i-am-working-on-a-new-interpretability-attribution-method-and-would-like-to-add-it-to-captum-how-do-i-proceed)
+* [I'm using a gradient-based attribution algorithm such as integrated gradients for a RNN/LSTM network and I see 'cudnn RNN backward can only be called in training mode'. How can I resolve this issue ?]
+(#how-can-I-resolve-cudnn-RNN-backward-error-for-RNN-LSTM-network)
 
 ### **How do I set the target parameter to an attribution method?**
 
@@ -69,3 +71,9 @@ For interpretability methods created by the community, we have two methods of in
 2. Inclusion in Captum - New attribution algorithms that fit the structure of Captum can be considered for contribution to the contrib package of algorithms in Captum.  We review proposals for new additions to the contrib package on a case-by-case basis and consider factors such as publication history, quantitative and qualitative evaluation, citations, etc.
 
 We are still working out the logistics of setting these up and will update this with more information once it’s available.
+
+
+### ***How can I resolve cudnn RNN backward error for RNN / LSTM network?**
+If your model is set in eval mode you might run into errors, such as `cudnn RNN backward can only be called in training mode`, when you try to perform backward pass on a RNN / LSTM model in a GPU environment.
+CuDNN with RNN / LSTM doesn't support gradient computation in eval mode that's why we need to disable cudnn for RNN in eval mode.
+To resolve the issue you can set`torch.backends.cudnn.enabled` flag to False - `torch.backends.cudnn.enabled=False`
