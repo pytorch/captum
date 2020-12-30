@@ -46,6 +46,10 @@
     {
       "id": "Multimodal_VQA_Captum_Insights",
       "title": "Using Captum Insights with multimodal models (VQA)"
+    },
+    {
+      "id": "DLRM_Tutorial",
+      "title": "Interpreting Deep Learning Recommender Models"
     }
   ]
 }

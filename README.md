@@ -412,6 +412,8 @@ See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
 ## Talks and Papers
 The slides of our presentation from NeurIPS 2019 can be found [here](docs/presentations/Captum_NeurIPS_2019_final.key)
 
+The slides of our presentation from KDD 2020 tutorial can be found [here](https://pytorch-tutorial-assets.s3.amazonaws.com/Captum_KDD_2020.pdf)
+
 ## References of Algorithms
 
 * `IntegratedGradients`, `LayerIntegratedGradients`: [Axiomatic Attribution for Deep Networks, Mukund Sundararajan et al. 2017](https://arxiv.org/abs/1703.01365) and [Did the Model Understand the Question?, Pramod K. Mudrakarta, et al. 2018](https://arxiv.org/abs/1805.05492)
