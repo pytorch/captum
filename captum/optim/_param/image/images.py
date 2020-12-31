@@ -13,7 +13,7 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import SymmetricPadding, ToRGB
-from captum.optim._utils.typing import InitSize, SquashFunc
+from captum.optim._utils.typing import SquashFuncType
 
 
 class ImageTensor(torch.Tensor):
@@ -183,7 +183,7 @@ class FFTImage(ImageParameterization):
 
     def __init__(
         self,
-        size: InitSize = None,
+        size: Tuple[int, int] = None,
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -271,7 +271,7 @@ class FFTImage(ImageParameterization):
 class PixelImage(ImageParameterization):
     def __init__(
         self,
-        size: InitSize = None,
+        size: Tuple[int, int] = None,
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -292,7 +292,7 @@ class PixelImage(ImageParameterization):
 class LaplacianImage(ImageParameterization):
     def __init__(
         self,
-        size: InitSize = None,
+        size: Tuple[int, int] = None,
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -318,7 +318,7 @@ class LaplacianImage(ImageParameterization):
 
     def setup_input(
         self,
-        size: InitSize,
+        size: Tuple[int, int],
         channels: int,
         power: float = 0.1,
         init: Optional[torch.Tensor] = None,
@@ -470,23 +470,23 @@ class NaturalImage(ImageParameterization):
     r"""Outputs an optimizable input image.
 
     By convention, single images are CHW and float32s in [0,1].
-    The underlying parameterization is decorrelated via a ToRGB transform.
+    The underlying parameterization can be decorrelated via a ToRGB transform.
     When used with the (default) FFT parameterization, this results in a fully
     uncorrelated image parameterization. :-)
 
     If a model requires a normalization step, such as normalizing imagenet RGB values,
     or rescaling to [0,255], it can perform those steps with the provided transforms or
     inside its computation.
-    For example, our GoogleNet factory function has a `transform_input=True` argument.
 
     Arguments:
-        size (list of int): The height and width to use for the nn.Parameter tensor.
-        channels (list of int): The number of channels to use when creating the
+        size (Tuple[int, int]): The height and width to use for the nn.Parameter image
+            tensor.
+        channels (int): The number of channels to use when creating the
             nn.Parameter tensor.
-        batch (list of int): The number of channels to use when creating the
+        batch (int): The number of channels to use when creating the
             nn.Parameter tensor, or stacking init images.
         parameterization (ImageParameterization): An image parameterization class.
-        squash_func (SquashFunc): The squash function to use after
+        squash_func (SquashFuncType): The squash function to use after
             color recorrelation. A funtion or lambda function.
         decorrelation_module (nn.Module): A ToRGB instance.
         decorrelate_init (bool): Whether or not to apply color decorrelation to the
@@ -495,13 +495,13 @@ class NaturalImage(ImageParameterization):
 
     def __init__(
         self,
-        size: InitSize = None,
+        size: Tuple[int, int] = None,
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
         parameterization: ImageParameterization = FFTImage,
-        squash_func: Optional[SquashFunc] = None,
-        decorrelation_module: nn.Module = ToRGB(transform_matrix="klt"),
+        squash_func: Optional[SquashFuncType] = None,
+        decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
     ) -> None:
         super().__init__()
@@ -517,10 +517,10 @@ class NaturalImage(ImageParameterization):
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
             if squash_func is None:
-                squash_func: SquashFunc = lambda x: x.clamp(0, 1)
+                squash_func: SquashFuncType = lambda x: x.clamp(0, 1)
         else:
             if squash_func is None:
-                squash_func: SquashFunc = lambda x: torch.sigmoid(x)
+                squash_func: SquashFuncType = lambda x: torch.sigmoid(x)
         self.squash_func = squash_func
         self.parameterization = parameterization(
             size=size, channels=channels, batch=batch, init=init
