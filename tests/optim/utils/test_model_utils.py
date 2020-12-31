@@ -317,5 +317,33 @@ class TestCollectActivations(BaseTest):
         self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
 
 
+class TestMax2AvgPool2d(BaseTest):
+    def test_max2avg_pool2d(self) -> None:
+        model = torch.nn.Sequential(
+            torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
+        )
+
+        model_utils.max2avg_pool2d(model)
+
+        test_tensor = torch.randn(128, 32, 16, 16)
+        test_tensor = F.pad(test_tensor, (0, 1, 0, 1), value=float("-inf"))
+        out_tensor = model(test_tensor)
+
+        avg_pool = torch.nn.AvgPool2d(kernel_size=3, stride=2, padding=0)
+        expected_tensor = avg_pool(test_tensor)
+        expected_tensor[expected_tensor == float("-inf")] = 0.0
+
+        assertTensorAlmostEqual(self, out_tensor, expected_tensor, 0)
+
+
+class TestIgnoreLayer(BaseTest):
+    def test_ignore_layer(self) -> None:
+        model = torch.nn.Sequential(torch.nn.ReLU())
+        x = torch.randn(1, 3, 4, 4)
+        model_utils.ignore_layer(model, torch.nn.ReLU)
+        output_tensor = model(x)
+        assertTensorAlmostEqual(self, x, output_tensor, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,11 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 
 from captum.optim._param.image.transform import center_crop_shape
 from captum.optim._utils.models import collect_activations
-from captum.optim._utils.typing import ModelInputType, PoolParam, TransformSize
+from captum.optim._utils.typing import ModelInputType, TransformSize
 
 
 def get_expanded_weights(
@@ -61,75 +61,3 @@ def get_expanded_weights(
     if crop_shape is not None:
         expanded_weights = center_crop_shape(expanded_weights, crop_shape)
     return expanded_weights
-
-
-def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
-    """
-    Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
-    This allows us to ignore nonlinear values when calculating expanded weights.
-
-    Args:
-        model (nn.Module): A PyTorch model instance.
-        value (Any): Used to return any padding that's meant to be ignored by
-            pooling layers back to zero.
-    """
-
-    class AvgPool2dInf(torch.nn.Module):
-        def __init__(
-            self,
-            kernel_size: PoolParam = 2,
-            stride: Optional[PoolParam] = 2,
-            padding: PoolParam = 0,
-            ceil_mode: bool = False,
-            value: Optional[Any] = None,
-        ) -> None:
-            super().__init__()
-            self.avgpool = torch.nn.AvgPool2d(
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-                ceil_mode=ceil_mode,
-            )
-            self.value = value
-
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
-            x = self.avgpool(x)
-            if self.value is not None:
-                x[x == self.value] = 0.0
-            return x
-
-    for name, child in model._modules.items():
-        if isinstance(child, torch.nn.MaxPool2d):
-            new_layer = AvgPool2dInf(
-                kernel_size=child.kernel_size,
-                stride=child.stride,
-                padding=child.padding,
-                ceil_mode=child.ceil_mode,
-                value=value,
-            )
-            setattr(model, name, new_layer)
-        elif child is not None:
-            max2avg_pool2d(child)
-
-
-def ignore_layer(model, layer) -> None:
-    """
-    Replace target layers with layers that do nothing.
-    This is useful for removing the nonlinear ReLU
-    layers when creating expanded weights.
-
-    Args:
-        model (nn.Module): A PyTorch model instance.
-        layer (nn.Module): A layer class type.
-    """
-
-    class IgnoreLayer(torch.nn.Module):
-        def forward(self, x: torch.Tensor) -> torch.Tensor:
-            return x
-
-    for name, child in model._modules.items():
-        if isinstance(child, layer):
-            new_layer = IgnoreLayer()
-            setattr(model, name, new_layer)
-        elif child is not None:
-            ignore_layer(child, layer)
