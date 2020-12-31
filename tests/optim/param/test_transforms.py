@@ -164,7 +164,7 @@ class TestCenterCrop(BaseTest):
 
         assertArraysAlmostEqual(cropped_tensor.numpy(), cropped_array, 0)
         expected_tensor = torch.stack(
-            [torch.stack([torch.tensor([0.0, 1.0, 1.0, 0.0])] * 2)] * 3
+            [torch.stack([torch.tensor([1.0, 0.0, 1.0, 1.0, 0.0, 1.0])] * 2)] * 3
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
 
