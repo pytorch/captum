@@ -22,7 +22,7 @@ class FFTImage:
         size=None,
         channels: int = 3,
         batch: int = 1,
-        init: Optional[torch.Tensor] = None,
+        init: Optional[np.ndarray] = None,
     ) -> None:
         super().__init__()
         if init is None:
