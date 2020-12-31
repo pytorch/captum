@@ -383,7 +383,9 @@ class TestToRGB(BaseTest):
         assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor, 0.002)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
-        assertTensorAlmostEqual(self, inverse_tensor, torch.ones_like(inverse_tensor))
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
 
     def test_to_rgb_alpha_klt_forward(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -403,7 +405,9 @@ class TestToRGB(BaseTest):
         assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor, 0.002)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
-        assertTensorAlmostEqual(self, inverse_tensor, torch.ones_like(inverse_tensor))
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
 
     def test_to_rgb_i1i2i3_forward(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -422,7 +426,9 @@ class TestToRGB(BaseTest):
         assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
-        assertTensorAlmostEqual(self, inverse_tensor, torch.ones_like(inverse_tensor))
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
 
     def test_to_rgb_alpha_i1i2i3_forward(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -442,7 +448,9 @@ class TestToRGB(BaseTest):
         assertTensorAlmostEqual(self, rgb_tensor, expected_rgb_tensor)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
-        assertTensorAlmostEqual(self, inverse_tensor, torch.ones_like(inverse_tensor))
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
 
     def test_to_rgb_custom_forward(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -461,7 +469,9 @@ class TestToRGB(BaseTest):
         assertArraysAlmostEqual(rgb_tensor.numpy(), rgb_array)
 
         inverse_tensor = to_rgb(rgb_tensor.clone(), inverse=True)
-        assertTensorAlmostEqual(self, inverse_tensor, torch.ones_like(inverse_tensor))
+        assertTensorAlmostEqual(
+            self, inverse_tensor, torch.ones_like(inverse_tensor.rename(None))
+        )
 
 
 class TestGaussianSmoothing(BaseTest):
