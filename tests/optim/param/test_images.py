@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List
 
 import numpy as np
 import torch
 
 from captum.optim._param.image import images
+from captum.optim._param.image.transform import SymmetricPadding
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
@@ -77,7 +79,7 @@ class TestFFTImage(BaseTest):
                 "Skipping FFTImage test due to insufficient Torch version."
             )
         size = (224, 224)
-        batch = 5
+        batch = 2
 
         fftimage = images.FFTImage(size=size, batch=batch)
         fftimage_np = numpy_image.FFTImage(size=size, batch=batch)
@@ -119,6 +121,7 @@ class TestFFTImage(BaseTest):
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+        assertArraysAlmostEqual(fftimage_tensor.detach().numpy(), fftimage_array, 25.0)
 
     def test_fftimage_forward_init_bchw(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -136,6 +139,7 @@ class TestFFTImage(BaseTest):
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+        assertArraysAlmostEqual(fftimage_tensor.detach().numpy(), fftimage_array, 25.0)
 
     def test_fftimage_forward_init_batch(self) -> None:
         if torch.__version__ == "1.2.0":
@@ -143,7 +147,7 @@ class TestFFTImage(BaseTest):
                 "Skipping FFTImage test due to insufficient Torch version."
             )
         size = (224, 224)
-        batch = 5
+        batch = 2
         init_tensor = torch.randn(1, 3, 224, 224)
         init_array = init_tensor.numpy()
 
@@ -154,6 +158,7 @@ class TestFFTImage(BaseTest):
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+        assertArraysAlmostEqual(fftimage_tensor.detach().numpy(), fftimage_array, 25.0)
 
 
 class TestPixelImage(BaseTest):
@@ -237,6 +242,317 @@ class TestLaplacianImage(BaseTest):
 
         self.assertEqual(test_tensor.dim(), 4)
         self.assertEqual(test_tensor.size(0), 1)
+        self.assertEqual(test_tensor.size(1), channels)
+        self.assertEqual(test_tensor.size(2), size[0])
+        self.assertEqual(test_tensor.size(3), size[1])
+
+
+class TestSharedImage(BaseTest):
+    def test_sharedimage_get_offset_single_number(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        offset = image_param.get_offset(4, 3)
+
+        self.assertEqual(len(offset), 3)
+        self.assertEqual(offset, [[4, 4, 4, 4]] * 3)
+
+    def test_sharedimage_get_offset_exact(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        offset_vals = ((1, 2, 3, 4), (4, 3, 2, 1), (1, 2, 3, 4))
+        offset = image_param.get_offset(offset_vals, 3)
+
+        self.assertEqual(len(offset), 3)
+        self.assertEqual(offset, [[int(o) for o in v] for v in offset_vals])
+
+    def test_sharedimage_get_offset_single_set_four_numbers(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        offset_vals = (1, 2, 3, 4)
+        offset = image_param.get_offset(offset_vals, 3)
+
+        self.assertEqual(len(offset), 3)
+        self.assertEqual(offset, [list(offset_vals)] * 3)
+
+    def test_sharedimage_get_offset_single_set_three_numbers(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        offset_vals = (2, 3, 4)
+        offset = image_param.get_offset(offset_vals, 3)
+
+        self.assertEqual(len(offset), 3)
+        self.assertEqual(offset, [[0] + list(offset_vals)] * 3)
+
+    def test_sharedimage_get_offset_single_set_two_numbers(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        offset_vals = (3, 4)
+        offset = image_param.get_offset(offset_vals, 3)
+
+        self.assertEqual(len(offset), 3)
+        self.assertEqual(offset, [[0, 0] + list(offset_vals)] * 3)
+
+    def apply_offset_compare(
+        self, x_list: List[torch.Tensor], offset_list: List[List[int]]
+    ) -> List[torch.Tensor]:
+        A = []
+        for x, offset in zip(x_list, offset_list):
+            assert x.dim() == 4
+            size = list(x.size())
+
+            offset_pad = (
+                [[abs(offset[0])] * 2]
+                + [[abs(offset[1])] * 2]
+                + [[abs(offset[2])] * 2]
+                + [[abs(offset[3])] * 2]
+            )
+
+            x = SymmetricPadding.apply(x, offset_pad)
+
+            for o, s in zip(offset, range(x.dim())):
+                x = torch.roll(x, shifts=o, dims=s)
+
+            x = x[: size[0], : size[1], : size[2], : size[3]]
+            A.append(x)
+        return A
+
+    def test_apply_offset(self):
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        size = (4, 3, 224, 224)
+        shared_shapes = (128 // 2, 128 // 2)
+        offset_vals = (2, 3, 4, 5)
+        test_param = lambda: torch.ones(*size)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param, offset=offset_vals
+        )
+
+        test_x_list = [torch.ones(*size) for x in range(size[0])]
+        output_A = image_param.apply_offset(test_x_list)
+
+        x_list = [torch.ones(*size) for x in range(size[0])]
+        self.assertEqual(image_param.offset, [list(offset_vals)])
+
+        offset_list = image_param.offset
+        expected_A = self.apply_offset_compare(x_list, offset_list)
+
+        for t_expected, t_output in zip(expected_A, output_A):
+            assertTensorAlmostEqual(self, t_expected, t_output)
+
+    def test_interpolate_tensor(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+        shared_shapes = (128 // 2, 128 // 2)
+        test_param = lambda: torch.ones(3, 3, 224, 224)  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+
+        size = (224, 224)
+        channels = 3
+        batch = 1
+
+        test_tensor = torch.ones(6, 4, 128, 128)
+        output_tensor = image_param.interpolate_tensor(
+            test_tensor, batch, channels, size[0], size[1]
+        )
+
+        self.assertEqual(output_tensor.dim(), 4)
+        self.assertEqual(output_tensor.size(0), batch)
+        self.assertEqual(output_tensor.size(1), channels)
+        self.assertEqual(output_tensor.size(2), size[0])
+        self.assertEqual(output_tensor.size(3), size[1])
+
+    def test_sharedimage_single_shape_hw_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+
+        shared_shapes = (128 // 2, 128 // 2)
+        batch = 6
+        channels = 3
+        size = (224, 224)
+        test_param = lambda: torch.ones(batch, channels, size[0], size[1])  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+        test_tensor = image_param.forward()
+
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(
+            list(image_param.shared_init[0].shape), [1, 1] + list(shared_shapes)
+        )
+        self.assertEqual(test_tensor.dim(), 4)
+        self.assertEqual(test_tensor.size(0), batch)
+        self.assertEqual(test_tensor.size(1), channels)
+        self.assertEqual(test_tensor.size(2), size[0])
+        self.assertEqual(test_tensor.size(3), size[1])
+
+    def test_sharedimage_single_shape_chw_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+
+        shared_shapes = (3, 128 // 2, 128 // 2)
+        batch = 6
+        channels = 3
+        size = (224, 224)
+        test_param = lambda: torch.ones(batch, channels, size[0], size[1])  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+        test_tensor = image_param.forward()
+
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(
+            list(image_param.shared_init[0].shape), [1] + list(shared_shapes)
+        )
+        self.assertEqual(test_tensor.dim(), 4)
+        self.assertEqual(test_tensor.size(0), batch)
+        self.assertEqual(test_tensor.size(1), channels)
+        self.assertEqual(test_tensor.size(2), size[0])
+        self.assertEqual(test_tensor.size(3), size[1])
+
+    def test_sharedimage_single_shape_bchw_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+
+        shared_shapes = (1, 3, 128 // 2, 128 // 2)
+        batch = 6
+        channels = 3
+        size = (224, 224)
+        test_param = lambda: torch.ones(batch, channels, size[0], size[1])  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+        test_tensor = image_param.forward()
+
+        self.assertIsNone(image_param.offset)
+        self.assertEqual(image_param.shared_init[0].dim(), 4)
+        self.assertEqual(list(image_param.shared_init[0].shape), list(shared_shapes))
+        self.assertEqual(test_tensor.dim(), 4)
+        self.assertEqual(test_tensor.size(0), batch)
+        self.assertEqual(test_tensor.size(1), channels)
+        self.assertEqual(test_tensor.size(2), size[0])
+        self.assertEqual(test_tensor.size(3), size[1])
+
+    def test_sharedimage_multiple_shapes_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+
+        shared_shapes = (
+            (1, 3, 128 // 2, 128 // 2),
+            (1, 3, 128 // 4, 128 // 4),
+            (1, 3, 128 // 8, 128 // 8),
+            (2, 3, 128 // 8, 128 // 8),
+            (1, 3, 128 // 16, 128 // 16),
+            (2, 3, 128 // 16, 128 // 16),
+        )
+        batch = 6
+        channels = 3
+        size = (224, 224)
+        test_param = lambda: torch.ones(batch, channels, size[0], size[1])  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+        test_tensor = image_param.forward()
+
+        self.assertIsNone(image_param.offset)
+        for i in range(len(shared_shapes)):
+            self.assertEqual(image_param.shared_init[i].dim(), 4)
+            self.assertEqual(
+                list(image_param.shared_init[i].shape), list(shared_shapes[i])
+            )
+        self.assertEqual(test_tensor.dim(), 4)
+        self.assertEqual(test_tensor.size(0), batch)
+        self.assertEqual(test_tensor.size(1), channels)
+        self.assertEqual(test_tensor.size(2), size[0])
+        self.assertEqual(test_tensor.size(3), size[1])
+
+    def test_sharedimage_multiple_shapes_diff_len_forward(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping SharedImage test due to insufficient Torch version."
+            )
+
+        shared_shapes = (
+            (128 // 2, 128 // 2),
+            (7, 3, 128 // 4, 128 // 4),
+            (3, 128 // 8, 128 // 8),
+            (2, 4, 128 // 8, 128 // 8),
+            (1, 3, 128 // 16, 128 // 16),
+            (2, 2, 128 // 16, 128 // 16),
+        )
+        batch = 6
+        channels = 3
+        size = (224, 224)
+        test_param = lambda: torch.ones(batch, channels, size[0], size[1])  # noqa: E731
+        image_param = images.SharedImage(
+            shapes=shared_shapes, parameterization=test_param
+        )
+        test_tensor = image_param.forward()
+
+        self.assertIsNone(image_param.offset)
+        for i in range(len(shared_shapes)):
+            self.assertEqual(image_param.shared_init[i].dim(), 4)
+            s_shape = list(shared_shapes[i])
+            s_shape = ([1] * (4 - len(s_shape))) + list(s_shape)
+            self.assertEqual(list(image_param.shared_init[i].shape), s_shape)
+
+        self.assertEqual(test_tensor.dim(), 4)
+        self.assertEqual(test_tensor.size(0), batch)
         self.assertEqual(test_tensor.size(1), channels)
         self.assertEqual(test_tensor.size(2), size[0])
         self.assertEqual(test_tensor.size(3), size[1])

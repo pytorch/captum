@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import cast
 
 import torch
 import torch.nn.functional as F
@@ -71,6 +72,13 @@ class TestRedirectedReluLayer(BaseTest):
         assertTensorAlmostEqual(self, t_grad_input[0], t_grad_output[0], 0)
 
 
+def check_is_not_instance(self, model, layer) -> None:
+    for name, child in model._modules.items():
+        if child is not None:
+            self.assertNotIsInstance(child, layer)
+            check_is_not_instance(self, child, layer)
+
+
 class TestReplaceLayers(BaseTest):
     def test_replace_layers(self) -> None:
         class BasicReluModule(torch.nn.Module):
@@ -97,10 +105,8 @@ class TestReplaceLayers(BaseTest):
         # Unittest can't run replace_layers correctly?
         model_utils.replace_layers(toy_model.relu2, old_layer, new_layer)
 
-        self.assertNotIsInstance(toy_model.relu1, old_layer)
+        check_is_not_instance(self, toy_model, old_layer)
         self.assertIsInstance(toy_model.relu1, new_layer)
-
-        self.assertNotIsInstance(toy_model.relu2.relu, old_layer)
         self.assertIsInstance(toy_model.relu2.relu, new_layer)
 
 
@@ -292,6 +298,23 @@ class TestGetLayers(BaseTest):
         model = alexnet(pretrained=True)
         collected_layers = model_utils.get_model_layers(model)
         self.assertEqual(collected_layers, expected_list)
+
+
+class TestCollectActivations(BaseTest):
+    def test_collect_activations(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping collect_activations test due to insufficient Torch version."
+            )
+        model = googlenet(pretrained=True)
+
+        activ_out = model_utils.collect_activations(
+            model, [model.mixed4d], torch.zeros(1, 3, 224, 224)
+        )
+
+        self.assertIsInstance(activ_out, dict)
+        m4d_activ = activ_out[model.mixed4d]
+        self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
 
 
 if __name__ == "__main__":

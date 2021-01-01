@@ -67,7 +67,6 @@ class InceptionV1(nn.Module):
             out_channels=64,
             kernel_size=(7, 7),
             stride=(2, 2),
-            padding=(3, 3),
             groups=1,
             bias=True,
         )
@@ -89,7 +88,6 @@ class InceptionV1(nn.Module):
             out_channels=192,
             kernel_size=(3, 3),
             stride=(1, 1),
-            padding=(1, 1),
             groups=1,
             bias=True,
         )
@@ -132,6 +130,7 @@ class InceptionV1(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self._transform_input(x)
+        x = F.pad(x, (2, 3, 2, 3))
         x = self.conv1(x)
         x = self.conv1_relu(x)
         x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
@@ -140,6 +139,7 @@ class InceptionV1(nn.Module):
 
         x = self.conv2(x)
         x = self.conv2_relu(x)
+        x = F.pad(x, (1, 1, 1, 1))
         x = self.conv3(x)
         x = self.conv3_relu(x)
         x = self.localresponsenorm2(x)
@@ -214,7 +214,6 @@ class InceptionModule(nn.Module):
             out_channels=c3x3,
             kernel_size=(3, 3),
             stride=(1, 1),
-            padding=(1, 1),
             groups=1,
             bias=True,
         )
@@ -234,7 +233,6 @@ class InceptionModule(nn.Module):
             out_channels=c5x5,
             kernel_size=(5, 5),
             stride=(1, 1),
-            padding=(2, 2),
             groups=1,
             bias=True,
         )
@@ -257,18 +255,20 @@ class InceptionModule(nn.Module):
 
         c3x3 = self.conv_3x3_reduce(x)
         c3x3 = self.conv_3x3_reduce_relu(c3x3)
+        c3x3 = F.pad(c3x3, (1, 1, 1, 1))
         c3x3 = self.conv_3x3(c3x3)
         c3x3 = self.conv_3x3_relu(c3x3)
 
         c5x5 = self.conv_5x5_reduce(x)
         c5x5 = self.conv_5x5_reduce_relu(c5x5)
+        c5x5 = F.pad(c5x5, (2, 2, 2, 2))
         c5x5 = self.conv_5x5(c5x5)
         c5x5 = self.conv_5x5_relu(c5x5)
 
-        px = self.pool_proj(x)
-        px = self.pool_proj_relu(px)
-        px = F.pad(px, (1, 1, 1, 1), value=float("-inf"))
+        px = F.pad(x, (1, 1, 1, 1), value=float("-inf"))
         px = self.pool(px)
+        px = self.pool_proj(px)
+        px = self.pool_proj_relu(px)
         return torch.cat([c1x1, c3x3, c5x5, px], dim=1)
 
 
