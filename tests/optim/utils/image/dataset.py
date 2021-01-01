@@ -3,7 +3,7 @@ import unittest
 
 import torch
 
-import captum.optim._utils.image_dataset as dataset_utils
+import captum.optim._utils.image.dataset as dataset_utils
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,

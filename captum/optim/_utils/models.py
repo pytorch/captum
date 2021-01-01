@@ -5,6 +5,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from captum.optim._core.output_hook import ActivationFetcher
+from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
+
 
 def get_model_layers(model) -> List[str]:
     """
@@ -154,3 +157,17 @@ class Conv2dSame(nn.Conv2d):
             self.dilation,
             self.groups,
         )
+
+
+def collect_activations(
+    model,
+    targets: Union[nn.Module, List[nn.Module]],
+    model_input: ModelInputType = torch.zeros(1, 3, 224, 224),
+) -> ModuleOutputMapping:
+    """
+    Collect target activations for a model.
+    """
+
+    catch_activ = ActivationFetcher(model, targets)
+    activ_out = catch_activ(model_input)
+    return activ_out
