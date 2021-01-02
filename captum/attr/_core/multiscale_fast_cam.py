@@ -49,21 +49,21 @@ class MultiscaleFastCam(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
         self.layer_act = LayerActivation(forward_func, layers, device_ids)
-        self.layers = layers
+        self.layers = layers # type: ModuleOrModuleList
 
     @log_usage()
     def attribute(
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
-        scale: str = 'smoe',
-        norm: str = 'gaussian',
+        scale: str = "smoe",
+        norm: str = "gaussian",
         weights: List[float] = None,
         combine: bool = True,
         resize_mode: str = "bilinear",
         relu_attribution: bool = False,
         additional_forward_args: Any = None,
-        attribute_to_layer_input: bool = False
-    ) -> Tuple[Tensor, ...]:  
+        attribute_to_layer_input: bool = False,
+    ) -> Tuple[Tensor, ...]:
 
         # pick out functions
         self.scale_func = self.pick_scale_func(scale)
@@ -81,7 +81,7 @@ class MultiscaleFastCam(GradientAttribution):
             attributes.append(normed_attr)
         attributes = tuple(attributes)
 
-        ## Combine
+        # Combine
         bn, channels, height, width = inputs.shape
         combined_map = torch.zeros(
             (bn, 1, height, width),
@@ -110,16 +110,19 @@ class MultiscaleFastCam(GradientAttribution):
             return weighted_maps
         return combined_map
 
-
     def pick_norm_func(self, norm):
         if norm:
             norm = norm.lower()
-        if norm == 'gamma':
+        if norm == "gamma":
             norm_func = self._compute_gamma_norm
-        elif norm == 'gaussian':
+        elif norm == "gaussian":
             norm_func = self._compute_gaussian_norm
-        elif norm is None or norm == 'none':
-            norm_func = lambda x: x.squeeze(1)
+        elif norm is None or norm == "none":
+
+            def identity(x):
+                return x.squeeze(1)
+
+            norm_func = identity
         elif callable(norm):
             norm_func = norm
         else:
@@ -130,22 +133,25 @@ class MultiscaleFastCam(GradientAttribution):
             raise NameError(msg)
         return norm_func
 
-
     def pick_scale_func(self, scale):
         if scale:
             scale = scale.lower()
-        if scale == 'smoe':
+        if scale == "smoe":
             scale_func = self._compute_smoe_scale
-        elif scale == 'std':
+        elif scale == "std":
             scale_func = self._compute_std_scale
-        elif scale == 'mean':
+        elif scale == "mean":
             scale_func = self._compute_mean_scale
-        elif scale == 'max':
+        elif scale == "max":
             scale_func = self._compute_max_scale
-        elif scale == 'normal':
+        elif scale == "normal":
             scale_func = self._compute_normal_entropy_scale
-        elif scale is None or scale == 'none':
-            scale_func = lambda x: x
+        elif scale is None or scale == "none":
+
+            def identity(x):
+                return x
+
+            scale_func = identity
         else:
             msg = (
                 f"{scale} scaling option not found or invalid. "
@@ -161,23 +167,20 @@ class MultiscaleFastCam(GradientAttribution):
         th = k * m
         return th
 
-
     def _compute_std_scale(self, inputs):
         return torch.std(inputs, dim=1, keepdim=True)
-    
 
     def _compute_mean_scale(self, inputs):
         return torch.mean(inputs, dim=1, keepdim=True)
 
-
     def _compute_max_scale(self, inputs):
         return torch.max(inputs, dim=1, keepdim=True).values
-
 
     def _compute_normal_entropy_scale(self, inputs):
         c1 = torch.tensor(0.3989422804014327)  # 1.0/math.sqrt(2.0*math.pi)
         c2 = torch.tensor(1.4142135623730951)  # math.sqrt(2.0)
         c3 = torch.tensor(4.1327313541224930)
+
         def _compute_alpha(mean, std, a=0):
             return (a - mean) / std
 
@@ -187,17 +190,17 @@ class MultiscaleFastCam(GradientAttribution):
         def _compute_cdf(eta):
             e = torch.erf(eta / c2)
             return 0.5 * (1.0 + e) + 1e-7
+
         m = torch.mean(inputs, dim=1)
         s = torch.std(inputs, dim=1) + 1e-7
         a = _compute_alpha(m, s)
-        pdf = _compute_pdf(a)  
+        pdf = _compute_pdf(a)
         cdf = _compute_cdf(a)
-        Z = 1.0 - cdf 
+        Z = 1.0 - cdf
         T1 = torch.log(c3 * s * Z)
         T2 = (a * pdf) / (2.0 * Z)
         ent = T1 + T2
         return ent.unsqueeze(1)
-
 
     def _compute_gaussian_norm(self, inputs):
         b, _, h, w = inputs.size()
@@ -207,7 +210,6 @@ class MultiscaleFastCam(GradientAttribution):
         x = 0.5 * (1.0 + torch.erf((x - m) / (s * torch.sqrt(torch.tensor(2.0)))))
         x = x.reshape(b, h, w)
         return x
-
 
     def _compute_gamma_norm(self, inputs):
         def _gamma(z):
@@ -253,7 +255,7 @@ class MultiscaleFastCam(GradientAttribution):
 
         def _compute_ml_est(x, i=10):
             x = x + eps
-            s = torch.log(x.mean(dim=1, keepdims=True)) 
+            s = torch.log(x.mean(dim=1, keepdims=True))
             s = s - torch.log(x).mean(dim=1, keepdims=True)
             s3 = s - 3.0
             rt = torch.sqrt(s3.pow(2.0) + 24.0 * s)
