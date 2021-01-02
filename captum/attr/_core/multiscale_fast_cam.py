@@ -49,6 +49,7 @@ class MultiscaleFastCam(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
         self.layer_act = LayerActivation(forward_func, layers, device_ids)
+        self.layers = layers
 
     @log_usage()
     def attribute(
@@ -57,7 +58,7 @@ class MultiscaleFastCam(GradientAttribution):
         scale: str = 'smoe',
         norm: str = 'gaussian',
         weights: List[float] = None,
-        return_weighted=True,
+        combine: bool = True,
         resize_mode: str = "bilinear",
         relu_attribution: bool = False,
         additional_forward_args: Any = None,
@@ -75,10 +76,13 @@ class MultiscaleFastCam(GradientAttribution):
         )
         attributes = []
         for layer_attr in layer_attrs:
+            print(layer_attr.shape)
             scaled_attr = self.scale_func(layer_attr)
+            print(scaled_attr.shape)
             normed_attr = self.norm_func(scaled_attr)
+            print(normed_attr.shape)
             attributes.append(normed_attr)
-        attributes = tuple(attributes)
+        # attributes = tuple(attributes)
 
         ## Combine
         bn, channels, height, width = inputs.shape
@@ -105,19 +109,20 @@ class MultiscaleFastCam(GradientAttribution):
             combined_map = F.relu(combined_map)
             weighted_maps = F.relu(weighted_maps)
 
-        if return_weighted:
+        if not combine:
             return weighted_maps
         return combined_map
 
 
     def pick_norm_func(self, norm):
-        norm = norm.lower()
+        if norm:
+            norm = norm.lower()
         if norm == 'gamma':
             norm_func = self._compute_gamma_norm
         elif norm == 'gaussian':
             norm_func = self._compute_gaussian_norm
-        elif norm is None or norm == 'None':
-            norm_func = lambda x: x.squeeze()
+        elif norm is None or norm == 'none':
+            norm_func = lambda x: x.squeeze(1)
         elif callable(norm):
             norm_func = norm
         else:
@@ -130,7 +135,8 @@ class MultiscaleFastCam(GradientAttribution):
 
 
     def pick_scale_func(self, scale):
-        scale = scale.lower()
+        if scale:
+            scale = scale.lower()
         if scale == 'smoe':
             scale_func = self._compute_smoe_scale
         elif scale == 'std':
@@ -140,7 +146,9 @@ class MultiscaleFastCam(GradientAttribution):
         elif scale == 'max':
             scale_func = self._compute_max_scale
         elif scale == 'normal':
-            scale_func = _compute_normal_entropy_scale
+            scale_func = self._compute_normal_entropy_scale
+        elif scale is None or scale == 'none':
+            scale_func = lambda x: x
         else:
             msg = (
                 f"{scale} scaling option not found or invalid. "
@@ -166,7 +174,7 @@ class MultiscaleFastCam(GradientAttribution):
 
 
     def _compute_max_scale(self, inputs):
-        return torch.max(inputs, dim=1, keepdim=True)
+        return torch.max(inputs, dim=1, keepdim=True).values
 
 
     def _compute_normal_entropy_scale(self, inputs):
@@ -183,7 +191,7 @@ class MultiscaleFastCam(GradientAttribution):
             e = torch.erf(eta / c2)
             return 0.5 * (1.0 + e) + 1e-7
         m = torch.mean(inputs, dim=1)
-        s = torch.std(inputs, dim=1)
+        s = torch.std(inputs, dim=1) + 1e-7
         a = _compute_alpha(m, s)
         pdf = _compute_pdf(a)  
         cdf = _compute_cdf(a)
@@ -191,7 +199,7 @@ class MultiscaleFastCam(GradientAttribution):
         T1 = torch.log(c3 * s * Z)
         T2 = (a * pdf) / (2.0 * Z)
         ent = T1 + T2
-        return ent
+        return ent.unsqueeze(1)
 
 
     def _compute_gaussian_norm(self, inputs):
@@ -275,11 +283,11 @@ class MultiscaleFastCam(GradientAttribution):
         )
         eps = 1e-7
         two_pi = torch.tensor(np.sqrt(2.0 * np.pi))
-        b, _, h, w = inputs.size()
+        b, c, h, w = inputs.size()
         x = inputs.reshape(b, h * w)
         x = x - torch.min(x, dim=1, keepdims=True)[0] + 1e-7
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
         x = torch.where(torch.isfinite(x), x, torch.zeros_like(x))
-        output = x.reshape(b, h, w)
+        output = x.reshape(b, c, h, w)
         return output
