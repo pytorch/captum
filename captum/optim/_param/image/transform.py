@@ -8,11 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from captum.optim._utils.image.common import nchannels_to_rgb
-from captum.optim._utils.typing import (
-    IntSeqOrIntType,
-    NumOrTensorType,
-    NumSeqOrTensorType,
-)
+from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -198,7 +194,9 @@ def center_crop(
     return x
 
 
-def rand_select(transform_values: NumSeqOrTensorType) -> NumOrTensorType:
+def rand_select(
+    transform_values: NumSeqOrTensorType,
+) -> Union[int, float, torch.Tensor]:
     """
     Randomly return a value from the provided tuple or list
     """
@@ -225,7 +223,9 @@ class RandomScale(nn.Module):
         )
         return scale_mat
 
-    def scale_tensor(self, x: torch.Tensor, scale: NumOrTensorType) -> torch.Tensor:
+    def scale_tensor(
+        self, x: torch.Tensor, scale: Union[int, float, torch.Tensor]
+    ) -> torch.Tensor:
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )

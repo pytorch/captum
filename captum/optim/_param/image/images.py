@@ -13,7 +13,6 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import SymmetricPadding, ToRGB
-from captum.optim._utils.typing import SquashFuncType
 
 
 class ImageTensor(torch.Tensor):
@@ -485,12 +484,13 @@ class NaturalImage(ImageParameterization):
             nn.Parameter tensor.
         batch (int): The number of channels to use when creating the
             nn.Parameter tensor, or stacking init images.
-        parameterization (ImageParameterization): An image parameterization class.
-        squash_func (SquashFuncType): The squash function to use after
-            color recorrelation. A funtion or lambda function.
-        decorrelation_module (nn.Module): A ToRGB instance.
-        decorrelate_init (bool): Whether or not to apply color decorrelation to the
-            init tensor input.
+        parameterization (ImageParameterization, optional): An image parameterization
+            class.
+        squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
+            function to use after color recorrelation. A funtion or lambda function.
+        decorrelation_module (nn.Module, optional): A ToRGB instance.
+        decorrelate_init (bool, optional): Whether or not to apply color decorrelation
+            to the init tensor input.
     """
 
     def __init__(
@@ -500,7 +500,7 @@ class NaturalImage(ImageParameterization):
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
         parameterization: ImageParameterization = FFTImage,
-        squash_func: Optional[SquashFuncType] = None,
+        squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
     ) -> None:
@@ -517,10 +517,14 @@ class NaturalImage(ImageParameterization):
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
             if squash_func is None:
-                squash_func: SquashFuncType = lambda x: x.clamp(0, 1)
+                squash_func: Callable[[torch.Tensor], torch.Tensor] = lambda x: x.clamp(
+                    0, 1
+                )
         else:
             if squash_func is None:
-                squash_func: SquashFuncType = lambda x: torch.sigmoid(x)
+                squash_func: Callable[
+                    [torch.Tensor], torch.Tensor
+                ] = lambda x: torch.sigmoid(x)
         self.squash_func = squash_func
         self.parameterization = parameterization(
             size=size, channels=channels, batch=batch, init=init

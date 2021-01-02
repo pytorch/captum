@@ -5,7 +5,7 @@ import torch.nn as nn
 
 from captum.optim._param.image.transform import center_crop
 from captum.optim._utils.models import collect_activations
-from captum.optim._utils.typing import IntSeqOrIntType, ModelInputType
+from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
 
 
 def get_expanded_weights(
@@ -13,7 +13,7 @@ def get_expanded_weights(
     target1: nn.Module,
     target2: nn.Module,
     crop_shape: Optional[Union[Tuple[int, int], IntSeqOrIntType]] = None,
-    model_input: ModelInputType = torch.zeros(1, 3, 224, 224),
+    model_input: TupleOfTensorsOrTensorType = torch.zeros(1, 3, 224, 224),
     crop_func: Optional[Callable] = center_crop,
 ) -> torch.Tensor:
     """
