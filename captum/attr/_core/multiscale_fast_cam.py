@@ -40,7 +40,6 @@ class MultiscaleFastCam(GradientAttribution):
             layers (torch.nn.Module or listt(torch.nn.Module)): A list of layers
                           for which attributions.
                           are computed.
-            norm (str): choice of norm to normalize saliency maps
             device_ids (list(int)): Device ID list, necessary only if forward_func
                           applies a DataParallel model. This allows reconstruction of
                           intermediate outputs from batched results across devices.
