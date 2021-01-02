@@ -48,7 +48,7 @@ class MultiscaleFastCam(GradientAttribution):
         """
         GradientAttribution.__init__(self, forward_func)
         self.layer_act = LayerActivation(forward_func, layers, device_ids)
-        self.layers = layers # type: ModuleOrModuleList
+        self.layers = layers  # type: ModuleOrModuleList
 
     @log_usage()
     def attribute(
