@@ -76,13 +76,10 @@ class MultiscaleFastCam(GradientAttribution):
         )
         attributes = []
         for layer_attr in layer_attrs:
-            print(layer_attr.shape)
             scaled_attr = self.scale_func(layer_attr)
-            print(scaled_attr.shape)
             normed_attr = self.norm_func(scaled_attr)
-            print(normed_attr.shape)
             attributes.append(normed_attr)
-        # attributes = tuple(attributes)
+        attributes = tuple(attributes)
 
         ## Combine
         bn, channels, height, width = inputs.shape
@@ -289,5 +286,5 @@ class MultiscaleFastCam(GradientAttribution):
         k, th = _compute_ml_est(x)
         x = (1.0 / _gamma(k)) * _lower_incl_gamma(k, x / th)
         x = torch.where(torch.isfinite(x), x, torch.zeros_like(x))
-        output = x.reshape(b, c, h, w)
+        output = x.reshape(b, h, w)
         return output
