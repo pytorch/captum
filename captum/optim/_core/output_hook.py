@@ -4,7 +4,7 @@ from warnings import warn
 
 import torch.nn as nn
 
-from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
+from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
 
 class AbortForwardException(Exception):
@@ -101,7 +101,7 @@ class ActivationFetcher:
         self.model = model
         self.layers = ModuleOutputsHook(targets)
 
-    def __call__(self, input_t: ModelInputType) -> ModuleOutputMapping:
+    def __call__(self, input_t: TupleOfTensorsOrTensorType) -> ModuleOutputMapping:
         try:
             with suppress(AbortForwardException):
                 self.model(input_t)
