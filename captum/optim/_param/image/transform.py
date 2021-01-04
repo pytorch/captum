@@ -1,6 +1,6 @@
 import math
 import numbers
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import torch
@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from captum.optim._utils.image.common import nchannels_to_rgb
-from captum.optim._utils.typing import TransformSize, TransformVal, TransformValList
+from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -46,14 +46,19 @@ class IgnoreAlpha(nn.Module):
 
 class ToRGB(nn.Module):
     """Transforms arbitrary channels to RGB. We use this to ensure our
-    image parameterization itself can be decorrelated. So this goes between
-    the image parameterization and the normalization/sigmoid step.
-    We offer two transforms: Karhunen-Loève (KLT) and I1I2I3.
+    image parametrization itself can be decorrelated. So this goes between
+    the image parametrization and the normalization/sigmoid step.
+    We offer two precalculated transforms: Karhunen-Loève (KLT) and I1I2I3.
     KLT corresponds to the empirically measured channel correlations on imagenet.
-    I1I2I3 corresponds to an aproximation for natural images from Ohta et al.[0]
+    I1I2I3 corresponds to an approximation for natural images from Ohta et al.[0]
     [0] Y. Ohta, T. Kanade, and T. Sakai, "Color information for region segmentation,"
     Computer Graphics and Image Processing, vol. 13, no. 3, pp. 222–241, 1980
     https://www.sciencedirect.com/science/article/pii/0146664X80900477
+
+    Arguments:
+        transform (str or tensor):  Either a string for one of the precalculated
+            transform matrices, or a 3x3 matrix for the 3 RGB channels of input
+            tensors.
     """
 
     @staticmethod
@@ -73,15 +78,21 @@ class ToRGB(nn.Module):
         ]
         return torch.Tensor(i1i2i3_matrix)
 
-    def __init__(self, transform_name: str = "klt") -> None:
+    def __init__(self, transform: Union[str, torch.Tensor] = "klt") -> None:
         super().__init__()
-
-        if transform_name == "klt":
+        assert isinstance(transform, str) or torch.is_tensor(transform)
+        if torch.is_tensor(transform):
+            transform = cast(torch.Tensor, transform)
+            assert list(transform.shape) == [3, 3]
+            self.register_buffer("transform", transform)
+        elif transform == "klt":
             self.register_buffer("transform", ToRGB.klt_transform())
-        elif transform_name == "i1i2i3":
+        elif transform == "i1i2i3":
             self.register_buffer("transform", ToRGB.i1i2i3_transform())
         else:
-            raise ValueError("transform_name has to be either 'klt' or 'i1i2i3'")
+            raise ValueError(
+                "transform has to be either 'klt', 'i1i2i3'," + " or a matrix tensor."
+            )
 
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         assert x.dim() == 3 or x.dim() == 4
@@ -118,60 +129,74 @@ class ToRGB(nn.Module):
 
 class CenterCrop(torch.nn.Module):
     """
-    Center crop the specified amount of pixels from the edges.
+    Center crop a specified amount from a tensor.
     Arguments:
-        size (int, sequence) or (int): Number of pixels to center crop away.
+        size (int, sequence, int): Number of pixels to center crop away.
+        pixels_from_edges (bool, optional): Whether to treat crop size
+            values as the number of pixels from the tensor's edge, or an
+            exact shape in the center.
     """
 
-    def __init__(self, size: TransformSize = 0) -> None:
+    def __init__(
+        self, size: IntSeqOrIntType = 0, pixels_from_edges: bool = False
+    ) -> None:
         super(CenterCrop, self).__init__()
-        if type(size) is list or type(size) is tuple:
-            assert len(size) == 2, (
-                "CenterCrop requires a single crop value or a tuple of (height,width)"
-                + "in pixels for cropping."
-            )
-            self.crop_val = size
-        else:
-            self.crop_val = [size] * 2
+        self.crop_vals = size
+        self.pixels_from_edges = pixels_from_edges
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        assert (
-            input.dim() == 3 or input.dim() == 4
-        ), "Input to CenterCrop must be 3D or 4D"
-        if input.dim() == 4:
-            h, w = input.size(2), input.size(3)
-        elif input.dim() == 3:
-            h, w = input.size(1), input.size(2)
-        h_crop = h - self.crop_val[0]
-        w_crop = w - self.crop_val[1]
-        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
-        return input[..., sh : sh + h_crop, sw : sw + w_crop]
+        """
+        Center crop an input.
+        Arguments:
+            input (torch.Tensor): Input to center crop.
+        Returns:
+            tensor (torch.Tensor): A center cropped tensor.
+        """
+
+        return center_crop(input, self.crop_vals, self.pixels_from_edges)
 
 
-def center_crop_shape(input: torch.Tensor, output_size: List[int]) -> torch.Tensor:
+def center_crop(
+    input: torch.Tensor, crop_vals: IntSeqOrIntType, pixels_from_edges: bool = False
+) -> torch.Tensor:
     """
-    Crop NCHW & CHW outputs by specifying the desired output shape.
+    Center crop a specified amount from a tensor.
+    Arguments:
+        input (tensor):  A CHW or NCHW image tensor to center crop.
+        size (int, sequence, int): Number of pixels to center crop away.
+        pixels_from_edges (bool, optional): Whether to treat crop size
+            values as the number of pixels from the tensor's edge, or an
+            exact shape in the center.
+    Returns:
+        *tensor*:  A center cropped tensor.
     """
 
-    assert input.dim() == 4 or input.dim() == 3
-    output_size = [output_size] if not hasattr(output_size, "__iter__") else output_size
-    assert len(output_size) == 1 or len(output_size) == 2
-    output_size = output_size * 2 if len(output_size) == 1 else output_size
+    assert input.dim() == 3 or input.dim() == 4
+    crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
+    crop_vals = cast(Union[List[int], Tuple[int], Tuple[int, int]], crop_vals)
+    assert len(crop_vals) == 1 or len(crop_vals) == 2
+    crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
 
     if input.dim() == 4:
         h, w = input.size(2), input.size(3)
     if input.dim() == 3:
         h, w = input.size(1), input.size(2)
 
-    h_crop = h - int(round((h - output_size[0]) / 2.0))
-    w_crop = w - int(round((w - output_size[1]) / 2.0))
+    if pixels_from_edges:
+        h_crop = h - crop_vals[0]
+        w_crop = w - crop_vals[1]
+        sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
+        x = input[..., sh : sh + h_crop, sw : sw + w_crop]
+    else:
+        h_crop = h - int(round((h - crop_vals[0]) / 2.0))
+        w_crop = w - int(round((w - crop_vals[1]) / 2.0))
+        x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
+    return x
 
-    return input[
-        ..., h_crop - output_size[0] : h_crop, w_crop - output_size[1] : w_crop
-    ]
 
-
-def rand_select(transform_values: TransformValList) -> TransformVal:
+def rand_select(
+    transform_values: NumSeqOrTensorType,
+) -> Union[int, float, torch.Tensor]:
     """
     Randomly return a value from the provided tuple or list
     """
@@ -186,19 +211,21 @@ class RandomScale(nn.Module):
         scale (float, sequence): Tuple of rescaling values to randomly select from.
     """
 
-    def __init__(self, scale: TransformValList) -> None:
+    def __init__(self, scale: NumSeqOrTensorType) -> None:
         super(RandomScale, self).__init__()
         self.scale = scale
 
     def get_scale_mat(
-        self, m: TransformVal, device: torch.device, dtype: torch.dtype
+        self, m: IntSeqOrIntType, device: torch.device, dtype: torch.dtype
     ) -> torch.Tensor:
         scale_mat = torch.tensor(
             [[m, 0.0, 0.0], [0.0, m, 0.0]], device=device, dtype=dtype
         )
         return scale_mat
 
-    def scale_tensor(self, x: torch.Tensor, scale: TransformVal) -> torch.Tensor:
+    def scale_tensor(
+        self, x: torch.Tensor, scale: Union[int, float, torch.Tensor]
+    ) -> torch.Tensor:
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
