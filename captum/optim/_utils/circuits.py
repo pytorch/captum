@@ -1,19 +1,20 @@
-from typing import Optional, Tuple, Union
+from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 
-from captum.optim._param.image.transform import center_crop_shape
+from captum.optim._param.image.transform import center_crop
 from captum.optim._utils.models import collect_activations
-from captum.optim._utils.typing import ModelInputType, TransformSize
+from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
 
 
 def get_expanded_weights(
     model,
     target1: nn.Module,
     target2: nn.Module,
-    crop_shape: Optional[Union[Tuple[int, int], TransformSize]] = None,
-    model_input: ModelInputType = torch.zeros(1, 3, 224, 224),
+    crop_shape: Optional[Union[Tuple[int, int], IntSeqOrIntType]] = None,
+    model_input: TupleOfTensorsOrTensorType = torch.zeros(1, 3, 224, 224),
+    crop_func: Optional[Callable] = center_crop,
 ) -> torch.Tensor:
     """
     Extract meaningful weight interactions from between neurons which aren’t
@@ -32,6 +33,8 @@ def get_expanded_weights(
             size to enter crop away padding.
         model_input (tensor or tuple of tensors, optional):  The input to use
             with the specified model.
+        crop_func (Callable, optional):  Specify a function to crop away the padding
+            from the output weights.
     Returns:
         *tensor*:  A tensor containing the expanded weights in the form of:
             (target2 output channels, target1 output channels, y, x)
@@ -56,8 +59,8 @@ def get_expanded_weights(
             retain_graph=True,
         )[0]
         A.append(x.squeeze(0))
-    exapnded_weights = torch.stack(A, 0)
+    expanded_weights = torch.stack(A, 0)
 
-    if crop_shape is not None:
-        exapnded_weights = center_crop_shape(exapnded_weights, crop_shape)
-    return exapnded_weights
+    if crop_shape is not None and crop_func is not None:
+        expanded_weights = crop_func(expanded_weights, crop_shape)
+    return expanded_weights
