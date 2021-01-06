@@ -1,5 +1,4 @@
 var path = require("path");
-var version = require("../package.json").version;
 
 // Custom webpack rules are generally the same for all webpack bundles, hence
 // stored in a separate local variable.
@@ -73,44 +72,6 @@ module.exports = [
       path: path.resolve(__dirname, "..", "..", "widget", "static"),
       libraryTarget: "amd",
     },
-    devtool: "source-map",
-    module: {
-      rules: rules,
-    },
-    resolveLoader: {
-      modules: ["../node_modules"],
-    },
-    resolve: {
-      modules: ["../node_modules"],
-      extensions: extensions,
-    },
-    externals: ["@jupyter-widgets/base"],
-  },
-  {
-    // Embeddable jupyter-captum-insights bundle
-    //
-    // This bundle is generally almost identical to the notebook bundle
-    // containing the custom widget views and models.
-    //
-    // The only difference is in the configuration of the webpack public path
-    // for the static assets.
-    //
-    // It will be automatically distributed by unpkg to work with the static
-    // widget embedder.
-    //
-    // The target bundle is always `dist/index.js`, which is the path required
-    // by the custom widget embedder.
-    //
-    mode: "production",
-    entry: "./src/embed.js",
-    output: {
-      filename: "index.js",
-      path: path.resolve(__dirname, "..", "..", "widget", "dist"),
-      libraryTarget: "amd",
-      publicPath:
-        "https://unpkg.com/jupyter-captum-insights@" + version + "/dist/",
-    },
-    devtool: "source-map",
     module: {
       rules: rules,
     },
