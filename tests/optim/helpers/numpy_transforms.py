@@ -1,3 +1,4 @@
+import math
 from typing import List, Optional, Tuple, Union, cast
 
 import numpy as np
@@ -116,8 +117,8 @@ def center_crop(
         sw, sh = w // 2 - (w_crop // 2), h // 2 - (h_crop // 2)
         x = input[..., sh : sh + h_crop, sw : sw + w_crop]
     else:
-        h_crop = h - int(round((h - crop_vals[0]) / 2.0))
-        w_crop = w - int(round((w - crop_vals[1]) / 2.0))
+        h_crop = h - int(math.ceil((h - crop_vals[0]) / 2.0))
+        w_crop = w - int(math.ceil((w - crop_vals[1]) / 2.0))
         x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
     return x
 
