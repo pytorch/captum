@@ -5,7 +5,7 @@ import torch
 
 def grid_indices(
     tensor: torch.Tensor,
-    size: Tuple[int, int] = (8, 8),
+    grid_size: Tuple[int, int],
     x_extent: Tuple[float, float] = (0.0, 1.0),
     y_extent: Tuple[float, float] = (0.0, 1.0),
 ) -> List[List[torch.Tensor]]:
@@ -15,22 +15,26 @@ def grid_indices(
     Args:
          tensor (torch.tensor): xy coordinate tensor to extract grid
             indices from.
-         size (Tuple[int, int]): The size of grid cells to use.
-         x_extent (Tuple[float, float]): The x extent to use.
-         y_extent (Tuple[float, float]): The y extent to use.
+         grid_size (Tuple[int, int]): The size of grid cells to use.
+         x_extent (Tuple[float, float], optional): The x extent to use.
+         y_extent (Tuple[float, float], optional): The y extent to use.
     Returns:
        indices (list of list of tensor): Grid cell indices for the
            irregular grid.
     """
 
     assert tensor.dim() == 2 and tensor.size(1) == 2
-    x_coords = ((tensor[:, 0] - x_extent[0]) / (x_extent[1] - x_extent[0])) * size[1]
-    y_coords = ((tensor[:, 1] - y_extent[0]) / (y_extent[1] - y_extent[0])) * size[0]
+    x_coords = ((tensor[:, 0] - x_extent[0]) / (x_extent[1] - x_extent[0])) * grid_size[
+        1
+    ]
+    y_coords = ((tensor[:, 1] - y_extent[0]) / (y_extent[1] - y_extent[0])) * grid_size[
+        0
+    ]
 
     x_list = []
-    for x in range(size[1]):
+    for x in range(grid_size[1]):
         y_list = []
-        for y in range(size[0]):
+        for y in range(grid_size[0]):
             in_bounds_x = torch.logical_and(x <= x_coords, x_coords <= x + 1)
             in_bounds_y = torch.logical_and(y <= y_coords, y_coords <= y + 1)
             in_bounds_indices = torch.where(
@@ -52,11 +56,11 @@ def normalize_grid(
 
     Args:
         x (torch.tensor): Tensor to normalize.
-        min_percentile (float): The minamum percentile to
+        min_percentile (float, optional): The minamum percentile to
             use when normalizing the tensor.
-        max_percentile (float): The maximum percentile to
+        max_percentile (float, optional): The maximum percentile to
             use when normalizing the tensor.
-        relative_margin (float): The relative margin to use
+        relative_margin (float, optional): The relative margin to use
             when normalizing the tensor.
     Returns:
         clipped (torch.tensor): A normalized tensor.
@@ -77,7 +81,7 @@ def normalize_grid(
 def extract_grid_vectors(
     grid: List[List[torch.Tensor]],
     activations: torch.Tensor,
-    size: Tuple[int, int] = (8, 8),
+    grid_size: Tuple[int, int],
     min_density: int = 8,
 ) -> Tuple[torch.Tensor, List[Tuple[int, int]]]:
     """
@@ -89,8 +93,9 @@ def extract_grid_vectors(
     Args:
         grid (torch.tensor): List of lists of grid indices to use.
         activations (torch.tensor): Raw activation samples.
-        size (Tuple[int, int]): The size of grid cells to use.
-        min_density (int): The minamum number of points for a cell to counted.
+        grid_size (Tuple[int, int]): The grid_size of grid cells to use.
+        min_density (int, optional): The minamum number of points for a
+            cell to counted.
     Returns:
         cells (torch.tensor): A tensor containing all the direction vector
             that were created.
@@ -102,8 +107,8 @@ def extract_grid_vectors(
 
     cell_coords = []
     average_activations = []
-    for x in range(size[1]):
-        for y in range(size[0]):
+    for x in range(grid_size[1]):
+        for y in range(grid_size[0]):
             indices = grid[x][y]
             if len(indices) >= min_density:
                 average_activations.append(torch.mean(activations[indices], 0))
@@ -114,7 +119,7 @@ def extract_grid_vectors(
 def create_atlas_vectors(
     tensor: torch.Tensor,
     activations: torch.Tensor,
-    size: Tuple[int, int] = (8, 8),
+    grid_size: Tuple[int, int],
     min_density: int = 8,
     normalize: bool = True,
 ) -> Tuple[torch.Tensor, List[Tuple[int, int]]]:
@@ -128,8 +133,8 @@ def create_atlas_vectors(
     Args:
         tensor (torch.tensor): The dimensionality reduced activation samples.
         activations (torch.tensor): Raw activation samples.
-        size (Tuple[int, int]): The size of grid cells to use.
-        min_density (int): The minamum number of points for a cell to counted.
+        grid_size (Tuple[int, int]): The size of grid cells to use.
+        min_density (int, optional): The minamum number of points for a cell to counted.
         normalize (bool, optional): Whether to normalize the dimensionality
             reduced activation samples to between [0,1] & to remove outliers.
     Returns:
@@ -145,9 +150,9 @@ def create_atlas_vectors(
 
     if normalize:
         tensor = normalize_grid(tensor)
-    indices = grid_indices(tensor, size)
+    indices = grid_indices(tensor, grid_size)
     grid_vecs, vec_coords = extract_grid_vectors(
-        indices, activations, size, min_density
+        indices, activations, grid_size, min_density
     )
     return grid_vecs, vec_coords
 
@@ -155,7 +160,7 @@ def create_atlas_vectors(
 def create_atlas(
     cells: List[torch.Tensor],
     coords: List[Tuple[int, int]],
-    grid_size: Tuple[int, int] = (8, 8),
+    grid_size: Tuple[int, int],
 ) -> torch.Tensor:
     """
     Create atlas grid from visualization imags with coordinates.

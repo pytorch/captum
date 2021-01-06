@@ -42,7 +42,7 @@ class TestGridIndices(BaseTest):
             )
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
         x = atlas.normalize_grid(x)
-        x_indices = atlas.grid_indices(x, size=(2, 2))
+        x_indices = atlas.grid_indices(x, grid_size=(2, 2))
 
         expected_indices = [
             [torch.tensor([0, 1, 2, 3, 4]), torch.tensor([4])],
@@ -62,11 +62,12 @@ class TestExtractGridVectors(BaseTest):
             )
         x_raw = torch.arange(0, 4 * 3 * 3).view(3 * 3, 4).float()
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
+        grid_size = (2, 2)
         x = atlas.normalize_grid(x)
-        x_indices = atlas.grid_indices(x, size=(2, 2))
+        x_indices = atlas.grid_indices(x, grid_size=grid_size)
 
         x_vecs, vec_coords = atlas.extract_grid_vectors(
-            x_indices, x_raw, size=(2, 2), min_density=2
+            x_indices, x_raw, grid_size=grid_size, min_density=2
         )
 
         expected_vecs = torch.tensor([[8.0, 9.0, 10.0, 11.0], [24.0, 25.0, 26.0, 27.0]])
@@ -85,7 +86,7 @@ class TestCreateAtlasVectors(BaseTest):
         x_raw = torch.arange(0, 4 * 3 * 3).view(3 * 3, 4).float()
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
         x_vecs, vec_coords = atlas.create_atlas_vectors(
-            x, x_raw, size=(2, 2), min_density=2, normalize=True
+            x, x_raw, grid_size=(2, 2), min_density=2, normalize=True
         )
 
         expected_vecs = torch.tensor([[8.0, 9.0, 10.0, 11.0], [24.0, 25.0, 26.0, 27.0]])
