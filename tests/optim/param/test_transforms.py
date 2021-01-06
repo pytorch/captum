@@ -111,7 +111,7 @@ class TestRandomRotation(BaseTest):
             .repeat(3, 1, 1)
             .unsqueeze(0)
         )
-        assertTensorAlmostEqual(self, test_output, expected_output)
+        assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
 
 
 class TestRandomSpatialJitter(BaseTest):

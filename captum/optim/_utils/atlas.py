@@ -98,7 +98,7 @@ def create_atlas_vectors(
 
 def create_atlas(
     cells: List[torch.Tensor],
-    coords: List[List[torch.Tensor]],
+    coords: List[Tuple[int, int]],
     grid_size: Tuple[int, int] = (8, 8),
 ) -> torch.Tensor:
     cell_h, cell_w = cells[0].shape[2:]

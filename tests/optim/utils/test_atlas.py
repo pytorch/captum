@@ -9,6 +9,10 @@ from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 class TestNormalizeGrid(BaseTest):
     def test_normalize_grid(self) -> None:
+        if torch.__version__ < "1.7.0":
+            raise unittest.SkipTest(
+                "Skipping normalize grid test due to insufficient Torch version."
+            )
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
 
         x_out = atlas.normalize_grid(x)
@@ -32,6 +36,10 @@ class TestNormalizeGrid(BaseTest):
 
 class TestGridIndices(BaseTest):
     def test_grid_indices(self) -> None:
+        if torch.__version__ < "1.7.0":
+            raise unittest.SkipTest(
+                "Skipping grid indices test due to insufficient Torch version."
+            )
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
         x = atlas.normalize_grid(x)
         x_indices = atlas.grid_indices(x, size=(2, 2))
@@ -48,6 +56,10 @@ class TestGridIndices(BaseTest):
 
 class TestExtractGridVectors(BaseTest):
     def test_extract_grid_vectors(self) -> None:
+        if torch.__version__ < "1.7.0":
+            raise unittest.SkipTest(
+                "Skipping extract grid vectors test due to insufficient Torch version."
+            )
         x_raw = torch.arange(0, 4 * 3 * 3).view(3 * 3, 4).float()
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
         x = atlas.normalize_grid(x)
@@ -66,6 +78,10 @@ class TestExtractGridVectors(BaseTest):
 
 class TestCreateAtlasVectors(BaseTest):
     def test_create_atlas_vectors(self) -> None:
+        if torch.__version__ < "1.7.0":
+            raise unittest.SkipTest(
+                "Skipping create atlas vectors test due to insufficient Torch version."
+            )
         x_raw = torch.arange(0, 4 * 3 * 3).view(3 * 3, 4).float()
         x = torch.arange(0, 2 * 3 * 3).view(3 * 3, 2).float()
         x_vecs, vec_coords = atlas.create_atlas_vectors(
