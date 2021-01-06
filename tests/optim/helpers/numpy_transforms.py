@@ -64,14 +64,22 @@ class CenterCrop:
         pixels_from_edges (bool, optional): Whether to treat crop size values
             as the number of pixels from the tensor's edge, or an exact shape
             in the center.
+        offset_left (bool, optional): If the cropped away sides are not
+            equal in size, offset to the left. Default is set to False
+            for offseting to the right. This parameter is only valid when
+            pixels_from_edges is False.
     """
 
     def __init__(
-        self, size: IntSeqOrIntType = 0, pixels_from_edges: bool = False
+        self,
+        size: IntSeqOrIntType = 0,
+        pixels_from_edges: bool = False,
+        offset_left: bool = False,
     ) -> None:
         super(CenterCrop, self).__init__()
         self.crop_vals = size
         self.pixels_from_edges = pixels_from_edges
+        self.offset_left = offset_left
 
     def forward(self, input: np.ndarray) -> np.ndarray:
         """
@@ -82,11 +90,16 @@ class CenterCrop:
             tensor (array): A center cropped tensor.
         """
 
-        return center_crop(input, self.crop_vals, self.pixels_from_edges)
+        return center_crop(
+            input, self.crop_vals, self.pixels_from_edges, self.offset_left
+        )
 
 
 def center_crop(
-    input: np.ndarray, crop_vals: IntSeqOrIntType, pixels_from_edges: bool = False
+    input: np.ndarray,
+    crop_vals: IntSeqOrIntType,
+    pixels_from_edges: bool = False,
+    offset_left: bool = False,
 ) -> np.ndarray:
     """
     Center crop a specified amount from a array.
@@ -96,6 +109,10 @@ def center_crop(
         pixels_from_edges (bool, optional): Whether to treat crop size values
             as the number of pixels from the array's edge, or an exact shape
             in the center.
+        offset_left (bool, optional): If the cropped away sides are not
+            equal in size, offset to the left. Default is set to False
+            for offseting to the right. This parameter is only valid when
+            pixels_from_edges is False.
     Returns:
         *array*:  A center cropped array.
     """
@@ -119,6 +136,10 @@ def center_crop(
     else:
         h_crop = h - int(math.ceil((h - crop_vals[0]) / 2.0))
         w_crop = w - int(math.ceil((w - crop_vals[1]) / 2.0))
+        if h % 2 == 0 and crop_vals[0] % 2 != 0 or h % 2 != 0 and crop_vals[0] % 2 == 0:
+            h_crop = h_crop + 1 if offset_left else h_crop
+        if w % 2 == 0 and crop_vals[1] % 2 != 0 or w % 2 != 0 and crop_vals[1] % 2 == 0:
+            w_crop = w_crop + 1 if offset_left else w_crop
         x = input[..., h_crop - crop_vals[0] : h_crop, w_crop - crop_vals[1] : w_crop]
     return x
 
