@@ -4,6 +4,7 @@ import unittest
 import torch
 
 import captum.optim._utils.image.dataset as dataset_utils
+from captum.optim._models.inception_v1 import googlenet
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
@@ -103,6 +104,29 @@ class TestDatasetKLTMatrix(BaseTest):
         )
 
         assertTensorAlmostEqual(self, klt_transform, expected_mtx)
+
+
+class TestCaptureActivationSamples(BaseTest):
+    def test_capture_activation_samples(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping capture_activation_samples test due to"
+                + "insufficient Torch version."
+            )
+
+        num_tensors = 10
+        dataset_tensors = [torch.ones(3, 224, 224) for x in range(num_tensors)]
+        test_dataset = dataset_helpers.ImageTestDataset(dataset_tensors)
+        dataset_loader = torch.utils.data.DataLoader(
+            test_dataset, batch_size=10, num_workers=0, shuffle=False
+        )
+        model = googlenet(pretrained=True)
+        targets = [model.mixed4c]
+        target_names = ["mixed4c"]
+        activation_dict = dataset_utils.capture_activation_samples(
+            dataset_loader, model, targets, target_names
+        )
+        self.assertEqual(list(activation_dict["mixed4c"].shape), [num_tensors, 512])
 
 
 if __name__ == "__main__":

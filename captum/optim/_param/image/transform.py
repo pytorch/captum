@@ -267,6 +267,53 @@ class RandomSpatialJitter(torch.nn.Module):
         return self.translate_tensor(input, insets)
 
 
+class RandomRotation(nn.Module):
+    """
+    Apply random rotation transforms on a NCHW tensor.
+    Arguments:
+        degrees (float, sequence): Tuple of degrees to randomly select from.
+    """
+
+    def __init__(
+        self, degrees: Union[List[float], Tuple[float, ...], torch.Tensor]
+    ) -> None:
+        super().__init__()
+        assert hasattr(degrees, "__iter__")
+        self.degrees = degrees
+
+    def get_rot_mat(
+        self,
+        theta: Union[int, float, torch.Tensor],
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> torch.Tensor:
+        theta = torch.tensor(theta, device=device, dtype=dtype)
+        rot_mat = torch.tensor(
+            [
+                [torch.cos(theta), -torch.sin(theta), 0],
+                [torch.sin(theta), torch.cos(theta), 0],
+            ],
+            device=device,
+            dtype=dtype,
+        )
+        return rot_mat
+
+    def rotate_tensor(
+        self, x: torch.Tensor, theta: Union[int, float, torch.Tensor]
+    ) -> torch.Tensor:
+        theta = theta * 3.141592653589793 / 180
+        rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
+            x.shape[0], 1, 1
+        )
+        grid = F.affine_grid(rot_matrix, x.size())
+        x = F.grid_sample(x, grid)
+        return x
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        rotate_angle = rand_select(self.degrees)
+        return self.rotate_tensor(x, rotate_angle)
+
+
 class ScaleInputRange(nn.Module):
     """
     Multiplies the input by a specified multiplier for models with input ranges other
