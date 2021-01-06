@@ -3,7 +3,6 @@ from typing import Dict, List, Optional
 import torch
 
 from captum.optim._utils.models import collect_activations
-from captum.optim._utils.typing import ModuleOutputMapping
 
 
 def image_cov(tensor: torch.Tensor) -> torch.Tensor:
@@ -65,7 +64,7 @@ def capture_activation_samples(
     target_names: List[str],
     num_samples: Optional[int] = None,
     input_device: torch.device = torch.device("cpu"),
-) -> ModuleOutputMapping:
+) -> Dict[str, torch.Tensor]:
     """
     Create a dict of randomly sampled activations for an image dataset.
 

@@ -72,6 +72,48 @@ class TestRandomScale(BaseTest):
         )
 
 
+class TestRandomRotation(BaseTest):
+    def test_random_rotation_degrees(self) -> None:
+        test_degrees = [0.0, 1.0, 2.0, 3.0, 4.0]
+        rot_mod = transform.RandomRotation(test_degrees)
+        degrees = rot_mod.degrees
+        self.assertTrue(hasattr(degrees, "__iter__"))
+        self.assertEqual(degrees, test_degrees)
+
+    def test_random_rotation_matrix(self) -> None:
+        theta = 25.1
+        theta = theta * 3.141592653589793 / 180
+        rot_mod = transform.RandomRotation([25.1])
+        rot_matrix = rot_mod.get_rot_mat(
+            theta, device=torch.device("cpu"), dtype=torch.float32
+        )
+        expected_matrix = torch.tensor(
+            [[0.9056, -0.4242, 0.0000], [0.4242, 0.9056, 0.0000]]
+        )
+
+        assertTensorAlmostEqual(self, rot_matrix, expected_matrix)
+
+    def test_random_rotation_rotate_tensor(self) -> None:
+        rot_mod = transform.RandomRotation([25.0])
+
+        test_input = torch.eye(4, 4).repeat(3, 1, 1).unsqueeze(0)
+        test_output = rot_mod.rotate_tensor(test_input, 25.0)
+
+        expected_output = (
+            torch.tensor(
+                [
+                    [0.1143, 0.0000, 0.0000, 0.0000],
+                    [0.5258, 0.6198, 0.2157, 0.0000],
+                    [0.0000, 0.2157, 0.6198, 0.5258],
+                    [0.0000, 0.0000, 0.0000, 0.1143],
+                ]
+            )
+            .repeat(3, 1, 1)
+            .unsqueeze(0)
+        )
+        assertTensorAlmostEqual(self, test_output, expected_output)
+
+
 class TestRandomSpatialJitter(BaseTest):
     def test_random_spatial_jitter_hw(self) -> None:
         translate_vals = [4, 4]
