@@ -4,7 +4,6 @@ import Header from "./components/Header";
 import cx from "./utils/cx";
 import Spinner from "./components/Spinner";
 import FilterContainer from "./components/FilterContainer";
-import Visualization from "./components/Visualization";
 import VisualizationGroupDisplay from "./components/VisualizationGroup";
 import "./App.css";
 import { VisualizationGroup } from "./models/visualizationOutput";

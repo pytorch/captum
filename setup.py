@@ -159,7 +159,6 @@ if __name__ == "__main__":
                 [
                     "captum/insights/attr_vis/widget/static/extension.js",
                     "captum/insights/attr_vis/widget/static/index.js",
-                    "captum/insights/attr_vis/widget/static/index.js.map",
                 ],
             ),
             (

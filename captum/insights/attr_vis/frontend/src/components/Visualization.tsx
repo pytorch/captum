@@ -47,8 +47,7 @@ class Visualization extends React.Component<
   //TODO: Refactor the visualization table as a <table> instead of columns, in order to have cleaner styling
   render() {
     const data = this.props.data;
-    const isFirstInGroup = this.props.data.model_index == 0;
-    console.log("visualization", data);
+    const isFirstInGroup = this.props.data.model_index === 0;
     const features = data.feature_outputs.map((f) => (
       <Feature data={f} hideHeaders={isFirstInGroup} />
     ));

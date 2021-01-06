@@ -16,7 +16,7 @@
     "babel-loader": "^8.0.6",
     "css-loader": "3.3.0",
     "js-levenshtein": "^1.1.6",
-    "plotly.js-basic-dist": "^1.53.0",
+    "plotly.js-basic-dist-min": "^1.58.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-plotly.js": "^2.4.0",
