@@ -66,7 +66,7 @@ except:
     print("please provide a valid path to pytorch-vqa")
     
 from captum.insights import AttributionVisualizer, Batch
-from captum.insights.features import ImageFeature, TextFeature
+from captum.insights.attr_vis.features import ImageFeature, TextFeature
 from captum.attr import TokenReferenceBase, configure_interpretable_embedding_layer, remove_interpretable_embedding_layer
 
 

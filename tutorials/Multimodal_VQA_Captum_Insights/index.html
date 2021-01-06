@@ -161,7 +161,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">"please provide a valid path to pytorch-vqa"</span><span class="p">)</span>
     
 <span class="kn">from</span> <span class="nn">captum.insights</span> <span class="kn">import</span> <span class="n">AttributionVisualizer</span><span class="p">,</span> <span class="n">Batch</span>
-<span class="kn">from</span> <span class="nn">captum.insights.features</span> <span class="kn">import</span> <span class="n">ImageFeature</span><span class="p">,</span> <span class="n">TextFeature</span>
+<span class="kn">from</span> <span class="nn">captum.insights.attr_vis.features</span> <span class="kn">import</span> <span class="n">ImageFeature</span><span class="p">,</span> <span class="n">TextFeature</span>
 <span class="kn">from</span> <span class="nn">captum.attr</span> <span class="kn">import</span> <span class="n">TokenReferenceBase</span><span class="p">,</span> <span class="n">configure_interpretable_embedding_layer</span><span class="p">,</span> <span class="n">remove_interpretable_embedding_layer</span>
 </pre></div>
 </div>
@@ -639,10 +639,10 @@ Our input text will need to be transformed into embeddings, as it is a sequence 
 <div class="output">
 <div class="output_area">
 <div class="prompt"></div>
-<div id="21061ab8-4355-4399-bbbc-7f179ac70fa9"></div>
+<div id="13b8cd15-43b8-40a4-bc89-36b5e22dc3db"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#21061ab8-4355-4399-bbbc-7f179ac70fa9');
+var element = $('#13b8cd15-43b8-40a4-bc89-36b5e22dc3db');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "2033d6dad6c54502ac460d417074440e", "version_major": 2, "version_minor": 0}
@@ -651,10 +651,10 @@ var element = $('#21061ab8-4355-4399-bbbc-7f179ac70fa9');
 </div>
 <div class="output_area">
 <div class="prompt"></div>
-<div id="0a93887d-3f84-473c-951f-fe0efd37bc8d"></div>
+<div id="22205db8-e33c-4d20-892d-10b0f4e953cf"></div>
 <div class="output_subarea output_widget_view">
 <script type="text/javascript">
-var element = $('#0a93887d-3f84-473c-951f-fe0efd37bc8d');
+var element = $('#22205db8-e33c-4d20-892d-10b0f4e953cf');
 </script>
 <script type="application/vnd.jupyter.widget-view+json">
 {"model_id": "1217799e7d9c4791a9506cb08eb193fe", "version_major": 2, "version_minor": 0}
@@ -706,7 +706,7 @@ var element = $('#0a93887d-3f84-473c-951f-fe0efd37bc8d');
 </div>
 </div>
 </div>
-</div></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Multimodal_VQA_Captum_Insights.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Multimodal_VQA_Captum_Insights.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2020 Facebook Inc.</section><script>
+</div></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Multimodal_VQA_Captum_Insights.ipynb" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Jupyter Notebook</a></div><div class="tutorialButtonWrapper buttonWrapper"><a class="tutorialButton button" download="" href="/files/Multimodal_VQA_Captum_Insights.py" target="_blank"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-download" class="svg-inline--fa fa-file-download fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm76.45 211.36l-96.42 95.7c-6.65 6.61-17.39 6.61-24.04 0l-96.42-95.7C73.42 337.29 80.54 320 94.82 320H160v-80c0-8.84 7.16-16 16-16h32c8.84 0 16 7.16 16 16v80h65.18c14.28 0 21.4 17.29 11.27 27.36zM377 105L279.1 7c-4.5-4.5-10.6-7-17-7H256v128h128v-6.1c0-6.3-2.5-12.4-7-16.9z"></path></svg>Download Tutorial Source Code</a></div></div></div></div><footer class="nav-footer" id="footer"><section class="sitemap"><div class="footerSection"><h5>Docs</h5><a href="/docs/introduction">Introduction</a><a href="/docs/getting_started">Getting Started</a><a href="/tutorials/">Tutorials</a><a href="/api/">API Reference</a></div><div class="footerSection"><h5>Social</h5><div class="social"><a class="github-button" href="https://github.com/pytorch/captum" data-count-href="https://github.com/pytorch/captum/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star Captum on GitHub">captum</a></div></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright"> Copyright © 2021 Facebook Inc.</section><script>
             (function() {
               var BAD_BASE = '/captum/';
               if (window.location.origin !== 'https://captum.ai') {
