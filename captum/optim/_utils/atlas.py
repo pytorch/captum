@@ -13,14 +13,14 @@ def grid_indices(
     Create grid cells of a specified size for an irregular grid.
 
     Args:
-         tensor (torch.tensor): xy coordinate tensor to extract grid
+        tensor (torch.tensor): xy coordinate tensor to extract grid
             indices from.
-         grid_size (Tuple[int, int]): The size of grid cells to use.
-         x_extent (Tuple[float, float], optional): The x extent to use.
-         y_extent (Tuple[float, float], optional): The y extent to use.
+        grid_size (Tuple[int, int]): The size of grid cells to use.
+        x_extent (Tuple[float, float], optional): The x extent to use.
+        y_extent (Tuple[float, float], optional): The y extent to use.
     Returns:
-       indices (list of list of tensor): Grid cell indices for the
-           irregular grid.
+        indices (list of list of tensor): Grid cell indices for the
+            irregular grid.
     """
 
     assert tensor.dim() == 2 and tensor.size(1) == 2
