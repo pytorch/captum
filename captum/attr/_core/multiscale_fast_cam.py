@@ -63,7 +63,120 @@ class MultiscaleFastCam(GradientAttribution):
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
     ) -> Tuple[Tensor, ...]:
+        r"""
+        Args:
 
+            inputs (tensor or tuple of tensors):  Input for which attributions
+                        are computed. If forward_func takes a single
+                        tensor as input, a single input tensor should be provided.
+                        If forward_func takes multiple tensors as input, a tuple
+                        of the input tensors should be provided. It is assumed
+                        that for all given input tensors, dimension 0 corresponds
+                        to the number of examples, and if multiple input tensors
+                        are provided, the examples must be aligned appropriately.
+            scale (str, optional): The choice of scale to pass through attributes.
+                        The available options are:
+
+                        - `smoe`: Saliency Map Order Equivalence, in which pixels
+                        are approximating the scale of Gamma distribution. See paper
+                        for more details.
+
+                        - `std`: Standard Deviation of all the pixel values, with
+                        respect to the inputs' channel dimension.
+
+                        - `mean`: Mean of all the pixel values, with respect to
+                        the inputs' channel dimension.
+
+                        - `max`: Maximum of all the pixel values, with respect to
+                        the inputs' channel dimension.
+
+                        - `normal`: Normal Entropy Scale function
+                        Default: `smoe`
+            norm (str, callable, optional): The choice of normalization after scaling.
+                        The available options are:
+
+                        - `gamma`: Normalize via the Gamma distribution.
+
+                        - `gaussian`: Normalize via the Gaussian distribution.
+
+                        - `identity`: The identity function; no normalization.
+                        Default: `gaussian`
+            weights (list(float), optional): Weight of each layer of attribution. If
+                        `None`, then each layer will have equal attribution to the final
+                        combined saliency map.
+                        Default: None
+            combine (bool, optional): Return the combined attributes if true. If
+                        False, return the weighted maps individually.
+                        Default: True
+            resize_mode (str, optional): An argument to interpolation method for
+                        rescaling.
+                        Default: `bilinear`
+            relu_attribution (bool, optional): An option to pass final attributes
+                        through a ReLU function before returning.
+                        Default: False
+            additional_forward_args (any, optional): If the forward function
+                        requires additional arguments other than the inputs for
+                        which attributions should not be computed, this argument
+                        can be provided. It must be either a single additional
+                        argument of a Tensor or arbitrary (non-tuple) type or a
+                        tuple containing multiple additional arguments including
+                        tensors or any arbitrary python types. These arguments
+                        are provided to forward_func in order following the
+                        arguments in inputs.
+                        Note that attributions are not computed with respect
+                        to these arguments.
+                        Default: None
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attribution with respect to the layer input
+                        or output. If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to
+                        layer input, otherwise it will be computed with respect
+                        to layer output.
+                        Note that currently it is assumed that either the input
+                        or the output of internal layer, depending on whether we
+                        attribute to the input or output, is a single tensor.
+                        Support for multiple tensors will be added later.
+                        Default: False
+
+        Returns:
+            *tensor* or tuple of *tensors* of **attributions**:
+            - **attributions** (*tensor* or tuple of *tensors*):
+                        Depending on the value of `combine`. If `combine` is set to
+                        True, then the number of attributions will be the batch size
+                        of the inputs. If `combine` is set to False, then each input
+                        will have a number of attributions, depending on the number
+                        of layers passed in during object instantiation.
+                        The attributions with respect to each input feature.
+                        If the forward function returns
+                        a scalar value per example, attributions will be
+                        the same size as the provided inputs, with each value
+                        providing the attribution of the corresponding input index.
+                        If the forward function returns a scalar per batch, then
+                        attribution tensor(s) will have first dimension 1 and
+                        the remaining dimensions will match the input.
+                        If a single tensor is provided as inputs, a single tensor is
+                        returned. If a tuple of tensors is provided for inputs, a
+                        tuple of corresponding sized tensors is returned.
+
+        Examples::
+
+            >>> # ImageClassifier takes a single input tensor of images Nx3x32x32,
+            >>> # and have multiple convolutional layers. Suppose we combine the
+            >>> # saliency map of three ReLU layers, which are
+            >>> # instances of nn.conv2d.
+            >>> # We will also use `smoe` scale and `gaussian` normalization,
+            >>> # which often yields the best results.
+            >>> net = ImageClassifier()
+            >>> fastcam = MultiscaleFastCam(net, [net.conv1, net.conv2, net.conv3])
+            >>> input = torch.randn(1, 3, 32, 32, requires_grad=True)
+            >>> # We set here that each layer we selected contributes equally to our
+            >>> # combined saliency map.
+            >>> attribution = fastcam.attribute(input, scale='smoe', norm='gaussian')
+            >>> # If we want to obtain each layer's attribution individually, we
+            >>> # set `combine=False`
+            >>> attribution = fastcam.attribute(input, scale='smoe',
+                                                norm='gaussian', combine=False)
+        """
         # pick out functions
         self.scale_func = self.pick_scale_func(scale)
         self.norm_func = self.pick_norm_func(norm)
@@ -110,20 +223,17 @@ class MultiscaleFastCam(GradientAttribution):
         return combined_map
 
     def pick_norm_func(self, norm):
-        if norm:
-            norm = norm.lower()
+        norm = norm.lower()
         if norm == "gamma":
             norm_func = self._compute_gamma_norm
         elif norm == "gaussian":
             norm_func = self._compute_gaussian_norm
-        elif norm is None or norm == "none":
+        elif norm == "identity":
 
             def identity(x):
                 return x.squeeze(1)
 
             norm_func = identity
-        elif callable(norm):
-            norm_func = norm
         else:
             msg = (
                 f"{norm} norming option not found or invalid. "
@@ -133,8 +243,7 @@ class MultiscaleFastCam(GradientAttribution):
         return norm_func
 
     def pick_scale_func(self, scale):
-        if scale:
-            scale = scale.lower()
+        scale = scale.lower()
         if scale == "smoe":
             scale_func = self._compute_smoe_scale
         elif scale == "std":
@@ -145,7 +254,7 @@ class MultiscaleFastCam(GradientAttribution):
             scale_func = self._compute_max_scale
         elif scale == "normal":
             scale_func = self._compute_normal_entropy_scale
-        elif scale is None or scale == "none":
+        elif scale == "identity":
 
             def identity(x):
                 return x
