@@ -2,6 +2,14 @@ from typing import Dict, List, Optional
 
 import torch
 
+try:
+    from tqdm.auto import tqdm
+except (ImportError, AssertionError):
+    print(
+        "The tqdm package is required to use captum.optim's"
+        + " capture_activation_samples function with progress bar"
+    )
+
 from captum.optim._utils.models import collect_activations
 
 
@@ -64,10 +72,10 @@ def capture_activation_samples(
     target_names: List[str],
     num_samples: Optional[int] = None,
     input_device: torch.device = torch.device("cpu"),
+    show_progress: bool = False,
 ) -> Dict[str, torch.Tensor]:
     """
     Create a dict of randomly sampled activations for an image dataset.
-
     Args:
         loader (torch.utils.data.DataLoader): A torch.utils.data.DataLoader
             instance for an image dataset.
@@ -76,9 +84,11 @@ def capture_activation_samples(
             from.
         target_names (list of str): A list of names to use for the layers
             to targets in the output dict.
-        num_samples (int): How many samples to collect. Default is to collect
-            all samples.
-        input_device (torch.device): The device to use for model inputs.
+        num_samples (int, optional): How many samples to collect. Default is
+            to collect all samples.
+        input_device (torch.device, optional): The device to use for model
+            inputs.
+        show_progress (bool, optional): Whether or not to show progress.
     Returns:
         activation_dict (dict of tensor): A dictionary containing the sampled
             dataset activations, with the target_names as the keys.
@@ -104,18 +114,37 @@ def capture_activation_samples(
     assert len(target_names) == len(targets)
     activation_dict: Dict = {k: [] for k in dict.fromkeys(target_names).keys()}
 
+    if show_progress:
+        total = (
+            len(loader.dataset) if num_samples is None else num_samples  # type: ignore
+        )
+        pbar = tqdm(total=total, unit=" images")
+
     sample_count = 0
     with torch.no_grad():
         for inputs, _ in loader:
             inputs = inputs.to(input_device)
-            target_activ_dict = collect_activations(model, targets, inputs)
-            for t in target_activ_dict.keys():
-                target_activ_dict[t] = [random_sample(target_activ_dict[t])]
-            activation_dict = {
-                k: activation_dict[k] + target_activ_dict[k] for k in activation_dict
-            }
             sample_count += inputs.size(0)
+
+            target_activ_dict = collect_activations(model, targets, inputs)
+
+            activation_dict = {
+                k: activation_dict[k] + [random_sample(target_activ_dict[t])]
+                for k, t in zip(activation_dict, target_activ_dict)
+            }
+            del target_activ_dict
+
+            if show_progress:
+                pbar.update(inputs.size(0))
+
             if num_samples is not None:
                 if sample_count > num_samples:
-                    return {k: torch.cat(activation_dict[k]) for k in activation_dict}
-    return {k: torch.cat(activation_dict[k]) for k in activation_dict}
+                    if show_progress:
+                        pbar.close()
+                    return {
+                        k: torch.cat(activation_dict[k]).cpu() for k in activation_dict
+                    }
+
+    if show_progress:
+        pbar.close()
+    return {k: torch.cat(activation_dict[k]).cpu() for k in activation_dict}
