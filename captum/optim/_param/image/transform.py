@@ -136,8 +136,8 @@ class CenterCrop(torch.nn.Module):
             values as the number of pixels from the tensor's edge, or an
             exact shape in the center.
         offset_left (bool, optional): If the cropped away sides are not
-            equal in size, offset to the left. Default is set to False
-            for offseting to the right. This parameter is only valid when
+            equal in size, offset center by +1 to the left and/or top.
+            Default is set to False. This parameter is only valid when
             pixels_from_edges is False.
     """
 
@@ -181,8 +181,8 @@ def center_crop(
             values as the number of pixels from the tensor's edge, or an
             exact shape in the center.
         offset_left (bool, optional): If the cropped away sides are not
-            equal in size, offset to the left. Default is set to False
-            for offseting to the right. This parameter is only valid when
+            equal in size, offset center by +1 to the left and/or top.
+            Default is set to False. This parameter is only valid when
             pixels_from_edges is False.
     Returns:
         *tensor*:  A center cropped tensor.
