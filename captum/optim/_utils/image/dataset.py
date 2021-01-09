@@ -103,8 +103,8 @@ def capture_activation_samples(
         for b in range(activations.size(0)):
             if activations.dim() == 4:
                 h, w = activations.shape[2:]
-                y = torch.randint(low=1, high=h, size=[1])
-                x = torch.randint(low=1, high=w, size=[1])
+                y = torch.randint(low=1, high=h-1, size=[1])
+                x = torch.randint(low=1, high=w-1, size=[1])
                 activ = activations[b, :, y, x]
             elif activations.dim() == 2:
                 activ = activations[b].unsqueeze(1)
