@@ -5,7 +5,6 @@ import torch
 
 import captum.optim._utils.circuits as circuits
 from captum.optim._models.inception_v1 import googlenet
-from captum.optim._utils.models import RedirectedReluLayer, ignore_layer, max2avg_pool2d
 from tests.helpers.basic import BaseTest
 
 
@@ -15,7 +14,9 @@ class TestGetExpandedWeights(BaseTest):
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights test due to insufficient Torch version."
             )
-        model = googlenet(pretrained=True)
+        model = googlenet(
+            pretrained=True, replace_nonlinears_with_linear_equivalents=True
+        )
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b
         )
@@ -28,7 +29,9 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights crop test due to insufficient Torch"
                 + " version."
             )
-        model = googlenet(pretrained=True)
+        model = googlenet(
+            pretrained=True, replace_nonlinears_with_linear_equivalents=True
+        )
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b, 5
         )
@@ -40,7 +43,9 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights two int crop test due to insufficient"
                 + " Torch version."
             )
-        model = googlenet(pretrained=True)
+        model = googlenet(
+            pretrained=True, replace_nonlinears_with_linear_equivalents=True
+        )
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b, (5, 5)
         )
@@ -57,9 +62,9 @@ class TestGetExpandedWeights(BaseTest):
             norm_func = torch.norm
         else:
             norm_func = torch.linalg.norm
-        model = googlenet(pretrained=True)
-        max2avg_pool2d(model)
-        ignore_layer(model, RedirectedReluLayer)
+        model = googlenet(
+            pretrained=True, replace_nonlinears_with_linear_equivalents=True
+        )
         output_tensor = circuits.get_expanded_weights(
             model, model.pool3, model.mixed4a, 5
         )
