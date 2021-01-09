@@ -11,14 +11,23 @@ GS_SAVED_WEIGHTS_URL = (
 
 
 def googlenet(
-    pretrained: bool = False, progress: bool = True, model_path: str = None, **kwargs
+    pretrained: bool = False,
+    progress: bool = True,
+    model_path: str = None,
+    replace_relus_with_redirectedrelu: bool = True,
+    replace_nonlinears_with_linear_equivalents: bool = False,
+    **kwargs
 ):
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
-        model_path (str): Optional path for InceptionV1 model file
+        model_path (str): Optional path for InceptionV1 model file.
+        replace_relus_with_redirectedrelu (bool): If True, return pretrained model
+            with Redirected ReLU in place of ReLU layers.
+        replace_nonlinears_with_linear_equivalents (bool): If True, return pretrained
+            model with all nonlinear layers replaced with linear equivalents.
         aux_logits (bool): If True, adds two auxiliary branches that can improve
             training. Default: *False* when pretrained is True otherwise *True*
         out_features (int): Number of output features in the model used for
@@ -43,7 +52,15 @@ def googlenet(
         else:
             state_dict = torch.load(model_path, map_location="cpu")
         model.load_state_dict(state_dict)
-        model_utils.replace_layers(model)
+
+        if (
+            replace_relus_with_redirectedrelu
+            and not replace_nonlinears_with_linear_equivalents
+        ):
+            model_utils.replace_layers(model)
+        elif replace_nonlinears_with_linear_equivalents:
+            model_utils.max2avg_pool2d(model)
+            model_utils.ignore_layer(model, model_utils.ReluLayer)
         return model
 
     return InceptionV1(**kwargs)
