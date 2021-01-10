@@ -125,7 +125,6 @@ class InceptionV1(nn.Module):
             assert x.min() >= 0.0 and x.max() <= 1.0
             x = x.unsqueeze(0) if x.dim() == 3 else x
             x = x * 255 - 117
-            x = x.clone()[:, [2, 1, 0]]  # RGB to BGR
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
