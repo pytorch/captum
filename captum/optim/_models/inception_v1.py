@@ -1,3 +1,5 @@
+from typing import Tuple, Union, cast
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,10 +36,15 @@ def googlenet(
             training. Default: 1008 when pretrained is True.
         transform_input (bool): If True, preprocesses the input according to
             the method with which it was trained on ImageNet. Default: *False*
+        bgr_transform (bool): If True and transform_input is True, perform an
+            RGB to BGR transform in the internal preprocessing.
+            Default: *False*
     """
     if pretrained:
         if "transform_input" not in kwargs:
             kwargs["transform_input"] = True
+        if "bgr_transform" not in kwargs:
+            kwargs["bgr_transform"] = False
         if "aux_logits" not in kwargs:
             kwargs["aux_logits"] = False
         if "out_features" not in kwargs:
@@ -73,10 +80,12 @@ class InceptionV1(nn.Module):
         out_features: int = 1008,
         aux_logits: bool = False,
         transform_input: bool = False,
+        bgr_transform: bool = False,
     ) -> None:
         super(InceptionV1, self).__init__()
         self.aux_logits = aux_logits
         self.transform_input = transform_input
+        self.bgr_transform = bgr_transform
         lrn_vals = (9, 9.99999974738e-05, 0.5, 1.0)
 
         self.conv1 = nn.Conv2d(
@@ -142,10 +151,12 @@ class InceptionV1(nn.Module):
             assert x.min() >= 0.0 and x.max() <= 1.0
             x = x.unsqueeze(0) if x.dim() == 3 else x
             x = x * 255 - 117
-            x = x.clone()[:, [2, 1, 0]]  # RGB to BGR
+            x = x[:, [2, 1, 0]] if self.bgr_transform else x
         return x
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         x = self._transform_input(x)
         x = F.pad(x, (2, 3, 2, 3))
         x = self.conv1(x)
@@ -190,7 +201,7 @@ class InceptionV1(nn.Module):
         x = self.drop(x)
         x = self.fc(x)
         if not self.aux_logits:
-            return x
+            return cast(torch.Tensor, x)
         else:
             return x, aux1_output, aux2_output
 
