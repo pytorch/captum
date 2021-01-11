@@ -134,8 +134,7 @@ class InceptionV1(nn.Module):
             assert x.min() >= 0.0 and x.max() <= 1.0
             x = x.unsqueeze(0) if x.dim() == 3 else x
             x = x * 255 - 117
-            if self.bgr_transform:
-                x = x.clone()[:, [2, 1, 0]]  # RGB to BGR
+            x = x[:, [2, 1, 0]] if self.bgr_transform else x
         return x
 
     def forward(
