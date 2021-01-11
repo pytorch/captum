@@ -33,6 +33,18 @@ class TestInceptionV1(BaseTest):
         expected_output = x * 255 - 117
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
+    def test_transform_bgr_inceptionv1(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping inceptionV1 internal transform"
+                + " BGR due to insufficient Torch version."
+            )
+        x = torch.randn(1, 3, 224, 224).clamp(0, 1)
+        model = googlenet(pretrained=True, bgr_transform=True)
+        output = model._transform_input(x)
+        expected_output = x[:, [2, 1, 0]] * 255 - 117
+        assertTensorAlmostEqual(self, output, expected_output, 0)
+
     def test_load_and_forward_basic_inceptionv1(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
