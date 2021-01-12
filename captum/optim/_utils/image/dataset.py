@@ -139,11 +139,7 @@ def capture_activation_samples(
 
             if num_samples is not None:
                 if sample_count > num_samples:
-                    if show_progress:
-                        pbar.close()
-                    return {
-                        k: torch.cat(activation_dict[k]).cpu() for k in activation_dict
-                    }
+                    break
 
     if show_progress:
         pbar.close()
