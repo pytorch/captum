@@ -141,7 +141,7 @@ def capture_activation_samples(
             if show_progress:
                 pbar.update(inputs.size(0))
 
-            if num_samples is not None:
+            if num_images is not None:
                 if image_count > num_images:
                     break
 
