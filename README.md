@@ -7,7 +7,7 @@
 [![CircleCI](https://circleci.com/gh/pytorch/captum.svg?style=shield)](https://circleci.com/gh/pytorch/captum)
 
 Captum is a model interpretability and understanding library for PyTorch.
-Captum means comprehension in latin and contains general purpose implementations
+Captum means comprehension in Latin and contains general purpose implementations
 of integrated gradients, saliency maps, smoothgrad, vargrad and others for
 PyTorch models. It has quick integration for models built with domain-specific
 libraries such as torchvision, torchtext, and others.
