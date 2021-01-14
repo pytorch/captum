@@ -70,7 +70,8 @@ def capture_activation_samples(
     model,
     targets: List[torch.nn.Module],
     target_names: List[str],
-    num_samples: Optional[int] = None,
+    num_images: Optional[int] = None,
+    samples_per_image: int = 1,
     input_device: torch.device = torch.device("cpu"),
     show_progress: bool = False,
 ) -> Dict[str, torch.Tensor]:
@@ -84,8 +85,10 @@ def capture_activation_samples(
             from.
         target_names (list of str): A list of names to use for the layers
             to targets in the output dict.
-        num_samples (int, optional): How many samples to collect. Default is
-            to collect all samples.
+        num_images (int, optional): How many images to collect samples from.
+            Default is to collect samples for every image in the dataset.
+        samples_per_image (int): How many samples to collect per image. Default
+            is 1 sample per image.
         input_device (torch.device, optional): The device to use for model
             inputs.
         show_progress (bool, optional): Whether or not to show progress.
@@ -100,15 +103,16 @@ def capture_activation_samples(
         """
 
         rnd_samples = []
-        for b in range(activations.size(0)):
-            if activations.dim() == 4:
-                h, w = activations.shape[2:]
-                y = torch.randint(low=1, high=h - 1, size=[1])
-                x = torch.randint(low=1, high=w - 1, size=[1])
-                activ = activations[b, :, y, x]
-            elif activations.dim() == 2:
-                activ = activations[b].unsqueeze(1)
-            rnd_samples.append(activ)
+        for i in range(samples_per_image):
+            for b in range(activations.size(0)):
+                if activations.dim() == 4:
+                    h, w = activations.shape[2:]
+                    y = torch.randint(low=1, high=h - 1, size=[1])
+                    x = torch.randint(low=1, high=w - 1, size=[1])
+                    activ = activations[b, :, y, x]
+                elif activations.dim() == 2:
+                    activ = activations[b].unsqueeze(1)
+                rnd_samples.append(activ)
         return torch.cat(rnd_samples, 1).permute(1, 0)
 
     assert len(target_names) == len(targets)
@@ -116,15 +120,15 @@ def capture_activation_samples(
 
     if show_progress:
         total = (
-            len(loader.dataset) if num_samples is None else num_samples  # type: ignore
+            len(loader.dataset) if num_images is None else num_images  # type: ignore
         )
         pbar = tqdm(total=total, unit=" images")
 
-    sample_count = 0
+    image_count = 0
     with torch.no_grad():
         for inputs, _ in loader:
             inputs = inputs.to(input_device)
-            sample_count += inputs.size(0)
+            image_count += inputs.size(0)
 
             target_activ_dict = collect_activations(model, targets, inputs)
 
@@ -138,7 +142,7 @@ def capture_activation_samples(
                 pbar.update(inputs.size(0))
 
             if num_samples is not None:
-                if sample_count > num_samples:
+                if image_count > num_images:
                     break
 
     if show_progress:

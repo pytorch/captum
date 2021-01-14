@@ -85,7 +85,7 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
 
 
 def weights_to_heatmap_2d(
-    weight: torch.Tensor,
+    tensor: torch.Tensor,
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> torch.Tensor:
     """
@@ -93,16 +93,15 @@ def weights_to_heatmap_2d(
     By default red represents excitatory values,
     blue represents inhibitory values, and white represents
     no excitation or inhibition.
-
     Args:
         weight (torch.Tensor):  A 2d tensor to create the heatmap from.
         colors (List of strings):  A list of strings containing color
         hex values to use for coloring the heatmap.
     Returns:
-        *tensor*:  A weight heatmap.
+        *color_tensor*:  A weight heatmap.
     """
 
-    assert weight.dim() == 2
+    assert tensor.dim() == 2
     assert len(colors) == 5
 
     def get_color(x: str) -> torch.Tensor:
@@ -113,23 +112,19 @@ def weights_to_heatmap_2d(
             [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
         )
 
-    def color_scale(x: torch.Tensor) -> torch.Tensor:
-        if x < 0:
-            x = -x
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[1])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1]) + x * get_color(colors[0])
-        else:
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[3])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3]) + x * get_color(colors[4])
+    t_colors = [get_color(c) for c in colors]
+    xt = tensor.expand((3, tensor.shape[0], tensor.shape[1])).permute(1, 2, 0)
 
-    return torch.stack(
-        [torch.stack([color_scale(x) for x in t]) for t in weight]
+    color_tensor = (
+        (xt >= 0) * (xt < 0.5) * ((1 - xt * 2) * t_colors[2] + xt * 2 * t_colors[3])
+        + (xt >= 0)
+        * (xt >= 0.5)
+        * ((1 - (xt - 0.5) * 2) * t_colors[3] + (xt - 0.5) * 2 * t_colors[4])
+        + (xt < 0)
+        * (xt > -0.5)
+        * ((1 - (-xt * 2)) * t_colors[2] + (-xt * 2) * t_colors[1])
+        + (xt < 0)
+        * (xt <= -0.5)
+        * ((1 - (-xt - 0.5) * 2) * t_colors[1] + (-xt - 0.5) * 2 * t_colors[0])
     ).permute(2, 0, 1)
+    return color_tensor

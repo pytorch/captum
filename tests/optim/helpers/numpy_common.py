@@ -23,23 +23,19 @@ def weights_to_heatmap_2d(
 
         return np.array([hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])])
 
-    def color_scale(x: np.ndarray) -> np.ndarray:
-        if x < 0:
-            x = -x
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[1])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1]) + x * get_color(colors[0])
-        else:
-            if x < 0.5:
-                x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[3])
-            else:
-                x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3]) + x * get_color(colors[4])
+    t_colors = [get_color(c) for c in colors]
+    xt = array[None, :].repeat(3, 0).transpose(1, 2, 0)
 
-    return np.stack([np.stack([color_scale(x) for x in a]) for a in array]).transpose(
-        2, 0, 1
-    )
+    color_array = (
+        (xt >= 0) * (xt < 0.5) * ((1 - xt * 2) * t_colors[2] + xt * 2 * t_colors[3])
+        + (xt >= 0)
+        * (xt >= 0.5)
+        * ((1 - (xt - 0.5) * 2) * t_colors[3] + (xt - 0.5) * 2 * t_colors[4])
+        + (xt < 0)
+        * (xt > -0.5)
+        * ((1 - (-xt * 2)) * t_colors[2] + (-xt * 2) * t_colors[1])
+        + (xt < 0)
+        * (xt <= -0.5)
+        * ((1 - (-xt - 0.5) * 2) * t_colors[1] + (-xt - 0.5) * 2 * t_colors[0])
+    ).transpose(2, 0, 1)
+    return color_array
