@@ -112,7 +112,7 @@ class TestReplaceLayers(BaseTest):
 
 class TestGetLayers(BaseTest):
     def test_get_layers_pretrained_inceptionv1(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping get_layers test due to insufficient Torch version."
             )
@@ -302,7 +302,7 @@ class TestGetLayers(BaseTest):
 
 class TestCollectActivations(BaseTest):
     def test_collect_activations(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping collect_activations test due to insufficient Torch version."
             )

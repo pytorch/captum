@@ -10,7 +10,7 @@ from tests.helpers.basic import BaseTest
 
 class TestGetExpandedWeights(BaseTest):
     def test_get_expanded_weights(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights test due to insufficient Torch version."
             )
@@ -24,7 +24,7 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 28, 28])
 
     def test_get_expanded_weights_crop_int(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights crop test due to insufficient Torch"
                 + " version."
@@ -38,7 +38,7 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
 
     def test_get_expanded_weights_crop_two_int(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights two int crop test due to insufficient"
                 + " Torch version."
@@ -52,7 +52,7 @@ class TestGetExpandedWeights(BaseTest):
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
 
     def test_get_expanded_nonlinear_top_connections(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights nonlinear_top_connections test"
                 + " due to insufficient Torch version."
