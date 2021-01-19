@@ -1,8 +1,9 @@
 import { calcHSLFromScore } from "../utils/color";
+import { DataPoint } from "../utils/dataPoint";
 import React from "react";
 import styles from "../App.module.css";
 import Tooltip from "./Tooltip";
-import Plot from "./Plot";
+import { Bar } from "react-chartjs-2";
 import { FeatureOutput } from "../models/visualizationOutput";
 
 interface FeatureProps<T> {
@@ -97,35 +98,47 @@ type GeneralFeatureProps = FeatureProps<{
 }>;
 
 function GeneralFeature(props: GeneralFeatureProps) {
+  const data = {
+    labels: props.data.base,
+    datasets: [
+      {
+        barPercentage: 0.5,
+        data: props.data.modified,
+        backgroundColor: (dataPoint: DataPoint) => {
+          if (!dataPoint.dataset || !dataPoint.dataset.data || dataPoint.datasetIndex === undefined) {
+            return "#d45c43"; // Default to red
+          }
+          const yValue = dataPoint.dataset.data[dataPoint.dataIndex as number] || 0;
+          return yValue < 0 ? "#d45c43" : "#80aaff"; // Red if negative, else blue
+        },
+      },
+    ],
+  };
+
   return (
-    <Plot
-      data={[
-        {
-          x: props.data.base,
-          y: props.data.modified,
-          type: "bar",
-          marker: {
-            color: props.data.modified.map(
-              (v) => (v < 0 ? "#d45c43" : "#80aaff") // red if negative, else blue
-            ),
-          },
-        },
-      ]}
-      config={{
-        displayModeBar: false,
-      }}
-      layout={{
-        height: 300,
-        margin: {
-          t: 20,
-          pad: 0,
-        },
-        yaxis: {
-          fixedrange: true,
-          showgrid: false,
-        },
-        xaxis: {
-          fixedrange: false,
+    <Bar
+      data={data}
+      width={300}
+      height={50}
+      legend={{ display: false }}
+      options={{
+        maintainAspectRatio: false,
+        scales: {
+          xAxes: [
+            {
+              gridLines: {
+                display: false,
+              },
+            },
+          ],
+          yAxes: [
+            {
+              gridLines: {
+                lineWidth: 0,
+                zeroLineWidth: 1,
+              },
+            },
+          ],
         },
       }}
     />

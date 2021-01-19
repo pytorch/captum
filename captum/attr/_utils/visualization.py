@@ -514,7 +514,7 @@ def format_word_importances(words, importances):
 
 def visualize_text(
     datarecords: Iterable[VisualizationDataRecord], legend: bool = True
-) -> HTML:
+) -> "HTML":  # In quotes because this type doesn't exist in standalone mode
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."

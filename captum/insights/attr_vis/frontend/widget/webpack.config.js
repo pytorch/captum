@@ -57,6 +57,7 @@ module.exports = [
     resolve: {
       modules: ["../node_modules"],
     },
+    externals: ["moment"], // Removes unused dependency-of-dependency
   },
   {
     // Bundle for the notebook containing the custom widget views and models
@@ -82,6 +83,6 @@ module.exports = [
       modules: ["../node_modules"],
       extensions: extensions,
     },
-    externals: ["@jupyter-widgets/base"],
+    externals: ["@jupyter-widgets/base", "moment"],
   },
 ];

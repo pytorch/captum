@@ -51,7 +51,7 @@ def report(*args):
         pass
 
 
-INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
+INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter", "flask-compress"]
 
 INSIGHTS_FILE_SUBDIRS = [
     "insights/attr_vis/frontend/build",
