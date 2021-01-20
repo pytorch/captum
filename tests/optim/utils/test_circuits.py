@@ -14,9 +14,7 @@ class TestGetExpandedWeights(BaseTest):
             raise unittest.SkipTest(
                 "Skipping get_expanded_weights test due to insufficient Torch version."
             )
-        model = googlenet(
-            pretrained=True, replace_nonlinears_with_linear_equivalents=True
-        )
+        model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b
         )
@@ -29,9 +27,7 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights crop test due to insufficient Torch"
                 + " version."
             )
-        model = googlenet(
-            pretrained=True, replace_nonlinears_with_linear_equivalents=True
-        )
+        model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b, 5
         )
@@ -43,9 +39,7 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights two int crop test due to insufficient"
                 + " Torch version."
             )
-        model = googlenet(
-            pretrained=True, replace_nonlinears_with_linear_equivalents=True
-        )
+        model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.get_expanded_weights(
             model, model.mixed3a, model.mixed3b, (5, 5)
         )
@@ -62,9 +56,7 @@ class TestGetExpandedWeights(BaseTest):
             norm_func = torch.norm
         else:
             norm_func = torch.linalg.norm
-        model = googlenet(
-            pretrained=True, replace_nonlinears_with_linear_equivalents=True
-        )
+        model = googlenet(pretrained=True, use_linear_modules_only=True)
         output_tensor = circuits.get_expanded_weights(
             model, model.pool3, model.mixed4a, 5
         )

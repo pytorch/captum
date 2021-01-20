@@ -58,8 +58,8 @@ def get_expanded_weights(
             grad_outputs=torch.ones_like(t_center[:, i]),
             retain_graph=True,
         )[0]
-        A.append(x.squeeze(0))
-    expanded_weights = torch.stack(A, 0)
+        A.append(x)
+    expanded_weights = torch.cat(A, 0)
 
     if crop_shape is not None and crop_func is not None:
         expanded_weights = crop_func(expanded_weights, crop_shape)

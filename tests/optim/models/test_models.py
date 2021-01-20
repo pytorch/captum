@@ -4,7 +4,7 @@ import unittest
 import torch
 
 from captum.optim._models.inception_v1 import googlenet
-from captum.optim._utils.models import RedirectedReluLayer, ReluLayer
+from captum.optim._utils.models import AvgPool2dLayer, RedirectedReluLayer, ReluLayer
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -13,6 +13,18 @@ def check_layer_not_in_model(self, model, layer) -> None:
         if child is not None:
             self.assertNotIsInstance(child, layer)
             check_layer_not_in_model(self, child, layer)
+
+
+def check_layer_in_model(self, model, layer) -> None:
+    L = []
+    for name, child in model._modules.items():
+        if child is not None:
+            if isinstance(child, layer):
+                L.append(True)
+            else:
+                L.append(False)
+            check_layer_in_model(self, child, layer)
+    self.assertTrue(any(L))
 
 
 class TestInceptionV1(BaseTest):
@@ -50,17 +62,15 @@ class TestInceptionV1(BaseTest):
                 + " due to insufficient Torch version."
             )
         try:
-            model = googlenet(
-                pretrained=True, replace_nonlinears_with_linear_equivalents=True
-            )
+            model = googlenet(pretrained=True, use_linear_modules_only=True)
             test = True
         except Exception:
             test = False
         self.assertTrue(test)
         check_layer_not_in_model(self, model, RedirectedReluLayer)
         check_layer_not_in_model(self, model, ReluLayer)
-        check_layer_not_in_model(self, model, torch.nn.ReLU)
         check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
+        check_layer_in_model(self, model, AvgPool2dLayer)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":
