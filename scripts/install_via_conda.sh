@@ -35,7 +35,7 @@ fi
 
 # install other deps
 conda install -y numpy sphinx pytest flake8 ipywidgets ipython scikit-learn
-conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints mypy flask isort
+conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typehints mypy flask isort flask-compress
 
 # install node/yarn for insights build
 conda install -y -c conda-forge yarn
