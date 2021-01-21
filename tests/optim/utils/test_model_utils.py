@@ -120,12 +120,12 @@ class TestGetLayers(BaseTest):
             "conv1",
             "conv1_relu",
             "pool1",
-            "localresponsenorm1",
+            "local_response_norm1",
             "conv2",
             "conv2_relu",
             "conv3",
             "conv3_relu",
-            "localresponsenorm2",
+            "local_response_norm2",
             "pool2",
             "mixed3a",
             "mixed3a.conv_1x1",
@@ -351,19 +351,19 @@ class TestMax2AvgPool2d(BaseTest):
         assertTensorAlmostEqual(self, out_tensor, expected_tensor, 0)
 
 
-class TestIgnoreLayer(BaseTest):
-    def test_ignore_layer(self) -> None:
-        layer = model_utils.IgnoreLayer()
+class TestSkipLayer(BaseTest):
+    def test_skip_layer(self) -> None:
+        layer = model_utils.SkipLayer()
         x = torch.randn(1, 3, 4, 4)
         output_tensor = layer(x)
         assertTensorAlmostEqual(self, x, output_tensor, 0)
 
 
-class TestIgnoreLayerFunction(BaseTest):
-    def test_ignore_layer(self) -> None:
+class TestSkipLayerFunction(BaseTest):
+    def test_skip_layer(self) -> None:
         model = torch.nn.Sequential(torch.nn.ReLU())
         x = torch.randn(1, 3, 4, 4)
-        model_utils.ignore_layer(model, torch.nn.ReLU)
+        model_utils.skip_layer(model, torch.nn.ReLU)
         output_tensor = model(x)
         assertTensorAlmostEqual(self, x, output_tensor, 0)
 

@@ -185,11 +185,11 @@ class AvgPool2dLayer(torch.nn.Module):
         stride (int or tuple of int, optional): The stride window size
             to use.
         padding (int or tuple of int): The amount of
-            zero padding to add to both sides.
+            zero padding to add to both sides in the nn.AvgPool2d module.
         ceil_mode (bool, optional): Whether to use ceil or floor for
             creating the output shape.
-        value (Any): Used to return any padding that's meant to be ignored
-            by pooling layers back to zero.
+        value (Any): Used to return any padding added in a previous layer
+            that's meant to be ignored by pooling layers back to zero.
     """
 
     def __init__(
@@ -241,7 +241,7 @@ def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
             max2avg_pool2d(child)
 
 
-class IgnoreLayer(torch.nn.Module):
+class SkipLayer(torch.nn.Module):
     """
     This layer is made to take the place of nonlinear activation layers.
     """
@@ -250,7 +250,7 @@ class IgnoreLayer(torch.nn.Module):
         return x
 
 
-def ignore_layer(model, layer) -> None:
+def skip_layer(model, layer) -> None:
     """
     Replace target layers with layers that do nothing.
     This is useful for removing the nonlinear ReLU
@@ -261,4 +261,4 @@ def ignore_layer(model, layer) -> None:
         layer (nn.Module): A layer class type.
     """
 
-    replace_layers(model, layer, IgnoreLayer)
+    replace_layers(model, layer, SkipLayer)

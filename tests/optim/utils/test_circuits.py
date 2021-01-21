@@ -52,7 +52,7 @@ class TestGetExpandedWeights(BaseTest):
                 + " due to insufficient Torch version."
             )
 
-        if torch.__version__ == "1.3.0":
+        if torch.__version__ <= "1.3.0":
             norm_func = torch.norm
         else:
             norm_func = torch.linalg.norm

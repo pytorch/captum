@@ -6,10 +6,10 @@ import torch.nn.functional as F
 
 from captum.optim._utils.models import (
     AvgPool2dLayer,
-    IgnoreLayer,
     LocalResponseNormLayer,
     RedirectedReluLayer,
     ReluLayer,
+    SkipLayer,
 )
 
 GS_SAVED_WEIGHTS_URL = (
@@ -92,7 +92,7 @@ class InceptionV1(nn.Module):
         lrn_vals = (9, 9.99999974738e-05, 0.5, 1.0)
 
         if use_linear_modules_only:
-            activ = IgnoreLayer
+            activ = SkipLayer
             pool = AvgPool2dLayer
         else:
             if replace_relus_with_redirectedrelu:
@@ -111,7 +111,7 @@ class InceptionV1(nn.Module):
         )
         self.conv1_relu = activ()
         self.pool1 = pool(kernel_size=3, stride=2, padding=0)
-        self.localresponsenorm1 = LocalResponseNormLayer(*lrn_vals)
+        self.local_response_norm1 = LocalResponseNormLayer(*lrn_vals)
 
         self.conv2 = nn.Conv2d(
             in_channels=64,
@@ -131,7 +131,7 @@ class InceptionV1(nn.Module):
             bias=True,
         )
         self.conv3_relu = activ()
-        self.localresponsenorm2 = LocalResponseNormLayer(*lrn_vals)
+        self.local_response_norm2 = LocalResponseNormLayer(*lrn_vals)
 
         self.pool2 = pool(kernel_size=3, stride=2, padding=0)
         self.mixed3a = InceptionModule(192, 64, 96, 128, 16, 32, 32, activ, pool)
@@ -176,14 +176,14 @@ class InceptionV1(nn.Module):
         x = self.conv1_relu(x)
         x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
         x = self.pool1(x)
-        x = self.localresponsenorm1(x)
+        x = self.local_response_norm1(x)
 
         x = self.conv2(x)
         x = self.conv2_relu(x)
         x = F.pad(x, (1, 1, 1, 1))
         x = self.conv3(x)
         x = self.conv3_relu(x)
-        x = self.localresponsenorm2(x)
+        x = self.local_response_norm2(x)
 
         x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
         x = self.pool2(x)
