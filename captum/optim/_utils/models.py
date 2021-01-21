@@ -243,22 +243,8 @@ def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
 
 class SkipLayer(torch.nn.Module):
     """
-    This layer is made to take the place of nonlinear activation layers.
+    This layer is made to take the place of nonlinear activation layers like ReLU.
     """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
-
-
-def skip_layer(model, layer) -> None:
-    """
-    Replace target layers with layers that do nothing.
-    This is useful for removing the nonlinear ReLU
-    layers when creating expanded weights.
-
-    Args:
-        model (nn.Module): A PyTorch model instance.
-        layer (nn.Module): A layer class type.
-    """
-
-    replace_layers(model, layer, SkipLayer)
