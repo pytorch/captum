@@ -305,7 +305,7 @@ class LayerGradientShap(LayerAttribution, GradientAttribution):
             nt,  # self
             inputs,
             nt_type="smoothgrad",
-            n_samples=n_samples,
+            nt_samples=n_samples,
             stdevs=stdevs,
             draw_baseline_from_distrib=True,
             baselines=baselines,

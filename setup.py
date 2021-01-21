@@ -51,7 +51,7 @@ def report(*args):
         pass
 
 
-INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter"]
+INSIGHTS_REQUIRES = ["flask", "ipython", "ipywidgets", "jupyter", "flask-compress"]
 
 INSIGHTS_FILE_SUBDIRS = [
     "insights/attr_vis/frontend/build",
@@ -159,7 +159,6 @@ if __name__ == "__main__":
                 [
                     "captum/insights/attr_vis/widget/static/extension.js",
                     "captum/insights/attr_vis/widget/static/index.js",
-                    "captum/insights/attr_vis/widget/static/index.js.map",
                 ],
             ),
             (

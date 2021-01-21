@@ -7,6 +7,7 @@ from time import sleep
 from typing import Optional
 
 from flask import Flask, jsonify, render_template, request
+from flask_compress import Compress
 from torch import Tensor
 
 from captum.log import log_usage
@@ -16,6 +17,7 @@ app = Flask(
 )
 visualizer = None
 port = None
+Compress(app)
 
 
 def namedtuple_to_dict(obj):
@@ -42,7 +44,9 @@ def attribute():
     r = request.get_json(force=True)
     return jsonify(
         namedtuple_to_dict(
-            visualizer._calculate_attribution_from_cache(r["instance"], r["labelIndex"])
+            visualizer._calculate_attribution_from_cache(
+                r["inputIndex"], r["modelIndex"], r["labelIndex"]
+            )
         )
     )
 

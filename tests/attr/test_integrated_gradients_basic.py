@@ -87,6 +87,15 @@ class Test(BaseTest):
     def test_batched_input_smoothgrad(self) -> None:
         self._assert_batched_tensor_input("smoothgrad", "riemann_middle")
 
+    def test_batched_input_smoothgrad_with_batch_size_1(self) -> None:
+        self._assert_n_samples_batched_size("smoothgrad", "riemann_middle", 1)
+
+    def test_batched_input_smoothgrad_with_batch_size_2(self) -> None:
+        self._assert_n_samples_batched_size("vargrad", "riemann_middle", 2)
+
+    def test_batched_input_smoothgrad_with_batch_size_3(self) -> None:
+        self._assert_n_samples_batched_size("smoothgrad_sq", "riemann_middle", 3)
+
     def test_batched_input_smoothgrad_sq(self) -> None:
         self._assert_batched_tensor_input("smoothgrad_sq", "riemann_trapezoid")
 
@@ -111,19 +120,20 @@ class Test(BaseTest):
         attributions_wo_mutliplying_by_inputs = nt_wo_mutliplying_by_inputs.attribute(
             inputs,
             nt_type=type,
-            n_samples=n_samples,
+            nt_samples=n_samples,
             stdevs=0.0,
             target=target,
             n_steps=500,
         )
-        attributions = nt.attribute(
-            inputs,
-            nt_type=type,
-            n_samples=n_samples,
-            stdevs=0.0,
-            target=target,
-            n_steps=500,
-        )
+        with self.assertWarns(DeprecationWarning):
+            attributions = nt.attribute(
+                inputs,
+                nt_type=type,
+                n_samples=n_samples,
+                stdevs=0.0,
+                target=target,
+                n_steps=500,
+            )
         assertTensorAlmostEqual(
             self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
@@ -139,6 +149,15 @@ class Test(BaseTest):
 
     def test_batched_multi_input_vargrad(self) -> None:
         self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid")
+
+    def test_batched_multi_input_vargrad_batch_size_1(self) -> None:
+        self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid", 1)
+
+    def test_batched_multi_input_smooth_batch_size_2(self) -> None:
+        self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid", 2)
+
+    def test_batched_multi_input_smoothgrad_sq_batch_size_3(self) -> None:
+        self._assert_batched_tensor_multi_input("vargrad", "riemann_trapezoid", 3)
 
     def _assert_multi_variable(
         self,
@@ -312,7 +331,10 @@ class Test(BaseTest):
         )
 
     def _assert_batched_tensor_multi_input(
-        self, type: str, approximation_method: str = "gausslegendre"
+        self,
+        type: str,
+        approximation_method: str = "gausslegendre",
+        nt_samples_batch_size: int = None,
     ) -> None:
         model = BasicModel_MultiLayer()
         input = (
@@ -324,10 +346,33 @@ class Test(BaseTest):
             ),
         )
         self._compute_attribution_and_evaluate(
-            model, input, type=type, target=0, approximation_method=approximation_method
+            model,
+            input,
+            type=type,
+            target=0,
+            approximation_method=approximation_method,
+            nt_samples_batch_size=nt_samples_batch_size,
         )
-        self._compute_attribution_batch_helper_evaluate(
-            model, input, target=0, approximation_method=approximation_method
+
+    def _assert_n_samples_batched_size(
+        self,
+        type: str,
+        approximation_method: str = "gausslegendre",
+        nt_samples_batch_size: int = None,
+    ) -> None:
+        model = BasicModel_MultiLayer()
+        input = (
+            torch.tensor(
+                [[1.5, 2.0, 1.3], [0.5, 0.1, 2.3], [1.5, 2.0, 1.3]], requires_grad=True
+            ),
+        )
+        self._compute_attribution_and_evaluate(
+            model,
+            input,
+            type=type,
+            target=0,
+            nt_samples_batch_size=nt_samples_batch_size,
+            approximation_method=approximation_method,
         )
 
     def _compute_attribution_and_evaluate(
@@ -340,12 +385,13 @@ class Test(BaseTest):
         type: str = "vanilla",
         approximation_method: str = "gausslegendre",
         multiply_by_inputs=True,
+        nt_samples_batch_size=None,
     ) -> Tuple[Tensor, ...]:
         r"""
         attrib_type: 'vanilla', 'smoothgrad', 'smoothgrad_sq', 'vargrad'
         """
         ig = IntegratedGradients(model, multiply_by_inputs=multiply_by_inputs)
-        self.assertEquals(ig.multiplies_by_inputs, multiply_by_inputs)
+        self.assertEqual(ig.multiplies_by_inputs, multiply_by_inputs)
         if not isinstance(inputs, tuple):
             inputs = (inputs,)  # type: ignore
         inputs: Tuple[Tensor, ...]
@@ -392,7 +438,7 @@ class Test(BaseTest):
             attributions, delta = nt.attribute(
                 inputs,
                 nt_type=type,
-                n_samples=n_samples,
+                nt_samples=n_samples,
                 stdevs=0.00000002,
                 baselines=baselines,
                 target=target,
@@ -400,19 +446,22 @@ class Test(BaseTest):
                 method=approximation_method,
                 n_steps=500,
                 return_convergence_delta=True,
+                nt_samples_batch_size=nt_samples_batch_size,
             )
-            attributions_without_delta = nt.attribute(
-                inputs,
-                nt_type=type,
-                n_samples=n_samples,
-                stdevs=0.00000002,
-                baselines=baselines,
-                target=target,
-                additional_forward_args=additional_forward_args,
-                method=approximation_method,
-                n_steps=500,
-            )
-            self.assertEquals(nt.multiplies_by_inputs, multiply_by_inputs)
+            with self.assertWarns(DeprecationWarning):
+                attributions_without_delta = nt.attribute(
+                    inputs,
+                    nt_type=type,
+                    n_samples=n_samples,
+                    stdevs=0.00000002,
+                    baselines=baselines,
+                    target=target,
+                    additional_forward_args=additional_forward_args,
+                    method=approximation_method,
+                    n_steps=500,
+                    nt_samples_batch_size=3,
+                )
+            self.assertEqual(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 
         for input, attribution in zip(inputs, attributions):
@@ -422,6 +471,7 @@ class Test(BaseTest):
 
         # compare attributions retrieved with and without
         # `return_convergence_delta` flag
+
         for attribution, attribution_without_delta in zip(
             attributions, attributions_without_delta
         ):

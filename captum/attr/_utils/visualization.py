@@ -514,7 +514,7 @@ def format_word_importances(words, importances):
 
 def visualize_text(
     datarecords: Iterable[VisualizationDataRecord], legend: bool = True
-) -> None:
+) -> "HTML":  # In quotes because this type doesn't exist in standalone mode
     assert HAS_IPYTHON, (
         "IPython must be available to visualize text. "
         "Please run 'pip install ipython'."
@@ -567,4 +567,7 @@ def visualize_text(
 
     dom.append("".join(rows))
     dom.append("</table>")
-    display(HTML("".join(dom)))
+    html = HTML("".join(dom))
+    display(html)
+
+    return html

@@ -32,6 +32,7 @@ from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
     _format_input_baseline,
+    lime_n_perturb_samples_deprecation_decorator,
 )
 from captum.log import log_usage
 
@@ -229,12 +230,13 @@ class LimeBase(PerturbationAttribution):
             ), "Must provide transform from original input space to interpretable space"
 
     @log_usage()
+    @lime_n_perturb_samples_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType = None,
         additional_forward_args: Any = None,
-        n_perturb_samples: int = 50,
+        n_samples: int = 50,
         perturbations_per_eval: int = 1,
         **kwargs
     ) -> Tensor:
@@ -308,9 +310,9 @@ class LimeBase(PerturbationAttribution):
                         Note that attributions are not computed with respect
                         to these arguments.
                         Default: None
-            n_perturb_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretable model.
-                        Default: `50` if `n_perturb_samples` is not provided.
+                        Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -409,7 +411,7 @@ class LimeBase(PerturbationAttribution):
             curr_model_inputs = []
             expanded_additional_args = None
             expanded_target = None
-            for i in range(n_perturb_samples):
+            for _ in range(n_samples):
                 curr_sample = self.perturb_func(inputs, **kwargs)
                 if self.perturb_interpretable_space:
                     interpretable_inps.append(curr_sample)
@@ -479,9 +481,7 @@ class LimeBase(PerturbationAttribution):
             dataset = TensorDataset(
                 combined_interp_inps, combined_outputs, combined_sim
             )
-            self.interpretable_model.fit(
-                DataLoader(dataset, batch_size=n_perturb_samples)
-            )
+            self.interpretable_model.fit(DataLoader(dataset, batch_size=n_samples))
             return self.interpretable_model.representation()
 
     def _evaluate_batch(
@@ -527,15 +527,15 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
     ), "Must provide baselines to use default interpretable representation transfrom"
     feature_mask = kwargs["feature_mask"]
     if isinstance(feature_mask, Tensor):
-        binary_mask = curr_sample[0][feature_mask]
+        binary_mask = curr_sample[0][feature_mask].to(original_inputs.dtype)
         return binary_mask * original_inputs + (1 - binary_mask) * kwargs["baselines"]
     else:
         binary_mask = tuple(
             curr_sample[0][feature_mask[j]] for j in range(len(feature_mask))
         )
         return tuple(
-            binary_mask[j] * original_inputs[j]
-            + (1 - binary_mask[j]) * kwargs["baselines"][j]
+            binary_mask[j].to(original_inputs[j].dtype) * original_inputs[j]
+            + (1 - binary_mask[j].to(original_inputs[j].dtype)) * kwargs["baselines"][j]
             for j in range(len(feature_mask))
         )
 
@@ -575,8 +575,8 @@ def get_exp_kernel_similarity_function(
     """
 
     def default_exp_kernel(original_inp, perturbed_inp, __, **kwargs):
-        flattened_original_inp = _flatten_tensor_or_tuple(original_inp)
-        flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp)
+        flattened_original_inp = _flatten_tensor_or_tuple(original_inp).float()
+        flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp).float()
         if distance_mode == "cosine":
             cos_sim = CosineSimilarity(dim=0)
             distance = 1 - cos_sim(flattened_original_inp, flattened_perturbed_inp)
@@ -599,7 +599,7 @@ def default_perturb_func(original_inp, **kwargs):
         device = original_inp[0].device
 
     probs = torch.ones(1, kwargs["num_interp_features"]) * 0.5
-    return torch.bernoulli(probs).to(device=device)
+    return torch.bernoulli(probs).to(device=device).long()
 
 
 class Lime(LimeBase):
@@ -752,6 +752,7 @@ class Lime(LimeBase):
         )
 
     @log_usage()
+    @lime_n_perturb_samples_deprecation_decorator
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -759,7 +760,7 @@ class Lime(LimeBase):
         target: TargetType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_perturb_samples: int = 25,
+        n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
     ) -> TensorOrTupleOfTensorsGeneric:
@@ -893,9 +894,9 @@ class Lime(LimeBase):
                         If None, then a feature mask is constructed which assigns
                         each scalar within a tensor as a separate feature.
                         Default: None
-            n_perturb_samples (int, optional):  The number of samples of the original
+            n_samples (int, optional):  The number of samples of the original
                         model used to train the surrogate interpretable model.
-                        Default: `50` if `n_perturb_samples` is not provided.
+                        Default: `50` if `n_samples` is not provided.
             perturbations_per_eval (int, optional): Allows multiple samples
                         to be processed simultaneously in one call to forward_fn.
                         Each forward pass will contain a maximum of
@@ -947,7 +948,7 @@ class Lime(LimeBase):
             >>> lime = Lime(net)
             >>> # Computes attribution, with each of the 4 x 4 = 16
             >>> # features as a separate interpretable feature
-            >>> attr = lime.attribute(input, target=1, n_perturb_samples=200)
+            >>> attr = lime.attribute(input, target=1, n_samples=200)
 
             >>> # Alternatively, we can group each 2x2 square of the inputs
             >>> # as one 'interpretable' feature and perturb them together.
@@ -1041,7 +1042,7 @@ class Lime(LimeBase):
                             inputs=curr_inps if is_inputs_tuple else curr_inps[0],
                             target=curr_target,
                             additional_forward_args=curr_additional_args,
-                            n_perturb_samples=n_perturb_samples,
+                            n_samples=n_samples,
                             perturbations_per_eval=perturbations_per_eval,
                             baselines=curr_baselines
                             if is_inputs_tuple
@@ -1081,7 +1082,7 @@ class Lime(LimeBase):
             inputs=inputs,
             target=target,
             additional_forward_args=additional_forward_args,
-            n_perturb_samples=n_perturb_samples,
+            n_samples=n_samples,
             perturbations_per_eval=perturbations_per_eval,
             baselines=baselines if is_inputs_tuple else baselines[0],
             feature_mask=feature_mask if is_inputs_tuple else feature_mask[0],
@@ -1129,7 +1130,10 @@ class Lime(LimeBase):
         is_inputs_tuple: bool,
     ) -> Union[Tensor, Tuple[Tensor, ...]]:
         coefs = coefs.flatten()
-        attr = [torch.zeros_like(single_inp) for single_inp in formatted_inp]
+        attr = [
+            torch.zeros_like(single_inp, dtype=torch.float)
+            for single_inp in formatted_inp
+        ]
         for tensor_ind in range(len(formatted_inp)):
             for single_feature in range(num_interp_features):
                 attr[tensor_ind] += (

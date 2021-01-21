@@ -36,11 +36,13 @@ from captum.attr._core.neuron.neuron_integrated_gradients import (
 from captum.attr._core.occlusion import Occlusion
 from captum.attr._core.saliency import Saliency
 from captum.attr._core.shapley_value import ShapleyValueSampling
+from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
 from tests.helpers.basic import set_all_random_seeds
 from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModel_MultiLayer_TrueMultiInput,
     ReLULinearModel,
 )
 
@@ -294,7 +296,7 @@ config = [
             "inputs": (10 * torch.randn(6, 3), 5 * torch.randn(6, 3)),
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -376,6 +378,27 @@ config = [
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
             "n_samples": 20,
+            "stdevs": 0.0,
+        },
+        "noise_tunnel": True,
+    },
+    {
+        "name": "basic_multi_tensor_target_batched_nt",
+        "algorithms": [
+            IntegratedGradients,
+            Saliency,
+            InputXGradient,
+            FeatureAblation,
+            DeepLift,
+            GuidedBackprop,
+            Deconvolution,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "attribute_args": {
+            "inputs": torch.randn(4, 3),
+            "target": torch.tensor([0, 1, 1, 0]),
+            "nt_samples": 20,
+            "nt_samples_batch_size": 2,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -1143,5 +1166,35 @@ config = [
         "model": BasicModel_MultiLayer(multi_input_module=True),
         "layer": ["multi_relu", "linear1", "linear0"],
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output",
+        "algorithms": [LayerIntegratedGradients],
+        "model": BasicModel_MultiLayer_TrueMultiInput(),
+        "layer": ["m1", "m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
+    },
+    {
+        "name": "basic_layer_ig_multi_layer_multi_output_with_input_wrapper",
+        "algorithms": [LayerIntegratedGradients],
+        "model": ModelInputWrapper(BasicModel_MultiLayer_TrueMultiInput()),
+        "layer": ["module.m1", "module.m234"],
+        "attribute_args": {
+            "inputs": (
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+                torch.randn(5, 3),
+            ),
+            "target": 0,
+        },
     },
 ]
