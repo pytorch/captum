@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from captum.optim._utils.models import (
-    AvgPool2dLayer,
+    AvgPool2dConstrained,
     LocalResponseNormLayer,
     RedirectedReluLayer,
     ReluLayer,
@@ -93,7 +93,7 @@ class InceptionV1(nn.Module):
 
         if use_linear_modules_only:
             activ = SkipLayer
-            pool = AvgPool2dLayer
+            pool = AvgPool2dConstrained
         else:
             if replace_relus_with_redirectedrelu:
                 activ = RedirectedReluLayer

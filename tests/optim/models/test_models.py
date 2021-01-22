@@ -6,7 +6,7 @@ import torch
 
 from captum.optim._models.inception_v1 import googlenet
 from captum.optim._utils.models import (
-    AvgPool2dLayer,
+    AvgPool2dConstrained,
     RedirectedReluLayer,
     ReluLayer,
     SkipLayer,
@@ -68,7 +68,7 @@ class TestInceptionV1(BaseTest):
         _check_layer_not_in_model(self, model, ReluLayer)
         _check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
         _check_layer_in_model(self, model, SkipLayer)
-        _check_layer_in_model(self, model, AvgPool2dLayer)
+        _check_layer_in_model(self, model, AvgPool2dConstrained)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":

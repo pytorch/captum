@@ -1,5 +1,6 @@
 import math
-from typing import Any, List, Optional, Tuple, Union
+from inspect import signature
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -78,18 +79,68 @@ class ReluLayer(nn.Module):
         return F.relu(input, inplace=self.inplace)
 
 
-def replace_layers(model, old_layer=ReluLayer, new_layer=RedirectedReluLayer) -> None:
+def replace_layers(
+    model, layer1, layer2, transfer_vars: bool = False, **kwargs
+) -> None:
     """
-    Replace all target layers with new layers.
-    The most common use case is replacing activation layers with activation layers
-    that can handle gradient flow issues.
+    Replace all target layers with new layers inside the specified model,
+    possibly with the same initialization variables.
+
+    Args:
+        model: (nn.Module): A PyTorch model instance.
+        layer1: (nn.Module): A layer instance that you want to transfer
+            initialization variables from.
+        layer2: (nn.Module): The layer class to create with the variables
+            from of layer1.
+        transfer_vars (bool, optional): Wether or not to try and copy
+            initialization variables from layer1 instances to the replacement
+            layer2 instances.
+        kwargs: (Any, optional): Any additional variables to use when creating
+            the new layer.
     """
 
     for name, child in model._modules.items():
-        if isinstance(child, old_layer):
-            setattr(model, name, new_layer())
+        if isinstance(child, layer1):
+            if transfer_vars:
+                new_layer = _transfer_layer_vars(child, layer2, **kwargs)
+            else:
+                new_layer = layer2(**kwargs)
+            setattr(model, name, new_layer)
         elif child is not None:
-            replace_layers(child, old_layer, new_layer)
+            replace_layers(child, layer1, layer2, transfer_vars, **kwargs)
+
+
+def _transfer_layer_vars(layer1, layer2, **kwargs):
+    """
+    Given a layer instance, create a new layer instance of another class
+    with the same initialization variables as the original layer.
+    Args:
+        layer1: (nn.Module): A layer instance that you want to transfer
+            initialization variables from.
+        layer2: (nn.Module): The layer class to create with the variables
+            from of layer1.
+        kwargs: (Any, optional): Any additional variables to use when creating
+            the new layer.
+    Returns:
+        layer2 instance (nn.Module): An instance of layer2 with the initialization
+            variables that it shares with layer1, and any specified additional
+            initialization variables.
+    """
+
+    l2_vars = list(signature(layer2.__init__).parameters.values())
+    l2_vars = [
+        str(l2_vars[i]).split()[0]
+        for i in range(len(l2_vars))
+        if str(l2_vars[i]) != "self"
+    ]
+    l2_vars = [p.split(":")[0] if ":" in p and "=" not in p else p for p in l2_vars]
+    l2_vars = [p.split("=")[0] if "=" in p and ":" not in p else p for p in l2_vars]
+    layer2_vars = {k: [] for k in dict.fromkeys(l2_vars).keys()}
+
+    layer1_vars = {k: v for k, v in vars(layer1).items() if not k.startswith("_")}
+    shared_vars = {k: v for k, v in layer1_vars.items() if k in layer2_vars}
+    new_vars = dict(item for d in (shared_vars, kwargs) for item in d.items())
+    return layer2(**new_vars)
 
 
 class LocalResponseNormLayer(nn.Module):
@@ -174,7 +225,7 @@ def collect_activations(
     return activ_out
 
 
-class AvgPool2dLayer(torch.nn.Module):
+class AvgPool2dConstrained(torch.nn.Module):
     """
     AvgPool2d layer that also zeros padding of a specific value. This
     layer is meant to be used to replace MaxPool2d layers.
@@ -219,26 +270,16 @@ class AvgPool2dLayer(torch.nn.Module):
 def max2avg_pool2d(model, value: Optional[Any] = float("-inf")) -> None:
     """
     Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
+    This function is a wrapper function for replace_layers.
     This allows us to ignore nonlinear values when calculating expanded weights.
-
     Args:
         model (nn.Module): A PyTorch model instance.
         value (Any): Used to return any padding that's meant to be ignored by
             pooling layers back to zero.
     """
-
-    for name, child in model._modules.items():
-        if isinstance(child, torch.nn.MaxPool2d):
-            new_layer = AvgPool2dLayer(
-                kernel_size=child.kernel_size,
-                stride=child.stride,
-                padding=child.padding,
-                ceil_mode=child.ceil_mode,
-                value=value,
-            )
-            setattr(model, name, new_layer)
-        elif child is not None:
-            max2avg_pool2d(child)
+    replace_layers(
+        model, torch.nn.MaxPool2d, AvgPool2dConstrained, transfer_vars=True, value=value
+    )
 
 
 class SkipLayer(torch.nn.Module):
@@ -250,14 +291,21 @@ class SkipLayer(torch.nn.Module):
         return x
 
 
-def skip_layer(model, layer) -> None:
+def skip_layers(model, layers) -> None:
     """
-    Replace target layers with layers that do nothing.
+    This function is a wrapper function for
+    replace_layers and replaces the target layer
+    with layers that do nothing.
     This is useful for removing the nonlinear ReLU
     layers when creating expanded weights.
     Args:
         model (nn.Module): A PyTorch model instance.
-        layer (nn.Module): A layer class type.
+        layers (nn.Module or list of nn.Module): The layer
+            class type to replace in the model.
     """
-
-    replace_layers(model, layer, SkipLayer)
+    if not hasattr(layers, "__iter__"):
+        replace_layers(model, layers, SkipLayer)
+    else:
+        layers = cast(List, layers)
+        for target_layer in layers:
+            replace_layers(model, target_layer, SkipLayer, transfer_vars=True)
