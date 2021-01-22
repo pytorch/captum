@@ -308,4 +308,4 @@ def skip_layers(model, layers) -> None:
     else:
         layers = cast(List, layers)
         for target_layer in layers:
-            replace_layers(model, target_layer, SkipLayer, transfer_vars=True)
+            replace_layers(model, target_layer, SkipLayer)
