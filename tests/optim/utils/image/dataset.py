@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import unittest
 
 import torch
@@ -108,25 +109,62 @@ class TestDatasetKLTMatrix(BaseTest):
 
 class TestCaptureActivationSamples(BaseTest):
     def test_capture_activation_samples(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping capture_activation_samples test due to"
                 + "insufficient Torch version."
             )
 
-        num_tensors = 10
+        num_tensors = 20
         dataset_tensors = [torch.ones(3, 224, 224) for x in range(num_tensors)]
         test_dataset = dataset_helpers.ImageTestDataset(dataset_tensors)
         dataset_loader = torch.utils.data.DataLoader(
-            test_dataset, batch_size=10, num_workers=0, shuffle=False
+            test_dataset, batch_size=5, num_workers=0, shuffle=False
         )
         model = googlenet(pretrained=True)
         targets = [model.mixed4c]
         target_names = ["mixed4c"]
-        activation_dict = dataset_utils.capture_activation_samples(
+        sample_dir = "test_samples"
+        os.mkdir(sample_dir)
+
+        dataset_utils.capture_activation_samples(
             dataset_loader, model, targets, target_names
         )
-        self.assertEqual(list(activation_dict["mixed4c"].shape), [num_tensors, 512])
+
+        tensor_samples_files = [
+            os.path.join(sample_dir, name)
+            for name in os.listdir(sample_dir)
+            if os.path.isfile(os.path.join(sample_dir, name))
+        ]
+        tensor_samples = []
+        [tensor_samples + torch.load(file) for file in tensor_samples_files]
+        sample_tensor = torch.cat(tensor_samples, 1).permute(1, 0)
+        self.assertEqual(list(sample_tensor.shape), [num_tensors, 512])
+
+
+class TestConsolidateSamples(BaseTest):
+    def test_consolidate_samples(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping consolidate_samples test due to"
+                + "insufficient Torch version."
+            )
+
+        sample_dir = "test_samples_consolidation"
+        os.mkdir(sample_dir)
+        num_channels = 512
+        num_files = 10
+        batch_size = 4
+        for i, f in enumerate(num_files):
+            tensor_batch = [torch.ones(num_channels, 1) for x in range(batch_size)]
+            torch.save(
+                tensor_batch, os.path.join(sample_dir, "tensor_batch_" + str(i) + ".pt")
+            )
+
+        sample_tensor = dataset_utils.consolidate_samples(sample_dir)
+        self.assertEqual(
+            list(sample_tensor.shape), [num_files * batch_size, num_channels]
+        )
 
 
 if __name__ == "__main__":

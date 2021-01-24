@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List, Optional
 
 import torch
@@ -67,24 +68,27 @@ def dataset_klt_matrix(
 
 def capture_activation_samples(
     loader: torch.utils.data.DataLoader,
-    model,
+    model: nn.Module,
     targets: List[torch.nn.Module],
-    target_names: List[str],
+    target_names: Optional[List[str]] = None,
+    sample_dir: str = "samples",
     num_images: Optional[int] = None,
     samples_per_image: int = 1,
     input_device: torch.device = torch.device("cpu"),
     show_progress: bool = False,
 ) -> Dict[str, torch.Tensor]:
     """
-    Create a dict of randomly sampled activations for an image dataset.
+    Capture randomly sampled activations for an image dataset from one or multiple
+    target layers.
     Args:
         loader (torch.utils.data.DataLoader): A torch.utils.data.DataLoader
             instance for an image dataset.
         model (nn.Module): A PyTorch model instance.
-        targets (list of nn.Module): A list of layers to sample activations
+        targets (list of nn.Module): A list of layers to collect activation samples
             from.
-        target_names (list of str): A list of names to use for the layers
-            to targets in the output dict.
+        target_names (list of str, optional): A list of names to use when saving sample
+            tensors as files.
+        sample_dir (str): Path to where activation samples should be saved.
         num_images (int, optional): How many images to collect samples from.
             Default is to collect samples for every image in the dataset.
         samples_per_image (int): How many samples to collect per image. Default
@@ -92,15 +96,13 @@ def capture_activation_samples(
         input_device (torch.device, optional): The device to use for model
             inputs.
         show_progress (bool, optional): Whether or not to show progress.
-    Returns:
-        activation_dict (dict of tensor): A dictionary containing the sampled
-            dataset activations, with the target_names as the keys.
     """
 
     def random_sample(activations: torch.Tensor) -> torch.Tensor:
         """
         Randomly sample H & W dimensions of activations with 4 dimensions.
         """
+        assert activations.dim() == 4 or activations.dim() == 2
 
         rnd_samples = []
         for i in range(samples_per_image):
@@ -113,10 +115,12 @@ def capture_activation_samples(
                 elif activations.dim() == 2:
                     activ = activations[b].unsqueeze(1)
                 rnd_samples.append(activ)
-        return torch.cat(rnd_samples, 1).permute(1, 0)
+        return rnd_samples
 
+    if target_names is None:
+        target_names = ["target" + str(i) + "_" for i in range(len(targets))]
     assert len(target_names) == len(targets)
-    activation_dict: Dict = {k: [] for k in dict.fromkeys(target_names).keys()}
+    assert os.path.isdir(sample_dir)
 
     if show_progress:
         total = (
@@ -132,10 +136,13 @@ def capture_activation_samples(
 
             target_activ_dict = collect_activations(model, targets, inputs)
 
-            activation_dict = {
-                k: activation_dict[k] + [random_sample(target_activ_dict[t])]
-                for k, t in zip(activation_dict, target_activ_dict)
-            }
+            [
+                torch.save(
+                    random_sample(target_activ_dict[t]),
+                    os.path.join(sample_dir, +n + "_" + str(batch_count) + ".pt"),
+                )
+                for t, n in zip(target_activ_dict, target_names)
+            ]
             del target_activ_dict
 
             if show_progress:
@@ -147,4 +154,42 @@ def capture_activation_samples(
 
     if show_progress:
         pbar.close()
-    return {k: torch.cat(activation_dict[k]).cpu() for k in activation_dict}
+
+
+def consolidate_samples(
+    sample_dir: str = "samples", sample_basename: str = "", show_progress: bool = False
+) -> torch.Tensor:
+    """
+    Combine samples collected from capture_activation_samples into a single tensor with a
+    shape of [n_samples, n_channels].
+
+    Args:
+        sample_dir (str): The directory where activation samples where saved.
+        sample_basename (str, optional): If samples from different layers are present in
+            sample_dir, then you can use samples from only a specific layer by specifying
+            the basename that samples of the same layer share.
+        show_progress (bool, optional): Whether or not to show progress.
+    Returns:
+        sample_tensor (torch.Tensor): A tensor containing all the specified sample tensors
+            with a shape of [n_samples, n_channels].
+    """
+
+    samples = []
+    tensor_samples = [
+        os.path.join(sample_dir, name)
+        for name in os.listdir(sample_dir)
+        if sample_basename.lower() in name.lower()
+        and os.path.isfile(os.path.join(sample_dir, name))
+    ]
+
+    if show_progress:
+        pbar = tqdm(total=len(tensor_samples), unit=" sample batches collected")
+    for file in tensor_samples:
+        sample_batch = torch.load(file)
+        for s in sample_batch:
+            samples += [s.cpu()]
+        if show_progress:
+            pbar.update(1)
+    if show_progress:
+        pbar.close()
+    return torch.cat(samples, 1).permute(1, 0)
