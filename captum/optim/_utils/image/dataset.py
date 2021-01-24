@@ -68,10 +68,10 @@ def dataset_klt_matrix(
 
 def capture_activation_samples(
     loader: torch.utils.data.DataLoader,
-    model: nn.Module,
+    model: torch.nn.Module,
     targets: List[torch.nn.Module],
     target_names: Optional[List[str]] = None,
-    sample_dir: str = "samples",
+    sample_dir: str = "",
     num_images: Optional[int] = None,
     samples_per_image: int = 1,
     input_device: torch.device = torch.device("cpu"),
@@ -128,11 +128,12 @@ def capture_activation_samples(
         )
         pbar = tqdm(total=total, unit=" images")
 
-    image_count = 0
+    image_count, batch_count = 0, 0
     with torch.no_grad():
         for inputs, _ in loader:
             inputs = inputs.to(input_device)
             image_count += inputs.size(0)
+            batch_count += 1
 
             target_activ_dict = collect_activations(model, targets, inputs)
 
@@ -160,18 +161,19 @@ def consolidate_samples(
     sample_dir: str = "samples", sample_basename: str = "", show_progress: bool = False
 ) -> torch.Tensor:
     """
-    Combine samples collected from capture_activation_samples into a single tensor with a
-    shape of [n_samples, n_channels].
+    Combine samples collected from capture_activation_samples into a single
+    tensor with a shape of [n_samples, n_channels].
 
     Args:
         sample_dir (str): The directory where activation samples where saved.
-        sample_basename (str, optional): If samples from different layers are present in
-            sample_dir, then you can use samples from only a specific layer by specifying
-            the basename that samples of the same layer share.
+        sample_basename (str, optional): If samples from different layers are
+            present in sample_dir, then you can use samples from only a
+            specific layer by specifying the basename that samples of the same
+            layer share.
         show_progress (bool, optional): Whether or not to show progress.
     Returns:
-        sample_tensor (torch.Tensor): A tensor containing all the specified sample tensors
-            with a shape of [n_samples, n_channels].
+        sample_tensor (torch.Tensor): A tensor containing all the specified
+            sample tensors with a shape of [n_samples, n_channels].
     """
 
     samples = []

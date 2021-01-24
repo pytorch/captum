@@ -128,7 +128,11 @@ class TestCaptureActivationSamples(BaseTest):
         os.mkdir(sample_dir)
 
         dataset_utils.capture_activation_samples(
-            dataset_loader, model, targets, target_names
+            loader=dataset_loader,
+            model=model,
+            targets=targets,
+            target_names=target_names,
+            sample_dir=sample_dir,
         )
 
         tensor_samples_files = [
