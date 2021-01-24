@@ -241,7 +241,7 @@ class L2(Loss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-        activations = (activations - self.constant).sum()
+        activations = ((activations - self.constant) ** 2).sum()
         return torch.sqrt(self.epsilon + activations)
 
 
@@ -405,6 +405,7 @@ class NeuronDirection(Loss):
         activations = activations[:, :, _x : _x + 1, _y : _y + 1]
         if self.channel_index is not None:
             activations = activations[:, self.channel_index, ...][:, None, ...]
+        print(activations)
         return torch.cosine_similarity(self.direction, activations)
 
 
