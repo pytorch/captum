@@ -250,6 +250,7 @@ class TestLaplacianImage(BaseTest):
         self.assertEqual(test_tensor.size(1), channels)
         self.assertEqual(test_tensor.size(2), size[0])
         self.assertEqual(test_tensor.size(3), size[1])
+
     def test_laplacianimage_init(self) -> None:
         if torch.__version__ == "1.2.0":
             raise unittest.SkipTest(
@@ -577,6 +578,7 @@ class TestNaturalImage(BaseTest):
         image_param = images.NaturalImage(size=(1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np) * 0.5)
+
     def test_natural_image_1(self) -> None:
         image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
         image_np = image_param.forward().detach().numpy()
