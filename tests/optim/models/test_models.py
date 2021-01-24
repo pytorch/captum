@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from typing import List, Optional, Type
+from typing import Type
 
 import torch
 
@@ -18,24 +18,16 @@ def _check_layer_in_model(
     self,
     model: torch.nn.Module,
     layer: Type[torch.nn.Module],
-    num_layers: Optional[int] = None,
 ) -> None:
-    in_model: List = []
-
-    def check_for_layer_in_model(model, layer, in_model: List) -> None:
+    def check_for_layer_in_model(model, layer) -> bool:
         for name, child in model._modules.items():
             if child is not None:
                 if isinstance(child, layer):
-                    in_model += [True]
-                else:
-                    in_model += [False]
-                check_for_layer_in_model(child, layer, in_model)
+                    return True
+                check_for_layer_in_model(child, layer)
+        return False
 
-    check_for_layer_in_model(model, layer, in_model)
-    if num_layers is not None:
-        self.assertEqual(sum(in_model), num_layers)
-    else:
-        self.assertTrue(any(in_model))
+    self.assertTrue(check_for_layer_in_model(model, layer))
 
 
 def _check_layer_not_in_model(
@@ -55,7 +47,7 @@ class TestInceptionV1(BaseTest):
                 + " due to insufficient Torch version."
             )
         model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=True)
-        _check_layer_in_model(self, model, RedirectedReluLayer, 57)
+        _check_layer_in_model(self, model, RedirectedReluLayer)
 
     def test_load_inceptionv1_no_redirected_relu(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -65,7 +57,7 @@ class TestInceptionV1(BaseTest):
             )
         model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=False)
         _check_layer_not_in_model(self, model, RedirectedReluLayer)
-        _check_layer_in_model(self, model, ReluLayer, 57)
+        _check_layer_in_model(self, model, ReluLayer)
 
     def test_load_inceptionv1_linear(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -77,8 +69,8 @@ class TestInceptionV1(BaseTest):
         _check_layer_not_in_model(self, model, RedirectedReluLayer)
         _check_layer_not_in_model(self, model, ReluLayer)
         _check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
-        _check_layer_in_model(self, model, SkipLayer, 57)
-        _check_layer_in_model(self, model, AvgPool2dConstrained, 13)
+        _check_layer_in_model(self, model, SkipLayer)
+        _check_layer_in_model(self, model, AvgPool2dConstrained)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":
