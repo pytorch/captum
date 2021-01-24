@@ -39,9 +39,9 @@ class InputOptimization(Objective, Parameterized):
     def __init__(
         self,
         model: nn.Module,
-        input_param: Optional[InputParameterization],
-        transform: Optional[nn.Module],
         loss_function: LossFunction,
+        input_param: Optional[InputParameterization] = None,
+        transform: Optional[nn.Module] = None,
         lr: float = 0.025,
     ) -> None:
         r"""
