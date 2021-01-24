@@ -140,7 +140,7 @@ class TestCaptureActivationSamples(BaseTest):
             for name in os.listdir(sample_dir)
             if os.path.isfile(os.path.join(sample_dir, name))
         ]
-        tensor_samples = []
+        tensor_samples: List = []
         [tensor_samples + torch.load(file) for file in tensor_samples_files]
         sample_tensor = torch.cat(tensor_samples, 1).permute(1, 0)
         self.assertEqual(list(sample_tensor.shape), [num_tensors, 512])
@@ -159,7 +159,7 @@ class TestConsolidateSamples(BaseTest):
         num_channels = 512
         num_files = 10
         batch_size = 4
-        for i, f in enumerate(num_files):
+        for i in range(num_files):
             tensor_batch = [torch.ones(num_channels, 1) for x in range(batch_size)]
             torch.save(
                 tensor_batch, os.path.join(sample_dir, "tensor_batch_" + str(i) + ".pt")
