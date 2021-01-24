@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import unittest
+from typing import List, Optional, Type
 
 import torch
 
@@ -13,20 +14,33 @@ from captum.optim._utils.models import (
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
-def _check_layer_in_model(self, model, layer) -> None:
-    def check_for_layer_in_model(model, layer) -> None:
+def _check_layer_in_model(
+    self,
+    model: torch.nn.Module,
+    layer: Type[torch.nn.Module],
+    num_layers: Optional[int] = None,
+) -> None:
+    in_model: List = []
+
+    def check_for_layer_in_model(model, layer, in_model: List) -> None:
         for name, child in model._modules.items():
             if child is not None:
                 if isinstance(child, layer):
-                    return
-                check_for_layer_in_model(child, layer)
+                    in_model += [True]
+                else:
+                    in_model += [False]
+                check_for_layer_in_model(child, layer, in_model)
 
-    check_for_layer_in_model(model, layer)
-    # If we reach here then there was no True
-    self.assertTrue(False)
+    check_for_layer_in_model(model, layer, in_model)
+    if num_layers is not None:
+        self.assertEqual(sum(in_model), num_layers)
+    else:
+        self.assertTrue(any(in_model))
 
 
-def _check_layer_not_in_model(self, model, layer) -> None:
+def _check_layer_not_in_model(
+    self, model: torch.nn.Module, layer: Type[torch.nn.Module]
+) -> None:
     for name, child in model._modules.items():
         if child is not None:
             self.assertNotIsInstance(child, layer)
