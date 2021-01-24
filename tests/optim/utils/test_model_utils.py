@@ -334,13 +334,13 @@ class TestAvgPool2dConstrained(BaseTest):
         assertTensorAlmostEqual(self, out_tensor, expected_tensor, 0)
 
 
-class TestMax2AvgPool2d(BaseTest):
-    def test_max2avg_pool2d(self) -> None:
+class TestReplaceMaxWithAvgConstPool2d(BaseTest):
+    def test_replace_max_with_avgconst_pool2d(self) -> None:
         model = torch.nn.Sequential(
             torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
         )
 
-        model_utils.max2avg_pool2d(model)
+        model_utils.replace_max_with_avgconst_pool2d(model)
 
         test_tensor = torch.randn(128, 32, 16, 16)
         test_tensor = F.pad(test_tensor, (0, 1, 0, 1), value=float("-inf"))
