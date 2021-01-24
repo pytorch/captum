@@ -1,6 +1,6 @@
 import math
 from inspect import signature
-from typing import Any, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 import torch.nn as nn
@@ -10,7 +10,7 @@ from captum.optim._core.output_hook import ActivationFetcher
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
 
-def get_model_layers(model) -> List[str]:
+def get_model_layers(model: nn.Module) -> List[str]:
     """
     Return a list of hookable layers for the target model.
     """
@@ -80,7 +80,11 @@ class ReluLayer(nn.Module):
 
 
 def replace_layers(
-    model, old_layer, new_layer, transfer_vars: bool = False, **kwargs
+    model: nn.Module,
+    layer1: Type[nn.Module],
+    layer2: Type[nn.Module],
+    transfer_vars: bool = False,
+    **kwargs
 ) -> None:
     """
     Replace all target layers with new layers inside the specified model,
@@ -88,47 +92,48 @@ def replace_layers(
 
     Args:
         model: (nn.Module): A PyTorch model instance.
-        old_layer: (nn.Module): A layer instance that you want to transfer
+        layer1: (nn.Module): A layer instance that you want to transfer
             initialization variables from.
-        new_layer: (nn.Module): The layer class to create with the variables
-            from of old_layer.
-        transfer_vars (bool, optional): Whether or not to try and copy
-            initialization variables from old_layer instances to the replacement
-            new_layer instances.
+        layer2: (nn.Module): The layer class to create with the variables
+            from of layer1.
+        transfer_vars (bool, optional): Wether or not to try and copy
+            initialization variables from layer1 instances to the replacement
+            layer2 instances.
         kwargs: (Any, optional): Any additional variables to use when creating
             the new layer.
     """
 
     for name, child in model._modules.items():
-        if isinstance(child, old_layer):
+        if isinstance(child, layer1):
             if transfer_vars:
-                new_layer_instance = _transfer_layer_vars(child, new_layer, **kwargs)
+                new_layer = _transfer_layer_vars(child, layer2, **kwargs)
             else:
-                new_layer_instance = new_layer(**kwargs)
-            setattr(model, name, new_layer_instance)
+                new_layer = layer2(**kwargs)
+            setattr(model, name, new_layer)
         elif child is not None:
-            replace_layers(child, old_layer, new_layer, transfer_vars, **kwargs)
+            replace_layers(child, layer1, layer2, transfer_vars, **kwargs)
 
 
-def _transfer_layer_vars(old_layer, new_layer, **kwargs):
+def _transfer_layer_vars(
+    layer1: nn.Module, layer2: Type[nn.Module], **kwargs
+) -> nn.Module:
     """
-    Given a layer instance, create a new layer instance of new_layer
-    with the same initialization variables as the original layer instance
-    of old_layer.
+    Given a layer instance, create a new layer instance of another class
+    with the same initialization variables as the original layer.
     Args:
-        old_layer: (nn.Module): A layer instance that you want to transfer
+        layer1: (nn.Module): A layer instance that you want to transfer
             initialization variables from.
-        new_layer: (nn.Module): The layer class to create with the variables
-            from of old_layer.
+        layer2: (nn.Module): The layer class to create with the variables
+            from of layer1.
         kwargs: (Any, optional): Any additional variables to use when creating
             the new layer.
     Returns:
-        new_layer instance (nn.Module): An instance of new_layer with the initialization
-            variables that it shares with old_layer, and any specified additional
+        layer2 instance (nn.Module): An instance of layer2 with the initialization
+            variables that it shares with layer1, and any specified additional
             initialization variables.
     """
 
-    l2_vars = list(signature(new_layer.__init__).parameters.values())
+    l2_vars = list(signature(layer2.__init__).parameters.values())
     l2_vars = [
         str(l2_vars[i]).split()[0]
         for i in range(len(l2_vars))
@@ -136,12 +141,12 @@ def _transfer_layer_vars(old_layer, new_layer, **kwargs):
     ]
     l2_vars = [p.split(":")[0] if ":" in p and "=" not in p else p for p in l2_vars]
     l2_vars = [p.split("=")[0] if "=" in p and ":" not in p else p for p in l2_vars]
-    new_layer_vars = {k: [] for k in dict.fromkeys(l2_vars).keys()}
+    layer2_vars: Dict = {k: [] for k in dict.fromkeys(l2_vars).keys()}
 
-    old_layer_vars = {k: v for k, v in vars(old_layer).items() if not k.startswith("_")}
-    shared_vars = {k: v for k, v in old_layer_vars.items() if k in new_layer_vars}
+    layer1_vars = {k: v for k, v in vars(layer1).items() if not k.startswith("_")}
+    shared_vars = {k: v for k, v in layer1_vars.items() if k in layer2_vars}
     new_vars = dict(item for d in (shared_vars, kwargs) for item in d.items())
-    return new_layer(**new_vars)
+    return layer2(**new_vars)
 
 
 class LocalResponseNormLayer(nn.Module):
@@ -213,7 +218,7 @@ class Conv2dSame(nn.Conv2d):
 
 
 def collect_activations(
-    model: Any,
+    model: nn.Module,
     targets: Union[nn.Module, List[nn.Module]],
     model_input: TupleOfTensorsOrTensorType = torch.zeros(1, 3, 224, 224),
 ) -> ModuleOutputMapping:
@@ -268,9 +273,7 @@ class AvgPool2dConstrained(torch.nn.Module):
         return x
 
 
-def replace_max_with_avgconst_pool2d(
-    model, value: Optional[Any] = float("-inf")
-) -> None:
+def max2avg_pool2d(model: nn.Module, value: Optional[Any] = float("-inf")) -> None:
     """
     Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
     This function is a wrapper function for replace_layers.
@@ -294,7 +297,9 @@ class SkipLayer(torch.nn.Module):
         return x
 
 
-def skip_layers(model, layers) -> None:
+def skip_layers(
+    model: nn.Module, layers: Union[List[Type[nn.Module]], Type[nn.Module]]
+) -> None:
     """
     This function is a wrapper function for
     replace_layers and replaces the target layer
@@ -307,8 +312,9 @@ def skip_layers(model, layers) -> None:
             class type to replace in the model.
     """
     if not hasattr(layers, "__iter__"):
+        layers = cast(Type[nn.Module], layers)
         replace_layers(model, layers, SkipLayer)
     else:
-        layers = cast(List, layers)
+        layers = cast(List[Type[nn.Module]], layers)
         for target_layer in layers:
             replace_layers(model, target_layer, SkipLayer)
