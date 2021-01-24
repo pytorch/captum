@@ -575,11 +575,19 @@ class TestSharedImage(BaseTest):
 
 class TestNaturalImage(BaseTest):
     def test_natural_image_0(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping NaturalImage test due to insufficient Torch version."
+            )
         image_param = images.NaturalImage(size=(1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np) * 0.5)
 
     def test_natural_image_1(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping NaturalImage test due to insufficient Torch version."
+            )
         image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np))

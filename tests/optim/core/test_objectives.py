@@ -19,6 +19,10 @@ class SimpleModel(nn.Module):
 
 class TestInputOptimization(BaseTest):
     def test_input_optimization(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping InputOptimization test due to insufficient Torch version."
+            )
         model = SimpleModel()
         loss_fn = opt.loss.ChannelActivation(model.layer, 0)
         obj = opt.InputOptimization(model, loss_function=loss_fn)
