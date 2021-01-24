@@ -273,7 +273,9 @@ class AvgPool2dConstrained(torch.nn.Module):
         return x
 
 
-def max2avg_pool2d(model: nn.Module, value: Optional[Any] = float("-inf")) -> None:
+def replace_max_with_avgconst_pool2d(
+    model: nn.Module, value: Optional[Any] = float("-inf")
+) -> None:
     """
     Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
     This function is a wrapper function for replace_layers.
