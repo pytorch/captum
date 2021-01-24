@@ -44,6 +44,11 @@ class TestSetupBatch(BaseTest):
         assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
 
 
+class TestImageTensor(BaseTest):
+    def test_repr(self) -> None:
+        self.assertEqual(str(images.ImageTensor()), "ImageTensor([])")
+
+
 class TestFFTImage(BaseTest):
     def test_pytorch_fftfreq(self) -> None:
         assertArraysAlmostEqual(
@@ -245,6 +250,15 @@ class TestLaplacianImage(BaseTest):
         self.assertEqual(test_tensor.size(1), channels)
         self.assertEqual(test_tensor.size(2), size[0])
         self.assertEqual(test_tensor.size(3), size[1])
+    def test_laplacianimage_init(self) -> None:
+        if torch.__version__ == "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping LaplacianImage random due to insufficient Torch version."
+            )
+        init_t = torch.zeros(1, 224, 224)
+        image_param = images.LaplacianImage(size=(224, 224), channels=3, init=init_t)
+        test_np = image_param.forward().detach().numpy()
+        assertArraysAlmostEqual(np.ones_like(test_np) * 0.5, test_np)
 
 
 class TestSharedImage(BaseTest):
@@ -556,6 +570,17 @@ class TestSharedImage(BaseTest):
         self.assertEqual(test_tensor.size(1), channels)
         self.assertEqual(test_tensor.size(2), size[0])
         self.assertEqual(test_tensor.size(3), size[1])
+
+
+class TestNaturalImage(BaseTest):
+    def test_natural_image_0(self) -> None:
+        image_param = images.NaturalImage(size=(1, 1))
+        image_np = image_param.forward().detach().numpy()
+        assertArraysAlmostEqual(image_np, np.ones_like(image_np) * 0.5)
+    def test_natural_image_1(self) -> None:
+        image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
+        image_np = image_param.forward().detach().numpy()
+        assertArraysAlmostEqual(image_np, np.ones_like(image_np))
 
 
 if __name__ == "__main__":
