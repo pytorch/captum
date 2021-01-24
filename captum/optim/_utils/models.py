@@ -10,7 +10,7 @@ from captum.optim._core.output_hook import ActivationFetcher
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
 
-def get_model_layers(model: Any) -> List[str]:
+def get_model_layers(model) -> List[str]:
     """
     Return a list of hookable layers for the target model.
     """
@@ -80,7 +80,7 @@ class ReluLayer(nn.Module):
 
 
 def replace_layers(
-    model: Any, old_layer: Any, new_layer: Any, transfer_vars: bool = False, **kwargs
+    model, old_layer, new_layer, transfer_vars: bool = False, **kwargs
 ) -> None:
     """
     Replace all target layers with new layers inside the specified model,
@@ -102,15 +102,15 @@ def replace_layers(
     for name, child in model._modules.items():
         if isinstance(child, old_layer):
             if transfer_vars:
-                new_layer = _transfer_layer_vars(child, new_layer, **kwargs)
+                new_layer_instance = _transfer_layer_vars(child, new_layer, **kwargs)
             else:
-                new_layer = new_layer(**kwargs)
-            setattr(model, name, new_layer)
+                new_layer_instance = new_layer(**kwargs)
+            setattr(model, name, new_layer_instance)
         elif child is not None:
             replace_layers(child, old_layer, new_layer, transfer_vars, **kwargs)
 
 
-def _transfer_layer_vars(old_layer: Any, new_layer: Any, **kwargs) -> Any:
+def _transfer_layer_vars(old_layer, new_layer, **kwargs):
     """
     Given a layer instance, create a new layer instance of new_layer
     with the same initialization variables as the original layer instance
@@ -269,7 +269,7 @@ class AvgPool2dConstrained(torch.nn.Module):
 
 
 def replace_max_with_avgconst_pool2d(
-    model: Any, value: Optional[Any] = float("-inf")
+    model, value: Optional[Any] = float("-inf")
 ) -> None:
     """
     Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
@@ -294,7 +294,7 @@ class SkipLayer(torch.nn.Module):
         return x
 
 
-def skip_layers(model: Any, layers: Any) -> None:
+def skip_layers(model, layers) -> None:
     """
     This function is a wrapper function for
     replace_layers and replaces the target layer
