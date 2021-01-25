@@ -37,7 +37,7 @@ def get_expanded_weights(
             from the output weights.
     Returns:
         *tensor*:  A tensor containing the expanded weights in the form of:
-            (target2 output channels, target1 output channels, y, x)
+            (target2 output channels, target1 output channels, height, width)
     """
 
     activations = collect_activations(model, [target1, target2], model_input)
