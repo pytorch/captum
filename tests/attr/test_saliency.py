@@ -136,6 +136,13 @@ class Test(BaseTest):
     def test_saliency_classification_vargrad(self) -> None:
         self._saliency_classification_assert(nt_type="vargrad")
 
+    def test_saliency_grad_unchanged(self) -> None:
+        model, inp, grads, add_args = _get_basic_config()
+        inp.grad = torch.randn_like(inp)
+        grad = inp.grad.detach().clone()
+        self._saliency_base_assert(model, inp, grads, add_args)
+        assertTensorTuplesAlmostEqual(self, inp.grad, grad)
+
     def _saliency_base_assert(
         self,
         model: Module,

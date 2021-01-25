@@ -55,13 +55,6 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
                 "required_grads has been set automatically." % index
             )
             input.requires_grad_()
-        if input.grad is not None:
-            if torch.sum(torch.abs(input.grad)).item() > 1e-7:
-                warnings.warn(
-                    "Input Tensor %d had a non-zero gradient tensor, "
-                    "which is being reset to 0." % index
-                )
-            input.grad.zero_()
     return grad_required
 
 
@@ -84,9 +77,6 @@ def undo_gradient_requirements(
     ), "Input tuple length should match gradient mask."
     for index, input in enumerate(inputs):
         assert isinstance(input, torch.Tensor), "Given input is not a torch.Tensor"
-        if input.grad is not None:
-            input.grad.detach_()
-            input.grad.zero_()
         if not grad_required[index]:
             input.requires_grad_(False)
 
