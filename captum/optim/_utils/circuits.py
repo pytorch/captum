@@ -9,7 +9,7 @@ from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorTy
 
 
 def get_expanded_weights(
-    model,
+    model: nn.Module,
     target1: nn.Module,
     target2: nn.Module,
     crop_shape: Optional[Union[Tuple[int, int], IntSeqOrIntType]] = None,
@@ -20,8 +20,8 @@ def get_expanded_weights(
     Extract meaningful weight interactions from between neurons which aren’t
     literally adjacent in a neural network, or where the weights aren’t directly
     represented in a single weight tensor.
-    Schubert, et al., "Visualizing Weights", Distill, 2020.
-    See: https://distill.pub/2020/circuits/visualizing-weights/
+    Schubert, et al., "Visualizing Weights", Distill, 2021.
+    See: https://distill.pub/2021/circuits/visualizing-weights/
 
     Args:
         model (nn.Module):  The reference to PyTorch model instance.
