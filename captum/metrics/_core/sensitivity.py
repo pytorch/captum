@@ -188,8 +188,8 @@ def sensitivity_max(
         >>> net = ImageClassifier()
         >>> saliency = Saliency(net)
         >>> input = torch.randn(2, 3, 32, 32, requires_grad=True)
-        >>> # Computes sensitivity score for saliency maps
-        >>> sens = sensitivity_max(saliency.attribute, input)
+        >>> # Computes sensitivity score for saliency maps of class 3
+        >>> sens = sensitivity_max(saliency.attribute, input, target = 3)
 
     """
 
