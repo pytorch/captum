@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, cast
+from typing import List, Tuple
 
 import torch
-from torch import Tensor
 
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -32,10 +31,6 @@ class Test(BaseTest):
         for i in range(len(test_tensor_tuple)):
             self.assertTrue(test_tensor_tuple[i].requires_grad)
             self.assertEqual(out_mask[i], initial_grads[i])
-            if test_tensor_tuple[i].grad is not None:
-                self.assertAlmostEqual(
-                    torch.sum(cast(Tensor, test_tensor_tuple[i].grad)).item(), 0.0
-                )
 
     def test_undo_gradient_reqs(self) -> None:
         initial_grads = [False, True, False]
@@ -49,10 +44,6 @@ class Test(BaseTest):
         undo_gradient_requirements(test_tensor_tuple, initial_grads)
         for i in range(len(test_tensor_tuple)):
             self.assertEqual(test_tensor_tuple[i].requires_grad, initial_grads[i])
-            if test_tensor_tuple[i].grad is not None:
-                self.assertAlmostEqual(
-                    torch.sum(cast(Tensor, test_tensor_tuple[i].grad)).item(), 0.0
-                )
 
     def test_gradient_basic(self) -> None:
         model = BasicModel()
