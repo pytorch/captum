@@ -114,6 +114,7 @@ commands:
           command: |
             pyenv versions
             pyenv global 3.7.0
+            pyenv local 3.7.0
             python -V
             which python
             pyenv which python
