@@ -119,7 +119,7 @@ commands:
             which python
             pyenv which python
             which pip
-            sudo python3 -m pip install pip
+            sudo python -m pip install --upgrade pip
 
   install_cuda:
     description: "Install CUDA for GPU Machine"
