@@ -141,7 +141,7 @@ class Test(BaseTest):
         inp.grad = torch.randn_like(inp)
         grad = inp.grad.detach().clone()
         self._saliency_base_assert(model, inp, grads, add_args)
-        assertTensorTuplesAlmostEqual(self, inp.grad, grad)
+        assertTensorTuplesAlmostEqual(self, inp.grad, grad, delta=0.0)
 
     def _saliency_base_assert(
         self,
