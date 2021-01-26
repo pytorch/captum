@@ -15,7 +15,7 @@ class TestGetExpandedWeights(BaseTest):
                 "Skipping get_expanded_weights test due to insufficient Torch version."
             )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
-        output_tensor = circuits.get_expanded_weights(
+        output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b
         )
         self.assertTrue(torch.is_tensor(output_tensor))
@@ -28,7 +28,7 @@ class TestGetExpandedWeights(BaseTest):
                 + " version."
             )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
-        output_tensor = circuits.get_expanded_weights(
+        output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b, 5
         )
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
@@ -40,7 +40,7 @@ class TestGetExpandedWeights(BaseTest):
                 + " Torch version."
             )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
-        output_tensor = circuits.get_expanded_weights(
+        output_tensor = circuits.extract_expanded_weights(
             model, model.mixed3a, model.mixed3b, (5, 5)
         )
         self.assertEqual(list(output_tensor.shape), [480, 256, 5, 5])
@@ -57,7 +57,7 @@ class TestGetExpandedWeights(BaseTest):
         else:
             norm_func = torch.linalg.norm
         model = googlenet(pretrained=True, use_linear_modules_only=True)
-        output_tensor = circuits.get_expanded_weights(
+        output_tensor = circuits.extract_expanded_weights(
             model, model.pool3, model.mixed4a, 5
         )
         self.assertEqual(list(output_tensor.shape), [508, 480, 5, 5])

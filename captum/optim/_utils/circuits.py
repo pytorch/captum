@@ -8,7 +8,7 @@ from captum.optim._utils.models import collect_activations
 from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
 
 
-def get_expanded_weights(
+def extract_expanded_weights(
     model: nn.Module,
     target1: nn.Module,
     target2: nn.Module,
