@@ -114,12 +114,6 @@ commands:
           command: |
             pyenv versions
             pyenv global 3.7.0
-            pyenv local 3.7.0
-            python -V
-            which python
-            pyenv which python
-            which pip
-            sudo python -m pip install --upgrade pip
 
   install_cuda:
     description: "Install CUDA for GPU Machine"
