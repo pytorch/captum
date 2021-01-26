@@ -102,7 +102,9 @@ commands:
     steps:
       - run:
           name: "Simple PIP install"
-          command: python -m pip install -e .[dev]
+          command: |
+            python -m pip install --upgrade pip
+            python -m pip install -e .[dev]
 
   py_3_7_setup:
     description: "Set python version to 3.7 and install pip and pytest"
@@ -112,8 +114,6 @@ commands:
           command: |
             pyenv versions
             pyenv global 3.7.0
-            sudo python -m pip install --upgrade pip
-            sudo python -m pip install pytest
 
   install_cuda:
     description: "Install CUDA for GPU Machine"
