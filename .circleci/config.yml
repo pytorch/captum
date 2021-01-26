@@ -119,8 +119,8 @@ commands:
             which python
             pyenv which python
             which pip
-            sudo pip3 install pip
-            sudo pip3 -m pip install pytest
+            sudo python3 -m pip install pip
+            sudo python3 -m pip install pytest
 
   install_cuda:
     description: "Install CUDA for GPU Machine"
