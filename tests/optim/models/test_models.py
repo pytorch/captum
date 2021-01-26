@@ -24,7 +24,7 @@ def _check_layer_in_model(
             if child is not None:
                 if isinstance(child, layer):
                     return True
-                check_for_layer_in_model(child, layer)
+                return check_for_layer_in_model(child, layer)
         return False
 
     self.assertTrue(check_for_layer_in_model(model, layer))
