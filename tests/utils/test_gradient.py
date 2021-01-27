@@ -48,14 +48,20 @@ class Test(BaseTest):
     def test_gradient_basic(self) -> None:
         model = BasicModel()
         input = torch.tensor([[5.0]], requires_grad=True)
+        input.grad = torch.tensor([[9.0]])
         grads = compute_gradients(model, input)[0]
         assertArraysAlmostEqual(grads.squeeze(0).tolist(), [0.0], delta=0.01)
+        # Verify grad attribute is not altered
+        assertArraysAlmostEqual(input.grad.squeeze(0).tolist(), [9.0], delta=0.0)
 
     def test_gradient_basic_2(self) -> None:
         model = BasicModel()
         input = torch.tensor([[-3.0]], requires_grad=True)
+        input.grad = torch.tensor([[14.0]])
         grads = compute_gradients(model, input)[0]
         assertArraysAlmostEqual(grads.squeeze(0).tolist(), [1.0], delta=0.01)
+        # Verify grad attribute is not altered
+        assertArraysAlmostEqual(input.grad.squeeze(0).tolist(), [14.0], delta=0.0)
 
     def test_gradient_multiinput(self) -> None:
         model = BasicModel6_MultiTensor()
