@@ -433,8 +433,8 @@ Image Classification Models and Saliency Maps, K. Simonyan, et. al. 2014](https:
 * `Guided Backpropagation`, `Neuron Guided Backpropagation`: [Striving for Simplicity: The All Convolutional Net, Jost Tobias Springenberg et al. 2015](https://arxiv.org/pdf/1412.6806.pdf)
 * `Feature Permutation`: [Permutation Feature Importance](https://christophm.github.io/interpretable-ml-book/feature-importance.html)
 * `Occlusion`: [Visualizing and Understanding Convolutional Networks](https://arxiv.org/abs/1311.2901)
-* `Shapely Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
-* `Shapely Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
+* `Shapley Value`: [A value for n-person games. Contributions to the Theory of Games 2.28 (1953): 307-317](https://apps.dtic.mil/dtic/tr/fulltext/u2/604084.pdf)
+* `Shapley Value Sampling`: [Polynomial calculation of the Shapley value based on sampling](https://www.sciencedirect.com/science/article/pii/S0305054808000804)
 * `Infidelity and Sensitivity`: [On the (In)fidelity and Sensitivity for Explanations](https://arxiv.org/abs/1901.09392)
 
 More details about the above mentioned [algorithms](https://captum.ai/docs/algorithms) and their pros and cons can be found on our [web-site](https://captum.ai/docs/algorithms_comparison_matrix).
