@@ -10,14 +10,18 @@ import captum.optim._core.loss as opt_loss
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 
-CHANNEL_ACTIVATION_0_LOSS = -0.48031163215637207
-CHANNEL_ACTIVATION_1_LOSS = -0.2667173147201538
+CHANNEL_ACTIVATION_0_LOSS = 1
+CHANNEL_ACTIVATION_1_LOSS = 1
 
 
 class SimpleModel(nn.Module):
     def __init__(self):
         super(SimpleModel, self).__init__()
         self.layer = nn.Conv2d(1, 2, 1)
+        # Initialize weights and biases for 
+        # easy reproducibility
+        self.layer.weight.data.fill_(0)
+        self.layer.bias.data.fill_(1)
 
     def forward(self, x):
         return self.layer(x)
@@ -32,7 +36,10 @@ def get_loss_value(model, loss, input_shape=[1, 1, 1, 1]):
         model(torch.zeros(*input_shape))
     module_outputs = hooks.consume_outputs()
     loss_value = loss(module_outputs)
-    return loss_value.detach().numpy()
+    try:
+        return loss_value.item()
+    except:
+        return loss_value.detach().numpy()
 
 
 class TestChannelActivation(BaseTest):
@@ -64,7 +71,7 @@ class TestTotalVariation(BaseTest):
 class TestL1(BaseTest):
     def test_l1(self) -> None:
         model = SimpleModel()
-        loss = -opt_loss.L1(model.layer)
+        loss = opt_loss.L1(model.layer)
         self.assertAlmostEqual(
             get_loss_value(model, loss),
             CHANNEL_ACTIVATION_0_LOSS + CHANNEL_ACTIVATION_1_LOSS,
