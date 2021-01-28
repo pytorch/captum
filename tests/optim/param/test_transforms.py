@@ -189,11 +189,11 @@ class TestCenterCrop(BaseTest):
             [
                 torch.tensor(
                     [
-                        [0.0, 0.0, 0.0, 0.0, 1.0],
-                        [0.0, 1.0, 1.0, 0.0, 1.0],
-                        [0.0, 1.0, 1.0, 0.0, 1.0],
-                        [0.0, 0.0, 0.0, 0.0, 1.0],
                         [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
                     ]
                 )
             ]
@@ -223,6 +223,24 @@ class TestCenterCrop(BaseTest):
             [torch.tensor([[0.0, 0.0], [1.0, 1.0], [1.0, 1.0], [0.0, 0.0]])] * 3
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor, 0)
+
+    def test_center_crop_offset_left_uneven_sides(self) -> None:
+        crop_mod = transform.CenterCrop(
+            [5, 5], pixels_from_edges=False, offset_left=True
+        )
+        x = torch.ones(1, 3, 5, 5)
+        px = F.pad(x, (5, 4, 5, 4), value=float("-inf"))
+        cropped_tensor = crop_mod(px)
+        assertTensorAlmostEqual(self, x, cropped_tensor)
+
+    def test_center_crop_offset_left_even_sides(self) -> None:
+        crop_mod = transform.CenterCrop(
+            [5, 5], pixels_from_edges=False, offset_left=True
+        )
+        x = torch.ones(1, 3, 5, 5)
+        px = F.pad(x, (5, 5, 5, 5), value=float("-inf"))
+        cropped_tensor = crop_mod(px)
+        assertTensorAlmostEqual(self, x, cropped_tensor)
 
 
 class TestCenterCropFunction(BaseTest):
@@ -286,11 +304,11 @@ class TestCenterCropFunction(BaseTest):
             [
                 torch.tensor(
                     [
-                        [0.0, 0.0, 0.0, 0.0, 1.0],
-                        [0.0, 1.0, 1.0, 0.0, 1.0],
-                        [0.0, 1.0, 1.0, 0.0, 1.0],
-                        [0.0, 0.0, 0.0, 0.0, 1.0],
                         [1.0, 1.0, 1.0, 1.0, 1.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 1.0, 1.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0, 0.0],
                     ]
                 )
             ]
@@ -318,6 +336,22 @@ class TestCenterCropFunction(BaseTest):
             [torch.tensor([[0.0, 0.0], [1.0, 1.0], [1.0, 1.0], [0.0, 0.0]])] * 3
         ).unsqueeze(0)
         assertTensorAlmostEqual(self, cropped_tensor, expected_tensor)
+
+    def test_center_crop_offset_left_uneven_sides(self) -> None:
+        x = torch.ones(1, 3, 5, 5)
+        px = F.pad(x, (5, 4, 5, 4), value=float("-inf"))
+        cropped_tensor = transform.center_crop(
+            px, crop_vals=[5, 5], pixels_from_edges=False, offset_left=True
+        )
+        assertTensorAlmostEqual(self, x, cropped_tensor)
+
+    def test_center_crop_offset_left_even_sides(self) -> None:
+        x = torch.ones(1, 3, 5, 5)
+        px = F.pad(x, (5, 5, 5, 5), value=float("-inf"))
+        cropped_tensor = transform.center_crop(
+            px, crop_vals=[5, 5], pixels_from_edges=False, offset_left=True
+        )
+        assertTensorAlmostEqual(self, x, cropped_tensor)
 
 
 class TestBlendAlpha(BaseTest):
