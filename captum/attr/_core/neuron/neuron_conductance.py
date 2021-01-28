@@ -275,7 +275,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """
-        if isinstance(neuron_selector, Callable):
+        if callable(neuron_selector):
             warnings.warn(
                 "The neuron_selector provided is a callable. Please ensure that this"
                 " function only selects neurons from the given layer; aggregating"
