@@ -18,7 +18,7 @@ class SimpleModel(nn.Module):
     def __init__(self):
         super(SimpleModel, self).__init__()
         self.layer = nn.Conv2d(1, 2, 1)
-        # Initialize weights and biases for 
+        # Initialize weights and biases for
         # easy reproducibility
         self.layer.weight.data.fill_(0)
         self.layer.bias.data.fill_(1)
@@ -38,7 +38,7 @@ def get_loss_value(model, loss, input_shape=[1, 1, 1, 1]):
     loss_value = loss(module_outputs)
     try:
         return loss_value.item()
-    except:
+    except ValueError:
         return loss_value.detach().numpy()
 
 
