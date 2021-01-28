@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union, cast
+from typing import Any, Callable, List, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -42,6 +42,13 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         self._conductance_input_test_assert(net, net.linear1, inp, 0, [0.0, 90.0, 0.0])
+
+    def test_simple_conductance_input_linear1_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]])
+        self._conductance_input_test_assert(
+            net, net.linear1, inp, lambda x: x[:, 0], [0.0, 90.0, 0.0]
+        )
 
     def test_simple_conductance_input_relu(self) -> None:
         net = BasicModel_MultiLayer()
@@ -93,6 +100,15 @@ class Test(BaseTest):
             (inp3, 5),
         )
 
+    def test_layer_tuple_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+        self._conductance_input_test_assert(
+            net, net.multi_relu, inp, lambda x: x[0][:, 1], [0.0, 6.0, 0.0]
+        )
+        lc = LayerConductance(net, net.multi_relu)
+        print(lc.attribute(inp, target=0))
+
     def test_matching_conv2_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10)
@@ -118,12 +134,34 @@ class Test(BaseTest):
         baseline = 20 * torch.randn(1, 1, 10, 10, requires_grad=True)
         self._conductance_input_sum_test_assert(net, net.pool2, inp, baseline)
 
+    def test_matching_layer_tuple_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer(multi_input_module=True)
+        inp = torch.tensor([[0.0, 6.0, 0.0]])
+
+        lc = LayerConductance(net, net.multi_relu)
+        layer_attr = lc.attribute(inp, target=0, n_steps=500, method="gausslegendre")
+        nc = NeuronConductance(net, net.multi_relu)
+        for i in range(len(layer_attr)):
+            for j in range(layer_attr[i].shape[1]):
+                neuron_attr = nc.attribute(
+                    inp,
+                    lambda x: x[i][:, j],
+                    target=0,
+                    n_steps=500,
+                    method="gausslegendre",
+                )
+                self.assertAlmostEqual(
+                    neuron_attr.sum().item(),
+                    layer_attr[i][0][j].item(),
+                    delta=0.005,
+                )
+
     def _conductance_input_test_assert(
         self,
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron: Union[int, Tuple[int, ...]],
+        test_neuron: Union[int, Tuple[int, ...], Callable],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
@@ -134,7 +172,7 @@ class Test(BaseTest):
                 target_layer,
                 multiply_by_inputs=multiply_by_inputs,
             )
-            self.assertEquals(cond.multiplies_by_inputs, multiply_by_inputs)
+            self.assertEqual(cond.multiplies_by_inputs, multiply_by_inputs)
             attributions = cond.attribute(
                 test_input,
                 test_neuron,
