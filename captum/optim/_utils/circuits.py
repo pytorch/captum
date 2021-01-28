@@ -8,8 +8,8 @@ from captum.optim._utils.models import collect_activations
 from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
 
 
-def get_expanded_weights(
-    model,
+def extract_expanded_weights(
+    model: nn.Module,
     target1: nn.Module,
     target2: nn.Module,
     crop_shape: Optional[Union[Tuple[int, int], IntSeqOrIntType]] = None,
@@ -20,8 +20,8 @@ def get_expanded_weights(
     Extract meaningful weight interactions from between neurons which aren’t
     literally adjacent in a neural network, or where the weights aren’t directly
     represented in a single weight tensor.
-    Schubert, et al., "Visualizing Weights", Distill, 2020.
-    See: https://distill.pub/2020/circuits/visualizing-weights/
+    Schubert, et al., "Visualizing Weights", Distill, 2021.
+    See: https://distill.pub/2021/circuits/visualizing-weights/
 
     Args:
         model (nn.Module):  The reference to PyTorch model instance.
@@ -37,7 +37,7 @@ def get_expanded_weights(
             from the output weights.
     Returns:
         *tensor*:  A tensor containing the expanded weights in the form of:
-            (target2 output channels, target1 output channels, y, x)
+            (target2 output channels, target1 output channels, height, width)
     """
 
     activations = collect_activations(model, [target1, target2], model_input)
@@ -58,8 +58,8 @@ def get_expanded_weights(
             grad_outputs=torch.ones_like(t_center[:, i]),
             retain_graph=True,
         )[0]
-        A.append(x.squeeze(0))
-    expanded_weights = torch.stack(A, 0)
+        A.append(x)
+    expanded_weights = torch.cat(A, 0)
 
     if crop_shape is not None and crop_func is not None:
         expanded_weights = crop_func(expanded_weights, crop_shape)
