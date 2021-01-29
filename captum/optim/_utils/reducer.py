@@ -23,7 +23,11 @@ class ChannelReducer:
     """
 
     def __init__(
-        self, n_components: int = 3, reduction_alg: Any = "NMF", **kwargs
+        self,
+        n_components: int = 3,
+        reduction_alg: Any = "NMF",
+        supports_gpu: bool = False,
+        **kwargs
     ) -> None:
         if isinstance(reduction_alg, str):
             reduction_alg = self._get_reduction_algo_instance(reduction_alg)
@@ -35,6 +39,8 @@ class ChannelReducer:
 
         self.n_components = n_components
         self._reducer = reduction_alg(n_components=n_components, **kwargs)
+        # Denotes whether _reducer is supports GPU inputs
+        self.supports_gpu = supports_gpu
 
     def _get_reduction_algo_instance(self, name: str) -> Union[None, Callable]:
         if hasattr(sklearn.decomposition, name):
@@ -64,7 +70,10 @@ class ChannelReducer:
             permute_vals = [0] + list(range(x.dim()))[2:] + [1]
             x = x.permute(*permute_vals)
 
-        x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
+        if not self.supports_gpu:
+            x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x.cpu())
+        else:
+            x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
 
         x_out = torch.as_tensor(x_out, device=x.device)
 
