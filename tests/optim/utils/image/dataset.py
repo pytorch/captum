@@ -109,7 +109,7 @@ class TestDatasetKLTMatrix(BaseTest):
 
 
 class TestCaptureActivationSamples(BaseTest):
-    def test_capture_activation_samples(self) -> None:
+    def test_capture_activation_samples_4d(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping capture_activation_samples test due to"
@@ -125,7 +125,7 @@ class TestCaptureActivationSamples(BaseTest):
         model = googlenet(pretrained=True)
         targets = [model.mixed4c]
         target_names = ["mixed4c"]
-        sample_dir = "test_samples"
+        sample_dir = "test_samples_4d"
         os.mkdir(sample_dir)
 
         dataset_utils.capture_activation_samples(
@@ -145,6 +145,43 @@ class TestCaptureActivationSamples(BaseTest):
         [tensor_samples + torch.load(file) for file in tensor_samples_files]
         sample_tensor = torch.cat(tensor_samples, 1).permute(1, 0)
         self.assertEqual(list(sample_tensor.shape), [num_tensors, 512])
+
+    def test_capture_activation_samples_2d(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping capture_activation_samples_2d test due to"
+                + "insufficient Torch version."
+            )
+
+        num_tensors = 20
+        dataset_tensors = [torch.ones(3, 224, 224) for x in range(num_tensors)]
+        test_dataset = dataset_helpers.ImageTestDataset(dataset_tensors)
+        dataset_loader = torch.utils.data.DataLoader(
+            test_dataset, batch_size=5, num_workers=0, shuffle=False
+        )
+        model = googlenet(pretrained=True)
+        targets = [model.fc]
+        target_names = ["fc"]
+        sample_dir = "test_samples_2d"
+        os.mkdir(sample_dir)
+
+        dataset_utils.capture_activation_samples(
+            loader=dataset_loader,
+            model=model,
+            targets=targets,
+            target_names=target_names,
+            sample_dir=sample_dir,
+        )
+
+        tensor_samples_files = [
+            os.path.join(sample_dir, name)
+            for name in os.listdir(sample_dir)
+            if os.path.isfile(os.path.join(sample_dir, name))
+        ]
+        tensor_samples: List = []
+        [tensor_samples + torch.load(file) for file in tensor_samples_files]
+        sample_tensor = torch.cat(tensor_samples, 1).permute(1, 0)
+        self.assertEqual(list(sample_tensor.shape), [num_tensors, 1008])
 
 
 class TestConsolidateSamples(BaseTest):
@@ -167,6 +204,37 @@ class TestConsolidateSamples(BaseTest):
             )
 
         sample_tensor = dataset_utils.consolidate_samples(sample_dir)
+        self.assertEqual(
+            list(sample_tensor.shape), [num_files * batch_size, num_channels]
+        )
+
+    def test_consolidate_samples_basename_mixed(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping consolidate_samples_basename_mixed test due to"
+                + "insufficient Torch version."
+            )
+
+        sample_dir = "test_samples_consolidation_mixed"
+        os.mkdir(sample_dir)
+        num_channels = 512
+        num_files = 10
+        batch_size = 4
+
+        for i in range(num_files):
+            tensor_batch = [torch.ones(num_channels, 1) for x in range(batch_size)]
+            torch.save(
+                tensor_batch, os.path.join(sample_dir, "tensor_batch_" + str(i) + ".pt")
+            )
+        for i in range(num_files):
+            tensor_batch = [torch.ones(num_channels, 1) for x in range(batch_size)]
+            torch.save(
+                tensor_batch, os.path.join(sample_dir, "other_data_" + str(i) + ".pt")
+            )
+
+        sample_tensor = dataset_utils.consolidate_samples(
+            sample_dir, sample_basename="other_data_"
+        )
         self.assertEqual(
             list(sample_tensor.shape), [num_files * batch_size, num_channels]
         )

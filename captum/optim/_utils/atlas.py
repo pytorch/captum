@@ -3,30 +3,65 @@ from typing import List, Tuple
 import torch
 
 
+def normalize_grid(
+    xy_grid: torch.Tensor,
+    min_percentile: float = 0.01,
+    max_percentile: float = 0.99,
+    relative_margin: float = 0.1,
+) -> torch.Tensor:
+    """
+    Remove outliers from an xy coordinate grid tensor, and rescale it to [0, 1].
+
+    Args:
+        xy_grid (torch.tensor): The xy coordinate grid tensor to normalize,
+            with a shape of: [n_channels, 2].
+        min_percentile (float, optional): The minamum percentile to use when
+            normalizing the tensor.
+        max_percentile (float, optional): The maximum percentile to use when
+            normalizing the tensor.
+        relative_margin (float, optional): The relative margin to use when
+            normalizing the tensor.
+    Returns:
+        normalized_grid (torch.tensor): A normalized xy coordinate grid tensor.
+    """
+
+    assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
+    mins = torch.quantile(xy_grid, min_percentile, dim=0)
+    maxs = torch.quantile(xy_grid, max_percentile, dim=0)
+
+    mins = mins - relative_margin * (maxs - mins)
+    maxs = maxs + relative_margin * (maxs - mins)
+
+    normalized_grid = torch.max(torch.min(xy_grid, maxs), mins)
+    normalized_grid = normalized_grid - normalized_grid.min(0)[0]
+    return normalized_grid / normalized_grid.max(0)[0]
+
+
 def calc_grid_indices(
-    tensor: torch.Tensor,
+    xy_grid: torch.Tensor,
     grid_size: Tuple[int, int],
     x_extent: Tuple[float, float] = (0.0, 1.0),
     y_extent: Tuple[float, float] = (0.0, 1.0),
 ) -> List[List[torch.Tensor]]:
     """
     Create grid cells of a specified size for an irregular grid.
+
     Args:
-        tensor (torch.tensor): xy coordinate tensor to extract grid
-            indices from.
-        grid_size (Tuple[int, int]): The size of grid cells to use.
+        xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
+            of: [n_channels, 2].
+        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
+            variable should be in the format of: [height, width].
         x_extent (Tuple[float, float], optional): The x extent to use.
         y_extent (Tuple[float, float], optional): The y extent to use.
     Returns:
-        indices (list of list of tensor): Grid cell indices for the
-            irregular grid.
+        indices (list of list of tensor): Grid cell indices for the irregular grid.
     """
 
-    assert tensor.dim() == 2 and tensor.size(1) == 2
+    assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
 
     #  Convert coordinations to bins
-    x_bin = ((tensor[:, 0] - x_extent[0]) / (x_extent[1] - x_extent[0])) * grid_size[1]
-    y_bin = ((tensor[:, 1] - y_extent[0]) / (y_extent[1] - y_extent[0])) * grid_size[0]
+    x_bin = ((xy_grid[:, 0] - x_extent[0]) / (x_extent[1] - x_extent[0])) * grid_size[1]
+    y_bin = ((xy_grid[:, 1] - y_extent[0]) / (y_extent[1] - y_extent[0])) * grid_size[0]
 
     x_list = []
     for x in range(grid_size[1]):
@@ -42,66 +77,39 @@ def calc_grid_indices(
     return x_list
 
 
-def normalize_grid(
-    x: torch.Tensor,
-    min_percentile: float = 0.01,
-    max_percentile: float = 0.99,
-    relative_margin: float = 0.1,
-) -> torch.Tensor:
-    """
-    Remove outliers and rescale tensor to [0,1].
-
-    Args:
-        x (torch.tensor): Tensor to normalize.
-        min_percentile (float, optional): The minamum percentile to
-            use when normalizing the tensor.
-        max_percentile (float, optional): The maximum percentile to
-            use when normalizing the tensor.
-        relative_margin (float, optional): The relative margin to use
-            when normalizing the tensor.
-    Returns:
-        clipped (torch.tensor): A normalized tensor.
-    """
-
-    assert x.dim() == 2 and x.size(1) == 2
-    mins = torch.quantile(x, min_percentile, dim=0)
-    maxs = torch.quantile(x, max_percentile, dim=0)
-
-    mins = mins - relative_margin * (maxs - mins)
-    maxs = maxs + relative_margin * (maxs - mins)
-
-    clipped = torch.max(torch.min(x, maxs), mins)
-    clipped = clipped - clipped.min(0)[0]
-    return clipped / clipped.max(0)[0]
-
-
 def extract_grid_vectors(
     grid_indices: List[List[torch.Tensor]],
-    activations: torch.Tensor,
+    raw_activations: torch.Tensor,
     grid_size: Tuple[int, int],
     min_density: int = 8,
 ) -> Tuple[torch.Tensor, List[Tuple[int, int, int]]]:
     """
-    Create direction vectors for activation samples and grid indices.
+    Create direction vectors for activation samples and grid indices. Grid cells
+    without the minamum number of points as specified by min_density will be
+    ignored.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
 
     Args:
-        grid_indices (torch.tensor): List of lists of grid indices to use.
-        activations (torch.tensor): Raw activation samples.
-        grid_size (Tuple[int, int]): The grid_size of grid cells to use.
-        min_density (int, optional): The minamum number of points for a
-            cell to counted.
+        grid_indices (list of list of torch.tensor): List of lists of grid indices to
+            use.
+        raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
+            of: [n_samples, n_channels].
+        grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
+            variable should be in the format of: [height, width].
+        min_density (int, optional): The minamum number of points for a cell to be
+            counted.
     Returns:
-        cells (torch.tensor): A tensor containing all the direction vector
-            that were created.
-        cell_coords (List[Tuple[int, int]]): List of coordinates for grid
-            spatial positons of each direction vector, and the number of
-            samples used for the cell.
+        cells (torch.tensor): A tensor containing all the direction vector that were
+            created.
+        cell_coords (list of Tuple[int, int] or list of Tuple[int, int, int]): List of
+            coordinates for grid spatial positons of each direction vector, and the
+            number of samples used for the cell. The tuple for each cell is in the
+            format of [y coord, x coord, number of samples].
     """
 
-    assert activations.dim() == 2
+    assert raw_activations.dim() == 2
 
     cell_coords = []
     average_activations = []
@@ -109,49 +117,54 @@ def extract_grid_vectors(
         for y in range(grid_size[0]):
             indices = grid_indices[x][y]
             if len(indices) >= min_density:
-                average_activations.append(torch.mean(activations[indices], 0))
-                cell_coords.append((x, y, len(indices)))
+                average_activations.append(torch.mean(raw_activations[indices], 0))
+                cell_coords.append((y, x, len(indices)))
     return torch.stack(average_activations), cell_coords
 
 
 def create_atlas_vectors(
-    tensor: torch.Tensor,
-    activations: torch.Tensor,
+    xy_grid: torch.Tensor,
+    raw_activations: torch.Tensor,
     grid_size: Tuple[int, int],
     min_density: int = 8,
     normalize: bool = True,
 ) -> Tuple[torch.Tensor, List[Tuple[int, int, int]]]:
     """
-    Create direction vectors by splitting an irregular grid of activation samples
-    into cells.
+    Create direction vectors by splitting an irregular grid of activation samples into
+    cells. Grid cells without the minamum number of points as specified by min_density
+    will be ignored.
 
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
 
     Args:
-        tensor (torch.tensor): The dimensionality reduced activation samples.
-        activations (torch.tensor): Raw activation samples.
-        grid_size (Tuple[int, int]): The size of grid cells to use.
+        xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
+            of: [n_channels, 2].
+        raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
+            of: [n_samples, n_channels].
+        grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
+            variable should be in the format of: [height, width].
         min_density (int, optional): The minamum number of points for a cell to counted.
-        normalize (bool, optional): Whether to normalize the dimensionality
-            reduced activation samples to between [0,1] & to remove outliers.
+        normalize (bool, optional): Whether or not to remove outliers from an xy
+            coordinate grid tensor, and rescale it to [0, 1].
     Returns:
-        grid_vecs (torch.tensor): A tensor containing all the direction vector
-            that were created.
-        cell_coords (List[Tuple[int, int]]): List of coordinates for grid
-            spatial positons of each direction vector, and the number of
-            samples used for the cell.
+        grid_vecs (torch.tensor): A tensor containing all the direction vector that
+            were created, stacked along the batch dimension.
+        cell_coords (list of Tuple[int, int, int]): List of coordinates for grid
+            spatial positons of each direction vector, and the number of samples used
+            for the cell. The tuple for each cell is in the format of:
+            [y coord, x coord, number of samples].
     """
 
-    assert tensor.dim() == 2 and tensor.size(1) == 2
-    assert activations.dim() == 2
-    assert activations.shape[0] == tensor.shape[0]
+    assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
+    assert raw_activations.dim() == 2
+    assert raw_activations.shape[0] == xy_grid.shape[0]
 
     if normalize:
-        tensor = normalize_grid(tensor)
-    indices = calc_grid_indices(tensor, grid_size)
+        xy_grid = normalize_grid(xy_grid)
+    indices = calc_grid_indices(xy_grid, grid_size)
     grid_vecs, vec_coords = extract_grid_vectors(
-        indices, activations, grid_size, min_density
+        indices, raw_activations, grid_size, min_density
     )
     return grid_vecs, vec_coords
 
@@ -165,28 +178,35 @@ def create_atlas(
     Create atlas grid from visualization imags with coordinates.
 
     Args:
-        cells (list of tensor): A list of image tensors made with atlas
-            direction vectors.
-        coords (list of Tuple[int, int] or list of Tuple[int, int, int]):
-            A list of coordinates to use for the atlas image tensors.
-        grid_size (Tuple[int, int]): The size of grid cells used to create
-            the visualization direction vectors.
+        cells (list of tensor): A list of image tensors made with atlas direction
+            vectors.
+        coords (list of Tuple[int, int] or list of Tuple[int, int, int]): A list of
+            coordinates to use for the atlas image tensors.
+        grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
+            variable should be in the format of: [height, width].
     Returns:
-        canvas (torch.tensor): The full activation atlas visualization.
+        atlas_canvas (torch.tensor): The full activation atlas visualization.
     """
 
     assert len(cells) == len(coords)
     assert all([c.shape == cells[0].shape for c in cells])
+    assert all([c.device == cells[0].device for c in cells])
     assert cells[0].dim() == 4
 
     cell_b, cell_c, cell_h, cell_w = cells[0].shape
-    canvas = torch.ones(cell_b, cell_c, cell_h * grid_size[0], cell_w * grid_size[1])
+    atlas_canvas = torch.ones(
+        cell_b,
+        cell_c,
+        cell_h * grid_size[0],
+        cell_w * grid_size[1],
+        device=cells[0].device,
+    )
     for i, img in enumerate(cells):
         y = int(coords[i][0])
         x = int(coords[i][1])
-        canvas[
+        atlas_canvas[
             ...,
-            (grid_size[0] - x - 1) * cell_h : (grid_size[0] - x) * cell_h,
-            y * cell_w : (y + 1) * cell_w,
+            (grid_size[0] - y - 1) * cell_h : (grid_size[0] - y) * cell_h,
+            (grid_size[1] - x - 1) * cell_w : (grid_size[1] - x) * cell_w,
         ] = img
-    return canvas
+    return atlas_canvas

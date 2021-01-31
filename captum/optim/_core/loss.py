@@ -306,7 +306,7 @@ class WhitenedNeuronDirection(Loss):
         self,
         target: torch.nn.Module,
         vec: torch.Tensor,
-        vec_w: torch.Tensor,
+        vec_whitened: torch.Tensor,
         cossim_pow: float = 4.0,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -315,7 +315,7 @@ class WhitenedNeuronDirection(Loss):
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1))
-        self.vec_w = vec_w
+        self.vec_whitened = vec_whitened.reshape((1, -1))
         self.cossim_pow = cossim_pow
         self.eps = eps
         self.x = x
@@ -323,14 +323,17 @@ class WhitenedNeuronDirection(Loss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-
-        assert activations.dim() == 4
+        assert activations.dim() == 4 or activations.dim() == 2
         assert activations.shape[0] == 1
-        _y = activations.shape[2] // 2 if self.y is None else self.y
-        _x = activations.shape[3] // 2 if self.x is None else self.x
+        if activations.dim() == 4:
+            _x, _y = get_neuron_pos(
+                activations.size(2), activations.size(3), self.x, self.y
+            )
+            activations = activations[0, :, _x, _y]
+        else:
+            activations = activations[0, ...]
 
-        activations = activations[0, :, _x, _y]
-        vec = torch.matmul(self.direction, self.vec_w)[0]
+        vec = torch.matmul(self.direction, self.vec_whitened)[0]
         if self.cossim_pow == 0:
             return activations * vec
 

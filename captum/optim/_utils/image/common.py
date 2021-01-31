@@ -112,19 +112,19 @@ def weights_to_heatmap_2d(
             [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
         )
 
-    t_colors = [get_color(c) for c in colors]
-    xt = tensor.expand((3, tensor.shape[0], tensor.shape[1])).permute(1, 2, 0)
+    color_list = [get_color(c) for c in colors]
+    x = tensor.expand((3, tensor.shape[0], tensor.shape[1])).permute(1, 2, 0)
 
     color_tensor = (
-        (xt >= 0) * (xt < 0.5) * ((1 - xt * 2) * t_colors[2] + xt * 2 * t_colors[3])
-        + (xt >= 0)
-        * (xt >= 0.5)
-        * ((1 - (xt - 0.5) * 2) * t_colors[3] + (xt - 0.5) * 2 * t_colors[4])
-        + (xt < 0)
-        * (xt > -0.5)
-        * ((1 - (-xt * 2)) * t_colors[2] + (-xt * 2) * t_colors[1])
-        + (xt < 0)
-        * (xt <= -0.5)
-        * ((1 - (-xt - 0.5) * 2) * t_colors[1] + (-xt - 0.5) * 2 * t_colors[0])
+        (x >= 0) * (x < 0.5) * ((1 - x * 2) * color_list[2] + x * 2 * color_list[3])
+        + (x >= 0)
+        * (x >= 0.5)
+        * ((1 - (x - 0.5) * 2) * color_list[3] + (x - 0.5) * 2 * color_list[4])
+        + (x < 0)
+        * (x > -0.5)
+        * ((1 - (-x * 2)) * color_list[2] + (-x * 2) * color_list[1])
+        + (x < 0)
+        * (x <= -0.5)
+        * ((1 - (-x - 0.5) * 2) * color_list[1] + (-x - 0.5) * 2 * color_list[0])
     ).permute(2, 0, 1)
     return color_tensor
