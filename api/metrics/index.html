@@ -396,8 +396,8 @@ the magnitudes of the input explanations.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">ImageClassifier</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">saliency</span> <span class="o">=</span> <span class="n">Saliency</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes sensitivity score for saliency maps</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sens</span> <span class="o">=</span> <span class="n">sensitivity_max</span><span class="p">(</span><span class="n">saliency</span><span class="o">.</span><span class="n">attribute</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Computes sensitivity score for saliency maps of class 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sens</span> <span class="o">=</span> <span class="n">sensitivity_max</span><span class="p">(</span><span class="n">saliency</span><span class="o">.</span><span class="n">attribute</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>

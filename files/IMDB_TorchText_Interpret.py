@@ -5,12 +5,17 @@
 
 # This notebook loads pretrained CNN model for sentiment analysis on IMDB dataset. It makes predictions on test samples and interprets those predictions using integrated gradients method.
 # 
-# The model was trained using an open source sentiment analysis tutorials described in: https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/4%20-%20Convolutional%20Sentiment%20Analysis.ipynb
+# The model was trained using an open source sentiment analysis tutorials described in: https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/4%20-%20Convolutional%20Sentiment%20Analysis.ipynb with the following changes:
+# 
+# - TEXT: set lower=True at initialization and call build_vocab() on the entire training data including validation to avoid mismatched indices
+# - model: save the entire model instead of just model.state_dict()
 # 
 # **Note:** Before running this tutorial, please install the spacy package, and its NLP modules for English language.
 
 # In[1]:
 
+
+import captum
 
 import spacy
 
@@ -30,6 +35,13 @@ nlp = spacy.load('en')
 # In[2]:
 
 
+for package in (captum, spacy, torch, torchtext):
+    print(package.__name__, package.__version__)
+
+
+# In[3]:
+
+
 device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
 
 
@@ -38,7 +50,7 @@ device = torch.device("cuda:5" if torch.cuda.is_available() else "cpu")
 # Redefining the model in order to be able to load it.
 # 
 
-# In[3]:
+# In[4]:
 
 
 class CNN(nn.Module):
@@ -95,7 +107,7 @@ class CNN(nn.Module):
 # 
 # The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn.pt
 
-# In[ ]:
+# In[5]:
 
 
 model = torch.load('models/imdb-model-cnn.pt')
@@ -105,7 +117,7 @@ model = model.to(device)
 
 # Forward function that supports sigmoid
 
-# In[5]:
+# In[6]:
 
 
 def forward_with_sigmoid(input):
@@ -114,14 +126,14 @@ def forward_with_sigmoid(input):
 
 # Load a small subset of test data using torchtext from IMDB dataset.
 
-# In[6]:
+# In[7]:
 
 
 TEXT = torchtext.data.Field(lower=True, tokenize='spacy')
 Label = torchtext.data.LabelField(dtype = torch.float)
 
 
-# In[7]:
+# In[8]:
 
 
 train, test = torchtext.datasets.IMDB.splits(text_field=TEXT,
@@ -134,22 +146,22 @@ test, _ = test.split(split_ratio = 0.04)
 
 # Loading and setting up vocabulary for word embeddings using torchtext.
 
-# In[8]:
+# In[9]:
 
 
 from torchtext import vocab
 
-#loaded_vectors = vocab.GloVe(name='6B', dim=50)
+#loaded_vectors = vocab.GloVe(name='6B', dim=100)
 
 # If you prefer to use pre-downloaded glove vectors, you can load them with the following two command line
-loaded_vectors = torchtext.vocab.Vectors('data/glove.6B.50d.txt')
+loaded_vectors = torchtext.vocab.Vectors('data/glove.6B.100d.txt')
 TEXT.build_vocab(train, vectors=loaded_vectors, max_size=len(loaded_vectors.stoi))
     
 TEXT.vocab.set_vectors(stoi=loaded_vectors.stoi, vectors=loaded_vectors.vectors, dim=loaded_vectors.dim)
 Label.build_vocab(train)
 
 
-# In[9]:
+# In[10]:
 
 
 print('Vocabulary Size: ', len(TEXT.vocab))
@@ -161,13 +173,13 @@ print('Vocabulary Size: ', len(TEXT.vocab))
 # 
 # To use `TokenReferenceBase` we need to provide a `reference_token_idx`. Since padding is one of the most commonly used references for tokens, padding index is passed as reference token index.
 
-# In[10]:
+# In[11]:
 
 
 PAD_IND = TEXT.vocab.stoi['pad']
 
 
-# In[11]:
+# In[12]:
 
 
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
@@ -180,7 +192,7 @@ token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 # 
 # Note that we can also use `IntegratedGradients` class instead, however in that case we need to precompute the embeddings and wrap Embedding layer with `InterpretableEmbeddingBase` module. This is necessary because we cannot perform input scaling and subtraction on the level of word/token indices and need access to the embedding layer.
 
-# In[12]:
+# In[13]:
 
 
 lig = LayerIntegratedGradients(model, model.embedding)
@@ -188,14 +200,14 @@ lig = LayerIntegratedGradients(model, model.embedding)
 
 # In the cell below, we define a generic function that generates attributions for each movie rating and stores them in a list using `VisualizationDataRecord` class. This will ultimately be used for visualization purposes.
 
-# In[13]:
+# In[14]:
 
 
 # accumalate couple samples in this array for visualization purposes
 vis_data_records_ig = []
 
 def interpret_sentence(model, sentence, min_len = 7, label = 0):
-    text = [tok.text for tok in nlp.tokenizer(sentence)]
+    text = [tok.text for tok in nlp.tokenizer(sentence.lower())]
     if len(text) < min_len:
         text += ['pad'] * (min_len - len(text))
     indexed = [TEXT.vocab.stoi[t] for t in text]
@@ -241,7 +253,7 @@ def add_attributions_to_visualizer(attributions, text, pred, pred_ind, label, de
 
 # Below cells call `interpret_sentence` to interpret a couple handcrafted review phrases.
 
-# In[14]:
+# In[15]:
 
 
 interpret_sentence(model, 'It was a fantastic performance !', label=1)
@@ -254,16 +266,16 @@ interpret_sentence(model, 'It is a disgusting movie!', label=0)
 
 # Below is an example of how we can visualize attributions for the text tokens. Feel free to visualize it differently if you choose to have a different visualization method.
 
-# In[15]:
+# In[16]:
 
 
 print('Visualize attributions based on Integrated Gradients')
-visualization.visualize_text(vis_data_records_ig)
+_ = visualization.visualize_text(vis_data_records_ig)
 
 
 # Above cell generates an output similar to this:
 
-# In[16]:
+# In[17]:
 
 
 from IPython.display import Image

@@ -215,8 +215,8 @@
 <span class="sd">        &gt;&gt;&gt; net = ImageClassifier()</span>
 <span class="sd">        &gt;&gt;&gt; saliency = Saliency(net)</span>
 <span class="sd">        &gt;&gt;&gt; input = torch.randn(2, 3, 32, 32, requires_grad=True)</span>
-<span class="sd">        &gt;&gt;&gt; # Computes sensitivity score for saliency maps</span>
-<span class="sd">        &gt;&gt;&gt; sens = sensitivity_max(saliency.attribute, input)</span>
+<span class="sd">        &gt;&gt;&gt; # Computes sensitivity score for saliency maps of class 3</span>
+<span class="sd">        &gt;&gt;&gt; sens = sensitivity_max(saliency.attribute, input, target = 3)</span>
 
 <span class="sd">    """</span>
 
