@@ -191,7 +191,7 @@ class TestCreateAtlas(BaseTest):
 
         atlas_canvas = atlas.create_atlas(img_list, vec_coords, grid_size=grid_size)
 
-        c_pattern = torch.hstack((torch.zeros(4, 4), torch.ones(4, 4)))
+        c_pattern = torch.hstack((torch.ones(4, 4), torch.zeros(4, 4)))
         expected_canvas = torch.stack(
             [torch.vstack((c_pattern, c_pattern.flip(1)))] * 3, 0
         ).unsqueeze(0)
@@ -209,13 +209,11 @@ class TestCreateAtlas(BaseTest):
         atlas_canvas = atlas.create_atlas(img_list, vec_coords, grid_size=grid_size)
 
         c_pattern = torch.hstack(
-            (torch.zeros(4, 4), torch.ones(4, 4), torch.ones(4, 4))
+            (torch.ones(4, 4), torch.ones(4, 4), torch.zeros(4, 4))
         )
-        expected_canvas = (
-            torch.stack([torch.vstack((c_pattern, c_pattern.flip(1)))] * 3, 0)
-            .unsqueeze(0)
-            .flip(2)
-        )
+        expected_canvas = torch.stack(
+            [torch.vstack((c_pattern, c_pattern.flip(1)))] * 3, 0
+        ).unsqueeze(0)
         assertTensorAlmostEqual(self, atlas_canvas, expected_canvas, 0)
 
     def test_create_atlas_zeros(self) -> None:
@@ -231,7 +229,7 @@ class TestCreateAtlas(BaseTest):
             img_list, vec_coords, grid_size=grid_size, base_tensor=torch.zeros
         )
 
-        c_pattern = torch.hstack((torch.ones(4, 4), torch.zeros(4, 4)))
+        c_pattern = torch.hstack((torch.zeros(4, 4), torch.ones(4, 4)))
         expected_canvas = torch.stack(
             [torch.vstack((c_pattern, c_pattern.flip(1)))] * 3, 0
         ).unsqueeze(0)
