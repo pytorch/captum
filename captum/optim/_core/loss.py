@@ -315,7 +315,7 @@ class WhitenedNeuronDirection(Loss):
         super(Loss, self).__init__()
         self.target = target
         self.direction = vec.reshape((1, -1))
-        self.vec_whitened = vec_whitened.reshape((1, -1))
+        self.vec_whitened = vec_whitened
         self.cossim_pow = cossim_pow
         self.eps = eps
         self.x = x
