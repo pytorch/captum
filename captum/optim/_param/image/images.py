@@ -17,7 +17,6 @@ from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 
 
 class ImageTensor(nn.Parameter):
-
     @classmethod
     def open(cls, path: str, scale: float = 255.0):
         if path.startswith("https://") or path.startswith("http://"):
