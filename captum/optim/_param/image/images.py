@@ -16,7 +16,8 @@ except (ImportError, AssertionError):
 from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 
 
-class ImageTensor(torch.Tensor):
+class ImageTensor(nn.Parameter):
+
     @classmethod
     def open(cls, path: str, scale: float = 255.0):
         if path.startswith("https://") or path.startswith("http://"):
@@ -94,11 +95,13 @@ class FFTImage(ImageParameterization):
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
+        device: Optional[str] = None,
     ) -> None:
         super().__init__()
         if init is None:
             assert len(size) == 2
             self.size = size
+            self.device = device or "cpu"
         else:
             assert init.dim() == 3 or init.dim() == 4
             self.size = (
@@ -106,6 +109,7 @@ class FFTImage(ImageParameterization):
                 if init.dim() == 3
                 else (init.size(2), init.size(3))
             )
+            self.device = device or init.device
         self.torch_rfft, self.torch_irfft = self.get_fft_funcs()
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
@@ -403,7 +407,7 @@ class NaturalImage(ImageParameterization):
 
     def __init__(
         self,
-        size: Tuple[int, int] = None,
+        size: Tuple[int, int] = [224, 224],
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -411,11 +415,13 @@ class NaturalImage(ImageParameterization):
         squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
         decorrelate_init: bool = True,
+        device: Optional[str] = None,
     ) -> None:
         super().__init__()
         self.decorrelate = decorrelation_module
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
+            self.device = device or init.device
             if decorrelate_init:
                 assert self.decorrelate is not None
                 init = (
@@ -429,13 +435,14 @@ class NaturalImage(ImageParameterization):
                     0, 1
                 )
         else:
+            self.device = device or "cpu"
             if squash_func is None:
                 squash_func: Callable[
                     [torch.Tensor], torch.Tensor
                 ] = lambda x: torch.sigmoid(x)
         self.squash_func = squash_func
         self.parameterization = parameterization(
-            size=size, channels=channels, batch=batch, init=init
+            size=size, channels=channels, batch=batch, init=init, device=device
         )
 
     def forward(self) -> torch.Tensor:
