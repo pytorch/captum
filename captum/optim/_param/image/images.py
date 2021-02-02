@@ -1,4 +1,5 @@
 from copy import deepcopy
+from types import MethodType
 from typing import Callable, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -18,10 +19,10 @@ from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 
 class ImageTensor(torch.Tensor):
     @staticmethod
-    def __new__(cls, x, *args, **kwargs):
-        if x.is_cuda:
-            x.show = cls.show
-            x.export = cls.export
+    def __new__(cls, x: Union[List, np.ndarray, torch.Tensor] = [], *args, **kwargs):
+        if isinstance(x, torch.Tensor) and x.is_cuda:
+            x.show = MethodType(cls.show, x)
+            x.export = MethodType(cls.export, x)
             return x
         else:
             return super().__new__(cls, x, *args, **kwargs)
@@ -55,6 +56,8 @@ class ImageTensor(torch.Tensor):
             numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
         elif len(self.shape) == 4:
             numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
+        else:
+            raise ValueError(f"Incompatible shape of {self.shape}.")
         plt.imshow(numpy_thing.astype(np.uint8))
         plt.axis("off")
         plt.show()
