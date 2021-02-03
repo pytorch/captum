@@ -117,7 +117,7 @@ class AttributionCalculation:
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[attribution_method_name]
         attribution_method = attribution_cls(model)
         if attribution_method_name in ATTRIBUTION_METHOD_CONFIG:
-            param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name] 
+            param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name]
             if param_config.post_process:
                 for k, v in attribution_arguments.items():
                     if k in param_config.post_process:
