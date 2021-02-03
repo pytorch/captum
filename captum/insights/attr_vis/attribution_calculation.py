@@ -116,11 +116,12 @@ class AttributionCalculation:
     ) -> Tuple[Tensor, ...]:
         attribution_cls = ATTRIBUTION_NAMES_TO_METHODS[attribution_method_name]
         attribution_method = attribution_cls(model)
-        param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name]
-        if param_config.post_process:
-            for k, v in attribution_arguments.items():
-                if k in param_config.post_process:
-                    attribution_arguments[k] = param_config.post_process[k](v)
+        if attribution_method_name in ATTRIBUTION_METHOD_CONFIG:
+            param_config = ATTRIBUTION_METHOD_CONFIG[attribution_method_name]
+            if param_config.post_process:
+                for k, v in attribution_arguments.items():
+                    if k in param_config.post_process:
+                        attribution_arguments[k] = param_config.post_process[k](v)
 
         # TODO support multiple baselines
         baseline = baselines[0] if baselines and len(baselines) > 0 else None
