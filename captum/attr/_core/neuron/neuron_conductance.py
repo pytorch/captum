@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import warnings
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -11,7 +12,7 @@ from captum._utils.common import (
     _format_additional_forward_args,
     _format_output,
     _is_tuple,
-    _verify_select_column,
+    _verify_select_neuron,
 )
 from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
@@ -93,7 +94,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
-        neuron_selector: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
@@ -113,13 +114,38 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         that for all given input tensors, dimension 0 corresponds
                         to the number of examples, and if multiple input tensors
                         are provided, the examples must be aligned appropriately.
-            neuron_selector (int or tuple): Index of neuron in output of given
-                            layer for which attribution is desired. Length of
-                            this tuple must be one less than the number of
-                            dimensions in the output of the given layer (since
-                            dimension 0 corresponds to number of examples).
-                            An integer may be provided instead of a tuple of
-                            length 1.
+            neuron_selector (int, callable, or tuple of ints or slices):
+                        Selector for neuron
+                        in given layer for which attribution is desired.
+                        Neuron selector can be provided as:
+
+                        - a single integer, if the layer output is 2D. This integer
+                          selects the appropriate neuron column in the layer input
+                          or output
+
+                        - a tuple of integers. Length of this
+                          tuple must be one less than the number of dimensions
+                          in the input / output of the given layer (since
+                          dimension 0 corresponds to number of examples).
+                          This can be used as long as the layer input / output
+                          is a single tensor.
+
+                        - a callable, which should
+                          take the target layer as input (single tensor or tuple
+                          if multiple tensors are in layer) and return a selected
+                          neuron - output shape should be 1D with length equal to
+                          batch_size (one scalar per input example)
+
+                          NOTE: Callables applicable for neuron conductance are
+                          less general than those of other methods and should
+                          NOT aggregate values of the layer, only return a specific
+                          output. This option should only be used in cases where the
+                          layer input / output is a tuple of tensors, where the other
+                          options would not suffice. This limitation is necessary since
+                          neuron conductance, unlike other neuron methods, also utilizes
+                          the gradient of output with respect to the intermedite neuron,
+                          which cannot be computed for aggregations of multiple
+                          intemediate neurons.
             baselines (scalar, tensor, tuple of scalars or tensors, optional):
                         Baselines define the starting point from which integral
                         is computed and can be provided as:
@@ -249,6 +275,13 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             >>> # index (4,1,2).
             >>> attribution = neuron_cond.attribute(input, (4,1,2))
         """
+        if callable(neuron_selector):
+            warnings.warn(
+                "The neuron_selector provided is a callable. Please ensure that this"
+                " function only selects neurons from the given layer; aggregating"
+                " or performing other operations on the tensor may lead to inaccurate"
+                " results."
+            )
         is_inputs_tuple = _is_tuple(inputs)
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
@@ -287,7 +320,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
     def _attribute(
         self,
         inputs: Tuple[Tensor, ...],
-        neuron_selector: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[int, ...], Callable],
         baselines: Tuple[Union[Tensor, int, float], ...],
         target: TargetType = None,
         additional_forward_args: Any = None,
@@ -343,18 +376,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_neuron_input,
         )
 
-        # Layer gradients and eval
-        assert (
-            len(layer_gradients) == 1 and len(layer_eval) == 1
-        ), "Layer can only have 1 output tensor for neuron attribution!"
-        layer_gradients = layer_gradients[0]
-        layer_eval = layer_eval[0]
-
-        # Multiplies by appropriate gradient of output with respect to hidden neurons
-        # mid_grads is a 1D Tensor of length num_steps*internal_batch_size,
-        # containing mid layer gradient for each input step.
-        mid_grads = _verify_select_column(layer_gradients, neuron_selector)
-
+        mid_grads = _verify_select_neuron(layer_gradients, neuron_selector)
         scaled_input_gradients = tuple(
             input_grad
             * mid_grads.reshape((total_batch,) + (1,) * (len(input_grad.shape) - 1))
