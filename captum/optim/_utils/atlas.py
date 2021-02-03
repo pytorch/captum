@@ -212,5 +212,5 @@ def create_atlas(
             ...,
             (grid_size[1] - y - 1) * cell_h : (grid_size[1] - y) * cell_h,
             (grid_size[0] - x - 1) * cell_w : (grid_size[0] - x) * cell_w,
-        ] = img
+        ] = img.flip([3])
     return torch.flip(atlas_canvas, [3])

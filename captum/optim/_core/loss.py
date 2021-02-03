@@ -296,10 +296,22 @@ class NeuronDirection(Loss):
 
 class WhitenedNeuronDirection(Loss):
     """
-    Visualize a single (x, y) position for a direction vector &
-    whitened activation samples.
+    Visualize a single (x, y) position for a direction vector & whitened activation
+    samples.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
+
+    Args:
+        target (nn.Module): A target layer instance.
+        vec (torch.Tensor): A neuron direction vector to use.
+        vec_whitened (torch.Tensor): A whitened neuron direction vector.
+        cossim_pow (float, optional): The desired cosine similarity power to use.
+        x (int, optional): Optionally provide a specific x position for the target
+            neuron.
+        y (int, optional): Optionally provide a specific y position for the target
+            neuron.
+        eps (float, optional): If cossim_pow is greater than zero, the desired
+            epsilon value to use for cosine similarity calculations.
     """
 
     def __init__(
