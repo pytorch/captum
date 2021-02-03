@@ -133,7 +133,7 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                         - a callable, which should
                           take the target layer as input (single tensor or tuple
                           if multiple tensors are in layer) and return a selected
-                          neuron (output shape should be 1D with length equal to
+                          neuron - output shape should be 1D with length equal to
                           batch_size (one scalar per input example)
 
                           NOTE: Callables applicable for neuron conductance are
