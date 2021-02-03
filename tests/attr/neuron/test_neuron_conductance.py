@@ -106,8 +106,6 @@ class Test(BaseTest):
         self._conductance_input_test_assert(
             net, net.multi_relu, inp, lambda x: x[0][:, 1], [0.0, 6.0, 0.0]
         )
-        lc = LayerConductance(net, net.multi_relu)
-        print(lc.attribute(inp, target=0))
 
     def test_matching_conv2_multi_input_conductance(self) -> None:
         net = BasicModel_ConvNet()
