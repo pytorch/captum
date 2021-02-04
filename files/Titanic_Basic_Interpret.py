@@ -27,12 +27,12 @@ from scipy import stats
 import pandas as pd
 
 
-# We will begin by importing and cleaning the dataset. Download the dataset from http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv and update the cell below with the path to the dataset csv.
+# We will begin by importing and cleaning the dataset. Download the dataset from https://biostat.app.vumc.org/wiki/pub/Main/DataSets/titanic3.csv and update the cell below with the path to the dataset csv.
 
 # In[3]:
 
 
-# Download dataset from: http://biostat.mc.vanderbilt.edu/wiki/pub/Main/DataSets/titanic3.csv
+# Download dataset from: https://biostat.app.vumc.org/wiki/pub/Main/DataSets/titanic3.csv
 # Update path to dataset here.
 dataset_path = "titanic3.csv"
 
@@ -123,7 +123,7 @@ class TitanicSimpleNNModel(nn.Module):
         return self.softmax(self.linear3(sigmoid_out2))
 
 
-# We can either use a pretrained model or train the network using the training data for 200 epochs. Note that the results of later steps may not match if retraining. The pretrained model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/cifar_torchvision.pt
+# We can either use a pretrained model or train the network using the training data for 200 epochs. Note that the results of later steps may not match if retraining. The pretrained model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/titanic_model.pt
 
 # In[12]:
 
