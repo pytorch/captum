@@ -641,5 +641,32 @@ class TestNChannelsToRGB(BaseTest):
         self.assertEqual(list(test_output.size()), [1, 3, 224, 224])
 
 
+class TestRandomCrop(BaseTest):
+    def test_random_crop(self) -> None:
+        crop_size = [160, 160]
+        crop_transform = transform.RandomCrop(crop_size=crop_size)
+        x = torch.ones(1, 4, 224, 224)
+
+        x_out = crop_transform(x)
+
+        self.assertEqual(list(x_out.shape), [1, 4, 160, 160])
+
+
+class TestAlphaChannelLoss(BaseTest):
+    def test_alpha_channel_loss_forward(self) -> None:
+        crop_size = [160, 160]
+        scale = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
+
+        alpha_loss_transform = transform.AlphaChannelLoss(
+            scale=scale, crop_size=crop_size
+        )
+        x = torch.randn(1, 4, 224, 224)
+
+        x_out = alpha_loss_transform(x)
+
+        assertTensorAlmostEqual(self, x_out, x, 0)
+        self.assertNotEqual(alpha_loss_transform.loss, 0)
+
+
 if __name__ == "__main__":
     unittest.main()
