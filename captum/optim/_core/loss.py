@@ -100,10 +100,9 @@ class Loss(ABC):
 
 class CompositeLoss(Loss):
     def __init__(self, loss_fn: Callable, name: str = "", target: nn.Module = []):
-        super(Loss, self).__init__()
+        super(CompositeLoss, self).__init__(target)
         self.__name__ = name
         self.loss_fn = loss_fn
-        self.target = target
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         return self.loss_fn(targets_to_values)
@@ -141,8 +140,7 @@ class ChannelActivation(Loss):
     """
 
     def __init__(self, target: nn.Module, channel_index: int) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(ChannelActivation, self).__init__(target)
         self.channel_index = channel_index
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -165,8 +163,7 @@ class NeuronActivation(Loss):
         x: Optional[int] = None,
         y: Optional[int] = None,
     ) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(NeuronActivation, self).__init__(target)
         self.channel_index = channel_index
         self.x = x
         self.y = y
@@ -217,8 +214,7 @@ class L1(Loss):
     """
 
     def __init__(self, target: nn.Module, constant: float = 0.0) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(L1, self).__init__(target)
         self.constant = constant
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -235,7 +231,7 @@ class L2(Loss):
     def __init__(
         self, target: nn.Module, constant: float = 0.0, epsilon: float = 1e-6
     ) -> None:
-        self.target = target
+        super(L2, self).__init__(target)
         self.constant = constant
         self.epsilon = epsilon
 
@@ -333,8 +329,7 @@ class Alignment(Loss):
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(Alignment, self).__init__(target)
         self.decay_ratio = decay_ratio
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -362,8 +357,7 @@ class Direction(Loss):
     """
 
     def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(Direction, self).__init__(target)
         self.direction = vec.reshape((1, -1, 1, 1))
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -387,8 +381,7 @@ class NeuronDirection(Loss):
         y: Optional[int] = None,
         channel_index: Optional[int] = None,
     ) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(NeuronDirection, self).__init__(target)
         self.direction = vec.reshape((1, -1, 1, 1))
         self.x = x
         self.y = y
@@ -418,8 +411,7 @@ class TensorDirection(Loss):
     """
 
     def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(TensorDirection, self).__init__(target)
         self.direction = vec
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -453,8 +445,7 @@ class ActivationWeights(Loss):
         wx: Optional[int] = None,
         wy: Optional[int] = None,
     ) -> None:
-        super(Loss, self).__init__()
-        self.target = target
+        super(ActivationWeights, self).__init__(target)
         self.x = x
         self.y = y
         self.wx = wx
