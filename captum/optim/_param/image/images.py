@@ -16,6 +16,8 @@ except (ImportError, AssertionError):
 
 from captum.optim._param.image.transform import SymmetricPadding, ToRGB
 
+TORCH_VERSION = torch.__version__
+
 
 class ImageTensor(torch.Tensor):
     @staticmethod
@@ -160,7 +162,7 @@ class FFTImage(ImageParameterization):
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable]:
         """Support older versions of PyTorch"""
-        if torch.__version__ <= "1.7.0":
+        if TORCH_VERSION <= "1.7.0":
             import torch.fft
 
             torch_rfft = lambda x: torch.view_as_real(torch.fft.rfftn(x, s=self.size))  # type: ignore  # noqa: E731 E501
