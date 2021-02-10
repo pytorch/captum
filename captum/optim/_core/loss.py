@@ -12,7 +12,7 @@ from captum.optim._utils.typing import ModuleOutputMapping
 def _make_arg_str(arg):
     arg = str(arg)
     too_big = len(arg) > 15 or "\n" in arg
-    return "..." if too_big else arg
+    return arg[:15] + "..." if too_big else arg
 
 
 class Loss(ABC):
