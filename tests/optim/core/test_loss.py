@@ -8,6 +8,7 @@ import torch.nn as nn
 
 import captum.optim._core.loss as opt_loss
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
+from captum.optim._utils.models import collect_activations
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 
 CHANNEL_ACTIVATION_0_LOSS = 1
@@ -28,13 +29,7 @@ class SimpleModel(nn.Module):
 
 
 def get_loss_value(model, loss, input_shape=[1, 1, 1, 1]):
-    if hasattr(loss.target, "__iter__"):
-        hooks = ModuleOutputsHook(loss.target)
-    else:
-        hooks = ModuleOutputsHook([loss.target])
-    with suppress(AbortForwardException):
-        model(torch.zeros(*input_shape))
-    module_outputs = hooks.consume_outputs()
+    module_outputs = collect_activations(model, loss.target, torch.zeros(*input_shape))
     loss_value = loss(module_outputs)
     try:
         return loss_value.item()
