@@ -288,7 +288,8 @@ class ActivationInterpolation(Loss):
         self.channel_index_one = channel_index1
         self.target_two = target2
         self.channel_index_two = channel_index2
-        Loss.__init__(self, [target1, target2])  # Exposing targets for InputOptimization
+        # Expose targets for InputOptimization
+        Loss.__init__(self, [target1, target2])
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_one = targets_to_values[self.target_one]
