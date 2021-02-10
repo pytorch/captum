@@ -20,7 +20,7 @@ class SimpleModel(nn.Module):
 
 class TestInputOptimization(BaseTest):
     def test_input_optimization(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping InputOptimization test due to insufficient Torch version."
             )
