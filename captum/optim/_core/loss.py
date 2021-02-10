@@ -300,11 +300,10 @@ class WhitenedNeuronDirection(Loss):
     samples.
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
-
     Args:
         target (nn.Module): A target layer instance.
         vec (torch.Tensor): A neuron direction vector to use.
-        vec_whitened (torch.Tensor): A whitened neuron direction vector.
+        vec_whitened (torch.Tensor, optional): A whitened neuron direction vector.
         cossim_pow (float, optional): The desired cosine similarity power to use.
         x (int, optional): Optionally provide a specific x position for the target
             neuron.
@@ -318,7 +317,7 @@ class WhitenedNeuronDirection(Loss):
         self,
         target: torch.nn.Module,
         vec: torch.Tensor,
-        vec_whitened: torch.Tensor,
+        vec_whitened: Optional[torch.Tensor] = None,
         cossim_pow: float = 4.0,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -345,7 +344,11 @@ class WhitenedNeuronDirection(Loss):
         else:
             activations = activations[0, ...]
 
-        vec = torch.matmul(self.direction, self.vec_whitened)[0]
+        vec = (
+            torch.matmul(self.direction, self.vec_whitened)[0]
+            if self.vec_whitened is not None
+            else self.direction
+        )
         if self.cossim_pow == 0:
             return activations * vec
 

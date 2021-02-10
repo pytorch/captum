@@ -8,7 +8,7 @@ try:
 except (ImportError, AssertionError):
     print(
         "The tqdm package is required to use captum.optim's"
-        + " capture_activation_samples function with progress bar"
+        + " image dataset functions with progress bar"
     )
 
 from captum.optim._utils.models import collect_activations
@@ -24,16 +24,31 @@ def image_cov(tensor: torch.Tensor) -> torch.Tensor:
     return 1 / (tensor.size(0) - 1) * tensor.T @ tensor
 
 
-def dataset_cov_matrix(loader: torch.utils.data.DataLoader) -> torch.Tensor:
+def dataset_cov_matrix(
+    loader: torch.utils.data.DataLoader,
+    show_progress: bool = False,
+    device: torch.device = torch.device("cpu"),
+) -> torch.Tensor:
     """
     Calculate the covariance matrix for an image dataset.
     """
 
-    cov_mtx = torch.zeros(3, 3)
+    if show_progress:
+        pbar = tqdm(total=len(loader.dataset), unit=" images")  # type: ignore
+
+    cov_mtx = cast(torch.Tensor, 0.0)
     for images, _ in loader:
         assert images.dim() == 4
+        images = images.to(device)
         for b in range(images.size(0)):
             cov_mtx = cov_mtx + image_cov(images[b].permute(1, 2, 0))
+
+            if show_progress:
+                pbar.update(1)
+
+    if show_progress:
+        pbar.close()
+
     cov_mtx = cov_mtx / len(loader.dataset)  # type: ignore
     return cov_mtx
 
@@ -53,7 +68,10 @@ def cov_matrix_to_klt(
 
 
 def dataset_klt_matrix(
-    loader: torch.utils.data.DataLoader, normalize: bool = False
+    loader: torch.utils.data.DataLoader,
+    normalize: bool = False,
+    show_progress: bool = False,
+    device: torch.device = torch.device("cpu"),
 ) -> torch.Tensor:
     """
     Calculate the color correlation matrix, also known as
@@ -62,7 +80,7 @@ def dataset_klt_matrix(
     transforms for models trained on the dataset.
     """
 
-    cov_mtx = dataset_cov_matrix(loader)
+    cov_mtx = dataset_cov_matrix(loader, show_progress=show_progress, device=device)
     return cov_matrix_to_klt(cov_mtx, normalize)
 
 
