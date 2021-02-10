@@ -62,7 +62,3 @@ class TestWeightsToHeatmap2D(BaseTest):
         x_out = common.weights_to_heatmap_2d(x)
         x_out_np = numpy_common.weights_to_heatmap_2d(x.numpy())
         assertTensorAlmostEqual(self, x_out, torch.as_tensor(x_out_np).float())
-
-
-if __name__ == "__main__":
-    unittest.main()

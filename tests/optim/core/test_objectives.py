@@ -31,7 +31,3 @@ class TestInputOptimization(BaseTest):
         history = np.mean(np.mean(history, axis=2), axis=2)
         for i, j in zip(history[:-1], history[1:]):
             assert i < j
-
-
-if __name__ == "__main__":
-    unittest.main()

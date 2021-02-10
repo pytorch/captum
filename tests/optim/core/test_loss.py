@@ -202,7 +202,3 @@ class TestCompositeLoss(BaseTest):
         self.assertAlmostEqual(
             get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS ** 2
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

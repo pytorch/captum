@@ -23,7 +23,3 @@ class TestActivationFetcher(BaseTest):
         self.assertIsInstance(activ_out, dict)
         m4d_activ = activ_out[model.mixed4d]
         self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
-
-
-if __name__ == "__main__":
-    unittest.main()

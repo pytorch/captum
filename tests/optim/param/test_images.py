@@ -591,7 +591,3 @@ class TestNaturalImage(BaseTest):
         image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np))
-
-
-if __name__ == "__main__":
-    unittest.main()

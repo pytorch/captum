@@ -140,7 +140,3 @@ class TestPosNeg(BaseTest):
         self.assertGreater(
             torch.sum(reducer.posneg(x) >= 0).item(), torch.sum(x >= 0).item()
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

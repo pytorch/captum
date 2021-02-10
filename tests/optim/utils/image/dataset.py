@@ -103,7 +103,3 @@ class TestDatasetKLTMatrix(BaseTest):
         )
 
         assertTensorAlmostEqual(self, klt_transform, expected_mtx)
-
-
-if __name__ == "__main__":
-    unittest.main()

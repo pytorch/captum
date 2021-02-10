@@ -368,7 +368,3 @@ class TestSkipLayersFunction(BaseTest):
         model_utils.skip_layers(model, torch.nn.ReLU)
         output_tensor = model(x)
         assertTensorAlmostEqual(self, x, output_tensor, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()

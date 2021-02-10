@@ -73,7 +73,3 @@ class TestGetExpandedWeights(BaseTest):
 
         expected_list = [50, 437, 96, 398, 434, 423, 408, 436, 424, 168]
         self.assertEqual(top_connected_neurons, expected_list)
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -138,7 +138,3 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
         self.assertEqual(len(outputs), 3)
-
-
-if __name__ == "__main__":
-    unittest.main()

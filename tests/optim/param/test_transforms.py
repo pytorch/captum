@@ -666,7 +666,3 @@ class TestAlphaChannelLoss(BaseTest):
 
         assertTensorAlmostEqual(self, x_out, x, 0)
         self.assertNotEqual(alpha_loss_transform.loss, 0)
-
-
-if __name__ == "__main__":
-    unittest.main()
