@@ -143,9 +143,9 @@ class InputOptimization(Objective, Parameterized):
                 optimizer.step()
                 step += 1
         except (Exception, BaseException) as e:
-            self.cleanup()
             raise e
-        self.cleanup()
+        finally:
+            self.cleanup()
         return history
 
 
