@@ -160,7 +160,7 @@ class FFTImage(ImageParameterization):
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable]:
         """Support older versions of PyTorch"""
-        try:
+        if torch.__version__ <= "1.7.0":
             import torch.fft
 
             torch_rfft = lambda x: torch.view_as_real(torch.fft.rfftn(x, s=self.size))  # type: ignore  # noqa: E731 E501
@@ -170,7 +170,7 @@ class FFTImage(ImageParameterization):
                     x = torch.view_as_complex(x)
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
-        except (ImportError, AssertionError):
+        else:
             import torch
 
             torch_rfft = lambda x: torch.rfft(x, signal_ndim=2)  # noqa: E731
