@@ -528,6 +528,9 @@ class AlphaChannelLoss(nn.Module):
         self.loss = 0
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4  # Should be of shape (batch, channel, height, width)
+        assert x.size(1) == 4  # Channel dim should be rgba
+
         x_shifted = torch.cat([self.blend_alpha(x.clone()), x.clone()[:, 3:]], 1)
 
         x_shifted = self.random_scale(x_shifted)
