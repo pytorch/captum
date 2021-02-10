@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-import unittest
-from contextlib import suppress
-
 import numpy as np
 import torch
 import torch.nn as nn
 
 import captum.optim._core.loss as opt_loss
-from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._utils.models import collect_activations
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 

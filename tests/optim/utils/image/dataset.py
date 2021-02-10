@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import unittest
-
 import torch
 
 import captum.optim._utils.image.dataset as dataset_utils
