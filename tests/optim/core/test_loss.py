@@ -34,19 +34,25 @@ class TestChannelActivation(BaseTest):
     def test_channel_activation_0(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0)
-        self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS, places=6
+        )
 
     def test_channel_activation_1(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 1)
-        self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_1_LOSS)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_1_LOSS, places=6
+        )
 
 
 class TestNeuronActivation(BaseTest):
     def test_neuron_activation_0(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.NeuronActivation(model.layer, 0)
-        self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS, places=6
+        )
 
 
 class TestTotalVariation(BaseTest):
@@ -156,7 +162,9 @@ class TestCompositeLoss(BaseTest):
     def test_negative(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = -opt_loss.ChannelActivation(model.layer, 0)
-        self.assertAlmostEqual(get_loss_value(model, loss), -CHANNEL_ACTIVATION_0_LOSS)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss), -CHANNEL_ACTIVATION_0_LOSS, places=6
+        )
 
     def test_addition(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -187,7 +195,7 @@ class TestCompositeLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) * 10
         self.assertAlmostEqual(
-            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10, places=6
         )
 
     def test_multiplication_error(self) -> None:
