@@ -591,3 +591,11 @@ class TestNaturalImage(BaseTest):
         image_param = images.NaturalImage(init=torch.ones(3, 1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np))
+
+    def test_natural_image_cuda(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping NaturalImage CUDA test due to not supporting CUDA."
+            )
+        image_param = images.NaturalImage(init=torch.ones(3, 1, 1)).cuda()
+        self.assertTrue(image_param().device == torch.device('cuda'))
