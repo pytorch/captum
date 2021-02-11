@@ -1,31 +1,18 @@
 #!/usr/bin/env python3
 import numpy as np
 import torch
-import torch.nn as nn
 
 import captum.optim._core.loss as opt_loss
 from captum.optim._utils.models import collect_activations
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 
-CHANNEL_ACTIVATION_0_LOSS = 1
-CHANNEL_ACTIVATION_1_LOSS = 1
-
-
-class SimpleModel(nn.Module):
-    def __init__(self):
-        super(SimpleModel, self).__init__()
-        self.layer = nn.Conv2d(1, 2, 1)
-        # Initialize weights and biases for
-        # easy reproducibility
-        self.layer.weight.data.fill_(0)
-        self.layer.bias.data.fill_(1)
-
-    def forward(self, x):
-        return self.layer(x)
+CHANNEL_ACTIVATION_0_LOSS = 1.3
+CHANNEL_ACTIVATION_1_LOSS = 1.3
 
 
-def get_loss_value(model, loss, input_shape=[1, 1, 1, 1]):
-    module_outputs = collect_activations(model, loss.target, torch.zeros(*input_shape))
+def get_loss_value(model, loss, input_shape=[1, 3, 1, 1]):
+    module_outputs = collect_activations(model, loss.target, torch.ones(*input_shape))
     loss_value = loss(module_outputs)
     try:
         return loss_value.item()
@@ -35,43 +22,44 @@ def get_loss_value(model, loss, input_shape=[1, 1, 1, 1]):
 
 class TestChannelActivation(BaseTest):
     def test_channel_activation_0(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0)
         self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS)
 
     def test_channel_activation_1(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 1)
         self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_1_LOSS)
 
 
 class TestNeuronActivation(BaseTest):
     def test_neuron_activation_0(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.NeuronActivation(model.layer, 0)
         self.assertAlmostEqual(get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS)
 
 
 class TestTotalVariation(BaseTest):
     def test_total_variation(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.TotalVariation(model.layer)
         self.assertAlmostEqual(get_loss_value(model, loss), 0.0)
 
 
 class TestL1(BaseTest):
     def test_l1(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.L1(model.layer)
         self.assertAlmostEqual(
             get_loss_value(model, loss),
             CHANNEL_ACTIVATION_0_LOSS + CHANNEL_ACTIVATION_1_LOSS,
+            places=6,
         )
 
 
 class TestL2(BaseTest):
     def test_l2(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.L2(model.layer)
         self.assertAlmostEqual(
             get_loss_value(model, loss),
@@ -82,7 +70,7 @@ class TestL2(BaseTest):
 
 class TestActivationInterpolation(BaseTest):
     def test_activation_interpolation_0_1(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationInterpolation(
             target1=model.layer,
             channel_index1=0,
@@ -90,23 +78,24 @@ class TestActivationInterpolation(BaseTest):
             channel_index2=1,
         )
         self.assertAlmostEqual(
-            get_loss_value(model, loss, input_shape=[2, 1, 1, 1]),
+            get_loss_value(model, loss, input_shape=[2, 3, 1, 1]),
             CHANNEL_ACTIVATION_0_LOSS + CHANNEL_ACTIVATION_1_LOSS,
+            places=6,
         )
 
 
 class TestAlignment(BaseTest):
     def test_alignment(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.Alignment(model.layer)
         self.assertAlmostEqual(
-            get_loss_value(model, loss, input_shape=[2, 1, 1, 1]), 0.0
+            get_loss_value(model, loss, input_shape=[2, 3, 1, 1]), 0.0
         )
 
 
 class TestNeuronDirection(BaseTest):
     def test_neuron_direction(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.NeuronDirection(model.layer, vec=torch.ones(1, 1, 1, 1))
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
@@ -117,7 +106,7 @@ class TestNeuronDirection(BaseTest):
 
 class TestTensorDirection(BaseTest):
     def test_tensor_direction(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.TensorDirection(model.layer, vec=torch.ones(1, 1, 1, 1))
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
@@ -128,12 +117,12 @@ class TestTensorDirection(BaseTest):
 
 class TestActivationWeights(BaseTest):
     def test_activation_weights_0(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationWeights(model.layer, weights=torch.zeros(1))
         assertArraysAlmostEqual(get_loss_value(model, loss), np.zeros((1, 2, 1)))
 
     def test_activation_weights_1(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ActivationWeights(
             model.layer, weights=torch.ones(1), neuron=True
         )
@@ -145,12 +134,12 @@ class TestActivationWeights(BaseTest):
 
 class TestCompositeLoss(BaseTest):
     def test_negative(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = -opt_loss.ChannelActivation(model.layer, 0)
         self.assertAlmostEqual(get_loss_value(model, loss), -CHANNEL_ACTIVATION_0_LOSS)
 
     def test_addition(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = (
             opt_loss.ChannelActivation(model.layer, 0)
             + opt_loss.ChannelActivation(model.layer, 1)
@@ -159,10 +148,11 @@ class TestCompositeLoss(BaseTest):
         self.assertAlmostEqual(
             get_loss_value(model, loss),
             CHANNEL_ACTIVATION_0_LOSS + CHANNEL_ACTIVATION_1_LOSS + 1,
+            places=6,
         )
 
     def test_subtraction(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = (
             opt_loss.ChannelActivation(model.layer, 0)
             - opt_loss.ChannelActivation(model.layer, 1)
@@ -174,22 +164,24 @@ class TestCompositeLoss(BaseTest):
         )
 
     def test_multiplication(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) * 10
         self.assertAlmostEqual(
             get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10
         )
 
     def test_division(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) / 10
         self.assertAlmostEqual(
             get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS / 10
         )
 
     def test_pow(self) -> None:
-        model = SimpleModel()
+        model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) ** 2
         self.assertAlmostEqual(
-            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS ** 2
+            get_loss_value(model, loss),
+            CHANNEL_ACTIVATION_0_LOSS ** 2,
+            places=6,
         )
