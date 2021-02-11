@@ -2,7 +2,6 @@ from copy import deepcopy
 from types import MethodType
 from typing import Callable, List, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
@@ -15,6 +14,7 @@ except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
 from captum.optim._param.image.transform import SymmetricPadding, ToRGB
+from captum.optim._utils.image.common import save_tensor_as_image, show
 
 TORCH_VERSION = torch.__version__
 
@@ -54,23 +54,10 @@ class ImageTensor(torch.Tensor):
         )
 
     def show(self, scale: float = 255.0) -> None:
-        if len(self.shape) == 3:
-            numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
-        elif len(self.shape) == 4:
-            numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        else:
-            raise ValueError(f"Incompatible shape of {self.shape}.")
-        plt.imshow(numpy_thing.astype(np.uint8))
-        plt.axis("off")
-        plt.show()
+        show(self, figsize=None, scale=scale)
 
     def export(self, filename: str, scale: float = 255.0) -> None:
-        if len(self.shape) == 3:
-            numpy_thing = self.cpu().detach().numpy().transpose(1, 2, 0) * scale
-        elif len(self.shape) == 4:
-            numpy_thing = self.cpu().detach().numpy()[0].transpose(1, 2, 0) * scale
-        im = Image.fromarray(numpy_thing.astype("uint8"))
-        im.save(filename)
+        save_tensor_as_image(self, filename=filename, scale=scale)
 
 
 def logit(p: torch.Tensor, epsilon: float = 1e-6) -> torch.Tensor:

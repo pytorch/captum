@@ -1,9 +1,65 @@
 import math
 from typing import List, Optional, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
 from captum.optim._utils.reducer import posneg
+
+try:
+    from PIL import Image
+except (ImportError, AssertionError):
+    print("The Pillow/PIL library is required to use Captum's Optim library")
+
+
+def show(
+    x: torch.Tensor, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
+) -> None:
+    """
+    Show CHW & NCHW tensors as an image.
+
+    Args:
+        x (torch.Tensor): The tensor you want to display as an image.
+        figsize (Tuple[int, int], optional): height & width to use
+            for displaying the image figure.
+        scale (float): Value to multiply the input tensor by so that
+            it's value range is [0-255] for display.
+    """
+
+    if x.dim() not in [3, 4]:
+        raise ValueError(
+            f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
+        )
+    x = x[0] if x.dim() == 4 else x
+    x = x.cpu().detach().permute(1, 2, 0) * scale
+    if figsize is not None:
+        plt.figure(figsize=figsize)
+    plt.imshow(x.numpy().astype(np.uint8))
+    plt.axis("off")
+    plt.show()
+
+
+def save_tensor_as_image(x: torch.Tensor, filename: str, scale: float = 255.0) -> None:
+    """
+    Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
+
+    Args:
+        x (torch.Tensor): The tensor you want to save as an image.
+        filename (str): The filename to use when saving the image.
+        scale (float, optional): Value to multiply the input tensor by so that
+            it's value range is [0-255] for saving.
+    """
+
+    if x.dim() not in [3, 4]:
+        raise ValueError(
+            f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
+        )
+    x = x[0] if x.dim() == 4 else x
+    x = x.clone().cpu().detach().permute(1, 2, 0) * scale
+    colorspace = "RGB" if x.shape[2] == 3 else "RGBA"
+    im = Image.fromarray(x.numpy().astype(np.uint8), colorspace)
+    im.save(filename)
 
 
 def get_neuron_pos(
