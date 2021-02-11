@@ -170,12 +170,30 @@ class TestCompositeLoss(BaseTest):
             get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10
         )
 
+    def test_multiplication_error(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) * "string"
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) * opt_loss.ChannelActivation(
+                model.layer, 1
+            )
+
     def test_division(self) -> None:
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) / 10
         self.assertAlmostEqual(
             get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS / 10
         )
+
+    def test_division_error(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) / "string"
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) / opt_loss.ChannelActivation(
+                model.layer, 1
+            )
 
     def test_pow(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -185,3 +203,12 @@ class TestCompositeLoss(BaseTest):
             CHANNEL_ACTIVATION_0_LOSS ** 2,
             places=6,
         )
+
+    def test_pow_error(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) ** "string"
+        with self.assertRaises(TypeError):
+            opt_loss.ChannelActivation(model.layer, 0) ** opt_loss.ChannelActivation(
+                model.layer, 1
+            )
