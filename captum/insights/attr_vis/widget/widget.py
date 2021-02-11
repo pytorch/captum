@@ -48,7 +48,9 @@ class CaptumInsights(widgets.DOMWidget):
         with self.out:
             self.attribution = namedtuple_to_dict(
                 self.visualizer._calculate_attribution_from_cache(
-                    self.label_details["instance"], self.label_details["labelIndex"]
+                    self.label_details["inputIndex"],
+                    self.label_details["modelIndex"],
+                    self.label_details["labelIndex"]
                 )
             )
             self.label_details = dict()
