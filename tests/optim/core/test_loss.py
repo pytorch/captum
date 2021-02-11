@@ -20,6 +20,16 @@ def get_loss_value(model, loss, input_shape=[1, 3, 1, 1]):
         return loss_value.detach().numpy()
 
 
+class TestDeepDream(BaseTest):
+    def test_channel_deepdream(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.DeepDream(model.layer)
+        assertArraysAlmostEqual(
+            get_loss_value(model, loss),
+            [[[CHANNEL_ACTIVATION_0_LOSS ** 2]], [[CHANNEL_ACTIVATION_1_LOSS ** 2]]],
+        )
+
+
 class TestChannelActivation(BaseTest):
     def test_channel_activation_0(self) -> None:
         model = BasicModel_ConvNet_Optim()
@@ -65,6 +75,16 @@ class TestL2(BaseTest):
             get_loss_value(model, loss),
             (CHANNEL_ACTIVATION_0_LOSS ** 2 + CHANNEL_ACTIVATION_1_LOSS ** 2) ** 0.5,
             places=5,
+        )
+
+
+class TestDiversity(BaseTest):
+    def test_diversity(self) -> None:
+        model = BasicModel_ConvNet_Optim()
+        loss = opt_loss.Diversity(model.layer)
+        self.assertAlmostEqual(
+            get_loss_value(model, loss, input_shape=[2, 3, 1, 1]),
+            -1,
         )
 
 
