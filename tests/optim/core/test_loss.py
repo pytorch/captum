@@ -195,7 +195,7 @@ class TestCompositeLoss(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss = opt_loss.ChannelActivation(model.layer, 0) * 10
         self.assertAlmostEqual(
-            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10, places=6
+            get_loss_value(model, loss), CHANNEL_ACTIVATION_0_LOSS * 10, places=5
         )
 
     def test_multiplication_error(self) -> None:

@@ -597,5 +597,5 @@ class TestNaturalImage(BaseTest):
             raise unittest.SkipTest(
                 "Skipping NaturalImage CUDA test due to not supporting CUDA."
             )
-        image_param = images.NaturalImage(init=torch.ones(3, 1, 1)).cuda()
-        self.assertTrue(image_param().device == torch.device("cuda"))
+        image_param = images.NaturalImage().cuda()
+        self.assertTrue(image_param().is_cuda)

@@ -17,7 +17,7 @@ class TestInputOptimization(BaseTest):
             )
         model = BasicModel_ConvNet_Optim()
         loss_fn = opt.loss.ChannelActivation(model.layer, 0)
-        obj = opt.InputOptimization(model, loss_function=loss_fn)
+        obj = opt.InputOptimization(model, loss_function=loss_fn, lr=1)
         history = obj.optimize(opt.objectives.n_steps(5, show_progress=False))
         history = np.mean(np.mean(history, axis=2), axis=2)
         print(history)
