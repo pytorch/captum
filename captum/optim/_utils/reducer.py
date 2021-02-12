@@ -39,7 +39,7 @@ class ChannelReducer:
 
         self.n_components = n_components
         self._reducer = reduction_alg(n_components=n_components, **kwargs)
-        # Denotes whether _reducer is supports GPU inputs
+        # Denotes whether _reducer supports GPU inputs
         self.supports_gpu = supports_gpu
 
     def _get_reduction_algo_instance(self, name: str) -> Union[None, Callable]:

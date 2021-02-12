@@ -18,7 +18,6 @@ class FakeReductionAlgorithm(object):
         self.components_ = np.ones((2, 64))
 
     def fit_transform(self, x: torch.Tensor) -> np.ndarray:
-        x = x.numpy() if torch.is_tensor(x) else x
         return x[:, 0:3, ...]
 
 
@@ -97,6 +96,33 @@ class TestChannelReducer(BaseTest):
         )
         components = c_reducer.components
         self.assertTrue(torch.is_tensor(components))
+
+    def test_channel_reducer_pytorch_custom_alg_cuda_input_cpu_reducer(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping CUDA tests due to not supporting CUDA."
+            )
+        test_input = torch.randn(1, 32, 224, 224).abs().cuda()
+        reduction_alg = FakeReductionAlgorithm
+        c_reducer = reducer.ChannelReducer(
+            n_components=3, reduction_alg=reduction_alg, max_iter=100
+        )
+        test_output = c_reducer.fit_transform(test_input)
+        self.assertTrue(test_output.is_cuda)
+
+    def test_channel_reducer_pytorch_custom_alg_cuda_input_cuda_reducer(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping CUDA tests due to not supporting CUDA."
+            )
+        test_input = torch.randn(1, 32, 224, 224).abs().cuda()
+        reduction_alg = FakeReductionAlgorithm
+        c_reducer = reducer.ChannelReducer(
+            n_components=3, reduction_alg=reduction_alg, supports_gpu=True,
+            max_iter=100,
+        )
+        test_output = c_reducer.fit_transform(test_input)
+        self.assertTrue(test_output.is_cuda)
 
     def test_channelreducer_pytorch_components(self) -> None:
         try:
