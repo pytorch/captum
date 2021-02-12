@@ -50,7 +50,7 @@ class CaptumInsights(widgets.DOMWidget):
                 self.visualizer._calculate_attribution_from_cache(
                     self.label_details["inputIndex"],
                     self.label_details["modelIndex"],
-                    self.label_details["labelIndex"]
+                    self.label_details["labelIndex"],
                 )
             )
             self.label_details = dict()
