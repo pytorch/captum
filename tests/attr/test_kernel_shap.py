@@ -197,6 +197,7 @@ class Test(BaseTest):
             expected,
             additional_input=(1,),
             feature_mask=(mask1, mask2, mask3),
+            n_perturb_samples=300,
         )
         expected_with_baseline = (
             [[1040, 1040, 1040], [184, 580.0, 184]],

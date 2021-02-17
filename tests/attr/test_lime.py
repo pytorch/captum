@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -52,6 +52,13 @@ def alt_perturb_func(
             + (1 - binary_mask[j]) * kwargs["baselines"][j]
             for j in range(len(feature_mask))
         )
+
+
+def alt_perturb_generator(
+    original_inp: TensorOrTupleOfTensorsGeneric, **kwargs
+) -> Generator[TensorOrTupleOfTensorsGeneric, None, None]:
+    while True:
+        yield alt_perturb_func(original_inp, **kwargs)
 
 
 def alt_to_interp_rep(
@@ -107,6 +114,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
             n_perturb_samples=500,
             expected_coefs_only=[73.3716, 193.3349, 113.3349],
+            test_generator=True,
         )
 
     def test_simple_lime_with_mask(self) -> None:
@@ -133,6 +141,7 @@ class Test(BaseTest):
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
             expected_coefs_only=[244.0, 100.0],
+            test_generator=True,
         )
 
     def test_simple_batch_lime(self) -> None:
@@ -158,6 +167,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
             n_perturb_samples=600,
             expected_coefs_only=[[271.0, 111.0, 0.0], [32.11, 48.00, 11.00]],
+            test_generator=True,
         )
 
     def test_multi_input_lime_without_mask(self) -> None:
@@ -216,6 +226,7 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
             n_perturb_samples=500,
             expected_coefs_only=[180, 576.0, -8.0],
+            test_generator=True,
         )
 
     def test_multi_input_batch_lime_without_mask(self) -> None:
@@ -289,6 +300,7 @@ class Test(BaseTest):
                 [180.3035, 575.8969, -8.3229],
             ],
             n_perturb_samples=500,
+            test_generator=True,
         )
 
     # Remaining tests are for cases where forward function returns a scalar
@@ -373,6 +385,7 @@ class Test(BaseTest):
             expected_coefs_only=[305.5, 3850.6666, 410.1],
             delta=1.5,
             batch_attr=True,
+            test_generator=True,
         )
 
     def _lime_test_assert(
@@ -389,6 +402,7 @@ class Test(BaseTest):
         n_perturb_samples: int = 100,
         delta: float = 1.0,
         batch_attr: bool = False,
+        test_generator: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             lime = Lime(
@@ -428,7 +442,7 @@ class Test(BaseTest):
                     model,
                     SkLearnLasso(alpha=1.0),
                     get_exp_kernel_similarity_function("euclidean", 1000.0),
-                    alt_perturb_func,
+                    alt_perturb_generator if test_generator else alt_perturb_func,
                     False,
                     None,
                     alt_to_interp_rep,
