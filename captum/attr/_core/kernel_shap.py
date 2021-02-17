@@ -38,8 +38,8 @@ def kernel_shap_similarity_kernel(
         # enforcing that trained linear model must satisfy
         # end-point criteria. In practice, it is sufficient to
         # make this weight substantially larger so setting this
-        # weight to 100000 (all other weights are < 1).
-        similarities = 100000.0
+        # weight to 1000000 (all other weights are 1).
+        similarities = 1000000.0
     else:
         similarities = 1.0
     return torch.tensor([similarities])

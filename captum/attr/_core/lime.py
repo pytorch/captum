@@ -3,7 +3,7 @@ import inspect
 import math
 import typing
 import warnings
-from typing import Any, Callable, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Generator, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
@@ -638,7 +638,7 @@ def construct_feature_mask(feature_mask, formatted_inputs):
                 " start at 0."
             )
             feature_mask = tuple(
-                single_inp + min_interp_features for single_inp in feature_mask
+                single_inp - min_interp_features for single_inp in feature_mask
             )
 
         num_interp_features = int(
@@ -688,7 +688,7 @@ class Lime(LimeBase):
         forward_func: Callable,
         interpretable_model: Optional[Model] = None,
         similarity_func: Optional[Callable] = None,
-        perturb_func: Optional[Callable] = None,
+        perturb_func: Optional[Union[Callable, Generator]] = None,
     ) -> None:
         r"""
 
@@ -808,7 +808,6 @@ class Lime(LimeBase):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
-        **kwargs
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method attributes the output of the model with given target index
