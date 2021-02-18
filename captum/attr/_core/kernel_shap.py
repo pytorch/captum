@@ -322,9 +322,7 @@ class KernelShap(Lime):
         feature_mask, num_interp_features = construct_feature_mask(
             feature_mask, formatted_inputs
         )
-        num_features_list = torch.arange(
-            num_interp_features, device=formatted_inputs[0].device
-        )
+        num_features_list = torch.arange(num_interp_features, dtype=torch.float)
         denom = num_features_list * (num_interp_features - num_features_list)
         probs = (num_interp_features - 1) / denom
         probs[0] = 0.0
