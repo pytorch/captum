@@ -73,7 +73,7 @@ class LimeBase(PerturbationAttribution):
         forward_func: Callable,
         interpretable_model: Model,
         similarity_func: Callable,
-        perturb_func: Callable,
+        perturb_func: Union[Callable],
         perturb_interpretable_space: bool,
         from_interp_rep_transform: Optional[Callable],
         to_interp_rep_transform: Optional[Callable],
@@ -688,7 +688,7 @@ class Lime(LimeBase):
         forward_func: Callable,
         interpretable_model: Optional[Model] = None,
         similarity_func: Optional[Callable] = None,
-        perturb_func: Optional[Union[Callable, Generator]] = None,
+        perturb_func: Optional[Callable] = None,
     ) -> None:
         r"""
 
@@ -758,7 +758,7 @@ class Lime(LimeBase):
                     (integer, determined from feature mask).
             perturb_func (optional, callable): Function which returns a single
                     sampled input, which is a binary vector of length
-                    num_interp_features.
+                    num_interp_features, or a generator of such tensors.
 
                     This function is optional, the default function returns
                     a binary vector where each element is selected
@@ -771,6 +771,7 @@ class Lime(LimeBase):
                     >>>    original_input: Tensor or tuple of Tensors,
                     >>>    **kwargs: Any
                     >>> ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
+                    >>>  or generator yielding such tensors
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask).
