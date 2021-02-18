@@ -3,7 +3,7 @@ import inspect
 import math
 import typing
 import warnings
-from typing import Any, Callable, Generator, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 
 import torch
 from torch import Tensor
