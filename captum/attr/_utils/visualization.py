@@ -155,8 +155,8 @@ def visualize_image_attr(
         outlier_perc (float or int, optional): Top attribution values which
                     correspond to a total of outlier_perc percentage of the
                     total attribution are set to 1 and scaling is performed
-                    using the minimum of these values. For sign=`all`, outliers a
-                    nd scale value are computed using absolute value of
+                    using the minimum of these values. For sign=`all`, outliers
+                    and scale value are computed using absolute value of
                     attributions.
                     Default: 2
         cmap (string, optional): String corresponding to desired colormap for
