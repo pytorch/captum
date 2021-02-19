@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import math
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
@@ -15,57 +14,6 @@ from captum.attr._utils.common import (
     lime_n_perturb_samples_deprecation_decorator,
 )
 from captum.log import log_usage
-
-
-def combination(n: int, k: int) -> int:
-    try:
-        # Combination only available in Python 3.8
-        return math.comb(n, k)  # type: ignore
-    except AttributeError:
-        return math.factorial(n) // math.factorial(k) // math.factorial(n - k)
-
-
-def kernel_shap_similarity_kernel(
-    _, __, interpretable_sample: Tensor, **kwargs
-) -> Tensor:
-    assert (
-        "num_interp_features" in kwargs
-    ), "Must provide num_interp_features to use default similarity kernel"
-    num_selected_features = int(interpretable_sample.sum(dim=1).item())
-    num_features = kwargs["num_interp_features"]
-    if num_selected_features == 0 or num_selected_features == num_features:
-        # weight should be theoretically infinite when denom = 0
-        # enforcing that trained linear model must satisfy
-        # end-point criteria. In practice, it is sufficient to
-        # make this weight substantially larger so setting this
-        # weight to 1000000 (all other weights are 1).
-        similarities = 1000000.0
-    else:
-        similarities = 1.0
-    return torch.tensor([similarities])
-
-
-def kernel_shap_perturb_generator(
-    original_inp, **kwargs
-) -> Generator[Tensor, None, None]:
-    assert "num_select_distribution" in kwargs and "num_interp_features" in kwargs, (
-        "num_select_distribution and num_interp_features are necessary"
-        " to use kernel_shap_perturb_func"
-    )
-    if isinstance(original_inp, Tensor):
-        device = original_inp.device
-    else:
-        device = original_inp[0].device
-    num_features = kwargs["num_interp_features"]
-    yield torch.ones(1, num_features, device=device, dtype=torch.long)
-    yield torch.zeros(1, num_features, device=device, dtype=torch.long)
-    while True:
-        num_selected_features = kwargs["num_select_distribution"].sample()
-        rand_vals = torch.randn(1, num_features)
-        threshold = torch.kthvalue(
-            rand_vals, num_features - num_selected_features
-        ).values.item()
-        yield (rand_vals > threshold).to(device=device).long()
 
 
 class KernelShap(Lime):
@@ -92,9 +40,10 @@ class KernelShap(Lime):
             self,
             forward_func,
             interpretable_model=SkLearnLinearRegression(),
-            similarity_func=kernel_shap_similarity_kernel,
-            perturb_func=kernel_shap_perturb_generator,
+            similarity_func=self.kernel_shap_similarity_kernel,
+            perturb_func=self.kernel_shap_perturb_generator,
         )
+        self.inf_weight = 1000000.0
 
     @log_usage()
     @lime_n_perturb_samples_deprecation_decorator
@@ -337,3 +286,46 @@ class KernelShap(Lime):
             return_input_shape=return_input_shape,
             num_select_distribution=Categorical(probs),
         )
+
+    def kernel_shap_similarity_kernel(
+        self, _, __, interpretable_sample: Tensor, **kwargs
+    ) -> Tensor:
+        assert (
+            "num_interp_features" in kwargs
+        ), "Must provide num_interp_features to use default similarity kernel"
+        num_selected_features = int(interpretable_sample.sum(dim=1).item())
+        num_features = kwargs["num_interp_features"]
+        if num_selected_features == 0 or num_selected_features == num_features:
+            # weight should be theoretically infinite when denom = 0
+            # enforcing that trained linear model must satisfy
+            # end-point criteria. In practice, it is sufficient to
+            # make this weight substantially larger so setting this
+            # weight to 1000000 (all other weights are 1).
+            similarities = self.inf_weight
+        else:
+            similarities = 1.0
+        return torch.tensor([similarities])
+
+    def kernel_shap_perturb_generator(
+        self, original_inp: Union[Tensor, Tuple[Tensor, ...]], **kwargs
+    ) -> Generator[Tensor, None, None]:
+        assert (
+            "num_select_distribution" in kwargs and "num_interp_features" in kwargs
+        ), (
+            "num_select_distribution and num_interp_features are necessary"
+            " to use kernel_shap_perturb_func"
+        )
+        if isinstance(original_inp, Tensor):
+            device = original_inp.device
+        else:
+            device = original_inp[0].device
+        num_features = kwargs["num_interp_features"]
+        yield torch.ones(1, num_features, device=device, dtype=torch.long)
+        yield torch.zeros(1, num_features, device=device, dtype=torch.long)
+        while True:
+            num_selected_features = kwargs["num_select_distribution"].sample()
+            rand_vals = torch.randn(1, num_features)
+            threshold = torch.kthvalue(
+                rand_vals, num_features - num_selected_features
+            ).values.item()
+            yield (rand_vals > threshold).to(device=device).long()

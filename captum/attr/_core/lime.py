@@ -73,7 +73,7 @@ class LimeBase(PerturbationAttribution):
         forward_func: Callable,
         interpretable_model: Model,
         similarity_func: Callable,
-        perturb_func: Union[Callable],
+        perturb_func: Callable,
         perturb_interpretable_space: bool,
         from_interp_rep_transform: Optional[Callable],
         to_interp_rep_transform: Optional[Callable],
