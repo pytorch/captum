@@ -320,3 +320,16 @@ def skip_layers(
         layers = cast(List[Type[nn.Module]], layers)
         for target_layer in layers:
             replace_layers(model, target_layer, SkipLayer)
+
+
+class CatLayer(nn.Module):
+    """
+    This layer class is used to make torch.cat operations hookable.
+    Args:
+        tensor_list (list of nn.Module): A list of tensors to concatinate.
+        dim (int, optional): The dimension at which to concatinate the list of
+            tensors.
+    """
+
+    def forward(self, tensor_list: List[torch.Tensor], dim: int = 1) -> torch.Tensor:
+        return torch.cat(tensor_list, dim)
