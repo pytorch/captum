@@ -90,7 +90,7 @@ class InceptionV1(nn.Module):
         self.aux_logits = aux_logits
         self.transform_input = transform_input
         self.bgr_transform = bgr_transform
-        lrn_vals = (11, 0.0011, 0.5, 2.0)
+        lrn_vals = (9, 9.99999974738e-05, 0.5, 1.0)
 
         if use_linear_modules_only:
             activ = SkipLayer
