@@ -90,7 +90,7 @@ class InceptionV1(nn.Module):
         self.aux_logits = aux_logits
         self.transform_input = transform_input
         self.bgr_transform = bgr_transform
-        lrn_vals = (9, 9.99999974738e-05, 0.5, 1.0)
+        lrn_vals = (11, 0.0011, 0.5, 2.0)
 
         if use_linear_modules_only:
             activ = SkipLayer
@@ -258,6 +258,7 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
+        self.conv_3x3_relu = activ()
 
         self.conv_5x5_reduce = nn.Conv2d(
             in_channels=in_channels,
@@ -277,6 +278,7 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
+        self.conv_5x5_relu = activ()
 
         self.pool = p_layer(kernel_size=3, stride=1, padding=1, ceil_mode=True)
         self.pool_proj = nn.Conv2d(
@@ -287,26 +289,26 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-
-        self.conv = CatLayer()
-        self.relu = activ()
+        self.pool_proj_relu = activ()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         c1x1 = self.conv_1x1(x)
+        c1x1 = self.conv_1x1_relu(c1x1)
 
         c3x3 = self.conv_3x3_reduce(x)
         c3x3 = self.conv_3x3_reduce_relu(c3x3)
         c3x3 = self.conv_3x3(c3x3)
+        c3x3 = self.conv_3x3_relu(c3x3)
 
         c5x5 = self.conv_5x5_reduce(x)
         c5x5 = self.conv_5x5_reduce_relu(c5x5)
         c5x5 = self.conv_5x5(c5x5)
+        c5x5 = self.conv_5x5_relu(c5x5)
 
         px = self.pool(x)
         px = self.pool_proj(px)
-
-        xc = self.conv([c1x1, c3x3, c5x5, px], dim=1)
-        return self.relu(xc)
+        px = self.pool_proj_relu(px)
+        return torch.cat([c1x1, c3x3, c5x5, px], dim=1)
 
 
 class AuxBranch(nn.Module):
