@@ -5,7 +5,6 @@ import torch.nn as nn
 
 from captum.optim._utils.models import (
     AvgPool2dConstrained,
-    CatLayer,
     Conv2dSame,
     LocalResponseNormLayer,
     RedirectedReluLayer,
