@@ -296,7 +296,8 @@ class KernelShap(Lime):
         num_selected_features = int(interpretable_sample.sum(dim=1).item())
         num_features = kwargs["num_interp_features"]
         if num_selected_features == 0 or num_selected_features == num_features:
-            # weight should be theoretically infinite when denom = 0
+            # weight should be theoretically infinite when
+            # num_selected_features = 0 or num_features
             # enforcing that trained linear model must satisfy
             # end-point criteria. In practice, it is sufficient to
             # make this weight substantially larger so setting this
@@ -309,6 +310,18 @@ class KernelShap(Lime):
     def kernel_shap_perturb_generator(
         self, original_inp: Union[Tensor, Tuple[Tensor, ...]], **kwargs
     ) -> Generator[Tensor, None, None]:
+        r"""
+        Perturbations are sampled by the following process:
+         - Choose k (number of selected features), based on the distribution
+                p(k) = (M - 1) / (k * (M - k))
+            where M is the total number of features
+         - Randomly select a binary vector with k ones
+
+         Since there are M choose k vectors with k ones, this weighted sampling
+         is equivalent to applying the Shapley kernel for the sample weight,
+         defined as:
+         k(M, k) = (M - 1) / (k * (M - k) * (M choose k))
+        """
         assert (
             "num_select_distribution" in kwargs and "num_interp_features" in kwargs
         ), (
