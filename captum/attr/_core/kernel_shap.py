@@ -314,8 +314,10 @@ class KernelShap(Lime):
         Perturbations are sampled by the following process:
          - Choose k (number of selected features), based on the distribution
                 p(k) = (M - 1) / (k * (M - k))
-            where M is the total number of features
-         - Randomly select a binary vector with k ones
+            where M is the total number of features in the interpretable space
+         - Randomly select a binary vector with k ones, each sample is equally
+            likely. This is done by generating a random vector of normal
+            values and thresholding based on the top k elements.
 
          Since there are M choose k vectors with k ones, this weighted sampling
          is equivalent to applying the Shapley kernel for the sample weight,
