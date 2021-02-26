@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import inspect
 import math
 import typing
 import warnings
@@ -138,13 +139,18 @@ class LimeBase(PerturbationAttribution):
                     the original input space (matching type and tensor shapes
                     of original input) or in the interpretable input space,
                     which is a vector containing the intepretable features.
+                    Alternatively, this function can return a generator
+                    yielding samples to train the interpretable surrogate
+                    model, and n_samples perturbations will be sampled
+                    from this generator.
 
                     The expected signature of this callable is:
 
                     >>> perturb_func(
                     >>>    original_input: Tensor or tuple of Tensors,
                     >>>    **kwargs: Any
-                    >>> ) -> Tensor or tuple of Tensors
+                    >>> ) -> Tensor or tuple of Tensors or
+                    >>>    generator yielding tensor or tuple of Tensors
 
                     All kwargs passed to the attribute method are
                     provided as keyword arguments (kwargs) to this callable.
@@ -411,8 +417,22 @@ class LimeBase(PerturbationAttribution):
             curr_model_inputs = []
             expanded_additional_args = None
             expanded_target = None
+            perturb_generator = None
+            if inspect.isgeneratorfunction(self.perturb_func):
+                perturb_generator = self.perturb_func(inputs, **kwargs)
+            batch_count = 0
             for _ in range(n_samples):
-                curr_sample = self.perturb_func(inputs, **kwargs)
+                if perturb_generator:
+                    try:
+                        curr_sample = next(perturb_generator)
+                    except StopIteration:
+                        warnings.warn(
+                            "Generator completed prior to given n_samples iterations!"
+                        )
+                        break
+                else:
+                    curr_sample = self.perturb_func(inputs, **kwargs)
+                batch_count += 1
                 if self.perturb_interpretable_space:
                     interpretable_inps.append(curr_sample)
                     curr_model_inputs.append(
@@ -481,7 +501,7 @@ class LimeBase(PerturbationAttribution):
             dataset = TensorDataset(
                 combined_interp_inps, combined_outputs, combined_sim
             )
-            self.interpretable_model.fit(DataLoader(dataset, batch_size=n_samples))
+            self.interpretable_model.fit(DataLoader(dataset, batch_size=batch_count))
             return self.interpretable_model.representation()
 
     def _evaluate_batch(
@@ -602,6 +622,31 @@ def default_perturb_func(original_inp, **kwargs):
     return torch.bernoulli(probs).to(device=device).long()
 
 
+def construct_feature_mask(feature_mask, formatted_inputs):
+    if feature_mask is None:
+        feature_mask, num_interp_features = _construct_default_feature_mask(
+            formatted_inputs
+        )
+    else:
+        feature_mask = _format_input(feature_mask)
+        min_interp_features = int(
+            min(torch.min(single_inp).item() for single_inp in feature_mask)
+        )
+        if min_interp_features != 0:
+            warnings.warn(
+                "Minimum element in feature mask is not 0, shifting indices to"
+                " start at 0."
+            )
+            feature_mask = tuple(
+                single_inp - min_interp_features for single_inp in feature_mask
+            )
+
+        num_interp_features = int(
+            max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
+        )
+    return feature_mask, num_interp_features
+
+
 class Lime(LimeBase):
     r"""
     Lime is an interpretability method that trains an interpretable surrogate model
@@ -713,7 +758,7 @@ class Lime(LimeBase):
                     (integer, determined from feature mask).
             perturb_func (optional, callable): Function which returns a single
                     sampled input, which is a binary vector of length
-                    num_interp_features.
+                    num_interp_features, or a generator of such tensors.
 
                     This function is optional, the default function returns
                     a binary vector where each element is selected
@@ -726,6 +771,7 @@ class Lime(LimeBase):
                     >>>    original_input: Tensor or tuple of Tensors,
                     >>>    **kwargs: Any
                     >>> ) -> Tensor [Binary 2D Tensor 1 x num_interp_features]
+                    >>>  or generator yielding such tensors
 
                     kwargs includes baselines, feature_mask, num_interp_features
                     (integer, determined from feature mask).
@@ -975,31 +1021,36 @@ class Lime(LimeBase):
             >>> # matching input shape.
             >>> attr = lime.attribute(input, target=1, feature_mask=feature_mask)
         """
+        return self._attribute_kwargs(
+            inputs=inputs,
+            baselines=baselines,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            feature_mask=feature_mask,
+            n_samples=n_samples,
+            perturbations_per_eval=perturbations_per_eval,
+            return_input_shape=return_input_shape,
+        )
+
+    def _attribute_kwargs(  # type: ignore
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        baselines: BaselineType = None,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
+        n_samples: int = 25,
+        perturbations_per_eval: int = 1,
+        return_input_shape: bool = True,
+        **kwargs
+    ) -> TensorOrTupleOfTensorsGeneric:
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
         bsz = formatted_inputs[0].shape[0]
 
-        if feature_mask is None:
-            feature_mask, num_interp_features = _construct_default_feature_mask(
-                formatted_inputs
-            )
-        else:
-            feature_mask = _format_input(feature_mask)
-            min_interp_features = int(
-                min(torch.min(single_inp).item() for single_inp in feature_mask)
-            )
-            if min_interp_features != 0:
-                warnings.warn(
-                    "Minimum element in feature mask is not 0, shifting indices to"
-                    " start at 0."
-                )
-                feature_mask = tuple(
-                    single_inp + min_interp_features for single_inp in feature_mask
-                )
-
-            num_interp_features = int(
-                max(torch.max(single_inp).item() for single_inp in feature_mask) + 1
-            )
+        feature_mask, num_interp_features = construct_feature_mask(
+            feature_mask, formatted_inputs
+        )
 
         if num_interp_features > 10000:
             warnings.warn(
@@ -1051,6 +1102,7 @@ class Lime(LimeBase):
                             if is_inputs_tuple
                             else curr_feature_mask[0],
                             num_interp_features=num_interp_features,
+                            **kwargs
                         )
                         if return_input_shape:
                             output_list.append(
@@ -1087,6 +1139,7 @@ class Lime(LimeBase):
             baselines=baselines if is_inputs_tuple else baselines[0],
             feature_mask=feature_mask if is_inputs_tuple else feature_mask[0],
             num_interp_features=num_interp_features,
+            **kwargs
         )
         if return_input_shape:
             return self._convert_output_shape(
