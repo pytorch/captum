@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import List, Tuple, cast
+from typing import List, Tuple
 
 import torch
-from torch import Tensor
 
 from captum._utils.gradient import (
     apply_gradient_requirements,
@@ -11,9 +10,8 @@ from captum._utils.gradient import (
     compute_layer_gradients_and_eval,
     undo_gradient_requirements,
 )
-
-from ..helpers.basic import BaseTest, assertArraysAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel,
     BasicModel2,
     BasicModel4_MultiArgs,
@@ -33,10 +31,6 @@ class Test(BaseTest):
         for i in range(len(test_tensor_tuple)):
             self.assertTrue(test_tensor_tuple[i].requires_grad)
             self.assertEqual(out_mask[i], initial_grads[i])
-            if test_tensor_tuple[i].grad is not None:
-                self.assertAlmostEqual(
-                    torch.sum(cast(Tensor, test_tensor_tuple[i].grad)).item(), 0.0
-                )
 
     def test_undo_gradient_reqs(self) -> None:
         initial_grads = [False, True, False]
@@ -50,22 +44,24 @@ class Test(BaseTest):
         undo_gradient_requirements(test_tensor_tuple, initial_grads)
         for i in range(len(test_tensor_tuple)):
             self.assertEqual(test_tensor_tuple[i].requires_grad, initial_grads[i])
-            if test_tensor_tuple[i].grad is not None:
-                self.assertAlmostEqual(
-                    torch.sum(cast(Tensor, test_tensor_tuple[i].grad)).item(), 0.0
-                )
 
     def test_gradient_basic(self) -> None:
         model = BasicModel()
         input = torch.tensor([[5.0]], requires_grad=True)
+        input.grad = torch.tensor([[9.0]])
         grads = compute_gradients(model, input)[0]
         assertArraysAlmostEqual(grads.squeeze(0).tolist(), [0.0], delta=0.01)
+        # Verify grad attribute is not altered
+        assertArraysAlmostEqual(input.grad.squeeze(0).tolist(), [9.0], delta=0.0)
 
     def test_gradient_basic_2(self) -> None:
         model = BasicModel()
         input = torch.tensor([[-3.0]], requires_grad=True)
+        input.grad = torch.tensor([[14.0]])
         grads = compute_gradients(model, input)[0]
         assertArraysAlmostEqual(grads.squeeze(0).tolist(), [1.0], delta=0.01)
+        # Verify grad attribute is not altered
+        assertArraysAlmostEqual(input.grad.squeeze(0).tolist(), [14.0], delta=0.0)
 
     def test_gradient_multiinput(self) -> None:
         model = BasicModel6_MultiTensor()

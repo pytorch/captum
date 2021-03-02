@@ -18,3 +18,11 @@ Score-CAM is a gradient-free visualization method extended from Grad-CAM and Gra
 White noise stimuli is fed to a classifier and the ones that are categorized into a particular class are averaged. It gives an estimate of the templates a classifier uses for classification, and is based on two popular and related methods in psychophysics and neurophysiology namely classification images and spike triggered analysis.
 - [Paper](https://arxiv.org/abs/1912.12106)
 - [https://github.com/aliborji/WhiteNoiseAnalysis.git](https://github.com/aliborji/WhiteNoiseAnalysis.git)
+
+
+#### FastCAM: Multiscale Saliency Map with SMOE scale
+An attribution method that uses information at the end of each network scale which is then combined into a single saliency map. 
+- [Paper](https://arxiv.org/abs/1911.11293)
+- [https://github.com/LLNL/fastcam](https://github.com/LLNL/fastcam)
+- [pull request](https://github.com/pytorch/captum/pull/442)
+- [jupyter notebook demo](https://github.com/LLNL/fastcam/blob/captum/demo-captum.ipynb)

@@ -20,7 +20,7 @@ class ClassSummarizer(Summarizer):
     """
 
     @log_usage()
-    def __init__(self, stats: List[Stat]):
+    def __init__(self, stats: List[Stat]) -> None:
         Summarizer.__init__.__wrapped__(self, stats)
         self.summaries: Dict[Any, Summarizer] = defaultdict(
             lambda: Summarizer(stats=stats)

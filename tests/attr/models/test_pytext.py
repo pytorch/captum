@@ -5,6 +5,7 @@ from __future__ import print_function
 import os
 import tempfile
 import unittest
+from typing import Dict, List
 
 import torch
 
@@ -32,9 +33,9 @@ except ImportError:
 
 
 class VocabStub:
-    def __init__(self):
-        self.itos = []
-        self.stoi = {}
+    def __init__(self) -> None:
+        self.itos: List = []
+        self.stoi: Dict = {}
 
 
 # TODO add more test cases for dict features

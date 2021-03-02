@@ -3,12 +3,11 @@
 import unittest
 
 from captum.attr._utils.approximation_methods import Riemann, riemann_builders
-
-from ..helpers.basic import assertArraysAlmostEqual
+from tests.helpers.basic import assertArraysAlmostEqual
 
 
 class Test(unittest.TestCase):
-    def __init__(self, methodName="runTest"):
+    def __init__(self, methodName="runTest") -> None:
         super().__init__(methodName)
 
     def test_riemann_0(self):

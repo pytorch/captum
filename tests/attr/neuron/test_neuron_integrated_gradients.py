@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from typing import Any, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -12,13 +12,12 @@ from captum.attr._core.integrated_gradients import IntegratedGradients
 from captum.attr._core.neuron.neuron_integrated_gradients import (
     NeuronIntegratedGradients,
 )
-
-from ...helpers.basic import (
+from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
     assertTensorTuplesAlmostEqual,
 )
-from ...helpers.basic_models import (
+from tests.helpers.basic_models import (
     BasicModel_ConvNet,
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
@@ -35,12 +34,7 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[100.0, 100.0, 100.0]])
         self._ig_input_test_assert(
-            net,
-            net.linear2,
-            inp,
-            0,
-            [3.96, 3.96, 3.96],
-            multiply_by_inputs=False,
+            net, net.linear2, inp, 0, [3.96, 3.96, 3.96], multiply_by_inputs=False
         )
 
     def test_simple_ig_input_linear1(self) -> None:
@@ -57,6 +51,20 @@ class Test(BaseTest):
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 5.0, 4.0]])
         self._ig_input_test_assert(net, net.relu, inp, 1, [0.0, 5.0, 4.0])
+
+    def test_simple_ig_input_relu_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._ig_input_test_assert(
+            net, net.relu, inp, lambda x: torch.sum(x[:, 2:]), [0.0, 10.0, 8.0]
+        )
+
+    def test_simple_ig_input_relu2_agg_neurons(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 5.0, 4.0]])
+        self._ig_input_test_assert(
+            net, net.relu, inp, (slice(0, 2, 1),), [0.0, 5.0, 4.0]
+        )
 
     def test_simple_ig_multi_input_linear2(self) -> None:
         net = BasicModel_MultiLayer_MultiInput()
@@ -100,6 +108,23 @@ class Test(BaseTest):
             (inp3, 0.5),
         )
 
+    def test_simple_ig_multi_input_relu_batch_selector_fn(self) -> None:
+        net = BasicModel_MultiLayer_MultiInput()
+        inp1 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 80.0, 0.0]])
+        inp2 = torch.tensor([[0.0, 6.0, 14.0], [0.0, 20.0, 0.0]])
+        inp3 = torch.tensor([[0.0, 0.0, 0.0], [0.0, 20.0, 0.0]])
+        self._ig_input_test_assert(
+            net,
+            net.model.relu,
+            (inp1, inp2),
+            lambda x: torch.sum(x),
+            (
+                [[0.0, 10.5, 24.5], [0.0, 160.0, 0.0]],
+                [[0.0, 10.5, 24.5], [0.0, 40.0, 0.0]],
+            ),
+            (inp3, 0.5),
+        )
+
     def test_matching_output_gradient(self) -> None:
         net = BasicModel_ConvNet()
         inp = 100 * torch.randn(2, 1, 10, 10, requires_grad=True)
@@ -111,16 +136,14 @@ class Test(BaseTest):
         model: Module,
         target_layer: Module,
         test_input: TensorOrTupleOfTensorsGeneric,
-        test_neuron: Union[int, Tuple[int, ...]],
+        test_neuron: Union[int, Tuple[Union[int, slice], ...], Callable],
         expected_input_ig: Union[List[float], Tuple[List[List[float]], ...]],
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
     ) -> None:
         for internal_batch_size in [None, 5, 20]:
             grad = NeuronIntegratedGradients(
-                model,
-                target_layer,
-                multiply_by_inputs=multiply_by_inputs,
+                model, target_layer, multiply_by_inputs=multiply_by_inputs
             )
             self.assertEquals(grad.multiplies_by_inputs, multiply_by_inputs)
             attributions = grad.attribute(

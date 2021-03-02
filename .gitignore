@@ -114,3 +114,4 @@ website/static/js/*
 !website/static/js/code_block_buttons.js
 website/static/_sphinx-sources/
 node_modules
+captum/insights/attr_vis/widget/static

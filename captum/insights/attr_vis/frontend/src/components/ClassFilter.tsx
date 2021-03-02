@@ -10,18 +10,17 @@ interface ClassFilterProps {
 }
 
 function ClassFilter(props: ClassFilterProps) {
-
-  const handleAddition = (newTag: { id: number | string, name: string }) => {
+  const handleAddition = (newTag: { id: number | string; name: string }) => {
     /**
-     * Need this type check as we expect tagId to be number while the `react-tag-autocomplete` has 
-     * id as number | string. 
+     * Need this type check as we expect tagId to be number while the `react-tag-autocomplete` has
+     * id as number | string.
      */
-    if(typeof newTag.id === 'string') {
+    if (typeof newTag.id === "string") {
       throw Error("Invalid tag id received from ReactTags");
     } else {
-      props.handleClassAdd({id: newTag.id, name: newTag.name}); 
+      props.handleClassAdd({ id: newTag.id, name: newTag.name });
     }
-  }
+  };
 
   return (
     <ReactTags

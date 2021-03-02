@@ -18,12 +18,17 @@ from torch.nn import Module
 
 from captum.attr import IntegratedGradients
 from captum.attr._utils.batching import _batched_generator
-from captum.insights.attribution_calculation import AttributionCalculation, OutputScore
+from captum.insights.attr_vis.attribution_calculation import (
+    AttributionCalculation,
+    OutputScore,
+)
+from captum.insights.attr_vis.config import (
+    ATTRIBUTION_METHOD_CONFIG,
+    ATTRIBUTION_NAMES_TO_METHODS,
+)
+from captum.insights.attr_vis.features import BaseFeature
+from captum.insights.attr_vis.server import namedtuple_to_dict
 from captum.log import log_usage
-
-from .config import ATTRIBUTION_METHOD_CONFIG, ATTRIBUTION_NAMES_TO_METHODS
-from .features import BaseFeature
-from .server import namedtuple_to_dict
 
 _CONTEXT_COLAB = "_CONTEXT_COLAB"
 _CONTEXT_IPYTHON = "_CONTEXT_IPYTHON"
@@ -71,7 +76,7 @@ def _get_context():
 
 
 VisualizationOutput = namedtuple(
-    "VisualizationOutput", "feature_outputs actual predicted active_index"
+    "VisualizationOutput", "feature_outputs actual predicted active_index model_index"
 )
 Contribution = namedtuple("Contribution", "name percent")
 SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
@@ -97,7 +102,7 @@ class Batch:
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         labels: Optional[Tensor],
         additional_args=None,
-    ):
+    ) -> None:
         r"""
         Constructs batch of inputs to be attributed and visualized.
 
@@ -131,7 +136,7 @@ class Batch:
         self.additional_args = additional_args
 
 
-class AttributionVisualizer(object):
+class AttributionVisualizer:
     def __init__(
         self,
         models: Union[List[Module], Module],
@@ -140,15 +145,12 @@ class AttributionVisualizer(object):
         dataset: Iterable[Batch],
         score_func: Optional[Callable] = None,
         use_label_for_attr: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
 
-            models (torch.nn.module): PyTorch module (model) for attribution
-                          visualization.
-                          We plan to support visualizing and comparing multiple models
-                          in the future, but currently this supports only a single
-                          model.
+            models (torch.nn.module): One or more PyTorch modules (models) for
+                          attribution visualization.
             classes (list of string): List of strings corresponding to the names of
                           classes for classification.
             features (list of BaseFeature): List of BaseFeatures, which correspond
@@ -190,6 +192,7 @@ class AttributionVisualizer(object):
         self.classes = classes
         self.features = features
         self.dataset = dataset
+        self.models = models
         self.attribution_calculation = AttributionCalculation(
             models, classes, features, score_func, use_label_for_attr
         )
@@ -198,12 +201,20 @@ class AttributionVisualizer(object):
         self._dataset_iter = iter(dataset)
 
     def _calculate_attribution_from_cache(
-        self, index: int, target: Optional[Tensor]
+        self, input_index: int, model_index: int, target: Optional[Tensor]
     ) -> Optional[VisualizationOutput]:
-        c = self._outputs[index][1]
-        return self._calculate_vis_output(
-            c.inputs, c.additional_forward_args, c.label, torch.tensor(target)
+        c = self._outputs[input_index][1]
+        result = self._calculate_vis_output(
+            c.inputs,
+            c.additional_forward_args,
+            c.label,
+            torch.tensor(target),
+            model_index,
         )
+
+        if not result:
+            return None
+        return result[0]
 
     def _update_config(self, settings):
         self._config = FilterConfig(
@@ -218,7 +229,7 @@ class AttributionVisualizer(object):
     def render(self, debug=True):
         from IPython.display import display
 
-        from .widget import CaptumInsights
+        from captum.insights.attr_vis.widget import CaptumInsights
 
         widget = CaptumInsights(visualizer=self)
         display(widget)
@@ -226,23 +237,27 @@ class AttributionVisualizer(object):
             display(widget.out)
 
     @log_usage()
-    def serve(self, blocking=False, debug=False, port=None):
+    def serve(self, blocking=False, debug=False, port=None, bind_all=False):
         context = _get_context()
         if context == _CONTEXT_COLAB:
             return self._serve_colab(blocking=blocking, debug=debug, port=port)
         else:
-            return self._serve(blocking=blocking, debug=debug, port=port)
+            return self._serve(
+                blocking=blocking, debug=debug, port=port, bind_all=bind_all
+            )
 
-    def _serve(self, blocking=False, debug=False, port=None):
-        from .server import start_server
+    def _serve(self, blocking=False, debug=False, port=None, bind_all=False):
+        from captum.insights.attr_vis.server import start_server
 
-        return start_server(self, blocking=blocking, debug=debug, _port=port)
+        return start_server(
+            self, blocking=blocking, debug=debug, _port=port, bind_all=bind_all
+        )
 
     def _serve_colab(self, blocking=False, debug=False, port=None):
         import ipywidgets as widgets
         from IPython.display import HTML, display
 
-        from .server import start_server
+        from captum.insights.attr_vis.server import start_server
 
         # TODO: Output widget only captures beginning of server logs. It seems
         # the context manager isn't respected when the web server is run on a
@@ -335,67 +350,95 @@ class AttributionVisualizer(object):
         return True
 
     def _calculate_vis_output(
-        self, inputs, additional_forward_args, label, target=None
-    ) -> Optional[VisualizationOutput]:
-        actual_label_output = None
-        if label is not None and len(label) > 0:
-            label_index = int(label[0])
-            actual_label_output = OutputScore(
-                score=100, index=label_index, label=self.classes[label_index]
+        self,
+        inputs,
+        additional_forward_args,
+        label,
+        target=None,
+        single_model_index=None,
+    ) -> Optional[List[VisualizationOutput]]:
+        # Use all models, unless the user wants to render data for a particular one
+        models_used = (
+            [self.models[single_model_index]]
+            if single_model_index is not None
+            else self.models
+        )
+        results = []
+        for model_index, model in enumerate(models_used):
+            # Get list of model visualizations for each input
+            actual_label_output = None
+            if label is not None and len(label) > 0:
+                label_index = int(label[0])
+                actual_label_output = OutputScore(
+                    score=100, index=label_index, label=self.classes[label_index]
+                )
+
+            (
+                predicted_scores,
+                baselines,
+                transformed_inputs,
+            ) = self.attribution_calculation.calculate_predicted_scores(
+                inputs, additional_forward_args, model
             )
 
-        (
-            predicted_scores,
-            baselines,
-            transformed_inputs,
-        ) = self.attribution_calculation.calculate_predicted_scores(
-            inputs, additional_forward_args
-        )
+            # Filter based on UI configuration
+            if actual_label_output is None or not self._should_keep_prediction(
+                predicted_scores, actual_label_output
+            ):
+                continue
 
-        # Filter based on UI configuration
-        if actual_label_output is None or not self._should_keep_prediction(
-            predicted_scores, actual_label_output
-        ):
-            return None
+            if target is None:
+                target = (
+                    predicted_scores[0].index if len(predicted_scores) > 0 else None
+                )
 
-        if target is None:
-            target = predicted_scores[0].index if len(predicted_scores) > 0 else None
+            # attributions are given per input*
+            # inputs given to the model are described via `self.features`
+            #
+            # *an input contains multiple features that represent it
+            #   e.g. all the pixels that describe an image is an input
 
-        # attributions are given per input*
-        # inputs given to the model are described via `self.features`
-        #
-        # *an input contains multiple features that represent it
-        #   e.g. all the pixels that describe an image is an input
-
-        attrs_per_input_feature = self.attribution_calculation.calculate_attribution(
-            baselines,
-            transformed_inputs,
-            additional_forward_args,
-            target,
-            self._config.attribution_method,
-            self._config.attribution_arguments,
-        )
-
-        net_contrib = self.attribution_calculation.calculate_net_contrib(
-            attrs_per_input_feature
-        )
-
-        # the features per input given
-        features_per_input = [
-            feature.visualize(attr, data, contrib)
-            for feature, attr, data, contrib in zip(
-                self.features, attrs_per_input_feature, inputs, net_contrib
+            attrs_per_feature = self.attribution_calculation.calculate_attribution(
+                baselines,
+                transformed_inputs,
+                additional_forward_args,
+                target,
+                self._config.attribution_method,
+                self._config.attribution_arguments,
+                model,
             )
-        ]
 
-        return VisualizationOutput(
-            feature_outputs=features_per_input,
-            actual=actual_label_output,
-            predicted=predicted_scores,
-            active_index=target if target is not None else actual_label_output.index,
-        )
+            net_contrib = self.attribution_calculation.calculate_net_contrib(
+                attrs_per_feature
+            )
 
-    def _get_outputs(self) -> List[Tuple[VisualizationOutput, SampleCache]]:
+            # the features per input given
+            features_per_input = [
+                feature.visualize(attr, data, contrib)
+                for feature, attr, data, contrib in zip(
+                    self.features, attrs_per_feature, inputs, net_contrib
+                )
+            ]
+
+            results.append(
+                VisualizationOutput(
+                    feature_outputs=features_per_input,
+                    actual=actual_label_output,
+                    predicted=predicted_scores,
+                    active_index=target
+                    if target is not None
+                    else actual_label_output.index,
+                    # Even if we only iterated over one model, the index should be fixed
+                    # to show the index the model would have had in the list
+                    model_index=single_model_index
+                    if single_model_index is not None
+                    else model_index,
+                )
+            )
+
+        return results if results else None
+
+    def _get_outputs(self) -> List[Tuple[List[VisualizationOutput], SampleCache]]:
         batch_data = next(self._dataset_iter)
         vis_outputs = []
 

@@ -11,9 +11,8 @@ from captum.attr._core.guided_backprop_deconvnet import GuidedBackprop
 from captum.attr._core.neuron.neuron_guided_backprop_deconvnet import (
     NeuronGuidedBackprop,
 )
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import BasicModel_ConvNet_One_Conv
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import BasicModel_ConvNet_One_Conv
 
 
 class Test(BaseTest):
@@ -38,6 +37,19 @@ class Test(BaseTest):
             [1.0, 2.0, 2.0, 1.0],
         ]
         self._neuron_guided_backprop_test_assert(net, net.fc1, (0,), (inp,), (exp,))
+
+    def test_simple_input_conv_neuron_gb_agg_neurons(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        inp = 1.0 * torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
+        exp = [
+            [0.0, 1.0, 1.0, 1.0],
+            [1.0, 3.0, 3.0, 2.0],
+            [1.0, 3.0, 3.0, 2.0],
+            [1.0, 2.0, 2.0, 1.0],
+        ]
+        self._neuron_guided_backprop_test_assert(
+            net, net.fc1, (slice(0, 1, 1),), (inp,), (exp,)
+        )
 
     def test_simple_multi_input_conv_gb(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
@@ -88,7 +100,7 @@ class Test(BaseTest):
         self,
         model: Module,
         layer: Module,
-        neuron_index: Union[int, Tuple[int, ...]],
+        neuron_selector: Union[int, Tuple[Union[int, slice], ...]],
         test_input: TensorOrTupleOfTensorsGeneric,
         expected: Tuple[List[List[float]], ...],
         additional_input: Any = None,
@@ -96,7 +108,7 @@ class Test(BaseTest):
         guided_backprop = NeuronGuidedBackprop(model, layer)
         attributions = guided_backprop.attribute(
             test_input,
-            neuron_index=neuron_index,
+            neuron_selector=neuron_selector,
             additional_forward_args=additional_input,
         )
         for i in range(len(test_input)):

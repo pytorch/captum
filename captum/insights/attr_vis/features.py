@@ -9,8 +9,7 @@ import numpy as np
 
 from captum._utils.common import safe_div
 from captum.attr._utils import visualization as viz
-
-from ._utils.transforms import format_transforms
+from captum.insights.attr_vis._utils.transforms import format_transforms
 
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
@@ -40,7 +39,7 @@ class BaseFeature:
         baseline_transforms: Optional[Union[Callable, List[Callable]]],
         input_transforms: Optional[Union[Callable, List[Callable]]],
         visualization_transform: Optional[Callable],
-    ):
+    ) -> None:
         r"""
         Args:
 
@@ -66,7 +65,8 @@ class BaseFeature:
         self.input_transforms = format_transforms(input_transforms)
         self.visualization_transform = visualization_transform
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         raise NotImplementedError
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -86,7 +86,7 @@ class ImageFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -112,7 +112,8 @@ class ImageFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "image"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -159,7 +160,7 @@ class TextFeature(BaseFeature):
         baseline_transforms: Union[Callable, List[Callable]],
         input_transforms: Union[Callable, List[Callable]],
         visualization_transform: Callable,
-    ):
+    ) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -196,7 +197,8 @@ class TextFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "text"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -235,7 +237,7 @@ class GeneralFeature(BaseFeature):
     where N is the number of samples and C is the number of categories.
     """
 
-    def __init__(self, name: str, categories: List[str]):
+    def __init__(self, name: str, categories: List[str]) -> None:
         r"""
         Args:
             name (str): The label of the specific feature. For example, an
@@ -252,7 +254,8 @@ class GeneralFeature(BaseFeature):
         )
         self.categories = categories
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "general"
 
     def visualize(self, attribution, data, contribution_frac) -> FeatureOutput:
@@ -284,7 +287,7 @@ class EmptyFeature(BaseFeature):
         baseline_transforms: Optional[Union[Callable, List[Callable]]] = None,
         input_transforms: Optional[Union[Callable, List[Callable]]] = None,
         visualization_transform: Optional[Callable] = None,
-    ):
+    ) -> None:
         super().__init__(
             name,
             baseline_transforms=baseline_transforms,
@@ -292,7 +295,8 @@ class EmptyFeature(BaseFeature):
             visualization_transform=visualization_transform,
         )
 
-    def visualization_type(self) -> str:
+    @staticmethod
+    def visualization_type() -> str:
         return "empty"
 
     def visualize(self, _attribution, _data, contribution_frac) -> FeatureOutput:

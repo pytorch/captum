@@ -10,14 +10,22 @@ import { VisualizationOutput } from "../models/visualizationOutput";
 interface VisualizationProps {
   data: VisualizationOutput;
   instance: number;
-  onTargetClick: (labelIndex: number, instance: number, callback: () => void) => void;
+  onTargetClick: (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number,
+    callback: () => void
+  ) => void;
 }
 
 interface VisualizationState {
   loading: boolean;
 }
 
-class Visualization extends React.Component<VisualizationProps, VisualizationState> {
+class Visualization extends React.Component<
+  VisualizationProps,
+  VisualizationState
+> {
   constructor(props: VisualizationProps) {
     super(props);
     this.state = {
@@ -25,17 +33,24 @@ class Visualization extends React.Component<VisualizationProps, VisualizationSta
     };
   }
 
-  onTargetClick = (labelIndex: number, instance: number) => {
+  onTargetClick = (
+    labelIndex: number,
+    inputIndex: number,
+    modelIndex: number
+  ) => {
     this.setState({ loading: true });
-    this.props.onTargetClick(labelIndex, instance, () =>
+    this.props.onTargetClick(labelIndex, inputIndex, modelIndex, () =>
       this.setState({ loading: false })
     );
   };
 
+  //TODO: Refactor the visualization table as a <table> instead of columns, in order to have cleaner styling
   render() {
     const data = this.props.data;
-    console.log("visualization", data);
-    const features = data.feature_outputs.map((f) => <Feature data={f} />);
+    const isFirstInGroup = this.props.data.model_index === 0;
+    const features = data.feature_outputs.map((f) => (
+      <Feature data={f} hideHeaders={isFirstInGroup} />
+    ));
 
     return (
       <>
@@ -44,22 +59,23 @@ class Visualization extends React.Component<VisualizationProps, VisualizationSta
             <Spinner />
           </div>
         )}
-        <div
-          className={cx({
-            [styles.panel]: true,
-            [styles["panel--long"]]: true,
-            [styles["panel--loading"]]: this.state.loading,
-          })}
-        >
+        {!isFirstInGroup && <div className={styles["model-separator"]} />}
+        <div className={styles["visualization-container"]}>
           <div className={styles["panel__column"]}>
-            <div className={styles["panel__column__title"]}>Predicted</div>
+            {isFirstInGroup && (
+              <div className={styles["panel__column__title"]}>Predicted</div>
+            )}
             <div className={styles["panel__column__body"]}>
+              <div className={styles["model-number"]}>
+                Model {data.model_index + 1}
+              </div>
               {data.predicted.map((p) => (
                 <div className={cx([styles.row, styles["row--padding"]])}>
                   <LabelButton
                     onTargetClick={this.onTargetClick}
                     labelIndex={p.index}
-                    instance={this.props.instance}
+                    inputIndex={this.props.instance}
+                    modelIndex={this.props.data.model_index}
                     active={p.index === data.active_index}
                   >
                     {p.label} ({p.score.toFixed(3)})
@@ -69,13 +85,17 @@ class Visualization extends React.Component<VisualizationProps, VisualizationSta
             </div>
           </div>
           <div className={styles["panel__column"]}>
-            <div className={styles["panel__column__title"]}>Label</div>
+            {isFirstInGroup && (
+              <div className={styles["panel__column__title"]}>Label</div>
+            )}
             <div className={styles["panel__column__body"]}>
+              <div className={styles["model-number-spacer"]} />
               <div className={cx([styles.row, styles["row--padding"]])}>
                 <LabelButton
                   onTargetClick={this.onTargetClick}
                   labelIndex={data.actual.index}
-                  instance={this.props.instance}
+                  inputIndex={this.props.instance}
+                  modelIndex={this.props.data.model_index}
                   active={data.actual.index === data.active_index}
                 >
                   {data.actual.label}
@@ -84,8 +104,11 @@ class Visualization extends React.Component<VisualizationProps, VisualizationSta
             </div>
           </div>
           <div className={styles["panel__column"]}>
-            <div className={styles["panel__column__title"]}>Contribution</div>
+            {isFirstInGroup && (
+              <div className={styles["panel__column__title"]}>Contribution</div>
+            )}
             <div className={styles["panel__column__body"]}>
+              <div className={styles["model-number-spacer"]} />
               <div className={styles["bar-chart"]}>
                 <Contributions feature_outputs={data.feature_outputs} />
               </div>

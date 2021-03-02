@@ -6,19 +6,18 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.parallel.scatter_gather import scatter
 
-from captum.log import log_usage
-
-from ...._utils.common import (
+from captum._utils.common import (
     _extract_device,
     _format_additional_forward_args,
     _format_input,
     _format_output,
     _run_forward,
 )
-from ...._utils.gradient import _forward_layer_eval
-from ...._utils.typing import BaselineType, TargetType
-from ..._utils.attribution import LayerAttribution, PerturbationAttribution
-from ..feature_ablation import FeatureAblation
+from captum._utils.gradient import _forward_layer_eval
+from captum._utils.typing import BaselineType, TargetType
+from captum.attr._core.feature_ablation import FeatureAblation
+from captum.attr._utils.attribution import LayerAttribution, PerturbationAttribution
+from captum.log import log_usage
 
 
 class LayerFeatureAblation(LayerAttribution, PerturbationAttribution):

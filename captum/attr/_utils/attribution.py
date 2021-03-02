@@ -6,17 +6,20 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
 
-from captum.log import log_usage
-
-from ..._utils.common import (
+from captum._utils.common import (
     _format_additional_forward_args,
     _format_tensor_into_tuples,
     _run_forward,
     _validate_target,
 )
-from ..._utils.gradient import compute_gradients
-from ..._utils.typing import ModuleOrModuleList, TargetType
-from .common import _format_input_baseline, _tensorize_baseline, _validate_input
+from captum._utils.gradient import compute_gradients
+from captum._utils.typing import ModuleOrModuleList, TargetType
+from captum.attr._utils.common import (
+    _format_input_baseline,
+    _tensorize_baseline,
+    _validate_input,
+)
+from captum.log import log_usage
 
 
 class Attribution:
@@ -273,7 +276,7 @@ class GradientAttribution(Attribution):
         _validate_target(num_samples, target)
 
         def _sum_rows(input: Tensor) -> Tensor:
-            return input.view(input.shape[0], -1).sum(1)
+            return input.reshape(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
             start_out_sum = _sum_rows(
@@ -461,7 +464,7 @@ class NeuronAttribution(InternalAttribution):
     Args:
 
             inputs:     A single high dimensional input tensor or a tuple of them.
-            neuron_index (int or tuple): Tuple providing index of neuron in output
+            neuron_selector (int or tuple): Tuple providing index of neuron in output
                     of given layer for which attribution is desired. Length of
                     this tuple must be one less than the number of
                     dimensions in the output of the given layer (since

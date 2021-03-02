@@ -9,10 +9,11 @@ import torch
 from torch import Tensor, device
 from torch.nn import Module
 
-from .._utils.typing import (
+from captum._utils.typing import (
     BaselineType,
     Literal,
     TargetType,
+    TensorOrTupleOfTensorsGeneric,
     TupleOrTensorOrBoolGeneric,
 )
 
@@ -248,6 +249,20 @@ def _expand_target(
     return target
 
 
+def _expand_feature_mask(
+    feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
+):
+    is_feature_mask_tuple = _is_tuple(feature_mask)
+    feature_mask = _format_tensor_into_tuples(feature_mask)
+    feature_mask_new = tuple(
+        feature_mask_elem.repeat_interleave(n_samples, dim=0)
+        if feature_mask_elem.size(0) > 1
+        else feature_mask_elem
+        for feature_mask_elem in feature_mask
+    )
+    return _format_output(is_feature_mask_tuple, feature_mask_new)
+
+
 def _expand_and_update_baselines(
     inputs: Tuple[Tensor, ...],
     n_samples: int,
@@ -316,6 +331,18 @@ def _expand_and_update_target(n_samples: int, kwargs: dict):
     kwargs["target"] = target
 
 
+def _expand_and_update_feature_mask(n_samples: int, kwargs: dict):
+    if "feature_mask" not in kwargs:
+        return
+
+    feature_mask = kwargs["feature_mask"]
+    if feature_mask is None:
+        return
+
+    feature_mask = _expand_feature_mask(feature_mask, n_samples)
+    kwargs["feature_mask"] = feature_mask
+
+
 @typing.overload
 def _format_output(
     is_inputs_tuple: Literal[True], output: Tuple[Tensor, ...]
@@ -351,6 +378,43 @@ def _format_output(
         "The number of output tensors is: {}".format(len(output))
     )
     return output if is_inputs_tuple else output[0]
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[False], outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: Literal[True], outputs: List[Tuple[Tensor, ...]]
+) -> List[Union[Tensor, Tuple[Tensor, ...]]]:
+    ...
+
+
+@typing.overload
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    ...
+
+
+def _format_outputs(
+    is_multiple_inputs: bool, outputs: List[Tuple[Tensor, ...]]
+) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+    assert isinstance(outputs, list), "Outputs must be a list"
+    assert is_multiple_inputs or len(outputs) == 1, (
+        "outputs should contain multiple inputs or have a single output"
+        f"however the number of outputs is: {len(outputs)}"
+    )
+
+    return (
+        [_format_output(len(output) > 1, output) for output in outputs]
+        if is_multiple_inputs
+        else _format_output(len(outputs[0]) > 1, outputs[0])
+    )
 
 
 def _run_forward(
@@ -417,14 +481,41 @@ def _select_targets(output: Tensor, target: TargetType) -> Tensor:
         raise AssertionError("Target type %r is not valid." % target)
 
 
+def _contains_slice(target: Union[int, Tuple[Union[int, slice], ...]]) -> bool:
+    if isinstance(target, tuple):
+        for index in target:
+            if isinstance(index, slice):
+                return True
+        return False
+    return isinstance(target, slice)
+
+
 def _verify_select_column(
-    output: Tensor, target: Union[int, Tuple[int, ...]]
+    output: Tensor, target: Union[int, Tuple[Union[int, slice], ...]]
 ) -> Tensor:
-    target = cast(Tuple[int, ...], (target,) if isinstance(target, int) else target)
+    target = (target,) if isinstance(target, int) else target
     assert (
         len(target) <= len(output.shape) - 1
     ), "Cannot choose target column with output shape %r." % (output.shape,)
     return output[(slice(None), *target)]
+
+
+def _verify_select_neuron(
+    layer_output: Tuple[Tensor, ...],
+    selector: Union[int, Tuple[Union[int, slice], ...], Callable],
+) -> Tensor:
+    if callable(selector):
+        return selector(layer_output if len(layer_output) > 1 else layer_output[0])
+
+    assert len(layer_output) == 1, (
+        "Cannot select neuron index from layer with multiple tensors,"
+        "consider providing a neuron selector function instead."
+    )
+
+    selected_neurons = _verify_select_column(layer_output[0], selector)
+    if _contains_slice(selector):
+        return selected_neurons.reshape(selected_neurons.shape[0], -1).sum(1)
+    return selected_neurons
 
 
 def _extract_device(
@@ -520,3 +611,9 @@ def _sort_key_list(
     "devices with computed tensors."
 
     return out_list
+
+
+def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
+    if isinstance(inp, Tensor):
+        return inp.flatten()
+    return torch.cat([single_inp.flatten() for single_inp in inp])
