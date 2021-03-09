@@ -26,6 +26,7 @@
 <div class="body" role="main">
 <h1>Source code for captum.attr._core.lime</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">typing</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
@@ -165,13 +166,18 @@
 <span class="sd">                    the original input space (matching type and tensor shapes</span>
 <span class="sd">                    of original input) or in the interpretable input space,</span>
 <span class="sd">                    which is a vector containing the intepretable features.</span>
+<span class="sd">                    Alternatively, this function can return a generator</span>
+<span class="sd">                    yielding samples to train the interpretable surrogate</span>
+<span class="sd">                    model, and n_samples perturbations will be sampled</span>
+<span class="sd">                    from this generator.</span>
 
 <span class="sd">                    The expected signature of this callable is:</span>
 
 <span class="sd">                    &gt;&gt;&gt; perturb_func(</span>
 <span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
-<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor or tuple of Tensors</span>
+<span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor or tuple of Tensors or</span>
+<span class="sd">                    &gt;&gt;&gt;    generator yielding tensor or tuple of Tensors</span>
 
 <span class="sd">                    All kwargs passed to the attribute method are</span>
 <span class="sd">                    provided as keyword arguments (kwargs) to this callable.</span>
@@ -438,8 +444,22 @@
             <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">expanded_additional_args</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">expanded_target</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">perturb_generator</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isgeneratorfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">):</span>
+                <span class="n">perturb_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
-                <span class="n">curr_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">perturb_generator</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">curr_sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">perturb_generator</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="s2">"Generator completed prior to given n_samples iterations!"</span>
+                        <span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">curr_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_interpretable_space</span><span class="p">:</span>
                     <span class="n">interpretable_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr_sample</span><span class="p">)</span>
                     <span class="n">curr_model_inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -508,7 +528,7 @@
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">TensorDataset</span><span class="p">(</span>
                 <span class="n">combined_interp_inps</span><span class="p">,</span> <span class="n">combined_outputs</span><span class="p">,</span> <span class="n">combined_sim</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">n_samples</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_count</span><span class="p">))</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpretable_model</span><span class="o">.</span><span class="n">representation</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_evaluate_batch</span><span class="p">(</span>
@@ -629,6 +649,31 @@
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
 
 
+<span class="k">def</span> <span class="nf">construct_feature_mask</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">_construct_default_feature_mask</span><span class="p">(</span>
+            <span class="n">formatted_inputs</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
+        <span class="n">min_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_interp_features</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">"Minimum element in feature mask is not 0, shifting indices to"</span>
+                <span class="s2">" start at 0."</span>
+            <span class="p">)</span>
+            <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">single_inp</span> <span class="o">-</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span>
+            <span class="p">)</span>
+
+        <span class="n">num_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span>
+
+
 <div class="viewcode-block" id="Lime"><a class="viewcode-back" href="../../../../lime.html#captum.attr.Lime">[docs]</a><span class="k">class</span> <span class="nc">Lime</span><span class="p">(</span><span class="n">LimeBase</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Lime is an interpretability method that trains an interpretable surrogate model</span>
@@ -740,7 +785,7 @@
 <span class="sd">                    (integer, determined from feature mask).</span>
 <span class="sd">            perturb_func (optional, callable): Function which returns a single</span>
 <span class="sd">                    sampled input, which is a binary vector of length</span>
-<span class="sd">                    num_interp_features.</span>
+<span class="sd">                    num_interp_features, or a generator of such tensors.</span>
 
 <span class="sd">                    This function is optional, the default function returns</span>
 <span class="sd">                    a binary vector where each element is selected</span>
@@ -753,6 +798,7 @@
 <span class="sd">                    &gt;&gt;&gt;    original_input: Tensor or tuple of Tensors,</span>
 <span class="sd">                    &gt;&gt;&gt;    **kwargs: Any</span>
 <span class="sd">                    &gt;&gt;&gt; ) -&gt; Tensor [Binary 2D Tensor 1 x num_interp_features]</span>
+<span class="sd">                    &gt;&gt;&gt;  or generator yielding such tensors</span>
 
 <span class="sd">                    kwargs includes baselines, feature_mask, num_interp_features</span>
 <span class="sd">                    (integer, determined from feature mask).</span>
@@ -1002,31 +1048,36 @@
 <span class="sd">            &gt;&gt;&gt; # matching input shape.</span>
 <span class="sd">            &gt;&gt;&gt; attr = lime.attribute(input, target=1, feature_mask=feature_mask)</span>
 <span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_kwargs</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
+            <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+            <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+            <span class="n">return_input_shape</span><span class="o">=</span><span class="n">return_input_shape</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_attribute_kwargs</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
         <span class="n">bsz</span> <span class="o">=</span> <span class="n">formatted_inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">feature_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">_construct_default_feature_mask</span><span class="p">(</span>
-                <span class="n">formatted_inputs</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">feature_mask</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">feature_mask</span><span class="p">)</span>
-            <span class="n">min_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                <span class="nb">min</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">min_interp_features</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">"Minimum element in feature mask is not 0, shifting indices to"</span>
-                    <span class="s2">" start at 0."</span>
-                <span class="p">)</span>
-                <span class="n">feature_mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">single_inp</span> <span class="o">+</span> <span class="n">min_interp_features</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span>
-                <span class="p">)</span>
-
-            <span class="n">num_interp_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-                <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_inp</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_inp</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="p">)</span>
+        <span class="n">feature_mask</span><span class="p">,</span> <span class="n">num_interp_features</span> <span class="o">=</span> <span class="n">construct_feature_mask</span><span class="p">(</span>
+            <span class="n">feature_mask</span><span class="p">,</span> <span class="n">formatted_inputs</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_interp_features</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -1078,6 +1129,7 @@
                             <span class="k">if</span> <span class="n">is_inputs_tuple</span>
                             <span class="k">else</span> <span class="n">curr_feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">kwargs</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
                             <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1114,6 +1166,7 @@
             <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_shape</span><span class="p">(</span>
@@ -1124,7 +1177,7 @@
                 <span class="n">is_inputs_tuple</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">coefs</span></div>
+            <span class="k">return</span> <span class="n">coefs</span>
 
     <span class="nd">@typing</span><span class="o">.</span><span class="n">overload</span>
     <span class="k">def</span> <span class="nf">_convert_output_shape</span><span class="p">(</span>

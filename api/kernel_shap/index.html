@@ -28,7 +28,7 @@
 <h1>KernelShap<a class="headerlink" href="#kernelshap" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="captum.attr.KernelShap">
-<em class="property">class </em><code class="sig-prename descclassname">captum.attr.</code><code class="sig-name descname">KernelShap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">forward_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.KernelShap" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">KernelShap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Kernel SHAP is a method that uses the LIME framework to compute
 Shapley Values. Setting the loss function, weighting kernel and
 regularization terms appropriately in the LIME framework allows
@@ -45,7 +45,7 @@ any modification of it</p>
 </dl>
 <dl class="py method">
 <dt id="captum.attr.KernelShap.attribute">
-<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em>, <em class="sig-param"><span class="n">baselines</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additional_forward_args</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">feature_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">25</span></em>, <em class="sig-param"><span class="n">perturbations_per_eval</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">return_input_shape</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#captum.attr.KernelShap.attribute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">attribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method attributes the output of the model with given target index
 (in case it is provided, otherwise it assumes that output is a
 scalar) to the inputs of the model using the approach described above,
@@ -265,6 +265,38 @@ num_interp_features.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt id="captum.attr.KernelShap.kernel_shap_perturb_generator">
+<code class="sig-name descname"><span class="pre">kernel_shap_perturb_generator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_inp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.kernel_shap_perturb_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.kernel_shap_perturb_generator" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Perturbations are sampled by the following process:</dt><dd><ul>
+<li><dl>
+<dt>Choose k (number of selected features), based on the distribution</dt><dd><blockquote>
+<div><p>p(k) = (M - 1) / (k * (M - k))</p>
+</div></blockquote>
+<p>where M is the total number of features in the interpretable space</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Randomly select a binary vector with k ones, each sample is equally</dt><dd><p>likely. This is done by generating a random vector of normal
+values and thresholding based on the top k elements.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Since there are M choose k vectors with k ones, this weighted sampling
+is equivalent to applying the Shapley kernel for the sample weight,
+defined as:
+k(M, k) = (M - 1) / (k * (M - k) * (M choose k))</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generator" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code></a>[<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.8.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
