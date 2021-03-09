@@ -40,7 +40,7 @@ export TERM=xterm
 # since we'd need to source the environemnt in each step.
 
 # upgrade pip
-sudo pip install --upgrade "pip < 21.0"
+sudo pip install --upgrade pip
 
 # install captum with dev deps
 sudo pip install -e .[dev]
