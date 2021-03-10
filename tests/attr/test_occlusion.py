@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import io
 import unittest
+import unittest.mock
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -265,6 +267,20 @@ class Test(BaseTest):
             strides=((1, 2, 1), (1, 1, 2)),
         )
 
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_input_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._occlusion_test_assert(
+            net,
+            inp,
+            [80.0, 200.0, 120.0],
+            perturbations_per_eval=(1, 2, 3),
+            sliding_window_shapes=((1,)),
+            show_progress=True,
+        )
+        assert "Occlusion attribution of Inputs[0]:" in mock_stderr.getvalue()
+
     def _occlusion_test_assert(
         self,
         model: Callable,
@@ -281,6 +297,7 @@ class Test(BaseTest):
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,
         strides: Union[None, int, Tuple[Union[int, Tuple[int, ...]], ...]] = None,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             ablation = Occlusion(model)
@@ -292,6 +309,7 @@ class Test(BaseTest):
                 baselines=baselines,
                 perturbations_per_eval=batch_size,
                 strides=strides,
+                show_progress=show_progress,
             )
             if isinstance(expected_ablation, tuple):
                 for i in range(len(expected_ablation)):
