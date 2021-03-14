@@ -156,8 +156,9 @@ class DataParallelMeta(type):
 
                 model_1, model_2 = (
                     cuda_model,
-                    torch.nn.parallel.DistributedDataParallel(cuda_model),
-                )
+                    torch.nn.parallel.DistributedDataParallel(
+                        cuda_model, device_ids=[0], output_device=0
+                    ),
                 args_1, args_2 = cuda_args, cuda_args
             else:
                 raise AssertionError("DataParallel compare mode type is not valid.")
