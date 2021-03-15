@@ -25,7 +25,7 @@ def normalize_grid(
         normalized_grid (torch.tensor): A normalized xy coordinate grid tensor.
     """
 
-    assert xy_grid.dim() == 2 and xy_grid.size(1) == 2
+    assert xy_grid.dim() == 2
     mins = torch.quantile(xy_grid, min_percentile, dim=0)
     maxs = torch.quantile(xy_grid, max_percentile, dim=0)
 
