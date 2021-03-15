@@ -22,6 +22,7 @@ from captum._utils.common import (
 )
 from captum._utils.models.linear_model import SkLearnLasso
 from captum._utils.models.model import Model
+from captum._utils.progress import progress
 from captum._utils.typing import (
     BaselineType,
     Literal,
@@ -244,7 +245,8 @@ class LimeBase(PerturbationAttribution):
         additional_forward_args: Any = None,
         n_samples: int = 50,
         perturbations_per_eval: int = 1,
-        **kwargs
+        show_progress: bool = False,
+        **kwargs,
     ) -> Tensor:
         r"""
         This method attributes the output of the model with given target index
@@ -331,6 +333,11 @@ class LimeBase(PerturbationAttribution):
                         If the forward function returns a single scalar per batch,
                         perturbations_per_eval must be set to 1.
                         Default: 1
+            show_progress (bool, optional): Displays the progress of computation.
+                        It will try to use tqdm if available for advanced features
+                        (e.g. time estimation). Otherwise, it will fallback to
+                        a simple output of progress.
+                        Default: False
             **kwargs (Any, optional): Any additional arguments necessary for
                         sampling and transformation functions (provided to
                         constructor).
@@ -420,6 +427,14 @@ class LimeBase(PerturbationAttribution):
             perturb_generator = None
             if inspect.isgeneratorfunction(self.perturb_func):
                 perturb_generator = self.perturb_func(inputs, **kwargs)
+
+            if show_progress:
+                attr_progress = progress(
+                    total=math.ceil(n_samples / perturbations_per_eval),
+                    desc=f"{self.get_name()} attribution",
+                )
+                attr_progress.update(0)
+
             batch_count = 0
             for _ in range(n_samples):
                 if perturb_generator:
@@ -470,6 +485,10 @@ class LimeBase(PerturbationAttribution):
                         expanded_additional_args,
                         device,
                     )
+
+                    if show_progress:
+                        attr_progress.update()
+
                     outputs.append(model_out)
 
                     curr_model_inputs = []
@@ -485,7 +504,12 @@ class LimeBase(PerturbationAttribution):
                     expanded_additional_args,
                     device,
                 )
+                if show_progress:
+                    attr_progress.update()
                 outputs.append(model_out)
+
+            if show_progress:
+                attr_progress.close()
 
             combined_interp_inps = torch.cat(interpretable_inps)
             combined_outputs = (
@@ -809,6 +833,7 @@ class Lime(LimeBase):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method attributes the output of the model with given target index
@@ -968,6 +993,11 @@ class Lime(LimeBase):
                         tensor is returned, containing only the coefficients
                         of the trained interpreatable models, with length
                         num_interp_features.
+            show_progress (bool, optional): Displays the progress of computation.
+                        It will try to use tqdm if available for advanced features
+                        (e.g. time estimation). Otherwise, it will fallback to
+                        a simple output of progress.
+                        Default: False
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions**:
@@ -1030,6 +1060,7 @@ class Lime(LimeBase):
             n_samples=n_samples,
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
+            show_progress=show_progress,
         )
 
     def _attribute_kwargs(  # type: ignore
@@ -1042,7 +1073,8 @@ class Lime(LimeBase):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
-        **kwargs
+        show_progress: bool = False,
+        **kwargs,
     ) -> TensorOrTupleOfTensorsGeneric:
         is_inputs_tuple = _is_tuple(inputs)
         formatted_inputs, baselines = _format_input_baseline(inputs, baselines)
@@ -1102,7 +1134,8 @@ class Lime(LimeBase):
                             if is_inputs_tuple
                             else curr_feature_mask[0],
                             num_interp_features=num_interp_features,
-                            **kwargs
+                            show_progress=show_progress,
+                            **kwargs,
                         )
                         if return_input_shape:
                             output_list.append(
@@ -1139,7 +1172,8 @@ class Lime(LimeBase):
             baselines=baselines if is_inputs_tuple else baselines[0],
             feature_mask=feature_mask if is_inputs_tuple else feature_mask[0],
             num_interp_features=num_interp_features,
-            **kwargs
+            show_progress=show_progress,
+            **kwargs,
         )
         if return_input_shape:
             return self._convert_output_shape(

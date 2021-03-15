@@ -57,6 +57,7 @@ class KernelShap(Lime):
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
+        show_progress: bool = False,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         This method attributes the output of the model with given target index
@@ -216,6 +217,11 @@ class KernelShap(Lime):
                         tensor is returned, containing only the coefficients
                         of the trained interpretable model, with length
                         num_interp_features.
+            show_progress (bool, optional): Displays the progress of computation.
+                        It will try to use tqdm if available for advanced features
+                        (e.g. time estimation). Otherwise, it will fallback to
+                        a simple output of progress.
+                        Default: False
 
         Returns:
             *tensor* or tuple of *tensors* of **attributions**:
@@ -285,6 +291,7 @@ class KernelShap(Lime):
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
             num_select_distribution=Categorical(probs),
+            show_progress=show_progress,
         )
 
     def kernel_shap_similarity_kernel(
