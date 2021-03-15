@@ -310,13 +310,31 @@ class FeatureAblation(PerturbationAttribution):
                     for input in inputs
                 ]
 
+            if show_progress:
+                feature_counts = self._get_feature_counts(
+                    inputs, feature_mask, **kwargs
+                )
+                total_forwards = sum(
+                    math.ceil(count / perturbations_per_eval)
+                    for count in feature_counts
+                )
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution", total=total_forwards
+                )
+                attr_progress.update(0)
+
             # Iterate through each feature tensor for ablation
             for i in range(len(inputs)):
                 # Skip any empty input tensors
                 if torch.numel(inputs[i]) == 0:
                     continue
 
-                ablation_generator, ablation_meta = self._ablation_generator_with_meta(
+                for (
+                    current_inputs,
+                    current_add_args,
+                    current_target,
+                    current_mask,
+                ) in self._ith_input_ablation_generator(
                     i,
                     inputs,
                     additional_forward_args,
@@ -325,26 +343,7 @@ class FeatureAblation(PerturbationAttribution):
                     feature_mask,
                     perturbations_per_eval,
                     **kwargs,
-                )
-
-                # optionally show progress of each input
-                if show_progress:
-                    iter_steps = (
-                        ablation_meta["num_features"] - ablation_meta["min_feature"]
-                    )
-                    iter_steps = math.ceil(iter_steps / perturbations_per_eval)
-                    ablation_generator = progress(
-                        ablation_generator,
-                        desc=f"{self.get_name()} attribution of Inputs[{i}]",
-                        total=iter_steps,
-                    )
-
-                for (
-                    current_inputs,
-                    current_add_args,
-                    current_target,
-                    current_mask,
-                ) in ablation_generator:
+                ):
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
                     modified_eval = _run_forward(
@@ -353,6 +352,10 @@ class FeatureAblation(PerturbationAttribution):
                         current_target,
                         current_add_args,
                     )
+
+                    if show_progress:
+                        attr_progress.update()
+
                     # (contains 1 more dimension than inputs). This adds extra
                     # dimensions of 1 to make the tensor broadcastable with the inputs
                     # tensor.
@@ -376,6 +379,9 @@ class FeatureAblation(PerturbationAttribution):
                         dim=0
                     )
 
+            if show_progress:
+                attr_progress.close()
+
             # Divide total attributions by counts and return formatted attributions
             if self.use_weights:
                 attrib = tuple(
@@ -387,7 +393,7 @@ class FeatureAblation(PerturbationAttribution):
             _result = _format_output(is_inputs_tuple, attrib)
         return _result
 
-    def _ablation_generator_with_meta(
+    def _ith_input_ablation_generator(
         self,
         i,
         inputs,
@@ -399,12 +405,11 @@ class FeatureAblation(PerturbationAttribution):
         **kwargs,
     ):
         """
-        This method return an generator of ablation perturbations with its related meta
+        This method return an generator of ablation perturbations of the i-th input
 
         Returns:
             ablation_iter (generator): yields each perturbation to be evaluated
                         as a tuple (inputs, additional_forward_args, targets, mask).
-            meta (dict): meta data of this ablation {min_feature: int, feature_num: int}
         """
         extra_args = {}
         for key, value in kwargs.items():
@@ -441,75 +446,65 @@ class FeatureAblation(PerturbationAttribution):
             additional_args_repeated = additional_args
             target_repeated = target
 
-        def _create_ablation_generator():
-            """nested generator function to iterate perturbation features"""
-            num_features_processed = min_feature
-            while num_features_processed < num_features:
-                current_num_ablated_features = min(
-                    perturbations_per_eval, num_features - num_features_processed
-                )
+        num_features_processed = min_feature
+        while num_features_processed < num_features:
+            current_num_ablated_features = min(
+                perturbations_per_eval, num_features - num_features_processed
+            )
 
-                # Store appropriate inputs and additional args based on batch size.
-                if current_num_ablated_features != perturbations_per_eval:
-                    current_features = [
-                        feature_repeated[
-                            0 : current_num_ablated_features * num_examples
-                        ]
-                        for feature_repeated in all_features_repeated
-                    ]
-                    current_additional_args = (
-                        _expand_additional_forward_args(
-                            additional_args, current_num_ablated_features
-                        )
-                        if additional_args is not None
-                        else None
+            # Store appropriate inputs and additional args based on batch size.
+            if current_num_ablated_features != perturbations_per_eval:
+                current_features = [
+                    feature_repeated[0 : current_num_ablated_features * num_examples]
+                    for feature_repeated in all_features_repeated
+                ]
+                current_additional_args = (
+                    _expand_additional_forward_args(
+                        additional_args, current_num_ablated_features
                     )
-                    current_target = _expand_target(
-                        target, current_num_ablated_features
-                    )
-                else:
-                    current_features = all_features_repeated
-                    current_additional_args = additional_args_repeated
-                    current_target = target_repeated
-
-                # Store existing tensor before modifying
-                original_tensor = current_features[i]
-                # Construct ablated batch for features in range num_features_processed
-                # to num_features_processed + current_num_ablated_features and return
-                # mask with same size as ablated batch. ablated_features has dimension
-                # (current_num_ablated_features, num_examples, inputs[i].shape[1:])
-                # Note that in the case of sparse tensors, the second dimension
-                # may not necessarilly be num_examples and will match the first
-                # dimension of this tensor.
-                current_reshaped = current_features[i].reshape(
-                    (current_num_ablated_features, -1) + current_features[i].shape[1:]
+                    if additional_args is not None
+                    else None
                 )
+                current_target = _expand_target(target, current_num_ablated_features)
+            else:
+                current_features = all_features_repeated
+                current_additional_args = additional_args_repeated
+                current_target = target_repeated
 
-                ablated_features, current_mask = self._construct_ablated_input(
-                    current_reshaped,
-                    input_mask,
-                    baseline,
-                    num_features_processed,
-                    num_features_processed + current_num_ablated_features,
-                    **extra_args,
-                )
+            # Store existing tensor before modifying
+            original_tensor = current_features[i]
+            # Construct ablated batch for features in range num_features_processed
+            # to num_features_processed + current_num_ablated_features and return
+            # mask with same size as ablated batch. ablated_features has dimension
+            # (current_num_ablated_features, num_examples, inputs[i].shape[1:])
+            # Note that in the case of sparse tensors, the second dimension
+            # may not necessarilly be num_examples and will match the first
+            # dimension of this tensor.
+            current_reshaped = current_features[i].reshape(
+                (current_num_ablated_features, -1) + current_features[i].shape[1:]
+            )
 
-                # current_features[i] has dimension
-                # (current_num_ablated_features * num_examples, inputs[i].shape[1:]),
-                # which can be provided to the model as input.
-                current_features[i] = ablated_features.reshape(
-                    (-1,) + ablated_features.shape[2:]
-                )
-                yield tuple(
-                    current_features
-                ), current_additional_args, current_target, current_mask
-                # Replace existing tensor at index i.
-                current_features[i] = original_tensor
-                num_features_processed += current_num_ablated_features
+            ablated_features, current_mask = self._construct_ablated_input(
+                current_reshaped,
+                input_mask,
+                baseline,
+                num_features_processed,
+                num_features_processed + current_num_ablated_features,
+                **extra_args,
+            )
 
-        return _create_ablation_generator(), dict(
-            min_feature=min_feature, num_features=num_features
-        )
+            # current_features[i] has dimension
+            # (current_num_ablated_features * num_examples, inputs[i].shape[1:]),
+            # which can be provided to the model as input.
+            current_features[i] = ablated_features.reshape(
+                (-1,) + ablated_features.shape[2:]
+            )
+            yield tuple(
+                current_features
+            ), current_additional_args, current_target, current_mask
+            # Replace existing tensor at index i.
+            current_features[i] = original_tensor
+            num_features_processed += current_num_ablated_features
 
     def _construct_ablated_input(
         self, expanded_input, input_mask, baseline, start_feature, end_feature, **kwargs
@@ -550,6 +545,18 @@ class FeatureAblation(PerturbationAttribution):
             torch.min(input_mask).item(),
             torch.max(input_mask).item() + 1,
             input_mask,
+        )
+
+    def _get_feature_counts(self, inputs, feature_mask, **kwargs):
+        """ return the numbers of input features """
+        if not feature_mask:
+            return tuple(inp[0].numel() if inp.numel() else 0 for inp in inputs)
+
+        return tuple(
+            (mask.max() - mask.min()).item() + 1
+            if mask is not None
+            else (inp[0].numel() if inp.numel() else 0)
+            for inp, mask in zip(inputs, feature_mask)
         )
 
     @staticmethod

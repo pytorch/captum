@@ -39,43 +39,69 @@ class DisableErrorIOWrapper(object):
         return self._wrapped_run(self._wrapped.flush, *args, **kwargs)
 
 
-def _simple_progress_out(
-    iterable: Iterable, desc: str = None, total: int = None, file: TextIO = None
-):
-    """
-    Simple progress output used when tqdm is unavailable.
-    Same as tqdm, output to stderr channel
-    """
-    cur = 0
+class SimpleProgress:
+    def __init__(
+        self,
+        iterable: Iterable = None,
+        desc: str = None,
+        total: int = None,
+        file: TextIO = None,
+    ):
+        """
+        Simple progress output used when tqdm is unavailable.
+        Same as tqdm, output to stderr channel
+        """
+        self.cur = 0
 
-    if total is None and hasattr(iterable, "__len__"):
-        total = len(cast(Sized, iterable))
+        self.iterable = iterable
+        self.total = total
+        if total is None and hasattr(iterable, "__len__"):
+            self.total = len(cast(Sized, iterable))
 
-    desc = desc + ": " if desc else ""
+        self.desc = desc
 
-    def _progress_str(cur):
-        if total:
+        file = DisableErrorIOWrapper(file if file else sys.stderr)
+        cast(TextIO, file)
+        self.file = file
+        self.closed = False
+
+    def __iter__(self):
+        if self.closed or not self.iterable:
+            return
+        self._refresh()
+        for it in self.iterable:
+            yield it
+            self.cur += 1
+            self._refresh()
+        self.close()
+
+    def _refresh(self):
+        progress_str = self.desc + ": " if self.desc else ""
+        if self.total:
             # e.g., progress: 60% 3/5
-            return f"{desc}{100 * cur // total}% {cur}/{total}"
+            progress_str += f"{100 * self.cur // self.total}% {self.cur}/{self.total}"
         else:
             # e.g., progress: .....
-            return f"{desc}{'.' * cur}"
+            progress_str += "." * self.cur
 
-    if not file:
-        file = sys.stderr
-    file = DisableErrorIOWrapper(file)
+        print("\r" + progress_str, end="", file=self.file)
 
-    print("\r" + _progress_str(cur), end="", file=file)
-    for it in iterable:
-        yield it
-        cur += 1
-        print("\r" + _progress_str(cur), end="", file=file)
+    def update(self, amount: int = 1):
+        if self.closed:
+            return
+        self.cur += amount
+        self._refresh()
+        if self.cur == self.total:
+            self.close()
 
-    print(file=file)  # end with new line
+    def close(self):
+        if not self.closed:
+            print(file=self.file)  # end with new line
+            self.closed = True
 
 
 def progress(
-    iterable: Iterable,
+    iterable: Iterable = None,
     desc: str = None,
     total: int = None,
     use_tqdm=True,
@@ -92,4 +118,4 @@ def progress(
                 "but tqdm is not installed. "
                 "Fall back to simply print out the progress."
             )
-        return _simple_progress_out(iterable, desc=desc, total=total, file=file)
+        return SimpleProgress(iterable, desc=desc, total=total, file=file)

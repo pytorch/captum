@@ -279,7 +279,11 @@ class Test(BaseTest):
             sliding_window_shapes=((1,)),
             show_progress=True,
         )
-        assert "Occlusion attribution of Inputs[0]:" in mock_stderr.getvalue()
+        assert "Occlusion attribution:" in mock_stderr.getvalue()
+
+        # to test if progress calculation aligns with the actual iteration
+        # all perturbations_per_eval should reach progress of 100%
+        assert mock_stderr.getvalue().count("100%") == 3
 
     def _occlusion_test_assert(
         self,

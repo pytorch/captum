@@ -62,3 +62,18 @@ class Test(BaseTest):
 
         assert list(progressed) == test_data
         assert mock_stderr.getvalue() == output
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_progress_without_tqdm_manually(self, mock_stderr) -> None:
+        desc = "test progress"
+        output = (
+            f"\r{desc}: 0% 0/5\r{desc}: 40% 2/5\r{desc}: 80% 4/5\r{desc}: 100% 5/5\n"
+        )
+
+        p = progress(total=5, desc=desc, use_tqdm=False)
+        p.update(0)
+        p.update(2)
+        p.update(2)
+        p.update(1)
+        p.close()
+        assert mock_stderr.getvalue() == output
