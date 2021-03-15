@@ -293,9 +293,23 @@ class ShapleyValueSampling(PerturbationAttribution):
                     max(torch.max(single_mask).item() for single_mask in feature_mask)
                     + 1
                 )
+
+            if show_progress:
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution",
+                    total=self._get_n_evaluations(
+                        total_features, n_samples, perturbations_per_eval
+                    ) + 1,  # add 1 for the initial eval
+                )
+                attr_progress.update(0)
+
             initial_eval = _run_forward(
                 self.forward_func, baselines, target, additional_forward_args
             )
+
+            if show_progress:
+                attr_progress.update()
+
             agg_output_mode = _find_output_mode_and_verify(
                 initial_eval, num_examples, perturbations_per_eval, feature_mask
             )
@@ -307,15 +321,6 @@ class ShapleyValueSampling(PerturbationAttribution):
                 )
                 for input in inputs
             ]
-
-            if show_progress:
-                attr_progress = progress(
-                    desc=f"{self.get_name()} attribution",
-                    total=self._get_n_evaluations(
-                        total_features, n_samples, perturbations_per_eval
-                    ),
-                )
-                attr_progress.update(0)
 
             iter_count = 0
             # Iterate for number of samples, generate a permutation of the features

@@ -257,11 +257,27 @@ class FeatureAblation(PerturbationAttribution):
             isinstance(perturbations_per_eval, int) and perturbations_per_eval >= 1
         ), "Perturbations per evaluation must be an integer and at least 1."
         with torch.no_grad():
+            if show_progress:
+                feature_counts = self._get_feature_counts(
+                    inputs, feature_mask, **kwargs
+                )
+                total_forwards = sum(
+                    math.ceil(count / perturbations_per_eval)
+                    for count in feature_counts
+                ) + 1  # add 1 for the initial eval
+                attr_progress = progress(
+                    desc=f"{self.get_name()} attribution", total=total_forwards
+                )
+                attr_progress.update(0)
+
             # Computes initial evaluation with all features, which is compared
             # to each ablated result.
             initial_eval = _run_forward(
                 self.forward_func, inputs, target, additional_forward_args
             )
+
+            if show_progress:
+                attr_progress.update()
 
             agg_output_mode = FeatureAblation._find_output_mode(
                 perturbations_per_eval, feature_mask
@@ -309,19 +325,6 @@ class FeatureAblation(PerturbationAttribution):
                     ).float()
                     for input in inputs
                 ]
-
-            if show_progress:
-                feature_counts = self._get_feature_counts(
-                    inputs, feature_mask, **kwargs
-                )
-                total_forwards = sum(
-                    math.ceil(count / perturbations_per_eval)
-                    for count in feature_counts
-                )
-                attr_progress = progress(
-                    desc=f"{self.get_name()} attribution", total=total_forwards
-                )
-                attr_progress.update(0)
 
             # Iterate through each feature tensor for ablation
             for i in range(len(inputs)):
