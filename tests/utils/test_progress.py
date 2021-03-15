@@ -32,6 +32,7 @@ class Test(BaseTest):
         assert list(progressed) == test_data
         assert mock_stderr.getvalue().startswith(f"\r{desc}: 0% 0/3")
         assert mock_stderr.getvalue().endswith(f"\r{desc}: 100% 3/3\n")
+
         # progress iterable without len but explicitly specify total
         def gen():
             for n in test_data:

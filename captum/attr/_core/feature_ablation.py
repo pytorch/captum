@@ -261,10 +261,13 @@ class FeatureAblation(PerturbationAttribution):
                 feature_counts = self._get_feature_counts(
                     inputs, feature_mask, **kwargs
                 )
-                total_forwards = sum(
-                    math.ceil(count / perturbations_per_eval)
-                    for count in feature_counts
-                ) + 1  # add 1 for the initial eval
+                total_forwards = (
+                    sum(
+                        math.ceil(count / perturbations_per_eval)
+                        for count in feature_counts
+                    )
+                    + 1
+                )  # add 1 for the initial eval
                 attr_progress = progress(
                     desc=f"{self.get_name()} attribution", total=total_forwards
                 )

@@ -2,8 +2,8 @@
 
 import sys
 import warnings
-from typing import Iterable, Sized, TextIO, cast
 from time import time
+from typing import Iterable, Sized, TextIO, cast
 
 try:
     from tqdm import tqdm
@@ -47,7 +47,7 @@ class SimpleProgress:
         desc: str = None,
         total: int = None,
         file: TextIO = None,
-        mininterval: float = .5,
+        mininterval: float = 0.5,
     ):
         """
         Simple progress output used when tqdm is unavailable.
@@ -67,7 +67,7 @@ class SimpleProgress:
         self.file = file
 
         self.mininterval = mininterval
-        self.last_print_t = 0
+        self.last_print_t = 0.0
         self.closed = False
 
     def __iter__(self):
@@ -113,7 +113,7 @@ def progress(
     total: int = None,
     use_tqdm=True,
     file: TextIO = None,
-    mininterval: float = .5,
+    mininterval: float = 0.5,
     **kwargs,
 ):
     # Try to use tqdm is possible. Fall back to simple progress print

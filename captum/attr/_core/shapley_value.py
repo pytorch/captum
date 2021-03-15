@@ -299,7 +299,8 @@ class ShapleyValueSampling(PerturbationAttribution):
                     desc=f"{self.get_name()} attribution",
                     total=self._get_n_evaluations(
                         total_features, n_samples, perturbations_per_eval
-                    ) + 1,  # add 1 for the initial eval
+                    )
+                    + 1,  # add 1 for the initial eval
                 )
                 attr_progress.update(0)
 
