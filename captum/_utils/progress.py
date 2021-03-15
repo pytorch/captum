@@ -3,6 +3,7 @@
 import sys
 import warnings
 from typing import Iterable, Sized, TextIO, cast
+from time import time
 
 try:
     from tqdm import tqdm
@@ -46,6 +47,7 @@ class SimpleProgress:
         desc: str = None,
         total: int = None,
         file: TextIO = None,
+        mininterval: float = .5,
     ):
         """
         Simple progress output used when tqdm is unavailable.
@@ -63,6 +65,9 @@ class SimpleProgress:
         file = DisableErrorIOWrapper(file if file else sys.stderr)
         cast(TextIO, file)
         self.file = file
+
+        self.mininterval = mininterval
+        self.last_print_t = 0
         self.closed = False
 
     def __iter__(self):
@@ -71,8 +76,7 @@ class SimpleProgress:
         self._refresh()
         for it in self.iterable:
             yield it
-            self.cur += 1
-            self._refresh()
+            self.update()
         self.close()
 
     def _refresh(self):
@@ -90,12 +94,15 @@ class SimpleProgress:
         if self.closed:
             return
         self.cur += amount
-        self._refresh()
-        if self.cur == self.total:
-            self.close()
+
+        cur_t = time()
+        if cur_t - self.last_print_t >= self.mininterval:
+            self._refresh()
+            self.last_print_t = cur_t
 
     def close(self):
         if not self.closed:
+            self._refresh()
             print(file=self.file)  # end with new line
             self.closed = True
 
@@ -106,11 +113,19 @@ def progress(
     total: int = None,
     use_tqdm=True,
     file: TextIO = None,
+    mininterval: float = .5,
     **kwargs,
 ):
     # Try to use tqdm is possible. Fall back to simple progress print
     if tqdm and use_tqdm:
-        return tqdm(iterable, desc=desc, total=total, file=file, **kwargs)
+        return tqdm(
+            iterable,
+            desc=desc,
+            total=total,
+            file=file,
+            mininterval=mininterval,
+            **kwargs,
+        )
     else:
         if not tqdm and use_tqdm:
             warnings.warn(
@@ -118,4 +133,6 @@ def progress(
                 "but tqdm is not installed. "
                 "Fall back to simply print out the progress."
             )
-        return SimpleProgress(iterable, desc=desc, total=total, file=file)
+        return SimpleProgress(
+            iterable, desc=desc, total=total, file=file, mininterval=mininterval
+        )

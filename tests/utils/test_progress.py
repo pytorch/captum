@@ -23,18 +23,15 @@ class Test(BaseTest):
         assert "test progress: " in mock_stderr.getvalue()
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_progress_without_tqdm(self, mock_stderr) -> None:
+    def test_simple_progress(self, mock_stderr) -> None:
         test_data = [1, 3, 5]
         desc = "test progress"
-        output = (
-            f"\r{desc}: 0% 0/3\r{desc}: 33% 1/3\r{desc}: 66% 2/3\r{desc}: 100% 3/3\n"
-        )
 
         progressed = progress(test_data, desc=desc, use_tqdm=False)
 
         assert list(progressed) == test_data
-        assert mock_stderr.getvalue() == output
-
+        assert mock_stderr.getvalue().startswith(f"\r{desc}: 0% 0/3")
+        assert mock_stderr.getvalue().endswith(f"\r{desc}: 100% 3/3\n")
         # progress iterable without len but explicitly specify total
         def gen():
             for n in test_data:
@@ -46,13 +43,13 @@ class Test(BaseTest):
         progressed = progress(gen(), desc=desc, total=len(test_data), use_tqdm=False)
 
         assert list(progressed) == test_data
-        assert mock_stderr.getvalue() == output
+        assert mock_stderr.getvalue().startswith(f"\r{desc}: 0% 0/3")
+        assert mock_stderr.getvalue().endswith(f"\r{desc}: 100% 3/3\n")
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_progress_without_tqdm_no_total(self, mock_stderr) -> None:
+    def test_simple_progress_without_total(self, mock_stderr) -> None:
         test_data = [1, 3, 5]
         desc = "test progress"
-        output = f"\r{desc}: \r{desc}: .\r{desc}: ..\r{desc}: ...\n"
 
         def gen():
             for n in test_data:
@@ -61,14 +58,12 @@ class Test(BaseTest):
         progressed = progress(gen(), desc=desc, use_tqdm=False)
 
         assert list(progressed) == test_data
-        assert mock_stderr.getvalue() == output
+        assert mock_stderr.getvalue().startswith(f"\r{desc}: ")
+        assert mock_stderr.getvalue().endswith(f"\r{desc}: ...\n")
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
-    def test_progress_without_tqdm_manually(self, mock_stderr) -> None:
+    def test_simple_progress_update_manually(self, mock_stderr) -> None:
         desc = "test progress"
-        output = (
-            f"\r{desc}: 0% 0/5\r{desc}: 40% 2/5\r{desc}: 80% 4/5\r{desc}: 100% 5/5\n"
-        )
 
         p = progress(total=5, desc=desc, use_tqdm=False)
         p.update(0)
@@ -76,4 +71,5 @@ class Test(BaseTest):
         p.update(2)
         p.update(1)
         p.close()
-        assert mock_stderr.getvalue() == output
+        assert mock_stderr.getvalue().startswith(f"\r{desc}: 0% 0/5")
+        assert mock_stderr.getvalue().endswith(f"\r{desc}: 100% 5/5\n")
