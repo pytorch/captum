@@ -145,7 +145,7 @@ if __name__ == "__main__":
         long_description_content_type="text/markdown",
         python_requires=">=3.6",
         install_requires=["matplotlib", "numpy", "torch>=1.2"],
-        packages=find_packages(),
+        packages=find_packages(exclude=("tests","tests.*")),
         extras_require={
             "dev": DEV_REQUIRES,
             "insights": INSIGHTS_REQUIRES,
