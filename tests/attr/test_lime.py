@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
+import unittest.mock
 from typing import Any, Callable, Generator, Tuple, Union
 
 import torch
@@ -143,6 +145,26 @@ class Test(BaseTest):
             expected_coefs_only=[244.0, 100.0],
             test_generator=True,
         )
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_lime_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._lime_test_assert(
+            net,
+            inp,
+            [73.3716, 193.3349, 113.3349],
+            perturbations_per_eval=(1, 2, 3),
+            n_perturb_samples=500,
+            test_generator=True,
+            show_progress=True,
+        )
+        output = mock_stderr.getvalue()
+        assert "Lime attribution:" in output
+
+        # to test if progress calculation aligns with the actual iteration
+        # all perturbations_per_eval should reach progress of 100%
+        assert output.count("100%") == 3
 
     def test_simple_batch_lime(self) -> None:
         net = BasicModel_MultiLayer()
@@ -403,6 +425,7 @@ class Test(BaseTest):
         delta: float = 1.0,
         batch_attr: bool = False,
         test_generator: bool = False,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             lime = Lime(
@@ -418,6 +441,7 @@ class Test(BaseTest):
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
                     n_perturb_samples=n_perturb_samples,
+                    show_progress=show_progress,
                 )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -433,6 +457,7 @@ class Test(BaseTest):
                     perturbations_per_eval=batch_size,
                     n_samples=n_perturb_samples,
                     return_input_shape=False,
+                    show_progress=show_progress,
                 )
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs_only, delta=delta, mode="max"
@@ -475,6 +500,7 @@ class Test(BaseTest):
                         perturbations_per_eval=batch_size,
                         n_samples=n_perturb_samples,
                         num_interp_features=num_interp_features,
+                        show_progress=show_progress,
                     )
                     assertTensorAlmostEqual(
                         self, attributions, expected_coefs_only, delta=delta, mode="max"
@@ -509,6 +535,7 @@ class Test(BaseTest):
                         perturbations_per_eval=batch_size,
                         n_samples=n_perturb_samples,
                         num_interp_features=num_interp_features,
+                        show_progress=show_progress,
                     )
                     assertTensorAlmostEqual(
                         self,

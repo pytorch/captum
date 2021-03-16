@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
+import unittest.mock
 from typing import Any, List, Tuple, Union, cast
 
 import torch
@@ -483,6 +485,45 @@ class Test(BaseTest):
             perturbations_per_eval=(1,),
             expected_ablation=[[1.0, 1.0, 0.0], [2.0, 2.0, 0.0], [0.0, 0.0, 3.0]],
         )
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_ablation_with_show_progress(self, mock_stderr) -> None:
+        ablation_algo = FeatureAblation(BasicModel_MultiLayer())
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._ablation_test_assert(
+            ablation_algo,
+            inp,
+            [[80.0, 200.0, 120.0]],
+            perturbations_per_eval=(1, 2, 3),
+            show_progress=True,
+        )
+
+        output = mock_stderr.getvalue()
+        assert "Feature Ablation attribution:" in output
+
+        # to test if progress calculation aligns with the actual iteration
+        # all perturbations_per_eval should reach progress of 100%
+        assert output.count("100%") == 3
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_ablation_with_mask_and_show_progress(self, mock_stderr) -> None:
+        ablation_algo = FeatureAblation(BasicModel_MultiLayer())
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._ablation_test_assert(
+            ablation_algo,
+            inp,
+            [[280.0, 280.0, 120.0]],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+            show_progress=True,
+        )
+
+        output = mock_stderr.getvalue()
+        assert "Feature Ablation attribution:" in output
+
+        # to test if progress calculation aligns with the actual iteration
+        # all perturbations_per_eval should reach progress of 100%
+        assert output.count("100%") == 3
 
     def _single_input_one_sample_batch_scalar_ablation_assert(
         self, ablation_algo: Attribution, dtype: torch.dtype = torch.float32

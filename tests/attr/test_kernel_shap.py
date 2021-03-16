@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import unittest
+import unittest.mock
 from typing import Any, Callable, List, Tuple, Union
 
 import torch
@@ -66,6 +68,25 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
             expected_coefs=[275.0, 115.0],
         )
+
+    @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
+    def test_simple_kernel_shap_with_show_progress(self, mock_stderr) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
+        self._kernel_shap_test_assert(
+            net,
+            inp,
+            [76.66666, 196.66666, 116.66666],
+            perturbations_per_eval=(1, 2, 3),
+            n_perturb_samples=500,
+            show_progress=True,
+        )
+        output = mock_stderr.getvalue()
+        assert "Kernel Shap attribution:" in output
+
+        # to test if progress calculation aligns with the actual iteration
+        # all perturbations_per_eval should reach progress of 100%
+        assert output.count("100%") == 3
 
     def test_simple_kernel_shap_with_baselines(self) -> None:
         net = BasicModel_MultiLayer()
@@ -310,6 +331,7 @@ class Test(BaseTest):
         n_perturb_samples: int = 100,
         delta: float = 1.0,
         expected_coefs: Union[None, List[float], List[List[float]]] = None,
+        show_progress: bool = False,
     ) -> None:
         for batch_size in perturbations_per_eval:
             kernel_shap = KernelShap(model)
@@ -322,6 +344,7 @@ class Test(BaseTest):
                     baselines=baselines,
                     perturbations_per_eval=batch_size,
                     n_perturb_samples=n_perturb_samples,
+                    show_progress=show_progress,
                 )
             assertTensorTuplesAlmostEqual(
                 self, attributions, expected_attr, delta=delta, mode="max"
@@ -338,6 +361,7 @@ class Test(BaseTest):
                     perturbations_per_eval=batch_size,
                     n_samples=n_perturb_samples,
                     return_input_shape=False,
+                    show_progress=show_progress,
                 )
                 assertTensorAlmostEqual(
                     self, attributions, expected_coefs, delta=delta, mode="max"

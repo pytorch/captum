@@ -98,6 +98,7 @@ class FeaturePermutation(FeatureAblation):
         additional_forward_args: Any = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
+        show_progress: bool = False,
         **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -190,6 +191,11 @@ class FeaturePermutation(FeatureAblation):
                             If the forward function returns a single scalar per batch,
                             perturbations_per_eval must be set to 1.
                             Default: 1
+                show_progress (bool, optional): Displays the progress of computation.
+                            It will try to use tqdm if available for advanced features
+                            (e.g. time estimation). Otherwise, it will fallback to
+                            a simple output of progress.
+                            Default: False
                 **kwargs (Any, optional): Any additional arguments used by child
                             classes of FeatureAblation (such as Occlusion) to construct
                             ablations. These arguments are ignored when using
@@ -256,6 +262,7 @@ class FeaturePermutation(FeatureAblation):
             additional_forward_args=additional_forward_args,
             feature_mask=feature_mask,
             perturbations_per_eval=perturbations_per_eval,
+            show_progress=show_progress,
             **kwargs,
         )
 
