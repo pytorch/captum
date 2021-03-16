@@ -3,7 +3,8 @@
      {
       "id": "Titanic_Basic_Interpret",
       "title": "Getting started with Captum"
-    },{
+    },
+    {
       "id": "IMDB_TorchText_Interpret",
       "title": "Interpreting text models"
     },
@@ -25,7 +26,11 @@
     },
     {
       "id": "Bert_SQUAD_Interpret",
-      "title": "Interpreting question answering with BERT"
+      "title": "Interpreting question answering with BERT Part 1"
+    },
+    {
+      "id": "Bert_SQUAD_Interpret2",
+      "title": "Interpreting question answering with BERT Part 2"
     },
     {
       "id": "House_Prices_Regression_Interpret",
