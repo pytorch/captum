@@ -490,40 +490,54 @@ class Test(BaseTest):
     def test_simple_ablation_with_show_progress(self, mock_stderr) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._ablation_test_assert(
-            ablation_algo,
-            inp,
-            [[80.0, 200.0, 120.0]],
-            perturbations_per_eval=(1, 2, 3),
-            show_progress=True,
-        )
 
-        output = mock_stderr.getvalue()
-        assert "Feature Ablation attribution:" in output
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._ablation_test_assert(
+                ablation_algo,
+                inp,
+                [[80.0, 200.0, 120.0]],
+                perturbations_per_eval=(bsz,),
+                show_progress=True,
+            )
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Feature Ablation attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_simple_ablation_with_mask_and_show_progress(self, mock_stderr) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer())
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._ablation_test_assert(
-            ablation_algo,
-            inp,
-            [[280.0, 280.0, 120.0]],
-            feature_mask=torch.tensor([[0, 0, 1]]),
-            perturbations_per_eval=(1, 2, 3),
-            show_progress=True,
-        )
 
-        output = mock_stderr.getvalue()
-        assert "Feature Ablation attribution:" in output
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._ablation_test_assert(
+                ablation_algo,
+                inp,
+                [[280.0, 280.0, 120.0]],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                perturbations_per_eval=(bsz,),
+                show_progress=True,
+            )
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Feature Ablation attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def _single_input_one_sample_batch_scalar_ablation_assert(
         self, ablation_algo: Attribution, dtype: torch.dtype = torch.float32

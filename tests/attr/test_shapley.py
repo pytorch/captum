@@ -228,41 +228,59 @@ class Test(BaseTest):
     def test_shapley_sampling_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._shapley_test_assert(
-            net,
-            inp,
-            [76.66666, 196.66666, 116.66666],
-            perturbations_per_eval=(1, 2, 3),
-            n_samples=250,
-            show_progress=True,
-        )
-        output = mock_stderr.getvalue()
-        assert "Shapley Value Sampling attribution:" in output
-        assert "Shapley Values attribution:" in output
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3 * 2
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._shapley_test_assert(
+                net,
+                inp,
+                [76.66666, 196.66666, 116.66666],
+                perturbations_per_eval=(bsz,),
+                n_samples=250,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Shapley Value Sampling attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+            assert (
+                "Shapley Values attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
     def test_shapley_sampling_with_mask_and_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._shapley_test_assert(
-            net,
-            inp,
-            [275.0, 275.0, 115.0],
-            feature_mask=torch.tensor([[0, 0, 1]]),
-            perturbations_per_eval=(1, 2, 3),
-            show_progress=True,
-        )
-        output = mock_stderr.getvalue()
-        assert "Shapley Value Sampling attribution:" in output
-        assert "Shapley Values attribution:" in output
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3 * 2
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._shapley_test_assert(
+                net,
+                inp,
+                [275.0, 275.0, 115.0],
+                feature_mask=torch.tensor([[0, 0, 1]]),
+                perturbations_per_eval=(bsz,),
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Shapley Value Sampling attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+            assert (
+                "Shapley Values attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def _single_input_one_sample_batch_scalar_shapley_assert(
         self, func: Callable
