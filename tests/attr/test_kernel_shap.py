@@ -73,20 +73,27 @@ class Test(BaseTest):
     def test_simple_kernel_shap_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._kernel_shap_test_assert(
-            net,
-            inp,
-            [76.66666, 196.66666, 116.66666],
-            perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
-            show_progress=True,
-        )
-        output = mock_stderr.getvalue()
-        assert "Kernel Shap attribution:" in output
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._kernel_shap_test_assert(
+                net,
+                inp,
+                [76.66666, 196.66666, 116.66666],
+                perturbations_per_eval=(bsz,),
+                n_perturb_samples=500,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Kernel Shap attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def test_simple_kernel_shap_with_baselines(self) -> None:
         net = BasicModel_MultiLayer()

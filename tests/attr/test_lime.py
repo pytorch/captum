@@ -66,7 +66,7 @@ def alt_perturb_generator(
 def alt_to_interp_rep(
     curr_sample: TensorOrTupleOfTensorsGeneric,
     original_input: TensorOrTupleOfTensorsGeneric,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Tensor:
     binary_vector = torch.zeros(1, kwargs["num_interp_features"])
     feature_mask = kwargs["feature_mask"]
@@ -150,21 +150,28 @@ class Test(BaseTest):
     def test_simple_lime_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._lime_test_assert(
-            net,
-            inp,
-            [73.3716, 193.3349, 113.3349],
-            perturbations_per_eval=(1, 2, 3),
-            n_perturb_samples=500,
-            test_generator=True,
-            show_progress=True,
-        )
-        output = mock_stderr.getvalue()
-        assert "Lime attribution:" in output
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert output.count("100%") == 3
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._lime_test_assert(
+                net,
+                inp,
+                [73.3716, 193.3349, 113.3349],
+                perturbations_per_eval=(bsz,),
+                n_perturb_samples=500,
+                test_generator=True,
+                show_progress=True,
+            )
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Lime attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def test_simple_batch_lime(self) -> None:
         net = BasicModel_MultiLayer()

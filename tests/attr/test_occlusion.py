@@ -271,19 +271,28 @@ class Test(BaseTest):
     def test_simple_input_with_show_progress(self, mock_stderr) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[20.0, 50.0, 30.0]], requires_grad=True)
-        self._occlusion_test_assert(
-            net,
-            inp,
-            [80.0, 200.0, 120.0],
-            perturbations_per_eval=(1, 2, 3),
-            sliding_window_shapes=((1,)),
-            show_progress=True,
-        )
-        assert "Occlusion attribution:" in mock_stderr.getvalue()
 
-        # to test if progress calculation aligns with the actual iteration
-        # all perturbations_per_eval should reach progress of 100%
-        assert mock_stderr.getvalue().count("100%") == 3
+        # test progress output for each batch size
+        for bsz in (1, 2, 3):
+            self._occlusion_test_assert(
+                net,
+                inp,
+                [80.0, 200.0, 120.0],
+                perturbations_per_eval=(bsz,),
+                sliding_window_shapes=((1,)),
+                show_progress=True,
+            )
+
+            output = mock_stderr.getvalue()
+
+            # to test if progress calculation aligns with the actual iteration
+            # all perturbations_per_eval should reach progress of 100%
+            assert (
+                "Occlusion attribution: 100%" in output
+            ), f"Error progress output: {repr(output)}"
+
+            mock_stderr.seek(0)
+            mock_stderr.truncate(0)
 
     def _occlusion_test_assert(
         self,
