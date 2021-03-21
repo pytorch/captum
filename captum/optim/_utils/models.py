@@ -320,3 +320,38 @@ def skip_layers(
         layers = cast(List[Type[nn.Module]], layers)
         for target_layer in layers:
             replace_layers(model, target_layer, SkipLayer)
+
+
+class MaxPool2dRelaxed(torch.nn.Module):
+    """
+    A relaxed pooling layer, that's useful for calculating attributions of spatial
+    positions. This layer reduces Noise in the gradient through the use of a
+    continuous relaxation of the gradient.
+
+    Args:
+        kernel_size (int or tuple of int): The size of the window to perform max &
+            average pooling with.
+        stride (int or tuple of int, optional): The stride window size to use.
+        padding (int or tuple of int): The amount of zero padding to add to both sides
+            in the nn.MaxPool2d & nn.AvgPool2d modules.
+        ceil_mode (bool, optional): Whether to use ceil or floor for creating the
+            output shape.
+    """
+
+    def __init__(
+        self,
+        kernel_size: Union[int, Tuple[int, ...]],
+        stride: Optional[Union[int, Tuple[int, ...]]] = None,
+        padding: Union[int, Tuple[int, ...]] = 0,
+        ceil_mode: bool = False,
+    ) -> None:
+        super().__init__()
+        self.maxpool = torch.nn.MaxPool2d(
+            kernel_size=kernel_size, stride=stride, padding=padding, ceil_mode=ceil_mode
+        )
+        self.avgpool = torch.nn.AvgPool2d(
+            kernel_size=kernel_size, stride=stride, padding=padding, ceil_mode=ceil_mode
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.maxpool(x.detach()) + self.avgpool(x) - self.avgpool(x.detach())
