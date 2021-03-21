@@ -412,7 +412,7 @@ class TestMaxPool2dRelaxed(BaseTest):
                 ]
             ],
         )
-        assertTensorAlmostEqual(self, output_grad, expected_output)
+        assertTensorAlmostEqual(self, output_grad, expected_output, 0.0005)
 
 
 if __name__ == "__main__":
