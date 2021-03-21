@@ -20,8 +20,9 @@ def extract_expanded_weights(
     Extract meaningful weight interactions from between neurons which aren’t
     literally adjacent in a neural network, or where the weights aren’t directly
     represented in a single weight tensor.
-    Schubert, et al., "Visualizing Weights", Distill, 2021.
-    See: https://distill.pub/2021/circuits/visualizing-weights/
+
+    Voss, et al., "Visualizing Weights", Distill, 2021.
+    See: https://distill.pub/2020/circuits/visualizing-weights/
 
     Args:
         model (nn.Module):  The reference to PyTorch model instance.
