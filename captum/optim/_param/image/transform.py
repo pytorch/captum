@@ -499,9 +499,9 @@ class RandomCrop(nn.Module):
 
 class AlphaChannelLoss(nn.Module):
     """
-        Transform for calculating alpha channel loss, while passing the input tensor
-        through unaltered. Loss values are calculated in such a way that opague and
-        transparent regions of the tensor are automatically balanced.
+        Transform for calculating alpha channel loss, without altering the input tensor.
+        Loss values are calculated in such a way that opaque and transparent regions of
+        the tensor are automatically balanced.
     ​
         See: https://distill.pub/2018/differentiable-parameterizations/
         Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.

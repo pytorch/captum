@@ -53,17 +53,17 @@ class ImageTensor(torch.Tensor):
             prefix + tensor_str, suffixes, indent, force_newline=self.is_sparse
         )
 
+    @classmethod
+    def __torch_function__(cls, func, types, args=(), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        return super().__torch_function__(func, types, args, kwargs)
+
     def show(self, scale: float = 255.0) -> None:
         show(self, figsize=None, scale=scale)
 
     def export(self, filename: str, scale: float = 255.0) -> None:
         save_tensor_as_image(self, filename=filename, scale=scale)
-
-
-def logit(p: torch.Tensor, epsilon: float = 1e-6) -> torch.Tensor:
-    p = torch.clamp(p, min=epsilon, max=1.0 - epsilon)
-    assert p.min() >= 0 and p.max() < 1
-    return torch.log(p / (1 - p))
 
 
 class InputParameterization(torch.nn.Module):
@@ -160,12 +160,13 @@ class FFTImage(ImageParameterization):
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         else:
-            import torch
+            def torch_rfft(x):
+                return torch.rfft(x, signal_ndim=2)
 
-            torch_rfft = lambda x: torch.rfft(x, signal_ndim=2)  # noqa: E731
-            torch_irfft = lambda x: torch.irfft(x, signal_ndim=2)[  # noqa: E731
-                :, :, : self.size[0], : self.size[1]  # noqa: E731
-            ]  # noqa: E731
+            def torch_irfft(x):
+                return torch.irfft(x, signal_ndim=2)[
+                    :, :, : self.size[0], : self.size[1]
+                ]
         return torch_rfft, torch_irfft
 
     def forward(self) -> torch.Tensor:

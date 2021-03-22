@@ -95,10 +95,10 @@ def replace_layers(
 
     Args:
         model: (nn.Module): A PyTorch model instance.
-        layer1: (nn.Module): A layer instance that you want to transfer
+        layer1: (Type[nn.Module]): The layer class that you want to transfer
             initialization variables from.
-        layer2: (nn.Module): The layer class to create with the variables
-            from of layer1.
+        layer2: (Type[nn.Module]): The layer class to create with the variables
+            from layer1.
         transfer_vars (bool, optional): Wether or not to try and copy
             initialization variables from layer1 instances to the replacement
             layer2 instances.
