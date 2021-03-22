@@ -1,4 +1,4 @@
-"""captum.optim.objectives."""
+"""captum.optim.optimization."""
 
 from contextlib import suppress
 from typing import List, Optional
@@ -138,13 +138,13 @@ class InputOptimization(Objective, Parameterized):
             while stop_criteria(step, self, history, optimizer):
                 optimizer.zero_grad()
                 loss_value = self.loss()
-                history.append(loss_value.cpu().detach().numpy())
+                history.append(loss_value)
                 (-1 * loss_value.mean()).backward()
                 optimizer.step()
                 step += 1
         finally:
             self.cleanup()
-        return history
+        return torch.stack(history)
 
 
 def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
