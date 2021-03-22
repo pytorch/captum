@@ -160,6 +160,7 @@ class FFTImage(ImageParameterization):
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         else:
+
             def torch_rfft(x):
                 return torch.rfft(x, signal_ndim=2)
 
@@ -167,6 +168,7 @@ class FFTImage(ImageParameterization):
                 return torch.irfft(x, signal_ndim=2)[
                     :, :, : self.size[0], : self.size[1]
                 ]
+
         return torch_rfft, torch_irfft
 
     def forward(self) -> torch.Tensor:
