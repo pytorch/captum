@@ -1,6 +1,7 @@
 import functools
+import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 import torch
 import torch.nn as nn
@@ -36,69 +37,103 @@ class Loss(ABC):
     def __repr__(self):
         return self.__name__
 
-    def __add__(self, other):
-        if isinstance(other, (int, float)):
-
-            def loss_fn(module):
-                return other + self(module)
-
-            name = self.__name__
-            target = self.target
-        else:
-            # We take the mean of the output tensor to resolve shape mismatches
-            def loss_fn(module):
-                return torch.mean(self(module)) + torch.mean(other(module))
-
-            name = f"Compose({', '.join([self.__name__, other.__name__])})"
-            target = (
-                self.target if hasattr(self.target, "__iter__") else [self.target]
-            ) + (other.target if hasattr(other.target, "__iter__") else [other.target])
-        return CompositeLoss(loss_fn, name=name, target=target)
-
     def __neg__(self):
-        return -1 * self
+        return module_op(self, None, operator.neg)
+
+    def __add__(self, other):
+        return module_op(self, other, operator.add)
 
     def __sub__(self, other):
-        return self + (-1 * other)
+        return module_op(self, other, operator.sub)
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-
-            def loss_fn(module):
-                return other * self(module)
-
-            return CompositeLoss(loss_fn, name=self.__name__, target=self.target)
-        else:
-            raise TypeError(
-                "Can only multiply by int or float. Received type " + str(type(other))
-            )
+        return module_op(self, other, operator.mul)
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            return self.__mul__(1 / other)
-        else:
-            raise TypeError(
-                "Can only divide by int or float. Received type " + str(type(other))
-            )
+        return module_op(self, other, operator.truediv)
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
+    def __pow__(self, other):
+        return module_op(self, other, operator.pow)
 
     def __radd__(self, other):
         return self.__add__(other)
 
-    def __pow__(self, other):
+    def __rsub__(self, other):
+        return self.__neg__().__add__(other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
 
             def loss_fn(module):
-                return self(module) ** other
+                return operator.truediv(other, torch.mean(self(module)))
 
-            return CompositeLoss(loss_fn, name=self.__name__, target=self.target)
+            name = self.__name__
+            target = self.target
+        elif isinstance(other, Loss):
+            # This should never get called because __div__ will be called instead
+            pass
         else:
             raise TypeError(
-                "Can only take to the power of int or float. Received type "
+                "Can only apply math operations with int, float or Loss. Received type "
                 + str(type(other))
             )
+        return CompositeLoss(loss_fn, name=name, target=target)
+
+    def __rpow__(self, other):
+        if isinstance(other, (int, float)):
+
+            def loss_fn(module):
+                return operator.pow(other, torch.mean(self(module)))
+
+            name = self.__name__
+            target = self.target
+        elif isinstance(other, Loss):
+            # This should never get called because __pow__ will be called instead
+            pass
+        else:
+            raise TypeError(
+                "Can only apply math operations with int, float or Loss. Received type "
+                + str(type(other))
+            )
+        return CompositeLoss(loss_fn, name=name, target=target)
+
+
+def module_op(self: Loss, other: Any, math_op: Callable):
+    """
+    This is a general function for applying math operations to Losses
+    """
+    if other is None and math_op == operator.neg:
+
+        def loss_fn(module):
+            return math_op(self(module))
+
+        name = self.__name__
+        target = self.target
+    elif isinstance(other, (int, float)):
+
+        def loss_fn(module):
+            return math_op(self(module), other)
+
+        name = self.__name__
+        target = self.target
+    elif isinstance(other, Loss):
+        # We take the mean of the output tensor to resolve shape mismatches
+        def loss_fn(module):
+            return math_op(torch.mean(self(module)), torch.mean(other(module)))
+
+        name = f"Compose({', '.join([self.__name__, other.__name__])})"
+        target = (
+            self.target if hasattr(self.target, "__iter__") else [self.target]
+        ) + (other.target if hasattr(other.target, "__iter__") else [other.target])
+    else:
+        raise TypeError(
+            "Can only apply math operations with int, float or Loss. Received type "
+            + str(type(other))
+        )
+    return CompositeLoss(loss_fn, name=name, target=target)
 
 
 class SimpleLoss(Loss):
