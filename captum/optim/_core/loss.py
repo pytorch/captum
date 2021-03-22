@@ -240,7 +240,7 @@ class NeuronActivation(SimpleLoss):
         )
 
         if self.batch_index is None:
-            return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1.0]
+            return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1]
         else:
             return activations[
                 self.batch_index, self.channel_index, _x : _x + 1, _y : _y + 1

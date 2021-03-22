@@ -20,8 +20,8 @@ class TestRandSelect(BaseTest):
         a = (1, 2, 3, 4, 5)
         b = torch.Tensor([0.1, -5, 56.7, 99.0])
 
-        self.assertIn(transform.rand_select(a), a)
-        self.assertIn(transform.rand_select(b), b)
+        self.assertIn(transform._rand_select(a), a)
+        self.assertIn(transform._rand_select(b), b)
 
 
 class TestRandomScale(BaseTest):
