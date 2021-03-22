@@ -137,13 +137,18 @@ def module_op(self: Loss, other: Any, math_op: Callable):
 
 
 class SimpleLoss(Loss):
-    def __init__(self, target: nn.Module = []):
+    def __init__(self, target: nn.Module = [], batch_index: Optional[int] = None):
         super(SimpleLoss, self).__init__()
         self._target = target
+        self._batch_index = batch_index
 
     @property
     def target(self):
         return self._target
+
+    @property
+    def batch_index(self):
+        return self._batch_index
 
 
 class CompositeLoss(SimpleLoss):
@@ -178,7 +183,10 @@ class LayerActivation(SimpleLoss):
     """
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
-        return targets_to_values[self.target]
+        activations = targets_to_values[self.target]
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
+        return activations
 
 
 @loss_wrapper
@@ -187,8 +195,10 @@ class ChannelActivation(SimpleLoss):
     Maximize activations at the target layer and target channel.
     """
 
-    def __init__(self, target: nn.Module, channel_index: int) -> None:
-        SimpleLoss.__init__(self, target)
+    def __init__(
+        self, target: nn.Module, channel_index: int, batch_index: Optional[int] = None
+    ) -> None:
+        SimpleLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -199,7 +209,10 @@ class ChannelActivation(SimpleLoss):
         # assume NCHW
         # NOTE: not necessarily true e.g. for Linear layers
         # assert len(activations.shape) == 4
-        return activations[:, self.channel_index, ...]
+        if self.batch_index is None:
+            return activations[:, self.channel_index, ...]
+        else:
+            return activations[self.batch_index, self.channel_index, ...]
 
 
 @loss_wrapper
@@ -210,8 +223,9 @@ class NeuronActivation(SimpleLoss):
         channel_index: int,
         x: Optional[int] = None,
         y: Optional[int] = None,
+        batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target)
+        SimpleLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
         self.x = x
         self.y = y
@@ -225,7 +239,12 @@ class NeuronActivation(SimpleLoss):
             activations.size(2), activations.size(3), self.x, self.y
         )
 
-        return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1]
+        if self.batch_index is None:
+            return activations[:, self.channel_index, _x : _x + 1, _y : _y + 1.0]
+        else:
+            return activations[
+                self.batch_index, self.channel_index, _x : _x + 1, _y : _y + 1
+            ]
 
 
 @loss_wrapper
@@ -237,6 +256,8 @@ class DeepDream(SimpleLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return activations ** 2
 
 
@@ -250,6 +271,8 @@ class TotalVariation(SimpleLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         x_diff = activations[..., 1:, :] - activations[..., :-1, :]
         y_diff = activations[..., :, 1:] - activations[..., :, :-1]
         return torch.sum(torch.abs(x_diff)) + torch.sum(torch.abs(y_diff))
@@ -261,12 +284,19 @@ class L1(SimpleLoss):
     L1 norm of the target layer, generally used as a penalty.
     """
 
-    def __init__(self, target: nn.Module, constant: float = 0.0) -> None:
-        SimpleLoss.__init__(self, target)
+    def __init__(
+        self,
+        target: nn.Module,
+        constant: float = 0.0,
+        batch_index: Optional[int] = None,
+    ) -> None:
+        SimpleLoss.__init__(self, target, batch_index)
         self.constant = constant
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return torch.abs(activations - self.constant).sum()
 
 
@@ -277,15 +307,21 @@ class L2(SimpleLoss):
     """
 
     def __init__(
-        self, target: nn.Module, constant: float = 0.0, epsilon: float = 1e-6
+        self,
+        target: nn.Module,
+        constant: float = 0.0,
+        epsilon: float = 1e-6,
+        batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target)
+        SimpleLoss.__init__(self, target, batch_index)
         self.constant = constant
         self.epsilon = epsilon
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         activations = ((activations - self.constant) ** 2).sum()
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return torch.sqrt(self.epsilon + activations)
 
 
@@ -404,13 +440,20 @@ class Direction(SimpleLoss):
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     """
 
-    def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
-        SimpleLoss.__init__(self, target)
+    def __init__(
+        self,
+        target: nn.Module,
+        vec: torch.Tensor,
+        batch_index: Optional[int] = None,
+    ) -> None:
+        SimpleLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
         assert activations.size(1) == self.direction.size(1)
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return torch.cosine_similarity(self.direction, activations)
 
 
@@ -429,8 +472,9 @@ class NeuronDirection(SimpleLoss):
         x: Optional[int] = None,
         y: Optional[int] = None,
         channel_index: Optional[int] = None,
+        batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target)
+        SimpleLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
         self.x = x
         self.y = y
@@ -447,7 +491,8 @@ class NeuronDirection(SimpleLoss):
         activations = activations[:, :, _x : _x + 1, _y : _y + 1]
         if self.channel_index is not None:
             activations = activations[:, self.channel_index, ...][:, None, ...]
-        print(activations)
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return torch.cosine_similarity(self.direction, activations)
 
 
@@ -459,8 +504,10 @@ class TensorDirection(SimpleLoss):
     https://distill.pub/2019/activation-atlas/#Aggregating-Multiple-Images
     """
 
-    def __init__(self, target: nn.Module, vec: torch.Tensor) -> None:
-        SimpleLoss.__init__(self, target)
+    def __init__(
+        self, target: nn.Module, vec: torch.Tensor, batch_index: Optional[int] = None
+    ) -> None:
+        SimpleLoss.__init__(self, target, batch_index)
         self.direction = vec
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -475,6 +522,8 @@ class TensorDirection(SimpleLoss):
         W = (W_activ - W_direction) // 2
 
         activations = activations[:, :, H : H + H_direction, W : W + W_direction]
+        if self.batch_index is not None:
+            activations = activations[self.batch_index]
         return torch.cosine_similarity(self.direction, activations)
 
 
