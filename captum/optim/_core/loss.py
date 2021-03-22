@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 import torch
 import torch.nn as nn
