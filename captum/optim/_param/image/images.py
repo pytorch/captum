@@ -152,7 +152,8 @@ class FFTImage(ImageParameterization):
         if TORCH_VERSION >= "1.7.0":
             import torch.fft
 
-            torch_rfft = lambda x: torch.view_as_real(torch.fft.rfftn(x, s=self.size))  # type: ignore  # noqa: E731 E501
+            def torch_rfft(x: torch.Tensor):
+                return torch.view_as_real(torch.fft.rfftn(x, s=self.size))
 
             def torch_irfft(x: torch.Tensor) -> torch.Tensor:
                 if type(x) is not torch.complex64:
@@ -160,11 +161,12 @@ class FFTImage(ImageParameterization):
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         else:
+            import torch
 
-            def torch_rfft(x):
+            def torch_rfft(x: torch.Tensor):
                 return torch.rfft(x, signal_ndim=2)
 
-            def torch_irfft(x):
+            def torch_irfft(x: torch.Tensor):
                 return torch.irfft(x, signal_ndim=2)[
                     :, :, : self.size[0], : self.size[1]
                 ]

@@ -1,7 +1,7 @@
 """captum.optim.optimization."""
 
 from contextlib import suppress
-from typing import List, Optional
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -113,7 +113,7 @@ class InputOptimization(Objective, Parameterized):
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
-    ) -> List:
+    ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
         Args:
             stop_criteria (StopCriteria, optional):  A function that is called
