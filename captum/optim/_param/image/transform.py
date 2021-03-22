@@ -215,7 +215,7 @@ def center_crop(
     return x
 
 
-def rand_select(
+def _rand_select(
     transform_values: NumSeqOrTensorType,
 ) -> Union[int, float, torch.Tensor]:
     """
@@ -260,7 +260,7 @@ class RandomScale(nn.Module):
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        scale = rand_select(self.scale)
+        scale = _rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
 
