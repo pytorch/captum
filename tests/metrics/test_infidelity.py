@@ -294,6 +294,29 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, infid, delta * delta)
         assertTensorAlmostEqual(self, infid, infid2)
 
+    def test_basic_infidelity_multiple_with_normalize(self) -> None:
+        input1 = torch.tensor([3.0] * 3)
+        input2 = torch.tensor([1.0] * 3)
+        inputs = (input1, input2)
+        expected = torch.zeros(3)
+
+        model = BasicModel2()
+        ig = IntegratedGradients(model)
+        attrs = ig.attribute(inputs)
+        scaled_attrs = tuple(attr * 100 for attr in attrs)
+
+        infid = self.infidelity_assert(model, attrs, inputs, expected, normalize=True)
+        scaled_infid = self.infidelity_assert(
+            model,
+            scaled_attrs,
+            inputs,
+            expected,
+            normalize=True,
+        )
+
+        # scaling attr should not change normalized infidelity
+        assertTensorAlmostEqual(self, infid, scaled_infid)
+
     def test_sensitivity_n_ig(self) -> None:
         model = BasicModel_MultiLayer()
         ig = IntegratedGradients(model)
@@ -384,6 +407,7 @@ class Test(BaseTest):
         max_batch_size: int = None,
         perturb_func: Callable = _local_perturb_func,
         multiply_by_inputs: bool = False,
+        normalize: bool = False,
     ) -> Tensor:
         ig = IntegratedGradients(model)
         if multiply_by_inputs:
@@ -404,6 +428,7 @@ class Test(BaseTest):
             n_perturb_samples=n_perturb_samples,
             max_batch_size=max_batch_size,
             perturb_func=perturb_func,
+            normalize=normalize,
         )
 
     def basic_model_global_assert(
@@ -417,6 +442,7 @@ class Test(BaseTest):
         n_perturb_samples: int = 10,
         max_batch_size: int = None,
         perturb_func: Callable = _global_perturb_func1,
+        normalize: bool = False,
     ) -> Tensor:
         attrs = attr_algo.attribute(
             inputs, additional_forward_args=additional_args, target=target
@@ -431,6 +457,7 @@ class Test(BaseTest):
             target=target,
             n_perturb_samples=n_perturb_samples,
             max_batch_size=max_batch_size,
+            normalize=normalize,
         )
         return infid
 
@@ -447,6 +474,7 @@ class Test(BaseTest):
         max_batch_size: int = None,
         multi_input: bool = True,
         perturb_func: Callable = _local_perturb_func,
+        normalize: bool = False,
         **kwargs: Any
     ) -> Tensor:
         infid = infidelity(
@@ -459,6 +487,7 @@ class Test(BaseTest):
             baselines=baselines,
             n_perturb_samples=n_perturb_samples,
             max_examples_per_batch=max_batch_size,
+            normalize=normalize,
         )
         assertTensorAlmostEqual(self, infid, expected, 0.05)
         return infid
