@@ -53,8 +53,8 @@ class TestImageTensor(BaseTest):
             raise unittest.SkipTest(
                 "Skipping ImageTensor CUDA test due to not supporting CUDA."
             )
-        image_param = images.ImageTensor().cuda()
-        self.assertTrue(image_param().is_cuda)
+        image_t = images.ImageTensor().cuda()
+        self.assertTrue(image_t.is_cuda)
 
 
 class TestFFTImage(BaseTest):
