@@ -48,6 +48,14 @@ class TestImageTensor(BaseTest):
     def test_repr(self) -> None:
         self.assertEqual(str(images.ImageTensor()), "ImageTensor([])")
 
+    def test_natural_image_cuda(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping ImageTensor CUDA test due to not supporting CUDA."
+            )
+        image_param = images.ImageTensor().cuda()
+        self.assertTrue(image_param().is_cuda)
+
 
 class TestFFTImage(BaseTest):
     def test_pytorch_fftfreq(self) -> None:
