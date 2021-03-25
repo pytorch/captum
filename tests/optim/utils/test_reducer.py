@@ -174,7 +174,7 @@ class TestChannelReducer(BaseTest):
         test_input = torch.randn(1, 224, 224, 32).abs().cuda()
         c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
         with self.assertRaises(TypeError):
-            test_output = c_reducer.fit_transform(test_input, swap_2nd_and_last_dims=False)
+            c_reducer.fit_transform(test_input, swap_2nd_and_last_dims=False)
 
 
 class TestPosNeg(BaseTest):
