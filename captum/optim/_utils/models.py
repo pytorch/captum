@@ -69,19 +69,6 @@ class RedirectedReluLayer(nn.Module):
             return RedirectedReLU.apply(input)
 
 
-class ReluLayer(nn.Module):
-    """
-    Basic Hookable & Replaceable ReLU layer.
-    """
-
-    def __init__(self, inplace: bool = True) -> None:
-        super(ReluLayer, self).__init__()
-        self.inplace = inplace
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.relu(input, inplace=self.inplace)
-
-
 def replace_layers(
     model: nn.Module,
     layer1: Type[nn.Module],
@@ -150,30 +137,6 @@ def _transfer_layer_vars(
     shared_vars = {k: v for k, v in layer1_vars.items() if k in layer2_vars}
     new_vars = dict(item for d in (shared_vars, kwargs) for item in d.items())
     return layer2(**new_vars)
-
-
-class LocalResponseNormLayer(nn.Module):
-    """
-    Basic Hookable Local Response Norm layer.
-    """
-
-    def __init__(
-        self,
-        size: int = 9,
-        alpha: float = 9.99999974738e-05,
-        beta: float = 0.5,
-        k: float = 1.0,
-    ) -> None:
-        super(LocalResponseNormLayer, self).__init__()
-        self.size = size
-        self.alpha = alpha
-        self.beta = beta
-        self.k = k
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.local_response_norm(
-            input, size=self.size, alpha=self.alpha, beta=self.beta, k=self.k
-        )
 
 
 class Conv2dSame(nn.Conv2d):

@@ -23,33 +23,6 @@ class TestConv2dSame(BaseTest):
         self.assertEqual(tuple(x_output.size()), tuple(x_expected.size()))
 
 
-class TestLocalResponseNormLayer(BaseTest):
-    def test_local_response_norm_layer(self) -> None:
-        size = 5
-        alpha = 9.999999747378752e-05
-        beta = 0.75
-        k = 1
-
-        x = torch.randn(32, 5, 24, 24)
-        lrn_layer = model_utils.LocalResponseNormLayer(
-            size=size, alpha=alpha, beta=beta, k=k
-        )
-
-        assertTensorAlmostEqual(
-            self,
-            lrn_layer(x),
-            F.local_response_norm(x, size=size, alpha=alpha, beta=beta, k=k),
-            0,
-        )
-
-
-class TestReluLayer(BaseTest):
-    def test_relu_layer(self) -> None:
-        x = torch.randn(1, 3, 4, 4)
-        relu_layer = model_utils.ReluLayer()
-        assertTensorAlmostEqual(self, relu_layer(x), F.relu(x), 0)
-
-
 class TestRedirectedReluLayer(BaseTest):
     def test_forward_redirected_relu_layer(self) -> None:
         x = torch.randn(1, 3, 4, 4)

@@ -6,9 +6,8 @@ import torch.nn.functional as F
 
 from captum.optim._utils.models import (
     AvgPool2dConstrained,
-    LocalResponseNormLayer,
+    Conv2dSame,
     RedirectedReluLayer,
-    ReluLayer,
     SkipLayer,
 )
 
@@ -98,7 +97,7 @@ class InceptionV1(nn.Module):
             if replace_relus_with_redirectedrelu:
                 activ = RedirectedReluLayer
             else:
-                activ = ReluLayer
+                activ = nn.ReLU
             pool = nn.MaxPool2d
 
         self.conv1 = nn.Conv2d(
@@ -110,8 +109,8 @@ class InceptionV1(nn.Module):
             bias=True,
         )
         self.conv1_relu = activ()
-        self.pool1 = pool(kernel_size=3, stride=2, padding=0)
-        self.local_response_norm1 = LocalResponseNormLayer(*lrn_vals)
+        self.pool1 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
+        self.local_response_norm1 = nn.LocalResponseNorm(*lrn_vals)
 
         self.conv2 = nn.Conv2d(
             in_channels=64,
@@ -131,7 +130,7 @@ class InceptionV1(nn.Module):
             bias=True,
         )
         self.conv3_relu = activ()
-        self.local_response_norm2 = LocalResponseNormLayer(*lrn_vals)
+        self.local_response_norm2 = nn.LocalResponseNorm(*lrn_vals)
 
         self.pool2 = pool(kernel_size=3, stride=2, padding=0)
         self.mixed3a = InceptionModule(192, 64, 96, 128, 16, 32, 32, activ, pool)
@@ -229,7 +228,7 @@ class InceptionModule(nn.Module):
         c5x5reduce: int,
         c5x5: int,
         pool_proj: int,
-        activ=ReluLayer,
+        activ=nn.ReLU,
         p_layer=nn.MaxPool2d,
     ) -> None:
         super(InceptionModule, self).__init__()
@@ -320,7 +319,7 @@ class AuxBranch(nn.Module):
         self,
         in_channels: int = 508,
         out_features: int = 1008,
-        activ=ReluLayer,
+        activ=nn.ReLU,
     ) -> None:
         super(AuxBranch, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
