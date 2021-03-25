@@ -1,7 +1,7 @@
 """captum.optim.optimization."""
 
 from contextlib import suppress
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -15,6 +15,7 @@ except (ImportError, AssertionError):
         + " n_steps stop criteria with progress bar"
     )
 
+from captum.optim._core.loss import default_loss_summarize
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
 from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
@@ -113,6 +114,7 @@ class InputOptimization(Objective, Parameterized):
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
+        loss_summarize_fn: Optional[Callable] = default_loss_summarize,
     ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
         Args:
@@ -139,7 +141,7 @@ class InputOptimization(Objective, Parameterized):
                 optimizer.zero_grad()
                 loss_value = self.loss()
                 history.append(loss_value)
-                (-1 * loss_value.mean()).backward()
+                loss_summarize_fn(loss_value).backward()
                 optimizer.step()
                 step += 1
         finally:

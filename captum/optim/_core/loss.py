@@ -576,3 +576,7 @@ class ActivationWeights(SimpleLoss):
         else:
             activations = activations * self.weights.view(1, -1, 1, 1)
         return activations
+
+
+def default_loss_summarize(loss_value):
+    return -1 * loss_value.mean()
