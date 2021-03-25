@@ -85,6 +85,7 @@
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -206,6 +207,11 @@
 <span class="sd">                            (perturbations_per_eval * #examples) / num_devices</span>
 <span class="sd">                            samples.</span>
 <span class="sd">                            Default: 1</span>
+<span class="sd">                show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                            It will try to use tqdm if available for advanced features</span>
+<span class="sd">                            (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                            a simple output of progress.</span>
+<span class="sd">                            Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
@@ -285,6 +291,7 @@
             <span class="n">sliding_window_tensors</span><span class="o">=</span><span class="n">sliding_window_tensors</span><span class="p">,</span>
             <span class="n">shift_counts</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shift_counts</span><span class="p">),</span>
             <span class="n">strides</span><span class="o">=</span><span class="n">strides</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
@@ -392,7 +399,11 @@
         <span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="n">feature_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">])</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_max</span><span class="p">,</span> <span class="kc">None</span></div>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_max</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">""" return the numbers of possible input features """</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">counts</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">])</span></div>
 </pre></div>
 </div>
 </div>

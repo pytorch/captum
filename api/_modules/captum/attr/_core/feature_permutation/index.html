@@ -125,6 +125,7 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
@@ -217,6 +218,11 @@
 <span class="sd">                            If the forward function returns a single scalar per batch,</span>
 <span class="sd">                            perturbations_per_eval must be set to 1.</span>
 <span class="sd">                            Default: 1</span>
+<span class="sd">                show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                            It will try to use tqdm if available for advanced features</span>
+<span class="sd">                            (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                            a simple output of progress.</span>
+<span class="sd">                            Default: False</span>
 <span class="sd">                **kwargs (Any, optional): Any additional arguments used by child</span>
 <span class="sd">                            classes of FeatureAblation (such as Occlusion) to construct</span>
 <span class="sd">                            ablations. These arguments are ignored when using</span>
@@ -283,6 +289,7 @@
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div>
 

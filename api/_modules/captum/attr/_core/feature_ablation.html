@@ -27,6 +27,7 @@
 <h1>Source code for captum.attr._core.feature_ablation</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -41,6 +42,7 @@
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="n">_format_input_baseline</span>
@@ -88,7 +90,8 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Args:</span>
@@ -206,6 +209,11 @@
 <span class="sd">                        and use a single feature mask to describe the features</span>
 <span class="sd">                        for all examples in the batch.</span>
 <span class="sd">                        Default: 1</span>
+<span class="sd">            show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                        It will try to use tqdm if available for advanced features</span>
+<span class="sd">                        (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                        a simple output of progress.</span>
+<span class="sd">                        Default: False</span>
 <span class="sd">            **kwargs (Any, optional): Any additional arguments used by child</span>
 <span class="sd">                        classes of FeatureAblation (such as Occlusion) to construct</span>
 <span class="sd">                        ablations. These arguments are ignored when using</span>
@@ -276,11 +284,30 @@
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">perturbations_per_eval</span> <span class="o">&gt;=</span> <span class="mi">1</span>
         <span class="p">),</span> <span class="s2">"Perturbations per evaluation must be an integer and at least 1."</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">feature_counts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature_counts</span><span class="p">(</span>
+                    <span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+                <span class="n">total_forwards</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">sum</span><span class="p">(</span>
+                        <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">feature_counts</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">1</span>
+                <span class="p">)</span>  <span class="c1"># add 1 for the initial eval</span>
+                <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">total_forwards</span>
+                <span class="p">)</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
             <span class="c1"># Computes initial evaluation with all features, which is compared</span>
             <span class="c1"># to each ablated result.</span>
             <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
             <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">FeatureAblation</span><span class="o">.</span><span class="n">_find_output_mode</span><span class="p">(</span>
                 <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
@@ -334,12 +361,13 @@
                 <span class="c1"># Skip any empty input tensors</span>
                 <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">continue</span>
+
                 <span class="k">for</span> <span class="p">(</span>
                     <span class="n">current_inputs</span><span class="p">,</span>
                     <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="n">current_target</span><span class="p">,</span>
                     <span class="n">current_mask</span><span class="p">,</span>
-                <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ablation_generator</span><span class="p">(</span>
+                <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ith_input_ablation_generator</span><span class="p">(</span>
                     <span class="n">i</span><span class="p">,</span>
                     <span class="n">inputs</span><span class="p">,</span>
                     <span class="n">additional_forward_args</span><span class="p">,</span>
@@ -347,7 +375,7 @@
                     <span class="n">baselines</span><span class="p">,</span>
                     <span class="n">feature_mask</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                 <span class="p">):</span>
                     <span class="c1"># modified_eval dimensions: 1D tensor with length</span>
                     <span class="c1"># equal to #num_examples * #features in batch</span>
@@ -357,6 +385,10 @@
                         <span class="n">current_target</span><span class="p">,</span>
                         <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                        <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
                     <span class="c1"># (contains 1 more dimension than inputs). This adds extra</span>
                     <span class="c1"># dimensions of 1 to make the tensor broadcastable with the inputs</span>
                     <span class="c1"># tensor.</span>
@@ -380,6 +412,9 @@
                         <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
                     <span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
             <span class="c1"># Divide total attributions by counts and return formatted attributions</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_weights</span><span class="p">:</span>
                 <span class="n">attrib</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
@@ -391,7 +426,7 @@
             <span class="n">_result</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_result</span></div>
 
-    <span class="k">def</span> <span class="nf">_ablation_generator</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_ith_input_ablation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">i</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">,</span>
@@ -400,11 +435,14 @@
         <span class="n">baselines</span><span class="p">,</span>
         <span class="n">input_mask</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">"""</span>
-<span class="sd">        This method is a generator which yields each perturbation to be evaluated</span>
-<span class="sd">        including inputs, additional_forward_args, targets, and mask.</span>
+<span class="sd">        This method return an generator of ablation perturbations of the i-th input</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ablation_iter (generator): yields each perturbation to be evaluated</span>
+<span class="sd">                        as a tuple (inputs, additional_forward_args, targets, mask).</span>
 <span class="sd">        """</span>
         <span class="n">extra_args</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -485,7 +523,7 @@
                 <span class="n">baseline</span><span class="p">,</span>
                 <span class="n">num_features_processed</span><span class="p">,</span>
                 <span class="n">num_features_processed</span> <span class="o">+</span> <span class="n">current_num_ablated_features</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">extra_args</span>
+                <span class="o">**</span><span class="n">extra_args</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># current_features[i] has dimension</span>
@@ -540,6 +578,18 @@
             <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">input_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
             <span class="n">input_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">""" return the numbers of input features """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">feature_mask</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">if</span> <span class="n">inp</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">mask</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">if</span> <span class="n">inp</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">inp</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">feature_mask</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>

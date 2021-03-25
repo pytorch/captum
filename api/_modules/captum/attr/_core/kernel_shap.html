@@ -84,6 +84,7 @@
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
@@ -243,6 +244,11 @@
 <span class="sd">                        tensor is returned, containing only the coefficients</span>
 <span class="sd">                        of the trained interpretable model, with length</span>
 <span class="sd">                        num_interp_features.</span>
+<span class="sd">            show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                        It will try to use tqdm if available for advanced features</span>
+<span class="sd">                        (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                        a simple output of progress.</span>
+<span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
@@ -312,6 +318,7 @@
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="n">return_input_shape</span><span class="o">=</span><span class="n">return_input_shape</span><span class="p">,</span>
             <span class="n">num_select_distribution</span><span class="o">=</span><span class="n">Categorical</span><span class="p">(</span><span class="n">probs</span><span class="p">),</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">kernel_shap_similarity_kernel</span><span class="p">(</span>

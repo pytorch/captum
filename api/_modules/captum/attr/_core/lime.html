@@ -49,6 +49,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.models.linear_model</span> <span class="kn">import</span> <span class="n">SkLearnLasso</span>
 <span class="kn">from</span> <span class="nn">captum._utils.models.model</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
@@ -271,7 +272,8 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
@@ -358,6 +360,11 @@
 <span class="sd">                        If the forward function returns a single scalar per batch,</span>
 <span class="sd">                        perturbations_per_eval must be set to 1.</span>
 <span class="sd">                        Default: 1</span>
+<span class="sd">            show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                        It will try to use tqdm if available for advanced features</span>
+<span class="sd">                        (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                        a simple output of progress.</span>
+<span class="sd">                        Default: False</span>
 <span class="sd">            **kwargs (Any, optional): Any additional arguments necessary for</span>
 <span class="sd">                        sampling and transformation functions (provided to</span>
 <span class="sd">                        constructor).</span>
@@ -447,6 +454,14 @@
             <span class="n">perturb_generator</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isgeneratorfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">):</span>
                 <span class="n">perturb_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perturb_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                    <span class="n">total</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_samples</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">),</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
             <span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">perturb_generator</span><span class="p">:</span>
@@ -497,6 +512,10 @@
                         <span class="n">expanded_additional_args</span><span class="p">,</span>
                         <span class="n">device</span><span class="p">,</span>
                     <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                        <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
                     <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
 
                     <span class="n">curr_model_inputs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -512,7 +531,12 @@
                     <span class="n">expanded_additional_args</span><span class="p">,</span>
                     <span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                    <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
                 <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model_out</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
             <span class="n">combined_interp_inps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">interpretable_inps</span><span class="p">)</span>
             <span class="n">combined_outputs</span> <span class="o">=</span> <span class="p">(</span>
@@ -836,6 +860,7 @@
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        This method attributes the output of the model with given target index</span>
@@ -995,6 +1020,11 @@
 <span class="sd">                        tensor is returned, containing only the coefficients</span>
 <span class="sd">                        of the trained interpreatable models, with length</span>
 <span class="sd">                        num_interp_features.</span>
+<span class="sd">            show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                        It will try to use tqdm if available for advanced features</span>
+<span class="sd">                        (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                        a simple output of progress.</span>
+<span class="sd">                        Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            *tensor* or tuple of *tensors* of **attributions**:</span>
@@ -1057,6 +1087,7 @@
             <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
             <span class="n">return_input_shape</span><span class="o">=</span><span class="n">return_input_shape</span><span class="p">,</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_attribute_kwargs</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
@@ -1069,7 +1100,8 @@
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">return_input_shape</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="n">is_inputs_tuple</span> <span class="o">=</span> <span class="n">_is_tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">formatted_inputs</span><span class="p">,</span> <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_input_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
@@ -1129,7 +1161,8 @@
                             <span class="k">if</span> <span class="n">is_inputs_tuple</span>
                             <span class="k">else</span> <span class="n">curr_feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
-                            <span class="o">**</span><span class="n">kwargs</span>
+                            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
                             <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1166,7 +1199,8 @@
             <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">baselines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span> <span class="k">if</span> <span class="n">is_inputs_tuple</span> <span class="k">else</span> <span class="n">feature_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">num_interp_features</span><span class="o">=</span><span class="n">num_interp_features</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">return_input_shape</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_shape</span><span class="p">(</span>

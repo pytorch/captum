@@ -28,6 +28,7 @@
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -43,6 +44,7 @@
     <span class="n">_is_tuple</span><span class="p">,</span>
     <span class="n">_run_forward</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.progress</span> <span class="kn">import</span> <span class="n">progress</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="n">PerturbationAttribution</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -113,6 +115,7 @@
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        NOTE: The feature_mask argument differs from other perturbation based</span>
@@ -236,6 +239,11 @@
 <span class="sd">                            If the forward function returns a single scalar per batch,</span>
 <span class="sd">                            perturbations_per_eval must be set to 1.</span>
 <span class="sd">                            Default: 1</span>
+<span class="sd">                show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                            It will try to use tqdm if available for advanced features</span>
+<span class="sd">                            (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                            a simple output of progress.</span>
+<span class="sd">                            Default: False</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
@@ -312,9 +320,24 @@
                     <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">single_mask</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">single_mask</span> <span class="ow">in</span> <span class="n">feature_mask</span><span class="p">)</span>
                     <span class="o">+</span> <span class="mi">1</span>
                 <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="p">(</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2"> attribution"</span><span class="p">,</span>
+                    <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_n_evaluations</span><span class="p">(</span>
+                        <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># add 1 for the initial eval</span>
+                <span class="p">)</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
             <span class="n">initial_eval</span> <span class="o">=</span> <span class="n">_run_forward</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">forward_func</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">additional_forward_args</span>
             <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
             <span class="n">agg_output_mode</span> <span class="o">=</span> <span class="n">_find_output_mode_and_verify</span><span class="p">(</span>
                 <span class="n">initial_eval</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">,</span> <span class="n">feature_mask</span>
             <span class="p">)</span>
@@ -363,6 +386,9 @@
                         <span class="n">current_target</span><span class="p">,</span>
                         <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                        <span class="n">attr_progress</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
                     <span class="k">if</span> <span class="n">agg_output_mode</span><span class="p">:</span>
                         <span class="n">eval_diff</span> <span class="o">=</span> <span class="n">modified_eval</span> <span class="o">-</span> <span class="n">prev_results</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">modified_eval</span>
@@ -384,6 +410,9 @@
                         <span class="n">total_attrib</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
                             <span class="n">current_eval_diff</span> <span class="o">*</span> <span class="n">current_masks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
                         <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
+                <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
             <span class="c1"># Divide total attributions by number of random permutations and return</span>
             <span class="c1"># formatted attributions.</span>
@@ -473,10 +502,14 @@
                 <span class="n">additional_args_repeated</span><span class="p">,</span>
                 <span class="n">target_repeated</span><span class="p">,</span>
                 <span class="n">combined_masks</span><span class="p">,</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
+        <span class="sd">""" return the total number of forward evaluations needed """</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_samples</span></div>
 
 
-<div class="viewcode-block" id="ShapleyValues"><a class="viewcode-back" href="../../../../shapley_value_sampling.html#captum.attr.ShapleyValues">[docs]</a><span class="k">class</span> <span class="nc">ShapleyValues</span><span class="p">(</span><span class="n">PerturbationAttribution</span><span class="p">):</span>
+<div class="viewcode-block" id="ShapleyValues"><a class="viewcode-back" href="../../../../shapley_value_sampling.html#captum.attr.ShapleyValues">[docs]</a><span class="k">class</span> <span class="nc">ShapleyValues</span><span class="p">(</span><span class="n">ShapleyValueSampling</span><span class="p">):</span>
     <span class="sd">"""</span>
 <span class="sd">    A perturbation based approach to compute attribution, based on the concept</span>
 <span class="sd">    of Shapley Values from cooperative game theory. This method involves taking</span>
@@ -519,9 +552,8 @@
 <span class="sd">                        attributions will have first dimension 1, corresponding to</span>
 <span class="sd">                        feature importance across all examples in the batch.</span>
 <span class="sd">        """</span>
-        <span class="n">PerturbationAttribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shapley_sampling</span> <span class="o">=</span> <span class="n">ShapleyValueSampling</span><span class="p">(</span><span class="n">forward_func</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shapley_sampling</span><span class="o">.</span><span class="n">permutation_generator</span> <span class="o">=</span> <span class="n">_all_perm_generator</span>
+        <span class="n">ShapleyValueSampling</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forward_func</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">permutation_generator</span> <span class="o">=</span> <span class="n">_all_perm_generator</span>
 
 <div class="viewcode-block" id="ShapleyValues.attribute"><a class="viewcode-back" href="../../../../shapley_value_sampling.html#captum.attr.ShapleyValues.attribute">[docs]</a>    <span class="nd">@log_usage</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
@@ -532,6 +564,7 @@
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
         <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        NOTE: The feature_mask argument differs from other perturbation based</span>
@@ -652,7 +685,11 @@
 <span class="sd">                            If the forward function returns a single scalar per batch,</span>
 <span class="sd">                            perturbations_per_eval must be set to 1.</span>
 <span class="sd">                            Default: 1</span>
-
+<span class="sd">                show_progress (bool, optional): Displays the progress of computation.</span>
+<span class="sd">                            It will try to use tqdm if available for advanced features</span>
+<span class="sd">                            (e.g. time estimation). Otherwise, it will fallback to</span>
+<span class="sd">                            a simple output of progress.</span>
+<span class="sd">                            Default: False</span>
 <span class="sd">        Returns:</span>
 <span class="sd">                *tensor* or tuple of *tensors* of **attributions**:</span>
 <span class="sd">                - **attributions** (*tensor* or tuple of *tensors*):</span>
@@ -718,15 +755,22 @@
                 <span class="s2">"Consider using Shapley Value Sampling instead."</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shapley_sampling</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shapley_sampling</span><span class="p">,</span>  <span class="c1"># self</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">attribute</span><span class="o">.</span><span class="n">__wrapped__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
             <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
             <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
             <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
             <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
             <span class="n">feature_mask</span><span class="o">=</span><span class="n">feature_mask</span><span class="p">,</span>
             <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
-        <span class="p">)</span></div></div>
+            <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
+        <span class="sd">""" return the total number of forward evaluations needed """</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span>
+            <span class="n">total_features</span>
+        <span class="p">)</span></div>
 </pre></div>
 </div>
 </div>
