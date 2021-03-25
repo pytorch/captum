@@ -157,6 +157,25 @@ class TestChannelReducer(BaseTest):
         self.assertEquals(test_output.size(2), 224)
         self.assertEquals(test_output.size(3), 3)
 
+    def test_channelreducer_error(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping ChannelReducer CUDA test due to not supporting CUDA."
+            )
+        try:
+            import sklearn  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module sklearn not found, skipping ChannelReducer"
+                + " PyTorch no reshape test"
+            )
+
+        test_input = torch.randn(1, 224, 224, 32).abs().cuda()
+        c_reducer = reducer.ChannelReducer(n_components=3, max_iter=100)
+        with self.assertRaises(TypeError):
+            test_output = c_reducer.fit_transform(test_input, swap_2nd_and_last_dims=False)
+
 
 class TestPosNeg(BaseTest):
     def test_posneg(self) -> None:

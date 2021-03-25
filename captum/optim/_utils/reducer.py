@@ -17,17 +17,15 @@ import torch
 class ChannelReducer:
     """
     Dimensionality reduction for the channel dimension of an input.
+    The default reduction_alg is NMF from sklearn, which requires users
+    to put input on CPU before passing to fit_transform.
 
     Olah, et al., "The Building Blocks of Interpretability", Distill, 2018.
     See: https://distill.pub/2018/building-blocks/
     """
 
     def __init__(
-        self,
-        n_components: int = 3,
-        reduction_alg: Any = "NMF",
-        supports_gpu: bool = False,
-        **kwargs
+        self, n_components: int = 3, reduction_alg: Any = "NMF", **kwargs
     ) -> None:
         if isinstance(reduction_alg, str):
             reduction_alg = self._get_reduction_algo_instance(reduction_alg)
@@ -39,8 +37,6 @@ class ChannelReducer:
 
         self.n_components = n_components
         self._reducer = reduction_alg(n_components=n_components, **kwargs)
-        # Denotes whether _reducer supports GPU inputs
-        self.supports_gpu = supports_gpu
 
     def _get_reduction_algo_instance(self, name: str) -> Union[None, Callable]:
         if hasattr(sklearn.decomposition, name):
@@ -52,7 +48,15 @@ class ChannelReducer:
     @classmethod
     def _apply_flat(cls, func: Callable, x: torch.Tensor) -> torch.Tensor:
         orig_shape = x.shape
-        return func(x.reshape([-1, x.shape[-1]])).reshape(list(orig_shape[:-1]) + [-1])
+        try:
+            return func(x.reshape([-1, x.shape[-1]])).reshape(
+                list(orig_shape[:-1]) + [-1]
+            )
+        except TypeError:
+            raise TypeError(
+                "The provided input is incompatible with the reduction_alg. "
+                "Try placing the input on CPU first via x.cpu()."
+            )
 
     def fit_transform(
         self, x: torch.Tensor, swap_2nd_and_last_dims: bool = True
@@ -70,10 +74,7 @@ class ChannelReducer:
             permute_vals = [0] + list(range(x.dim()))[2:] + [1]
             x = x.permute(*permute_vals)
 
-        if not self.supports_gpu:
-            x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x.cpu())
-        else:
-            x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
+        x_out = ChannelReducer._apply_flat(self._reducer.fit_transform, x)
 
         x_out = torch.as_tensor(x_out, device=x.device)
 
