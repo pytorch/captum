@@ -392,8 +392,8 @@ Captum Insights also has a Jupyter widget providing the same user interface as t
 To install and enable the widget, run
 
 ```
-jupyter nbextension install --py --symlink --sys-prefix captum.insights.widget
-jupyter nbextension enable captum.insights.widget --py --sys-prefix
+jupyter nbextension install --py --symlink --sys-prefix captum.insights.attr_vis.widget
+jupyter nbextension enable captum.insights.attr_vis.widget --py --sys-prefix
 ```
 
 To build the widget from a checkout in a conda environment run
