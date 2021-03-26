@@ -161,13 +161,12 @@ def weights_to_heatmap_2d(
     assert weight.dim() == 2
     assert len(colors) == 5
 
-    def get_color(x: str, device='cpu') -> torch.Tensor:
+    def get_color(x: str, device="cpu") -> torch.Tensor:
         def hex2base10(x: str) -> float:
             return int(x, 16) / 255.0
 
         return torch.tensor(
-            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])],
-            device=device
+            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])], device=device
         )
 
     def color_scale(x: torch.Tensor) -> torch.Tensor:
@@ -175,17 +174,25 @@ def weights_to_heatmap_2d(
             x = -x
             if x < 0.5:
                 x = x * 2
-                return (1 - x) * get_color(colors[2], x.device) + x * get_color(colors[1], x.device)
+                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
+                    colors[1], x.device
+                )
             else:
                 x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1], x.device) + x * get_color(colors[0], x.device)
+                return (1 - x) * get_color(colors[1], x.device) + x * get_color(
+                    colors[0], x.device
+                )
         else:
             if x < 0.5:
                 x = x * 2
-                return (1 - x) * get_color(colors[2], x.device) + x * get_color(colors[3], x.device)
+                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
+                    colors[3], x.device
+                )
             else:
                 x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3], x.device) + x * get_color(colors[4], x.device)
+                return (1 - x) * get_color(colors[3], x.device) + x * get_color(
+                    colors[4], x.device
+                )
 
     return torch.stack(
         [torch.stack([color_scale(x) for x in t]) for t in weight]
