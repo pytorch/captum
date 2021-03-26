@@ -139,6 +139,8 @@ def _transfer_layer_vars(
 class Conv2dSame(nn.Conv2d):
     """
     Tensorflow like 'SAME' convolution wrapper for 2D convolutions.
+    TODO: Replace with torch.nn.Conv2d when support for padding='same'
+    is in stable version
     """
 
     def __init__(
