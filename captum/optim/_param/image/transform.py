@@ -10,8 +10,6 @@ import torch.nn.functional as F
 from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class BlendAlpha(nn.Module):
     r"""Blends a 4 channel input parameterization into an RGB image.
