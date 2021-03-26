@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
@@ -42,31 +40,31 @@ class Loss(ABC):
     def __neg__(self):
         return module_op(self, None, operator.neg)
 
-    def __add__(self, other: Union[int, float, Loss]):
+    def __add__(self, other: Union[int, float, "Loss"]):
         return module_op(self, other, operator.add)
 
-    def __sub__(self, other: Union[int, float, Loss]):
+    def __sub__(self, other: Union[int, float, "Loss"]):
         return module_op(self, other, operator.sub)
 
-    def __mul__(self, other: Union[int, float, Loss]):
+    def __mul__(self, other: Union[int, float, "Loss"]):
         return module_op(self, other, operator.mul)
 
-    def __truediv__(self, other: Union[int, float, Loss]):
+    def __truediv__(self, other: Union[int, float, "Loss"]):
         return module_op(self, other, operator.truediv)
 
-    def __pow__(self, other: Union[int, float, Loss]):
+    def __pow__(self, other: Union[int, float, "Loss"]):
         return module_op(self, other, operator.pow)
 
-    def __radd__(self, other: Union[int, float, Loss]):
+    def __radd__(self, other: Union[int, float, "Loss"]):
         return self.__add__(other)
 
-    def __rsub__(self, other: Union[int, float, Loss]):
+    def __rsub__(self, other: Union[int, float, "Loss"]):
         return self.__neg__().__add__(other)
 
-    def __rmul__(self, other: Union[int, float, Loss]):
+    def __rmul__(self, other: Union[int, float, "Loss"]):
         return self.__mul__(other)
 
-    def __rtruediv__(self, other: Union[int, float, Loss]):
+    def __rtruediv__(self, other: Union[int, float, "Loss"]):
         if isinstance(other, (int, float)):
 
             def loss_fn(module):
@@ -84,7 +82,7 @@ class Loss(ABC):
             )
         return CompositeLoss(loss_fn, name=name, target=target)
 
-    def __rpow__(self, other: Union[int, float, Loss]):
+    def __rpow__(self, other: Union[int, float, "Loss"]):
         if isinstance(other, (int, float)):
 
             def loss_fn(module):
