@@ -40,7 +40,10 @@ def extract_expanded_weights(
         *tensor*:  A tensor containing the expanded weights in the form of:
             (target2 output channels, target1 output channels, height, width)
     """
-
+    if isinstance(model_input, torch.Tensor):
+        model_input = model_input.to(next(model.parameters()).device)
+    elif isinstance(model_input, tuple):
+        model_input = tuple(tensor.to(next(model.parameters()).device) for tensor in model_input)
     activations = collect_activations(model, [target1, target2], model_input)
     activ1 = activations[target1]
     activ2 = activations[target2]
