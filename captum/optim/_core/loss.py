@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, Optional
+from typing import Callable, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -101,7 +101,7 @@ class Loss(ABC):
         return CompositeLoss(loss_fn, name=name, target=target)
 
 
-def module_op(self: Loss, other: Any, math_op: Callable):
+def module_op(self: Loss, other: Union[None, int, float, Loss], math_op: Callable):
     """
     This is a general function for applying math operations to Losses
     """
