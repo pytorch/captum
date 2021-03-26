@@ -63,10 +63,7 @@ class RedirectedReluLayer(nn.Module):
     """
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        if F.relu(input.detach().sum()) != 0:
-            return F.relu(input, inplace=True)
-        else:
-            return RedirectedReLU.apply(input)
+        return RedirectedReLU.apply(input)
 
 
 def replace_layers(
