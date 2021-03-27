@@ -162,7 +162,6 @@ class FFTImage(ImageParameterization):
             def torch_irfft(x: torch.Tensor) -> torch.Tensor:
                 if type(x) is not torch.complex64:
                     x = torch.view_as_complex(x)
-                print(torch.fft.irfftn(x, s=self.size).shape)
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         else:
