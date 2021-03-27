@@ -63,6 +63,7 @@ class InputOptimization(Objective, Parameterized):
         else:
             self.hooks = ModuleOutputsHook([loss_function.target])
         self.input_param = input_param or NaturalImage((224, 224))
+        self.input_param.to(next(self.model.parameters()).device)
         self.transform = transform or torch.nn.Sequential(
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
@@ -130,7 +131,7 @@ class InputOptimization(Objective, Parameterized):
                         A list of loss values per iteration.
                         Length of the list corresponds to the number of iterations
         """
-        stop_criteria = stop_criteria or n_steps(1024)
+        stop_criteria = stop_criteria or n_steps(256)
         optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
         assert isinstance(optimizer, optim.Optimizer)
 
