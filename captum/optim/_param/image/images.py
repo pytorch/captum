@@ -101,11 +101,10 @@ class FFTImage(ImageParameterization):
             self.size = size
         else:
             assert init.dim() == 3 or init.dim() == 4
-            self.size = (
-                (init.size(1), init.size(2))
-                if init.dim() == 3
-                else (init.size(2), init.size(3))
-            )
+            if init.dim() == 3:
+                init = init.unsqueeze(0)
+            self.size = (init.size(2), init.size(3))
+        self.batch = batch
         self.torch_rfft, self.torch_irfft = self.get_fft_funcs()
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
@@ -118,7 +117,13 @@ class FFTImage(ImageParameterization):
         self.register_buffer("spectrum_scale", spectrum_scale)
 
         if init is None:
-            coeffs_shape = (channels, self.size[0], self.size[1] // 2 + 1, 2)
+            coeffs_shape = (
+                self.batch,
+                channels,
+                self.size[0],
+                self.size[1] // 2 + 1,
+                2,
+            )
             random_coeffs = torch.randn(
                 coeffs_shape
             )  # names=["C", "H_f", "W_f", "complex"]
@@ -126,7 +131,6 @@ class FFTImage(ImageParameterization):
         else:
             fourier_coeffs = self.torch_rfft(init) / spectrum_scale
 
-        fourier_coeffs = self.setup_batch(fourier_coeffs, batch, 4)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     @staticmethod
@@ -158,6 +162,7 @@ class FFTImage(ImageParameterization):
             def torch_irfft(x: torch.Tensor) -> torch.Tensor:
                 if type(x) is not torch.complex64:
                     x = torch.view_as_complex(x)
+                print(torch.fft.irfftn(x, s=self.size).shape)
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
         else:
@@ -191,10 +196,13 @@ class PixelImage(ImageParameterization):
         super().__init__()
         if init is None:
             assert size is not None and channels is not None and batch is not None
-            init = torch.randn([channels, size[0], size[1]]) / 10 + 0.5
+            init = torch.randn([batch, channels, size[0], size[1]]) / 10 + 0.5
         else:
-            assert init.shape[0] == 3
-        init = self.setup_batch(init, batch)
+            assert init.dim() == 3 or init.dim() == 4
+            if init.dim() == 3:
+                init = init.unsqueeze(0)
+            assert init.shape[1] == 3, "PixelImage init should have 3 channels, "
+            f"input has {init.shape[1]} channels."
         self.image = nn.Parameter(init)
 
     def forward(self) -> torch.Tensor:
