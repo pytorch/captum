@@ -4,8 +4,8 @@ from typing import Type
 
 import torch
 
-from captum.optim._models.inception_v1 import googlenet
-from captum.optim._utils.models import (
+from captum.optim.models import googlenet
+from captum.optim.models._common import (
     AvgPool2dConstrained,
     RedirectedReluLayer,
     SkipLayer,

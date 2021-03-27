@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 import captum.optim._core.loss as opt_loss
-from captum.optim._utils.models import collect_activations
+from captum.optim.models import collect_activations
 from tests.helpers.basic import BaseTest, assertArraysAlmostEqual
 from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 

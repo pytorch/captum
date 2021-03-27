@@ -5,7 +5,7 @@ from typing import cast
 import torch
 
 import captum.optim._core.output_hook as output_hook
-from captum.optim._models.inception_v1 import googlenet
+from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest
 
 

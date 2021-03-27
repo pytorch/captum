@@ -4,7 +4,7 @@ import unittest
 import torch
 
 import captum.optim._utils.circuits as circuits
-from captum.optim._models.inception_v1 import googlenet
+from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest
 
 

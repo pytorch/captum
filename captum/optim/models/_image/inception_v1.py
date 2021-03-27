@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from captum.optim._utils.models import (
+from captum.optim.models._common import (
     AvgPool2dConstrained,
     Conv2dSame,
     RedirectedReluLayer,

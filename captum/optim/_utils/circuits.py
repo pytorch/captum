@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 
 from captum.optim._param.image.transform import center_crop
-from captum.optim._utils.models import collect_activations
 from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
+from captum.optim.models import collect_activations
 
 
 def extract_expanded_weights(

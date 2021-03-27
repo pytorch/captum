@@ -5,8 +5,8 @@ from typing import cast
 import torch
 import torch.nn.functional as F
 
-import captum.optim._utils.models as model_utils
-from captum.optim._models.inception_v1 import googlenet
+import captum.optim.models._common as model_utils
+from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
