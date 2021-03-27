@@ -134,24 +134,33 @@ class InceptionV1(nn.Module):
 
         self.pool2 = pool(kernel_size=3, stride=2, padding=0)
         self.mixed3a = InceptionModule(192, 64, 96, 128, 16, 32, 32, activ, pool)
+        self.mixed3a_relu = activ()
         self.mixed3b = InceptionModule(256, 128, 128, 192, 32, 96, 64, activ, pool)
-        self.pool3 = pool(kernel_size=3, stride=2, padding=0)
+        self.mixed3b_relu = activ()
+        self.pool3 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
         self.mixed4a = InceptionModule(480, 192, 96, 204, 16, 48, 64, activ, pool)
+        self.mixed4a_relu = activ()
 
         if self.aux_logits:
             self.aux1 = AuxBranch(508, out_features, activ)
 
         self.mixed4b = InceptionModule(508, 160, 112, 224, 24, 64, 64, activ, pool)
+        self.mixed4b_relu = activ()
         self.mixed4c = InceptionModule(512, 128, 128, 256, 24, 64, 64, activ, pool)
+        self.mixed4c_relu = activ()
         self.mixed4d = InceptionModule(512, 112, 144, 288, 32, 64, 64, activ, pool)
+        self.mixed4d_relu = activ()
 
         if self.aux_logits:
             self.aux2 = AuxBranch(528, out_features, activ)
 
         self.mixed4e = InceptionModule(528, 256, 160, 320, 32, 128, 128, activ, pool)
-        self.pool4 = pool(kernel_size=3, stride=2, padding=0)
+        self.mixed4e_relu = activ()
+        self.pool4 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
         self.mixed5a = InceptionModule(832, 256, 160, 320, 48, 128, 128, activ, pool)
+        self.mixed5a_relu = activ()
         self.mixed5b = InceptionModule(832, 384, 192, 384, 48, 128, 128, activ, pool)
+        self.mixed5b_relu = activ()
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.drop = nn.Dropout(0.4000000059604645)
@@ -186,27 +195,25 @@ class InceptionV1(nn.Module):
 
         x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
         x = self.pool2(x)
-        x = self.mixed3a(x)
-        x = self.mixed3b(x)
-        x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
+        x = self.mixed3a_relu(self.mixed3a(x))
+        x = self.mixed3b_relu(self.mixed3b(x))
         x = self.pool3(x)
-        x = self.mixed4a(x)
+        x = self.mixed4a_relu(self.mixed4a(x))
 
         if self.aux_logits:
             aux1_output = self.aux1(x)
 
-        x = self.mixed4b(x)
-        x = self.mixed4c(x)
-        x = self.mixed4d(x)
+        x = self.mixed4b_relu(self.mixed4b(x))
+        x = self.mixed4c_relu(self.mixed4c(x))
+        x = self.mixed4d_relu(self.mixed4d(x))
 
         if self.aux_logits:
             aux2_output = self.aux2(x)
 
-        x = self.mixed4e(x)
-        x = F.pad(x, (0, 1, 0, 1), value=float("-inf"))
+        x = self.mixed4e_relu(self.mixed4e(x))
         x = self.pool4(x)
-        x = self.mixed5a(x)
-        x = self.mixed5b(x)
+        x = self.mixed5a_relu(self.mixed5a(x))
+        x = self.mixed5b_relu(self.mixed5b(x))
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
@@ -240,7 +247,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_1x1_relu = activ()
 
         self.conv_3x3_reduce = nn.Conv2d(
             in_channels=in_channels,
@@ -259,7 +265,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_3x3_relu = activ()
 
         self.conv_5x5_reduce = nn.Conv2d(
             in_channels=in_channels,
@@ -278,7 +283,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_5x5_relu = activ()
 
         self.pool = p_layer(kernel_size=3, stride=1, padding=0)
         self.pool_proj = nn.Conv2d(
@@ -289,28 +293,23 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.pool_proj_relu = activ()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         c1x1 = self.conv_1x1(x)
-        c1x1 = self.conv_1x1_relu(c1x1)
 
         c3x3 = self.conv_3x3_reduce(x)
         c3x3 = self.conv_3x3_reduce_relu(c3x3)
         c3x3 = F.pad(c3x3, (1, 1, 1, 1))
         c3x3 = self.conv_3x3(c3x3)
-        c3x3 = self.conv_3x3_relu(c3x3)
 
         c5x5 = self.conv_5x5_reduce(x)
         c5x5 = self.conv_5x5_reduce_relu(c5x5)
         c5x5 = F.pad(c5x5, (2, 2, 2, 2))
         c5x5 = self.conv_5x5(c5x5)
-        c5x5 = self.conv_5x5_relu(c5x5)
 
         px = F.pad(x, (1, 1, 1, 1), value=float("-inf"))
         px = self.pool(px)
         px = self.pool_proj(px)
-        px = self.pool_proj_relu(px)
         return torch.cat([c1x1, c3x3, c5x5, px], dim=1)
 
 

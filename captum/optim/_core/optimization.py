@@ -131,7 +131,7 @@ class InputOptimization(Objective, Parameterized):
                         A list of loss values per iteration.
                         Length of the list corresponds to the number of iterations
         """
-        stop_criteria = stop_criteria or n_steps(256)
+        stop_criteria = stop_criteria or n_steps(512)
         optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
         assert isinstance(optimizer, optim.Optimizer)
 
