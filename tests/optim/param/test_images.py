@@ -216,9 +216,7 @@ class TestPixelImage(BaseTest):
         channels = 2
         init_tensor = torch.randn(channels, *size)
         with self.assertRaises(AssertionError):
-            images.PixelImage(
-                size=size, channels=channels, init=init_tensor
-            )
+            images.PixelImage(size=size, channels=channels, init=init_tensor)
 
     def test_pixelimage_random_forward(self) -> None:
         if torch.__version__ <= "1.2.0":
