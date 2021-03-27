@@ -116,7 +116,6 @@ class TestChannelReducer(BaseTest):
         c_reducer = reducer.ChannelReducer(
             n_components=3,
             reduction_alg=reduction_alg,
-            supports_gpu=True,
             max_iter=100,
         )
         test_output = c_reducer.fit_transform(test_input)
