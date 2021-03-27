@@ -332,22 +332,19 @@ class Diversity(SimpleLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-        return -sum(
-            [
-                sum(
-                    [
-                        (
-                            torch.cosine_similarity(
-                                activations[j].view(1, -1), activations[i].view(1, -1)
-                            )
-                        ).sum()
-                        for i in range(activations.size(0))
-                        if i != j
-                    ]
-                )
-                for j in range(activations.size(0))
-            ]
-        ) / activations.size(0)
+        batch, channels, _, _ = activations.shape
+        flattened = activations.view(batch, channels, -1)
+        grams = torch.matmul(flattened, torch.transpose(flattened, 1, 2))
+        grams = nn.functional.normalize(grams, p=2, dim=(1, 2))
+        return (
+            -sum(
+                [
+                    sum([(grams[i] * grams[j]).sum() for j in range(batch) if j != i])
+                    for i in range(batch)
+                ]
+            )
+            / batch
+        )
 
 
 @loss_wrapper

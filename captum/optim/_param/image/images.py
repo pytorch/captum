@@ -59,8 +59,10 @@ class ImageTensor(torch.Tensor):
             kwargs = {}
         return super().__torch_function__(func, types, args, kwargs)
 
-    def show(self, scale: float = 255.0) -> None:
-        show(self, figsize=None, scale=scale)
+    def show(
+        self, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
+    ) -> None:
+        show(self, figsize=figsize, scale=scale)
 
     def export(self, filename: str, scale: float = 255.0) -> None:
         save_tensor_as_image(self, filename=filename, scale=scale)
