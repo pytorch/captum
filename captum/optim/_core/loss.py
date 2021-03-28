@@ -423,7 +423,7 @@ class Alignment(SimpleLoss):
                     (activ_a - activ_b) ** 2
                 ).mean() / self.decay_ratio ** float(d)
 
-        return sum_tensor
+        return -sum_tensor
 
 
 @loss_wrapper
