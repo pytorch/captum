@@ -136,9 +136,9 @@ def module_op(self: Loss, other: Union[None, int, float, Loss], math_op: Callabl
     return CompositeLoss(loss_fn, name=name, target=target)
 
 
-class SimpleLoss(Loss):
+class BaseLoss(Loss):
     def __init__(self, target: nn.Module = [], batch_index: Optional[int] = None):
-        super(SimpleLoss, self).__init__()
+        super(BaseLoss, self).__init__()
         self._target = target
         if batch_index is None:
             self._batch_index = (None, None)
@@ -154,7 +154,7 @@ class SimpleLoss(Loss):
         return self._batch_index
 
 
-class CompositeLoss(SimpleLoss):
+class CompositeLoss(BaseLoss):
     def __init__(self, loss_fn: Callable, name: str = "", target: nn.Module = []):
         super(CompositeLoss, self).__init__(target)
         self.__name__ = name
@@ -180,7 +180,7 @@ def loss_wrapper(cls):
 
 
 @loss_wrapper
-class LayerActivation(SimpleLoss):
+class LayerActivation(BaseLoss):
     """
     Maximize activations at the target layer.
     """
@@ -192,7 +192,7 @@ class LayerActivation(SimpleLoss):
 
 
 @loss_wrapper
-class ChannelActivation(SimpleLoss):
+class ChannelActivation(BaseLoss):
     """
     Maximize activations at the target layer and target channel.
     """
@@ -200,7 +200,7 @@ class ChannelActivation(SimpleLoss):
     def __init__(
         self, target: nn.Module, channel_index: int, batch_index: Optional[int] = None
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -217,7 +217,7 @@ class ChannelActivation(SimpleLoss):
 
 
 @loss_wrapper
-class NeuronActivation(SimpleLoss):
+class NeuronActivation(BaseLoss):
     def __init__(
         self,
         target: nn.Module,
@@ -226,7 +226,7 @@ class NeuronActivation(SimpleLoss):
         y: Optional[int] = None,
         batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.channel_index = channel_index
         self.x = x
         self.y = y
@@ -248,7 +248,7 @@ class NeuronActivation(SimpleLoss):
 
 
 @loss_wrapper
-class DeepDream(SimpleLoss):
+class DeepDream(BaseLoss):
     """
     Maximize 'interestingness' at the target layer.
     Mordvintsev et al., 2015.
@@ -261,7 +261,7 @@ class DeepDream(SimpleLoss):
 
 
 @loss_wrapper
-class TotalVariation(SimpleLoss):
+class TotalVariation(BaseLoss):
     """
     Total variation denoising penalty for activations.
     See Mahendran, V. 2014. Understanding Deep Image Representations by Inverting Them.
@@ -277,7 +277,7 @@ class TotalVariation(SimpleLoss):
 
 
 @loss_wrapper
-class L1(SimpleLoss):
+class L1(BaseLoss):
     """
     L1 norm of the target layer, generally used as a penalty.
     """
@@ -288,7 +288,7 @@ class L1(SimpleLoss):
         constant: float = 0.0,
         batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.constant = constant
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -298,7 +298,7 @@ class L1(SimpleLoss):
 
 
 @loss_wrapper
-class L2(SimpleLoss):
+class L2(BaseLoss):
     """
     L2 norm of the target layer, generally used as a penalty.
     """
@@ -310,7 +310,7 @@ class L2(SimpleLoss):
         epsilon: float = 1e-6,
         batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.constant = constant
         self.epsilon = epsilon
 
@@ -323,7 +323,7 @@ class L2(SimpleLoss):
 
 
 @loss_wrapper
-class Diversity(SimpleLoss):
+class Diversity(BaseLoss):
     """
     Use a cosine similarity penalty to extract features from a polysemantic neuron.
     Olah, Mordvintsev & Schubert, 2017.
@@ -348,7 +348,7 @@ class Diversity(SimpleLoss):
 
 
 @loss_wrapper
-class ActivationInterpolation(SimpleLoss):
+class ActivationInterpolation(BaseLoss):
     """
     Interpolate between two different layers & channels.
     Olah, Mordvintsev & Schubert, 2017.
@@ -367,7 +367,7 @@ class ActivationInterpolation(SimpleLoss):
         self.target_two = target2
         self.channel_index_two = channel_index2
         # Expose targets for InputOptimization
-        SimpleLoss.__init__(self, [target1, target2])
+        BaseLoss.__init__(self, [target1, target2])
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations_one = targets_to_values[self.target_one]
@@ -398,7 +398,7 @@ class ActivationInterpolation(SimpleLoss):
 
 
 @loss_wrapper
-class Alignment(SimpleLoss):
+class Alignment(BaseLoss):
     """
     Penalize the L2 distance between tensors in the batch to encourage visual
     similarity between them.
@@ -407,7 +407,7 @@ class Alignment(SimpleLoss):
     """
 
     def __init__(self, target: nn.Module, decay_ratio: float = 2.0) -> None:
-        SimpleLoss.__init__(self, target)
+        BaseLoss.__init__(self, target)
         self.decay_ratio = decay_ratio
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -427,7 +427,7 @@ class Alignment(SimpleLoss):
 
 
 @loss_wrapper
-class Direction(SimpleLoss):
+class Direction(BaseLoss):
     """
     Visualize a general direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
@@ -440,7 +440,7 @@ class Direction(SimpleLoss):
         vec: torch.Tensor,
         batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -451,7 +451,7 @@ class Direction(SimpleLoss):
 
 
 @loss_wrapper
-class NeuronDirection(SimpleLoss):
+class NeuronDirection(BaseLoss):
     """
     Visualize a single (x, y) position for a direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
@@ -467,7 +467,7 @@ class NeuronDirection(SimpleLoss):
         channel_index: Optional[int] = None,
         batch_index: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
         self.x = x
         self.y = y
@@ -490,7 +490,7 @@ class NeuronDirection(SimpleLoss):
 
 
 @loss_wrapper
-class TensorDirection(SimpleLoss):
+class TensorDirection(BaseLoss):
     """
     Visualize a tensor direction vector.
     Carter, et al., "Activation Atlas", Distill, 2019.
@@ -500,7 +500,7 @@ class TensorDirection(SimpleLoss):
     def __init__(
         self, target: nn.Module, vec: torch.Tensor, batch_index: Optional[int] = None
     ) -> None:
-        SimpleLoss.__init__(self, target, batch_index)
+        BaseLoss.__init__(self, target, batch_index)
         self.direction = vec
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
@@ -524,7 +524,7 @@ class TensorDirection(SimpleLoss):
 
 
 @loss_wrapper
-class ActivationWeights(SimpleLoss):
+class ActivationWeights(BaseLoss):
     """
     Apply weights to channels, neurons, or spots in the target.
     """
@@ -539,7 +539,7 @@ class ActivationWeights(SimpleLoss):
         wx: Optional[int] = None,
         wy: Optional[int] = None,
     ) -> None:
-        SimpleLoss.__init__(self, target)
+        BaseLoss.__init__(self, target)
         self.x = x
         self.y = y
         self.wx = wx
