@@ -497,6 +497,7 @@ class RandomCrop(nn.Module):
 
 class AlphaChannelLoss(nn.Module):
     """
+        TODO: Fix AlphaChannelLoss
         Transform for calculating alpha channel loss, without altering the input tensor.
         Loss values are calculated in such a way that opaque and transparent regions of
         the tensor are automatically balanced.
@@ -518,6 +519,7 @@ class AlphaChannelLoss(nn.Module):
         crop_size: Optional[Tuple[int, int]] = None,
         background: Optional[torch.Tensor] = None,
     ) -> None:
+        raise NotImplementedError  # We are not ready for this
         super().__init__()
         self.random_scale = RandomScale(scale=scale)
         self.crop_size = crop_size

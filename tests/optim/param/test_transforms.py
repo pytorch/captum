@@ -654,6 +654,9 @@ class TestRandomCrop(BaseTest):
 
 class TestAlphaChannelLoss(BaseTest):
     def test_alpha_channel_loss_forward(self) -> None:
+        raise unittest.SkipTest(
+            "Skipping AlphaChannelLoss test until function is ready."
+        )
         crop_size = [160, 160]
         scale = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
 
