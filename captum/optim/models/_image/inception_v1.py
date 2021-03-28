@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Type, Union, cast
 
 import torch
 import torch.nn as nn
@@ -235,8 +235,8 @@ class InceptionModule(nn.Module):
         c5x5reduce: int,
         c5x5: int,
         pool_proj: int,
-        activ=nn.ReLU,
-        p_layer=nn.MaxPool2d,
+        activ: Type[nn.Module] = nn.ReLU,
+        p_layer: Type[nn.Module] = nn.MaxPool2d,
     ) -> None:
         super(InceptionModule, self).__init__()
         self.conv_1x1 = nn.Conv2d(
