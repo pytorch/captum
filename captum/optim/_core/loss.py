@@ -297,7 +297,11 @@ class NeuronDirection(Loss):
 class WhitenedNeuronDirection(Loss):
     """
     Visualize a single (x, y) position for a direction vector & whitened activation
-    samples.
+    samples. When cossim_pow is equal to 0, this objective works as a euclidean
+    neuron objective. When cossim_pow is greater than 0, this objective works as a
+    cosine similarity objective. An additional whitened neuron direction vector
+    can optionally be supplied to improve visualization quality for some models.
+
     Carter, et al., "Activation Atlas", Distill, 2019.
     https://distill.pub/2019/activation-atlas/
     Args:
