@@ -575,5 +575,5 @@ class ActivationWeights(BaseLoss):
         return activations
 
 
-def default_loss_summarize(loss_value):
+def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
     return -1 * loss_value.mean()
