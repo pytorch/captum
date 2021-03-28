@@ -318,7 +318,7 @@ class AuxBranch(nn.Module):
         self,
         in_channels: int = 508,
         out_features: int = 1008,
-        activ=nn.ReLU,
+        activ: Type[nn.Module] = nn.ReLU,
     ) -> None:
         super(AuxBranch, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
