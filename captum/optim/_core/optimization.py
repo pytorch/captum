@@ -1,7 +1,7 @@
 """captum.optim.optimization."""
 
 from contextlib import suppress
-from typing import Callable, Optional
+from typing import Callable, Iterable, Optional
 
 import torch
 import torch.nn as nn
@@ -43,7 +43,6 @@ class InputOptimization(Objective, Parameterized):
         loss_function: LossFunction,
         input_param: Optional[InputParameterization] = None,
         transform: Optional[nn.Module] = None,
-        lr: float = 0.025,
     ) -> None:
         r"""
         Args:
@@ -68,7 +67,6 @@ class InputOptimization(Objective, Parameterized):
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
         self.loss_function = loss_function
-        self.lr = lr
 
     def loss(self) -> torch.Tensor:
         r"""Compute loss value for current iteration.
@@ -100,7 +98,7 @@ class InputOptimization(Objective, Parameterized):
 
     # Targets are managed by ModuleOutputHooks; we mainly just want a convenient setter
     @property
-    def targets(self):
+    def targets(self) -> Iterable[nn.Module]:
         return self.hooks.targets
 
     @targets.setter
@@ -108,7 +106,7 @@ class InputOptimization(Objective, Parameterized):
         self.hooks.remove_hooks()
         self.hooks = ModuleOutputsHook(value)
 
-    def parameters(self):
+    def parameters(self) -> Iterable[nn.Parameter]:
         return self.input_param.parameters()
 
     def optimize(
@@ -116,6 +114,7 @@ class InputOptimization(Objective, Parameterized):
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
         loss_summarize_fn: Optional[Callable] = default_loss_summarize,
+        lr: Optional[float] = 0.025,
     ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
         Args:
@@ -132,7 +131,7 @@ class InputOptimization(Objective, Parameterized):
                         Length of the list corresponds to the number of iterations
         """
         stop_criteria = stop_criteria or n_steps(512)
-        optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = optimizer or optim.Adam(self.parameters(), lr=lr)
         assert isinstance(optimizer, optim.Optimizer)
 
         history = []
