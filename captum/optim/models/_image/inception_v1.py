@@ -192,8 +192,6 @@ class InceptionV1(nn.Module):
         x = self.local_response_norm2(x)
 
         x = self.pool2(x)
-        x = self.mixed3a(x)
-        x = self.mixed3b(x)
         x = self.mixed3a_relu(self.mixed3a(x))
         x = self.mixed3b_relu(self.mixed3b(x))
         x = self.pool3(x)
@@ -209,7 +207,6 @@ class InceptionV1(nn.Module):
         if self.aux_logits:
             aux2_output = self.aux2(x)
 
-        x = self.mixed4e(x)
         x = self.mixed4e_relu(self.mixed4e(x))
         x = self.pool4(x)
         x = self.mixed5a_relu(self.mixed5a(x))
