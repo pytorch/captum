@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import unittest
 
-import numpy as np
 import torch
 
 import captum.optim as opt
@@ -20,6 +19,5 @@ class TestInputOptimization(BaseTest):
         obj = opt.InputOptimization(model, loss_function=loss_fn)
         n_steps = 5
         history = obj.optimize(opt.optimization.n_steps(n_steps, show_progress=False))
-        history = np.mean(np.mean(history.cpu().detach().numpy(), axis=2), axis=2)
-        self.assertTrue(history[0] < history[-1])
+        self.assertTrue(history[0] > history[-1])
         self.assertTrue(len(history) == n_steps)

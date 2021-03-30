@@ -139,9 +139,9 @@ class InputOptimization(Objective, Parameterized):
         try:
             while stop_criteria(step, self, history, optimizer):
                 optimizer.zero_grad()
-                loss_value = self.loss()
+                loss_value = loss_summarize_fn(self.loss())
                 history.append(loss_value)
-                loss_summarize_fn(loss_value).backward()
+                loss_value.backward()
                 optimizer.step()
                 step += 1
         finally:
@@ -162,7 +162,12 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     if show_progress:
         pbar = tqdm(total=n, unit=" step")
 
-    def continue_while(step, obj, history, optim) -> bool:
+    def continue_while(
+        step: int,
+        obj: InputOptimization,
+        history: Iterable[torch.Tensor],
+        optim: torch.optim.Optimizer,
+    ) -> bool:
         if len(history) > 0:
             if show_progress:
                 pbar.set_postfix(
