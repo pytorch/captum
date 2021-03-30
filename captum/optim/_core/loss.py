@@ -576,4 +576,11 @@ class ActivationWeights(BaseLoss):
 
 
 def default_loss_summarize(loss_value: torch.Tensor) -> torch.Tensor:
+    """
+    Helper function to summarize tensor outputs from loss functions.
+
+    default_loss_summarize applies `mean` to the loss tensor
+    and negates it so that optimizing it maximizes the activations we
+    are interested in.
+    """
     return -1 * loss_value.mean()
