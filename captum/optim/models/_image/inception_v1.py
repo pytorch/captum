@@ -100,11 +100,12 @@ class InceptionV1(nn.Module):
                 activ = nn.ReLU
             pool = nn.MaxPool2d
 
-        self.conv1 = nn.Conv2d(
+        self.conv1 = Conv2dSame(
             in_channels=3,
             out_channels=64,
             kernel_size=(7, 7),
             stride=(2, 2),
+            padding=3,
             groups=1,
             bias=True,
         )
@@ -121,11 +122,12 @@ class InceptionV1(nn.Module):
             bias=True,
         )
         self.conv2_relu = activ()
-        self.conv3 = nn.Conv2d(
+        self.conv3 = Conv2dSame(
             in_channels=64,
             out_channels=192,
             kernel_size=(3, 3),
             stride=(1, 1),
+            padding=1,
             groups=1,
             bias=True,
         )
@@ -257,11 +259,12 @@ class InceptionModule(nn.Module):
             bias=True,
         )
         self.conv_3x3_reduce_relu = activ()
-        self.conv_3x3 = nn.Conv2d(
+        self.conv_3x3 = Conv2dSame(
             in_channels=c3x3reduce,
             out_channels=c3x3,
             kernel_size=(3, 3),
             stride=(1, 1),
+            padding=1,
             groups=1,
             bias=True,
         )
@@ -275,11 +278,12 @@ class InceptionModule(nn.Module):
             bias=True,
         )
         self.conv_5x5_reduce_relu = activ()
-        self.conv_5x5 = nn.Conv2d(
+        self.conv_5x5 = Conv2dSame(
             in_channels=c5x5reduce,
             out_channels=c5x5,
             kernel_size=(5, 5),
             stride=(1, 1),
+            padding=1,
             groups=1,
             bias=True,
         )
