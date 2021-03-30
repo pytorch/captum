@@ -498,10 +498,8 @@ def infidelity(
         )
 
         attr_times_perturb_sums = sum(
-            [
-                torch.sum(attribution_times_perturb, dim=1)
-                for attribution_times_perturb in attributions_times_perturb
-            ]
+            torch.sum(attribution_times_perturb, dim=1)
+            for attribution_times_perturb in attributions_times_perturb
         )
         attr_times_perturb_sums = cast(Tensor, attr_times_perturb_sums)
 
