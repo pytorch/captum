@@ -41,7 +41,10 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]])
         module_list: List[Module] = [net.linear0, net.linear1]
         self._layer_activation_test_assert(
-            net, module_list, inp, ([0.0, 400.0, 0.0], [90.0, 101.0, 101.0, 101.0]),
+            net,
+            module_list,
+            inp,
+            ([0.0, 400.0, 0.0], [90.0, 101.0, 101.0, 101.0]),
         )
 
     def test_simple_linear_gradient_activation_no_grad(self) -> None:
