@@ -3,7 +3,7 @@ from typing import Callable, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._param.image.transform import center_crop
+from captum.optim._param.image.transforms import center_crop
 from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
 from captum.optim.models import collect_activations
 

@@ -13,7 +13,7 @@ try:
 except (ImportError, AssertionError):
     print("The Pillow/PIL library is required to use Captum's Optim library")
 
-from captum.optim._param.image.transform import SymmetricPadding, ToRGB
+from captum.optim._param.image.transforms import SymmetricPadding, ToRGB
 from captum.optim._utils.image.common import save_tensor_as_image, show
 
 TORCH_VERSION = torch.__version__

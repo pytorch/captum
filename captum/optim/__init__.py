@@ -1,49 +1,10 @@
 """optim submodule."""
 
-from captum.optim._core.loss import (  # noqa: F401
-    L1,
-    L2,
-    ActivationInterpolation,
-    ActivationWeights,
-    Alignment,
-    BaseLoss,
-    ChannelActivation,
-    DeepDream,
-    Direction,
-    Diversity,
-    LayerActivation,
-    Loss,
-    NeuronActivation,
-    NeuronDirection,
-    TensorDirection,
-    TotalVariation,
-    default_loss_summarize,
-)
-from captum.optim._core.optimization import InputOptimization, n_steps  # noqa: F401
-from captum.optim._param.image.images import (  # noqa: F401
-    FFTImage,
-    ImageParameterization,
-    ImageTensor,
-    LaplacianImage,
-    NaturalImage,
-    PixelImage,
-    SharedImage,
-)
-from captum.optim._param.image.transform import (  # noqa: F401
-    BlendAlpha,
-    CenterCrop,
-    GaussianSmoothing,
-    IgnoreAlpha,
-    NChannelsToRGB,
-    RandomCrop,
-    RandomScale,
-    RandomSpatialJitter,
-    RGBToBGR,
-    ScaleInputRange,
-    SymmetricPadding,
-    ToRGB,
-)
-from captum.optim._utils.circuits import extract_expanded_weights  # noqa: F401
+from captum.optim._core.optimization import InputOptimization  # noqa: F401
+from captum.optim._core import loss, optimization  # noqa: F401
+from captum.optim._param.image.images import ImageTensor  # noqa: F401
+from captum.optim._param.image import images, transforms  # noqa: F401
+from captum.optim._utils import circuits, reducer  # noqa: F401
 from captum.optim._utils.image.common import (  # noqa: F401
     nchannels_to_rgb,
     save_tensor_as_image,
@@ -51,67 +12,20 @@ from captum.optim._utils.image.common import (  # noqa: F401
     weights_to_heatmap_2d,
 )
 from captum.optim._utils.reducer import ChannelReducer, posneg  # noqa: F401
-from captum.optim.models import (
-    InceptionV1,
-    RedirectedReluLayer,
-    collect_activations,
-    get_model_layers,
-    googlenet,
-    replace_layers,
-    skip_layers,
-)
+from captum.optim import models
 
 __all__ = [
-    "Loss",
-    "BaseLoss",
-    "LayerActivation",
-    "ChannelActivation",
-    "NeuronActivation",
-    "DeepDream",
-    "TotalVariation",
-    "L1",
-    "L2",
-    "Diversity",
-    "ActivationInterpolation",
-    "Alignment",
-    "Direction",
-    "NeuronDirection",
-    "TensorDirection",
-    "ActivationWeights",
-    "default_loss_summarize",
     "InputOptimization",
-    "n_steps",
-    "ImageParameterization",
     "ImageTensor",
-    "FFTImage",
-    "PixelImage",
-    "LaplacianImage",
-    "SharedImage",
-    "NaturalImage",
-    "BlendAlpha",
-    "IgnoreAlpha",
-    "ToRGB",
-    "CenterCrop",
-    "RandomScale",
-    "RandomSpatialJitter",
-    "ScaleInputRange",
-    "RGBToBGR",
-    "GaussianSmoothing",
-    "SymmetricPadding",
-    "NChannelsToRGB",
-    "RandomCrop",
-    "extract_expanded_weights",
-    "ChannelReducer",
-    "posneg",
+    "loss",
+    "optimization",
+    "images",
+    "transforms",
+    "circuits",
+    "models",
+    "reducer",
     "nchannels_to_rgb",
-    "weights_to_heatmap_2d",
-    "show",
     "save_tensor_as_image",
-    "InceptionV1",
-    "googlenet",
-    "RedirectedReluLayer",
-    "collect_activations",
-    "get_model_layers",
-    "replace_layers",
-    "skip_layers",
+    "show",
+    "weights_to_heatmap_2d",
 ]

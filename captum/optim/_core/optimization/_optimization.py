@@ -18,7 +18,7 @@ except (ImportError, AssertionError):
 from captum.optim._core.loss import default_loss_summarize
 from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
-from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
+from captum.optim._param.image.transforms import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
     Objective,
