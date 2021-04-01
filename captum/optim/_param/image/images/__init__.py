@@ -1,17 +1,16 @@
 from captum.optim._param.image.images._images import (  # noqa: F401
-	FFTImage,
-    InputParameterization,
+    FFTImage,
     ImageParameterization,
     ImageTensor,
+    InputParameterization,
     LaplacianImage,
     NaturalImage,
     PixelImage,
     SharedImage,
 )
 
-
 __all__ = [
-	"FFTImage",
+    "FFTImage",
     "InputParameterization",
     "ImageParameterization",
     "ImageTensor",

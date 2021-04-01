@@ -1,22 +1,21 @@
 from captum.optim._core.loss._loss import (  # noqa: F401
-	BaseLoss,
-    LayerActivation,
-    ChannelActivation,
-    NeuronActivation,
-    DeepDream,
-    TotalVariation,
     L1,
     L2,
-    Diversity,
     ActivationInterpolation,
+    ActivationWeights,
     Alignment,
+    BaseLoss,
+    ChannelActivation,
+    DeepDream,
     Direction,
+    Diversity,
+    LayerActivation,
+    NeuronActivation,
     NeuronDirection,
     TensorDirection,
-    ActivationWeights,
+    TotalVariation,
     default_loss_summarize,
 )
-
 
 __all__ = [
     "BaseLoss",

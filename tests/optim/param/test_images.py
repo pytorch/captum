@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from captum.optim._param.image import images
-from captum.optim._param.image.transform import SymmetricPadding
+from captum.optim._param.image.transforms import SymmetricPadding
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,

@@ -15,9 +15,9 @@ class TestInputOptimization(BaseTest):
                 "Skipping InputOptimization test due to insufficient Torch version."
             )
         model = BasicModel_ConvNet_Optim()
-        loss_fn = opt.ChannelActivation(model.layer, 0)
+        loss_fn = opt.loss.ChannelActivation(model.layer, 0)
         obj = opt.InputOptimization(model, loss_function=loss_fn)
         n_steps = 5
-        history = obj.optimize(opt.n_steps(n_steps, show_progress=False))
+        history = obj.optimize(opt.optimization.n_steps(n_steps, show_progress=False))
         self.assertTrue(history[0] > history[-1])
         self.assertTrue(len(history) == n_steps)

@@ -1,5 +1,5 @@
 from captum.optim._param.image.transforms._transforms import (  # noqa: F401
-	BlendAlpha,
+    BlendAlpha,
     CenterCrop,
     GaussianSmoothing,
     IgnoreAlpha,
@@ -14,9 +14,8 @@ from captum.optim._param.image.transforms._transforms import (  # noqa: F401
     center_crop,
 )
 
-
 __all__ = [
-	"BlendAlpha",
+    "BlendAlpha",
     "CenterCrop",
     "GaussianSmoothing",
     "IgnoreAlpha",
