@@ -171,8 +171,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             additional_forward_args
         )
 
-        if inputs[0].is_floating_point() or inputs[0].is_complex():
-            gradient_mask = apply_gradient_requirements(inputs)
+        gradient_mask = apply_gradient_requirements(inputs)
 
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
@@ -186,8 +185,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             attribute_to_layer_input=attribute_to_layer_input,
         )
 
-        if inputs[0].is_floating_point() or inputs[0].is_complex():
-            undo_gradient_requirements(inputs, gradient_mask)
+        undo_gradient_requirements(inputs, gradient_mask)
 
         if isinstance(self.layer, Module):
             return _format_output(
