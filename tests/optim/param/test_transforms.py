@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-import captum.optim._param.image.transforms._transforms as transforms
+import captum.optim._param.image.transforms as transforms
 from tests.helpers.basic import (
     BaseTest,
     assertArraysAlmostEqual,
