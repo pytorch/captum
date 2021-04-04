@@ -70,3 +70,6 @@ def extract_expanded_weights(
     if crop_shape is not None and crop_func is not None:
         expanded_weights = crop_func(expanded_weights, crop_shape)
     return expanded_weights
+
+
+__all__ = ["extract_expanded_weights"]

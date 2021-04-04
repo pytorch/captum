@@ -183,3 +183,9 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
             return False
 
     return continue_while
+
+
+__all__ = [
+    "InputOptimization",
+    "n_steps",
+]

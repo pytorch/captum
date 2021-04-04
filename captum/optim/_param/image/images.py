@@ -458,3 +458,15 @@ class NaturalImage(ImageParameterization):
             image = self.decorrelate(image)
         image = image.rename(None)  # TODO: the world is not yet ready
         return ImageTensor(self.squash_func(image))
+
+
+__all__ = [
+    "ImageTensor",
+    "InputParameterization",
+    "ImageParameterization",
+    "FFTImage",
+    "PixelImage",
+    "LaplacianImage",
+    "SharedImage",
+    "NaturalImage",
+]

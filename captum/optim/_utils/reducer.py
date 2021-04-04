@@ -120,3 +120,9 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     """
 
     return torch.cat([F.relu(x), F.relu(-x)], dim=dim)
+
+
+__all__ = [
+    "ChannelReducer",
+    "posneg",
+]

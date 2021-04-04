@@ -540,3 +540,20 @@ class AlphaChannelLoss(nn.Module):
             (1.0 - x_shifted_crop[:, 3:].mean()) * 0.5
         )
         return x
+
+
+__all__ = [
+    "BlendAlpha",
+    "IgnoreAlpha",
+    "ToRGB",
+    "CenterCrop",
+    "center_crop",
+    "RandomScale",
+    "RandomSpatialJitter",
+    "ScaleInputRange",
+    "RGBToBGR",
+    "GaussianSmoothing",
+    "SymmetricPadding",
+    "NChannelsToRGB",
+    "RandomCrop",
+]
