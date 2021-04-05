@@ -51,7 +51,7 @@ from captum.attr._models.base import (
     configure_interpretable_embedding_layer,
     remove_interpretable_embedding_layer,
 )
-from captum.attr._utils import visualization  # noqa
+# from captum.attr._utils import visualization  # noqa
 from captum.attr._utils.attribution import Attribution  # noqa
 from captum.attr._utils.attribution import GradientAttribution  # noqa
 from captum.attr._utils.attribution import LayerAttribution  # noqa

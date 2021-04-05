@@ -109,6 +109,18 @@ class Test(BaseTest):
             list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
         )
 
+    def test_gradient_activation_embedding_no_grad(self) -> None:
+        input1 = torch.tensor([2, 5, 0, 1])
+        input2 = torch.tensor([3, 0, 0, 2])
+        model = BasicEmbeddingModel()
+        # for param in model.parameters():
+        #    param.requires_grad = False
+        with torch.no_grad():
+            layer_act = LayerGradientXActivation(model, model.embedding1)
+            self.assertEqual(
+                list(layer_act.attribute(inputs=(input1, input2)).shape), [4, 100]
+            )
+
     def _layer_activation_test_assert(
         self,
         model: Module,
