@@ -347,11 +347,16 @@ def infidelity(
 
                 Default: None
         normalize (bool, optional): Normalize the dot product of the input
-                perturbation and the attribution so the infedelity value is invariant
+                perturbation and the attribution so the infidelity value is invariant
                 to constant scaling of the attribution values. The normalization factor
-                is defined as the ratio of two mean values across all perturbations:
-                `mean(dot product * func value diff) / mean(dot product * dot product)`.
-                Details can be found in the original paper's implementation
+                beta is defined as the ratio of two mean values:
+                $$ \beta = \frac{
+                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]
+                }{
+                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]
+                } $$.
+                Please refer the original paper for the meaning of the symbols. Same
+                normalization can be found in the paper's official implementation
                 https://github.com/chihkuanyeh/saliency_evaluation
 
                 Default: False
@@ -449,7 +454,7 @@ def infidelity(
 
     def _next_infidelity_tensors(
         current_n_perturb_samples: int,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> Tuple[Tensor, Tensor, Tensor]:
         perturbations, inputs_perturbed = _generate_perturbations(
             current_n_perturb_samples
         )
@@ -503,17 +508,21 @@ def infidelity(
         )
         attr_times_perturb_sums = cast(Tensor, attr_times_perturb_sums)
 
-        # in order to normalize, we have to keep all the results
-        # return as Tensor(bsz, current_n_perturb_samples)
+        # reshape as Tensor(bsz, current_n_perturb_samples)
+        attr_times_perturb_sums = attr_times_perturb_sums.view(bsz, -1)
+        perturbed_fwd_diffs = perturbed_fwd_diffs.view(bsz, -1)
+
+        # in order to normalize, we have to aggregate the following tensors
+        # to calculate MSE in its polynomial expansion:
+        # (a-b)^2 = a^2 - 2ab + b^2
         return (
-            attr_times_perturb_sums.view(bsz, -1),
-            perturbed_fwd_diffs.view(bsz, -1),
+            attr_times_perturb_sums.pow(2).sum(-1),
+            (attr_times_perturb_sums * perturbed_fwd_diffs).sum(-1),
+            perturbed_fwd_diffs.pow(2).sum(-1),
         )
 
-    def _concat_infidelity_tensors(agg_tensors, tensors):
-        return tuple(
-            torch.cat([agg_t, t], dim=1) for agg_t, t in zip(agg_tensors, tensors)
-        )
+    def _sum_infidelity_tensors(agg_tensors, tensors):
+        return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
 
     # perform argument formattings
     inputs = _format_input(inputs)  # type: ignore
@@ -537,28 +546,28 @@ def infidelity(
 
     bsz = inputs[0].size(0)
     with torch.no_grad():
-        metrics_sum = _divide_and_aggregate_metrics(
+        # aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
+        agg_tensors = _divide_and_aggregate_metrics(
             cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
             _next_infidelity_tensors,
-            agg_func=_concat_infidelity_tensors,
+            agg_func=_sum_infidelity_tensors,
             max_examples_per_batch=max_examples_per_batch,
         )
 
-    attr_times_perturb_sums, perturbed_fwd_diffs = metrics_sum
-
-    assert attr_times_perturb_sums.size(-1) == n_perturb_samples
-    assert perturbed_fwd_diffs.size(-1) == n_perturb_samples
-
     if normalize:
-        beta_num = (attr_times_perturb_sums * perturbed_fwd_diffs).mean(-1)
-        beta_denorm = attr_times_perturb_sums.pow(2).mean(-1)
+        beta_num = agg_tensors[1]
+        beta_denorm = agg_tensors[0]
 
         beta_denorm[beta_denorm == 0] += 1e-10  # safe divide
         beta = beta_num / beta_denorm
 
-        attr_times_perturb_sums *= beta.unsqueeze(-1)
+        infidelity_values = (
+            beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
+        )
+    else:
+        infidelity_values = agg_tensors[0] - 2 * agg_tensors[1] + agg_tensors[2]
 
-    infidelity_values = (attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).mean(-1)
+    infidelity_values /= n_perturb_samples
 
     return infidelity_values
