@@ -113,8 +113,9 @@ class Test(BaseTest):
         input1 = torch.tensor([2, 5, 0, 1])
         input2 = torch.tensor([3, 0, 0, 2])
         model = BasicEmbeddingModel()
-        # for param in model.parameters():
-        #    param.requires_grad = False
+        for param in model.parameters():
+            param.requires_grad = False
+
         with torch.no_grad():
             layer_act = LayerGradientXActivation(model, model.embedding1)
             self.assertEqual(
