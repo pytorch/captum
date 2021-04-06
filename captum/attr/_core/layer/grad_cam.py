@@ -11,11 +11,7 @@ from captum._utils.common import (
     _format_input,
     _format_output,
 )
-from captum._utils.gradient import (
-    apply_gradient_requirements,
-    compute_layer_gradients_and_eval,
-    undo_gradient_requirements,
-)
+from captum._utils.gradient import compute_layer_gradients_and_eval
 from captum._utils.typing import TargetType
 from captum.attr._utils.attribution import GradientAttribution, LayerAttribution
 from captum.log import log_usage
@@ -190,7 +186,6 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-        gradient_mask = apply_gradient_requirements(inputs)
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals = compute_layer_gradients_and_eval(
@@ -202,7 +197,6 @@ class LayerGradCam(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-        undo_gradient_requirements(inputs, gradient_mask)
 
         summed_grads = tuple(
             torch.mean(
