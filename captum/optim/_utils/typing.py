@@ -24,7 +24,7 @@ class Parameterized(Protocol):
 
 
 class Objective(Parameterized, HasLoss):
-    def cleanup(self):
+    def cleanup(self) -> None:
         pass
 
 

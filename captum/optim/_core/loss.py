@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -10,7 +10,7 @@ from captum.optim._utils.image.common import get_neuron_pos
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
-def _make_arg_str(arg):
+def _make_arg_str(arg: Any) -> str:
     arg = str(arg)
     too_big = len(arg) > 15 or "\n" in arg
     return arg[:15] + "..." if too_big else arg
@@ -27,47 +27,47 @@ class Loss(ABC):
         super(Loss, self).__init__()
 
     @abstractproperty
-    def target(self):
+    def target(self) -> nn.Module:
         pass
 
     @abstractmethod
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__name__
 
-    def __neg__(self):
+    def __neg__(self) -> "CompositeLoss":
         return module_op(self, None, operator.neg)
 
-    def __add__(self, other: Union[int, float, "Loss"]):
+    def __add__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.add)
 
-    def __sub__(self, other: Union[int, float, "Loss"]):
+    def __sub__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.sub)
 
-    def __mul__(self, other: Union[int, float, "Loss"]):
+    def __mul__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.mul)
 
-    def __truediv__(self, other: Union[int, float, "Loss"]):
+    def __truediv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.truediv)
 
-    def __pow__(self, other: Union[int, float, "Loss"]):
+    def __pow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return module_op(self, other, operator.pow)
 
-    def __radd__(self, other: Union[int, float, "Loss"]):
+    def __radd__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return self.__add__(other)
 
-    def __rsub__(self, other: Union[int, float, "Loss"]):
+    def __rsub__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return self.__neg__().__add__(other)
 
-    def __rmul__(self, other: Union[int, float, "Loss"]):
+    def __rmul__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return self.__mul__(other)
 
-    def __rtruediv__(self, other: Union[int, float, "Loss"]):
+    def __rtruediv__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         if isinstance(other, (int, float)):
 
-            def loss_fn(module):
+            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
                 return operator.truediv(other, torch.mean(self(module)))
 
             name = self.__name__
@@ -82,10 +82,10 @@ class Loss(ABC):
             )
         return CompositeLoss(loss_fn, name=name, target=target)
 
-    def __rpow__(self, other: Union[int, float, "Loss"]):
+    def __rpow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         if isinstance(other, (int, float)):
 
-            def loss_fn(module):
+            def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
                 return operator.pow(other, torch.mean(self(module)))
 
             name = self.__name__
@@ -101,27 +101,29 @@ class Loss(ABC):
         return CompositeLoss(loss_fn, name=name, target=target)
 
 
-def module_op(self: Loss, other: Union[None, int, float, Loss], math_op: Callable):
+def module_op(
+    self: Loss, other: Union[None, int, float, Loss], math_op: Callable
+) -> "CompositeLoss":
     """
     This is a general function for applying math operations to Losses
     """
     if other is None and math_op == operator.neg:
 
-        def loss_fn(module):
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
             return math_op(self(module))
 
         name = self.__name__
         target = self.target
     elif isinstance(other, (int, float)):
 
-        def loss_fn(module):
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
             return math_op(self(module), other)
 
         name = self.__name__
         target = self.target
     elif isinstance(other, Loss):
         # We take the mean of the output tensor to resolve shape mismatches
-        def loss_fn(module):
+        def loss_fn(module: ModuleOutputMapping) -> torch.Tensor:
             return math_op(torch.mean(self(module)), torch.mean(other(module)))
 
         name = f"Compose({', '.join([self.__name__, other.__name__])})"
@@ -137,7 +139,9 @@ def module_op(self: Loss, other: Union[None, int, float, Loss], math_op: Callabl
 
 
 class BaseLoss(Loss):
-    def __init__(self, target: nn.Module = [], batch_index: Optional[int] = None):
+    def __init__(
+        self, target: nn.Module = [], batch_index: Optional[int] = None
+    ) -> None:
         super(BaseLoss, self).__init__()
         self._target = target
         if batch_index is None:
@@ -155,7 +159,9 @@ class BaseLoss(Loss):
 
 
 class CompositeLoss(BaseLoss):
-    def __init__(self, loss_fn: Callable, name: str = "", target: nn.Module = []):
+    def __init__(
+        self, loss_fn: Callable, name: str = "", target: nn.Module = []
+    ) -> None:
         super(CompositeLoss, self).__init__(target)
         self.__name__ = name
         self.loss_fn = loss_fn

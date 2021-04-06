@@ -74,17 +74,7 @@ class InputParameterization(torch.nn.Module):
 
 
 class ImageParameterization(InputParameterization):
-    def setup_batch(
-        self, x: torch.Tensor, batch: int = 1, dim: int = 3
-    ) -> torch.Tensor:
-        assert batch > 0
-        x = x.unsqueeze(0) if x.dim() == dim and batch == 1 else x
-        x = (
-            torch.stack([x.clone() for b in range(batch)])
-            if x.dim() == dim and batch > 1
-            else x
-        )
-        return x
+    pass
 
 
 class FFTImage(ImageParameterization):
@@ -158,7 +148,7 @@ class FFTImage(ImageParameterization):
         if TORCH_VERSION >= "1.7.0":
             import torch.fft
 
-            def torch_rfft(x: torch.Tensor):
+            def torch_rfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.view_as_real(torch.fft.rfftn(x, s=self.size))
 
             def torch_irfft(x: torch.Tensor) -> torch.Tensor:
@@ -169,10 +159,10 @@ class FFTImage(ImageParameterization):
         else:
             import torch
 
-            def torch_rfft(x: torch.Tensor):
+            def torch_rfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.rfft(x, signal_ndim=2)
 
-            def torch_irfft(x: torch.Tensor):
+            def torch_irfft(x: torch.Tensor) -> torch.Tensor:
                 return torch.irfft(x, signal_ndim=2)[
                     :, :, : self.size[0], : self.size[1]
                 ]

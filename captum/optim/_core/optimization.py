@@ -102,7 +102,7 @@ class InputOptimization(Objective, Parameterized):
         return self.hooks.targets
 
     @targets.setter
-    def targets(self, value) -> None:
+    def targets(self, value: Iterable[nn.Module]) -> None:
         self.hooks.remove_hooks()
         self.hooks = ModuleOutputsHook(value)
 

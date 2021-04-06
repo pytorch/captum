@@ -17,7 +17,7 @@ class FakeReductionAlgorithm(object):
         self.n_components = n_components
         self.components_ = np.ones((2, 64))
 
-    def fit_transform(self, x: torch.Tensor) -> np.ndarray:
+    def fit_transform(self, x: torch.Tensor) -> torch.Tensor:
         return x[:, 0:3, ...]
 
 

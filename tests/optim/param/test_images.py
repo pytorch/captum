@@ -15,35 +15,6 @@ from tests.helpers.basic import (
 from tests.optim.helpers import numpy_image
 
 
-class TestSetupBatch(BaseTest):
-    def test_setup_batch_chw(self) -> None:
-        init = torch.randn(3, 4, 4)
-
-        batch_test = images.ImageParameterization()
-        tensor_wbatch = batch_test.setup_batch(init)
-        array_wbatch = numpy_image.setup_batch(init.numpy())
-
-        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
-
-    def test_setup_batch_chwr(self) -> None:
-        init = torch.randn(3, 4, 4, 2)
-
-        batch_test = images.ImageParameterization()
-        tensor_wbatch = batch_test.setup_batch(init, dim=4)
-        array_wbatch = numpy_image.setup_batch(init.numpy(), dim=4)
-
-        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
-
-    def test_setup_batch_init(self) -> None:
-        init = torch.randn(5, 3, 4, 4)
-
-        batch_test = images.ImageParameterization()
-        tensor_wbatch = batch_test.setup_batch(init, dim=3)
-        array_wbatch = numpy_image.setup_batch(init.numpy(), dim=3)
-
-        assertArraysAlmostEqual(tensor_wbatch.numpy(), array_wbatch)
-
-
 class TestImageTensor(BaseTest):
     def test_repr(self) -> None:
         self.assertEqual(str(images.ImageTensor()), "ImageTensor([])")

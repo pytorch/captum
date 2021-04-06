@@ -1,7 +1,8 @@
 from contextlib import suppress
-from typing import Iterable, List, Union
+from typing import Callable, Iterable, Union
 from warnings import warn
 
+import torch
 import torch.nn as nn
 
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
@@ -16,7 +17,7 @@ class ModuleReuseException(Exception):
 
 
 class ModuleOutputsHook:
-    def __init__(self, target_modules: Iterable[nn.Module]) -> None:
+    def __init__(self, target_modules: Union[nn.Module, Iterable[nn.Module]]) -> None:
         self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
@@ -30,8 +31,10 @@ class ModuleOutputsHook:
     def is_ready(self) -> bool:
         return all(value is not None for value in self.outputs.values())
 
-    def _forward_hook(self):
-        def forward_hook(module, input, output) -> None:
+    def _forward_hook(self) -> Callable:
+        def forward_hook(
+            module: nn.Module, input: torch.Tensor, output: torch.Tensor
+        ) -> None:
             assert module in self.outputs.keys()
             if self.outputs[module] is None:
                 self.outputs[module] = output
@@ -56,7 +59,7 @@ class ModuleOutputsHook:
         return outputs
 
     @property
-    def targets(self):
+    def targets(self) -> Iterable[nn.Module]:
         return self.outputs.keys()
 
     def remove_hooks(self) -> None:
@@ -73,7 +76,9 @@ class ActivationFetcher:
     Simple module for collecting activations from model targets.
     """
 
-    def __init__(self, model, targets: Union[nn.Module, List[nn.Module]]) -> None:
+    def __init__(
+        self, model: nn.Module, targets: Union[nn.Module, Iterable[nn.Module]]
+    ) -> None:
         super(ActivationFetcher, self).__init__()
         self.model = model
         self.layers = ModuleOutputsHook(targets)

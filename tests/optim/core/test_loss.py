@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from typing import List
+
 import numpy as np
 import torch
 
@@ -11,7 +13,9 @@ CHANNEL_ACTIVATION_0_LOSS = 1.3
 CHANNEL_ACTIVATION_1_LOSS = 1.3
 
 
-def get_loss_value(model, loss, input_shape=[1, 3, 1, 1]):
+def get_loss_value(
+    model: torch.nn.Module, loss: opt_loss.Loss, input_shape: List[int] = [1, 3, 1, 1]
+):
     module_outputs = collect_activations(model, loss.target, torch.ones(*input_shape))
     loss_value = loss(module_outputs)
     try:
