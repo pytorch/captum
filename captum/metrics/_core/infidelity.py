@@ -454,7 +454,7 @@ def infidelity(
 
     def _next_infidelity_tensors(
         current_n_perturb_samples: int,
-    ) -> Tuple[Tensor, Tensor, Tensor]:
+    ) -> Union[Tuple[Tensor], Tuple[Tensor, Tensor, Tensor]]:
         perturbations, inputs_perturbed = _generate_perturbations(
             current_n_perturb_samples
         )
@@ -512,14 +512,18 @@ def infidelity(
         attr_times_perturb_sums = attr_times_perturb_sums.view(bsz, -1)
         perturbed_fwd_diffs = perturbed_fwd_diffs.view(bsz, -1)
 
-        # in order to normalize, we have to aggregate the following tensors
-        # to calculate MSE in its polynomial expansion:
-        # (a-b)^2 = a^2 - 2ab + b^2
-        return (
-            attr_times_perturb_sums.pow(2).sum(-1),
-            (attr_times_perturb_sums * perturbed_fwd_diffs).sum(-1),
-            perturbed_fwd_diffs.pow(2).sum(-1),
-        )
+        if normalize:
+            # in order to normalize, we have to aggregate the following tensors
+            # to calculate MSE in its polynomial expansion:
+            # (a-b)^2 = a^2 - 2ab + b^2
+            return (
+                attr_times_perturb_sums.pow(2).sum(-1),
+                (attr_times_perturb_sums * perturbed_fwd_diffs).sum(-1),
+                perturbed_fwd_diffs.pow(2).sum(-1),
+            )
+        else:
+            # returns (a-b)^2 if no need to normalize
+            return ((attr_times_perturb_sums - perturbed_fwd_diffs).pow(2).sum(-1),)
 
     def _sum_infidelity_tensors(agg_tensors, tensors):
         return tuple(agg_t + t for agg_t, t in zip(agg_tensors, tensors))
@@ -546,7 +550,8 @@ def infidelity(
 
     bsz = inputs[0].size(0)
     with torch.no_grad():
-        # aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
+        # if not normalize, directly return aggrgated MSE ((a-b)^2,)
+        # else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)
         agg_tensors = _divide_and_aggregate_metrics(
             cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
@@ -566,7 +571,7 @@ def infidelity(
             beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
         )
     else:
-        infidelity_values = agg_tensors[0] - 2 * agg_tensors[1] + agg_tensors[2]
+        infidelity_values = agg_tensors[0]
 
     infidelity_values /= n_perturb_samples
 
