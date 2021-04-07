@@ -161,7 +161,7 @@ def weights_to_heatmap_2d(
     assert weight.dim() == 2
     assert len(colors) == 5
 
-    def get_color(x: str, device: Union[str, torch.device] = "cpu") -> torch.Tensor:
+    def get_color(x: str, device: torch.device = torch.device('cpu')) -> torch.Tensor:
         def hex2base10(x: str) -> float:
             return int(x, 16) / 255.0
 
