@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Callable, Iterable, Union
+from typing import Callable, Iterable
 from warnings import warn
 
 import torch
@@ -17,7 +17,7 @@ class ModuleReuseException(Exception):
 
 
 class ModuleOutputsHook:
-    def __init__(self, target_modules: Union[nn.Module, Iterable[nn.Module]]) -> None:
+    def __init__(self, target_modules: Iterable[nn.Module]) -> None:
         self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
@@ -76,9 +76,7 @@ class ActivationFetcher:
     Simple module for collecting activations from model targets.
     """
 
-    def __init__(
-        self, model: nn.Module, targets: Union[nn.Module, Iterable[nn.Module]]
-    ) -> None:
+    def __init__(self, model: nn.Module, targets: Iterable[nn.Module]) -> None:
         super(ActivationFetcher, self).__init__()
         self.model = model
         self.layers = ModuleOutputsHook(targets)

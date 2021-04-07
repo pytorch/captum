@@ -428,7 +428,9 @@ class SymmetricPadding(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, x: torch.Tensor, padding: List[List[int]]) -> torch.Tensor:
+    def forward(
+        ctx: torch.autograd.Function, x: torch.Tensor, padding: List[List[int]]
+    ) -> torch.Tensor:
         ctx.padding = padding
         x_device = x.device
         x = x.cpu()
@@ -439,7 +441,9 @@ class SymmetricPadding(torch.autograd.Function):
         return x
 
     @staticmethod
-    def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+    def backward(
+        ctx: torch.autograd.Function, grad_output: torch.Tensor
+    ) -> Tuple[torch.Tensor, None]:
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
         b1, b2 = ctx.padding[0]

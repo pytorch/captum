@@ -1,6 +1,6 @@
 from copy import deepcopy
 from types import MethodType
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import requests
@@ -21,7 +21,12 @@ TORCH_VERSION = torch.__version__
 
 class ImageTensor(torch.Tensor):
     @staticmethod
-    def __new__(cls, x: Union[List, np.ndarray, torch.Tensor] = [], *args, **kwargs):
+    def __new__(
+        cls: Type["ImageTensor"],
+        x: Union[List, np.ndarray, torch.Tensor] = [],
+        *args,
+        **kwargs,
+    ) -> torch.Tensor:
         if isinstance(x, torch.Tensor) and x.is_cuda:
             x.show = MethodType(cls.show, x)
             x.export = MethodType(cls.export, x)
@@ -30,7 +35,7 @@ class ImageTensor(torch.Tensor):
             return super().__new__(cls, x, *args, **kwargs)
 
     @classmethod
-    def open(cls, path: str, scale: float = 255.0):
+    def open(cls, path: str, scale: float = 255.0) -> "ImageTensor":
         if path.startswith("https://") or path.startswith("http://"):
             response = requests.get(path, stream=True)
             img = Image.open(response.raw)
@@ -54,7 +59,13 @@ class ImageTensor(torch.Tensor):
         )
 
     @classmethod
-    def __torch_function__(cls, func, types, args=(), kwargs=None):
+    def __torch_function__(
+        cls: Type["ImageTensor"],
+        func: Callable,
+        types: List[Type[torch.Tensor]],
+        args: Tuple = (),
+        kwargs: dict = None,
+    ) -> torch.Tensor:
         if kwargs is None:
             kwargs = {}
         return super().__torch_function__(func, types, args, kwargs)
@@ -69,7 +80,7 @@ class ImageTensor(torch.Tensor):
 
 
 class InputParameterization(torch.nn.Module):
-    def forward(self):
+    def forward(self) -> torch.Tensor:
         raise NotImplementedError
 
 
@@ -429,14 +440,16 @@ class NaturalImage(ImageParameterization):
                 )
                 init = self.decorrelate(init, inverse=True).rename(None)
             if squash_func is None:
-                squash_func: Callable[[torch.Tensor], torch.Tensor] = lambda x: x.clamp(
-                    0, 1
-                )
+
+                def squash_func(x: torch.Tensor):
+                    return x.clamp(0, 1)
+
         else:
             if squash_func is None:
-                squash_func: Callable[
-                    [torch.Tensor], torch.Tensor
-                ] = lambda x: torch.sigmoid(x)
+
+                def squash_func(x: torch.Tensor):
+                    return torch.sigmoid(x)
+
         self.squash_func = squash_func
         self.parameterization = parameterization(
             size=size, channels=channels, batch=batch, init=init

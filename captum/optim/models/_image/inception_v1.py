@@ -21,7 +21,7 @@ def googlenet(
     progress: bool = True,
     model_path: Optional[str] = None,
     **kwargs
-):
+) -> "InceptionV1":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
     Args:
@@ -227,7 +227,7 @@ class InceptionModule(nn.Module):
         self,
         in_channels: int,
         c1x1: int,
-        c3x3reduce,
+        c3x3reduce: int,
         c3x3: int,
         c5x5reduce: int,
         c5x5: int,

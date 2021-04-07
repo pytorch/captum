@@ -170,7 +170,7 @@ class CompositeLoss(BaseLoss):
         return self.loss_fn(targets_to_values)
 
 
-def loss_wrapper(cls):
+def loss_wrapper(cls: Any) -> Callable:
     """
     Primarily for naming purposes.
     """

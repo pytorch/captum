@@ -164,7 +164,7 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
 
     def continue_while(
         step: int,
-        obj: InputOptimization,
+        obj: Objective,
         history: Iterable[torch.Tensor],
         optim: torch.optim.Optimizer,
     ) -> bool:
