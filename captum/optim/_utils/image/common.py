@@ -104,7 +104,7 @@ def weights_to_heatmap_2d(
     assert tensor.dim() == 2
     assert len(colors) == 5
 
-    def get_color(x: str) -> torch.Tensor:
+    def get_color(x: str, device: torch.device = torch.device("cpu")) -> torch.Tensor:
         def hex2base10(x: str) -> float:
             return int(x, 16) / 255.0
 
@@ -112,7 +112,7 @@ def weights_to_heatmap_2d(
             [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
         )
 
-    color_list = [get_color(c) for c in colors]
+    color_list = [get_color(c, tensor.device) for c in colors]
     x = tensor.expand((3, tensor.shape[0], tensor.shape[1])).permute(1, 2, 0)
 
     color_tensor = (
