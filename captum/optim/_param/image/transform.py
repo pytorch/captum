@@ -326,8 +326,13 @@ class RandomRotation(nn.Module):
         rot_matrix = self.get_rot_mat(theta, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        grid = F.affine_grid(rot_matrix, x.size())
-        x = F.grid_sample(x, grid)
+        if torch.__version__ >= "1.3.0":
+            # Pass align_corners explicitly for torch >= 1.3.0
+            grid = F.affine_grid(rot_matrix, x.size(), align_corners=False)
+            x = F.grid_sample(x, grid, align_corners=False)
+        else:
+            grid = F.affine_grid(rot_matrix, x.size())
+            x = F.grid_sample(x, grid)
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -220,3 +220,12 @@ def create_atlas(
             (grid_size[0] - x - 1) * cell_w : (grid_size[0] - x) * cell_w,
         ] = img.flip([3])
     return torch.flip(atlas_canvas, [3])
+
+
+__all__ = [
+    "normalize_grid",
+    "calc_grid_indices",
+    "extract_grid_vectors",
+    "create_atlas_vectors",
+    "create_atlas",
+]
