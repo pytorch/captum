@@ -170,9 +170,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
         additional_forward_args = _format_additional_forward_args(
             additional_forward_args
         )
-
         gradient_mask = apply_gradient_requirements(inputs)
-
         # Returns gradient of output with respect to
         # hidden layer and hidden layer evaluated at each input.
         layer_gradients, layer_evals = compute_layer_gradients_and_eval(
@@ -184,9 +182,7 @@ class LayerGradientXActivation(LayerAttribution, GradientAttribution):
             device_ids=self.device_ids,
             attribute_to_layer_input=attribute_to_layer_input,
         )
-
         undo_gradient_requirements(inputs, gradient_mask)
-
         if isinstance(self.layer, Module):
             return _format_output(
                 len(layer_evals) > 1,
