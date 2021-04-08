@@ -3,12 +3,7 @@ from typing import Optional, Tuple, Type, Union, cast
 import torch
 import torch.nn as nn
 
-from captum.optim.models._common import (
-    AvgPool2dConstrained,
-    Conv2dSame,
-    RedirectedReluLayer,
-    SkipLayer,
-)
+from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (
     "https://github.com/pytorch/captum/raw/"
@@ -91,7 +86,7 @@ class InceptionV1(nn.Module):
 
         if use_linear_modules_only:
             activ = SkipLayer
-            pool = AvgPool2dConstrained
+            pool = nn.AvgPool2d
         else:
             if replace_relus_with_redirectedrelu:
                 activ = RedirectedReluLayer

@@ -263,42 +263,6 @@ class TestCollectActivations(BaseTest):
         self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
 
 
-class TestAvgPool2dConstrained(BaseTest):
-    def test_avg_pool2d_constrained(self) -> None:
-        test_tensor = torch.randn(128, 32, 16, 16)
-        test_tensor = F.pad(test_tensor, (0, 1, 0, 1), value=float("-inf"))
-
-        avg_pool_layer = model_utils.AvgPool2dConstrained(
-            kernel_size=3, stride=2, padding=0
-        )
-        out_tensor = avg_pool_layer(test_tensor)
-
-        avg_pool = torch.nn.AvgPool2d(kernel_size=3, stride=2, padding=0)
-        expected_tensor = avg_pool(test_tensor)
-        expected_tensor[expected_tensor == float("-inf")] = 0.0
-
-        assertTensorAlmostEqual(self, out_tensor, expected_tensor, 0)
-
-
-class TestReplaceMaxWithAvgConstPool2d(BaseTest):
-    def test_replace_max_with_avgconst_pool2d(self) -> None:
-        model = torch.nn.Sequential(
-            torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
-        )
-
-        model_utils.replace_max_with_avgconst_pool2d(model)
-
-        test_tensor = torch.randn(128, 32, 16, 16)
-        test_tensor = F.pad(test_tensor, (0, 1, 0, 1), value=float("-inf"))
-        out_tensor = model(test_tensor)
-
-        avg_pool = torch.nn.AvgPool2d(kernel_size=3, stride=2, padding=0)
-        expected_tensor = avg_pool(test_tensor)
-        expected_tensor[expected_tensor == float("-inf")] = 0.0
-
-        assertTensorAlmostEqual(self, out_tensor, expected_tensor, 0)
-
-
 class TestSkipLayer(BaseTest):
     def test_skip_layer(self) -> None:
         layer = model_utils.SkipLayer()

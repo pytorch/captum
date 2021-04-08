@@ -5,11 +5,7 @@ from typing import Type
 import torch
 
 from captum.optim.models import googlenet
-from captum.optim.models._common import (
-    AvgPool2dConstrained,
-    RedirectedReluLayer,
-    SkipLayer,
-)
+from captum.optim.models._common import RedirectedReluLayer, SkipLayer
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -70,7 +66,6 @@ class TestInceptionV1(BaseTest):
         _check_layer_not_in_model(self, model, torch.nn.ReLU)
         _check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
         _check_layer_in_model(self, model, SkipLayer)
-        _check_layer_in_model(self, model, AvgPool2dConstrained)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":
