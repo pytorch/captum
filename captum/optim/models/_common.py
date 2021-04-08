@@ -197,65 +197,6 @@ def collect_activations(
     return activ_out
 
 
-class AvgPool2dConstrained(torch.nn.Module):
-    """
-    AvgPool2d layer that also zeros padding of a specific value. This
-    layer is meant to be used to replace MaxPool2d layers.
-
-    Args:
-        kernel_size (int or tuple of int): The size of the window to
-            perform average pooling with.
-        stride (int or tuple of int, optional): The stride window size
-            to use.
-        padding (int or tuple of int): The amount of
-            zero padding to add to both sides in the nn.AvgPool2d module.
-        ceil_mode (bool, optional): Whether to use ceil or floor for
-            creating the output shape.
-        value (Any): Used to return any padding added in a previous layer
-            that's meant to be ignored by pooling layers back to zero.
-    """
-
-    def __init__(
-        self,
-        kernel_size: Union[int, Tuple[int, ...]],
-        stride: Optional[Union[int, Tuple[int, ...]]] = None,
-        padding: Union[int, Tuple[int, ...]] = 0,
-        ceil_mode: bool = False,
-        value: Optional[Any] = float("-inf"),
-    ) -> None:
-        super().__init__()
-        self.avgpool = torch.nn.AvgPool2d(
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            ceil_mode=ceil_mode,
-        )
-        self.value = value
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.avgpool(x)
-        if self.value is not None:
-            x[x == self.value] = 0.0
-        return x
-
-
-def replace_max_with_avgconst_pool2d(
-    model: nn.Module, value: Optional[Any] = float("-inf")
-) -> None:
-    """
-    Replace all nonlinear MaxPool2d layers with their linear AvgPool2d equivalents.
-    This function is a wrapper function for replace_layers.
-    This allows us to ignore nonlinear values when calculating expanded weights.
-    Args:
-        model (nn.Module): A PyTorch model instance.
-        value (Any): Used to return any padding that's meant to be ignored by
-            pooling layers back to zero.
-    """
-    replace_layers(
-        model, torch.nn.MaxPool2d, AvgPool2dConstrained, transfer_vars=True, value=value
-    )
-
-
 class SkipLayer(torch.nn.Module):
     """
     This layer is made to take the place of nonlinear activation layers like ReLU.
