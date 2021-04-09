@@ -24,7 +24,7 @@ from captum._utils.typing import (
 
 
 def apply_gradient_requirements(
-    inputs: Tuple[Tensor, ...], warn: bool = False
+    inputs: Tuple[Tensor, ...], warn: bool = True
 ) -> List[bool]:
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
