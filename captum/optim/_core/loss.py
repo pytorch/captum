@@ -1,7 +1,7 @@
 import functools
 import operator
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -150,11 +150,11 @@ class BaseLoss(Loss):
             self._batch_index = (batch_index, batch_index + 1)
 
     @property
-    def target(self):
+    def target(self) -> nn.Module:
         return self._target
 
     @property
-    def batch_index(self):
+    def batch_index(self) -> Tuple:
         return self._batch_index
 
 
@@ -176,7 +176,7 @@ def loss_wrapper(cls: Any) -> Callable:
     """
 
     @functools.wraps(cls)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> object:
         obj = cls(*args, **kwargs)
         args_str = " [" + ", ".join([_make_arg_str(arg) for arg in args]) + "]"
         obj.__name__ = cls.__name__ + args_str
@@ -338,7 +338,7 @@ class Diversity(BaseLoss):
 
     def __call__(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
         activations = targets_to_values[self.target]
-        batch, channels, _, _ = activations.shape
+        batch, channels = activations.shape[:2]
         flattened = activations.view(batch, channels, -1)
         grams = torch.matmul(flattened, torch.transpose(flattened, 1, 2))
         grams = nn.functional.normalize(grams, p=2, dim=(1, 2))

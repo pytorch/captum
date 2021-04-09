@@ -441,14 +441,13 @@ class NaturalImage(ImageParameterization):
                 init = self.decorrelate(init, inverse=True).rename(None)
             if squash_func is None:
 
-                def squash_func(x: torch.Tensor):
+                def squash_func(x: torch.Tensor) -> torch.Tensor:
                     return x.clamp(0, 1)
 
         else:
             if squash_func is None:
 
-                def squash_func(x: torch.Tensor):
-                    return torch.sigmoid(x)
+                squash_func = torch.sigmoid
 
         self.squash_func = squash_func
         self.parameterization = parameterization(
