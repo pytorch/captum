@@ -350,7 +350,7 @@ class BasicModel_MultiLayer_MultiInput(nn.Module):
 
 
 class BasicModel_ConvNet_Optim(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.layer = nn.Conv2d(3, 2, 1)
         # Initialize weights and biases for
@@ -358,7 +358,7 @@ class BasicModel_ConvNet_Optim(nn.Module):
         self.layer.weight.data.fill_(0.1)
         self.layer.bias.data.fill_(1)
 
-    def forward(self, x):
+    def forward(self, x) -> Tensor:
         return self.layer(x)
 
 
