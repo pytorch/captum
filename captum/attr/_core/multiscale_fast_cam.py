@@ -22,7 +22,7 @@ class MultiscaleFastCam(GradientAttribution):
     The recommended use case for FastCAM is to compute saliency maps for multiple
     layers with different scales in a deep network, then combine them to obtain
     a more meaningful saliency map for the original input. For details, please
-    refer to the example in the docstring of `attribute()`. 
+    refer to the example in the docstring of `attribute()`.
 
     More details regrading FastCam can be found in the original paper:
     https://arxiv.org/abs/1911.11293

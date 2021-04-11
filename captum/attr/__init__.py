@@ -26,7 +26,6 @@ from captum.attr._core.layer.layer_integrated_gradients import (  # noqa
 from captum.attr._core.layer.layer_lrp import LayerLRP  # noqa
 from captum.attr._core.lime import Lime, LimeBase  # noqa
 from captum.attr._core.lrp import LRP  # noqa
-from ._core.multiscale_fast_cam import MultiscaleFastCam  # noqa
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance  # noqa
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift  # noqa
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLiftShap
@@ -71,6 +70,8 @@ from captum.attr._utils.stat import (
     Var,
 )
 from captum.attr._utils.summarizer import Summarizer
+
+from ._core.multiscale_fast_cam import MultiscaleFastCam  # noqa
 
 __all__ = [
     "Attribution",
