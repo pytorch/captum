@@ -21,7 +21,8 @@ class MultiscaleFastCam(GradientAttribution):
 
     The recommended use case for FastCAM is to compute saliency maps for multiple
     layers with different scales in a deep network, then combine them to obtain
-    a more meaningful saliency map for the original input.
+    a more meaningful saliency map for the original input. For details, please
+    refer to the example in the docstring of `attribute()`. 
 
     More details regrading FastCam can be found in the original paper:
     https://arxiv.org/abs/1911.11293
@@ -37,7 +38,7 @@ class MultiscaleFastCam(GradientAttribution):
         Args:
             forward_func (callable): The forward function of the model or any
                           modification of it
-            layers (torch.nn.Module or listt(torch.nn.Module)): A list of layers
+            layers (torch.nn.Module or list(torch.nn.Module)): A list of layers
                           for which attributions.
                           are computed.
             device_ids (list(int)): Device ID list, necessary only if forward_func
@@ -66,7 +67,7 @@ class MultiscaleFastCam(GradientAttribution):
         r"""
         Args:
 
-            inputs (tensor or tuple of tensors):  Input for which attributions
+            inputs (tensor):  Input for which attributions
                         are computed. If forward_func takes a single
                         tensor as input, a single input tensor should be provided.
                         If forward_func takes multiple tensors as input, a tuple
@@ -237,7 +238,7 @@ class MultiscaleFastCam(GradientAttribution):
         else:
             msg = (
                 f"{norm} norming option not found or invalid. "
-                + "Available options: [gamma, normal, None]"
+                + "Available options: [gamma, gaussian, identity]"
             )
             raise NameError(msg)
         return norm_func
@@ -263,7 +264,7 @@ class MultiscaleFastCam(GradientAttribution):
         else:
             msg = (
                 f"{scale} scaling option not found or invalid. "
-                + "Available options: [smoe, std, mean, normal]"
+                + "Available options: [smoe, std, mean, max, normal, identity]"
             )
             raise NameError(msg)
         return scale_func
