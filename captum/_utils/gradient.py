@@ -23,7 +23,9 @@ from captum._utils.typing import (
 )
 
 
-def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
+def apply_gradient_requirements(
+    inputs: Tuple[Tensor, ...], warn: bool = True
+) -> List[bool]:
     """
     Iterates through tuple on input tensors and sets requires_grad to be true on
     each Tensor, and ensures all grads are set to zero. To ensure that the input
@@ -43,17 +45,19 @@ def apply_gradient_requirements(inputs: Tuple[Tensor, ...]) -> List[bool]:
         if not inputs_dtype.is_floating_point and not (
             hasattr(inputs_dtype, "is_complex") and inputs_dtype.is_complex
         ):
-            warnings.warn(
-                """Input Tensor %d has a dtype of %s.
-                Gradients cannot be activated
-                for these data types."""
-                % (index, str(inputs_dtype))
-            )
+            if warn:
+                warnings.warn(
+                    """Input Tensor %d has a dtype of %s.
+                    Gradients cannot be activated
+                    for these data types."""
+                    % (index, str(inputs_dtype))
+                )
         elif not input.requires_grad:
-            warnings.warn(
-                "Input Tensor %d did not already require gradients, "
-                "required_grads has been set automatically." % index
-            )
+            if warn:
+                warnings.warn(
+                    "Input Tensor %d did not already require gradients, "
+                    "required_grads has been set automatically." % index
+                )
             input.requires_grad_()
     return grad_required
 
@@ -196,6 +200,7 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: Literal[False] = False,
+    require_layer_grads: bool = False,
 ) -> Dict[Module, Dict[device, Tuple[Tensor, ...]]]:
     ...
 
@@ -210,6 +215,7 @@ def _forward_layer_distributed_eval(
     attribute_to_layer_input: bool = False,
     *,
     forward_hook_with_return: Literal[True],
+    require_layer_grads: bool = False,
 ) -> Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor]:
     ...
 
@@ -222,6 +228,7 @@ def _forward_layer_distributed_eval(
     additional_forward_args: Any = None,
     attribute_to_layer_input: bool = False,
     forward_hook_with_return: bool = False,
+    require_layer_grads: bool = False,
 ) -> Union[
     Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
     Dict[Module, Dict[device, Tuple[Tensor, ...]]],
@@ -251,6 +258,8 @@ def _forward_layer_distributed_eval(
 
             if not is_eval_tuple:
                 eval_tsrs = (eval_tsrs,)
+            if require_layer_grads:
+                apply_gradient_requirements(eval_tsrs, warn=False)
             with lock:
                 nonlocal saved_layer
                 # Note that cloning behaviour of `eval_tsr` is different
@@ -588,6 +597,7 @@ def compute_layer_gradients_and_eval(
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
             forward_hook_with_return=True,
+            require_layer_grads=True,
         )
         assert output[0].numel() == 1, (
             "Target not provided when necessary, cannot"
