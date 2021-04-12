@@ -100,7 +100,8 @@ def _dot_cossim(
         eps (float, optional): If cossim_pow is greater than zero, the desired
             epsilon value to use for cosine similarity calculations.
     Returns:
-        tensor (torch.Tensor): Dot cosine similarity between x and y, along the specified dim.
+        tensor (torch.Tensor): Dot cosine similarity between x and y, along the
+        specified dim.
     """
 
     dot = torch.sum(x * y, dim)
