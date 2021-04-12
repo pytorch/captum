@@ -282,7 +282,7 @@ class RandomSpatialJitter(torch.nn.Module):
             -insets[1],
             -(self.pad_range - insets[1]),
         ]
-        cropped = F.pad(padded, pad=tblr)
+        cropped = F.pad(padded, pad=[int(n) for n in tblr])
         assert cropped.shape == x.shape
         return cropped
 
