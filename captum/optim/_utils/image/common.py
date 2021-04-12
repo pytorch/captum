@@ -79,6 +79,36 @@ def get_neuron_pos(
     return _x, _y
 
 
+def _dot_cossim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    cossim_pow: float = 0.0,
+    dim: int = 1,
+    eps: float = 1.0e-4,
+) -> torch.Tensor:
+    """
+    Computes product between dot product and cosine similarity of two tensors along
+    a specified dimension.
+
+    Args:
+        x (torch.Tensor): The tensor that you wish to compute the cosine similarity
+            for in relation to tensor y.
+        y (torch.Tensor): The tensor that you wish to compute the cosine similarity
+            for in relation to tensor x.
+        cossim_pow (float, optional): The desired cosine similarity power to use.
+        dim (int, optional): The target dimension for computing cosine similarity.
+        eps (float, optional): If cossim_pow is greater than zero, the desired
+            epsilon value to use for cosine similarity calculations.
+    Returns:
+        tensor (torch.Tensor): Dot cosine similarity between x and y, along the specified dim.
+    """
+
+    dot = torch.sum(x * y, dim)
+    if cossim_pow == 0:
+        return dot
+    return dot * torch.clamp(torch.cosine_similarity(x, y), 0.1) ** cossim_pow
+
+
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     """
     Convert an NCHW image with n channels into a 3 channel RGB image.

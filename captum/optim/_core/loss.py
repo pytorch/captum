@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.image.common import get_neuron_pos
+from captum.optim._utils.image.common import get_neuron_pos, _dot_cossim
 from captum.optim._utils.typing import ModuleOutputMapping
 
 
@@ -430,34 +430,6 @@ class Alignment(BaseLoss):
                 ).mean() / self.decay_ratio ** float(d)
 
         return -sum_tensor
-
-
-def _dot_cossim(
-    x: torch.Tensor,
-    y: torch.Tensor,
-    cossim_pow: float = 0.0,
-    dim: int = 1,
-    eps: float = 1.0e-4,
-) -> torch.Tensor:
-    """
-    Computes product between dot product and cosine similarity of two tensors along
-    a specified dimension.
-
-    Args:
-        x (torch.Tensor): The tensor that you wish to compute the cosine similarity
-            for in relation to tensor y.
-        y (torch.Tensor): The tensor that you wish to compute the cosine similarity
-            for in relation to tensor x.
-        cossim_pow (float, optional): The desired cosine similarity power to use.
-        dim (int, optional): The target dimension for computing cosine similarity.
-        eps (float, optional): If cossim_pow is greater than zero, the desired
-            epsilon value to use for cosine similarity calculations.
-    """
-
-    dot = torch.sum(x * y, dim)
-    if cossim_pow == 0:
-        return dot
-    return dot * torch.clamp(torch.cosine_similarity(x, y), 0.1) ** cossim_pow
 
 
 @loss_wrapper
