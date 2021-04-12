@@ -1,4 +1,3 @@
-from contextlib import suppress
 from typing import Callable, Iterable
 from warnings import warn
 
@@ -6,10 +5,6 @@ import torch
 import torch.nn as nn
 
 from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
-
-
-class AbortForwardException(Exception):
-    pass
 
 
 class ModuleReuseException(Exception):
@@ -44,7 +39,11 @@ class ModuleOutputsHook:
                     "As of 2019-11-22 please don't reuse nn.Modules in your models."
                 )
             if self.is_ready:
-                raise AbortForwardException("Forward hook called, all outputs saved.")
+                warn(
+                    "No outputs found from models. This can be ignored if you are "
+                    "optimizing on inputs only, without models. Otherwise, check "
+                    "that you are passing model layers in your losses."
+                )
 
         return forward_hook
 
@@ -83,8 +82,7 @@ class ActivationFetcher:
 
     def __call__(self, input_t: TupleOfTensorsOrTensorType) -> ModuleOutputMapping:
         try:
-            with suppress(AbortForwardException):
-                self.model(input_t)
+            self.model(input_t)
             activations = self.layers.consume_outputs()
         finally:
             self.layers.remove_hooks()

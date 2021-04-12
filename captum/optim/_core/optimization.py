@@ -1,6 +1,5 @@
 """captum.optim.optimization."""
 
-from contextlib import suppress
 from typing import Callable, Iterable, Optional
 
 import torch
@@ -16,7 +15,7 @@ except (ImportError, AssertionError):
     )
 
 from captum.optim._core.loss import default_loss_summarize
-from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
+from captum.optim._core.output_hook import ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
 from captum.optim._param.image.transforms import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
@@ -84,8 +83,7 @@ class InputOptimization(Objective, Parameterized):
         if self.transform:
             input_t = self.transform(input_t)
 
-        with suppress(AbortForwardException):
-            _unreachable = self.model(input_t)  # noqa: F841
+        _unreachable = self.model(input_t)  # noqa: F841
 
         # consume_outputs return the captured values and resets the hook's state
         module_outputs = self.hooks.consume_outputs()
