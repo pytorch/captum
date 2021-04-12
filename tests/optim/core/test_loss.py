@@ -129,9 +129,8 @@ class TestNeuronDirection(BaseTest):
         loss = opt_loss.NeuronDirection(model.layer, vec=torch.ones(1, 1, 1, 1))
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
-        cos_sim = np.inner(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-        cos_sim = np.sum(cos_sim)
-        self.assertAlmostEqual(get_loss_value(model, loss), cos_sim, places=6)
+        dot = np.sum(np.inner(a, b))
+        self.assertAlmostEqual(get_loss_value(model, loss), dot, places=6)
 
 
 class TestTensorDirection(BaseTest):
@@ -140,9 +139,8 @@ class TestTensorDirection(BaseTest):
         loss = opt_loss.TensorDirection(model.layer, vec=torch.ones(1, 1, 1, 1))
         a = 1
         b = [CHANNEL_ACTIVATION_0_LOSS, CHANNEL_ACTIVATION_1_LOSS]
-        cos_sim = np.inner(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-        cos_sim = np.sum(cos_sim)
-        self.assertAlmostEqual(get_loss_value(model, loss), cos_sim, places=6)
+        dot = np.sum(np.inner(a, b))
+        self.assertAlmostEqual(get_loss_value(model, loss), dot, places=6)
 
 
 class TestActivationWeights(BaseTest):
