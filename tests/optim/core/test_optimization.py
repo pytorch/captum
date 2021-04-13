@@ -21,3 +21,18 @@ class TestInputOptimization(BaseTest):
         history = obj.optimize(opt.optimization.n_steps(n_steps, show_progress=False))
         self.assertTrue(history[0] > history[-1])
         self.assertTrue(len(history) == n_steps)
+
+    def test_input_optimization_param(self) -> None:
+        """Test for optimizing param without model"""
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping InputOptimization test due to insufficient Torch version."
+            )
+        img_param = opt.images.NaturalImage()
+        loss_fn = opt.loss.ChannelActivation(img_param, 0)
+        # Use torch.nn.Identity as placeholder for non-model optimization
+        obj = opt.InputOptimization(torch.nn.Identity(), loss_fn, img_param)
+        n_steps = 5
+        history = obj.optimize(opt.optimization.n_steps(n_steps, show_progress=False))
+        self.assertTrue(history[0] > history[-1])
+        self.assertTrue(len(history) == n_steps)
