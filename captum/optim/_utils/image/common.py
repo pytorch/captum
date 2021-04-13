@@ -84,7 +84,7 @@ def _dot_cossim(
     y: torch.Tensor,
     cossim_pow: float = 0.0,
     dim: int = 1,
-    eps: float = 1.0e-4,
+    eps: float = 1e-8,
 ) -> torch.Tensor:
     """
     Computes product between dot product and cosine similarity of two tensors along
@@ -107,7 +107,7 @@ def _dot_cossim(
     dot = torch.sum(x * y, dim)
     if cossim_pow == 0:
         return dot
-    return dot * torch.clamp(torch.cosine_similarity(x, y), 0.1) ** cossim_pow
+    return dot * torch.clamp(torch.cosine_similarity(x, y, eps=eps), 0.1) ** cossim_pow
 
 
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
