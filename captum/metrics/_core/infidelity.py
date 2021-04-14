@@ -17,6 +17,7 @@ from captum._utils.common import (
     safe_div,
 )
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
+from captum.log import log_usage
 from captum.metrics._utils.batching import _divide_and_aggregate_metrics
 
 
@@ -108,6 +109,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
     return sub_infidelity_perturb_func_decorator
 
 
+@log_usage()
 def infidelity(
     forward_func: Callable,
     perturb_func: Callable,

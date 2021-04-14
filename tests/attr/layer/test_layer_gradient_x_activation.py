@@ -23,6 +23,12 @@ class Test(BaseTest):
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 400.0, 0.0])
 
+    def test_simple_input_gradient_activation_no_grad(self) -> None:
+        net = BasicModel_MultiLayer()
+        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
+        with torch.no_grad():
+            self._layer_activation_test_assert(net, net.linear0, inp, [0.0, 400.0, 0.0])
+
     def test_simple_linear_gradient_activation(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]])
