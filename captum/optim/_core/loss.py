@@ -444,8 +444,8 @@ class Direction(BaseLoss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        batch_index: Optional[int] = None,
         cossim_pow: Optional[float] = 0.0,
+        batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
@@ -473,8 +473,8 @@ class NeuronDirection(BaseLoss):
         x: Optional[int] = None,
         y: Optional[int] = None,
         channel_index: Optional[int] = None,
-        batch_index: Optional[int] = None,
         cossim_pow: Optional[float] = 0.0,
+        batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
         self.direction = vec.reshape((1, -1, 1, 1))
@@ -511,8 +511,8 @@ class TensorDirection(BaseLoss):
         self,
         target: nn.Module,
         vec: torch.Tensor,
-        batch_index: Optional[int] = None,
         cossim_pow: Optional[float] = 0.0,
+        batch_index: Optional[int] = None,
     ) -> None:
         BaseLoss.__init__(self, target, batch_index)
         self.direction = vec

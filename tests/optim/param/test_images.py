@@ -95,7 +95,7 @@ class TestFFTImage(BaseTest):
                 "Skipping FFTImage test due to insufficient Torch version."
             )
         size = (224, 224)
-        init_tensor = torch.randn(3, 224, 224)
+        init_tensor = torch.randn(1, 3, 224, 224)
         init_array = init_tensor.numpy()
 
         fftimage = images.FFTImage(size=size, init=init_tensor)

@@ -1,4 +1,5 @@
-from typing import Callable, Iterable
+import warnings
+from typing import Callable, Iterable, Tuple
 from warnings import warn
 
 import torch
@@ -28,7 +29,7 @@ class ModuleOutputsHook:
 
     def _forward_hook(self) -> Callable:
         def forward_hook(
-            module: nn.Module, input: torch.Tensor, output: torch.Tensor
+            module: nn.Module, input: Tuple[torch.Tensor], output: torch.Tensor
         ) -> None:
             assert module in self.outputs.keys()
             if self.outputs[module] is None:
@@ -82,7 +83,9 @@ class ActivationFetcher:
 
     def __call__(self, input_t: TupleOfTensorsOrTensorType) -> ModuleOutputMapping:
         try:
-            self.model(input_t)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.model(input_t)
             activations = self.layers.consume_outputs()
         finally:
             self.layers.remove_hooks()

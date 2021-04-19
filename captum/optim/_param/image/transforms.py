@@ -145,7 +145,7 @@ class CenterCrop(torch.nn.Module):
         pixels_from_edges: bool = False,
         offset_left: bool = False,
     ) -> None:
-        super(CenterCrop, self).__init__()
+        super().__init__()
         self.crop_vals = size
         self.pixels_from_edges = pixels_from_edges
         self.offset_left = offset_left
@@ -187,10 +187,10 @@ def center_crop(
     """
 
     assert input.dim() == 3 or input.dim() == 4
-    crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
-    crop_vals = cast(Union[List[int], Tuple[int], Tuple[int, int]], crop_vals)
-    assert len(crop_vals) == 1 or len(crop_vals) == 2
-    crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
+    crop_vals = [crop_vals] * 2 if not hasattr(crop_vals, "__iter__") else crop_vals
+    crop_vals = list(crop_vals) * 2 if len(crop_vals) == 1 else crop_vals
+    crop_vals = cast(Union[List[int], Tuple[int, int]], crop_vals)
+    assert len(crop_vals) == 2
 
     if input.dim() == 4:
         h, w = input.size(2), input.size(3)
@@ -231,7 +231,7 @@ class RandomScale(nn.Module):
     """
 
     def __init__(self, scale: NumSeqOrTensorType) -> None:
-        super(RandomScale, self).__init__()
+        super().__init__()
         self.scale = scale
 
     def get_scale_mat(
@@ -270,7 +270,7 @@ class RandomSpatialJitter(torch.nn.Module):
     """
 
     def __init__(self, translate: int) -> None:
-        super(RandomSpatialJitter, self).__init__()
+        super().__init__()
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
@@ -478,9 +478,13 @@ class RandomCrop(nn.Module):
 
     def __init__(
         self,
-        crop_size: Union[Tuple[int, int], Tuple[int]],
+        crop_size: IntSeqOrIntType,
     ) -> None:
         super().__init__()
+        crop_size = [crop_size] * 2 if not hasattr(crop_size, "__iter__") else crop_size
+        crop_size = list(crop_size) * 2 if len(crop_size) == 1 else crop_size
+        crop_size = cast(Union[List[int], Tuple[int, int]], crop_size)
+        assert len(crop_size) == 2
         self.crop_size = crop_size
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

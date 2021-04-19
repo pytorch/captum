@@ -154,7 +154,7 @@ class Conv2dSame(nn.Conv2d):
         groups: int = 1,
         bias: bool = True,
     ) -> None:
-        super(Conv2dSame, self).__init__(
+        super().__init__(
             in_channels, out_channels, kernel_size, stride, 0, dilation, groups, bias
         )
 
@@ -164,8 +164,8 @@ class Conv2dSame(nn.Conv2d):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         ih, iw = x.size()[-2:]
         kh, kw = self.weight.size()[-2:]
-        pad_h = self.calc_same_pad(ih, kh, self.stride[0], self.dilation[0])
-        pad_w = self.calc_same_pad(iw, kw, self.stride[1], self.dilation[1])
+        pad_h = self.calc_same_pad(i=ih, k=kh, s=self.stride[0], d=self.dilation[0])
+        pad_w = self.calc_same_pad(i=iw, k=kw, s=self.stride[1], d=self.dilation[1])
 
         if pad_h > 0 or pad_w > 0:
             x = F.pad(

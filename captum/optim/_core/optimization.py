@@ -1,5 +1,6 @@
 """captum.optim.optimization."""
 
+import warnings
 from typing import Callable, Iterable, Optional
 
 import torch
@@ -75,16 +76,14 @@ class InputOptimization(Objective, Parameterized):
             - **loss** (*tensor*):
                         Size of the tensor corresponds to the targets passed.
         """
-        input_t = (
-            self.input_param()[None, ...]
-            if self.input_param().dim() == 3
-            else self.input_param()
-        )
+        input_t = self.input_param()
 
         if self.transform:
             input_t = self.transform(input_t)
 
-        _unreachable = self.model(input_t)  # noqa: F841
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _unreachable = self.model(input_t)  # noqa: F841
 
         # consume_outputs return the captured values and resets the hook's state
         module_outputs = self.hooks.consume_outputs()
@@ -113,7 +112,7 @@ class InputOptimization(Objective, Parameterized):
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
         loss_summarize_fn: Optional[Callable] = default_loss_summarize,
-        lr: Optional[float] = 0.025,
+        lr: float = 0.025,
     ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
         Args:
