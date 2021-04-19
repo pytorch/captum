@@ -59,7 +59,7 @@ INSIGHTS_FILE_SUBDIRS = [
     "insights/widget/static",
 ]
 
-TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
+TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision", "umap-learn"]
 
 TEST_REQUIRES = ["pytest", "pytest-cov"]
 
