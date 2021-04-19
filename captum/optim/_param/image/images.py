@@ -107,8 +107,7 @@ class FFTImage(ImageParameterization):
             if init.dim() == 3:
                 init = init.unsqueeze(0)
             self.size = (init.size(2), init.size(3))
-        self.batch = batch
-        self.torch_rfft, self.torch_irfft = self.get_fft_funcs()
+        self.torch_rfft, self.torch_irfft, self.torch_fft_freq = self.get_fft_funcs()
 
         frequencies = FFTImage.rfft2d_freqs(*self.size)
         scale = 1.0 / torch.max(
@@ -121,7 +120,7 @@ class FFTImage(ImageParameterization):
 
         if init is None:
             coeffs_shape = (
-                self.batch,
+                batch,
                 channels,
                 self.size[0],
                 self.size[1] // 2 + 1,
@@ -167,6 +166,9 @@ class FFTImage(ImageParameterization):
                     x = torch.view_as_complex(x)
                 return torch.fft.irfftn(x, s=self.size)  # type: ignore
 
+            def torch_fft_freq(v: int, d: float = 1.0) -> torch.Tensor:
+                return torch.fft.fftfreq(v, d)
+
         else:
             import torch
 
@@ -178,7 +180,15 @@ class FFTImage(ImageParameterization):
                     :, :, : self.size[0], : self.size[1]
                 ]
 
-        return torch_rfft, torch_irfft
+            def torch_fft_freq(v: int, d: float = 1.0) -> torch.Tensor:
+                """PyTorch version of np.fft.fftfreq"""
+                results = torch.empty(v)
+                s = (v - 1) // 2 + 1
+                results[:s] = torch.arange(0, s)
+                results[s:] = torch.arange(-(v // 2), 0)
+                return results * (1.0 / (v * d))
+
+        return torch_rfft, torch_irfft, torch_fft_freq
 
     def forward(self) -> torch.Tensor:
         h, w = self.size
