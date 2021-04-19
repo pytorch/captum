@@ -564,8 +564,11 @@ def infidelity(
         beta_num = agg_tensors[1]
         beta_denorm = agg_tensors[0]
 
-        beta_denorm[beta_denorm == 0] += 1e-10  # safe divide
-        beta = beta_num / beta_denorm
+        beta = safe_div(
+            beta_num,
+            beta_denorm,
+            torch.tensor(1.0, dtype=beta_denorm.dtype, device=beta_denorm.device),
+        )
 
         infidelity_values = (
             beta ** 2 * agg_tensors[0] - 2 * beta * agg_tensors[1] + agg_tensors[2]
