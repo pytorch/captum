@@ -119,6 +119,7 @@ def extract_grid_vectors(
             if len(indices) >= min_density:
                 average_activations.append(torch.mean(raw_activations[indices], 0))
                 cell_coords.append((x, y, len(indices)))
+    assert len(cell_coords) > 0, "No grid vectors were able to be created."
     return torch.stack(average_activations), cell_coords
 
 
