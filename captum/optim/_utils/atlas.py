@@ -66,9 +66,9 @@ def calc_grid_indices(
     x_bin = ((xy_grid[:, 0] - x_extent[0]) / (x_extent[1] - x_extent[0])) * grid_size[0]
     y_bin = ((xy_grid[:, 1] - y_extent[0]) / (y_extent[1] - y_extent[0])) * grid_size[1]
 
-    indices: List = []
+    indices: List[List[torch.Tensor]] = []
     for x in range(grid_size[0]):
-        indice_bounds: List = []
+        indice_bounds: List[torch.Tensor] = []
         for y in range(grid_size[1]):
             in_bounds_x = torch.logical_and(x <= x_bin, x_bin <= x + 1)
             in_bounds_y = torch.logical_and(y <= y_bin, y_bin <= y + 1)
@@ -114,8 +114,8 @@ def extract_grid_vectors(
 
     assert raw_activations.dim() == 2
 
-    cell_coords: List = []
-    average_activations: List = []
+    cell_coords: List[Tuple[int, int, int]] = []
+    average_activations: List[torch.Tensor] = []
     for x in range(grid_size[0]):
         for y in range(grid_size[1]):
             indices = grid_indices[x][y]
