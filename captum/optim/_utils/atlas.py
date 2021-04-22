@@ -14,11 +14,11 @@ def normalize_grid(
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid tensor to normalize,
-            with a shape of: [n_channels, 2].
+            with a shape of: [n_channels, n_axes].
         min_percentile (float, optional): The minamum percentile to use when
-            normalizing the tensor.
+            normalizing the tensor. Value must be in the range [0, 1].
         max_percentile (float, optional): The maximum percentile to use when
-            normalizing the tensor.
+            normalizing the tensor. Value must be in the range [0, 1].
         relative_margin (float, optional): The relative margin to use when
             normalizing the tensor.
     Returns:
@@ -26,6 +26,9 @@ def normalize_grid(
     """
 
     assert xy_grid.dim() == 2
+    assert 0.0 <= min_percentile <= 1.0
+    assert 0.0 <= max_percentile <= 1.0
+
     mins = torch.quantile(xy_grid, min_percentile, dim=0)
     maxs = torch.quantile(xy_grid, max_percentile, dim=0)
 
@@ -51,8 +54,8 @@ def calc_grid_indices(
             of: [n_channels, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
-        x_extent (Tuple[float, float], optional): The x extent to use.
-        y_extent (Tuple[float, float], optional): The y extent to use.
+        x_extent (Tuple[float, float], optional): The x axis range to use.
+        y_extent (Tuple[float, float], optional): The y axis range to use.
     Returns:
         indices (list of list of tensor): Grid cell indices for the irregular grid.
     """
@@ -150,8 +153,8 @@ def create_atlas_vectors(
         min_density (int, optional): The minamum number of points for a cell to counted.
         normalize (bool, optional): Whether or not to remove outliers from an xy
             coordinate grid tensor, and rescale it to [0, 1].
-        x_extent (Tuple[float, float], optional): The x extent to use.
-        y_extent (Tuple[float, float], optional): The y extent to use.
+        x_extent (Tuple[float, float], optional): The x axis range to use.
+        y_extent (Tuple[float, float], optional): The y axis range to use.
 
     Returns:
         grid_vecs (torch.tensor): A tensor containing all the direction vector that

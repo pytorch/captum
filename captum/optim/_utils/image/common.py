@@ -26,7 +26,6 @@ def get_neuron_pos(
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     """
     Convert an NCHW image with n channels into a 3 channel RGB image.
-
     Args:
         x (torch.Tensor):  Image tensor to transform into RGB image.
         warp (bool, optional):  Whether or not to make colors more distinguishable.
@@ -35,7 +34,7 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
         *tensor* RGB image
     """
 
-    def hue_to_rgb(angle: float) -> torch.Tensor:
+    def hue_to_rgb(angle: float, device: torch.device) -> torch.Tensor:
         """
         Create an RGB unit vector based on a hue of the input angle.
         """
@@ -49,7 +48,8 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
                 [0.0, 0.7071, 0.7071],
                 [0.0, 0.0, 1.0],
                 [0.7071, 0.0, 0.7071],
-            ]
+            ],
+            device=device,
         )
 
         idx = math.floor(angle / 60)
@@ -74,9 +74,9 @@ def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     nc = x.size(1)
     for i in range(nc):
         rgb = rgb + x[:, i][:, None, :, :]
-        rgb = rgb * hue_to_rgb(360 * i / nc).to(device=x.device)[None, :, None, None]
+        rgb = rgb * hue_to_rgb(360 * i / nc, device=x.device)[None, :, None, None]
 
-    rgb = rgb + torch.ones(x.size(2), x.size(3))[None, None, :, :] * (
+    rgb = rgb + torch.ones(x.size(2), x.size(3), device=x.device)[None, None, :, :] * (
         torch.sum(x, 1)[:, None] - torch.max(x, 1)[0][:, None]
     )
     return (rgb / (1e-4 + torch.norm(rgb, dim=1, keepdim=True))) * torch.norm(
@@ -95,7 +95,7 @@ def weights_to_heatmap_2d(
     no excitation or inhibition.
     Args:
         weight (torch.Tensor):  A 2d tensor to create the heatmap from.
-        colors (List of strings):  A list of strings containing color
+        colors (List of strings):  A list of 5 strings containing color
         hex values to use for coloring the heatmap.
     Returns:
         *color_tensor*:  A weight heatmap.
@@ -103,13 +103,14 @@ def weights_to_heatmap_2d(
 
     assert tensor.dim() == 2
     assert len(colors) == 5
+    assert all([len(c) == 6 for c in colors])
 
     def get_color(x: str, device: torch.device = torch.device("cpu")) -> torch.Tensor:
         def hex2base10(x: str) -> float:
             return int(x, 16) / 255.0
 
         return torch.tensor(
-            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
+            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])], device=device
         )
 
     color_list = [get_color(c, tensor.device) for c in colors]
