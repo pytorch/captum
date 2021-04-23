@@ -113,6 +113,26 @@ class TestRandomRotation(BaseTest):
         )
         assertTensorAlmostEqual(self, test_output, expected_output, 0.005)
 
+    def test_random_rotation_forward(self) -> None:
+        rotate_transform = transform.RandomRotation(list(range(-25, 25)))
+        x = torch.ones(1, 3, 224, 224)
+        output = rotate_transform(x)
+
+        self.assertEqual(output.shape, x.shape)
+
+    def test_random_rotation_forward_cuda(self) -> None:
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping RandomRotation forward CUDA test due to not supporting"
+                + " CUDA."
+            )
+        rotate_transform = transform.RandomRotation(list(range(-25, 25)))
+        x = torch.ones(1, 3, 224, 224).cuda()
+        output = rotate_transform(x)
+
+        self.assertTrue(output.is_cuda)
+        self.assertEqual(output.shape, x.shape)
+
 
 class TestRandomSpatialJitter(BaseTest):
     def test_random_spatial_jitter_hw(self) -> None:

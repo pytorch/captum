@@ -315,18 +315,21 @@ def consolidate_samples(
             tensors with a shape of [n_channels, n_samples].
     """
 
-    samples: List = []
+    assert os.path.isdir(sample_dir)
+
     tensor_samples = [
         os.path.join(sample_dir, name)
         for name in os.listdir(sample_dir)
         if sample_basename.lower() in name.lower()
         and os.path.isfile(os.path.join(sample_dir, name))
     ]
+    assert len(tensor_samples) > 0
 
     if show_progress:
         total = len(tensor_samples) if num_files is None else num_files  # type: ignore
         pbar = tqdm(total=total, unit=" sample batches collected")
 
+    samples: List[torch.Tensor] = []
     for file in tensor_samples:
         sample_batch = torch.load(file)
         for s in sample_batch:

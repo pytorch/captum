@@ -26,12 +26,13 @@ def get_neuron_pos(
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
     """
     Convert an NCHW image with n channels into a 3 channel RGB image.
+
     Args:
-        x (torch.Tensor):  Image tensor to transform into RGB image.
+        x (torch.Tensor):  NCHW image tensor to transform into RGB image.
         warp (bool, optional):  Whether or not to make colors more distinguishable.
             Default: True
     Returns:
-        *tensor* RGB image
+        tensor (torch.Tensor): An NCHW RGB image tensor.
     """
 
     def hue_to_rgb(angle: float, device: torch.device) -> torch.Tensor:
@@ -89,16 +90,17 @@ def weights_to_heatmap_2d(
     colors: List[str] = ["0571b0", "92c5de", "f7f7f7", "f4a582", "ca0020"],
 ) -> torch.Tensor:
     """
-    Create a color heatmap of an input weight tensor.
-    By default red represents excitatory values,
-    blue represents inhibitory values, and white represents
+    Create a color heatmap of an input weight tensor. By default red represents
+    excitatory values, blue represents inhibitory values, and white represents
     no excitation or inhibition.
+
     Args:
         weight (torch.Tensor):  A 2d tensor to create the heatmap from.
-        colors (List of strings):  A list of 5 strings containing color
-        hex values to use for coloring the heatmap.
+        colors (list of str):  A list of 5 strings containing hex triplet
+            (six digit), three-byte hexadecimal color values to use for coloring
+            the heatmap.
     Returns:
-        *color_tensor*:  A weight heatmap.
+        color_tensor (torch.Tensor):  A weight heatmap.
     """
 
     assert tensor.dim() == 2
