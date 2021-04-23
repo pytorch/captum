@@ -511,17 +511,17 @@ class LimeBase(PerturbationAttribution):
             if show_progress:
                 attr_progress.close()
 
-            combined_interp_inps = torch.cat(interpretable_inps).float()
+            combined_interp_inps = torch.cat(interpretable_inps).double()
             combined_outputs = (
                 torch.cat(outputs)
                 if len(outputs[0].shape) > 0
                 else torch.stack(outputs)
-            ).float()
+            ).double()
             combined_sim = (
                 torch.cat(similarities)
                 if len(similarities[0].shape) > 0
                 else torch.stack(similarities)
-            ).float()
+            ).double()
             dataset = TensorDataset(
                 combined_interp_inps, combined_outputs, combined_sim
             )
