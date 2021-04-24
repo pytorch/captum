@@ -30,15 +30,16 @@ class TestImageTensor(BaseTest):
 
 class TestFFTImage(BaseTest):
     def test_pytorch_fftfreq(self) -> None:
-        assertArraysAlmostEqual(
-            images.FFTImage.pytorch_fftfreq(4, 4).numpy(), np.fft.fftfreq(4, 4)
-        )
+        image = images.FFTImage((1, 1))
+        _, _, fftfreq = image.get_fft_funcs()
+        assertArraysAlmostEqual(fftfreq(4, 4).numpy(), np.fft.fftfreq(4, 4))
 
     def test_rfft2d_freqs(self) -> None:
         height = 2
         width = 3
+        image = images.FFTImage((1, 1))
         assertArraysAlmostEqual(
-            images.FFTImage.rfft2d_freqs(height, width).numpy(),
+            image.rfft2d_freqs(height, width).numpy(),
             numpy_image.FFTImage.rfft2d_freqs(height, width),
         )
 
