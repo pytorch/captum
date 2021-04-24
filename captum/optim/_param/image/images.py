@@ -143,7 +143,7 @@ class FFTImage(ImageParameterization):
         fx = self.torch_fftfreq(width)[: width // 2 + wadd]
         return torch.sqrt((fx * fx) + (fy * fy))
 
-    def get_fft_funcs(self) -> Tuple[Callable, Callable]:
+    def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
         """Support older versions of PyTorch"""
         if TORCH_VERSION >= "1.7.0":
             import torch.fft
