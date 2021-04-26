@@ -7,7 +7,7 @@ from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLay
 
 GS_SAVED_WEIGHTS_URL = (
     "https://github.com/pytorch/captum/raw/"
-    + "optim-wip/captum/optim/_models/inception5h.pth"
+    + "optim-wip/captum/optim/models/_image/inception5h.pth"
 )
 
 
