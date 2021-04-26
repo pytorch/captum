@@ -691,6 +691,7 @@ __all__ = [
     "Alignment",
     "Direction",
     "NeuronDirection",
+    "AngledNeuronDirection",
     "TensorDirection",
     "ActivationWeights",
     "default_loss_summarize",
