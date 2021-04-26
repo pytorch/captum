@@ -4,13 +4,8 @@ from typing import Type
 
 import torch
 
-from captum.optim._models.inception_v1 import googlenet
-from captum.optim._utils.models import (
-    AvgPool2dConstrained,
-    RedirectedReluLayer,
-    ReluLayer,
-    SkipLayer,
-)
+from captum.optim.models import googlenet
+from captum.optim.models._common import RedirectedReluLayer, SkipLayer
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
 
@@ -58,7 +53,7 @@ class TestInceptionV1(BaseTest):
             )
         model = googlenet(pretrained=True, replace_relus_with_redirectedrelu=False)
         _check_layer_not_in_model(self, model, RedirectedReluLayer)
-        _check_layer_in_model(self, model, ReluLayer)
+        _check_layer_in_model(self, model, torch.nn.ReLU)
 
     def test_load_inceptionv1_linear(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -68,10 +63,10 @@ class TestInceptionV1(BaseTest):
             )
         model = googlenet(pretrained=True, use_linear_modules_only=True)
         _check_layer_not_in_model(self, model, RedirectedReluLayer)
-        _check_layer_not_in_model(self, model, ReluLayer)
+        _check_layer_not_in_model(self, model, torch.nn.ReLU)
         _check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
         _check_layer_in_model(self, model, SkipLayer)
-        _check_layer_in_model(self, model, AvgPool2dConstrained)
+        _check_layer_in_model(self, model, torch.nn.AvgPool2d)
 
     def test_transform_inceptionv1(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -139,7 +134,3 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
         self.assertEqual(len(outputs), 3)
-
-
-if __name__ == "__main__":
-    unittest.main()

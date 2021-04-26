@@ -238,7 +238,3 @@ class TestConsolidateSamples(BaseTest):
         self.assertEqual(
             list(sample_tensor.shape), [num_files * batch_size, num_channels]
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

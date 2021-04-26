@@ -24,12 +24,12 @@ class Parameterized(Protocol):
 
 
 class Objective(Parameterized, HasLoss):
-    def cleanup(self):
+    def cleanup(self) -> None:
         pass
 
 
 ModuleOutputMapping = Dict[Module, Optional[Tensor]]
-StopCriteria = Callable[[int, Objective, Optimizer], bool]
+StopCriteria = Callable[[int, Objective, Iterable[Tensor], Optimizer], bool]
 LossFunction = Callable[[ModuleOutputMapping], Tensor]
 SingleTargetLossFunction = Callable[[Tensor], Tensor]
 

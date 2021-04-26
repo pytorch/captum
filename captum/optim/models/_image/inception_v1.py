@@ -1,20 +1,13 @@
-from typing import Optional, Tuple, Union, cast
+from typing import Optional, Tuple, Type, Union, cast
 
 import torch
 import torch.nn as nn
 
-from captum.optim._utils.models import (
-    AvgPool2dConstrained,
-    Conv2dSame,
-    LocalResponseNormLayer,
-    RedirectedReluLayer,
-    ReluLayer,
-    SkipLayer,
-)
+from captum.optim.models._common import Conv2dSame, RedirectedReluLayer, SkipLayer
 
 GS_SAVED_WEIGHTS_URL = (
     "https://github.com/pytorch/captum/raw/"
-    + "optim-wip/captum/optim/_models/inception5h.pth"
+    + "optim-wip/captum/optim/models/_image/inception5h.pth"
 )
 
 
@@ -23,7 +16,7 @@ def googlenet(
     progress: bool = True,
     model_path: Optional[str] = None,
     **kwargs
-):
+) -> "InceptionV1":
     r"""GoogLeNet (also known as Inception v1 & Inception 5h) model architecture from
     `"Going Deeper with Convolutions" <http://arxiv.org/abs/1409.4842>`_.
     Args:
@@ -93,12 +86,12 @@ class InceptionV1(nn.Module):
 
         if use_linear_modules_only:
             activ = SkipLayer
-            pool = AvgPool2dConstrained
+            pool = nn.AvgPool2d
         else:
             if replace_relus_with_redirectedrelu:
                 activ = RedirectedReluLayer
             else:
-                activ = ReluLayer
+                activ = nn.ReLU
             pool = nn.MaxPool2d
 
         self.conv1 = Conv2dSame(
@@ -112,7 +105,7 @@ class InceptionV1(nn.Module):
         )
         self.conv1_relu = activ()
         self.pool1 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
-        self.local_response_norm1 = LocalResponseNormLayer(*lrn_vals)
+        self.local_response_norm1 = nn.LocalResponseNorm(*lrn_vals)
 
         self.conv2 = nn.Conv2d(
             in_channels=64,
@@ -133,28 +126,37 @@ class InceptionV1(nn.Module):
             bias=True,
         )
         self.conv3_relu = activ()
-        self.local_response_norm2 = LocalResponseNormLayer(*lrn_vals)
+        self.local_response_norm2 = nn.LocalResponseNorm(*lrn_vals)
 
         self.pool2 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
         self.mixed3a = InceptionModule(192, 64, 96, 128, 16, 32, 32, activ, pool)
+        self.mixed3a_relu = activ()
         self.mixed3b = InceptionModule(256, 128, 128, 192, 32, 96, 64, activ, pool)
+        self.mixed3b_relu = activ()
         self.pool3 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
         self.mixed4a = InceptionModule(480, 192, 96, 204, 16, 48, 64, activ, pool)
+        self.mixed4a_relu = activ()
 
         if self.aux_logits:
             self.aux1 = AuxBranch(508, out_features, activ)
 
         self.mixed4b = InceptionModule(508, 160, 112, 224, 24, 64, 64, activ, pool)
+        self.mixed4b_relu = activ()
         self.mixed4c = InceptionModule(512, 128, 128, 256, 24, 64, 64, activ, pool)
+        self.mixed4c_relu = activ()
         self.mixed4d = InceptionModule(512, 112, 144, 288, 32, 64, 64, activ, pool)
+        self.mixed4d_relu = activ()
 
         if self.aux_logits:
             self.aux2 = AuxBranch(528, out_features, activ)
 
         self.mixed4e = InceptionModule(528, 256, 160, 320, 32, 128, 128, activ, pool)
+        self.mixed4e_relu = activ()
         self.pool4 = pool(kernel_size=3, stride=2, padding=0, ceil_mode=True)
         self.mixed5a = InceptionModule(832, 256, 160, 320, 48, 128, 128, activ, pool)
+        self.mixed5a_relu = activ()
         self.mixed5b = InceptionModule(832, 384, 192, 384, 48, 128, 128, activ, pool)
+        self.mixed5b_relu = activ()
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.drop = nn.Dropout(0.4000000059604645)
@@ -185,25 +187,25 @@ class InceptionV1(nn.Module):
         x = self.local_response_norm2(x)
 
         x = self.pool2(x)
-        x = self.mixed3a(x)
-        x = self.mixed3b(x)
+        x = self.mixed3a_relu(self.mixed3a(x))
+        x = self.mixed3b_relu(self.mixed3b(x))
         x = self.pool3(x)
-        x = self.mixed4a(x)
+        x = self.mixed4a_relu(self.mixed4a(x))
 
         if self.aux_logits:
             aux1_output = self.aux1(x)
 
-        x = self.mixed4b(x)
-        x = self.mixed4c(x)
-        x = self.mixed4d(x)
+        x = self.mixed4b_relu(self.mixed4b(x))
+        x = self.mixed4c_relu(self.mixed4c(x))
+        x = self.mixed4d_relu(self.mixed4d(x))
 
         if self.aux_logits:
             aux2_output = self.aux2(x)
 
-        x = self.mixed4e(x)
+        x = self.mixed4e_relu(self.mixed4e(x))
         x = self.pool4(x)
-        x = self.mixed5a(x)
-        x = self.mixed5b(x)
+        x = self.mixed5a_relu(self.mixed5a(x))
+        x = self.mixed5b_relu(self.mixed5b(x))
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
@@ -220,13 +222,13 @@ class InceptionModule(nn.Module):
         self,
         in_channels: int,
         c1x1: int,
-        c3x3reduce,
+        c3x3reduce: int,
         c3x3: int,
         c5x5reduce: int,
         c5x5: int,
         pool_proj: int,
-        activ=ReluLayer,
-        p_layer=nn.MaxPool2d,
+        activ: Type[nn.Module] = nn.ReLU,
+        p_layer: Type[nn.Module] = nn.MaxPool2d,
     ) -> None:
         super(InceptionModule, self).__init__()
         self.conv_1x1 = nn.Conv2d(
@@ -237,7 +239,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_1x1_relu = activ()
 
         self.conv_3x3_reduce = nn.Conv2d(
             in_channels=in_channels,
@@ -257,7 +258,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_3x3_relu = activ()
 
         self.conv_5x5_reduce = nn.Conv2d(
             in_channels=in_channels,
@@ -277,7 +277,6 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.conv_5x5_relu = activ()
 
         self.pool = p_layer(kernel_size=3, stride=1, padding=1, ceil_mode=True)
         self.pool_proj = nn.Conv2d(
@@ -288,25 +287,20 @@ class InceptionModule(nn.Module):
             groups=1,
             bias=True,
         )
-        self.pool_proj_relu = activ()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         c1x1 = self.conv_1x1(x)
-        c1x1 = self.conv_1x1_relu(c1x1)
 
         c3x3 = self.conv_3x3_reduce(x)
         c3x3 = self.conv_3x3_reduce_relu(c3x3)
         c3x3 = self.conv_3x3(c3x3)
-        c3x3 = self.conv_3x3_relu(c3x3)
 
         c5x5 = self.conv_5x5_reduce(x)
         c5x5 = self.conv_5x5_reduce_relu(c5x5)
         c5x5 = self.conv_5x5(c5x5)
-        c5x5 = self.conv_5x5_relu(c5x5)
 
         px = self.pool(x)
         px = self.pool_proj(px)
-        px = self.pool_proj_relu(px)
         return torch.cat([c1x1, c3x3, c5x5, px], dim=1)
 
 
@@ -315,7 +309,7 @@ class AuxBranch(nn.Module):
         self,
         in_channels: int = 508,
         out_features: int = 1008,
-        activ=ReluLayer,
+        activ: Type[nn.Module] = nn.ReLU,
     ) -> None:
         super(AuxBranch, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((4, 4))
