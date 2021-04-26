@@ -1,6 +1,6 @@
 import math
 from inspect import signature
-from typing import Dict, List, Tuple, Type, Union, cast
+from typing import Dict, List, Optional, Tuple, Type, Union, cast
 
 import torch
 import torch.nn as nn
