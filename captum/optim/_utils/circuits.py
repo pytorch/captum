@@ -3,9 +3,9 @@ from typing import Callable, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 
-from captum.optim._param.image.transform import center_crop
-from captum.optim._utils.models import collect_activations
+from captum.optim._param.image.transforms import center_crop
 from captum.optim._utils.typing import IntSeqOrIntType, TupleOfTensorsOrTensorType
+from captum.optim.models import collect_activations
 
 
 def extract_expanded_weights(
@@ -40,7 +40,12 @@ def extract_expanded_weights(
         *tensor*:  A tensor containing the expanded weights in the form of:
             (target2 output channels, target1 output channels, height, width)
     """
-
+    if isinstance(model_input, torch.Tensor):
+        model_input = model_input.to(next(model.parameters()).device)
+    elif isinstance(model_input, tuple):
+        model_input = tuple(
+            tensor.to(next(model.parameters()).device) for tensor in model_input
+        )
     activations = collect_activations(model, [target1, target2], model_input)
     activ1 = activations[target1]
     activ2 = activations[target2]
@@ -65,3 +70,6 @@ def extract_expanded_weights(
     if crop_shape is not None and crop_func is not None:
         expanded_weights = crop_func(expanded_weights, crop_shape)
     return expanded_weights
+
+
+__all__ = ["extract_expanded_weights"]

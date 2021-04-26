@@ -10,8 +10,6 @@ import torch.nn.functional as F
 from captum.optim._utils.image.common import nchannels_to_rgb
 from captum.optim._utils.typing import IntSeqOrIntType, NumSeqOrTensorType
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class BlendAlpha(nn.Module):
     r"""Blends a 4 channel input parameterization into an RGB image.
@@ -147,7 +145,7 @@ class CenterCrop(torch.nn.Module):
         pixels_from_edges: bool = False,
         offset_left: bool = False,
     ) -> None:
-        super(CenterCrop, self).__init__()
+        super().__init__()
         self.crop_vals = size
         self.pixels_from_edges = pixels_from_edges
         self.offset_left = offset_left
@@ -189,10 +187,10 @@ def center_crop(
     """
 
     assert input.dim() == 3 or input.dim() == 4
-    crop_vals = [crop_vals] if not hasattr(crop_vals, "__iter__") else crop_vals
-    crop_vals = cast(Union[List[int], Tuple[int], Tuple[int, int]], crop_vals)
-    assert len(crop_vals) == 1 or len(crop_vals) == 2
-    crop_vals = crop_vals * 2 if len(crop_vals) == 1 else crop_vals
+    crop_vals = [crop_vals] * 2 if not hasattr(crop_vals, "__iter__") else crop_vals
+    crop_vals = list(crop_vals) * 2 if len(crop_vals) == 1 else crop_vals
+    crop_vals = cast(Union[List[int], Tuple[int, int]], crop_vals)
+    assert len(crop_vals) == 2
 
     if input.dim() == 4:
         h, w = input.size(2), input.size(3)
@@ -215,7 +213,7 @@ def center_crop(
     return x
 
 
-def rand_select(
+def _rand_select(
     transform_values: NumSeqOrTensorType,
 ) -> Union[int, float, torch.Tensor]:
     """
@@ -233,7 +231,7 @@ class RandomScale(nn.Module):
     """
 
     def __init__(self, scale: NumSeqOrTensorType) -> None:
-        super(RandomScale, self).__init__()
+        super().__init__()
         self.scale = scale
 
     def get_scale_mat(
@@ -250,12 +248,17 @@ class RandomScale(nn.Module):
         scale_matrix = self.get_scale_mat(scale, x.device, x.dtype)[None, ...].repeat(
             x.shape[0], 1, 1
         )
-        grid = F.affine_grid(scale_matrix, x.size())
-        x = F.grid_sample(x, grid)
+        if torch.__version__ >= "1.3.0":
+            # Pass align_corners explicitly for torch >= 1.3.0
+            grid = F.affine_grid(scale_matrix, x.size(), align_corners=False)
+            x = F.grid_sample(x, grid, align_corners=False)
+        else:
+            grid = F.affine_grid(scale_matrix, x.size())
+            x = F.grid_sample(x, grid)
         return x
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        scale = rand_select(self.scale)
+        scale = _rand_select(self.scale)
         return self.scale_tensor(input, scale=scale)
 
 
@@ -267,7 +270,7 @@ class RandomSpatialJitter(torch.nn.Module):
     """
 
     def __init__(self, translate: int) -> None:
-        super(RandomSpatialJitter, self).__init__()
+        super().__init__()
         self.pad_range = 2 * translate
         self.pad = nn.ReflectionPad2d(translate)
 
@@ -279,7 +282,7 @@ class RandomSpatialJitter(torch.nn.Module):
             -insets[1],
             -(self.pad_range - insets[1]),
         ]
-        cropped = F.pad(padded, pad=tblr)
+        cropped = F.pad(padded, pad=[int(n) for n in tblr])
         assert cropped.shape == x.shape
         return cropped
 
@@ -425,7 +428,9 @@ class SymmetricPadding(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, x: torch.Tensor, padding: List[List[int]]) -> torch.Tensor:
+    def forward(
+        ctx: torch.autograd.Function, x: torch.Tensor, padding: List[List[int]]
+    ) -> torch.Tensor:
         ctx.padding = padding
         x_device = x.device
         x = x.cpu()
@@ -436,7 +441,9 @@ class SymmetricPadding(torch.autograd.Function):
         return x
 
     @staticmethod
-    def backward(ctx, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
+    def backward(
+        ctx: torch.autograd.Function, grad_output: torch.Tensor
+    ) -> Tuple[torch.Tensor, None]:
         grad_input = grad_output.clone()
         B, C, H, W = grad_input.size()
         b1, b2 = ctx.padding[0]
@@ -459,3 +466,102 @@ class NChannelsToRGB(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         assert x.dim() == 4
         return nchannels_to_rgb(x, self.warp)
+
+
+class RandomCrop(nn.Module):
+    """
+        Randomly crop out a specific size from an NCHW image tensor.
+    ​
+        Args:
+            crop_size (int, sequence, int): The desired cropped output size.
+    """
+
+    def __init__(
+        self,
+        crop_size: IntSeqOrIntType,
+    ) -> None:
+        super().__init__()
+        crop_size = [crop_size] * 2 if not hasattr(crop_size, "__iter__") else crop_size
+        crop_size = list(crop_size) * 2 if len(crop_size) == 1 else crop_size
+        crop_size = cast(Union[List[int], Tuple[int, int]], crop_size)
+        assert len(crop_size) == 2
+        self.crop_size = crop_size
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4
+        hs = x.shape[2] - self.crop_size[0]
+        ws = x.shape[3] - self.crop_size[1]
+        shifts = [
+            torch.randint(low=-hs, high=hs, size=[1]),
+            torch.randint(low=-ws, high=ws, size=[1]),
+        ]
+        x = torch.roll(x, shifts, dims=(2, 3))
+        return center_crop(
+            x,
+            crop_vals=self.crop_size,
+            pixels_from_edges=False,
+        )
+
+
+class AlphaChannelLoss(nn.Module):
+    """
+        TODO: Fix AlphaChannelLoss
+        Transform for calculating alpha channel loss, without altering the input tensor.
+        Loss values are calculated in such a way that opaque and transparent regions of
+        the tensor are automatically balanced.
+    ​
+        See: https://distill.pub/2018/differentiable-parameterizations/
+        Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
+    ​
+        Args:
+            scale (float, sequence): Tuple of rescaling values to randomly select from.
+            crop_size (int, sequence, int, optional): The desired cropped output size
+                for secondary alpha channel loss.
+            background (tensor, optional):  An NCHW image tensor to be used as the
+                alpha channel's background.
+    """
+
+    def __init__(
+        self,
+        scale: NumSeqOrTensorType,
+        crop_size: Optional[Tuple[int, int]] = None,
+        background: Optional[torch.Tensor] = None,
+    ) -> None:
+        raise NotImplementedError  # We are not ready for this
+        super().__init__()
+        self.random_scale = RandomScale(scale=scale)
+        self.crop_size = crop_size
+        self.random_crop = RandomCrop(crop_size)
+        self.blend_alpha = BlendAlpha(background=background)
+        self.loss = 0
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        assert x.dim() == 4  # Should be of shape (batch, channel, height, width)
+        assert x.size(1) == 4  # Channel dim should be rgba
+
+        x_shifted = torch.cat([self.blend_alpha(x.clone()), x.clone()[:, 3:]], 1)
+
+        x_shifted = self.random_scale(x_shifted)
+        x_shifted_crop = self.random_crop(x_shifted)
+
+        self.loss = (1.0 - x_shifted[:, 3:].mean()) + (
+            (1.0 - x_shifted_crop[:, 3:].mean()) * 0.5
+        )
+        return x
+
+
+__all__ = [
+    "BlendAlpha",
+    "IgnoreAlpha",
+    "ToRGB",
+    "CenterCrop",
+    "center_crop",
+    "RandomScale",
+    "RandomSpatialJitter",
+    "ScaleInputRange",
+    "RGBToBGR",
+    "GaussianSmoothing",
+    "SymmetricPadding",
+    "NChannelsToRGB",
+    "RandomCrop",
+]

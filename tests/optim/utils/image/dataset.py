@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import unittest
-
 import torch
 
 import captum.optim._utils.image.dataset as dataset_utils
@@ -103,7 +101,3 @@ class TestDatasetKLTMatrix(BaseTest):
         )
 
         assertTensorAlmostEqual(self, klt_transform, expected_mtx)
-
-
-if __name__ == "__main__":
-    unittest.main()
