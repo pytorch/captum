@@ -138,7 +138,7 @@ class InputOptimization(Objective, Parameterized):
             while stop_criteria(step, self, history, optimizer):
                 optimizer.zero_grad()
                 loss_value = loss_summarize_fn(self.loss())
-                history.append(loss_value)
+                history.append(loss_value.clone().detach().cpu())
                 loss_value.backward()
                 optimizer.step()
                 step += 1
