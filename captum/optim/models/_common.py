@@ -149,7 +149,6 @@ class Conv2dSame(nn.Conv2d):
         out_channels: int,
         kernel_size: Union[int, Tuple[int, int]],
         stride: Union[int, Tuple[int, int]] = 1,
-        padding: Union[int, Tuple[int, int]] = 0,
         dilation: Union[int, Tuple[int, int]] = 1,
         groups: int = 1,
         bias: bool = True,
