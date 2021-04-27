@@ -127,13 +127,13 @@ class LayerLRP(LRP, LayerAttribution):
                         implementations. If attributions for all layers are returned
                         (layer=None) a list of tensors or tuples of tensors is returned
                         with entries for each layer.
-            - **delta** (*tensor*, tuple of *tensor*, list of *tensors*, or list of
-                tuples of *tensor* returned if return_convergence_delta=True):
+            - **delta** (*tensor* or list of *tensors*
+                         returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
                         If attributions for all layers are returned (layer=None) a list
-                        of tensors or tuples of tensors is returned with entries for
+                        of tensors is returned with entries for
                         each layer.
         Examples::
 
@@ -187,61 +187,36 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return relevances
 
+    def _get_single_output_relevance(self, layer, output):
+        if self.attribute_to_layer_input:
+            normalized_relevances = layer.rule.relevance_input
+        else:
+            normalized_relevances = layer.rule.relevance_output
+        key_list = _sort_key_list(list(normalized_relevances.keys()), self.device_ids)
+        normalized_relevances = _reduce_list(
+            [normalized_relevances[device_id] for device_id in key_list]
+        )
+
+        if isinstance(normalized_relevances, tuple):
+            relevances = [
+                normalized_relevance
+                * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
+                for normalized_relevance in normalized_relevances
+            ]
+            return self._convert_list_to_tuple(relevances)
+        else:
+            return normalized_relevances * output.reshape(
+                (-1,) + (1,) * (normalized_relevances.dim() - 1)
+            )
+
     def _get_output_relevance(self, output):
         if isinstance(self.layer, list):
             relevances = []
             for layer in self.layer:
-                if self.attribute_to_layer_input:
-                    normalized_relevances = layer.rule.relevance_input
-                else:
-                    normalized_relevances = layer.rule.relevance_output
-                key_list = _sort_key_list(
-                    list(normalized_relevances.keys()), self.device_ids
-                )
-                normalized_relevances = _reduce_list(
-                    [normalized_relevances[device_id] for device_id in key_list]
-                )
-                if isinstance(normalized_relevances, tuple):
-                    relevance = [
-                        normalized_relevance
-                        * output.reshape(
-                            (-1,) + (1,) * (normalized_relevance.dim() - 1)
-                        )
-                        for normalized_relevance in normalized_relevances
-                    ]
-                    relevances.append(self._convert_list_to_tuple(relevance))
-                else:
-                    relevances.append(
-                        normalized_relevances
-                        * output.reshape(
-                            (-1,) + (1,) * (normalized_relevances.dim() - 1)
-                        )
-                    )
+                relevances.append(self._get_single_output_relevance(layer, output))
             return relevances
-
         else:
-            if self.attribute_to_layer_input:
-                normalized_relevances = self.layer.rule.relevance_input
-            else:
-                normalized_relevances = self.layer.rule.relevance_output
-            key_list = _sort_key_list(
-                list(normalized_relevances.keys()), self.device_ids
-            )
-            normalized_relevances = _reduce_list(
-                [normalized_relevances[device_id] for device_id in key_list]
-            )
-
-            if isinstance(normalized_relevances, tuple):
-                relevances = [
-                    normalized_relevance
-                    * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
-                    for normalized_relevance in normalized_relevances
-                ]
-                return self._convert_list_to_tuple(relevances)
-            else:
-                return normalized_relevances * output.reshape(
-                    (-1,) + (1,) * (normalized_relevances.dim() - 1)
-                )
+            return self._get_single_output_relevance(self.layer, output)
 
     @staticmethod
     def _convert_list_to_tuple(relevances):
