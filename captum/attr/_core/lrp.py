@@ -167,7 +167,8 @@ class LRP(GradientAttribution):
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
             )
             relevances = tuple(
-                normalized_relevance * output.unsqueeze(dim=1)
+                normalized_relevance
+                * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
                 for normalized_relevance in normalized_relevances
             )
         finally:
@@ -241,7 +242,7 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if hasattr(layer, "rule"):
                 layer.activations = {}
-                layer.rule.relevance_input = defaultdict([])
+                layer.rule.relevance_input = defaultdict(list)
                 layer.rule.relevance_output = {}
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
