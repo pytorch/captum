@@ -198,12 +198,11 @@ class LayerLRP(LRP, LayerAttribution):
         )
 
         if isinstance(normalized_relevances, tuple):
-            relevances = [
+            return tuple(
                 normalized_relevance
                 * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
                 for normalized_relevance in normalized_relevances
-            ]
-            return self._convert_list_to_tuple(relevances)
+            )
         else:
             return normalized_relevances * output.reshape(
                 (-1,) + (1,) * (normalized_relevances.dim() - 1)
