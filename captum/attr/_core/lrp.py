@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 
-import torch
 import torch.nn as nn
 
 from captum.log import log_usage
@@ -10,6 +9,7 @@ from captum.log import log_usage
 from ..._utils.common import _format_input, _format_output, _run_forward
 from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
 from .._utils.attribution import GradientAttribution
+from .._utils.common import _sum_rows
 from .._utils.custom_modules import Addition_Module
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
 
@@ -177,12 +177,9 @@ class LRP(GradientAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = []
-            for relevance in relevances:
-                delta.append(self.compute_convergence_delta(relevance, output))
             return (
                 _format_output(is_inputs_tuple, relevances),
-                torch.cat(delta),
+                self.compute_convergence_delta(relevances, output),
             )
         else:
             return _format_output(is_inputs_tuple, relevances)
@@ -217,19 +214,12 @@ class LRP(GradientAttribution):
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-
-        def _attribution_delta(attributions, output):
-            remaining_dims = tuple(range(1, len(attributions.shape)))
-            sum_attributions = torch.sum(attributions, dim=remaining_dims)
-            delta = output - sum_attributions
-            return delta
-
         if isinstance(attributions, tuple):
-            stacked_attributions = torch.stack(attributions, dim=1)
-            delta = _attribution_delta(stacked_attributions, output)
+            for attr in attributions:
+                summed_attr = sum(_sum_rows(attr) for attr in attributions)
         else:
-            delta = _attribution_delta(attributions, output)
-        return delta
+            summed_attr = _sum_rows(attributions)
+        return output.flatten() - summed_attr.flatten()
 
     def _get_layers(self, model):
         for layer in model.children():

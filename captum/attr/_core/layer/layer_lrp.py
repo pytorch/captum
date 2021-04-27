@@ -201,11 +201,22 @@ class LayerLRP(LRP, LayerAttribution):
                 normalized_relevances = _reduce_list(
                     [normalized_relevances[device_id] for device_id in key_list]
                 )
-                relevance = [
-                    normalized_relevance * output.unsqueeze(dim=1)
-                    for normalized_relevance in normalized_relevances
-                ]
-                relevances.append(self._convert_list_to_tuple(relevance))
+                if isinstance(normalized_relevances, tuple):
+                    relevance = [
+                        normalized_relevance
+                        * output.reshape(
+                            (-1,) + (1,) * (normalized_relevance.dim() - 1)
+                        )
+                        for normalized_relevance in normalized_relevances
+                    ]
+                    relevances.append(self._convert_list_to_tuple(relevance))
+                else:
+                    relevances.append(
+                        normalized_relevances
+                        * output.reshape(
+                            (-1,) + (1,) * (normalized_relevances.dim() - 1)
+                        )
+                    )
             return relevances
 
         else:
@@ -220,11 +231,17 @@ class LayerLRP(LRP, LayerAttribution):
                 [normalized_relevances[device_id] for device_id in key_list]
             )
 
-            relevances = [
-                normalized_relevance * output.unsqueeze(dim=1)
-                for normalized_relevance in normalized_relevances
-            ]
-            return self._convert_list_to_tuple(relevances)
+            if isinstance(normalized_relevances, tuple):
+                relevances = [
+                    normalized_relevance
+                    * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
+                    for normalized_relevance in normalized_relevances
+                ]
+                return self._convert_list_to_tuple(relevances)
+            else:
+                return normalized_relevances * output.reshape(
+                    (-1,) + (1,) * (normalized_relevances.dim() - 1)
+                )
 
     @staticmethod
     def _convert_list_to_tuple(relevances):

@@ -302,8 +302,9 @@ class Test(BaseTest):
         attributions, delta = lrp.attribute(
             input, target=0, return_convergence_delta=True
         )
-        self.assertEqual(len(input), len(delta))
+        self.assertEqual(len(input), 2)
         assertTensorAlmostEqual(self, attributions[0], torch.Tensor([[16, 32, 48]]))
+        assertTensorAlmostEqual(self, delta, torch.Tensor(0))
 
     def test_lrp_ixg_equivalency(self):
         model, inputs = _get_simple_model()

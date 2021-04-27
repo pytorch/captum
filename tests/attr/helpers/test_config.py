@@ -132,7 +132,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
             "target": 0,
         },
-        "dp_delta": 0.0005,
+        "dp_delta": 0.001,
     },
     {
         "name": "basic_multi_target",
