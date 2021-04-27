@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import warnings
+from collections import defaultdict
 
 import torch
 import torch.nn as nn
+
+from captum.log import log_usage
 
 from ..._utils.common import _format_input, _format_output, _run_forward
 from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
@@ -37,22 +39,14 @@ class LRP(GradientAttribution):
                 is used.
         """
         GradientAttribution.__init__(self, model)
-
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            self.model = model.module
-        else:
-            self.model = model
-
+        self.model = model
         self._check_rules()
 
     @property
     def multiplies_by_inputs(self):
         return True
 
+    @log_usage()
     def attribute(
         self,
         inputs,
@@ -187,7 +181,7 @@ class LRP(GradientAttribution):
                 delta.append(self.compute_convergence_delta(relevance, output))
             return (
                 _format_output(is_inputs_tuple, relevances),
-                _format_output(is_inputs_tuple, tuple(delta)),
+                torch.cat(delta),
             )
         else:
             return _format_output(is_inputs_tuple, relevances)
@@ -246,9 +240,15 @@ class LRP(GradientAttribution):
     def _check_and_attach_rules(self):
         for layer in self.layers:
             if hasattr(layer, "rule"):
+                layer.activations = {}
+                layer.rule.relevance_input = defaultdict([])
+                layer.rule.relevance_output = {}
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
+                layer.activations = {}
                 layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()
+                layer.rule.relevance_input = defaultdict(list)
+                layer.rule.relevance_output = {}
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 layer.rule = None
             else:
@@ -358,7 +358,9 @@ class LRP(GradientAttribution):
 
         #TODO: Remove when bugs are fixed
         """
-        adjusted_inputs = tuple(input + 0 for input in inputs)
+        adjusted_inputs = tuple(
+            input + 0 if input is not None else input for input in inputs
+        )
         return self.model(*adjusted_inputs)
 
 

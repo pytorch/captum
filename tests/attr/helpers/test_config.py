@@ -20,7 +20,9 @@ from captum.attr._core.layer.layer_feature_ablation import LayerFeatureAblation
 from captum.attr._core.layer.layer_gradient_shap import LayerGradientShap
 from captum.attr._core.layer.layer_gradient_x_activation import LayerGradientXActivation
 from captum.attr._core.layer.layer_integrated_gradients import LayerIntegratedGradients
+from captum.attr._core.layer.layer_lrp import LayerLRP
 from captum.attr._core.lime import Lime
+from captum.attr._core.lrp import LRP
 from captum.attr._core.neuron.neuron_conductance import NeuronConductance
 from captum.attr._core.neuron.neuron_deep_lift import NeuronDeepLift, NeuronDeepLiftShap
 from captum.attr._core.neuron.neuron_feature_ablation import NeuronFeatureAblation
@@ -103,6 +105,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": 1},
@@ -121,6 +124,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -128,7 +132,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(12, 3), 5),
             "target": 0,
         },
-        "dp_delta": 0.0003,
+        "dp_delta": 0.0005,
     },
     {
         "name": "basic_multi_target",
@@ -144,6 +148,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": [0, 1, 1, 0]},
@@ -162,6 +167,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -169,6 +175,7 @@ config = [
             "additional_forward_args": (2 * torch.randn(6, 3), 5),
             "target": [0, 1, 1, 0, 0, 1],
         },
+        "dp_delta": 0.0005,
     },
     {
         "name": "basic_multiple_tuple_target",
@@ -184,6 +191,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -206,6 +214,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {"inputs": torch.randn(4, 3), "target": torch.tensor([0])},
@@ -224,6 +233,7 @@ config = [
             FeaturePermutation,
             Lime,
             KernelShap,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -290,6 +300,7 @@ config = [
             Saliency,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer_MultiInput(),
         "attribute_args": {
@@ -300,6 +311,7 @@ config = [
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
+        "dp_delta": 0.01,
     },
     {
         "name": "basic_multiple_target_with_baseline_nt",
@@ -311,6 +323,7 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -331,6 +344,7 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -352,6 +366,7 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -372,6 +387,7 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -392,6 +408,7 @@ config = [
             DeepLift,
             GuidedBackprop,
             Deconvolution,
+            LRP,
         ],
         "model": BasicModel_MultiLayer(),
         "attribute_args": {
@@ -1196,5 +1213,29 @@ config = [
             ),
             "target": 0,
         },
+    },
+    # Layer LRP
+    {
+        "name": "basic_layer_lrp",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer(),
+        "layer": "linear2",
+        "attribute_args": {"inputs": torch.randn(4, 3), "target": 0},
+    },
+    {
+        "name": "basic_layer_lrp_multi_input",
+        "algorithms": [
+            LayerLRP,
+        ],
+        "model": BasicModel_MultiLayer_MultiInput(),
+        "layer": "model.linear1",
+        "attribute_args": {
+            "inputs": (10 * torch.randn(12, 3), 5 * torch.randn(12, 3)),
+            "additional_forward_args": (2 * torch.randn(12, 3), 5),
+            "target": 0,
+        },
+        "dp_delta": 0.0002,
     },
 ]

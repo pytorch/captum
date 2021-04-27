@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from ...._utils.common import _format_input
+from typing import List, Union
+
+from ...._utils.common import _format_input, _reduce_list, _sort_key_list
 from ...._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
@@ -23,7 +25,7 @@ class LayerLRP(LRP, LayerAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model, layer) -> None:
+    def __init__(self, model, layer, device_ids: Union[None, List[int]] = None) -> None:
         """
         Args:
 
@@ -38,9 +40,16 @@ class LayerLRP(LRP, LayerAttribution):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer. If value is None, the
                           relevance for all layers is returned in attribution.
+            device_ids (list(int)): Device ID list, necessary only if forward_func
+                        applies a DataParallel model. This allows reconstruction of
+                        intermediate outputs from batched results across devices.
+                        If forward_func is given as the DataParallel model itself,
+                        then it is not necessary to provide this argument.
         """
-        LayerAttribution.__init__(self, model, layer)
+        LayerAttribution.__init__(self, model, layer, device_ids)
         LRP.__init__(self, model)
+        if self.device_ids is None and hasattr(self.model, "device_ids"):
+            self.device_ids = self.model.device_ids
 
     def attribute(
         self,
@@ -193,6 +202,12 @@ class LayerLRP(LRP, LayerAttribution):
                     normalized_relevances = layer.rule.relevance_input
                 else:
                     normalized_relevances = layer.rule.relevance_output
+                key_list = _sort_key_list(
+                    list(normalized_relevances.keys()), self.device_ids
+                )
+                normalized_relevances = _reduce_list(
+                    [normalized_relevances[device_id] for device_id in key_list]
+                )
                 relevance = [
                     normalized_relevance * output.unsqueeze(dim=1)
                     for normalized_relevance in normalized_relevances
@@ -205,6 +220,13 @@ class LayerLRP(LRP, LayerAttribution):
                 normalized_relevances = self.layer.rule.relevance_input
             else:
                 normalized_relevances = self.layer.rule.relevance_output
+            key_list = _sort_key_list(
+                list(normalized_relevances.keys()), self.device_ids
+            )
+            normalized_relevances = _reduce_list(
+                [normalized_relevances[device_id] for device_id in key_list]
+            )
+
             relevances = [
                 normalized_relevance * output.unsqueeze(dim=1)
                 for normalized_relevance in normalized_relevances
