@@ -3,8 +3,8 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
-from torch.nn import Module
 import torch
+from torch.nn import Module
 
 from captum.attr._core.noise_tunnel import NoiseTunnel
 from captum.attr._models.base import _set_deep_layer_value

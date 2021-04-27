@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from typing import List, Union
-
 from ...._utils.common import _format_input, _reduce_list, _sort_key_list
 from ...._utils.gradient import (
     apply_gradient_requirements,
@@ -25,7 +23,7 @@ class LayerLRP(LRP, LayerAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model, layer, device_ids: Union[None, List[int]] = None) -> None:
+    def __init__(self, model, layer) -> None:
         """
         Args:
 
@@ -40,15 +38,10 @@ class LayerLRP(LRP, LayerAttribution):
                           input or output depending on whether we attribute to the
                           inputs or outputs of the layer. If value is None, the
                           relevance for all layers is returned in attribution.
-            device_ids (list(int)): Device ID list, necessary only if forward_func
-                        applies a DataParallel model. This allows reconstruction of
-                        intermediate outputs from batched results across devices.
-                        If forward_func is given as the DataParallel model itself,
-                        then it is not necessary to provide this argument.
         """
-        LayerAttribution.__init__(self, model, layer, device_ids)
+        LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
-        if self.device_ids is None and hasattr(self.model, "device_ids"):
+        if hasattr(self.model, "device_ids"):
             self.device_ids = self.model.device_ids
 
     def attribute(

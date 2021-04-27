@@ -43,7 +43,6 @@ class PropagationRule(ABC):
                 self.relevance_input[device] = relevance.data
             else:
                 self.relevance_input[device].append(relevance.data)
-            # print(relevance)
             return relevance
 
         return _backward_hook_input
