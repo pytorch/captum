@@ -6,7 +6,11 @@ import torch
 import torch.nn as nn
 
 from ..._utils.common import _format_input, _format_output, _run_forward
-from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from ..._utils.gradient import (
+    apply_gradient_requirements,
+    register_backward_hook,
+    undo_gradient_requirements,
+)
 from .._utils.attribution import GradientAttribution
 from .._utils.custom_modules import Addition_Module
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
@@ -276,8 +280,8 @@ class LRP(GradientAttribution):
     def _register_forward_hooks(self):
         for layer in self.layers:
             if type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                backward_handle = layer.register_backward_hook(
-                    PropagationRule.backward_hook_activation
+                backward_handle = register_backward_hook(
+                    layer, PropagationRule.backward_hook_activation
                 )
                 self.backward_handles.append(backward_handle)
             else:

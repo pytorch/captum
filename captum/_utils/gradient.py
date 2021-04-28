@@ -85,6 +85,17 @@ def undo_gradient_requirements(
             input.requires_grad_(False)
 
 
+def register_backward_hook(
+    module: Module, hook: Callable
+) -> torch.utils.hooks.RemovableHandle:
+    try:
+        # Only support for torch >= 1.8
+        return module.register_full_backward_hook(hook)
+    except AttributeError:
+        # Fallback for previous versions of PyTorch
+        return module.register_backward_hook(hook)
+
+
 def compute_gradients(
     forward_fn: Callable,
     inputs: Union[Tensor, Tuple[Tensor, ...]],

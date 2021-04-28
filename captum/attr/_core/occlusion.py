@@ -375,5 +375,5 @@ class Occlusion(FeatureAblation):
         return 0, feature_max, None
 
     def _get_feature_counts(self, inputs, feature_mask, **kwargs):
-        """ return the numbers of possible input features """
+        """return the numbers of possible input features"""
         return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])

@@ -478,7 +478,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
 
     def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
-        """ return the total number of forward evaluations needed """
+        """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * n_samples
 
 
@@ -740,7 +740,7 @@ class ShapleyValues(ShapleyValueSampling):
         )
 
     def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
-        """ return the total number of forward evaluations needed """
+        """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * math.factorial(
             total_features
         )
