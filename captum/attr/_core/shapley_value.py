@@ -424,8 +424,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         target_repeated = _expand_target(target, perturbations_per_eval)
         for i in range(len(feature_permutation)):
             current_tensors = tuple(
-                current
-                * (torch.tensor(1) - (mask == feature_permutation[i]).to(current.dtype))
+                current * (~(mask == feature_permutation[i])).to(current.dtype)
                 + input * (mask == feature_permutation[i]).to(input.dtype)
                 for input, current, mask in zip(inputs, current_tensors, input_masks)
             )
@@ -478,7 +477,7 @@ class ShapleyValueSampling(PerturbationAttribution):
             )
 
     def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
-        """ return the total number of forward evaluations needed """
+        """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * n_samples
 
 
@@ -740,7 +739,7 @@ class ShapleyValues(ShapleyValueSampling):
         )
 
     def _get_n_evaluations(self, total_features, n_samples, perturbations_per_eval):
-        """ return the total number of forward evaluations needed """
+        """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * math.factorial(
             total_features
         )
