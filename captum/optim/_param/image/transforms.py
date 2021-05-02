@@ -232,6 +232,10 @@ class RandomScale(nn.Module):
 
     def __init__(self, scale: NumSeqOrTensorType) -> None:
         super().__init__()
+        assert hasattr(scale, "__iter__")
+        if torch.is_tensor(scale):
+            assert cast(torch.Tensor, scale).dim() == 1
+        assert len(scale) > 0
         self.scale = scale
 
     def get_scale_mat(
