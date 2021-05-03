@@ -575,6 +575,7 @@ class TestNaturalImage(BaseTest):
         image_param = images.NaturalImage(size=(1, 1))
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np) * 0.5)
+
     @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_natural_image_1(self) -> None:
         if torch.__version__ <= "1.2.0":
