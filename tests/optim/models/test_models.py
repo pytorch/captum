@@ -148,7 +148,7 @@ class TestInceptionV1(BaseTest):
 
 class TestInceptionV1Places365(BaseTest):
     def test_load_inceptionv1_places365_with_redirected_relu(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping load pretrained InceptionV1 Places365 due to insufficient"
                 + " Torch version."
@@ -159,7 +159,7 @@ class TestInceptionV1Places365(BaseTest):
         _check_layer_in_model(self, model, RedirectedReluLayer)
 
     def test_load_inceptionv1_places365_no_redirected_relu(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping load pretrained InceptionV1 Places365 RedirectedRelu test"
                 + " due to insufficient Torch version."
@@ -171,7 +171,7 @@ class TestInceptionV1Places365(BaseTest):
         _check_layer_in_model(self, model, torch.nn.ReLU)
 
     def test_load_inceptionv1_places365_linear(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping load pretrained InceptionV1 Places365 linear test due to"
                 + " insufficient Torch version."
@@ -184,7 +184,7 @@ class TestInceptionV1Places365(BaseTest):
         _check_layer_in_model(self, model, torch.nn.AvgPool2d)
 
     def test_inceptionv1_places365_transform(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping InceptionV1 Places365 internal transform test due to"
                 + " insufficient Torch version."
@@ -199,7 +199,7 @@ class TestInceptionV1Places365(BaseTest):
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
     def test_inceptionv1_places365_load_and_forward(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping basic pretrained InceptionV1 Places365 forward test due to"
                 + " insufficient Torch version."
@@ -210,7 +210,7 @@ class TestInceptionV1Places365(BaseTest):
         self.assertEqual([list(o.shape) for o in outputs], [[1, 365]] * 3)
 
     def test_inceptionv1_places365_load_and_forward_diff_sizes(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 Places365 forward with different"
                 + " sized inputs test due to insufficient Torch version."
@@ -226,7 +226,7 @@ class TestInceptionV1Places365(BaseTest):
         self.assertEqual([list(o.shape) for o in outputs2], [[1, 365]] * 3)
 
     def test_inceptionv1_places365_forward_no_aux(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 Places365 with aux logits forward"
                 + " test due to insufficient Torch version."
@@ -237,7 +237,7 @@ class TestInceptionV1Places365(BaseTest):
         self.assertEqual(list(outputs.shape), [1, 365])
 
     def test_inceptionv1_places365_forward_cuda(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.6.0":
             raise unittest.SkipTest(
                 "Skipping pretrained InceptionV1 Places365 forward CUDA test due to"
                 + " insufficient Torch version."
