@@ -32,8 +32,8 @@ class TestImageTensor(BaseTest):
         self.assertEqual(x.shape, test_tensor.shape)
 
     def test_new_list(self) -> None:
-        x = torch.ones(5).tolist()
-        test_tensor = images.ImageTensor(x)
+        x = torch.ones(5)
+        test_tensor = images.ImageTensor(x.tolist())
         self.assertTrue(torch.is_tensor(test_tensor))
         self.assertEqual(x.shape, test_tensor.shape)
 
