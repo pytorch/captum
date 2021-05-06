@@ -503,53 +503,6 @@ class RandomCrop(nn.Module):
         )
 
 
-class AlphaChannelLoss(nn.Module):
-    """
-        TODO: Fix AlphaChannelLoss
-        Transform for calculating alpha channel loss, without altering the input tensor.
-        Loss values are calculated in such a way that opaque and transparent regions of
-        the tensor are automatically balanced.
-    ​
-        See: https://distill.pub/2018/differentiable-parameterizations/
-        Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
-    ​
-        Args:
-            scale (float, sequence): Tuple of rescaling values to randomly select from.
-            crop_size (int, sequence, int, optional): The desired cropped output size
-                for secondary alpha channel loss.
-            background (tensor, optional):  An NCHW image tensor to be used as the
-                alpha channel's background.
-    """
-
-    def __init__(
-        self,
-        scale: NumSeqOrTensorType,
-        crop_size: Optional[Tuple[int, int]] = None,
-        background: Optional[torch.Tensor] = None,
-    ) -> None:
-        raise NotImplementedError  # We are not ready for this
-        super().__init__()
-        self.random_scale = RandomScale(scale=scale)
-        self.crop_size = crop_size
-        self.random_crop = RandomCrop(crop_size)
-        self.blend_alpha = BlendAlpha(background=background)
-        self.loss = 0
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert x.dim() == 4  # Should be of shape (batch, channel, height, width)
-        assert x.size(1) == 4  # Channel dim should be rgba
-
-        x_shifted = torch.cat([self.blend_alpha(x.clone()), x.clone()[:, 3:]], 1)
-
-        x_shifted = self.random_scale(x_shifted)
-        x_shifted_crop = self.random_crop(x_shifted)
-
-        self.loss = (1.0 - x_shifted[:, 3:].mean()) + (
-            (1.0 - x_shifted_crop[:, 3:].mean()) * 0.5
-        )
-        return x
-
-
 __all__ = [
     "BlendAlpha",
     "IgnoreAlpha",

@@ -9,7 +9,6 @@ from tests.helpers.basic_models import BasicModel_ConvNet_Optim
 
 
 class TestInputOptimization(BaseTest):
-    @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_input_optimization(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -23,7 +22,6 @@ class TestInputOptimization(BaseTest):
         self.assertTrue(history[0] > history[-1])
         self.assertTrue(len(history) == n_steps)
 
-    @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_input_optimization_param(self) -> None:
         """Test for optimizing param without model"""
         if torch.__version__ <= "1.2.0":

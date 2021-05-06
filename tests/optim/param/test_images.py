@@ -16,9 +16,52 @@ from tests.optim.helpers import numpy_image
 
 
 class TestImageTensor(BaseTest):
-    @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_repr(self) -> None:
         self.assertEqual(str(images.ImageTensor()), "ImageTensor([])")
+
+    def test_new(self) -> None:
+        x = torch.ones(5)
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_new_numpy(self) -> None:
+        x = torch.ones(5).numpy()
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_new_list(self) -> None:
+        x = torch.ones(5).tolist()
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_torch_function(self) -> None:
+        x = torch.ones(5)
+        image_tensor = images.ImageTensor(x)
+        image_tensor = (image_tensor * 1) * torch.ones(5)
+        self.assertEqual(image_tensor.sum().item(), torch.ones(5).sum().item())
+
+    def test_load_image_from_url(self) -> None:
+        img_url = (
+            "https://github.com/pytorch/captum"
+            + "/raw/master/website/static/img/captum_logo.png"
+        )
+        new_tensor = images.ImageTensor().open(img_url)
+        self.assertTrue(torch.is_tensor(new_tensor))
+        self.assertEqual(list(new_tensor.shape), [3, 54, 208])
+
+    def test_export_and_open_local_image(self) -> None:
+        x = torch.ones(1, 3, 5, 5)
+        image_tensor = images.ImageTensor(x)
+
+        filename = "image_tensor.jpg"
+        image_tensor.export(filename)
+        new_tensor = images.ImageTensor().open(filename)
+
+        self.assertTrue(torch.is_tensor(new_tensor))
+        assertTensorAlmostEqual(self, image_tensor, new_tensor)
 
     def test_natural_image_cuda(self) -> None:
         if not torch.cuda.is_available():
@@ -566,7 +609,6 @@ class TestSharedImage(BaseTest):
 
 
 class TestNaturalImage(BaseTest):
-    @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_natural_image_0(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -576,7 +618,6 @@ class TestNaturalImage(BaseTest):
         image_np = image_param.forward().detach().numpy()
         assertArraysAlmostEqual(image_np, np.ones_like(image_np) * 0.5)
 
-    @unittest.skipIf(torch.__version__ > "1.8.1", "Bug in PyTorch nightly build")
     def test_natural_image_1(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
