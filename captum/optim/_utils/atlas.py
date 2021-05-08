@@ -47,7 +47,7 @@ def calc_grid_indices(
     y_extent: Tuple[float, float] = (0.0, 1.0),
 ) -> List[List[torch.Tensor]]:
     """
-    Create grid cells of a specified size for an irregular grid.
+    Create sets of grid cell indices of a specified size for an irregular grid.
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
