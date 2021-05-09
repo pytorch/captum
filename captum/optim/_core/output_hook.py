@@ -92,14 +92,15 @@ class ActivationFetcher:
             input_t (tensor or tuple of tensors, optional):  The input to use
                 with the specified model.
         Returns:
-            *dict*:  An dict containing the collected activations.
+            activations_dict: An dict containing the collected activations. The keys
+                for the returned dictionary are the target layers.
         """
 
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.model(input_t)
-            activations = self.layers.consume_outputs()
+            activations_dict = self.layers.consume_outputs()
         finally:
             self.layers.remove_hooks()
-        return activations
+        return activations_dict

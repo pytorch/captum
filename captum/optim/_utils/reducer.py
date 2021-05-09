@@ -16,18 +16,20 @@ import torch
 
 class ChannelReducer:
     """
-    Dimensionality reduction for the channel dimension of an input.
-    The default reduction_alg is NMF from sklearn, which requires users
-    to put input on CPU before passing to fit_transform.
+    Dimensionality reduction for the channel dimension of an input tensor.
     Olah, et al., "The Building Blocks of Interpretability", Distill, 2018.
-    See: https://distill.pub/2018/building-blocks/
+
+    See here for more information: https://distill.pub/2018/building-blocks/
 
     Args:
-        n_components (int):  The number of channels to reduce the target
+        n_components (int, optional):  The number of channels to reduce the target
             dimension to.
-        reduction_alg (str or callable):  The desired dimensionality
-            reduction algorithm to use.
-        **kwargs: Arbitrary keyword arguments used by the specified reduction_alg.
+        reduction_alg (str or callable, optional):  The desired dimensionality
+            reduction algorithm to use. The default reduction_alg is set to NMF from
+            sklearn, which requires users to put inputs on CPU before passing them to
+            fit_transform.
+        **kwargs (optional): Arbitrary keyword arguments used by the specified
+            reduction_alg.
     """
 
     def __init__(
@@ -69,12 +71,11 @@ class ChannelReducer:
     ) -> torch.Tensor:
         """
         Perform dimensionality reduction on an input tensor.
-
         Args:
             tensor (tensor):  A tensor to perform dimensionality reduction on.
-            swap_2nd_and_last_dims (bool):   If true, input channels are expected
-                to be in the second dimension unless the input tensor has a shape
-                of CHW.
+            swap_2nd_and_last_dims (bool, optional): If true, input channels are
+                expected to be in the second dimension unless the input tensor has a
+                shape of CHW. Default is set to True.
         Returns:
             *tensor*:  A tensor with one of it's dimensions reduced.
         """
@@ -126,15 +127,15 @@ class ChannelReducer:
 
 def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     """
-    Hack that makes a matrix positive by concatination in order to simulate
-    one-sided NMF with regular NMF
+    Hack that makes a matrix positive by concatination in order to simulate one-sided
+    NMF with regular NMF.
 
     Args:
         x (tensor):  A tensor to make positive.
-        dim (int):  The dimension to concatinate the two tensor halves at.
-
+        dim (int, optional):  The dimension to concatinate the two tensor halves at.
     Returns:
-        *tensor*:  A positive tensor for one-sided dimensionality reduction.
+        tensor (torch.tensor):  A positive tensor for one-sided dimensionality
+            reduction.
     """
 
     return torch.cat([F.relu(x), F.relu(-x)], dim=dim)

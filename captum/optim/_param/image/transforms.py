@@ -113,10 +113,12 @@ class ToRGB(nn.Module):
     def forward(self, x: torch.Tensor, inverse: bool = False) -> torch.Tensor:
         """
         Args:
-            x (tensor):  A CHW or NCHW RGB or RGBA image tensor.
-            inverse (bool):  Whether to recorrelate or decorrelate colors.
+            x (torch.tensor):  A CHW or NCHW RGB or RGBA image tensor.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default is set to False.
         Returns:
-            *tensor*:  A tensor with it's colors recorrelated or decorrelated.
+            chw (torch.tensor):  A tensor with it's colors recorrelated or
+                decorrelated.
         """
 
         assert x.dim() == 3 or x.dim() == 4

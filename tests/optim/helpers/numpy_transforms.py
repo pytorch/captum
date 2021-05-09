@@ -201,7 +201,8 @@ class ToRGB:
         """
         Args:
             x (array):  A CHW or NCHW RGB or RGBA image array.
-            inverse (bool):  Whether to recorrelate or decorrelate colors.
+            inverse (bool, optional):  Whether to recorrelate or decorrelate colors.
+                Default is set to False.
         Returns:
             *array*:  An array with it's colors recorrelated or decorrelated.
         """

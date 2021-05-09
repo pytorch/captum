@@ -93,10 +93,12 @@ class FFTImage(ImageParameterization):
     Parameterize an image using inverse real 2D FFT
 
     Args:
-        size (list of int): The H & W dimensions to use for creating
-            the nn.Parameter tensor.
-        channels (int): The number of channels to create.
-        batch (int): The number of batches to create.
+        size (Tuple[int, int]): The height & width dimensions to use for the
+            parameterized output image tensor.
+        channels (int, optional): The number of channels to use for each image. Default
+            is set to 3.
+        batch (int, optional): The number of images to stack along the batch dimension.
+            Default is set to 1.
         init (torch.tensor, optional): Optionally specify a tensor to
             use instead of creating one.
     """
@@ -168,7 +170,7 @@ class FFTImage(ImageParameterization):
 
         Returns:
             fft functions (tuple of Callable): A list of FFT functions
-                to use for irfft and rfft operations.
+                to use for irfft, rfft, and fftfreq operations.
         """
 
         if TORCH_VERSION >= "1.7.0":
@@ -209,7 +211,7 @@ class FFTImage(ImageParameterization):
     def forward(self) -> torch.Tensor:
         """
         Returns:
-            spatially correlated tensor (tensor): A spatially recorrelated tensor.
+            output (torch.tensor): A spatially recorrelated tensor.
         """
 
         h, w = self.size
@@ -223,10 +225,12 @@ class PixelImage(ImageParameterization):
     Parameterize a simple image tensor.
 
     Args:
-        size (list of int): The H & W dimensions to use for creating
-            the nn.Parameter tensor.
-        channels (int): The number of channels to create.
-        batch (int): The number of batches to create.
+        size (Tuple[int, int]): The height & width dimensions to use for the
+            parameterized output image tensor.
+        channels (int, optional): The number of channels to use for each image. Default
+            is set to 3.
+        batch (int, optional): The number of images to stack along the batch dimension.
+            Default is set to 1.
         init (torch.tensor, optional): Optionally specify a tensor to
             use instead of creating one.
     """
@@ -256,13 +260,15 @@ class PixelImage(ImageParameterization):
 
 class LaplacianImage(ImageParameterization):
     """
-    Parameterize an image with a laplacian pyramid.
+    Parameterize an image tensor with a laplacian pyramid.
 
     Args:
-        size (list of int): The H & W dimensions to use for creating
-            the nn.Parameter tensor.
-        channels (int): The number of channels to create.
-        batch (int): The number of batches to create.
+        size (Tuple[int, int]): The height & width dimensions to use for the
+            parameterized output image tensor.
+        channels (int, optional): The number of channels to use for each image. Default
+            is set to 3.
+        batch (int, optional): The number of images to stack along the batch dimension.
+            Default is set to 1.
         init (torch.tensor, optional): Optionally specify a tensor to
             use instead of creating one.
     """
@@ -347,8 +353,8 @@ class SharedImage(ImageParameterization):
         shapes (list of int or list of list of ints): The shapes of the shared tensors
             to use for creating the nn.Parameter tensors.
         parameterization (ImageParameterization):  An image parameterization instance.
-        offset (int or list of int or list of list of ints): The offsets to use for the
-            shared tensors.
+        offset (int or list of int or list of list of ints , optional): The offsets to
+            use for the shared tensors.
     """
 
     def __init__(
@@ -474,10 +480,10 @@ class NaturalImage(ImageParameterization):
     Arguments:
         size (Tuple[int, int]): The height and width to use for the nn.Parameter image
             tensor.
-        channels (int): The number of channels to use when creating the
-            nn.Parameter tensor.
-        batch (int): The number of channels to use when creating the
-            nn.Parameter tensor, or stacking init images.
+        channels (int, optional): The number of channels to use when creating the
+            nn.Parameter tensor. Default is set to 3.
+        batch (int, optional): The number of channels to use when creating the
+            nn.Parameter tensor, or stacking init images. Default is set to 1.
         parameterization (ImageParameterization, optional): An image parameterization
             class.
         squash_func (Callable[[torch.Tensor], torch.Tensor]], optional): The squash
