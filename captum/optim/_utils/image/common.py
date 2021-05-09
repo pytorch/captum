@@ -1,9 +1,65 @@
 import math
 from typing import List, Optional, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
 from captum.optim._utils.reducer import posneg
+
+try:
+    from PIL import Image
+except (ImportError, AssertionError):
+    print("The Pillow/PIL library is required to use Captum's Optim library")
+
+
+def show(
+    x: torch.Tensor, figsize: Optional[Tuple[int, int]] = None, scale: float = 255.0
+) -> None:
+    """
+    Show CHW & NCHW tensors as an image.
+
+    Args:
+        x (torch.Tensor): The tensor you want to display as an image.
+        figsize (Tuple[int, int], optional): height & width to use
+            for displaying the image figure.
+        scale (float): Value to multiply the input tensor by so that
+            it's value range is [0-255] for display.
+    """
+
+    if x.dim() not in [3, 4]:
+        raise ValueError(
+            f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
+        )
+    x = torch.cat([t[0] for t in x.split(1)], dim=2) if x.dim() == 4 else x
+    x = x.clone().cpu().detach().permute(1, 2, 0) * scale
+    if figsize is not None:
+        plt.figure(figsize=figsize)
+    plt.imshow(x.numpy().astype(np.uint8))
+    plt.axis("off")
+    plt.show()
+
+
+def save_tensor_as_image(x: torch.Tensor, filename: str, scale: float = 255.0) -> None:
+    """
+    Save RGB & RGBA image tensors with a shape of CHW or NCHW as images.
+
+    Args:
+        x (torch.Tensor): The tensor you want to save as an image.
+        filename (str): The filename to use when saving the image.
+        scale (float, optional): Value to multiply the input tensor by so that
+            it's value range is [0-255] for saving.
+    """
+
+    if x.dim() not in [3, 4]:
+        raise ValueError(
+            f"Incompatible number of dimensions. x.dim() = {x.dim()}; should be 3 or 4."
+        )
+    x = x[0] if x.dim() == 4 else x
+    x = x.clone().cpu().detach().permute(1, 2, 0) * scale
+    colorspace = "RGB" if x.shape[2] == 3 else "RGBA"
+    im = Image.fromarray(x.numpy().astype(np.uint8), colorspace)
+    im.save(filename)
 
 
 def get_neuron_pos(
@@ -21,6 +77,37 @@ def get_neuron_pos(
         assert y < H
         _y = y
     return _x, _y
+
+
+def _dot_cossim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    cossim_pow: float = 0.0,
+    dim: int = 1,
+    eps: float = 1e-8,
+) -> torch.Tensor:
+    """
+    Computes product between dot product and cosine similarity of two tensors along
+    a specified dimension.
+
+    Args:
+        x (torch.Tensor): The tensor that you wish to compute the cosine similarity
+            for in relation to tensor y.
+        y (torch.Tensor): The tensor that you wish to compute the cosine similarity
+            for in relation to tensor x.
+        cossim_pow (float, optional): The desired cosine similarity power to use.
+        dim (int, optional): The target dimension for computing cosine similarity.
+        eps (float, optional): If cossim_pow is greater than zero, the desired
+            epsilon value to use for cosine similarity calculations.
+    Returns:
+        tensor (torch.Tensor): Dot cosine similarity between x and y, along the
+        specified dim.
+    """
+
+    dot = torch.sum(x * y, dim)
+    if cossim_pow == 0:
+        return dot
+    return dot * torch.clamp(torch.cosine_similarity(x, y, eps=eps), 0.1) ** cossim_pow
 
 
 def nchannels_to_rgb(x: torch.Tensor, warp: bool = True) -> torch.Tensor:
@@ -105,12 +192,12 @@ def weights_to_heatmap_2d(
     assert weight.dim() == 2
     assert len(colors) == 5
 
-    def get_color(x: str) -> torch.Tensor:
+    def get_color(x: str, device: torch.device = torch.device("cpu")) -> torch.Tensor:
         def hex2base10(x: str) -> float:
             return int(x, 16) / 255.0
 
         return torch.tensor(
-            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])]
+            [hex2base10(x[0:2]), hex2base10(x[2:4]), hex2base10(x[4:6])], device=device
         )
 
     def color_scale(x: torch.Tensor) -> torch.Tensor:
@@ -118,17 +205,25 @@ def weights_to_heatmap_2d(
             x = -x
             if x < 0.5:
                 x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[1])
+                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
+                    colors[1], x.device
+                )
             else:
                 x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[1]) + x * get_color(colors[0])
+                return (1 - x) * get_color(colors[1], x.device) + x * get_color(
+                    colors[0], x.device
+                )
         else:
             if x < 0.5:
                 x = x * 2
-                return (1 - x) * get_color(colors[2]) + x * get_color(colors[3])
+                return (1 - x) * get_color(colors[2], x.device) + x * get_color(
+                    colors[3], x.device
+                )
             else:
                 x = (x - 0.5) * 2
-                return (1 - x) * get_color(colors[3]) + x * get_color(colors[4])
+                return (1 - x) * get_color(colors[3], x.device) + x * get_color(
+                    colors[4], x.device
+                )
 
     return torch.stack(
         [torch.stack([color_scale(x) for x in t]) for t in weight]

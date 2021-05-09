@@ -17,6 +17,8 @@ import torch
 class ChannelReducer:
     """
     Dimensionality reduction for the channel dimension of an input.
+    The default reduction_alg is NMF from sklearn, which requires users
+    to put input on CPU before passing to fit_transform.
     Olah, et al., "The Building Blocks of Interpretability", Distill, 2018.
     See: https://distill.pub/2018/building-blocks/
 
@@ -52,7 +54,15 @@ class ChannelReducer:
     @classmethod
     def _apply_flat(cls, func: Callable, x: torch.Tensor) -> torch.Tensor:
         orig_shape = x.shape
-        return func(x.reshape([-1, x.shape[-1]])).reshape(list(orig_shape[:-1]) + [-1])
+        try:
+            return func(x.reshape([-1, x.shape[-1]])).reshape(
+                list(orig_shape[:-1]) + [-1]
+            )
+        except TypeError:
+            raise TypeError(
+                "The provided input is incompatible with the reduction_alg. "
+                "Try placing the input on CPU first via x.cpu()."
+            )
 
     def fit_transform(
         self, x: torch.Tensor, swap_2nd_and_last_dims: bool = True
@@ -128,3 +138,9 @@ def posneg(x: torch.Tensor, dim: int = 0) -> torch.Tensor:
     """
 
     return torch.cat([F.relu(x), F.relu(-x)], dim=dim)
+
+
+__all__ = [
+    "ChannelReducer",
+    "posneg",
+]

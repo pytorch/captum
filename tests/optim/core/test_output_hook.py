@@ -5,13 +5,13 @@ from typing import cast
 import torch
 
 import captum.optim._core.output_hook as output_hook
-from captum.optim._models.inception_v1 import googlenet
+from captum.optim.models import googlenet
 from tests.helpers.basic import BaseTest
 
 
 class TestActivationFetcher(BaseTest):
     def test_activation_fetcher(self) -> None:
-        if torch.__version__ == "1.2.0":
+        if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
                 "Skipping ActivationFetcher test due to insufficient Torch version."
             )
@@ -23,7 +23,3 @@ class TestActivationFetcher(BaseTest):
         self.assertIsInstance(activ_out, dict)
         m4d_activ = activ_out[model.mixed4d]
         self.assertEqual(list(cast(torch.Tensor, m4d_activ).shape), [1, 528, 14, 14])
-
-
-if __name__ == "__main__":
-    unittest.main()

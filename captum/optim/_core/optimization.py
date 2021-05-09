@@ -1,7 +1,7 @@
-"""captum.optim.objectives."""
+"""captum.optim.optimization."""
 
-from contextlib import suppress
-from typing import Callable, Iterable, List, Optional
+import warnings
+from typing import Callable, Iterable, Optional
 
 import torch
 import torch.nn as nn
@@ -15,15 +15,14 @@ except (ImportError, AssertionError):
         + " n_steps stop criteria with progress bar"
     )
 
-from captum.optim._core.output_hook import AbortForwardException, ModuleOutputsHook
+from captum.optim._core.loss import default_loss_summarize
+from captum.optim._core.output_hook import ModuleOutputsHook
 from captum.optim._param.image.images import InputParameterization, NaturalImage
-from captum.optim._param.image.transform import RandomScale, RandomSpatialJitter
+from captum.optim._param.image.transforms import RandomScale, RandomSpatialJitter
 from captum.optim._utils.typing import (
     LossFunction,
-    ModuleOutputMapping,
     Objective,
     Parameterized,
-    SingleTargetLossFunction,
     StopCriteria,
 )
 
@@ -41,11 +40,9 @@ class InputOptimization(Objective, Parameterized):
     def __init__(
         self,
         model: nn.Module,
-        input_param: Optional[InputParameterization],
-        transform: Optional[nn.Module],
-        target_modules: Iterable[nn.Module],
         loss_function: LossFunction,
-        lr: float = 0.025,
+        input_param: Optional[InputParameterization] = None,
+        transform: Optional[nn.Module] = None,
     ) -> None:
         r"""
         Args:
@@ -54,20 +51,23 @@ class InputOptimization(Objective, Parameterized):
                         consumed by the model.
             transform (nn.Module, optional):  A module that transforms or preprocesses
                         the input before being passed to the model.
-            target_modules (iterable of nn.Module):  A list of targets, objectives that
-                        are used to compute the loss function.
             loss_function (callable): The loss function to minimize during optimization
                         optimization.
             lr (float): The learning rate to use with the Adam optimizer.
         """
         self.model = model
-        self.hooks = ModuleOutputsHook(target_modules)
+        # Grab targets from loss_function
+        if hasattr(loss_function.target, "__iter__"):
+            self.hooks = ModuleOutputsHook(loss_function.target)
+        else:
+            self.hooks = ModuleOutputsHook([loss_function.target])
         self.input_param = input_param or NaturalImage((224, 224))
+        if isinstance(self.model, Iterable):
+            self.input_param.to(next(self.model.parameters()).device)
         self.transform = transform or torch.nn.Sequential(
             RandomScale(scale=(1, 0.975, 1.025, 0.95, 1.05)), RandomSpatialJitter(16)
         )
         self.loss_function = loss_function
-        self.lr = lr
 
     def loss(self) -> torch.Tensor:
         r"""Compute loss value for current iteration.
@@ -76,17 +76,14 @@ class InputOptimization(Objective, Parameterized):
             - **loss** (*tensor*):
                         Size of the tensor corresponds to the targets passed.
         """
-        image = (
-            self.input_param()._t[None, ...]
-            if self.input_param()._t.dim() == 3
-            else self.input_param()._t
-        )
+        input_t = self.input_param()
 
         if self.transform:
-            image = self.transform(image)
+            input_t = self.transform(input_t)
 
-        with suppress(AbortForwardException):
-            _unreachable = self.model(image)  # noqa: F841
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _unreachable = self.model(input_t)  # noqa: F841
 
         # consume_outputs return the captured values and resets the hook's state
         module_outputs = self.hooks.consume_outputs()
@@ -99,22 +96,24 @@ class InputOptimization(Objective, Parameterized):
 
     # Targets are managed by ModuleOutputHooks; we mainly just want a convenient setter
     @property
-    def targets(self):
+    def targets(self) -> Iterable[nn.Module]:
         return self.hooks.targets
 
     @targets.setter
-    def targets(self, value) -> None:
+    def targets(self, value: Iterable[nn.Module]) -> None:
         self.hooks.remove_hooks()
         self.hooks = ModuleOutputsHook(value)
 
-    def parameters(self):
+    def parameters(self) -> Iterable[nn.Parameter]:
         return self.input_param.parameters()
 
     def optimize(
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
-    ) -> List:
+        loss_summarize_fn: Optional[Callable] = default_loss_summarize,
+        lr: float = 0.025,
+    ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
         Args:
             stop_criteria (StopCriteria, optional):  A function that is called
@@ -129,8 +128,8 @@ class InputOptimization(Objective, Parameterized):
                         A list of loss values per iteration.
                         Length of the list corresponds to the number of iterations
         """
-        stop_criteria = stop_criteria or n_steps(1024)
-        optimizer = optimizer or optim.Adam(self.parameters(), lr=self.lr)
+        stop_criteria = stop_criteria or n_steps(512)
+        optimizer = optimizer or optim.Adam(self.parameters(), lr=lr)
         assert isinstance(optimizer, optim.Optimizer)
 
         history = []
@@ -138,16 +137,14 @@ class InputOptimization(Objective, Parameterized):
         try:
             while stop_criteria(step, self, history, optimizer):
                 optimizer.zero_grad()
-                loss_value = self.loss()
-                history.append(loss_value.cpu().detach().numpy())
-                (-1 * loss_value.mean()).backward()
+                loss_value = loss_summarize_fn(self.loss())
+                history.append(loss_value)
+                loss_value.backward()
                 optimizer.step()
                 step += 1
-        except (Exception, BaseException) as e:
+        finally:
             self.cleanup()
-            raise e
-        self.cleanup()
-        return history
+        return torch.stack(history)
 
 
 def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
@@ -163,7 +160,12 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     if show_progress:
         pbar = tqdm(total=n, unit=" step")
 
-    def continue_while(step, obj, history, optim) -> bool:
+    def continue_while(
+        step: int,
+        obj: Objective,
+        history: Iterable[torch.Tensor],
+        optim: torch.optim.Optimizer,
+    ) -> bool:
         if len(history) > 0:
             if show_progress:
                 pbar.set_postfix(
@@ -181,63 +183,7 @@ def n_steps(n: int, show_progress: bool = True) -> StopCriteria:
     return continue_while
 
 
-def single_target_objective(
-    target: nn.Module, loss_function: SingleTargetLossFunction
-) -> LossFunction:
-    def inner(targets_to_values: ModuleOutputMapping):
-        value = targets_to_values[target]
-        return loss_function(value)
-
-    return inner
-
-
-class SingleTargetObjective(Objective):
-    def __init__(
-        self,
-        model: nn.Module,
-        target: nn.Module,
-        loss_function: Callable[[torch.Tensor], torch.Tensor],
-    ) -> None:
-        super(SingleTargetObjective, self).__init__(model=model, targets=[target])
-        self.loss_function = loss_function
-
-    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
-        assert len(self.targets) == 1
-        target = self.targets[0]
-        target_value = targets_to_values[target]
-        loss_value = self.loss_function(target_value)
-        self.history.append(loss_value.sum().cpu().detach().numpy().squeeze().item())
-        return loss_value
-
-
-class MultiTargetObjective(Objective):
-    def __init__(
-        self, objectives: List[Objective], weights: Optional[Iterable[float]] = None
-    ) -> None:
-        model = objectives[0].model
-        assert all(o.model == model for o in objectives)
-        targets = (target for objective in objectives for target in objective.targets)
-        super(MultiTargetObjective, self).__init__(model=model, targets=targets)
-        self.objectives = objectives
-        self.weights = weights or len(objectives) * [1]
-
-    def loss(self, targets_to_values: ModuleOutputMapping) -> torch.Tensor:
-        loss = (
-            objective.loss_function(targets_to_values) for objective in self.objectives
-        )
-        weighted = (loss * weight for weight in self.weights)
-        loss_value = sum(weighted)
-        self.history.append(loss_value.cpu().detach().numpy().squeeze().item())
-        return loss_value
-
-    @property
-    def histories(self) -> List[List[float]]:
-        return [objective.history for objective in self.objectives]
-
-
-# class ChannelObjective(SingleTargetObjective):
-#     def __init__(self, channel: int, *args, **kwargs):
-#         loss_function = lambda activation: activation[:, channel, :, :].mean()
-#         super(ChannelObjective, self).__init__(
-#             *args, loss_function=loss_function, **kwargs
-#         )
+__all__ = [
+    "InputOptimization",
+    "n_steps",
+]

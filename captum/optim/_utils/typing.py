@@ -24,18 +24,15 @@ class Parameterized(Protocol):
 
 
 class Objective(Parameterized, HasLoss):
-    def cleanup(self):
+    def cleanup(self) -> None:
         pass
 
 
 ModuleOutputMapping = Dict[Module, Optional[Tensor]]
-StopCriteria = Callable[[int, Objective, Optimizer], bool]
+StopCriteria = Callable[[int, Objective, Iterable[Tensor], Optimizer], bool]
 LossFunction = Callable[[ModuleOutputMapping], Tensor]
 SingleTargetLossFunction = Callable[[Tensor], Tensor]
 
-InitSize = Tuple[int, int]
-SquashFunc = Callable[[Tensor], Tensor]
-TransformValList = Union[Sequence[int], Sequence[float], Tensor]
-TransformVal = Union[int, float, Tensor]
-TransformSize = Union[List[int], Tuple[int], int]
-ModelInputType = Union[Tuple[Tensor], Tensor]
+NumSeqOrTensorType = Union[Sequence[int], Sequence[float], Tensor]
+IntSeqOrIntType = Union[List[int], Tuple[int], Tuple[int, int], int]
+TupleOfTensorsOrTensorType = Union[Tuple[Tensor, ...], Tensor]

@@ -1,46 +1,20 @@
-from contextlib import suppress
-from typing import Iterable, List, Union
+import warnings
+from typing import Callable, Iterable, Tuple
 from warnings import warn
 
+import torch
 import torch.nn as nn
 
-from captum.optim._utils.typing import ModelInputType, ModuleOutputMapping
-
-
-class AbortForwardException(Exception):
-    pass
+from captum.optim._utils.typing import ModuleOutputMapping, TupleOfTensorsOrTensorType
 
 
 class ModuleReuseException(Exception):
     pass
 
 
-# class SingleTargetHook:
-#     def __init__(self, module: nn.Module):
-#         self.saved_output = None
-#         self.target_modules = [module]
-#         self.remove_forward = module.register_forward_hook(self._forward_hook())
-
-#     @property
-#     def is_ready(self) -> bool:
-#         return self.saved_output is not None
-
-#     def _forward_hook(self):
-#         def forward_hook(module, input, output):
-#             assert self.module == module
-#             self.saved_output = output
-#             raise AbortForwardException("Forward hook called, output saved.")
-
-#         return forward_hook
-
-#     def __del__(self):
-#         self.remove_forward()
-
-
 class ModuleOutputsHook:
     def __init__(self, target_modules: Iterable[nn.Module]) -> None:
-        # self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
-        self.outputs = dict.fromkeys(target_modules, None)
+        self.outputs: ModuleOutputMapping = dict.fromkeys(target_modules, None)
         self.hooks = [
             module.register_forward_hook(self._forward_hook())
             for module in target_modules
@@ -53,8 +27,10 @@ class ModuleOutputsHook:
     def is_ready(self) -> bool:
         return all(value is not None for value in self.outputs.values())
 
-    def _forward_hook(self):
-        def forward_hook(module, input, output) -> None:
+    def _forward_hook(self) -> Callable:
+        def forward_hook(
+            module: nn.Module, input: Tuple[torch.Tensor], output: torch.Tensor
+        ) -> None:
             assert module in self.outputs.keys()
             if self.outputs[module] is None:
                 self.outputs[module] = output
@@ -64,11 +40,15 @@ class ModuleOutputsHook:
                     "As of 2019-11-22 please don't reuse nn.Modules in your models."
                 )
             if self.is_ready:
-                raise AbortForwardException("Forward hook called, all outputs saved.")
+                warn(
+                    "No outputs found from models. This can be ignored if you are "
+                    "optimizing on inputs only, without models. Otherwise, check "
+                    "that you are passing model layers in your losses."
+                )
 
         return forward_hook
 
-    def consume_outputs(self):  # -> ModuleOutputMapping:
+    def consume_outputs(self) -> ModuleOutputMapping:
         if not self.is_ready:
             warn(
                 "Consume captured outputs, but not all requested target outputs "
@@ -79,7 +59,7 @@ class ModuleOutputsHook:
         return outputs
 
     @property
-    def targets(self):
+    def targets(self) -> Iterable[nn.Module]:
         return self.outputs.keys()
 
     def remove_hooks(self) -> None:
@@ -101,12 +81,12 @@ class ActivationFetcher:
             collect activations from.
     """
 
-    def __init__(self, model, targets: Union[nn.Module, List[nn.Module]]) -> None:
+    def __init__(self, model: nn.Module, targets: Iterable[nn.Module]) -> None:
         super(ActivationFetcher, self).__init__()
         self.model = model
         self.layers = ModuleOutputsHook(targets)
 
-    def __call__(self, input_t: ModelInputType) -> ModuleOutputMapping:
+    def __call__(self, input_t: TupleOfTensorsOrTensorType) -> ModuleOutputMapping:
         """
         Args:
             input_t (tensor or tuple of tensors, optional):  The input to use
@@ -116,7 +96,8 @@ class ActivationFetcher:
         """
 
         try:
-            with suppress(AbortForwardException):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
                 self.model(input_t)
             activations = self.layers.consume_outputs()
         finally:

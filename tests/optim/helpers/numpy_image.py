@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 
 
@@ -20,7 +22,7 @@ class FFTImage:
         size=None,
         channels: int = 3,
         batch: int = 1,
-        init=None,
+        init: Optional[np.ndarray] = None,
     ) -> None:
         super().__init__()
         if init is None:
@@ -44,7 +46,7 @@ class FFTImage:
         self.spectrum_scale = spectrum_scale
 
         if init is None:
-            coeffs_shape = (channels, self.size[0], self.size[1] // 2 + 1, 2)
+            coeffs_shape = (batch, channels, self.size[0], self.size[1] // 2 + 1, 2)
             random_coeffs = np.random.randn(
                 *coeffs_shape
             )  # names=["C", "H_f", "W_f", "complex"]
@@ -54,7 +56,6 @@ class FFTImage:
                 np.fft.rfftn(init, s=self.size).view("(2,)float") / spectrum_scale
             )
 
-        fourier_coeffs = setup_batch(fourier_coeffs, batch, 4)
         self.fourier_coeffs = fourier_coeffs
 
     @staticmethod
