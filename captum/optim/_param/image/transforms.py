@@ -536,8 +536,8 @@ class NChannelsToRGB(nn.Module):
     Convert an NCHW image with n channels into a 3 channel RGB image.
 
     Args:
-        warp (bool):  Whether or not to make the resulting RGB colors more distict
-            from each other.
+        warp (bool, optional): Whether or not to make the resulting RGB colors more
+            distict from each other. Default is set to False.
     """
 
     def __init__(self, warp: bool = False) -> None:
