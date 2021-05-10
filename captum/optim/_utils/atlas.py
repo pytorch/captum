@@ -14,7 +14,7 @@ def normalize_grid(
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid tensor to normalize,
-            with a shape of: [n_channels, n_axes].
+            with a shape of: [n_points, n_axes].
         min_percentile (float, optional): The minimum percentile to use when
             normalizing the tensor. Value must be in the range [0, 1].
         max_percentile (float, optional): The maximum percentile to use when
@@ -51,7 +51,7 @@ def calc_grid_indices(
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
-            of: [n_channels, 2].
+            of: [n_points, 2].
         grid_size (Tuple[int, int]): The grid_size of grid cells to use. The grid_size
             variable should be in the format of: [width, height].
         x_extent (Tuple[float, float], optional): The x axis range to use.
@@ -145,7 +145,7 @@ def create_atlas_vectors(
 
     Args:
         xy_grid (torch.tensor): The xy coordinate grid activation samples, with a shape
-            of: [n_channels, 2].
+            of: [n_points, 2].
         raw_activations (torch.tensor): Raw unmodified activation samples, with a shape
             of: [n_samples, n_channels].
         grid_size (Tuple[int, int]): The size of grid cells to use. The grid_size
