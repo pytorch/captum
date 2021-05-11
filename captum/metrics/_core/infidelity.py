@@ -69,7 +69,7 @@ def infidelity_perturb_func_decorator(multipy_by_inputs: bool = True) -> Callabl
         def default_perturb_func(
             inputs: TensorOrTupleOfTensorsGeneric, baselines: BaselineType = None
         ):
-            r""""""
+            r""" """
             inputs_perturbed = (
                 pertub_func(inputs, baselines)
                 if baselines is not None
@@ -398,7 +398,7 @@ def infidelity(
         """
 
         def call_perturb_func():
-            r""""""
+            r""" """
             baselines_pert = None
             inputs_pert: Union[Tensor, Tuple[Tensor, ...]]
             if len(inputs_expanded) == 1:

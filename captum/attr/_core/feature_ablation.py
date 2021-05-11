@@ -554,7 +554,7 @@ class FeatureAblation(PerturbationAttribution):
         )
 
     def _get_feature_counts(self, inputs, feature_mask, **kwargs):
-        """ return the numbers of input features """
+        """return the numbers of input features"""
         if not feature_mask:
             return tuple(inp[0].numel() if inp.numel() else 0 for inp in inputs)
 
