@@ -362,6 +362,21 @@ class BasicModel_MultiLayer(nn.Module):
             return lin2_out
 
 
+class BasicModelBoolInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer()
+
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
+
+
 class BasicModel_MultiLayer_MultiInput(nn.Module):
     def __init__(self) -> None:
         super().__init__()

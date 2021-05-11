@@ -13,6 +13,7 @@ from tests.helpers.basic import BaseTest, assertTensorTuplesAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
 )
 
 
@@ -36,6 +37,29 @@ class Test(BaseTest):
             inp,
             [275.0, 275.0, 115.0],
             feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [35.0, 35.0, 35.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+        )
+
+    def test_simple_shapley_sampling_boolean_with_baseline(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._shapley_test_assert(
+            net,
+            inp,
+            [-40.0, -40.0, 0.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
             perturbations_per_eval=(1, 2, 3),
         )
 

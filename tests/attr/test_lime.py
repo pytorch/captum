@@ -25,6 +25,7 @@ from tests.helpers.basic import (
 from tests.helpers.basic_models import (
     BasicModel_MultiLayer,
     BasicModel_MultiLayer_MultiInput,
+    BasicModelBoolInput,
 )
 
 
@@ -143,6 +144,31 @@ class Test(BaseTest):
             baselines=4,
             perturbations_per_eval=(1, 2, 3),
             expected_coefs_only=[244.0, 100.0],
+            test_generator=True,
+        )
+
+    def test_simple_lime_boolean(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._lime_test_assert(
+            net,
+            inp,
+            [31.42, 31.42, 30.90],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            perturbations_per_eval=(1, 2, 3),
+            test_generator=True,
+        )
+
+    def test_simple_lime_boolean_with_baselines(self) -> None:
+        net = BasicModelBoolInput()
+        inp = torch.tensor([[True, False, True]])
+        self._lime_test_assert(
+            net,
+            inp,
+            [-36.0, -36.0, 0.0],
+            feature_mask=torch.tensor([[0, 0, 1]]),
+            baselines=True,
+            perturbations_per_eval=(1, 2, 3),
             test_generator=True,
         )
 
