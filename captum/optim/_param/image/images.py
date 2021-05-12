@@ -418,17 +418,17 @@ class NaturalImage(ImageParameterization):
 
     def __init__(
         self,
-        size: Tuple[int, int] = [224, 224],
+        size: Tuple[int, int] = (224, 224),
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
         parameterization: ImageParameterization = FFTImage,
         squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
-        decorrelation_module: Optional[nn.Module] = ToRGB(transform="klt"),
-        decorrelate_init: bool = True,
+        decorrelation_module: Optional[nn.Module] = None,
+        decorrelate_init: bool = False,
     ) -> None:
         super().__init__()
-        self.decorrelate = decorrelation_module
+        self.decorrelate = decorrelation_module or ToRGB(transform="klt")
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
             if decorrelate_init:
