@@ -425,7 +425,7 @@ class NaturalImage(ImageParameterization):
         parameterization: ImageParameterization = FFTImage,
         squash_func: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
         decorrelation_module: Optional[nn.Module] = None,
-        decorrelate_init: bool = False,
+        decorrelate_init: bool = True,
     ) -> None:
         super().__init__()
         self.decorrelate = decorrelation_module or ToRGB(transform="klt")
