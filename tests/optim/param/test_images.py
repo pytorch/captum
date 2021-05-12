@@ -44,6 +44,14 @@ class TestImageTensor(BaseTest):
         self.assertEqual(image_tensor.sum().item(), torch.ones(5).sum().item())
 
     def test_load_image_from_url(self) -> None:
+        try:
+            from PIL import Image  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module Pillow / PIL not found, skipping ImageTensor load from url"
+                + " test"
+            )
         img_url = (
             "https://github.com/pytorch/captum"
             + "/raw/master/website/static/img/captum_logo.png"
@@ -53,6 +61,14 @@ class TestImageTensor(BaseTest):
         self.assertEqual(list(new_tensor.shape), [3, 54, 208])
 
     def test_export_and_open_local_image(self) -> None:
+        try:
+            from PIL import Image  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module Pillow / PIL not found, skipping ImageTensor export and save"
+                + " local image test"
+            )
         x = torch.ones(1, 3, 5, 5)
         image_tensor = images.ImageTensor(x)
 
