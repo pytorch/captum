@@ -91,7 +91,7 @@ class TestInceptionV1(BaseTest):
         )
         model = googlenet(pretrained=True)
         with self.assertWarns(UserWarning):
-            output = model._transform_input(x)
+            model._transform_input(x)
 
     def test_inceptionv1_transform_bgr(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -222,7 +222,7 @@ class TestInceptionV1Places365(BaseTest):
         )
         model = googlenet_places365(pretrained=True)
         with self.assertWarns(UserWarning):
-            output = model._transform_input(x)
+            model._transform_input(x)
 
     def test_inceptionv1_places365_load_and_forward(self) -> None:
         if torch.__version__ <= "1.6.0":
