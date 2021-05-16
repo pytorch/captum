@@ -80,6 +80,19 @@ class TestInceptionV1(BaseTest):
         expected_output = x * 255 - 117
         assertTensorAlmostEqual(self, output, expected_output, 0)
 
+    def test_inceptionv1_transform_warning(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping InceptionV1 internal transform warning test due to"
+                + " insufficient Torch version."
+            )
+        x = torch.stack(
+            [torch.ones(3, 112, 112) * -1, torch.ones(3, 112, 112) * 2], dim=0
+        )
+        model = googlenet(pretrained=True)
+        with self.assertWarns(UserWarning):
+            output = model._transform_input(x)
+
     def test_inceptionv1_transform_bgr(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(
@@ -197,6 +210,19 @@ class TestInceptionV1Places365(BaseTest):
         ).view(3, 1, 1)
         expected_output = expected_output[:, [2, 1, 0]]
         assertTensorAlmostEqual(self, output, expected_output, 0)
+
+    def test_inceptionv1_places365_transform_warning(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping InceptionV1 Places365 internal transform warning test due"
+                + " to insufficient Torch version."
+            )
+        x = torch.stack(
+            [torch.ones(3, 112, 112) * -1, torch.ones(3, 112, 112) * 2], dim=0
+        )
+        model = googlenet_places365(pretrained=True)
+        with self.assertWarns(UserWarning):
+            output = model._transform_input(x)
 
     def test_inceptionv1_places365_load_and_forward(self) -> None:
         if torch.__version__ <= "1.6.0":

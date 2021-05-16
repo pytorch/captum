@@ -1,4 +1,5 @@
 from typing import Any, Optional, Tuple, Type, Union, cast
+from warnings import warn
 
 import torch
 import torch.nn as nn
@@ -178,7 +179,8 @@ class InceptionV1Places365(nn.Module):
     def _transform_input(self, x: torch.Tensor) -> torch.Tensor:
         if self.transform_input:
             assert x.dim() == 3 or x.dim() == 4
-            assert x.min() >= 0.0 and x.max() <= 1.0
+            if x.min() < 0.0 or x.max() > 1.0:
+                warn("Model input has values outside of the range [0, 1].")
             x = x.unsqueeze(0) if x.dim() == 3 else x
             x = x * 255 - torch.tensor(
                 [116.7894, 112.6004, 104.0437], device=x.device
