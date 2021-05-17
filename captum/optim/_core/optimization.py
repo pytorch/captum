@@ -123,10 +123,9 @@ class InputOptimization(Objective, Parameterized):
             optimizer (Optimizer, optional):  An torch.optim.Optimizer used to
                         optimize the input based on the loss function.
         Returns:
-            *list* of *np.arrays* representing the **history**:
-            - **history** (*list*):
-                        A list of loss values per iteration.
-                        Length of the list corresponds to the number of iterations
+            history (torch.Tensor): A stack of loss values per iteration. The size
+                of the dimension on which loss values are stacked corresponds to
+                the number of iterations.
         """
         stop_criteria = stop_criteria or n_steps(512)
         optimizer = optimizer or optim.Adam(self.parameters(), lr=lr)

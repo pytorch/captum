@@ -478,8 +478,8 @@ class NaturalImage(ImageParameterization):
     inside its computation.
 
     Arguments:
-        size (Tuple[int, int]): The height and width to use for the nn.Parameter image
-            tensor.
+        size (Tuple[int, int], optional): The height and width to use for the
+                nn.Parameter image tensor.
         channels (int, optional): The number of channels to use when creating the
             nn.Parameter tensor. Default is set to 3.
         batch (int, optional): The number of channels to use when creating the
