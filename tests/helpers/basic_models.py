@@ -227,9 +227,10 @@ class SimpleLRPModel(nn.Module):
         self.relu = torch.nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(3, 1, bias=False)
         self.linear2.weight.data.fill_(3.0)
+        self.dropout = torch.nn.Dropout(p=0.01)
 
     def forward(self, x):
-        return self.linear2(self.relu(self.linear(x)))
+        return self.dropout(self.linear2(self.relu(self.linear(x))))
 
 
 class Conv1dSeqModel(nn.Module):
