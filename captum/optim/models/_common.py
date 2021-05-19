@@ -202,7 +202,10 @@ class SkipLayer(torch.nn.Module):
     This layer is made to take the place of nonlinear activation layers like ReLU.
     """
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__()
+
+    def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         return x
 
 
