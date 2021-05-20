@@ -111,7 +111,7 @@ class InputOptimization(Objective, Parameterized):
         self,
         stop_criteria: Optional[StopCriteria] = None,
         optimizer: Optional[optim.Optimizer] = None,
-        loss_summarize_fn: Optional[Callable] = default_loss_summarize,
+        loss_summarize_fn: Optional[Callable] = None,
         lr: float = 0.025,
     ) -> torch.Tensor:
         r"""Optimize input based on loss function and objectives.
@@ -131,6 +131,7 @@ class InputOptimization(Objective, Parameterized):
         stop_criteria = stop_criteria or n_steps(512)
         optimizer = optimizer or optim.Adam(self.parameters(), lr=lr)
         assert isinstance(optimizer, optim.Optimizer)
+        loss_summarize_fn = loss_summarize_fn or default_loss_summarize
 
         history = []
         step = 0
