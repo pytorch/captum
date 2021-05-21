@@ -217,9 +217,9 @@ def _rand_select(
     transform_values: NumSeqOrTensorType,
 ) -> Union[int, float, torch.Tensor]:
     """
-    Randomly return a value from the provided tuple or list
+    Randomly return a single value from the provided tuple, list, or tensor.
     """
-    n = torch.randint(low=0, high=len(transform_values) - 1, size=[1]).item()
+    n = torch.randint(low=0, high=len(transform_values), size=[1]).item()
     return transform_values[n]
 
 
