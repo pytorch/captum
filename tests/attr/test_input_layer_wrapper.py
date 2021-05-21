@@ -123,11 +123,7 @@ class TestInputLayerWrapper(BaseTest, metaclass=InputLayerMeta):
         # used to test utilization of args/kwargs
         use_args_or_kwargs = [
             [[0], [1]],
-            [
-                [0, 0],
-                [0, 1],
-                [1, 1],
-            ],
+            [[0, 0], [0, 1], [1, 1],],
         ]
 
         model = ModelInputWrapper(model)

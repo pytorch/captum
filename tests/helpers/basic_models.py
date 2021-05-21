@@ -369,10 +369,7 @@ class BasicModelBoolInput(nn.Module):
         self.mod = BasicModel_MultiLayer()
 
     def forward(
-        self,
-        x: Tensor,
-        add_input: Optional[Tensor] = None,
-        mult: float = 10.0,
+        self, x: Tensor, add_input: Optional[Tensor] = None, mult: float = 10.0,
     ):
         assert x.dtype is torch.bool, "Input must be boolean"
         return self.mod(x.float() * mult, add_input)

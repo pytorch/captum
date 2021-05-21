@@ -62,10 +62,7 @@ class LayerDeepLift(LayerAttribution, DeepLift):
     """
 
     def __init__(
-        self,
-        model: Module,
-        layer: Module,
-        multiply_by_inputs: bool = True,
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:
@@ -390,10 +387,7 @@ class LayerDeepLiftShap(LayerDeepLift, DeepLiftShap):
     """
 
     def __init__(
-        self,
-        model: Module,
-        layer: Module,
-        multiply_by_inputs: bool = True,
+        self, model: Module, layer: Module, multiply_by_inputs: bool = True,
     ) -> None:
         r"""
         Args:

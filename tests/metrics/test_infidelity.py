@@ -307,11 +307,7 @@ class Test(BaseTest):
 
         infid = self.infidelity_assert(model, attrs, inputs, expected, normalize=True)
         scaled_infid = self.infidelity_assert(
-            model,
-            scaled_attrs,
-            inputs,
-            expected,
-            normalize=True,
+            model, scaled_attrs, inputs, expected, normalize=True,
         )
 
         # scaling attr should not change normalized infidelity

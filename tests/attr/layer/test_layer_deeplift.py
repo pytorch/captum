@@ -46,9 +46,7 @@ class TestDeepLift(BaseTest):
 
         layer_dl = LayerDeepLift(model, model.relu, multiply_by_inputs=False)
         attributions = layer_dl.attribute(
-            inputs,
-            baselines,
-            attribute_to_layer_input=True,
+            inputs, baselines, attribute_to_layer_input=True,
         )
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 1.0]])
 
@@ -172,9 +170,7 @@ class TestDeepLift(BaseTest):
         ) = _create_inps_and_base_for_deepliftshap_neuron_layer_testing()
         layer_dl_shap = LayerDeepLiftShap(model, model.relu, multiply_by_inputs=False)
         attributions = layer_dl_shap.attribute(
-            inputs,
-            baselines,
-            attribute_to_layer_input=True,
+            inputs, baselines, attribute_to_layer_input=True,
         )
         assertTensorAlmostEqual(self, attributions[0], [[0.0, 1.0]])
 
