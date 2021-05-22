@@ -3,17 +3,6 @@ from typing import Optional
 import numpy as np
 
 
-def setup_batch(x: np.ndarray, batch: int = 1, dim: int = 3) -> np.ndarray:
-    assert batch > 0
-    x = x[None, :] if x.ndim == dim and batch == 1 else x
-    x = (
-        np.stack([np.copy(x) for b in range(batch)])
-        if x.ndim == dim and batch > 1
-        else x
-    )
-    return x
-
-
 class FFTImage:
     """Parameterize an image using inverse real 2D FFT"""
 
@@ -66,10 +55,6 @@ class FFTImage:
         wadd = 2 if width % 2 == 1 else 1
         fx = np.fft.fftfreq(width)[: width // 2 + wadd]
         return np.sqrt((fx * fx) + (fy * fy))
-
-    def set_image(self, correlated_image: np.ndarray) -> None:
-        coeffs = np.fft.rfftn(correlated_image, s=self.size).view("(2,)float")
-        self.fourier_coeffs = coeffs / self.spectrum_scale
 
     def forward(self) -> np.ndarray:
         h, w = self.size

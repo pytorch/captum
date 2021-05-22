@@ -150,6 +150,16 @@ class TestFFTImage(BaseTest):
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
 
+    def test_fftimage_forward_randn_init_width_odd(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        fftimage = images.FFTImage(size=(512, 405))
+        self.assertEqual(list(fftimage.spectrum_scale.shape), [1, 512, 203, 1])
+        fftimage_tensor = fftimage().detach()
+        self.assertEqual(list(fftimage_tensor.shape), [1, 3, 512, 405])
+
     def test_fftimage_forward_init_chw(self) -> None:
         if torch.__version__ <= "1.2.0":
             raise unittest.SkipTest(

@@ -138,9 +138,7 @@ class FFTImage(ImageParameterization):
     def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
         """Computes 2D spectrum frequencies."""
         fy = self.torch_fftfreq(height)[:, None]
-        # on odd input dimensions we need to keep one additional frequency
-        wadd = 2 if width % 2 == 1 else 1
-        fx = self.torch_fftfreq(width)[: width // 2 + wadd]
+        fx = self.torch_fftfreq(width)[: width // 2 + 1]
         return torch.sqrt((fx * fx) + (fy * fy))
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
