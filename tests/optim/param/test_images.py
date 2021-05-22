@@ -98,9 +98,11 @@ class TestFFTImage(BaseTest):
         height = 2
         width = 3
         image = images.FFTImage((1, 1))
-        assertArraysAlmostEqual(
-            image.rfft2d_freqs(height, width).numpy(),
-            numpy_image.FFTImage.rfft2d_freqs(height, width),
+
+        assertTensorAlmostEqual(
+            self,
+            image.rfft2d_freqs(height, width),
+            torch.tensor([[0.0000, 0.3333], [0.5000, 0.6009]]),
         )
 
     def test_fftimage_forward_randn_init(self) -> None:

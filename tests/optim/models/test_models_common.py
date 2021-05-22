@@ -270,6 +270,18 @@ class TestSkipLayer(BaseTest):
         output_tensor = layer(x)
         assertTensorAlmostEqual(self, x, output_tensor, 0)
 
+    def test_skip_layer_ignore_init_variables(self) -> None:
+        layer = model_utils.SkipLayer(0, inplace=True)
+        x = torch.randn(1, 3, 4, 4)
+        output_tensor = layer(x)
+        assertTensorAlmostEqual(self, x, output_tensor, 0)
+
+    def test_skip_layer_ignore_forward_variables(self) -> None:
+        layer = model_utils.SkipLayer()
+        x = torch.randn(1, 3, 4, 4)
+        output_tensor = layer(x, 1, inverse=True)
+        assertTensorAlmostEqual(self, x, output_tensor, 0)
+
 
 class TestSkipLayersFunction(BaseTest):
     def test_skip_layers(self) -> None:
