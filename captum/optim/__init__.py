@@ -12,7 +12,6 @@ from captum.optim._utils.image.common import (  # noqa: F401
     show,
     weights_to_heatmap_2d,
 )
-from captum.optim._utils.reducer import ChannelReducer, posneg  # noqa: F401
 
 __all__ = [
     "InputOptimization",
