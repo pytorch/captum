@@ -35,13 +35,13 @@ class ImageTensor(torch.Tensor):
             return super().__new__(cls, x, *args, **kwargs)
 
     @classmethod
-    def open(cls, path: str, scale: float = 255.0) -> "ImageTensor":
+    def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
         if path.startswith("https://") or path.startswith("http://"):
             response = requests.get(path, stream=True)
             img = Image.open(response.raw)
         else:
             img = Image.open(path)
-        img_np = np.array(img.convert("RGB")).astype(np.float32)
+        img_np = np.array(img.convert(mode)).astype(np.float32)
         return cls(img_np.transpose(2, 0, 1) / scale)
 
     def __repr__(self) -> str:
