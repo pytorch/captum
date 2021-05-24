@@ -219,7 +219,7 @@ class LRP(GradientAttribution):
             for relevance in relevances:
                 delta.append(self.compute_convergence_delta(relevance, output))
             return (  # type: ignore
-                _format_output(is_inputs_tuple, relevances),
+                _format_output(is_inputs_tuple, relevances),  # type: ignore
                 _format_output(is_inputs_tuple, tuple(delta)),
             )
         else:
