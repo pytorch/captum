@@ -66,7 +66,8 @@ def compare_to_sk_learn(
     )
 
     sklearn_stats = sklearn_classifier.fit(
-        train_data=train_loader, norm_input=args.norm_sklearn,
+        train_data=train_loader,
+        norm_input=args.norm_sklearn,
     )
     pytorch_stats = pytorch_classifier.fit(
         train_data=train_loader,
@@ -161,7 +162,9 @@ if __name__ == "__main__":
         description="train & test linear model with SGD + compare to sklearn"
     )
     parser.add_argument(
-        "--norm_type", type=str, default=None,
+        "--norm_type",
+        type=str,
+        default=None,
     )
     parser.add_argument(
         "--datasets",

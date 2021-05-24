@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import List, Tuple, Union, Any
+from typing import List, Tuple, Union, Any, cast
 from captum._utils.typing import (
     Literal,
     ModuleOrModuleList,
@@ -63,9 +63,7 @@ class LayerLRP(LRP, LayerAttribution):
         return_convergence_delta: Literal[False] = False,
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
-    ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...]], List[Tensor], List[Tuple[Tensor, ...]]
-    ]:
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
         ...
 
     @typing.overload
@@ -78,27 +76,9 @@ class LayerLRP(LRP, LayerAttribution):
         return_convergence_delta: Literal[True],
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
-    ) -> Union[
-        Tuple[
-            Union[
-                Union[Tensor, Tuple[Tensor, ...]],
-                List[Tensor],
-                List[Tuple[Tensor, ...]],
-            ],
-            Union[Tensor, Tuple[Tensor, ...], List[Tensor], List[Tuple[Tensor, ...]]],
-        ],
-        List[
-            Tuple[
-                Union[
-                    Union[Tensor, Tuple[Tensor, ...]],
-                    List[Tensor],
-                    List[Tuple[Tensor, ...]],
-                ],
-                Union[
-                    Tensor, Tuple[Tensor, ...], List[Tensor], List[Tuple[Tensor, ...]]
-                ],
-            ]
-        ],
+    ) -> Tuple[
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Union[Tensor, List[Tensor]],
     ]:
         ...
 
@@ -111,28 +91,10 @@ class LayerLRP(LRP, LayerAttribution):
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
     ) -> Union[
-        Union[
-            Union[Tensor, Tuple[Tensor, ...]], List[Tensor], List[Tuple[Tensor, ...]]
-        ],
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
         Tuple[
-            Union[
-                Union[Tensor, Tuple[Tensor, ...]],
-                List[Tensor],
-                List[Tuple[Tensor, ...]],
-            ],
-            Union[Tensor, Tuple[Tensor, ...], List[Tensor], List[Tuple[Tensor, ...]]],
-        ],
-        List[
-            Tuple[
-                Union[
-                    Union[Tensor, Tuple[Tensor, ...]],
-                    List[Tensor],
-                    List[Tuple[Tensor, ...]],
-                ],
-                Union[
-                    Tensor, Tuple[Tensor, ...], List[Tensor], List[Tuple[Tensor, ...]]
-                ],
-            ]
+            Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+            Union[Tensor, List[Tensor]],
         ],
     ]:
         r"""
@@ -196,11 +158,6 @@ class LayerLRP(LRP, LayerAttribution):
                         then the attributions will be computed with respect to
                         layer input, otherwise it will be computed with respect
                         to layer output.
-                        Note that currently it is assumed that either the input
-                        or the output of internal layer, depending on whether we
-                        attribute to the input or output, is a single tensor.
-                        Support for multiple tensors will be added later.
-                        Default: False
 
             verbose (bool, optional): Indicates whether information on application
                     of rules is printed during propagation.
@@ -269,6 +226,7 @@ class LayerLRP(LRP, LayerAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
+            delta: Union[Tensor, List[Tensor]]
             if isinstance(self.layer, list):
                 delta = []
                 for relevance_layer in relevances:
@@ -276,12 +234,12 @@ class LayerLRP(LRP, LayerAttribution):
                         self.compute_convergence_delta(relevance_layer, output)
                     )
             else:
-                delta = self.compute_convergence_delta(  # type: ignore
-                    relevances, output
-                )  # type: ignore
-            return relevances, delta
+                delta = self.compute_convergence_delta(
+                    cast(Tuple[Tensor, ...], relevances), output
+                )
+            return relevances, delta  # type: ignore
         else:
-            return relevances
+            return relevances  # type: ignore
 
     def _get_output_relevance(
         self, output: Tensor

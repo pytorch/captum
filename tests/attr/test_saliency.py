@@ -82,7 +82,8 @@ class Test(BaseTest):
             n_samples_batch_size=2,
         )
         attributions = self._saliency_base_assert(
-            *_get_multiargs_basic_config_large(), nt_type="smoothgrad",
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad",
         )
 
         assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
@@ -94,7 +95,8 @@ class Test(BaseTest):
             n_samples_batch_size=3,
         )
         attributions = self._saliency_base_assert(
-            *_get_multiargs_basic_config_large(), nt_type="smoothgrad_sq",
+            *_get_multiargs_basic_config_large(),
+            nt_type="smoothgrad_sq",
         )
         assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
 
@@ -105,7 +107,8 @@ class Test(BaseTest):
             n_samples_batch_size=1,
         )
         attributions = self._saliency_base_assert(
-            *_get_multiargs_basic_config_large(), nt_type="vargrad",
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
         )
         assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
 
@@ -116,7 +119,8 @@ class Test(BaseTest):
             n_samples_batch_size=6,
         )
         attributions = self._saliency_base_assert(
-            *_get_multiargs_basic_config_large(), nt_type="vargrad",
+            *_get_multiargs_basic_config_large(),
+            nt_type="vargrad",
         )
         assertTensorTuplesAlmostEqual(self, attributions_batch_size, attributions)
 

@@ -29,7 +29,10 @@ class Test(BaseTest):
         grad = NeuronGradient(net, net.linear2)
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
         with self.assertWarns(DeprecationWarning):
-            attributions = grad.attribute(inp, neuron_index=(0,),)
+            attributions = grad.attribute(
+                inp,
+                neuron_index=(0,),
+            )
         assertTensorTuplesAlmostEqual(self, attributions, [4.0, 4.0, 4.0])
 
     def test_simple_gradient_input_linear2(self) -> None:

@@ -2,7 +2,7 @@
 import warnings
 
 import typing
-from typing import Callable, List, Optional, Tuple, Union, Any
+from typing import List, Tuple, Union, Any
 from captum._utils.typing import (
     Literal,
     TargetType,
@@ -13,6 +13,7 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 from torch.nn import Module
+from torch.utils.hooks import RemovableHandle
 
 from captum._utils.common import _format_input, _format_output, _run_forward
 from captum._utils.gradient import (
@@ -73,7 +74,7 @@ class LRP(GradientAttribution):
         additional_forward_args: Any = None,
         return_convergence_delta: Literal[False] = False,
         verbose: bool = False,
-    ) -> Union[Tensor, Tuple[Tensor, ...]]:
+    ) -> TensorOrTupleOfTensorsGeneric:
         ...
 
     @typing.overload
@@ -85,7 +86,7 @@ class LRP(GradientAttribution):
         *,
         return_convergence_delta: Literal[True],
         verbose: bool = False,
-    ) -> Tuple[Union[Tensor, Tuple[Tensor, ...]], Union[Tensor, Tuple[Tensor, ...]]]:
+    ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
     def attribute(
@@ -96,9 +97,7 @@ class LRP(GradientAttribution):
         return_convergence_delta: bool = False,
         verbose: bool = False,
     ) -> Union[
-        Tensor,
-        Tuple[Tensor, ...],
-        Tuple[Union[Tensor, Tuple[Tensor, ...]], Union[Tensor, Tuple[Tensor, ...]]],
+        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
     ]:
         r"""
         Args:
@@ -190,11 +189,11 @@ class LRP(GradientAttribution):
         """
         self.verbose = verbose
         self._original_state_dict = self.model.state_dict()
-        self.layers: List[Any] = []
+        self.layers: List[Module] = []
         self._get_layers(self.model)
         self._check_and_attach_rules()
-        self.backward_handles: List[Any] = []
-        self.forward_handles: List[Any] = []
+        self.backward_handles: List[RemovableHandle] = []
+        self.forward_handles: List[RemovableHandle] = []
 
         is_inputs_tuple = isinstance(inputs, tuple)
         inputs = _format_input(inputs)
@@ -224,12 +223,12 @@ class LRP(GradientAttribution):
             delta = []
             for relevance in relevances:
                 delta.append(self.compute_convergence_delta(relevance, output))
-            return (
+            return (  # type: ignore
                 _format_output(is_inputs_tuple, relevances),
                 _format_output(is_inputs_tuple, tuple(delta)),
             )
         else:
-            return _format_output(is_inputs_tuple, relevances)
+            return _format_output(is_inputs_tuple, relevances)  # type: ignore
 
     def has_convergence_delta(self) -> bool:
         return True
@@ -289,9 +288,9 @@ class LRP(GradientAttribution):
             if hasattr(layer, "rule"):
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
-                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()
+                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
-                layer.rule = None
+                layer.rule = None  # type: ignore
             else:
                 raise TypeError(
                     (
@@ -322,7 +321,9 @@ class LRP(GradientAttribution):
                 )
                 self.backward_handles.append(backward_handle)
             else:
-                forward_handle = layer.register_forward_hook(layer.rule.forward_hook)
+                forward_handle = layer.register_forward_hook(
+                    layer.rule.forward_hook  # type: ignore
+                )
                 self.forward_handles.append(forward_handle)
                 if self.verbose:
                     print(f"Applied {layer.rule} on layer {layer}")
@@ -331,7 +332,7 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_hook(
-                    layer.rule.forward_hook_weights
+                    layer.rule.forward_hook_weights  # type: ignore
                 )
                 self.forward_handles.append(forward_handle)
 
@@ -339,7 +340,7 @@ class LRP(GradientAttribution):
         for layer in self.layers:
             if layer.rule is not None:
                 forward_handle = layer.register_forward_pre_hook(
-                    layer.rule.forward_pre_hook_activations
+                    layer.rule.forward_pre_hook_activations  # type: ignore
                 )
                 self.forward_handles.append(forward_handle)
 
@@ -347,7 +348,7 @@ class LRP(GradientAttribution):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         target: TargetType,
-        additional_forward_args: Optional[Union[Any, Tuple[Any, ...]]],
+        additional_forward_args: Any,
     ) -> Tensor:
         try:
             self._register_weight_hooks()
@@ -369,10 +370,10 @@ class LRP(GradientAttribution):
             backward_handle.remove()
         for layer in self.layers:
             if hasattr(layer.rule, "_handle_input_hooks"):
-                for handle in layer.rule._handle_input_hooks:
+                for handle in layer.rule._handle_input_hooks:  # type: ignore
                     handle.remove()
             if hasattr(layer.rule, "_handle_output_hook"):
-                layer.rule._handle_output_hook.remove()
+                layer.rule._handle_output_hook.remove()  # type: ignore
 
     def _remove_rules(self) -> None:
         for layer in self.layers:
@@ -394,7 +395,7 @@ class LRP(GradientAttribution):
         self._remove_rules()
         self._clear_properties()
 
-    def _forward_fn_wrapper(self, *inputs: Tensor) -> Callable:
+    def _forward_fn_wrapper(self, *inputs: Tensor) -> Tensor:
         """
         Wraps a forward function with addition of zero as a workaround to
         https://github.com/pytorch/pytorch/issues/35802 discussed in

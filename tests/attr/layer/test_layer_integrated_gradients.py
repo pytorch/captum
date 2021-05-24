@@ -99,7 +99,10 @@ class Test(BaseTest):
         baseline = tuple(torch.zeros_like(inp) for inp in inputs)
 
         self._assert_compare_with_emb_patching(
-            inputs, baseline, multiple_emb=True, additional_args=None,
+            inputs,
+            baseline,
+            multiple_emb=True,
+            additional_args=None,
         )
 
     def test_multiple_layers_multiple_inputs_shared_input(self) -> None:
@@ -257,7 +260,9 @@ class Test(BaseTest):
         if multiple_emb:
             module_list: List[Module] = [model.embedding1, model.embedding2]
             lig = LayerIntegratedGradients(
-                model, module_list, multiply_by_inputs=multiply_by_inputs,
+                model,
+                module_list,
+                multiply_by_inputs=multiply_by_inputs,
             )
         else:
             lig = LayerIntegratedGradients(
