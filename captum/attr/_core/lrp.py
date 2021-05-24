@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
-import warnings
-
 import typing
-from typing import List, Tuple, Union, Any
-from captum._utils.typing import (
-    Literal,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+import warnings
+from typing import Any, List, Tuple, Union
 
 import torch
-from torch import Tensor
 import torch.nn as nn
+from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
@@ -20,6 +14,7 @@ from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
+from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
 from captum.attr._utils.custom_modules import Addition_Module
 from captum.attr._utils.lrp_rules import EpsilonRule, PropagationRule

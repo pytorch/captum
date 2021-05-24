@@ -2,8 +2,8 @@
 from typing import Tuple, cast
 
 import torch
-from torch import Tensor
 import torch.nn as nn
+from torch import Tensor
 from torch.nn import Module
 
 from captum.attr import LRP, InputXGradient
@@ -13,7 +13,6 @@ from captum.attr._utils.lrp_rules import (
     GammaRule,
     IdentityRule,
 )
-
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,

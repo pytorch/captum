@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 import typing
-from typing import List, Tuple, Union, Any, cast
-from captum._utils.typing import (
-    Literal,
-    ModuleOrModuleList,
-    TargetType,
-    TensorOrTupleOfTensorsGeneric,
-)
+from typing import Any, List, Tuple, Union, cast
 
 from torch import Tensor
 from torch.nn import Module
@@ -16,6 +10,12 @@ from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
+)
+from captum._utils.typing import (
+    Literal,
+    ModuleOrModuleList,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
 )
 from captum.attr._core.lrp import LRP
 from captum.attr._utils.attribution import LayerAttribution
