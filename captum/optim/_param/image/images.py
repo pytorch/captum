@@ -179,7 +179,6 @@ class FFTImage(ImageParameterization):
         return torch_rfft, torch_irfft, torch_fftfreq
 
     def forward(self) -> torch.Tensor:
-        h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
         return output.refine_names("B", "C", "H", "W")
