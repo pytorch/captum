@@ -18,7 +18,7 @@ from captum._utils.gradient import (
     undo_gradient_requirements,
 )
 from captum.attr._core.lrp import LRP
-from captum.attr.utils.attribution import LayerAttribution
+from captum.attr._utils.attribution import LayerAttribution
 
 
 class LayerLRP(LRP, LayerAttribution):
