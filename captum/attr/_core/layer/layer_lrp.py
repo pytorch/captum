@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
-from ...._utils.common import _format_input
-from ...._utils.gradient import (
+import typing
+from typing import Any, List, Tuple, Union, cast
+
+from torch import Tensor
+from torch.nn import Module
+
+from captum._utils.common import _format_input
+from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
     undo_gradient_requirements,
 )
-from ..._core.lrp import LRP
-from ..._utils.attribution import LayerAttribution
+from captum._utils.typing import (
+    Literal,
+    ModuleOrModuleList,
+    TargetType,
+    TensorOrTupleOfTensorsGeneric,
+)
+from captum.attr._core.lrp import LRP
+from captum.attr._utils.attribution import LayerAttribution
 
 
 class LayerLRP(LRP, LayerAttribution):
@@ -23,11 +35,11 @@ class LayerLRP(LRP, LayerAttribution):
     Ancona et al. [https://openreview.net/forum?id=Sy21R9JAW].
     """
 
-    def __init__(self, model, layer) -> None:
+    def __init__(self, model: Module, layer: ModuleOrModuleList) -> None:
         """
         Args:
 
-            model (callable): The forward function of the model or
+            model (module): The forward function of the model or
                         any modification of it. Custom rules for a given layer need to
                         be defined as attribute
                         `module.rule` and need to be of type PropagationRule.
@@ -42,15 +54,51 @@ class LayerLRP(LRP, LayerAttribution):
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
 
+    @typing.overload  # type: ignore
     def attribute(
         self,
-        inputs,
-        target=None,
-        additional_forward_args=None,
-        return_convergence_delta=False,
-        attribute_to_layer_input=False,
-        verbose=False,
-    ):
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: Literal[False] = False,
+        attribute_to_layer_input: bool = False,
+        verbose: bool = False,
+    ) -> Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]]:
+        ...
+
+    @typing.overload
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        *,
+        return_convergence_delta: Literal[True],
+        attribute_to_layer_input: bool = False,
+        verbose: bool = False,
+    ) -> Tuple[
+        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Union[Tensor, List[Tensor]],
+    ]:
+        ...
+
+    def attribute(
+        self,
+        inputs: TensorOrTupleOfTensorsGeneric,
+        target: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        attribute_to_layer_input: bool = False,
+        verbose: bool = False,
+    ) -> Union[
+        Tensor,
+        Tuple[Tensor, ...],
+        List[Union[Tensor, Tuple[Tensor, ...]]],
+        Tuple[
+            Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+            Union[Tensor, List[Tensor]],
+        ],
+    ]:
         r"""
 
         Args:
@@ -105,6 +153,13 @@ class LayerLRP(LRP, LayerAttribution):
                     is set to True convergence delta will be returned in
                     a tuple following attributions.
                     Default: False
+
+            attribute_to_layer_input (bool, optional): Indicates whether to
+                        compute the attribution with respect to the layer input
+                        or output. If `attribute_to_layer_input` is set to True
+                        then the attributions will be computed with respect to
+                        layer input, otherwise it will be computed with respect
+                        to layer output.
 
             verbose (bool, optional): Indicates whether information on application
                     of rules is printed during propagation.
@@ -173,6 +228,7 @@ class LayerLRP(LRP, LayerAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
+            delta: Union[Tensor, List[Tensor]]
             if isinstance(self.layer, list):
                 delta = []
                 for relevance_layer in relevances:
@@ -180,12 +236,16 @@ class LayerLRP(LRP, LayerAttribution):
                         self.compute_convergence_delta(relevance_layer, output)
                     )
             else:
-                delta = self.compute_convergence_delta(relevances, output)
-            return relevances, delta
+                delta = self.compute_convergence_delta(
+                    cast(Tuple[Tensor, ...], relevances), output
+                )
+            return relevances, delta  # type: ignore
         else:
-            return relevances
+            return relevances  # type: ignore
 
-    def _get_output_relevance(self, output):
+    def _get_output_relevance(
+        self, output: Tensor
+    ) -> Union[List[Tuple[Tensor, ...]], Tuple[Tensor, ...]]:
         if isinstance(self.layer, list):
             relevances = []
             for layer in self.layer:
@@ -212,7 +272,9 @@ class LayerLRP(LRP, LayerAttribution):
             return self._convert_list_to_tuple(relevances)
 
     @staticmethod
-    def _convert_list_to_tuple(relevances):
+    def _convert_list_to_tuple(
+        relevances: Union[List[Any], Tuple[Any, ...]]
+    ) -> Tuple[Any, ...]:
         if isinstance(relevances, list):
             return tuple(relevances)
         else:
