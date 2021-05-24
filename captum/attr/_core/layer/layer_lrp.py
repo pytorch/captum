@@ -91,7 +91,9 @@ class LayerLRP(LRP, LayerAttribution):
         attribute_to_layer_input: bool = False,
         verbose: bool = False,
     ) -> Union[
-        Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
+        Tensor,
+        Tuple[Tensor, ...],
+        List[Union[Tensor, Tuple[Tensor, ...]]],
         Tuple[
             Union[Tensor, Tuple[Tensor, ...], List[Union[Tensor, Tuple[Tensor, ...]]]],
             Union[Tensor, List[Tensor]],

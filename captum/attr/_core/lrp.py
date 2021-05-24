@@ -341,7 +341,7 @@ class LRP(GradientAttribution):
 
     def _compute_output_and_change_weights(
         self,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         target: TargetType,
         additional_forward_args: Any,
     ) -> Tensor:
