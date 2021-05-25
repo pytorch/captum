@@ -17,7 +17,7 @@ Before you begin writing code, it is important that you share your intention to 
 
 Once you implement and test your feature or bug-fix, please submit a Pull Request to https://github.com/pytorch/captum (https://github.com/pytorch/pytorch).
 
-This document covers some of the techical aspects of contributing to Captum. More details on what we are looking for in the contributions can be found in the [Contributing Guidelines](https://captum.ai/docs/contribution_guide).
+This document covers some of the techical aspects of contributing to Captum. More details on what we are looking for in the contributions can be found in the [Contributing Guidelines](https://captum.ai/docs/contribution_guidelines).
 
 
 ## Development installation
