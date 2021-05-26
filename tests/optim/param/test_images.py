@@ -664,7 +664,7 @@ class TestNaturalImage(BaseTest):
         self.assertTrue(image_param().is_cuda)
 
     def test_natural_image_decorrelation_module_none(self) -> None:
-        if torch.__version__ <= "1.2.0":
+        if torch.__version__ <= "1.3.0":
             raise unittest.SkipTest(
                 "Skipping NaturalImage test due to insufficient Torch version."
             )
