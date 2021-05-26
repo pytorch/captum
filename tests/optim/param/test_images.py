@@ -662,3 +662,14 @@ class TestNaturalImage(BaseTest):
             )
         image_param = images.NaturalImage().cuda()
         self.assertTrue(image_param().is_cuda)
+
+    def test_natural_image_decorrelation_module_none(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping NaturalImage test due to insufficient Torch version."
+            )
+        image_param = images.NaturalImage(
+            init=torch.ones(1, 3, 4, 4), decorrelation_module=None
+        )
+        image = image_param.forward().detach()
+        assertTensorAlmostEqual(self, image, torch.ones_like(image))
