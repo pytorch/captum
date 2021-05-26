@@ -40,7 +40,7 @@ conda install -y -c conda-forge black matplotlib pytest-cov sphinx-autodoc-typeh
 # install node/yarn for insights build
 conda install -y -c conda-forge yarn
 # nodejs should be last, otherwise other conda packages will downgrade node
-conda update -y --no-channel-priority -c conda-forge nodejs
+conda install -y --no-channel-priority -c conda-forge nodejs=14
 
 
 # build insights and install captum
