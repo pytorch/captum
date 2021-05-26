@@ -24,11 +24,11 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="guided-gradcam">
+<section id="guided-gradcam">
 <h1>Guided GradCAM<a class="headerlink" href="#guided-gradcam" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="captum.attr.GuidedGradCam">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">GuidedGradCam</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GuidedGradCam" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.GuidedGradCam">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">GuidedGradCam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GuidedGradCam" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes element-wise product of guided backpropagation attributions
 with upsampled (non-negative) GradCAM attributions.
 GradCAM attributions are computed with respect to the layer
@@ -69,8 +69,8 @@ then it is not necessary to provide this argument.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.GuidedGradCam.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_layer_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GuidedGradCam.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.GuidedGradCam.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attribute_to_layer_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/guided_grad_cam.html#GuidedGradCam.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GuidedGradCam.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -185,7 +185,7 @@ index position.</p>
 </div>
 </dd></dl>
 </dd></dl>
-</div>
+</section>
 </div>
 </div>
 </div>

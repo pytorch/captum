@@ -24,13 +24,13 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="base-classes">
+<section id="base-classes">
 <h1>Base Classes<a class="headerlink" href="#base-classes" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="attribution">
+<section id="attribution">
 <h2>Attribution<a class="headerlink" href="#attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.Attribution">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">Attribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.Attribution">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">Attribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>All attribution algorithms extend this class. It enforces its child classes
 to extend and override core <cite>attribute</cite> method.</p>
 <dl class="field-list simple">
@@ -41,8 +41,8 @@ function.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="captum.attr.Attribution.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.Attribution.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.Attribution.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes and returns the attribution values for each input tensor.
 Deriving classes are responsible for implementing its logic accordingly.</p>
 <p>Specific attribution algorithms that extend this class take relevant
@@ -76,8 +76,8 @@ corresponding sized tensors is returned.</p>
 </dl>
 </dd></dl>
 <dl class="py attribute">
-<dt id="captum.attr.Attribution.compute_convergence_delta">
-<code class="sig-name descname"><span class="pre">compute_convergence_delta</span></code><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.Attribution.compute_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.Attribution.compute_convergence_delta">
+<span class="sig-name descname"><span class="pre">compute_convergence_delta</span></span><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.Attribution.compute_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>The attribution algorithms which derive <cite>Attribution</cite> class and provide
 convergence delta (aka approximation error) should implement this method.
 Convergence delta can be computed based on certain properties of the
@@ -117,8 +117,8 @@ single floating point tensor.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="captum.attr.Attribution.get_name">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">get_name</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution.get_name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.Attribution.get_name">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create readable class name by inserting a space before any capital
 characters besides the very first.</p>
 <dl class="field-list simple">
@@ -134,8 +134,8 @@ characters besides the very first.</p>
 ‘Integrated Gradients’</p>
 </dd></dl>
 <dl class="py method">
-<dt id="captum.attr.Attribution.has_convergence_delta">
-<code class="sig-name descname"><span class="pre">has_convergence_delta</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.Attribution.has_convergence_delta">
+<span class="sig-name descname"><span class="pre">has_convergence_delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#Attribution.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.Attribution.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides
 a convergence delta (aka an approximation error) or not. Convergence
 delta may serve as a proxy of correctness of attribution algorithm’s
@@ -153,12 +153,12 @@ provides a convergence delta (aka approximation error) or not.</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
-<div class="section" id="layer-attribution">
+</section>
+<section id="layer-attribution">
 <h2>Layer Attribution<a class="headerlink" href="#layer-attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.LayerAttribution">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">LayerAttribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerAttribution" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.LayerAttribution">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">LayerAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerAttribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Layer attribution provides attribution values for the given layer, quanitfying
 the importance of each neuron within the given layer’s output. The output
 attribution of calling attribute on a LayerAttribution object always matches
@@ -180,8 +180,8 @@ then it is not necessary to provide this argument.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.LayerAttribution.interpolate">
-<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">interpolate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerAttribution.interpolate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.LayerAttribution.interpolate">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer_attribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#LayerAttribution.interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.LayerAttribution.interpolate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolates given 3D, 4D or 5D layer attribution to given dimensions.
 This is often utilized to upsample the attribution of a convolutional layer
 to the size of an input, which allows visualizing in the input space.</p>
@@ -221,12 +221,12 @@ interpolate_dims.</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
-<div class="section" id="neuron-attribution">
+</section>
+<section id="neuron-attribution">
 <h2>Neuron Attribution<a class="headerlink" href="#neuron-attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.NeuronAttribution">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">NeuronAttribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronAttribution" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.NeuronAttribution">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NeuronAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#NeuronAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NeuronAttribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Neuron attribution provides input attribution for a given neuron, quanitfying
 the importance of each input feature in the activation of a particular neuron.
 Calling attribute on a NeuronAttribution object requires also providing
@@ -251,8 +251,8 @@ then it is not necessary to provide this argument.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="captum.attr.NeuronAttribution.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.NeuronAttribution.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.NeuronAttribution.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><em class="property"><span class="pre">:</span> <span class="pre">Callable</span></em><a class="headerlink" href="#captum.attr.NeuronAttribution.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes and returns the neuron attribution values for each
 input tensor. Deriving classes are responsible for implementing
 its logic accordingly.</p>
@@ -287,12 +287,12 @@ dimensionality of inputs.</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
-<div class="section" id="gradient-attribution">
+</section>
+<section id="gradient-attribution">
 <h2>Gradient Attribution<a class="headerlink" href="#gradient-attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.GradientAttribution">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">GradientAttribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GradientAttribution" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.GradientAttribution">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">GradientAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GradientAttribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>All gradient based attribution algorithms extend this class. It requires a
 forward function, which most commonly is the forward function of the model
 that we want to interpret or the model itself.</p>
@@ -304,8 +304,8 @@ function.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.GradientAttribution.compute_convergence_delta">
-<code class="sig-name descname"><span class="pre">compute_convergence_delta</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution.compute_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GradientAttribution.compute_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.GradientAttribution.compute_convergence_delta">
+<span class="sig-name descname"><span class="pre">compute_convergence_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#GradientAttribution.compute_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.GradientAttribution.compute_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Here we provide a specific implementation for <cite>compute_convergence_delta</cite>
 which is based on a common property among gradient-based attribution algorithms.
 In the literature sometimes it is also called completeness axiom. Completeness
@@ -397,12 +397,12 @@ of those values, if necessary.</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
-<div class="section" id="perturbation-attribution">
+</section>
+<section id="perturbation-attribution">
 <h2>Perturbation Attribution<a class="headerlink" href="#perturbation-attribution" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.PerturbationAttribution">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">PerturbationAttribution</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#PerturbationAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.PerturbationAttribution" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.PerturbationAttribution">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">PerturbationAttribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_utils/attribution.html#PerturbationAttribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.PerturbationAttribution" title="Permalink to this definition">¶</a></dt>
 <dd><p>All perturbation based attribution algorithms extend this class. It requires a
 forward function, which most commonly is the forward function of the model
 that we want to interpret or the model itself.</p>
@@ -414,8 +414,8 @@ function.</p>
 </dd>
 </dl>
 </dd></dl>
-</div>
-</div>
+</section>
+</section>
 </div>
 </div>
 </div>

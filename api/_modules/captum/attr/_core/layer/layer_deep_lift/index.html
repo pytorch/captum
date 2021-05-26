@@ -40,11 +40,7 @@
     <span class="n">_format_baseline</span><span class="p">,</span>
     <span class="n">_format_input</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">apply_gradient_requirements</span><span class="p">,</span>
-    <span class="n">compute_layer_gradients_and_eval</span><span class="p">,</span>
-    <span class="n">undo_gradient_requirements</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">captum._utils.gradient</span> <span class="kn">import</span> <span class="n">compute_layer_gradients_and_eval</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaselineType</span><span class="p">,</span>
     <span class="n">Literal</span><span class="p">,</span>
@@ -321,7 +317,6 @@
 <span class="sd">        """</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">baselines</span> <span class="o">=</span> <span class="n">_format_baseline</span><span class="p">(</span><span class="n">baselines</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-        <span class="n">gradient_mask</span> <span class="o">=</span> <span class="n">apply_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">_validate_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
 
         <span class="n">baselines</span> <span class="o">=</span> <span class="n">_tensorize_baseline</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
@@ -384,7 +379,6 @@
             <span class="c1"># remove hooks from all activations</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_hooks</span><span class="p">(</span><span class="n">main_model_hooks</span><span class="p">)</span>
 
-        <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_compute_conv_delta_and_format_attrs</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">return_convergence_delta</span><span class="p">,</span>

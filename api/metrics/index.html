@@ -24,13 +24,13 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="metrics">
+<section id="metrics">
 <h1>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="infidelity">
+<section id="infidelity">
 <h2>Infidelity<a class="headerlink" href="#infidelity" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.metrics.infidelity">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.metrics.</span></code><code class="sig-name descname"><span class="pre">infidelity</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturb_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_perturb_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_examples_per_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/infidelity.html#infidelity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.metrics.infidelity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.metrics.infidelity">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.metrics.</span></span><span class="sig-name descname"><span class="pre">infidelity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturb_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_perturb_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_examples_per_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/infidelity.html#infidelity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.metrics.infidelity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Explanation infidelity represents the expected mean-squared error
 between the explanation multiplied by a meaningful input perturbation
 and the differences between the predictor function at its input
@@ -236,6 +236,24 @@ at least be equal <cite>input batch size</cite> and at most
 <cite>input batch size * n_perturb_samples</cite>.</p>
 <p>Default: None</p>
 </p></li>
+<li><p><strong>normalize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – <p>Normalize the dot product of the input
+perturbation and the attribution so the infidelity value is invariant
+to constant scaling of the attribution values. The normalization factor
+beta is defined as the ratio of two mean values:
+$$ beta = frac{</p>
+<blockquote>
+<div><p>mathbb{E}_{I sim mu_I} [ I^T Phi(f, x) (f(x) - f(x - I)) ]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>}{</dt><dd><p>mathbb{E}_{I sim mu_I} [ (I^T Phi(f, x))^2 ]</p>
+</dd>
+</dl>
+<p>} $$.
+Please refer the original paper for the meaning of the symbols. Same
+normalization can be found in the paper’s official implementation
+<a class="reference external" href="https://github.com/chihkuanyeh/saliency_evaluation">https://github.com/chihkuanyeh/saliency_evaluation</a></p>
+<p>Default: False</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -270,12 +288,12 @@ dimension is one.</p>
 </dd>
 </dl>
 </dd></dl>
-</div>
-<div class="section" id="sensitivity">
+</section>
+<section id="sensitivity">
 <h2>Sensitivity<a class="headerlink" href="#sensitivity" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.metrics.sensitivity_max">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.metrics.</span></code><code class="sig-name descname"><span class="pre">sensitivity_max</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">explanation_func</span></em>, <em class="sig-param"><span class="pre">inputs</span></em>, <em class="sig-param"><span class="pre">perturb_func=&lt;function</span> <span class="pre">default_perturb_func&gt;</span></em>, <em class="sig-param"><span class="pre">perturb_radius=0.02</span></em>, <em class="sig-param"><span class="pre">n_perturb_samples=10</span></em>, <em class="sig-param"><span class="pre">norm_ord='fro'</span></em>, <em class="sig-param"><span class="pre">max_examples_per_batch=None</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/sensitivity.html#sensitivity_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.metrics.sensitivity_max" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.metrics.sensitivity_max">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.metrics.</span></span><span class="sig-name descname"><span class="pre">sensitivity_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">explanation_func</span></em>, <em class="sig-param"><span class="pre">inputs</span></em>, <em class="sig-param"><span class="pre">perturb_func=&lt;function</span> <span class="pre">default_perturb_func&gt;</span></em>, <em class="sig-param"><span class="pre">perturb_radius=0.02</span></em>, <em class="sig-param"><span class="pre">n_perturb_samples=10</span></em>, <em class="sig-param"><span class="pre">norm_ord='fro'</span></em>, <em class="sig-param"><span class="pre">max_examples_per_batch=None</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/metrics/_core/sensitivity.html#sensitivity_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.metrics.sensitivity_max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Explanation sensitivity measures the extent of explanation change when
 the input is slightly perturbed. It has been shown that the models that
 have high explanation sensitivity are prone to adversarial attacks:
@@ -403,8 +421,8 @@ the magnitudes of the input explanations.</p>
 </dd>
 </dl>
 </dd></dl>
-</div>
-</div>
+</section>
+</section>
 </div>
 </div>
 </div>

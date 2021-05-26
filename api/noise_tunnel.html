@@ -24,11 +24,11 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="noisetunnel">
+<section id="noisetunnel">
 <h1>NoiseTunnel<a class="headerlink" href="#noisetunnel" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="captum.attr.NoiseTunnel">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">NoiseTunnel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribution_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.NoiseTunnel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">NoiseTunnel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribution_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds gaussian noise to each input in the batch <cite>nt_samples</cite> times
 and applies the given attribution algorithm to each of the samples.
 The attributions of the samples are combined based on the given noise
@@ -59,8 +59,8 @@ Conductance or Saliency.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.NoiseTunnel.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'smoothgrad'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_baseline_from_distrib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.NoiseTunnel.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'smoothgrad'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nt_samples_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_baseline_from_distrib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -156,8 +156,8 @@ across all <cite>nt_samples</cite> perturbed tensors for that input.</p>
 </div>
 </dd></dl>
 <dl class="py method">
-<dt id="captum.attr.NoiseTunnel.has_convergence_delta">
-<code class="sig-name descname"><span class="pre">has_convergence_delta</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.NoiseTunnel.has_convergence_delta">
+<span class="sig-name descname"><span class="pre">has_convergence_delta</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/noise_tunnel.html#NoiseTunnel.has_convergence_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.NoiseTunnel.has_convergence_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method informs the user whether the attribution algorithm provides
 a convergence delta (aka an approximation error) or not. Convergence
 delta may serve as a proxy of correctness of attribution algorithm’s
@@ -175,7 +175,7 @@ provides a convergence delta (aka approximation error) or not.</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
+</section>
 </div>
 </div>
 </div>

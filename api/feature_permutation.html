@@ -24,11 +24,11 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="feature-permutation">
+<section id="feature-permutation">
 <h1>Feature Permutation<a class="headerlink" href="#feature-permutation" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="captum.attr.FeaturePermutation">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">FeaturePermutation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">forward_func</span></em>, <em class="sig-param"><span class="pre">perm_func=&lt;function</span> <span class="pre">_permute_feature&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.FeaturePermutation">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">FeaturePermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">forward_func</span></em>, <em class="sig-param"><span class="pre">perm_func=&lt;function</span> <span class="pre">_permute_feature&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation" title="Permalink to this definition">¶</a></dt>
 <dd><p>A perturbation based approach to compute attribution, which
 takes each input feature, permutes the feature values within a batch,
 and computes the difference between original and shuffled outputs for
@@ -82,8 +82,8 @@ Default: <cite>_permute_feature</cite></p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.FeaturePermutation.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.FeaturePermutation.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/feature_permutation.html#FeaturePermutation.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.FeaturePermutation.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is almost equivalent to <cite>FeatureAblation.attribute</cite>. The
 main difference is the way ablated examples are generated. Specifically
 they are generated through the <cite>perm_func</cite>, as we set the baselines for
@@ -244,7 +244,7 @@ a tuple of corresponding sized tensors is returned.</p>
 </div>
 </dd></dl>
 </dd></dl>
-</div>
+</section>
 </div>
 </div>
 </div>

@@ -24,13 +24,13 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="utilities">
+<section id="utilities">
 <h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="visualization">
+<section id="visualization">
 <h2>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="captum.attr.visualization.visualize_image_attr">
-<code class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></code><code class="sig-name descname"><span class="pre">visualize_image_attr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'heat_map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.visualization.visualize_image_attr">
+<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'heat_map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'absolute_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plt_fig_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_perc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_overlay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(6,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualizes attribution for a given image by normalizing attribution values
 of the desired sign (positive, negative, absolute value, or all) and displaying
 them using the desired mode in a matplotlib figure.</p>
@@ -152,8 +152,8 @@ same axis provided.</p>
 </div>
 </dd></dl>
 <dl class="py function">
-<dt id="captum.attr.visualization.visualize_image_attr_multiple">
-<code class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></code><code class="sig-name descname"><span class="pre">visualize_image_attr_multiple</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr_multiple" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.visualization.visualize_image_attr_multiple">
+<span class="sig-prename descclassname"><span class="pre">captum.attr.visualization.</span></span><span class="sig-name descname"><span class="pre">visualize_image_attr_multiple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">titles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pyplot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#captum.attr.visualization.visualize_image_attr_multiple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Visualizes attribution using multiple visualization methods displayed
 in a 1 x k grid, where k is the number of desired visualizations.</p>
 <dl class="field-list simple">
@@ -228,12 +228,12 @@ same axis provided.</p>
 </pre></div>
 </div>
 </dd></dl>
-</div>
-<div class="section" id="interpretable-embeddings">
+</section>
+<section id="interpretable-embeddings">
 <h2>Interpretable Embeddings<a class="headerlink" href="#interpretable-embeddings" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.InterpretableEmbeddingBase">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">InterpretableEmbeddingBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Since some embedding vectors, e.g. word are created and assigned in
 the embedding layers of Pytorch models we need a way to access
 those layers, generate the embeddings and subtract the baseline.
@@ -244,8 +244,8 @@ The original embedding layer is being replaced by
 precomputed embedding vectors to the layers below.</p>
 <p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 <dl class="py method">
-<dt id="captum.attr.InterpretableEmbeddingBase.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>The forward function of a wrapper embedding layer that takes and returns
 embedding layer. It allows embeddings to be created outside of the model
 and passes them seamlessly to the preceding layers of the model.</p>
@@ -285,8 +285,8 @@ without any modifications.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="captum.attr.InterpretableEmbeddingBase.indices_to_embeddings">
-<code class="sig-name descname"><span class="pre">indices_to_embeddings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.InterpretableEmbeddingBase.indices_to_embeddings">
+<span class="sig-name descname"><span class="pre">indices_to_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#InterpretableEmbeddingBase.indices_to_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.InterpretableEmbeddingBase.indices_to_embeddings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maps indices to corresponding embedding vectors. E.g. word embeddings</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -310,8 +310,8 @@ indices specified in the input</p>
 </dd></dl>
 </dd></dl>
 <dl class="py function">
-<dt id="captum.attr.configure_interpretable_embedding_layer">
-<code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">configure_interpretable_embedding_layer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_layer_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'embedding'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.configure_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.configure_interpretable_embedding_layer">
+<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">configure_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_layer_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'embedding'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#configure_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.configure_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method wraps model’s embedding layer with an interpretable embedding
 layer that allows us to access the embeddings through their indices.</p>
 <dl class="field-list simple">
@@ -360,8 +360,8 @@ accessed through <cite>embedding_layer_name</cite>.</p>
 </div>
 </dd></dl>
 <dl class="py function">
-<dt id="captum.attr.remove_interpretable_embedding_layer">
-<code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">remove_interpretable_embedding_layer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpretable_emb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.remove_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.remove_interpretable_embedding_layer">
+<span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">remove_interpretable_embedding_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpretable_emb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#remove_interpretable_embedding_layer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.remove_interpretable_embedding_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes interpretable embedding layer and sets back original
 embedding layer in the model.</p>
 <dl class="field-list simple">
@@ -400,19 +400,19 @@ to be removed after interpretation is finished.</p></li>
 </pre></div>
 </div>
 </dd></dl>
-</div>
-<div class="section" id="token-reference-base">
+</section>
+<section id="token-reference-base">
 <h2>Token Reference Base<a class="headerlink" href="#token-reference-base" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum.attr.TokenReferenceBase">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">TokenReferenceBase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.TokenReferenceBase">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">TokenReferenceBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_token_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for creating reference (aka baseline) tensor for a sequence of
 tokens. A typical example of such token is <cite>PAD</cite>. Users need to provide the
 index of the reference token in the vocabulary as an argument to
 <cite>TokenReferenceBase</cite> class.</p>
 <dl class="py method">
-<dt id="captum.attr.TokenReferenceBase.generate_reference">
-<code class="sig-name descname"><span class="pre">generate_reference</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.TokenReferenceBase.generate_reference">
+<span class="sig-name descname"><span class="pre">generate_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_models/base.html#TokenReferenceBase.generate_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.TokenReferenceBase.generate_reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generated reference tensor of given <cite>sequence_length</cite> using
 <cite>reference_token_idx</cite>.</p>
 <dl class="field-list simple">
@@ -436,18 +436,18 @@ be created.</p></li>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
-<div class="section" id="linear-models">
+</section>
+<section id="linear-models">
 <h2>Linear Models<a class="headerlink" href="#linear-models" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="captum._utils.models.model.Model">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></code><code class="sig-name descname"><span class="pre">Model</span></code><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.model.Model">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.model.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract Class to describe the interface of a trainable model to be used
 within the algorithms of captum.</p>
 <p>Please note that this is an experimental feature.</p>
 <dl class="py method">
-<dt id="captum._utils.models.model.Model.fit">
-<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.model.Model.fit">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override this method to actually train your model.</p>
 <p>The specification of the dataloader will be supplied by the algorithm
 you are using within captum. This will likely be a supervised learning
@@ -466,8 +466,8 @@ train, training loss, etc.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="captum._utils.models.model.Model.representation">
-<em class="property"><span class="pre">abstract</span> </em><code class="sig-name descname"><span class="pre">representation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.model.Model.representation">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">representation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/model.html#Model.representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.model.Model.representation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the underlying representation of the interpretable model. For a
 linear model this is simply a tensor (the concatenation of weights
 and bias). For something slightly more complicated, such as a decision
@@ -483,8 +483,8 @@ tree, this could be the nodes of a decision tree.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SkLearnLinearModel">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SkLearnLinearModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sklearn_module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to construct a <cite>LinearModel</cite> with sklearn training method.</p>
 <p>Please note that this assumes:</p>
 <ol class="arabic simple" start="0">
@@ -507,8 +507,8 @@ such as <cite>SkLearnLasso</cite>.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SkLearnLinearModel.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearModel.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearModel.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearModel.fit" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -520,14 +520,14 @@ such as <cite>SkLearnLasso</cite>.</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SkLearnLinearRegression">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearRegression">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLinearRegression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.LinearRegression</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SkLearnLinearRegression.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLinearRegression.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLinearRegression.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLinearRegression.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Args:
 train_data</p>
 <blockquote>
@@ -540,14 +540,14 @@ train_data</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SkLearnLasso">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SkLearnLasso</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLasso">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a <cite>LinearModel</cite> model with
 <cite>sklearn.linear_model.Lasso</cite>. You will need sklearn version &gt;= 0.23 to
 support sample weights.</p>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SkLearnLasso.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnLasso.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnLasso.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Args:
 train_data</p>
 <blockquote>
@@ -560,14 +560,14 @@ train_data</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SkLearnRidge">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SkLearnRidge</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnRidge">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SkLearnRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Trains a model with <cite>sklearn.linear_model.Ridge</cite>.</p>
 <p>Any arguments provided to the sklearn constructor can be provided
 as kwargs here.</p>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SkLearnRidge.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SkLearnRidge.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SkLearnRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SkLearnRidge.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Args:
 train_data</p>
 <blockquote>
@@ -580,8 +580,8 @@ train_data</p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SGDLinearModel">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SGDLinearModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLinearModel">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLinearModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLinearModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLinearModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class. Construct a a <cite>LinearModel</cite> with the
 <cite>sgd_train_linear_model</cite> as the train method</p>
 <dl class="field-list simple">
@@ -593,8 +593,8 @@ documentation.</p>
 </dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SGDLasso">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SGDLasso</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLasso">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDLasso</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha * L1
@@ -602,26 +602,26 @@ regularization.</p>
 <p>Please note that with SGD it is not guaranteed that weights will
 converge to 0.</p>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SGDLasso.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDLasso.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDLasso.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDLasso.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <cite>self.train_fn</cite></p>
 </dd></dl>
 </dd></dl>
 <dl class="py class">
-<dt id="captum._utils.models.linear_model.SGDRidge">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></code><code class="sig-name descname"><span class="pre">SGDRidge</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDRidge">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum._utils.models.linear_model.</span></span><span class="sig-name descname"><span class="pre">SGDRidge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory class to train a <cite>LinearModel</cite> with SGD
 (<cite>sgd_train_linear_model</cite>) whilst setting appropriate parameters to
 optimize for ridge regression loss. This optimizes L2 loss + alpha *
 L2 regularization.</p>
 <dl class="py method">
-<dt id="captum._utils.models.linear_model.SGDRidge.fit">
-<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge.fit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum._utils.models.linear_model.SGDRidge.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/_utils/models/linear_model/model.html#SGDRidge.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum._utils.models.linear_model.SGDRidge.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls <cite>self.train_fn</cite></p>
 </dd></dl>
 </dd></dl>
-</div>
-</div>
+</section>
+</section>
 </div>
 </div>
 </div>

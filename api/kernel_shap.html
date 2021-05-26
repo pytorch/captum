@@ -24,11 +24,11 @@
 <div class="documentwrapper">
 <div class="bodywrapper">
 <div class="body" role="main">
-<div class="section" id="kernelshap">
+<section id="kernelshap">
 <h1>KernelShap<a class="headerlink" href="#kernelshap" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="captum.attr.KernelShap">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">captum.attr.</span></code><code class="sig-name descname"><span class="pre">KernelShap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.KernelShap">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">captum.attr.</span></span><span class="sig-name descname"><span class="pre">KernelShap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forward_func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Kernel SHAP is a method that uses the LIME framework to compute
 Shapley Values. Setting the loss function, weighting kernel and
 regularization terms appropriately in the LIME framework allows
@@ -44,8 +44,8 @@ any modification of it</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="captum.attr.KernelShap.attribute">
-<code class="sig-name descname"><span class="pre">attribute</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.attribute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.KernelShap.attribute">
+<span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.attribute" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method attributes the output of the model with given target index
 (in case it is provided, otherwise it assumes that output is a
 scalar) to the inputs of the model using the approach described above,
@@ -274,8 +274,8 @@ num_interp_features.</p>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="captum.attr.KernelShap.kernel_shap_perturb_generator">
-<code class="sig-name descname"><span class="pre">kernel_shap_perturb_generator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_inp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.kernel_shap_perturb_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.kernel_shap_perturb_generator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="captum.attr.KernelShap.kernel_shap_perturb_generator">
+<span class="sig-name descname"><span class="pre">kernel_shap_perturb_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">original_inp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/kernel_shap.html#KernelShap.kernel_shap_perturb_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.KernelShap.kernel_shap_perturb_generator" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
 <dt>Perturbations are sampled by the following process:</dt><dd><ul>
 <li><dl>
@@ -306,7 +306,7 @@ k(M, k) = (M - 1) / (k * (M - k) * (M choose k))</p>
 </dl>
 </dd></dl>
 </dd></dl>
-</div>
+</section>
 </div>
 </div>
 </div>

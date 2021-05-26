@@ -44,6 +44,7 @@
     <span class="n">safe_div</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">captum._utils.typing</span> <span class="kn">import</span> <span class="n">BaselineType</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">TensorOrTupleOfTensorsGeneric</span>
+<span class="kn">from</span> <span class="nn">captum.log</span> <span class="kn">import</span> <span class="n">log_usage</span>
 <span class="kn">from</span> <span class="nn">captum.metrics._utils.batching</span> <span class="kn">import</span> <span class="n">_divide_and_aggregate_metrics</span>
 
 
@@ -95,7 +96,7 @@
         <span class="k">def</span> <span class="nf">default_perturb_func</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">baselines</span><span class="p">:</span> <span class="n">BaselineType</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="p">):</span>
-            <span class="sa">r</span><span class="sd">""""""</span>
+            <span class="sa">r</span><span class="sd">""" """</span>
             <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">pertub_func</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">baselines</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">baselines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -135,7 +136,8 @@
     <span class="k">return</span> <span class="n">sub_infidelity_perturb_func_decorator</span>
 
 
-<div class="viewcode-block" id="infidelity"><a class="viewcode-back" href="../../../../metrics.html#captum.metrics.infidelity">[docs]</a><span class="k">def</span> <span class="nf">infidelity</span><span class="p">(</span>
+<div class="viewcode-block" id="infidelity"><a class="viewcode-back" href="../../../../metrics.html#captum.metrics.infidelity">[docs]</a><span class="nd">@log_usage</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">infidelity</span><span class="p">(</span>
     <span class="n">forward_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="n">perturb_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
@@ -145,6 +147,7 @@
     <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="n">max_examples_per_batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Explanation infidelity represents the expected mean-squared error</span>
@@ -372,6 +375,20 @@
 <span class="sd">                `input batch size * n_perturb_samples`.</span>
 
 <span class="sd">                Default: None</span>
+<span class="sd">        normalize (bool, optional): Normalize the dot product of the input</span>
+<span class="sd">                perturbation and the attribution so the infidelity value is invariant</span>
+<span class="sd">                to constant scaling of the attribution values. The normalization factor</span>
+<span class="sd">                beta is defined as the ratio of two mean values:</span>
+<span class="sd">                $$ \beta = \frac{</span>
+<span class="sd">                    \mathbb{E}_{I \sim \mu_I} [ I^T \Phi(f, x) (f(x) - f(x - I)) ]</span>
+<span class="sd">                }{</span>
+<span class="sd">                    \mathbb{E}_{I \sim \mu_I} [ (I^T \Phi(f, x))^2 ]</span>
+<span class="sd">                } $$.</span>
+<span class="sd">                Please refer the original paper for the meaning of the symbols. Same</span>
+<span class="sd">                normalization can be found in the paper's official implementation</span>
+<span class="sd">                https://github.com/chihkuanyeh/saliency_evaluation</span>
+
+<span class="sd">                Default: False</span>
 <span class="sd">    Returns:</span>
 
 <span class="sd">        infidelities (tensor): A tensor of scalar infidelity scores per</span>
@@ -408,7 +425,7 @@
 <span class="sd">        """</span>
 
         <span class="k">def</span> <span class="nf">call_perturb_func</span><span class="p">():</span>
-            <span class="sa">r</span><span class="sd">""""""</span>
+            <span class="sa">r</span><span class="sd">""" """</span>
             <span class="n">baselines_pert</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">inputs_pert</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs_expanded</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -464,7 +481,9 @@
 <span class="sd">                is: {}"""</span>
             <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perturb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">input_perturbed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_next_infidelity</span><span class="p">(</span><span class="n">current_n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_next_infidelity_tensors</span><span class="p">(</span>
+        <span class="n">current_n_perturb_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]]:</span>
         <span class="n">perturbations</span><span class="p">,</span> <span class="n">inputs_perturbed</span> <span class="o">=</span> <span class="n">_generate_perturbations</span><span class="p">(</span>
             <span class="n">current_n_perturb_samples</span>
         <span class="p">)</span>
@@ -499,11 +518,12 @@
         <span class="n">inputs_fwd</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span>
             <span class="n">inputs_fwd</span><span class="p">,</span> <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
         <span class="p">)</span>
-        <span class="n">inputs_minus_perturb</span> <span class="o">=</span> <span class="n">inputs_fwd</span> <span class="o">-</span> <span class="n">inputs_perturbed_fwd</span>
+        <span class="n">perturbed_fwd_diffs</span> <span class="o">=</span> <span class="n">inputs_fwd</span> <span class="o">-</span> <span class="n">inputs_perturbed_fwd</span>
         <span class="n">attributions_expanded</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">repeat_interleave</span><span class="p">(</span><span class="n">attribution</span><span class="p">,</span> <span class="n">current_n_perturb_samples</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">attribution</span> <span class="ow">in</span> <span class="n">attributions</span>
         <span class="p">)</span>
+
         <span class="n">attributions_times_perturb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
             <span class="p">(</span><span class="n">attribution_expanded</span> <span class="o">*</span> <span class="n">perturbation</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">attribution_expanded</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">attribution_expanded</span><span class="p">,</span> <span class="n">perturbation</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
@@ -511,19 +531,31 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">attribution_times_perturb_sums</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">attribution_times_perturb</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">attribution_times_perturb</span> <span class="ow">in</span> <span class="n">attributions_times_perturb</span>
-            <span class="p">]</span>
+        <span class="n">attr_times_perturb_sums</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">attribution_times_perturb</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">attribution_times_perturb</span> <span class="ow">in</span> <span class="n">attributions_times_perturb</span>
         <span class="p">)</span>
+        <span class="n">attr_times_perturb_sums</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attr_times_perturb_sums</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span>
-                <span class="n">attribution_times_perturb_sums</span> <span class="o">-</span> <span class="n">inputs_minus_perturb</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">2</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-            <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># reshape as Tensor(bsz, current_n_perturb_samples)</span>
+        <span class="n">attr_times_perturb_sums</span> <span class="o">=</span> <span class="n">attr_times_perturb_sums</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">perturbed_fwd_diffs</span> <span class="o">=</span> <span class="n">perturbed_fwd_diffs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="c1"># in order to normalize, we have to aggregate the following tensors</span>
+            <span class="c1"># to calculate MSE in its polynomial expansion:</span>
+            <span class="c1"># (a-b)^2 = a^2 - 2ab + b^2</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">attr_times_perturb_sums</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">attr_times_perturb_sums</span> <span class="o">*</span> <span class="n">perturbed_fwd_diffs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">perturbed_fwd_diffs</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># returns (a-b)^2 if no need to normalize</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">attr_times_perturb_sums</span> <span class="o">-</span> <span class="n">perturbed_fwd_diffs</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),)</span>
+
+    <span class="k">def</span> <span class="nf">_sum_infidelity_tensors</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">agg_t</span> <span class="o">+</span> <span class="n">t</span> <span class="k">for</span> <span class="n">agg_t</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">agg_tensors</span><span class="p">,</span> <span class="n">tensors</span><span class="p">))</span>
 
     <span class="c1"># perform argument formattings</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_input</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
@@ -547,13 +579,35 @@
 
     <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="n">metrics_sum</span> <span class="o">=</span> <span class="n">_divide_and_aggregate_metrics</span><span class="p">(</span>
+        <span class="c1"># if not normalize, directly return aggrgated MSE ((a-b)^2,)</span>
+        <span class="c1"># else return aggregated MSE's polynomial expansion tensors (a^2, ab, b^2)</span>
+        <span class="n">agg_tensors</span> <span class="o">=</span> <span class="n">_divide_and_aggregate_metrics</span><span class="p">(</span>
             <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inputs</span><span class="p">),</span>
             <span class="n">n_perturb_samples</span><span class="p">,</span>
-            <span class="n">_next_infidelity</span><span class="p">,</span>
+            <span class="n">_next_infidelity_tensors</span><span class="p">,</span>
+            <span class="n">agg_func</span><span class="o">=</span><span class="n">_sum_infidelity_tensors</span><span class="p">,</span>
             <span class="n">max_examples_per_batch</span><span class="o">=</span><span class="n">max_examples_per_batch</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">return</span> <span class="n">metrics_sum</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n_perturb_samples</span></div>
+
+    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">beta_num</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">beta_denorm</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">safe_div</span><span class="p">(</span>
+            <span class="n">beta_num</span><span class="p">,</span>
+            <span class="n">beta_denorm</span><span class="p">,</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">beta_denorm</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">beta_denorm</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">infidelity_values</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">beta</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">infidelity_values</span> <span class="o">=</span> <span class="n">agg_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">infidelity_values</span> <span class="o">/=</span> <span class="n">n_perturb_samples</span>
+
+    <span class="k">return</span> <span class="n">infidelity_values</span></div>
 </pre></div>
 </div>
 </div>

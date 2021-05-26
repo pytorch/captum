@@ -451,8 +451,7 @@
         <span class="n">target_repeated</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_permutation</span><span class="p">)):</span>
             <span class="n">current_tensors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">current</span>
-                <span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+                <span class="n">current</span> <span class="o">*</span> <span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="o">+</span> <span class="nb">input</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">current_tensors</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">)</span>
             <span class="p">)</span>
@@ -505,7 +504,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
-        <span class="sd">""" return the total number of forward evaluations needed """</span>
+        <span class="sd">"""return the total number of forward evaluations needed"""</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_samples</span></div>
 
 
@@ -767,7 +766,7 @@
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">):</span>
-        <span class="sd">""" return the total number of forward evaluations needed """</span>
+        <span class="sd">"""return the total number of forward evaluations needed"""</span>
         <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">total_features</span> <span class="o">/</span> <span class="n">perturbations_per_eval</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span>
             <span class="n">total_features</span>
         <span class="p">)</span></div>
