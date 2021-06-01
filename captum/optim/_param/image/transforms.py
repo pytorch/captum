@@ -107,9 +107,9 @@ class ToRGB(nn.Module):
         h, w = x.size("H"), x.size("W")
         flat = x.flatten(("H", "W"), "spatials")
         if inverse:
-            correct = torch.inverse(self.transform) @ flat
+            correct = torch.inverse(self.transform.to(x.device)) @ flat
         else:
-            correct = self.transform @ flat
+            correct = self.transform.to(x.device) @ flat
         chw = correct.unflatten("spatials", (("H", h), ("W", w)))
 
         if x.dim() == 3:
