@@ -116,7 +116,6 @@ class FFTImage(ImageParameterization):
         )
         scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None]
-        self.register_buffer("spectrum_scale", spectrum_scale)
 
         if init is None:
             coeffs_shape = (
@@ -131,8 +130,10 @@ class FFTImage(ImageParameterization):
             )  # names=["C", "H_f", "W_f", "complex"]
             fourier_coeffs = random_coeffs / 50
         else:
+            spectrum_scale = spectrum_scale.to(init.device)
             fourier_coeffs = self.torch_rfft(init) / spectrum_scale
 
+        self.register_buffer("spectrum_scale", spectrum_scale)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
@@ -390,7 +391,7 @@ class SharedImage(ImageParameterization):
 
 class NaturalImage(ImageParameterization):
     r"""TODO: Resolve device issues with default ToRGB instance, and init tensors.
-    
+
     Outputs an optimizable input image.
 
     By convention, single images are CHW and float32s in [0,1].
