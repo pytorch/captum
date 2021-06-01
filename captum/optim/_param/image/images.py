@@ -209,6 +209,9 @@ class PixelImage(ImageParameterization):
 
 
 class LaplacianImage(ImageParameterization):
+    """
+    TODO: Fix divison by 6 in setup_input when init is not None.
+    """
     def __init__(
         self,
         size: Tuple[int, int] = None,
@@ -386,7 +389,9 @@ class SharedImage(ImageParameterization):
 
 
 class NaturalImage(ImageParameterization):
-    r"""Outputs an optimizable input image.
+    r"""TODO: Resolve device issues with default ToRGB instance, and init tensors.
+    
+    Outputs an optimizable input image.
 
     By convention, single images are CHW and float32s in [0,1].
     The underlying parameterization can be decorrelated via a ToRGB transform.
