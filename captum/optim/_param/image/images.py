@@ -430,12 +430,7 @@ class NaturalImage(ImageParameterization):
         decorrelate_init: bool = True,
     ) -> None:
         super().__init__()
-        # Deep copy to avoid issue with creating class instance in the function
-        # signature
-        if isinstance(decorrelation_module, ToRGB):
-            decorrelation_module = deepcopy(decorrelation_module)
         self.decorrelate = decorrelation_module
-
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
             if decorrelate_init and self.decorrelate is not None:
