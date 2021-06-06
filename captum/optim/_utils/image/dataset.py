@@ -14,14 +14,15 @@ except (ImportError, AssertionError):
 from captum.optim._utils.models import collect_activations
 
 
-def image_cov(tensor: torch.Tensor) -> torch.Tensor:
+def image_cov(x: torch.Tensor) -> torch.Tensor:
     """
     Calculate a tensor's RGB covariance matrix
     """
 
-    tensor = tensor.reshape(-1, 3)
-    tensor = tensor - tensor.mean(0, keepdim=True)
-    return 1 / (tensor.size(0) - 1) * tensor.T @ tensor
+    assert x.dim() > 1
+    x = x.reshape(-1, x.size(1)).T
+    x = x - torch.mean(x, dim=-1).unsqueeze(-1)
+    return 1 / (x.shape[-1] - 1) * x @ x.transpose(-1, -2)
 
 
 def dataset_cov_matrix(
@@ -38,18 +39,16 @@ def dataset_cov_matrix(
 
     cov_mtx = cast(torch.Tensor, 0.0)
     for images, _ in loader:
-        assert images.dim() == 4
+        assert images.dim() > 1
         images = images.to(device)
-        for b in range(images.size(0)):
-            cov_mtx = cov_mtx + image_cov(images[b].permute(1, 2, 0))
-
-            if show_progress:
-                pbar.update(1)
+        cov_mtx = cov_mtx + image_cov(images)
+        if show_progress:
+            pbar.update(images.size(0))
 
     if show_progress:
         pbar.close()
 
-    cov_mtx = cov_mtx / len(loader.dataset)  # type: ignore
+    cov_mtx = cov_mtx / cast(int, len(loader.dataset))
     return cov_mtx
 
 
