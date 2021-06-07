@@ -35,13 +35,13 @@ class ImageTensor(torch.Tensor):
             return super().__new__(cls, x, *args, **kwargs)
 
     @classmethod
-    def open(cls, path: str, scale: float = 255.0) -> "ImageTensor":
+    def open(cls, path: str, scale: float = 255.0, mode: str = "RGB") -> "ImageTensor":
         if path.startswith("https://") or path.startswith("http://"):
             response = requests.get(path, stream=True)
             img = Image.open(response.raw)
         else:
             img = Image.open(path)
-        img_np = np.array(img.convert("RGB")).astype(np.float32)
+        img_np = np.array(img.convert(mode)).astype(np.float32)
         return cls(img_np.transpose(2, 0, 1) / scale)
 
     def __repr__(self) -> str:
@@ -116,7 +116,6 @@ class FFTImage(ImageParameterization):
         )
         scale = scale * ((self.size[0] * self.size[1]) ** (1 / 2))
         spectrum_scale = scale[None, :, :, None]
-        self.register_buffer("spectrum_scale", spectrum_scale)
 
         if init is None:
             coeffs_shape = (
@@ -131,16 +130,16 @@ class FFTImage(ImageParameterization):
             )  # names=["C", "H_f", "W_f", "complex"]
             fourier_coeffs = random_coeffs / 50
         else:
+            spectrum_scale = spectrum_scale.to(init.device)
             fourier_coeffs = self.torch_rfft(init) / spectrum_scale
 
+        self.register_buffer("spectrum_scale", spectrum_scale)
         self.fourier_coeffs = nn.Parameter(fourier_coeffs)
 
     def rfft2d_freqs(self, height: int, width: int) -> torch.Tensor:
         """Computes 2D spectrum frequencies."""
         fy = self.torch_fftfreq(height)[:, None]
-        # on odd input dimensions we need to keep one additional frequency
-        wadd = 2 if width % 2 == 1 else 1
-        fx = self.torch_fftfreq(width)[: width // 2 + wadd]
+        fx = self.torch_fftfreq(width)[: width // 2 + 1]
         return torch.sqrt((fx * fx) + (fy * fy))
 
     def get_fft_funcs(self) -> Tuple[Callable, Callable, Callable]:
@@ -181,7 +180,6 @@ class FFTImage(ImageParameterization):
         return torch_rfft, torch_irfft, torch_fftfreq
 
     def forward(self) -> torch.Tensor:
-        h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         output = self.torch_irfft(scaled_spectrum)
         return output.refine_names("B", "C", "H", "W")
@@ -212,6 +210,10 @@ class PixelImage(ImageParameterization):
 
 
 class LaplacianImage(ImageParameterization):
+    """
+    TODO: Fix divison by 6 in setup_input when init is not None.
+    """
+
     def __init__(
         self,
         size: Tuple[int, int] = None,
@@ -418,7 +420,7 @@ class NaturalImage(ImageParameterization):
 
     def __init__(
         self,
-        size: Tuple[int, int] = [224, 224],
+        size: Tuple[int, int] = (224, 224),
         channels: int = 3,
         batch: int = 1,
         init: Optional[torch.Tensor] = None,
@@ -431,8 +433,7 @@ class NaturalImage(ImageParameterization):
         self.decorrelate = decorrelation_module
         if init is not None:
             assert init.dim() == 3 or init.dim() == 4
-            if decorrelate_init:
-                assert self.decorrelate is not None
+            if decorrelate_init and self.decorrelate is not None:
                 init = (
                     init.refine_names("B", "C", "H", "W")
                     if init.dim() == 4

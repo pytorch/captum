@@ -17,7 +17,7 @@ class TestInputOptimization(BaseTest):
         model = BasicModel_ConvNet_Optim()
         loss_fn = opt.loss.ChannelActivation(model.layer, 0)
         obj = opt.InputOptimization(model, loss_function=loss_fn)
-        n_steps = 5
+        n_steps = 25
         history = obj.optimize(opt.optimization.n_steps(n_steps, show_progress=False))
         self.assertTrue(history[0] > history[-1])
         self.assertTrue(len(history) == n_steps)

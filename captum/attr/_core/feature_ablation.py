@@ -62,7 +62,7 @@ class FeatureAblation(PerturbationAttribution):
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         perturbations_per_eval: int = 1,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
@@ -321,7 +321,7 @@ class FeatureAblation(PerturbationAttribution):
                     baselines,
                     feature_mask,
                     perturbations_per_eval,
-                    **kwargs
+                    **kwargs,
                 ):
                     # modified_eval dimensions: 1D tensor with length
                     # equal to #num_examples * #features in batch
@@ -373,7 +373,7 @@ class FeatureAblation(PerturbationAttribution):
         baselines,
         input_mask,
         perturbations_per_eval,
-        **kwargs
+        **kwargs,
     ):
         """
         This method is a generator which yields each perturbation to be evaluated
@@ -458,7 +458,7 @@ class FeatureAblation(PerturbationAttribution):
                 baseline,
                 num_features_processed,
                 num_features_processed + current_num_ablated_features,
-                **extra_args
+                **extra_args,
             )
 
             # current_features[i] has dimension
