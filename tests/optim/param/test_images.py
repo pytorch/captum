@@ -19,6 +19,66 @@ class TestImageTensor(BaseTest):
     def test_repr(self) -> None:
         self.assertEqual(str(images.ImageTensor()), "ImageTensor([])")
 
+    def test_new(self) -> None:
+        x = torch.ones(5)
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_new_numpy(self) -> None:
+        x = torch.ones(5).numpy()
+        test_tensor = images.ImageTensor(x)
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_new_list(self) -> None:
+        x = torch.ones(5)
+        test_tensor = images.ImageTensor(x.tolist())
+        self.assertTrue(torch.is_tensor(test_tensor))
+        self.assertEqual(x.shape, test_tensor.shape)
+
+    def test_torch_function(self) -> None:
+        x = torch.ones(5)
+        image_tensor = images.ImageTensor(x)
+        image_tensor = (image_tensor * 1) * torch.ones(5)
+        self.assertEqual(image_tensor.sum().item(), torch.ones(5).sum().item())
+
+    def test_load_image_from_url(self) -> None:
+        try:
+            from PIL import Image  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module Pillow / PIL not found, skipping ImageTensor load from url"
+                + " test"
+            )
+        img_url = (
+            "https://github.com/pytorch/captum"
+            + "/raw/master/website/static/img/captum_logo.png"
+        )
+        new_tensor = images.ImageTensor().open(img_url)
+        self.assertTrue(torch.is_tensor(new_tensor))
+        self.assertEqual(list(new_tensor.shape), [3, 54, 208])
+
+    def test_export_and_open_local_image(self) -> None:
+        try:
+            from PIL import Image  # noqa: F401
+
+        except (ImportError, AssertionError):
+            raise unittest.SkipTest(
+                "Module Pillow / PIL not found, skipping ImageTensor export and save"
+                + " local image test"
+            )
+        x = torch.ones(1, 3, 5, 5)
+        image_tensor = images.ImageTensor(x)
+
+        filename = "image_tensor.jpg"
+        image_tensor.export(filename)
+        new_tensor = images.ImageTensor().open(filename)
+
+        self.assertTrue(torch.is_tensor(new_tensor))
+        assertTensorAlmostEqual(self, image_tensor, new_tensor)
+
     def test_natural_image_cuda(self) -> None:
         if not torch.cuda.is_available():
             raise unittest.SkipTest(
@@ -38,9 +98,11 @@ class TestFFTImage(BaseTest):
         height = 2
         width = 3
         image = images.FFTImage((1, 1))
-        assertArraysAlmostEqual(
-            image.rfft2d_freqs(height, width).numpy(),
-            numpy_image.FFTImage.rfft2d_freqs(height, width),
+
+        assertTensorAlmostEqual(
+            self,
+            image.rfft2d_freqs(height, width),
+            torch.tensor([[0.0000, 0.3333], [0.5000, 0.6009]]),
         )
 
     def test_fftimage_forward_randn_init(self) -> None:
@@ -89,6 +151,16 @@ class TestFFTImage(BaseTest):
         fftimage_array = fftimage_np.forward()
 
         self.assertEqual(fftimage_tensor.detach().numpy().shape, fftimage_array.shape)
+
+    def test_fftimage_forward_randn_init_width_odd(self) -> None:
+        if torch.__version__ <= "1.2.0":
+            raise unittest.SkipTest(
+                "Skipping FFTImage test due to insufficient Torch version."
+            )
+        fftimage = images.FFTImage(size=(512, 405))
+        self.assertEqual(list(fftimage.spectrum_scale.shape), [1, 512, 203, 1])
+        fftimage_tensor = fftimage().detach()
+        self.assertEqual(list(fftimage_tensor.shape), [1, 3, 512, 405])
 
     def test_fftimage_forward_init_chw(self) -> None:
         if torch.__version__ <= "1.2.0":
@@ -590,3 +662,14 @@ class TestNaturalImage(BaseTest):
             )
         image_param = images.NaturalImage().cuda()
         self.assertTrue(image_param().is_cuda)
+
+    def test_natural_image_decorrelation_module_none(self) -> None:
+        if torch.__version__ <= "1.3.0":
+            raise unittest.SkipTest(
+                "Skipping NaturalImage test due to insufficient Torch version."
+            )
+        image_param = images.NaturalImage(
+            init=torch.ones(1, 3, 4, 4), decorrelation_module=None
+        )
+        image = image_param.forward().detach()
+        assertTensorAlmostEqual(self, image, torch.ones_like(image))
