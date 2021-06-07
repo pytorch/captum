@@ -68,9 +68,8 @@ class TestChannelReducer(BaseTest):
             )
 
         test_input = torch.randn(1, 32, 224, 224).abs()
-        c_reducer = reducer.ChannelReducer(
-            n_components=3, reduction_alg="PCA", max_iter=100
-        )
+        c_reducer = reducer.ChannelReducer(n_components=3, reduction_alg="PCA")
+
         test_output = c_reducer.fit_transform(test_input)
         self.assertEquals(test_output.size(0), 1)
         self.assertEquals(test_output.size(1), 3)

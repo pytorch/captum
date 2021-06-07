@@ -3,17 +3,6 @@ from typing import Optional
 import numpy as np
 
 
-def setup_batch(x: np.ndarray, batch: int = 1, dim: int = 3) -> np.ndarray:
-    assert batch > 0
-    x = x[None, :] if x.ndim == dim and batch == 1 else x
-    x = (
-        np.stack([np.copy(x) for b in range(batch)])
-        if x.ndim == dim and batch > 1
-        else x
-    )
-    return x
-
-
 class FFTImage:
     """Parameterize an image using inverse real 2D FFT"""
 
@@ -62,17 +51,10 @@ class FFTImage:
     def rfft2d_freqs(height: int, width: int) -> np.ndarray:
         """Computes 2D spectrum frequencies."""
         fy = np.fft.fftfreq(height)[:, None]
-        # on odd input dimensions we need to keep one additional frequency
-        wadd = 2 if width % 2 == 1 else 1
-        fx = np.fft.fftfreq(width)[: width // 2 + wadd]
+        fx = np.fft.fftfreq(width)[: width // 2 + 1]
         return np.sqrt((fx * fx) + (fy * fy))
 
-    def set_image(self, correlated_image: np.ndarray) -> None:
-        coeffs = np.fft.rfftn(correlated_image, s=self.size).view("(2,)float")
-        self.fourier_coeffs = coeffs / self.spectrum_scale
-
     def forward(self) -> np.ndarray:
-        h, w = self.size
         scaled_spectrum = self.fourier_coeffs * self.spectrum_scale
         scaled_spectrum = scaled_spectrum.astype(complex)
         output = np.fft.irfftn(scaled_spectrum, s=self.size)
