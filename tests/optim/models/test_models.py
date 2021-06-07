@@ -4,7 +4,7 @@ from typing import Type
 
 import torch
 
-from captum.optim.models import googlenet
+from captum.optim.models import googlenet, vgg16
 from captum.optim.models._common import RedirectedReluLayer, SkipLayer
 from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
 
@@ -134,3 +134,136 @@ class TestInceptionV1(BaseTest):
         model = googlenet(pretrained=False, aux_logits=True)
         outputs = model(x)
         self.assertEqual(len(outputs), 3)
+
+
+class TestVGG16(BaseTest):
+    def test_load_vgg16_with_redirected_relu(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping load pretrained VGG-16 due to insufficient"
+                + " Torch version."
+            )
+        model = vgg16(pretrained=True, replace_relus_with_redirectedrelu=True)
+        _check_layer_in_model(self, model, RedirectedReluLayer)
+
+    def test_load_vgg16_no_redirected_relu(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping load pretrained VGG-16 RedirectedRelu test"
+                + " due to insufficient Torch version."
+            )
+        model = vgg16(pretrained=True, replace_relus_with_redirectedrelu=False)
+        _check_layer_not_in_model(self, model, RedirectedReluLayer)
+        _check_layer_in_model(self, model, torch.nn.ReLU)
+
+    def test_load_vgg16_linear(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping load pretrained VGG-16 linear test due to"
+                + " insufficient Torch version."
+            )
+        model = vgg16(pretrained=True, use_linear_modules_only=True)
+        _check_layer_not_in_model(self, model, RedirectedReluLayer)
+        _check_layer_not_in_model(self, model, torch.nn.ReLU)
+        _check_layer_not_in_model(self, model, torch.nn.MaxPool2d)
+        _check_layer_in_model(self, model, SkipLayer)
+        _check_layer_in_model(self, model, torch.nn.AvgPool2d)
+
+    def test_vgg16_transform(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping VGG-16 internal transform test due to"
+                + " insufficient Torch version."
+            )
+        x = torch.randn(1, 3, 224, 224).clamp(0, 1)
+        model = vgg16(pretrained=True)
+        output = model._transform_input(x)
+        expected_output = x * 255 - torch.tensor(
+            [123.68, 116.779, 103.939], device=x.device
+        ).view(3, 1, 1)
+        expected_output = expected_output[:, [2, 1, 0]]
+        assertTensorAlmostEqual(self, output, expected_output, 0)
+
+    def test_vgg16_transform_no_scale(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping VGG-16 internal transform test due to"
+                + " insufficient Torch version."
+            )
+        x = torch.randn(1, 3, 224, 224).clamp(0, 1) * 255
+        model = vgg16(pretrained=True, scale_input=False)
+        output = model._transform_input(x)
+        expected_output = x - torch.tensor(
+            [123.68, 116.779, 103.939], device=x.device
+        ).view(3, 1, 1)
+        expected_output = expected_output[:, [2, 1, 0]]
+        assertTensorAlmostEqual(self, output, expected_output, 0)
+
+    def test_vgg16_transform_warning(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping VGG-16 internal transform warning test due"
+                + " to insufficient Torch version."
+            )
+        x = torch.stack(
+            [torch.ones(3, 112, 112) * -1, torch.ones(3, 112, 112) * 2], dim=0
+        )
+        model = vgg16(pretrained=True)
+        with self.assertWarns(UserWarning):
+            model._transform_input(x)
+
+    def test_vgg16_load_and_forward(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping basic pretrained VGG-16 forward test due to"
+                + " insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = vgg16(pretrained=True)
+        outputs = model(x)
+        self.assertEqual(list(outputs.shape), [1, 512, 7, 7])
+
+    def test_vgg16_load_and_forward_diff_sizes(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained VGG-16 forward with different"
+                + " sized inputs test due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 512, 512)
+        x2 = torch.zeros(1, 3, 383, 511)
+        model = vgg16(pretrained=True)
+
+        outputs = model(x)
+        outputs2 = model(x2)
+
+        self.assertEqual(list(outputs.shape), [1, 512, 7, 7])
+        self.assertEqual(list(outputs2.shape), [1, 512, 7, 7])
+
+    def test_vgg16_forward_classifier(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained VGG-16 with classifier_logits forward"
+                + " test due to insufficient Torch version."
+            )
+        x = torch.zeros(1, 3, 224, 224)
+        model = vgg16(pretrained=False, classifier_logits=True)
+        outputs = model(x)
+        self.assertEqual(list(outputs.shape), [1, 1000])
+
+    def test_vgg16_forward_cuda(self) -> None:
+        if torch.__version__ <= "1.6.0":
+            raise unittest.SkipTest(
+                "Skipping pretrained VGG-16 forward CUDA test due to"
+                + " insufficient Torch version."
+            )
+        if not torch.cuda.is_available():
+            raise unittest.SkipTest(
+                "Skipping pretrained VGG-16 forward CUDA test due to"
+                + " not supporting CUDA."
+            )
+        x = torch.zeros(1, 3, 224, 224).cuda()
+        model = vgg16(pretrained=True).cuda()
+        output = model(x)
+
+        self.assertTrue(output.is_cuda)
+        self.assertEqual(list(output.shape), [1, 512, 7, 7])
