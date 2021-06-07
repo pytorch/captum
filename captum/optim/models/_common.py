@@ -199,10 +199,37 @@ def collect_activations(
 
 class SkipLayer(torch.nn.Module):
     """
-    This layer is made to take the place of nonlinear activation layers like ReLU.
+    This layer is made to take the place of any layer that needs to be skipped over
+    during the forward pass. Use cases include removing nonlinear activation layers
+    like ReLU for circuits research.
+
+    This layer works almost exactly the same way that nn.Indentiy does, except it also
+    ignores any additional arguments passed to the forward function. Any layer replaced
+    by SkipLayer must have the same input and output shapes.
+
+    See nn.Identity for more details:
+    https://pytorch.org/docs/stable/generated/torch.nn.Identity.html
+
+    Args:
+        args (Any): Any argument. Arguments will be safely ignored.
+        kwargs (Any) Any keyword argument. Arguments will be safely ignored.
     """
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__()
+
+    def forward(
+        self, x: Union[torch.Tensor, Tuple[torch.Tensor]], *args, **kwargs
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
+        """
+        Args:
+            x (torch.Tensor or tuple of torch.Tensor): The input tensor or tensors.
+            args (Any): Any argument. Arguments will be safely ignored.
+            kwargs (Any) Any keyword argument. Arguments will be safely ignored.
+        Returns:
+            x (torch.Tensor or tuple of torch.Tensor): The unmodified input tensor or
+                tensors.
+        """
         return x
 
 
