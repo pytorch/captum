@@ -11,8 +11,8 @@ from captum.attr._utils.lrp_rules import (
     IdentityRule,
     WSquaredRule,
     AlphaBetaRule,
-    ZBoundRule, 
-    FlatRule
+    ZBoundRule,
+    FlatRule,
 )
 
 from ..helpers.basic import BaseTest, assertTensorAlmostEqual
@@ -63,8 +63,7 @@ def _get_simple_model2(inplace=False):
 
 
 def _get_two_layer_model() -> torch.nn.Module:
-    """returns a simple model comprised of two layers.
-    """
+    """returns a simple model comprised of two layers."""
 
     class TwoLayer(torch.nn.Module):
         def __init__(self):
@@ -365,7 +364,7 @@ class Test(BaseTest):
         attributions_ixg = ixg.attribute(inputs)
         assertTensorAlmostEqual(
             self, attributions_lrp, attributions_ixg
-        )  # Divide by score because LRP relevance is normalized.
+        )
 
     def test_epsilon_rule(self) -> None:
         model = _get_two_layer_model()
@@ -379,7 +378,6 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[4 / 18, 14 / 18]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_gamma_rule(self) -> None:
@@ -397,13 +395,13 @@ class Test(BaseTest):
         oracle = 18 * torch.Tensor(
             [
                 [
-                    ((1 + gamma_1) * (60 + 18 * gamma_1)) / (18 * (3 + gamma_1) * (5 + gamma_1)),
+                    ((1 + gamma_1) * (60 + 18 * gamma_1))
+                    / (18 * (3 + gamma_1) * (5 + gamma_1)),
                     (210 + 66 * gamma_1) / (18 * (3 + gamma_1) * (5 + gamma_1)),
                 ]
             ]
         )
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_identity_rule(self) -> None:
@@ -418,7 +416,6 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[3 / 18, 15 / 18]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_w_squared_rule(self) -> None:
@@ -433,7 +430,6 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[23 / 100, 77 / 100]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_alpha_beta_rule_alpha1(self) -> None:
@@ -448,7 +444,6 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[4 / 18, 14 / 18]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_alpha_beta_rule_alpha2(self) -> None:
@@ -463,9 +458,15 @@ class Test(BaseTest):
         model.layer_2.rule = AlphaBetaRule(alpha=alpha_2)
         attr = lrp.attribute(input_, target=0)
 
-        oracle = -7 * torch.Tensor([[(alpha_1 * (2 * alpha_2 + 3)) / 15, (alpha_1 * (-2 * alpha_2 + 12)) / 15,]])
+        oracle = -7 * torch.Tensor(
+            [
+                [
+                    (alpha_1 * (2 * alpha_2 + 3)) / 15,
+                    (alpha_1 * (-2 * alpha_2 + 12)) / 15,
+                ]
+            ]
+        )
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=0)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_z_bound_rule(self) -> None:
@@ -480,14 +481,13 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[(303) / (7 * 11 * 13), (2 * 349) / (7 * 11 * 13)]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_flat_rule(self) -> None:
         model = _get_two_layer_model()
         input_ = torch.Tensor([[1, -2]])
         input_.requires_grad = True
-        
+
         lrp = LRP(model)
         model.layer_1.rule = FlatRule()
         model.layer_2.rule = FlatRule()
@@ -495,26 +495,22 @@ class Test(BaseTest):
 
         oracle = 18 * torch.Tensor([[1 / 2, 1 / 2]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, target=1)
         assertTensorAlmostEqual(self, attr, oracle)
 
     def test_alpha1_eq_zplus_for_pos_input(self) -> None:
         model = _get_two_layer_model()
-        #model.eval()
         input_ = torch.Tensor([[1, 0]])
         input_.requires_grad = True
-
 
         lrp = LRP(model)
         model.layer_1.rule = AlphaBetaRule(alpha=1)
         model.layer_2.rule = AlphaBetaRule(alpha=1)
-        attr_1 = lrp.attribute(input_, target=1).detach()  # pylint: disable=E1101
+        attr_1 = lrp.attribute(input_, target=1).detach()
 
         model.layer_1.rule = ZPlusRule()
         model.layer_2.rule = ZPlusRule()
-        attr_2 = lrp.attribute(input_, target=1).detach()  # pylint: disable=E1101
+        attr_2 = lrp.attribute(input_, target=1).detach()
 
-        #np.testing.assert_almost_equal(attr_1, attr_2)
         assertTensorAlmostEqual(self, attr_1, attr_2)
 
     def test_alpha_beta_non_sequential(self) -> None:
@@ -530,5 +526,4 @@ class Test(BaseTest):
 
         oracle = torch.Tensor([[2, 6]])
 
-        #self._lrp_matches_oracle(model, input_, oracle, 0)
         assertTensorAlmostEqual(self, attr, oracle)

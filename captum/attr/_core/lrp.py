@@ -50,6 +50,8 @@ class LRP(GradientAttribution):
         else:
             self.model = model
 
+        self.layers = []
+        self._get_layers(self.model)
         self._check_rules()
 
     @property
@@ -154,8 +156,6 @@ class LRP(GradientAttribution):
         """
         self.verbose = verbose
         self._original_state_dict = self.model.state_dict()
-        self.layers = []
-        self._get_layers(self.model)
         self._check_and_attach_rules()
         self.backward_handles = []
         self.forward_handles = []

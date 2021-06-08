@@ -185,6 +185,14 @@ class IdentityRule(EpsilonRule):
     Can be used for BatchNorm2D.
     """
 
+    def _create_backward_hook_output(
+        self, outputs: Tensor
+    ) -> Callable[[Tensor], Tensor]:
+        def _backward_hook_output(grad: Tensor) -> Tensor:
+            self.relevance_output = grad.data
+
+        return _backward_hook_output
+
     def _create_backward_hook_input(self, inputs: Tensor) -> Callable[[Tensor], Tensor]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
             return self.relevance_output
@@ -229,7 +237,7 @@ class WSquaredRule(PropagationRule):
     def _create_backward_hook_input(self, input_: Tensor) -> Callable[[Tensor], None]:
         def _backward_hook_input(
             grad: Tensor,
-        ) -> None:  # pylint: disable=unused-argument
+        ) -> None:
             pass
 
         return _backward_hook_input
@@ -268,13 +276,9 @@ class FlatRule(WSquaredRule):
     ) -> None:
         if hasattr(module, "bias"):
             if module.bias is not None:
-                module.bias.data = torch.zeros_like(
-                    module.bias.data
-                )  # pylint: disable=E1101
+                module.bias.data = torch.zeros_like(module.bias.data)
         if hasattr(module, "weight"):
-            module.weight.data = torch.ones_like(
-                module.weight.data
-            )  # pylint: disable=E1101
+            module.weight.data = torch.ones_like(module.weight.data)
 
 
 class AlphaBetaRule(PropagationRule):
