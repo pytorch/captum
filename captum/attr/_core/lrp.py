@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import warnings
-
 from typing import Any
 
 import torch
@@ -9,10 +8,10 @@ import torch.nn as nn
 
 from ..._utils.common import _format_input, _format_output, _run_forward
 from ..._utils.gradient import apply_gradient_requirements, undo_gradient_requirements
+from ..._utils.typing import Module, TargetType, Tensor, TensorOrTupleOfTensorsGeneric
 from .._utils.attribution import GradientAttribution
 from .._utils.custom_modules import Addition_Module
 from .._utils.lrp_rules import EpsilonRule, PropagationRule
-from ..._utils.typing import Tensor, Module, TensorOrTupleOfTensorsGeneric, TargetType
 
 
 class LRP(GradientAttribution):

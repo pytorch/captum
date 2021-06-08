@@ -2,12 +2,12 @@
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Tuple, Callable, Union
+from typing import Callable, Tuple, Union
 
 import torch
 
 from ..._utils.common import _format_tensor_into_tuples
-from ..._utils.typing import TensorOrTupleOfTensorsGeneric, Tensor, Module
+from ..._utils.typing import Module, Tensor, TensorOrTupleOfTensorsGeneric
 
 
 class PropagationRule(ABC):
@@ -19,7 +19,7 @@ class PropagationRule(ABC):
     STABILITY_FACTOR = 1e-9
 
     def forward_hook(
-        self, module: Module, inputs: TensorOrTupleOfTensorsGeneric, outputs: Tensor
+        self, module: Module, inputs: Tuple[Tensor, ...], outputs: Tensor
     ) -> Tensor:
         """Register backward hooks on input and output
         tensors of linear layers in the model."""
@@ -80,7 +80,7 @@ class PropagationRule(ABC):
     def _manipulate_weights(
         self,
         module: Module,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         outputs: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         raise NotImplementedError
@@ -110,7 +110,7 @@ class EpsilonRule(PropagationRule):
     def _manipulate_weights(
         self,
         module: Module,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         outputs: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         pass
@@ -135,7 +135,7 @@ class GammaRule(PropagationRule):
     def _manipulate_weights(
         self,
         module: Module,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         outputs: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         if hasattr(module, "weight"):
@@ -166,7 +166,7 @@ class ZPlusRule(PropagationRule):
     def _manipulate_weights(
         self,
         module: Module,
-        inputs: TensorOrTupleOfTensorsGeneric,
+        inputs: Tuple[Tensor, ...],
         outputs: TensorOrTupleOfTensorsGeneric,
     ) -> None:
         if hasattr(module, "weight"):
@@ -311,7 +311,8 @@ class AlphaBetaRule(PropagationRule):
     def forward_hook(
         self, module: torch.nn.Module, inputs: Tuple[Tensor, ...], outputs: Tensor
     ) -> None:
-        r"""Register backward hooks on input and output tensors of linear layers in the model."""
+        r"""Register backward hooks on input and output tensors of linear layers in the
+        model."""
         if not hasattr(module, "weight"):
             raise RuntimeError(
                 f"AlphaBetaRule assigned to module without weights: {module}. "
@@ -334,7 +335,7 @@ class AlphaBetaRule(PropagationRule):
 
     def _create_backward_hook_input(
         self, input_: Tensor, input_index: int
-    ) -> Callable[[Tensor,], Tensor]:
+    ) -> Callable[[Tensor], Tensor]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
             out = self.out[input_index]
             return out
@@ -452,7 +453,7 @@ class AlphaBetaRuleV2(AlphaBetaRule):
 
     def _create_backward_hook_input(
         self, input_: Tensor, input_index: int
-    ) -> Callable[[Tensor,], Tensor]:
+    ) -> Callable[[Tensor], Tensor]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
             out = input_ * grad
             out += self.out[input_index]
@@ -631,7 +632,7 @@ class ZBoundRule(PropagationRule):
 
     def _create_backward_hook_input(
         self, input_: Tensor, input_index: int
-    ) -> Callable[[Tensor,], Tensor]:
+    ) -> Callable[[Tensor], Tensor]:
         def _backward_hook_input(grad: Tensor) -> Tensor:
             relevance = (input_ - self._lower_bound_tensor[input_index]) * grad
             relevance += (input_ - self._upper_bound_tensor[input_index]) * self.res_wm[
@@ -644,7 +645,7 @@ class ZBoundRule(PropagationRule):
 
     def _create_backward_hook_output(
         self, output: Tensor
-    ) -> Callable[[Tensor,], Tensor]:
+    ) -> Callable[[Tensor], Tensor]:
         def _backward_hook_output(grad: Tensor) -> Tensor:
 
             denominator = self.og_outputs[0] - self._denominator_bound_contribution

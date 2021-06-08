@@ -4,15 +4,16 @@ import torch
 import torch.nn as nn
 
 from captum.attr import LRP, InputXGradient
+from captum.attr._utils.custom_modules import Addition_Module
 from captum.attr._utils.lrp_rules import (
-    ZPlusRule,
+    AlphaBetaRule,
     EpsilonRule,
+    FlatRule,
     GammaRule,
     IdentityRule,
     WSquaredRule,
-    AlphaBetaRule,
     ZBoundRule,
-    FlatRule,
+    ZPlusRule,
 )
 
 from ..helpers.basic import BaseTest, assertTensorAlmostEqual
@@ -21,7 +22,6 @@ from ..helpers.basic_models import (
     BasicModel_MultiLayer,
     SimpleLRPModel,
 )
-from captum.attr._utils.custom_modules import Addition_Module
 
 
 def _get_basic_config():
@@ -362,9 +362,7 @@ class Test(BaseTest):
         attributions_lrp = lrp.attribute(inputs)
         ixg = InputXGradient(model)
         attributions_ixg = ixg.attribute(inputs)
-        assertTensorAlmostEqual(
-            self, attributions_lrp, attributions_ixg
-        )
+        assertTensorAlmostEqual(self, attributions_lrp, attributions_ixg)
 
     def test_epsilon_rule(self) -> None:
         model = _get_two_layer_model()
