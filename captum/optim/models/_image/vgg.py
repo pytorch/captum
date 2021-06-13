@@ -10,6 +10,13 @@ GS_SAVED_WEIGHTS_URL = (
     "https://pytorch-tutorial-assets.s3.amazonaws.com/captum/vgg16_caffe_features.pth"
 )
 
+VGG16_LAYERS: List[Union[int, str]] = (
+    [64, 64, "P", 128, 128, "P"]
+    + [256] * 3
+    + ["P"]
+    + list([512] * 3 + ["P"]) * 2  # type: ignore
+)
+
 
 def vgg16(
     pretrained: bool = False,
@@ -44,14 +51,8 @@ def vgg16(
             *True*.
     """
 
-    layers: List[Union[int, str]] = (
-        [64, 64, "P", 128, 128, "P"]
-        + [256] * 3
-        + ["P"]
-        + list([512] * 3 + ["P"]) * 2  # type: ignore
-    )
     if "layers" not in kwargs:
-        kwargs["layers"] = layers
+        kwargs["layers"] = VGG16_LAYERS
 
     if pretrained:
         if "transform_input" not in kwargs:
@@ -86,7 +87,7 @@ class VGG(nn.Module):
 
     def __init__(
         self,
-        layers: List[Union[int, str]],
+        layers: List[Union[int, str]] = VGG16_LAYERS,
         out_features: int = 1000,
         transform_input: bool = True,
         scale_input: bool = True,
