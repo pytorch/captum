@@ -285,9 +285,11 @@ class LRP(GradientAttribution):
         ordering ambiguity issues.
         """
         if isinstance(inputs, tuple):
-            return tuple(x + 0.0 for x in inputs)
+            out = tuple(input_ + 0.0 for input_ in inputs)
         elif isinstance(inputs, Tensor):
-            return inputs + 0.0
+            out = inputs + 0.0
+
+        return out
 
     def _register_forward_hooks(self) -> None:
         for layer in self.layers:
