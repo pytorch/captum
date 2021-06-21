@@ -619,6 +619,7 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
         return inp.flatten()
     return torch.cat([single_inp.flatten() for single_inp in inp])
 
+
 def _get_module_from_name(model: Module, layer_name: str) -> Any:
     r"""
     Returns the module (layer) object, given its (string) name
