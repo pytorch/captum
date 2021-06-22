@@ -227,9 +227,10 @@ class SimpleLRPModel(nn.Module):
         self.relu = torch.nn.ReLU(inplace=inplace)
         self.linear2 = nn.Linear(3, 1, bias=False)
         self.linear2.weight.data.fill_(3.0)
+        self.dropout = torch.nn.Dropout(p=0.01)
 
     def forward(self, x):
-        return self.linear2(self.relu(self.linear(x)))
+        return self.dropout(self.linear2(self.relu(self.linear(x))))
 
 
 class Conv1dSeqModel(nn.Module):
@@ -360,6 +361,21 @@ class BasicModel_MultiLayer(nn.Module):
             return torch.stack((stack_mid, 4 * stack_mid), dim=3)
         else:
             return lin2_out
+
+
+class BasicModelBoolInput(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mod = BasicModel_MultiLayer()
+
+    def forward(
+        self,
+        x: Tensor,
+        add_input: Optional[Tensor] = None,
+        mult: float = 10.0,
+    ):
+        assert x.dtype is torch.bool, "Input must be boolean"
+        return self.mod(x.float() * mult, add_input)
 
 
 class BasicModel_MultiLayer_MultiInput(nn.Module):

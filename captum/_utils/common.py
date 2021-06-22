@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import typing
 from enum import Enum
+from functools import reduce
 from inspect import signature
 from typing import Any, Callable, Dict, List, Tuple, Union, cast, overload
 
@@ -106,7 +107,7 @@ def _zeros(inputs: Tuple[Tensor, ...]) -> Tuple[int, ...]:
     Takes a tuple of tensors as input and returns a tuple that has the same
     length as `inputs` with each element as the integer 0.
     """
-    return tuple(0 for input in inputs)
+    return tuple(0 if input.dtype is not torch.bool else False for input in inputs)
 
 
 def _format_baseline(
@@ -617,3 +618,18 @@ def _flatten_tensor_or_tuple(inp: TensorOrTupleOfTensorsGeneric) -> Tensor:
     if isinstance(inp, Tensor):
         return inp.flatten()
     return torch.cat([single_inp.flatten() for single_inp in inp])
+
+
+def _get_module_from_name(model: Module, layer_name: str) -> Any:
+    r"""
+    Returns the module (layer) object, given its (string) name
+    in the model.
+
+    Args:
+            name (str): Module or nested modules name string in self.model
+
+    Returns:
+            The module (layer) in self.model.
+    """
+
+    return reduce(getattr, layer_name.split("."), model)

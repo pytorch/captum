@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+from typing import Tuple, cast
 
 import torch
 import torch.nn as nn
+from torch import Tensor
+from torch.nn import Module
 
 from captum.attr import LRP, InputXGradient
 from captum.attr._utils.lrp_rules import (
@@ -10,21 +13,20 @@ from captum.attr._utils.lrp_rules import (
     GammaRule,
     IdentityRule,
 )
-
-from ..helpers.basic import BaseTest, assertTensorAlmostEqual
-from ..helpers.basic_models import (
+from tests.helpers.basic import BaseTest, assertTensorAlmostEqual
+from tests.helpers.basic_models import (
     BasicModel_ConvNet_One_Conv,
     BasicModel_MultiLayer,
     SimpleLRPModel,
 )
 
 
-def _get_basic_config():
+def _get_basic_config() -> Tuple[Module, Tensor]:
     input = torch.arange(16).view(1, 1, 4, 4).float()
     return BasicModel_ConvNet_One_Conv(), input
 
 
-def _get_rule_config():
+def _get_rule_config() -> Tuple[Tensor, Module, Tensor, Tensor]:
     relevance = torch.tensor([[[-0.0, 3.0]]])
     layer = nn.modules.Conv1d(1, 1, 2, bias=False)
     nn.init.constant_(layer.weight.data, 2)
@@ -33,14 +35,14 @@ def _get_rule_config():
     return relevance, layer, activations, input
 
 
-def _get_simple_model(inplace=False):
+def _get_simple_model(inplace: bool = False) -> Tuple[Module, Tensor]:
     model = SimpleLRPModel(inplace)
     inputs = torch.tensor([[1.0, 2.0, 3.0]])
 
     return model, inputs
 
 
-def _get_simple_model2(inplace=False):
+def _get_simple_model2(inplace: bool = False) -> Tuple[Module, Tensor]:
     class MyModel(nn.Module):
         def __init__(self, inplace) -> None:
             super().__init__()
@@ -58,27 +60,27 @@ def _get_simple_model2(inplace=False):
 
 
 class Test(BaseTest):
-    def test_lrp_creator(self):
+    def test_lrp_creator(self) -> None:
         model, _ = _get_basic_config()
-        model.conv1.rule = 1
+        model.conv1.rule = 1  # type: ignore
         self.assertRaises(TypeError, LRP, model)
 
-    def test_lrp_creator_activation(self):
+    def test_lrp_creator_activation(self) -> None:
         model, inputs = _get_basic_config()
         model.add_module("sigmoid", nn.Sigmoid())
         lrp = LRP(model)
         self.assertRaises(TypeError, lrp.attribute, inputs)
 
-    def test_lrp_basic_attributions(self):
+    def test_lrp_basic_attributions(self) -> None:
         model, inputs = _get_basic_config()
         logits = model(inputs)
         _, classIndex = torch.max(logits, 1)
         lrp = LRP(model)
         relevance, delta = lrp.attribute(
-            inputs, classIndex.item(), return_convergence_delta=True
+            inputs, cast(int, classIndex.item()), return_convergence_delta=True
         )
-        self.assertEqual(delta.item(), 0)
-        self.assertEqual(relevance.shape, inputs.shape)
+        self.assertEqual(delta.item(), 0)  # type: ignore
+        self.assertEqual(relevance.shape, inputs.shape)  # type: ignore
         assertTensorAlmostEqual(
             self,
             relevance,
@@ -87,56 +89,56 @@ class Test(BaseTest):
             ),
         )
 
-    def test_lrp_simple_attributions(self):
+    def test_lrp_simple_attributions(self) -> None:
         model, inputs = _get_simple_model()
         model.eval()
-        model.linear.rule = EpsilonRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = EpsilonRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([18.0, 36.0, 54.0]))
 
-    def test_lrp_simple_attributions_batch(self):
+    def test_lrp_simple_attributions_batch(self) -> None:
         model, inputs = _get_simple_model()
         model.eval()
-        model.linear.rule = EpsilonRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = EpsilonRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         inputs = torch.cat((inputs, 3 * inputs))
         relevance, delta = lrp.attribute(
             inputs, target=0, return_convergence_delta=True
         )
-        self.assertEqual(relevance.shape, inputs.shape)
-        self.assertEqual(delta.shape[0], inputs.shape[0])
+        self.assertEqual(relevance.shape, inputs.shape)  # type: ignore
+        self.assertEqual(delta.shape[0], inputs.shape[0])  # type: ignore
         assertTensorAlmostEqual(
             self, relevance, torch.Tensor([[18.0, 36.0, 54.0], [54.0, 108.0, 162.0]])
         )
 
-    def test_lrp_simple_repeat_attributions(self):
+    def test_lrp_simple_repeat_attributions(self) -> None:
         model, inputs = _get_simple_model()
         model.eval()
-        model.linear.rule = GammaRule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = GammaRule()  # type: ignore
+        model.linear2.rule = Alpha1_Beta0_Rule()  # type: ignore
         output = model(inputs)
         lrp = LRP(model)
         _ = lrp.attribute(inputs)
         output_after = model(inputs)
         assertTensorAlmostEqual(self, output, output_after)
 
-    def test_lrp_simple_inplaceReLU(self):
+    def test_lrp_simple_inplaceReLU(self) -> None:
         model_default, inputs = _get_simple_model()
         model_inplace, _ = _get_simple_model(inplace=True)
         for model in [model_default, model_inplace]:
             model.eval()
-            model.linear.rule = EpsilonRule()
-            model.linear2.rule = EpsilonRule()
+            model.linear.rule = EpsilonRule()  # type: ignore
+            model.linear2.rule = EpsilonRule()  # type: ignore
         lrp_default = LRP(model_default)
         lrp_inplace = LRP(model_inplace)
         relevance_default = lrp_default.attribute(inputs)
         relevance_inplace = lrp_inplace.attribute(inputs)
         assertTensorAlmostEqual(self, relevance_default, relevance_inplace)
 
-    def test_lrp_simple_tanh(self):
+    def test_lrp_simple_tanh(self) -> None:
         class Model(nn.Module):
             def __init__(self) -> None:
                 super(Model, self).__init__()
@@ -158,55 +160,55 @@ class Test(BaseTest):
             self, relevance, torch.Tensor([[0.0269, 0.0537, 0.0806]])
         )  # Result if tanh is skipped for propagation
 
-    def test_lrp_simple_attributions_GammaRule(self):
+    def test_lrp_simple_attributions_GammaRule(self) -> None:
         model, inputs = _get_simple_model()
         with torch.no_grad():
-            model.linear.weight.data[0][0] = -2
+            model.linear.weight.data[0][0] = -2  # type: ignore
         model.eval()
-        model.linear.rule = GammaRule(gamma=1)
-        model.linear2.rule = GammaRule()
+        model.linear.rule = GammaRule(gamma=1)  # type: ignore
+        model.linear2.rule = GammaRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(
-            self, relevance.data, torch.tensor([[28 / 3, 104 / 3, 52]])
+            self, relevance.data, torch.tensor([[28 / 3, 104 / 3, 52]])  # type: ignore
         )
 
-    def test_lrp_simple_attributions_AlphaBeta(self):
+    def test_lrp_simple_attributions_AlphaBeta(self) -> None:
         model, inputs = _get_simple_model()
         with torch.no_grad():
-            model.linear.weight.data[0][0] = -2
+            model.linear.weight.data[0][0] = -2  # type: ignore
         model.eval()
-        model.linear.rule = Alpha1_Beta0_Rule()
-        model.linear2.rule = Alpha1_Beta0_Rule()
+        model.linear.rule = Alpha1_Beta0_Rule()  # type: ignore
+        model.linear2.rule = Alpha1_Beta0_Rule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([[12, 33.6, 50.4]]))
 
-    def test_lrp_Identity(self):
+    def test_lrp_Identity(self) -> None:
         model, inputs = _get_simple_model()
         with torch.no_grad():
-            model.linear.weight.data[0][0] = -2
+            model.linear.weight.data[0][0] = -2  # type: ignore
         model.eval()
-        model.linear.rule = IdentityRule()
-        model.linear2.rule = EpsilonRule()
+        model.linear.rule = IdentityRule()  # type: ignore
+        model.linear2.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(inputs)
         assertTensorAlmostEqual(self, relevance, torch.tensor([24.0, 36.0, 36.0]))
 
-    def test_lrp_simple2_attributions(self):
+    def test_lrp_simple2_attributions(self) -> None:
         model, input = _get_simple_model2()
         lrp = LRP(model)
         relevance = lrp.attribute(input, 0)
-        self.assertEqual(relevance.shape, input.shape)
+        self.assertEqual(relevance.shape, input.shape)  # type: ignore
 
-    def test_lrp_skip_connection(self):
+    def test_lrp_skip_connection(self) -> None:
         # A custom addition module needs to be used so that relevance is
         # propagated correctly.
         class Addition_Module(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
 
-            def forward(self, x1, x2):
+            def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
                 return x1 + x2
 
         class SkipConnection(nn.Module):
@@ -216,18 +218,18 @@ class Test(BaseTest):
                 self.linear.weight.data.fill_(5)
                 self.add = Addition_Module()
 
-            def forward(self, input):
+            def forward(self, input: Tensor) -> Module:
                 x = self.add(self.linear(input), input)
                 return x
 
         model = SkipConnection()
         input = torch.Tensor([[2, 3]])
-        model.add.rule = EpsilonRule()
+        model.add.rule = EpsilonRule()  # type: ignore
         lrp = LRP(model)
         relevance = lrp.attribute(input, target=1)
         assertTensorAlmostEqual(self, relevance, torch.Tensor([[10, 18]]))
 
-    def test_lrp_maxpool1D(self):
+    def test_lrp_maxpool1D(self) -> None:
         class MaxPoolModel(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
@@ -235,7 +237,7 @@ class Test(BaseTest):
                 self.linear.weight.data.fill_(2.0)
                 self.maxpool = nn.MaxPool1d(2)
 
-            def forward(self, input):
+            def forward(self, input: Tensor) -> Module:
                 return self.maxpool(self.linear(input))
 
         model = MaxPoolModel()
@@ -244,13 +246,13 @@ class Test(BaseTest):
         relevance = lrp.attribute(input, target=1)
         assertTensorAlmostEqual(self, relevance, torch.Tensor([[[0.0, 0.0], [10, 12]]]))
 
-    def test_lrp_maxpool2D(self):
+    def test_lrp_maxpool2D(self) -> None:
         class MaxPoolModel(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
                 self.maxpool = nn.MaxPool2d(2)
 
-            def forward(self, input):
+            def forward(self, input: Tensor) -> Module:
                 return self.maxpool(input)
 
         model = MaxPoolModel()
@@ -261,13 +263,13 @@ class Test(BaseTest):
             self, relevance, torch.Tensor([[[[0.0, 0.0], [0.0, 6.0]]]])
         )
 
-    def test_lrp_maxpool3D(self):
+    def test_lrp_maxpool3D(self) -> None:
         class MaxPoolModel(nn.Module):
             def __init__(self) -> None:
                 super().__init__()
                 self.maxpool = nn.MaxPool3d(2)
 
-            def forward(self, input):
+            def forward(self, input: Tensor) -> Module:
                 return self.maxpool(input)
 
         model = MaxPoolModel()
@@ -280,7 +282,7 @@ class Test(BaseTest):
             torch.Tensor([[[[[0.0, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.0, 8.0]]]]]),
         )
 
-    def test_lrp_multi(self):
+    def test_lrp_multi(self) -> None:
         model = BasicModel_MultiLayer()
         input = torch.Tensor([[1, 2, 3]])
         add_input = 0
@@ -292,9 +294,11 @@ class Test(BaseTest):
         attributions_add_input = lrp.attribute(
             input, target=0, additional_forward_args=(add_input,)
         )
-        self.assertTrue(torch.equal(attributions, attributions_add_input))
+        self.assertTrue(
+            torch.equal(attributions, attributions_add_input)  # type: ignore
+        )  # type: ignore
 
-    def test_lrp_multi_inputs(self):
+    def test_lrp_multi_inputs(self) -> None:
         model = BasicModel_MultiLayer()
         input = torch.Tensor([[1, 2, 3]])
         input = (input, 3 * input)
@@ -306,7 +310,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(self, attributions[0], torch.Tensor([[16, 32, 48]]))
         assertTensorAlmostEqual(self, delta, torch.Tensor(0))
 
-    def test_lrp_ixg_equivalency(self):
+    def test_lrp_ixg_equivalency(self) -> None:
         model, inputs = _get_simple_model()
         lrp = LRP(model)
         attributions_lrp = lrp.attribute(inputs)
