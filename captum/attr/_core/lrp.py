@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from collections import defaultdict
 import typing
-import warnings
+from collections import defaultdict
 from typing import Any, List, Tuple, Union
 
 import torch.nn as nn
@@ -17,9 +16,10 @@ from captum._utils.gradient import (
 )
 from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
+from captum.attr._utils.common import _sum_rows
 from captum.attr._utils.custom_modules import Addition_Module
 from captum.attr._utils.lrp_rules import EpsilonRule, PropagationRule
-from captum.attr._utils.common import _sum_rows
+from captum.log import log_usage
 
 
 class LRP(GradientAttribution):
