@@ -23,7 +23,6 @@ from captum.attr._utils.common import (
     _format_input_baseline,
     _reshape_and_sum,
     _validate_input,
-    neuron_index_deprecation_decorator,
 )
 from captum.log import log_usage
 
@@ -90,7 +89,6 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

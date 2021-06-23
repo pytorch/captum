@@ -7,7 +7,6 @@ from captum._utils.gradient import construct_neuron_grad_fn
 from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._core.gradient_shap import GradientShap
 from captum.attr._utils.attribution import GradientAttribution, NeuronAttribution
-from captum.attr._utils.common import neuron_index_deprecation_decorator
 from captum.log import log_usage
 
 
@@ -93,7 +92,6 @@ class NeuronGradientShap(NeuronAttribution, GradientAttribution):
         self._multiply_by_inputs = multiply_by_inputs
 
     @log_usage()
-    @neuron_index_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

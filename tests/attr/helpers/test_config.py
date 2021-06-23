@@ -316,7 +316,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": [0, 1, 1, 0],
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -337,7 +337,7 @@ config = [
             "inputs": torch.randn(4, 3),
             "target": [(1, 0, 0), (0, 1, 1), (1, 1, 1), (0, 0, 0)],
             "additional_forward_args": (None, True),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -357,7 +357,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0]),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
@@ -377,7 +377,7 @@ config = [
         "attribute_args": {
             "inputs": torch.randn(4, 3),
             "target": torch.tensor([0, 1, 1, 0]),
-            "n_samples": 20,
+            "nt_samples": 20,
             "stdevs": 0.0,
         },
         "noise_tunnel": True,
