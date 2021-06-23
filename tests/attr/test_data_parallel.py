@@ -205,7 +205,8 @@ class DataParallelMeta(type):
                         ),
                     ):
                         attr_method_2 = internal_algorithm(
-                            model_2, get_target_layer(cuda_model, target_layer)
+                            model_2,
+                            get_target_layer(cuda_model, target_layer),  # type: ignore
                         )
                     else:
                         attr_method_2 = internal_algorithm(
