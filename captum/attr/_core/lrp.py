@@ -9,7 +9,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
-from captum._utils.common import _format_input, _format_output, _run_forward, _is_tuple
+from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
