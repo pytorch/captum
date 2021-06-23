@@ -54,7 +54,7 @@ class LayerLRP(LRP, LayerAttribution):
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
         if hasattr(self.model, "device_ids"):
-            self.device_ids = self.model.device_ids
+            self.device_ids = cast(List[int], self.model.device_ids)
 
     @typing.overload  # type: ignore
     def attribute(

@@ -2,14 +2,14 @@
 
 import typing
 from collections import defaultdict
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple, Union, cast
 
 import torch.nn as nn
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
-from captum._utils.common import _format_input, _format_output, _run_forward
+from captum._utils.common import _format_input, _format_output, _run_forward, _is_tuple
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
@@ -184,7 +184,7 @@ class LRP(GradientAttribution):
         self.backward_handles: List[RemovableHandle] = []
         self.forward_handles: List[RemovableHandle] = []
 
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -251,7 +251,9 @@ class LRP(GradientAttribution):
         """
         if isinstance(attributions, tuple):
             for attr in attributions:
-                summed_attr = sum(_sum_rows(attr) for attr in attributions)
+                summed_attr = cast(
+                    Tensor, sum(_sum_rows(attr) for attr in attributions)
+                )
         else:
             summed_attr = _sum_rows(attributions)
         return output.flatten() - summed_attr.flatten()
@@ -266,15 +268,15 @@ class LRP(GradientAttribution):
     def _check_and_attach_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
-                layer.activations = {}
-                layer.rule.relevance_input = defaultdict(list)
-                layer.rule.relevance_output = {}
+                layer.activations = {}  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
-                layer.activations = {}
-                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()
-                layer.rule.relevance_input = defaultdict(list)
-                layer.rule.relevance_output = {}
+                layer.activations = {}  # type: ignore
+                layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 layer.rule = None  # type: ignore
             else:
