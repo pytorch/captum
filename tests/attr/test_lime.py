@@ -464,6 +464,7 @@ class Test(BaseTest):
             lime = Lime(
                 model,
                 similarity_func=get_exp_kernel_similarity_function("cosine", 10.0),
+                interpretable_model=SkLearnLasso(alpha=1.0),
             )
             with self.assertWarns(DeprecationWarning):
                 attributions = lime.attribute(
