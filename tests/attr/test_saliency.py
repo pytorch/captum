@@ -162,15 +162,14 @@ class Test(BaseTest):
             )
         else:
             nt = NoiseTunnel(saliency)
-            with self.assertWarns(DeprecationWarning):
-                attributions = nt.attribute(
-                    inputs,
-                    nt_type=nt_type,
-                    n_samples=10,
-                    nt_samples_batch_size=n_samples_batch_size,
-                    stdevs=0.0000002,
-                    additional_forward_args=additional_forward_args,
-                )
+            attributions = nt.attribute(
+                inputs,
+                nt_type=nt_type,
+                nt_samples=10,
+                nt_samples_batch_size=n_samples_batch_size,
+                stdevs=0.0000002,
+                additional_forward_args=additional_forward_args,
+            )
 
         for input, attribution, expected_attr in zip(inputs, attributions, expected):
             if nt_type == "vanilla":

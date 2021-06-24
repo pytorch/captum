@@ -125,15 +125,14 @@ class Test(BaseTest):
             target=target,
             n_steps=500,
         )
-        with self.assertWarns(DeprecationWarning):
-            attributions = nt.attribute(
-                inputs,
-                nt_type=type,
-                n_samples=n_samples,
-                stdevs=0.0,
-                target=target,
-                n_steps=500,
-            )
+        attributions = nt.attribute(
+            inputs,
+            nt_type=type,
+            nt_samples=n_samples,
+            stdevs=0.0,
+            target=target,
+            n_steps=500,
+        )
         assertTensorAlmostEqual(
             self, attributions_wo_mutliplying_by_inputs * inputs, attributions
         )
@@ -448,19 +447,18 @@ class Test(BaseTest):
                 return_convergence_delta=True,
                 nt_samples_batch_size=nt_samples_batch_size,
             )
-            with self.assertWarns(DeprecationWarning):
-                attributions_without_delta = nt.attribute(
-                    inputs,
-                    nt_type=type,
-                    n_samples=n_samples,
-                    stdevs=0.00000002,
-                    baselines=baselines,
-                    target=target,
-                    additional_forward_args=additional_forward_args,
-                    method=approximation_method,
-                    n_steps=500,
-                    nt_samples_batch_size=3,
-                )
+            attributions_without_delta = nt.attribute(
+                inputs,
+                nt_type=type,
+                nt_samples=n_samples,
+                stdevs=0.00000002,
+                baselines=baselines,
+                target=target,
+                additional_forward_args=additional_forward_args,
+                method=approximation_method,
+                n_steps=500,
+                nt_samples_batch_size=3,
+            )
             self.assertEqual(nt.multiplies_by_inputs, multiply_by_inputs)
             self.assertEqual([inputs[0].shape[0] * n_samples], list(delta.shape))
 

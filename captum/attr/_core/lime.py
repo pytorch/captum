@@ -34,7 +34,6 @@ from captum.attr._utils.batching import _batch_example_iterator
 from captum.attr._utils.common import (
     _construct_default_feature_mask,
     _format_input_baseline,
-    lime_n_perturb_samples_deprecation_decorator,
 )
 from captum.log import log_usage
 
@@ -237,7 +236,6 @@ class LimeBase(PerturbationAttribution):
             ), "Must provide transform from original input space to interpretable space"
 
     @log_usage()
-    @lime_n_perturb_samples_deprecation_decorator
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -825,7 +823,6 @@ class Lime(LimeBase):
         )
 
     @log_usage()
-    @lime_n_perturb_samples_deprecation_decorator
     def attribute(  # type: ignore
         self,
         inputs: TensorOrTupleOfTensorsGeneric,

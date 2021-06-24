@@ -24,17 +24,6 @@ from tests.helpers.basic_models import (
 
 
 class Test(BaseTest):
-    def test_neuron_index_deprecated_warning(self) -> None:
-        net = BasicModel_MultiLayer()
-        grad = NeuronGradient(net, net.linear2)
-        inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)
-        with self.assertWarns(DeprecationWarning):
-            attributions = grad.attribute(
-                inp,
-                neuron_index=(0,),
-            )
-        assertTensorTuplesAlmostEqual(self, attributions, [4.0, 4.0, 4.0])
-
     def test_simple_gradient_input_linear2(self) -> None:
         net = BasicModel_MultiLayer()
         inp = torch.tensor([[0.0, 100.0, 0.0]], requires_grad=True)

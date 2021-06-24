@@ -66,7 +66,7 @@ class Test(BaseTest):
             attributions = nt.attribute(
                 inputs,
                 nt_type=nt_type,
-                n_samples=10,
+                nt_samples=10,
                 stdevs=0.0002,
                 additional_forward_args=additional_forward_args,
             )
@@ -109,7 +109,7 @@ class Test(BaseTest):
         else:
             nt = NoiseTunnel(input_x_grad)
             attributions = nt.attribute(
-                input, nt_type=nt_type, n_samples=10, stdevs=1.0, target=target
+                input, nt_type=nt_type, nt_samples=10, stdevs=1.0, target=target
             )
 
         self.assertEqual(attributions.shape, input.shape)
