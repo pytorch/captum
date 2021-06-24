@@ -3,6 +3,7 @@
 from enum import Enum
 from typing import Any, Callable, Dict, Optional, Tuple, Type, cast
 
+import torch
 from torch.nn import Module
 
 from captum.attr._core.noise_tunnel import NoiseTunnel
@@ -43,6 +44,12 @@ class HookRemovalMode(Enum):
 
 
 class ErrorModule(Module):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        self.relu = torch.nn.ReLU()
+
     def forward(*args, **kwargs):
         raise AssertionError("Raising error on execution")
 

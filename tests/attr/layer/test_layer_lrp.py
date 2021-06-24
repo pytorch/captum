@@ -62,9 +62,7 @@ class Test(BaseTest):
         assertTensorAlmostEqual(
             self, relevance[0], torch.Tensor([[[0, 4], [31, 40]], [[0, 0], [-6, -15]]])
         )
-        assertTensorAlmostEqual(
-            self, delta, torch.Tensor([-21, 75])
-        )  # Due to bias in conv1 layer
+        assertTensorAlmostEqual(self, delta, torch.Tensor([0]))
 
     def test_lrp_simple_attributions(self):
         model, inputs = _get_simple_model(inplace=False)
@@ -174,6 +172,6 @@ class Test(BaseTest):
         self.assertEqual(len(relevance), len(delta))
         assertTensorAlmostEqual(
             self,
-            relevance[0][0],
-            torch.tensor([[[18.0, 36.0, 54.0]], [[36.0, 72.0, 108.0]]]),
+            relevance[0],
+            torch.tensor([[18.0, 36.0, 54.0], [36.0, 72.0, 108.0]]),
         )

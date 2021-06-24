@@ -22,6 +22,10 @@ if TYPE_CHECKING:
     from captum.attr._utils.attribution import GradientAttribution
 
 
+def _sum_rows(input: Tensor) -> Tensor:
+    return input.reshape(input.shape[0], -1).sum(1)
+
+
 def _validate_target(num_samples: int, target: TargetType) -> None:
     if isinstance(target, list) or (
         isinstance(target, torch.Tensor) and torch.numel(target) > 1

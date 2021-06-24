@@ -16,6 +16,7 @@ from captum._utils.gradient import compute_gradients
 from captum._utils.typing import ModuleOrModuleList, TargetType
 from captum.attr._utils.common import (
     _format_input_baseline,
+    _sum_rows,
     _tensorize_baseline,
     _validate_input,
 )
@@ -274,9 +275,6 @@ class GradientAttribution(Attribution):
         num_samples = end_point[0].shape[0]
         _validate_input(end_point, start_point)
         _validate_target(num_samples, target)
-
-        def _sum_rows(input: Tensor) -> Tensor:
-            return input.reshape(input.shape[0], -1).sum(1)
 
         with torch.no_grad():
             start_out_sum = _sum_rows(
