@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
-import typing
-import warnings
-from typing import Any, List, Tuple, Union
 
-import torch
+import typing
+from collections import defaultdict
+from typing import Any, List, Tuple, Union, cast
+
 import torch.nn as nn
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.hooks import RemovableHandle
 
-from captum._utils.common import _format_input, _format_output, _run_forward
+from captum._utils.common import _format_input, _format_output, _is_tuple, _run_forward
 from captum._utils.gradient import (
     apply_gradient_requirements,
     undo_gradient_requirements,
 )
 from captum._utils.typing import Literal, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import GradientAttribution
+from captum.attr._utils.common import _sum_rows
 from captum.attr._utils.custom_modules import Addition_Module
 from captum.attr._utils.lrp_rules import EpsilonRule, PropagationRule
+from captum.log import log_usage
 
 
 class LRP(GradientAttribution):
@@ -45,16 +47,7 @@ class LRP(GradientAttribution):
                 is used.
         """
         GradientAttribution.__init__(self, model)
-
-        if isinstance(model, nn.DataParallel):
-            warnings.warn(
-                """Although input model is of type `nn.DataParallel` it will run
-                only on one device. Support for multiple devices will be added soon."""
-            )
-            self.model = model.module
-        else:
-            self.model = model
-
+        self.model = model
         self._check_rules()
 
     @property
@@ -84,6 +77,7 @@ class LRP(GradientAttribution):
     ) -> Tuple[TensorOrTupleOfTensorsGeneric, Tensor]:
         ...
 
+    @log_usage()
     def attribute(
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
@@ -190,7 +184,7 @@ class LRP(GradientAttribution):
         self.backward_handles: List[RemovableHandle] = []
         self.forward_handles: List[RemovableHandle] = []
 
-        is_inputs_tuple = isinstance(inputs, tuple)
+        is_inputs_tuple = _is_tuple(inputs)
         inputs = _format_input(inputs)
         gradient_mask = apply_gradient_requirements(inputs)
 
@@ -206,7 +200,8 @@ class LRP(GradientAttribution):
                 self._forward_fn_wrapper, inputs, target, additional_forward_args
             )
             relevances = tuple(
-                normalized_relevance * output.unsqueeze(dim=1)
+                normalized_relevance
+                * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
                 for normalized_relevance in normalized_relevances
             )
         finally:
@@ -215,12 +210,9 @@ class LRP(GradientAttribution):
         undo_gradient_requirements(inputs, gradient_mask)
 
         if return_convergence_delta:
-            delta = []
-            for relevance in relevances:
-                delta.append(self.compute_convergence_delta(relevance, output))
-            return (  # type: ignore
-                _format_output(is_inputs_tuple, relevances),  # type: ignore
-                _format_output(is_inputs_tuple, tuple(delta)),
+            return (
+                _format_output(is_inputs_tuple, relevances),
+                self.compute_convergence_delta(relevances, output),
             )
         else:
             return _format_output(is_inputs_tuple, relevances)  # type: ignore
@@ -257,19 +249,14 @@ class LRP(GradientAttribution):
             *tensor*:
             - **delta** Difference of relevance in output layer and input layer.
         """
-
-        def _attribution_delta(attributions: Tensor, output: Tensor) -> Tensor:
-            remaining_dims = tuple(range(1, len(attributions.shape)))
-            sum_attributions = torch.sum(attributions, dim=remaining_dims)
-            delta = output - sum_attributions
-            return delta
-
         if isinstance(attributions, tuple):
-            stacked_attributions = torch.stack(attributions, dim=1)
-            delta = _attribution_delta(stacked_attributions, output)
+            for attr in attributions:
+                summed_attr = cast(
+                    Tensor, sum(_sum_rows(attr) for attr in attributions)
+                )
         else:
-            delta = _attribution_delta(attributions, output)
-        return delta
+            summed_attr = _sum_rows(attributions)
+        return output.flatten() - summed_attr.flatten()
 
     def _get_layers(self, model: Module) -> None:
         for layer in model.children():
@@ -281,9 +268,15 @@ class LRP(GradientAttribution):
     def _check_and_attach_rules(self) -> None:
         for layer in self.layers:
             if hasattr(layer, "rule"):
+                layer.activations = {}  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
                 pass
             elif type(layer) in SUPPORTED_LAYERS_WITH_RULES.keys():
+                layer.activations = {}  # type: ignore
                 layer.rule = SUPPORTED_LAYERS_WITH_RULES[type(layer)]()  # type: ignore
+                layer.rule.relevance_input = defaultdict(list)  # type: ignore
+                layer.rule.relevance_output = {}  # type: ignore
             elif type(layer) in SUPPORTED_NON_LINEAR_LAYERS:
                 layer.rule = None  # type: ignore
             else:
@@ -398,7 +391,9 @@ class LRP(GradientAttribution):
 
         #TODO: Remove when bugs are fixed
         """
-        adjusted_inputs = tuple(input + 0 for input in inputs)
+        adjusted_inputs = tuple(
+            input + 0 if input is not None else input for input in inputs
+        )
         return self.model(*adjusted_inputs)
 
 

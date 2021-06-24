@@ -725,7 +725,7 @@ class Lime(LimeBase):
             interpretable_model (optional, Model): Model object to train
                     interpretable model.
 
-                    This argument is optional and defaults to SkLearnLasso(alpha=1.0),
+                    This argument is optional and defaults to SkLearnLasso(alpha=0.01),
                     which is a wrapper around the Lasso linear model in SkLearn.
                     This requires having sklearn version >= 0.23 available.
 
@@ -803,7 +803,7 @@ class Lime(LimeBase):
 
         """
         if interpretable_model is None:
-            interpretable_model = SkLearnLasso(alpha=1.0)
+            interpretable_model = SkLearnLasso(alpha=0.01)
 
         if similarity_func is None:
             similarity_func = get_exp_kernel_similarity_function()

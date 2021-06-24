@@ -5,7 +5,7 @@ from typing import Any, List, Tuple, Union, cast
 from torch import Tensor
 from torch.nn import Module
 
-from captum._utils.common import _format_input
+from captum._utils.common import _format_input, _reduce_list, _sort_key_list
 from captum._utils.gradient import (
     apply_gradient_requirements,
     compute_gradients,
@@ -53,6 +53,8 @@ class LayerLRP(LRP, LayerAttribution):
         """
         LayerAttribution.__init__(self, model, layer)
         LRP.__init__(self, model)
+        if hasattr(self.model, "device_ids"):
+            self.device_ids = cast(List[int], self.model.device_ids)
 
     @typing.overload  # type: ignore
     def attribute(
@@ -180,13 +182,13 @@ class LayerLRP(LRP, LayerAttribution):
                         implementations. If attributions for all layers are returned
                         (layer=None) a list of tensors or tuples of tensors is returned
                         with entries for each layer.
-            - **delta** (*tensor*, tuple of *tensor*, list of *tensors*, or list of
-                tuples of *tensor* returned if return_convergence_delta=True):
+            - **delta** (*tensor* or list of *tensors*
+                         returned if return_convergence_delta=True):
                         Delta is calculated per example, meaning that the number of
                         elements in returned delta tensor is equal to the number of
                         of examples in input.
                         If attributions for all layers are returned (layer=None) a list
-                        of tensors or tuples of tensors is returned with entries for
+                        of tensors is returned with entries for
                         each layer.
         Examples::
 
@@ -243,33 +245,35 @@ class LayerLRP(LRP, LayerAttribution):
         else:
             return relevances  # type: ignore
 
-    def _get_output_relevance(
-        self, output: Tensor
-    ) -> Union[List[Tuple[Tensor, ...]], Tuple[Tensor, ...]]:
+    def _get_single_output_relevance(self, layer, output):
+        if self.attribute_to_layer_input:
+            normalized_relevances = layer.rule.relevance_input
+        else:
+            normalized_relevances = layer.rule.relevance_output
+        key_list = _sort_key_list(list(normalized_relevances.keys()), self.device_ids)
+        normalized_relevances = _reduce_list(
+            [normalized_relevances[device_id] for device_id in key_list]
+        )
+
+        if isinstance(normalized_relevances, tuple):
+            return tuple(
+                normalized_relevance
+                * output.reshape((-1,) + (1,) * (normalized_relevance.dim() - 1))
+                for normalized_relevance in normalized_relevances
+            )
+        else:
+            return normalized_relevances * output.reshape(
+                (-1,) + (1,) * (normalized_relevances.dim() - 1)
+            )
+
+    def _get_output_relevance(self, output):
         if isinstance(self.layer, list):
             relevances = []
             for layer in self.layer:
-                if self.attribute_to_layer_input:
-                    normalized_relevances = layer.rule.relevance_input
-                else:
-                    normalized_relevances = layer.rule.relevance_output
-                relevance = [
-                    normalized_relevance * output.unsqueeze(dim=1)
-                    for normalized_relevance in normalized_relevances
-                ]
-                relevances.append(self._convert_list_to_tuple(relevance))
+                relevances.append(self._get_single_output_relevance(layer, output))
             return relevances
-
         else:
-            if self.attribute_to_layer_input:
-                normalized_relevances = self.layer.rule.relevance_input
-            else:
-                normalized_relevances = self.layer.rule.relevance_output
-            relevances = [
-                normalized_relevance * output.unsqueeze(dim=1)
-                for normalized_relevance in normalized_relevances
-            ]
-            return self._convert_list_to_tuple(relevances)
+            return self._get_single_output_relevance(self.layer, output)
 
     @staticmethod
     def _convert_list_to_tuple(
